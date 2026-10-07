@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 159 dated entries, newest 2026-10-07. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 160 dated entries, newest 2026-10-07. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -40,7 +40,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 24 | [ROUND 48 OPENS: THE FIRST DETAILED PASS ON THE MERGED 47](#07102026--round-48-opens-the-first-detailed-pass-on-the-merged-47) | 2026-10-07 |
+| process-and-git | 25 | [ROUND 48, SECOND BATCH: THE RECKONING KEEPS THREE FIGURES](#07102026--round-48-second-batch-the-reckoning-keeps-three-figures) | 2026-10-07 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
@@ -5933,3 +5933,13 @@ succession door is renamed by him**: «A daughter came later» → «A child cam
 **The tail pages get named decorations**: a vertical W1000 tag right on the last sheet, a green
 Slam ticket at the bottom of the second-to-last, and horizontal gaps may take a second photo
 («например из vacation второе рядом»).
+
+## 07.10.2026 – ROUND 48, SECOND BATCH: THE RECKONING KEEPS THREE FIGURES
+
+On the architect's 3b verdict (the share is correct by construction – the family's part of the
+prize cheques against her whole bank): «наверное Family's share вообще можно убрать, а spent
+переименовать TENNIS & TRIPS и проверить их сумму за все года, здесь я имею в виду вообще все
+расходы на теннис, конечно, включая всех тренеров. останется всего 3 цифры в итоге.» So the
+ending's money block is three rows – Tennis & trips (the renamed outlay, HIS label), Family's
+portfolio, her account – the Family's share row leaves the screen, and the outlay figure owes a
+verification that it is the WHOLE career and ALL the tennis, coaches included.
