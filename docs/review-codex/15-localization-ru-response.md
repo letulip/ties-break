@@ -144,7 +144,7 @@ files swept mechanically only; the ё check runs without a morphology dictionary
 | source inventory + ~40 batch tables | **TAKE** | the drift of §3 becomes **RU-18** (his table to fill – the skeleton above lifts verbatim); four «complete» claims downgraded until it lands |
 | RU-14 LQA worksheet | **TAKE** | its cross-cutting laws already agree with the spec; `EXPOSURE_ROW` becomes pre-task **L1c**; its manual acceptance matrix becomes **L4's script**; its five open decisions join §9 |
 | RU-15/16/17 deltas | **TAKE** | the delta process is right; RU-18 continues it for rounds 47/48 |
-| the 61 files themselves | **NOT extracted now** (a deliberate deviation from intake step 2, reasoned) | this is not a review document to fold in – it is the owner's LIVING editorial source, and a copy in main would fork it while he keeps drafting on the branch. It merges ONCE, together with L1b, so the importer's first run lands against the same tree it reads. If the owner prefers it versioned in main earlier, that is §9 question 7 |
+| the 61 files themselves | ~~NOT extracted now~~ → **LANDED WITH THE INTAKE** (his 07.10 closing order supersedes the L1b recommendation) | «всё в intake пойдет» – the stack lands in main in this branch, byte-identical to `ec166201` and then amended by the three ruled passes (№10 family voice, №11 drift, §9.5 names); the codex branch closes once `git cherry` shows containment, and future batches arrive as PRs to main |
 
 The spec's §8 dispatch table is refreshed in the same commit as this document
 ([i18n-2026-10.md](../specs/i18n-2026-10.md)): executors stay sonnet-per-wave under the token law;
@@ -157,16 +157,21 @@ at 26 cells) as the album batch's second editorial prerequisite, the importer's 
 compact-money pair added to the catalog's formatter list, and L4 adopting RU-14's acceptance
 matrix.
 
-## 6 · The approval gate – owner rulings needed before L1 launches
+## 6 · The approval gate – ⭐ RULED 07.10, all nine in one pass, plus three orders
 
-The six §9 questions of the spec stand (contract · ctx column · legacy-save migration price ·
-switcher home · proper-noun policy · number/currency format), now joined by:
+The owner answered the whole §9 list the same day (his words in `docs/decisions.md`, the ruled
+form in the spec's §9): the importer contract stands with a mechanised LANDED flip; ctx by note;
+the legacy migration goes ahead with a ruled «продолжить или начать заново» plan-B; the switcher
+in More **plus a first-run locale prompt**; generated proper nouns are NOT translated; money and
+numbers keep one form across locales (D18 closes with no translation row); the stack lands with
+THIS branch (superseding the L1b recommendation); `Raise another` = «Новая история»; the three
+family labels stand; the store description defers to L4; the short year stands; the cold register
+stays in the cold band.
 
-7. **When does the editorial stack merge to main** – with L1b (recommended, §5) or now?
-8. **Compact money in Russian** – the shipped `$40.6M` (dot, rounds) against his own «40,5М»
-   example (comma, truncates, Cyrillic М): D18 needs the ruling before RU-13D can row it.
-9. RU-14's five open editorial decisions, relayed: the `Raise another` Russian; the three
-   family-resource corridor names (RU-02A); the installed-app store description; `’31` vs `2031`
-   after phone LQA; the cold-register note voice.
+The three orders, executed in this branch: **№10** – the parent speaks as the FAMILY («мы
+купили», «мы видели», «мы гордимся», «мы не разобрали»), every gendered parent-«я» cell converted
+by his formula, `the-line` excepted, before→after table for his read; **№11** – the RU-18 drift
+applied (re-keys, removals, the Latin-per-ruling name rows, the restored completeness claims);
+**№12** – `EXPOSURE_ROW` fixed in code, byte-identical worlds.
 
-Nothing of L1a/L1b/L1c/RU-18 is launched. «Запускаю» follows the owner's approve, per the skill.
+L1a and L1b remain NOT launched: «после мержа будем стартовать по моей команде».

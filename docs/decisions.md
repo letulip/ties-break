@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 161 dated entries, newest 2026-10-07. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 162 dated entries, newest 2026-10-07. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -41,7 +41,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
 | process-and-git | 26 | [THE LOCALIZATION STACK RECEIVED: CODEX/LOCALIZATION-RU INTAKEN, THE SPEC RE-PLANNED](#07102026--the-localization-stack-received-codexlocalization-ru-intaken-the-spec-re-planned) | 2026-10-07 |
-| product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
+| product-and-scope | 8 | [LOCALIZATION: THE NINE QUESTIONS RULED, PLUS THREE ORDERS – THE STACK LANDS WITH THE INTAKE](#07102026--localization-the-nine-questions-ruled-plus-three-orders--the-stack-lands-with-the-intake) | 2026-10-07 |
 | ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
 | simulation-and-balance | 8 | [THE FEEDBACK CHANNEL BUILT, AND THE SHARE TYPE MEASURED RATHER THAN GUESSED](#30092026--the-feedback-channel-built-and-the-share-type-measured-rather-than-guessed) | 2026-09-30 |
@@ -5962,3 +5962,44 @@ is refreshed (L1c, RU-18, RU-07A′, importer ctx-flag + `—` lint, compact mon
 matrix) and §9 grew to nine pending rulings. The 61 files are deliberately NOT copied into main –
 the living editorial source merges once, with L1b. **Nothing is launched: the L-waves wait on his
 approve and the §9 answers.**
+
+## 07.10.2026 – LOCALIZATION: THE NINE QUESTIONS RULED, PLUS THREE ORDERS – THE STACK LANDS WITH THE INTAKE
+
+The §9 batch, answered in one pass (review 15 §6):
+**1 – the importer contract stands**, with a scale order: «вопрос в количестве "щелкаешь", если мы
+о тысячах записей говорим, то наверное надо что-то придумать» – the LANDED flip is mechanised
+(an importer write-back mode flips APPROVED→LANDED for rows proven live; running it stays his
+act), never a thousand hand edits. **2 – ctx by note column** (the recommendation). **3 – the
+legacy migration goes ahead** («если недорого и можем сделай, то давай миграцию, да. Лишь бы
+работало»), with his ruled plan-B on record: «надо фолбек сделать "продолжить или начать заново"»
+– if the measured unmatched remainder disappoints, the fallback dialog replaces the promise, and
+old saves are explicitly not today's priority. **4 – the switcher lives in More by the save, AND
+the first launch asks first**: «на первом экране надо предлагать сразу выбор языка, может даже до
+всего остального для первого входа» – a first-run locale prompt enters L1a's scope, strings as
+DRAFT rows. **5 – generated proper nouns are not translated at all** («Я бы вообще не стал
+переводить»): venues, clubs, rivals, brands stay Latin in RU mode; existing translated name rows
+in the tables revert to source. **6 + 8 – money and numbers stay one form everywhere** («я бы
+доллары оставил и не заморачивался», «я бы оставил везде одно, как с именами собственными»):
+`$12,500.40` and `$40.6M` are locale-invariant by ruling; RU-13D narrows to dates, week labels
+and countries. **7 – superseded by his own closing order**: the merge-with-L1b recommendation
+fell to «всё в intake пойдет» – the editorial stack lands in main WITH THIS INTAKE BRANCH, the
+codex branch closes after content-containment is verified, and future batches arrive as PRs
+(«главное всё в документации отразить, чтобы ничего не потерялось»). **9a – `Raise another` is
+«Новая история»** (his own wording, replacing both drafted options). **9b – the three family
+labels stand** (Обеспеченная семья / Средний достаток / Скромный бюджет). **9c – the store
+description is deferred to L4** with a proposal owed («предложи что-то, но если не критично, то
+можно отложить»). **9d – the short year stands** («а чем плох короткий год?»). **9e – the cold
+register stays in the cold band only** («я бы холод оставил в cold-полосе если это возможно») –
+the warm rows that leaked the chill go to his editorial re-read.
+
+The three orders: **№10 – the parent speaks as the FAMILY, «мы», everywhere**: «здесь и в
+остальных местах мы говорим от лица "семьи", т.е. "мы купили", "мы видели", "мы гордимся", "мы
+не разобрали" и т.д. надо всё везде проверить и переписать» – a ruled-formula conversion of
+every gendered parent-«я» cell (the album corpus's «parent is male» design note dies; `the-line`
+stays the lawful exception – the previous heroine's mother), delivered as DRAFT with a full
+before→after table for his read. This is the one ruled exception to «no agent writes Russian»:
+a formula he gave, with examples, every change listed. **№11 – the rounds-47/48 drift is fixed
+now** («работа шла параллельно, надо актуализировать»): RU-18 applied in this branch. **№12 –
+`EXPOSURE_ROW` is fixed unconditionally** («и это тоже чиним безусловно»): the dedup moves to
+`lifeKind`, byte-identical worlds. Launch of L1a/L1b stays on his word: «после мержа будем
+стартовать по моей команде».
