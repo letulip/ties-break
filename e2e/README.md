@@ -3,6 +3,12 @@
 Playwright over a **real production build** in **real Chromium**. S0–S2 of
 `docs/plans/playwright.md` – the harness, the state-seeding fixture and the journeys.
 
+⚠ SINCE L1a (08.10) EVERY FRESH CONTEXT MUST CARRY `tb-locale`, or the first-run language prompt
+stands in front of the splash and every journey stops at it. `playwright.config.ts` seeds it via
+`use.storageState` for both origins and `careerAt.ts` re-seeds after its `localStorage.clear()`;
+a spec that asserts an EMPTY localStorage will see the key. Any out-of-repo Playwright config
+(the devlog tooling among them) must seed the same key itself.
+
 **👉 What is covered, at which layer, and what is deliberately not:
 [`docs/specs/e2e-coverage.md`](../docs/specs/e2e-coverage.md).** That document is the map, and
 `coverage-map.spec.ts` in this directory keeps it honest against the repo.
