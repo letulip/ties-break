@@ -14,7 +14,7 @@
 //      The numbers print.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
-import { mount, type VueWrapper } from '@vue/test-utils'
+import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -596,7 +596,7 @@ function mountTrophies(snapshot: Snapshot = golden): VueWrapper {
 }
 /** The two-digit year the cabinet prints for a career week (`seasonYear(floor(week / 52))` – the season's display year, never the calendar one). */
 const yy = (week: number): string => String(seasonYear(Math.floor(week / 52), golden.startYear) % 100).padStart(2, '0')
-const cellOf = (w: VueWrapper, tier: string, metal: 'gold' | 'silver'): ReturnType<VueWrapper['get']> => {
+const cellOf = (w: VueWrapper, tier: string, metal: 'gold' | 'silver'): DOMWrapper<Element> => {
   const index = TIER_LADDER.indexOf(tier as (typeof TIER_LADDER)[number])
   return w.findAll('.trophy-shelf')[index]!.findAll('.trophy-cell')[metal === 'gold' ? 0 : 1]!
 }
@@ -794,7 +794,7 @@ describe('L2-7b seams – the cabinet and the chrome follow the locale without a
 describe('L2-7b context tag – album|Back to Home (measured against every batch table)', () => {
   it('is a wired key that renders the bare English, and the album asks for it, never the two other Back-to-Home keys', async () => {
     // THREE Russians for one English: Home's tournament-only control (RU-03 and the shell say one), the profile and the money screen (RU-05 and RU-06 agree on a second,
-    // `screen|Back to Home`) and the album (RU-07 §17 says a third). The album takes its own tag; the owner's alignment pass may fold them – it is listed for his читка.
+    // `screen|Back to Home`) and the album (RU-07 §17 says a third). The album takes its own tag; the owner's alignment pass may fold them – it is listed for his read-through.
     expect(CATALOG.keys['album|Back to Home']?.wrapped).toBe(true)
     expect(t('album|Back to Home')).toBe('Back to Home')
     installCatalog('ru', { 'album|Back to Home': 'ALBUM-BACK*', 'screen|Back to Home': 'SCREEN*', 'Back to Home': 'BARE*' })
