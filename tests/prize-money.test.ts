@@ -20,7 +20,7 @@ import type { FamilyBackground } from '../src/shared/protocol'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
 import { firstRoundValue } from './openerValue'
-import { region } from './helpers/source'
+import { region, tTransparent } from './helpers/source'
 
 // =================================================================================================
 // A2 — PRIZE MONEY (task #17, docs/specs/adult-tour-and-endings.md §3).
@@ -435,7 +435,8 @@ function playOneAdultEvent(seed: string, background: FamilyBackground): AdultRun
 // must not become a second one) and the app's one money formatter.
 // =================================================================================================
 describe('the tournament facts row prints the cheque where one exists, the dash where none does', () => {
-  const flow = readFileSync(new URL('../src/components/TournamentFlow.vue', import.meta.url), 'utf8')
+  // ⚠ L2-4 (08.10): READ THROUGH `tTransparent` – the screen's words are `t()` calls now and this pin asserts the words, not the wrapper.
+  const flow = tTransparent(readFileSync(new URL('../src/components/TournamentFlow.vue', import.meta.url), 'utf8'))
   const template = /<template>([\s\S]*)<\/template>/.exec(flow)?.[1] ?? ''
   const facts = region(template, 'class="tf-facts"', 'class="tf-first"')
 

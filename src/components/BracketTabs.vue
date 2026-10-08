@@ -21,6 +21,7 @@
 // date line above the tabs (they belong to whichever screen mounts this).
 import { computed, nextTick, ref, watch } from 'vue'
 import { KID_ID } from '../engine/world'
+import { t } from '../i18n'
 // U0: the round switcher is the app's standard segmented control, and this file was its ONE
 // consumer – the pair `.tab-row` / `.tab-pill` had been "shared once" and never got a component.
 // docs/specs/ui-components.md §8 says this makes it official, so the draw is SegmentedRow's real
@@ -48,10 +49,14 @@ const SET_COLS = 3
 /** Short stage label of a round in a draw of `drawSize`: 2→F, 4→SF, 8→QF, else R{remaining}. */
 function shortStage(round: number, drawSize: number): string {
   const remaining = drawSize / 2 ** round
-  if (remaining === 2) return 'F'
-  if (remaining === 4) return 'SF'
-  if (remaining === 8) return 'QF'
-  return `R${remaining}`
+  if (remaining === 2) return t('stage|F')
+  if (remaining === 4) return t('stage|SF')
+  if (remaining === 8) return t('stage|QF')
+  if (remaining === 16) return t('stage|R16')
+  if (remaining === 32) return t('stage|R32')
+  if (remaining === 64) return t('stage|R64')
+  if (remaining === 128) return t('stage|R128')
+  return t('stage|R{0}', [remaining])
 }
 
 interface RoundTab {
@@ -155,7 +160,7 @@ const pairs = computed<BracketCell[][]>(() => {
 
 // --- SCREEN K: the Final ------------------------------------------------------------------------
 // One match, and it is the only screen in the draw that is about a moment rather than a list.
-const isFinal = computed(() => cells.value.length === 1 && shortStage(selected.value, props.drawSize) === 'F')
+const isFinal = computed(() => cells.value.length === 1 && props.drawSize / 2 ** selected.value === 2)
 
 /** Who each finalist beat to get here, in the finalists' own order - read off the semifinal
  *  matches already in `matches`, so nothing new has to reach the snapshot for this line to exist. */
@@ -233,19 +238,19 @@ watch(
       class="bt-tabs"
       tone="on-panel"
       :options="segments"
-      group-label="Draw rounds"
+      :group-label="t('Draw rounds')"
     />
 
     <!-- SCREEN K – the Final. Not a list of one: the trophy, the label, the single card in the
          accent frame, and the semifinal line under a pair of hairlines. -->
     <div v-if="isFinal" class="bt-final">
       <div class="bt-final-cup" aria-hidden="true">🏆</div>
-      <p class="bt-final-label">The Final</p>
+      <p class="bt-final-label">{{ t('The Final') }}</p>
       <div
         class="bt-cell bt-cell--final"
         :class="{ 'is-kid': cells[0].isKidMatch }"
         role="group"
-        :aria-label="`The final – ${cells[0].a.name} vs ${cells[0].b.name}`"
+        :aria-label="t('The final – {0} vs {1}', [cells[0].a.name, cells[0].b.name])"
       >
         <div v-for="(side, si) in [cells[0].a, cells[0].b]" :key="si" class="bt-final-row">
           <span class="bt-row" :class="{ won: side.won, kid: side.isKid }">
@@ -259,7 +264,7 @@ watch(
       </div>
       <p v-if="semifinalVictims.length" class="bt-final-semis">
         <span class="bt-final-semis-text">
-          Semifinals: <span v-for="(name, i) in semifinalVictims" :key="i">{{ i ? ' · ' : '' }}def. {{ name }}</span>
+          {{ t('Semifinals:') }} <span v-for="(name, i) in semifinalVictims" :key="i">{{ i ? ' · ' : '' }}{{ t('def. {0}', [name]) }}</span>
         </span>
       </p>
     </div>
@@ -276,7 +281,7 @@ watch(
               :class="{ 'is-kid': cell.isKidMatch }"
               :style="{ height: CELL_H + 'px' }"
               role="group"
-              :aria-label="cell.isKidMatch ? `Her match – ${cell.a.name} vs ${cell.b.name}` : undefined"
+              :aria-label="cell.isKidMatch ? t('Her match – {0} vs {1}', [cell.a.name, cell.b.name]) : undefined"
             >
               <div class="bt-players">
                 <span

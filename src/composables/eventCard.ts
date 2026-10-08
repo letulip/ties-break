@@ -206,6 +206,12 @@ export function courtSentence(style: PlayStyleOf, surface: Surface): string | nu
   return affinity === 'suits' ? t('The court suits her game.') : t('The court not her surface.')
 }
 
+/** `#12` / `Unranked` – `rankLabel`'s two shapes (shared/format.ts, engine-importable, so it cannot call `t()`) read through the catalog, as the
+ *  Home chip does since L2-3. `null` is «no rank»; `rankLabel(n, true)` and `#{rank}` are the same characters. */
+export function rankText(rank: number | null): string {
+  return rank === null ? t('Unranked') : t('#{rank}', { rank })
+}
+
 export function useEventCard(): {
   venueUrl: (e: PaintableEvent) => string
   surfaceVerdict: (surface: Surface) => string | null

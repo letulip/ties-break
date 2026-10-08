@@ -41,7 +41,7 @@ import type { TierId } from '../src/engine/season/types'
 // QUOTING. `art/trophies.ts` says in a comment why there is no 'bronze'; the finale's script says
 // what the emoji it replaced used to be. A ban that reads the comments fires on its own
 // documentation, and the only way to satisfy it would be to delete the reasoning.
-import { codeOf, region, regionToLast } from './helpers/source'
+import { codeOf, region, regionToLast, tTransparent } from './helpers/source'
 import { describeReaches, importsOf, isWorldBarrel, isWorldPackage, WORLD_PACKAGE } from './helpers/engineImports'
 // ⚠ WAVE B (07.09) – THE SHELL'S LOGIC IS TWO FILES NOW. `App.vue`'s four tab "seen" marks, their
 // watchers and their dot computeds moved to `composables/tabSeen.ts` (U-04), so every POSITIVE claim
@@ -428,6 +428,7 @@ describe('the copy rules hold on the markup this slice wrote', () => {
       expect(block).not.toContain('—')
     }
     // ...and the player-facing words on the two posters are unchanged and still short-dashed.
-    expect(template).toContain(`{{ pending.kidChampion ? 'Champion' : 'Runner-up' }}`)
+    // ⚠ L2-4 (08.10): the template is READ THROUGH `tTransparent` – the two status words are `t()` calls now and this pin asserts the words.
+    expect(tTransparent(template)).toContain(`{{ pending.kidChampion ? 'Champion' : 'Runner-up' }}`)
   })
 })

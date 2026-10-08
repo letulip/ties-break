@@ -168,7 +168,9 @@ const playIconStyle = {
 // into three files and whose hues are not the `--surface-*` tokens the ring uses, so the same clay
 // court was one orange here and a different orange there. `affinity` and `fit` moved to the coach's
 // plaque a wave ago and are read there directly. What is left is the one thing the card asks for.
-/** The engine's hint MINUS its surface-name prefix. `surfaceStyleHint` writes "Grass – suits her
+/** ⚠ L2-4 (08.10): `surfaceFit` IS GONE – the coach's court sentence is `courtRead` (composables/eventCard.ts), worded from the engine's affinity and
+ *  never cut at an English dash. What follows is the record of why the slice existed.
+ *  The engine's hint MINUS its surface-name prefix. `surfaceStyleHint` writes "Grass – suits her
  *  game"; the pill already says "grass", so only the tail belongs under it. Sliced off the engine's
  *  own string rather than re-written from the affinity, so the two can never word it differently. */
 /** The engine's whole sentence, surface name included, for the mark's title. Falls back to the bare,
