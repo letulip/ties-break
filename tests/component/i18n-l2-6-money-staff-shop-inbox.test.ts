@@ -32,9 +32,17 @@ import { SPARRING_LOCKED_DETAIL } from '../../src/engine/world/sparring'
 import { formatShortName } from '../../src/shared/format'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 import { installCatalog, missCount, missedKeys, resetI18nForTests, resetMisses, setLocale, t } from '../../src/i18n'
-import { careerSnapshot } from '../helpers/career'
+import { careerSnapshot, walkWeeks } from '../helpers/career'
+import { createWorld, toSnapshot } from '../../src/engine/world'
+import { rngFromSeed } from '../../src/engine/rng'
+import OfferLetter from '../../src/components/OfferLetter.vue'
+import { SALE_LABELS } from '../../src/composables/shop'
+import { SALE_SENDER } from '../../src/composables/saleLetter'
+import type { Offer } from '../../src/shared/protocol'
+import { SHELF_TAB_LABELS, openShelfTab, shelfRow } from './shelf'
+import { mountInbox, withPost } from './inbox'
 import { installMemoryStorage } from './setup'
-import { PHONE, availableWidth, demandedWidth, setViewport } from './fits'
+import { PHONE, assertDismissReachable, availableWidth, demandedWidth, setViewport } from './fits'
 import { DEFAULT_ALLOW, hardcodeLeaks, installPseudoLocale } from './pseudoloc'
 
 /** His approved Russian, as the importer compiled it. Every Russian expectation below is read from here by key. */
@@ -750,5 +758,371 @@ describe('L2-6 xx sweep – no unwrapped literal in the frames, and the phone st
       expect(x.r.word.r, `${x.label}: the word «${x.r.word.at}» overflows its box under xx`).toBeLessThanOrEqual(1)
     }
     expect(xx.every((x, i) => x.r.chars > english[i]!.r.chars), 'xx made a surface no longer – the measurement did not see the words').toBe(true)
+  })
+
+  it('an open OfferLetter shell – the foot with its window line and two doors – holds a 375x667 phone with every word longer; the longest sign question still reaches its dismiss (numbers printed)', async () => {
+    const measure = (): { label: string; r: ReturnType<typeof widest> }[] => {
+      setViewport(PHONE)
+      const offer = openCampaign()
+      const w = mount(OfferLetter, { props: { offer, week: 40, offers: [offer] }, attachTo: document.body })
+      const foot = w.findAll('.offer-foot')[0]
+      expect(foot, 'the open letter has a foot').toBeTruthy()
+      const out = [{ label: 'the open letter\'s foot (window line + Refuse / Sign)', r: widest(foot!.element) }]
+      w.unmount()
+      return out
+    }
+    const english = measure()
+    resetI18nForTests(null)
+    await installPseudoLocale()
+    const xx = measure()
+    const pct = (r: number): string => `${(r * 100).toFixed(0)}%`
+    console.log(
+      '[L2-6 xx] 375x667, share of the box\'s room, English -> xx: ' +
+        english
+          .map((e, i) => {
+            const x = xx[i]!
+            return `${e.label}: ${e.r.boxes} text boxes, ${e.r.chars} -> ${x.r.chars} chars; widest line ${pct(e.r.line.r)} («${e.r.line.at}») -> ${pct(x.r.line.r)} («${x.r.line.at}»); longest word ${pct(e.r.word.r)} («${e.r.word.at}») -> ${pct(x.r.word.r)} («${x.r.word.at}»)`
+          })
+          .join(' · '),
+    )
+    for (const x of xx) {
+      expect(x.r.line.r, `${x.label}: «${x.r.line.at}» cannot wrap and overflows its box under xx`).toBeLessThanOrEqual(1)
+      expect(x.r.word.r, `${x.label}: the word «${x.r.word.at}» overflows its box under xx`).toBeLessThanOrEqual(1)
+    }
+    expect(xx.every((x, i) => x.r.chars > english[i]!.r.chars), 'xx made a surface no longer – the measurement did not see the words').toBe(true)
+    // CLAUDE.md's popup rule, on the longest question this wave wired: the sign question of a four-year campaign, opened from the inbox, under xx
+    const offer = openCampaign()
+    setViewport(PHONE)
+    const sheet = await mountInbox(withPost(coached, [offer], 40), { attachTo: document.body }, [offer])
+    await sheet.get('.inbox-open').trigger('click')
+    await sheet.get('.offer-sign').trigger('click')
+    const fit = assertDismissReachable(document.querySelector('.dialog-overlay .dialog-card')!, document.querySelector('.dialog-overlay .dialog-actions')!, PHONE, 'InboxSheet sign question under xx')
+    console.log(`[L2-6 xx] the four-year campaign's sign question under xx: card ${fit.cardWidth.toFixed(0)}x${fit.cardHeight.toFixed(0)}, ${fit.shape}, dismiss ${fit.dismissTop.toFixed(0)}..${fit.dismissBottom.toFixed(0)} of ${PHONE.height}`)
+    sheet.unmount()
+  })
+})
+
+
+// =================================================================================================================
+// L2-6b – THE SHOP, THE SPONSORS' LETTER SHELL AND THE INBOX
+// =================================================================================================================
+
+/** A professional career with a full purse: the shelf is open and every rung is reachable (`shop-tab.test.ts`'s recipe). */
+let shopSnap: Snapshot
+const shopFixture = (): Snapshot => {
+  if (shopSnap) return shopSnap
+  const world = createWorld('l26-shop')
+  walkWeeks(world, rngFromSeed(world.seed), 20)
+  world.bestFinishByTier.wta250 = 3
+  shopSnap = toSnapshot(world)
+  shopSnap.fundsCents = 60_000_000_00
+  return shopSnap
+}
+async function mountShop(snapshot: Snapshot = shopFixture()): Promise<VueWrapper> {
+  const w = mountMoney(snapshot)
+  await press(w, 'Shop')
+  return w
+}
+
+/** The two letters whose terms are short enough to pose by hand – a tournament desk notice and an academy scholarship – and an OPEN clothing campaign. */
+function entryLetter(): Offer {
+  return { id: 'l26-entry', kind: 'entry', week: 30, deadlineWeek: 30, state: 'info', terms: { kind: 'entry', tier: 'wta250', label: 'Harbour Open', eventWeek: 34, freeUntilWeek: 32 } } as unknown as Offer
+}
+function academyLetter(): Offer {
+  return { id: 'l26-academy', kind: 'academy', week: 31, deadlineWeek: 31, state: 'info', terms: { kind: 'academy', notice: 'arrived', sharePct: 25, grantCents: 1_000_00, sinceWeek: 31 } } as unknown as Offer
+}
+function openCampaign(): Offer {
+  return {
+    id: 'l26-ad', kind: 'ad', week: 40, deadlineWeek: 43, state: 'open',
+    terms: { kind: 'ad', category: 'clothing', brand: 'Orla', trade: 'We make her kit', cashCents: 100_000_00, termYears: 4, termWeeks: 4 * 52, shootCount: 1 },
+  } as unknown as Offer
+}
+
+describe('L2-6b parity – the shop, the inbox and the letter shell, with no catalog', () => {
+  it('the shop home: the plate, its note, the cheapest rung and the six cards with their hovers', async () => {
+    const w = await mountShop()
+    const text = flat(w.text())
+    expect(text).toContain('The shelf')
+    expect(text).toContain("This is the family's own money, and none of it is hers. Nothing here makes her better, faster or fitter - it is what the money becomes once the tennis has stopped needing it.")
+    expect(text).toMatch(/You own nothing yet\. The cheapest thing here is .+, from \$[\d,.]+\./)
+    // the six cards are the six segments' words with the segments' own hovers (`SHELF_CATEGORY_CARDS` reads them out of `SHELF_TAB_OPTIONS`)
+    const HOVER = new Map([
+      ['Invest', 'Money that stays money'], ['Business', 'What the family owns that earns – the academy included'], ['Cars', 'The garage'],
+      ['Property', 'Somewhere to live'], ['Water', 'Boats, ordered rather than bought'], ['Air', 'The family aeroplane'],
+    ])
+    const cards = w.findAll('.shelf-cat').map((n) => [n.text().trim(), n.attributes('title')] as const)
+    expect(new Map(cards)).toEqual(HOVER)
+    expect([...SHELF_TAB_LABELS].sort()).toEqual([...HOVER.keys()].sort())
+    w.unmount()
+  })
+
+  it('the shelf: every family head and note, the rate lines, the controls, the build wait and the stake words', async () => {
+    const w = await mountShop()
+    const HEADS = new Map([
+      ['Invest', ['Investments', 'Money that stays money. Each one names a minimum, not a price – put in what you like above it.']],
+      ['Cars', ['Cars', 'Every one of these is worth less next season than it is today. That is what a car is.']],
+      ['Property', ['Property', 'Slow, large, and the end of paying somebody else rent.']],
+      ['Business', ['The business', 'The first thing on this shelf that earns. What it brings in follows how known she is – the shoots and the titles – not her ranking.']],
+      ['Water', ['On the water', 'Ordered, not bought – the money goes now and the boat comes years later. Every one of them costs a wage a week to keep.']],
+      ['Air', ['In the air', 'The family aeroplane. It takes half the fare off every trip to a tournament, and it is kept the way an aeroplane is kept.']],
+    ])
+    const rates = /^(Gains about \d+% a season|Neither gains nor loses|Loses \d+% a season|Worth [\d.]+ years of what it sells)$/
+    for (const [tab, [head, note]] of HEADS) {
+      await openShelfTab(w, tab)
+      const heads = w.findAll('.shop-family-head').map((n) => n.text())
+      expect(heads, tab).toContain(head)
+      expect(w.findAll('.shop-family-note').map((n) => n.text()), tab).toContain(note)
+      expect(w.findAll('.shop-row-rate').every((n) => rates.test(flat(n.text()))), `${tab}: every rate line is one of the four English shapes`).toBe(true)
+      expect(w.findAll('.shop-action').every((n) => ['Put it in', 'Buy it', 'Order it'].includes(n.text().trim())), `${tab}: the controls`).toBe(true)
+    }
+    await openShelfTab(w, 'Invest')
+    expect(w.text()).toMatch(/One unit is \$[\d,.]+ this week/)
+    expect(w.text()).toMatch(/How much, from \$[\d,.]+/)
+    await openShelfTab(w, 'Water')
+    expect(w.findAll('.shop-row-wait').map((n) => flat(n.text())).some((s) => /^Built to order – about (\d+ months|\d+ years|\d+ weeks?) from the week it is ordered\.$/.test(s))).toBe(true)
+    expect(w.findAll('.shop-row-upkeep').every((n) => /^\$[\d,.]+ a week to keep$/.test(flat(n.text())))).toBe(true)
+    w.unmount()
+  })
+
+  it('the shelf questions: a car is bought, a boat is ordered with its keep, and the order of the words is the old one', async () => {
+    const w = await mountShop()
+    await (await shelfRow(w, 'The sensible estate')).find('.shop-action').trigger('click')
+    expect(flat(w.get('.dialog-card').text())).toContain("Buy The sensible estate for $60,000? It comes out of the family's money this week.")
+    w.unmount()
+    const boat = await mountShop()
+    await openShelfTab(boat, 'Water')
+    await boat.findAll('.shop-row')[0]!.find('.shop-action').trigger('click')
+    expect(flat(boat.get('.dialog-card').text())).toMatch(/^Order .+ for \$[\d,.]+\? The money goes this week and it arrives in \d+ weeks\. It then costs \$[\d,.]+ a week to keep\./)
+    boat.unmount()
+  })
+
+  it('the secondary market words: List, Sell now, Keep it, Withdraw and the two senders are the English the table drafted', () => {
+    expect(SALE_LABELS.list).toBe('List')
+    expect(SALE_LABELS.sellNow).toBe('Sell now')
+    expect(SALE_LABELS.keep).toBe('Keep it')
+    expect(SALE_LABELS.withdraw).toBe('Withdraw')
+    expect(SALE_SENDER.buyer).toBe('A buyer')
+    expect(SALE_SENDER.market).toBe('The market')
+  })
+
+  it('the inbox: the empty states, the title and the way out', async () => {
+    const base = coached
+    const none = await mountInbox(withPost(base, []), {}, [])
+    expect(flat(none.text())).toContain('Nothing yet. Sponsors write to players they have been watching for a season.')
+    expect(seen(none.element)).toContain('Close')
+    expect(none.html()).toContain('Inbox')
+    none.unmount()
+  })
+
+  it('the inbox: senders, subjects, the filed line and the sign-offs of a tournament notice and a scholarship', async () => {
+    const post = [entryLetter(), academyLetter()]
+    const w = await mountInbox(withPost(coached, post, 32), {}, post)
+    expect(w.findAll('.inbox-from').map((n) => n.text()).sort()).toEqual(['The academy', 'Tournament desk'])
+    expect(w.findAll('.inbox-subject').map((n) => n.text()).sort()).toEqual(['A scholarship – 25% of her travel', 'Entry confirmed – Harbour Open'])
+    for (const [letter, who] of [[0, 'Tournament desk'], [1, 'The academy']] as const) {
+      const row = w.findAll('.inbox-row').find((r) => r.text().includes(who))!
+      await row.get('.inbox-open').trigger('click')
+      const paper = flat(w.get('.offer-letter').text())
+      expect(paper, String(letter)).toContain(`– ${who}`)
+      expect(paper, String(letter)).toMatch(/Filed W\d+ ['’]\d\d\./)
+      expect(w.findAll('button[aria-label="Back to all letters"]').length).toBe(1)
+      await w.get('button[aria-label="Back to all letters"]').trigger('click')
+    }
+    w.unmount()
+  })
+
+  it('an open campaign: the window in its singular and plural, the doors, the sign question and the bin question', async () => {
+    for (const [week, shape] of [[43, /^1 week to decide\. The terms will not change\./], [40, /^4 weeks to decide\. The terms will not change\./]] as const) {
+      const offer = openCampaign()
+      const w = mount(OfferLetter, { props: { offer, week, offers: [offer] }, attachTo: document.body })
+      expect(flat(w.get('.offer-window').text()), `week ${week}`).toMatch(shape)
+      expect(w.findAll('.offer-actions button').map((b) => b.text())).toEqual(['Refuse', 'Sign'])
+      expect(flat(w.get('.offer-sign-off').text())).toBe('– Orla')
+      w.unmount()
+    }
+    const offer = openCampaign()
+    const sheet = await mountInbox(withPost(coached, [offer], 40), { global: { stubs: { teleport: true } } }, [offer])
+    expect(sheet.findAll('.inbox-waiting').map((n) => n.text())).toEqual(['Needs an answer'])
+    expect(sheet.findAll('.inbox-subject').map((n) => n.text())).toEqual(['Her face in a campaign – $100,000'])
+    expect(sheet.findAll('.inbox-meta').map((n) => flat(n.text()))[0]).toMatch(/^W\d+ ['’]\d\d · 4 weeks to decide$/)
+    await sheet.get('.inbox-open').trigger('click')
+    await sheet.get('.offer-sign').trigger('click')
+    expect(flat(sheet.get('.dialog-card').text())).toMatch(/^Sign with Orla\? \$100,000 a year for 4 years – the first year's fee paid to her now, the rest on each anniversary – her face in their campaign to /)
+    sheet.unmount()
+  })
+})
+
+describe('L2-6b completeness and seams', () => {
+  const FILES = ['src/components/ShopPanel.vue', 'src/composables/shop.ts', 'src/composables/saleLetter.ts', 'src/components/InboxSheet.vue']
+  it('no CERTAIN string homed in the shop, the sender words or the inbox sheet is left unwrapped', () => {
+    const open = Object.entries(CATALOG.keys).filter(([, v]) => v.home.some((h) => FILES.includes(h)) && !v.wrapped).map(([k]) => k)
+    expect(open).toEqual([])
+  })
+
+  it('the sites this wave names call t(): the shelf words, the sentences with holes, the sender words and the inbox chrome', () => {
+    const SITES: [string, string[]][] = [
+      ['src/composables/shop.ts', ['List', 'Sell now', 'Keep it', 'listing|Withdraw', 'Investments', 'Cars', 'Property', 'The business', 'On the water', 'In the air', 'Her academy', 'Invest', 'Business', 'Water', 'Air',
+        'Money that stays money', 'The garage', 'Somewhere to live', 'Boats, ordered rather than bought', 'The family aeroplane', '{0}% built – ready {1}',
+        'Built to order – about 1 week from the week it is ordered.', 'Built to order – about {0} weeks from the week it is ordered.', 'Built to order – about {0} months from the week it is ordered.',
+        'Built to order – about {0} years from the week it is ordered.', 'Worth {0} years of what it sells', 'Loses {0}% a season', 'Neither gains nor loses', 'Gains about {0}% a season',
+        '{0} months', '1 year', '{0} years', 'Bought in {0}, {1}', 'Not enough months to draw yet', 'One unit, monthly, from {0} to {1}: {2} to {3}', 'Amount, from {0}',
+        'Amount, from {0} – leave it blank to sell all {1}', "Put a further {0} into {1}? It comes out of the family's money this week.", 'It then costs {0} a week to keep.',
+        'Order {0} for {1}? The money goes this week and it arrives in {2} weeks.', "Buy {0} for {1}? It comes out of the family's money this week.", 'exactly what it cost', '{0} less than it cost',
+        '{0} more than it cost', 'Take {0} out of {1}? That part is {2}, and the rest stays invested.', 'Sell {0} for {1}? That is {2}.', 'It may take {0} weeks or more to sell – there may be no buyer at all.',
+        'It may take {0} to {1} weeks to sell.', 'Offers may range from {0} to {1}.', 'Selling now pays {0}, at once.', 'Few buyers can pay this much – it may not sell at all.',
+        'The academy sells as one lot – every stage goes together, not the courts alone.', 'Interest has gone quiet · 1 week on the market', 'Interest has gone quiet · {0} weeks on the market',
+        'On the market · 1 week', 'On the market · {0} weeks', 'paid {0}']],
+      ['src/composables/saleLetter.ts', ['A buyer', 'The market']],
+      ['src/components/ShopPanel.vue', ['The shelf', "This is the family's own money, and none of it is hers. Nothing here makes her better, faster or fitter - it is what the money becomes once the tennis has stopped needing it.",
+        'You own nothing yet. The cheapest thing here is {0}, from {1}.', 'What you own', '1 thing', '{0} things', 'Which part of the shelf',
+        "She takes {0}% of what these earn; the figures below are the family's {1}%. A holding's worth is the whole business.", 'How far back the chart goes', '{0} units at {1} each',
+        'One month of prices so far &ndash; the chart starts next month.'.replace('&ndash;', '–'), '{0} a week to keep', 'Brings in {0} a week right now', '{0} has to come first.', 'On order',
+        'It cannot be sold before it is delivered, and it costs nothing to keep until then.', 'Worth now', '{0} units – bought at {1} each, {2} now', 'Trading as {0}', 'since you bought it ({0}%)',
+        'since you bought it', 'Add more', 'Sell', 'One unit is {0} this week', 'How much, from {0}', 'What is it called', 'or type your own', 'What it is called', 'Put it in', 'Order it', 'Buy it']],
+      ['src/components/InboxSheet.vue', ['Inbox', 'Close', 'Back to all letters', 'Nothing yet. Sponsors write to players they have been watching for a season.',
+        'Your inbox is clear. Everything you took off the list is still in her history.', 'Nothing waiting on an answer.', 'Needs an answer', 'Delete the letter: {0} – {1}', 'Sign it', 'Delete', 'Keep it',
+        'Tournament desk', 'Tour office', 'The academy', 'Her coach', 'Her masseur', 'Her psychologist', 'Her hitting partner', 'Her national federation', 'Order desk',
+        'Entry confirmed – {0}', 'Withdrawn by the desk – {0}', 'Withdrawal confirmed – {0}', 'Required event – {0}', 'Penalty points recorded', 'Required season – the top {0}', 'Required season',
+        'Entries suspended', 'A scholarship – {0}% of her travel', 'The scholarship has ended', 'Scholarship review – {0}% of her travel', 'Named in the squad – {0}, {1}', 'Her face in a campaign – {0}',
+        '{0} is ready', 'Interest in {0} has gone quiet', '{0} – an offer of {1}', 'A raise request – {0}', 'The season on court – {0}', 'The season on the table – {0}', "The season's work in the room – {0}",
+        "The season's practice – {0}", 'The kit deal has ended', 'Renewing her kit with us', 'Another year in our kit', 'A kit deal for your daughter', '{0} · 1 week to decide', '{0} · {1} weeks to decide',
+        'Take this letter from {0} off your list? Nothing that happened is undone – it stays in her history, it just stops showing here.',
+        'Accept the raise? The rate goes from {0} to {1} {2}. This cannot be undone.', 'Sell {0} for {1}? The sale settles this week and cannot be undone.',
+        'Sign with {0}? {1} a year, paid to her every year for life – no shoot weeks, no end date. This cannot be undone.', 'A one-time fee of {0}, paid to her now',
+        "{0} a year for {1} years – the first year's fee paid to her now, the rest on each anniversary", ', with her shoot weeks on {0}{1} – working weeks, less rest in them', 'and {0} more across the term',
+        'Sign with {0}? {1} – her face in their campaign to {2}{3}. This cannot be undone.', 'a season', '{0} seasons', 'Signing ends her campaign with {0} – {1} of fees still to come on it.',
+        'Signing ends her campaign with {0}. Every fee it owed her is already banked and stays hers.',
+        'Sign with {0}? They cover her {1} for {2} – up to {3}, to {4} – and she must enter at least {5} tournaments a season.{6} This cannot be undone.']],
+      ['src/components/OfferLetter.vue', ['– Tournament desk', '– Tour office', '– The academy', '– Her national federation', '– Order desk', '– Her coach', '– Her masseur', '– Her psychologist', '– Her hitting partner',
+        'Filed {0}.', '1 week to decide. The terms will not change.', '{0} weeks to decide. The terms will not change.', 'Refuse', 'Sign', 'Decline', 'Accept']],
+    ]
+    const unwired: string[] = []
+    const absent: string[] = []
+    for (const [file, keys] of SITES) {
+      const source = SRC(file)
+      for (const key of keys) {
+        if (!CATALOG.keys[key]?.wrapped) unwired.push(`${file}: ${key}`)
+        const literal = key.replaceAll("'", "\\'")
+        if (!source.includes(`'${literal}'`) && !source.includes(`"${key}"`) && !source.includes(`\`${key}\``)) absent.push(`${file}: ${key}`)
+      }
+    }
+    expect(unwired).toEqual([])
+    expect(absent, 'a key the table names that its own file does not call').toEqual([])
+  })
+
+  it('the shelf tabs, the family heads and the secondary market words are getters: they read the catalog when READ', async () => {
+    installCatalog('ru', { Invest: 'INVEST*', 'Money that stays money': 'MTSM*', Investments: 'FAMILY*', 'Put it in': 'PUT*', 'listing|Withdraw': 'WD*', 'Sell now': 'NOW*', 'A buyer': 'BUYER*' })
+    await setLocale('ru')
+    expect(SALE_LABELS.withdraw).toBe('WD*')
+    expect(SALE_LABELS.sellNow).toBe('NOW*')
+    expect(SALE_SENDER.buyer).toBe('BUYER*')
+    const w = await mountShop()
+    expect(w.findAll('.shelf-cat').map((n) => n.text().trim())[0]).toBe('INVEST*')
+    await openShelfTab(w, 'INVEST*')
+    const text = seen(w.element)
+    for (const marker of ['FAMILY*', 'PUT*']) expect(text, marker).toContain(marker)
+    w.unmount()
+  })
+
+  it('the pending counts are counted phrases: one thing, many things; one week, many weeks – each its own whole message', async () => {
+    const src = SRC('src/components/ShopPanel.vue')
+    expect(src).toContain("t('1 thing')")
+    expect(src).toContain("t('{0} things', [shop.ownedCount])")
+    installCatalog('ru', { '{0} weeks to decide. The terms will not change.': 'WIN* {0}', '1 week to decide. The terms will not change.': 'ONE*' })
+    await setLocale('ru')
+    const offer = openCampaign()
+    const w = mount(OfferLetter, { props: { offer, week: 43, offers: [offer] } })
+    expect(w.get('.offer-window').text()).toBe('ONE*')
+    await w.setProps({ week: 40 })
+    expect(w.get('.offer-window').text()).toBe('WIN* 4')
+    w.unmount()
+  })
+})
+
+describe('L2-6b context tag – listing|Withdraw (measured against every batch table)', () => {
+  it('is a wired key that renders the bare English, and the shelf asks for it, never the bare word the tournament withdrawal owns', async () => {
+    expect(CATALOG.keys['listing|Withdraw']?.wrapped).toBe(true)
+    expect(t('listing|Withdraw')).toBe('Withdraw')
+    installCatalog('ru', { 'listing|Withdraw': 'LISTED*', Withdraw: 'BARE*' })
+    await setLocale('ru')
+    expect(SALE_LABELS.withdraw).toBe('LISTED*')
+    expect(Object.values(SALE_LABELS).some((v) => v === 'BARE*')).toBe(false)
+  })
+})
+
+describe('L2-6b Russian smoke – the shop and the inbox from the REAL ru.json', () => {
+  it('every approved row on these surfaces renders his Russian; every unapproved one renders English and is counted', async () => {
+    installCatalog('ru', RU)
+    await setLocale('ru')
+    resetMisses()
+    const shop = await mountShop()
+    const inbox = await mountInbox(withPost(coached, [entryLetter(), academyLetter()], 32), {}, [entryLetter(), academyLetter()])
+    const mounted = [shop, inbox]
+    const everything = mounted.map((m) => seen(m.element)).join('\n')
+    const HERE = /ShopPanel|composables\/shop|saleLetter|InboxSheet|OfferLetter/
+    const wiredHere = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.some((h) => HERE.test(h)))
+    for (const key of wiredHere) expect(everything, `${key} is approved and wired, so his Russian must render`).toContain(RU[key]!)
+    expect(everything).toContain('The shelf')
+    expect(missCount(), 'unapproved rows must be counted as misses').toBeGreaterThan(15)
+    for (const key of ['The shelf', 'Invest', 'Tournament desk']) expect(missedKeys(), key).toContain(key)
+    console.log(`[L2-6b smoke] ru.json: ${Object.keys(RU).length} keys; approved AND wired on these screens: ${wiredHere.length}; distinct misses on two mounted surfaces: ${missedKeys().length}`)
+    mounted.forEach((m) => m.unmount())
+  })
+})
+
+describe('L2-6b xx sweep – the shop, the inbox and the letter shell', () => {
+  const ENGINE_BORN: RegExp[] = [
+    /^W\d+( \d{4}| ['’]\d{2})?$/, /^[−-]?\$[\d,.]+[KMB]?$/, /^[−-]?\$[\d,.]+/, /^\d+(?:\.\d+)?%$/, /^\d+°?$/, /^#\d+$/, /^[\d,]+$/, /^\d+(?:-\d+)*$/, /^[—–-]$/, /^\?$/, /^%$/, /^·$/,
+    // the month axis of a chart («Jan '38») and its price span («$6,688 – $7,147»): `monthLabel` and money, formatters
+    /^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ['’]\d\d$/, /^\$[\d,.]+ – \$[\d,.]+$/,
+    // the units figure the shelf prints in the unit's own spelling («12.5»)
+    /^[\d,.]+$/,
+  ]
+  // the sign-off glue «– » before a brand the letter carries (`– {{ adTerms.brand }}`) is punctuation, not copy
+  const prose = (leak: string): string => leak.replace(/^[\p{Extended_Pictographic}‍️\s]+|[\p{Extended_Pictographic}‍️\s]+$/gu, '').trim().replace(/^– (?=\S)/, '')
+  const corpusOf = (snap: Snapshot, extra: string[] = []): string => [JSON.stringify(snap), ...extra].join('\n')
+  const allow = [...DEFAULT_ALLOW, ...ENGINE_BORN]
+  // a string is the engine's when the snapshot carries it: as part of its prose, or – for the short ones (a two-letter monogram on a naming chip) – as an exact JSON value
+  const leaksOf = (root: Element, corpus: string): string[] =>
+    hardcodeLeaks(root, allow).filter((l) => !((prose(l).length > 2 && corpus.includes(prose(l))) || corpus.includes(JSON.stringify(prose(l)))))
+  /** A letter's SHELL: the foot (the window line, the filed line, the doors) and the sign-off. ⚠ The paper's BODY is the letter's prose – template-authored today, a
+   *  paragraph per section, and by the brief engine-born class-c prose (RU-15's S-rows) that stays raw for L3 – so it is counted below, not swept. */
+  const shellLeaks = (root: Element, corpus: string): string[] => Array.from(root.querySelectorAll('.offer-foot, .offer-sign-off')).flatMap((el) => leaksOf(el, corpus))
+
+  it('the shop home and all six shelves, the inbox list and two letters, and an open campaign: nothing the SCREEN wrote is left unbracketed', async () => {
+    await installPseudoLocale()
+    const results: [string, string[]][] = []
+    const snap = shopFixture()
+    const corpus = corpusOf(snap)
+    const shop = mountMoney(snap)
+    await shop.findAll('.money-tabs button')[3]!.trigger('click') // under xx the chapter words are bracketed: Shop is the fourth
+    results.push(['shop/home', leaksOf(shop.element, corpus)])
+    // under xx the words are bracketed, so the tabs are reached by position: a card opens the first shelf, the segments walk the six
+    await shop.findAll('.shelf-cat')[0]!.trigger('click')
+    for (let i = 0; i < SHELF_TAB_LABELS.length; i++) {
+      await shop.findAll('.shelf-tabs button.tab-pill')[i]!.trigger('click')
+      results.push([`shop/${SHELF_TAB_LABELS[i]}`, leaksOf(shop.element, corpus)])
+    }
+    shop.unmount()
+    const post = [entryLetter(), academyLetter(), openCampaign()]
+    const inboxSnap = withPost(coached, post, 41)
+    const inbox = await mountInbox(inboxSnap, { global: { stubs: { teleport: true } } }, post)
+    const inboxCorpus = corpusOf(inboxSnap, [JSON.stringify(post)])
+    results.push(['inbox/list', leaksOf(inbox.element, inboxCorpus)])
+    const rowCount = inbox.findAll('.inbox-row').length
+    expect(rowCount, 'the three letters are listed').toBe(3)
+    let bodies = 0
+    for (let i = 0; i < rowCount; i++) {
+      await inbox.findAll('.inbox-open')[i]!.trigger('click')
+      const shell = shellLeaks(inbox.element, inboxCorpus)
+      results.push([`inbox/letter#${i} shell`, shell])
+      bodies += leaksOf(inbox.element, inboxCorpus).length - shell.length
+      await inbox.get('.inbox-back').trigger('click')
+    }
+    inbox.unmount()
+    expect(bodies, 'the three letters really have bodies the sweep did not charge').toBeGreaterThan(5)
+    console.log(`[L2-6b xx] letter bodies left raw for L3 (class c): ${bodies} paragraphs and lines across three letters`)
+    console.log(`[L2-6b xx] leaks: ${JSON.stringify(results.map(([a, b]) => [a, b.slice(0, 6)]))}`)
+    for (const [surface, leaks] of results) expect(leaks, `${surface}: copy the SCREEN wrote that did not go through t()`).toEqual([])
   })
 })

@@ -56,6 +56,7 @@ import type {
 import { LADDER_LABEL } from '../shared/protocol'
 import { finishLabel } from '../engine/world/labels'
 import { formatCents } from '../shared/money'
+import { t } from '../i18n'
 import { WEEKS_IN_SEASON, seasonYear, weekLabel, weekRange } from '../shared/dates'
 // ⭐⭐ T4.2 · E-07 – `isOfferLive` rides this same import: the engine's own «is this letter still a
 // decision», which the foot's two controls are gated on. See the `live` computed for what it replaced.
@@ -201,10 +202,10 @@ const staffTerms = computed(() => props.offer.terms as StaffLetterTerms)
  *  signature in silence – the `never` narrowing `InboxSheet`'s tour arm uses, for its reason. */
 const staffSignOff = computed(() => {
   const seat = staffTerms.value.seat
-  if (seat === 'coach') return '– Her coach'
-  if (seat === 'masseur') return '– Her masseur'
-  if (seat === 'psychologist') return '– Her psychologist'
-  if (seat === 'sparring') return '– Her hitting partner'
+  if (seat === 'coach') return t('– Her coach')
+  if (seat === 'masseur') return t('– Her masseur')
+  if (seat === 'psychologist') return t('– Her psychologist')
+  if (seat === 'sparring') return t('– Her hitting partner')
   const unhandled: never = seat
   return unhandled
 })
@@ -796,10 +797,10 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
           is refunded in full.
         </p>
       </template>
-      <p class="offer-sign-off">– Tournament desk</p>
+      <p class="offer-sign-off">{{ t('– Tournament desk') }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
     </div>
   </article>
 
@@ -869,10 +870,10 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
           </li>
         </ul>
       </template>
-      <p class="offer-sign-off">– Tour office</p>
+      <p class="offer-sign-off">{{ t('– Tour office') }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
     </div>
   </article>
 
@@ -920,10 +921,10 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
           <li>If her tennis brings her back to us, our list is open every off-season.</li>
         </ul>
       </template>
-      <p class="offer-sign-off">– The academy</p>
+      <p class="offer-sign-off">{{ t('– The academy') }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
     </div>
   </article>
 
@@ -1040,15 +1041,15 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
            report only says when it was filed. -->
       <template v-if="staffAsk">
         <p v-if="live" class="offer-window">
-          {{ weeksLeft }} {{ weeksLeft === 1 ? 'week' : 'weeks' }} to decide. The terms will not change.
+          {{ weeksLeft === 1 ? t('1 week to decide. The terms will not change.') : t('{0} weeks to decide. The terms will not change.', [weeksLeft]) }}
         </p>
         <p v-else class="offer-window settled">{{ staffAskSettled }}</p>
         <div v-if="live" class="offer-actions">
-          <button class="offer-refuse" @click="emit('refuse', offer.id)">Decline</button>
-          <button class="offer-sign primary" @click="emit('sign', offer.id)">Accept</button>
+          <button class="offer-refuse" @click="emit('refuse', offer.id)">{{ t('Decline') }}</button>
+          <button class="offer-sign primary" @click="emit('sign', offer.id)">{{ t('Accept') }}</button>
         </div>
       </template>
-      <p v-else class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p v-else class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
     </div>
   </article>
 
@@ -1081,10 +1082,10 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
           anybody in it. Playing when we call is what representing asks of her.
         </li>
       </ul>
-      <p class="offer-sign-off">– Her national federation</p>
+      <p class="offer-sign-off">{{ t('– Her national federation') }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
     </div>
   </article>
 
@@ -1126,10 +1127,10 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
            is not. `InboxSheet` shows `senderOf` in the LIST; the moment a letter is opened the list is
            replaced by the paper alone, so the signature is the only thing that says who wrote. All
            seven letter arms in this file sign, and the build would be the only one that did not. -->
-      <p class="offer-sign-off">– Order desk</p>
+      <p class="offer-sign-off">{{ t('– Order desk') }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
     </div>
   </article>
 
@@ -1150,15 +1151,15 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <p class="offer-sign-off">– {{ saleSender }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p v-if="saleIsNotice" class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p v-if="saleIsNotice" class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
       <template v-else>
         <p v-if="live" class="offer-window">
-          {{ weeksLeft }} {{ weeksLeft === 1 ? 'week' : 'weeks' }} to decide. The terms will not change.
+          {{ weeksLeft === 1 ? t('1 week to decide. The terms will not change.') : t('{0} weeks to decide. The terms will not change.', [weeksLeft]) }}
         </p>
         <p v-else class="offer-window settled">{{ saleSettled }}</p>
         <div v-if="live" class="offer-actions">
-          <button class="offer-refuse" @click="emit('refuse', offer.id)">Refuse</button>
-          <button class="offer-sign primary" @click="emit('sign', offer.id)">Sign</button>
+          <button class="offer-refuse" @click="emit('refuse', offer.id)">{{ t('Refuse') }}</button>
+          <button class="offer-sign primary" @click="emit('sign', offer.id)">{{ t('Sign') }}</button>
         </div>
       </template>
     </div>
@@ -1219,12 +1220,12 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
     </PaperNote>
     <div class="offer-foot">
       <p v-if="live" class="offer-window">
-        {{ weeksLeft }} {{ weeksLeft === 1 ? 'week' : 'weeks' }} to decide. The terms will not change.
+        {{ weeksLeft === 1 ? t('1 week to decide. The terms will not change.') : t('{0} weeks to decide. The terms will not change.', [weeksLeft]) }}
       </p>
       <p v-else class="offer-window settled">{{ adSettled }}</p>
       <div v-if="live" class="offer-actions">
-        <button class="offer-refuse" @click="emit('refuse', offer.id)">Refuse</button>
-        <button class="offer-sign primary" @click="emit('sign', offer.id)">Sign</button>
+        <button class="offer-refuse" @click="emit('refuse', offer.id)">{{ t('Refuse') }}</button>
+        <button class="offer-sign primary" @click="emit('sign', offer.id)">{{ t('Sign') }}</button>
       </div>
     </div>
   </article>
@@ -1243,7 +1244,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <p class="offer-sign-off">– {{ terms.brand }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
     </div>
   </article>
 
@@ -1340,7 +1341,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
 
     <div class="offer-foot">
       <p v-if="live" class="offer-window">
-        {{ weeksLeft }} {{ weeksLeft === 1 ? 'week' : 'weeks' }} to decide. The terms will not change.
+        {{ weeksLeft === 1 ? t('1 week to decide. The terms will not change.') : t('{0} weeks to decide. The terms will not change.', [weeksLeft]) }}
       </p>
       <p v-else class="offer-window settled">{{ settled }}</p>
       <!-- THE CONTRACT AS AN INTERVAL, once it is a record rather than a decision. Both weeks are
@@ -1348,8 +1349,8 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
            brand is committed to and the parent stops having to count seasons. -->
       <p v-if="signedRun" class="offer-window settled">{{ signedRun }}</p>
       <div v-if="live" class="offer-actions">
-        <button class="offer-refuse" @click="emit('refuse', offer.id)">Refuse</button>
-        <button class="offer-sign primary" @click="emit('sign', offer.id)">Sign</button>
+        <button class="offer-refuse" @click="emit('refuse', offer.id)">{{ t('Refuse') }}</button>
+        <button class="offer-sign primary" @click="emit('sign', offer.id)">{{ t('Sign') }}</button>
       </div>
     </div>
   </article>

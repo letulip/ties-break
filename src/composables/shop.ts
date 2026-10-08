@@ -14,6 +14,7 @@ import { useGameStore } from '../stores/game'
 import type { ShopPricePoint, ShopPurchaseView, ShopRowView } from '../shared/protocol'
 import { monthLabel, weekLabel } from '../shared/dates'
 import { formatCents } from '../shared/money'
+import { t } from '../i18n'
 // ⭐ ROUND 30 #5 / ROUND 35 #3 – the paintings' own module. `shelfArtUrl` is what decides whether a
 // rung has a band at all (see `shopRowArtSide`), and `SHELF_CATEGORY_KEYS` is HIS row order for the
 // six category tiles, kept beside the paintings it is the order of.
@@ -59,11 +60,19 @@ export interface PendingShop {
  *  keep the pin green after the real literal changed – found by S5's own mutation run.)
  *  Declared once, at module scope, because the popup component and the panel both print them and two spellings would be two wordings. */
 export const SALE_LABELS = {
-  list: 'List',
-  sellNow: 'Sell now',
-  keep: 'Keep it',
-  withdraw: 'Withdraw',
-} as const
+  get list() {
+    return t('List')
+  },
+  get sellNow() {
+    return t('Sell now')
+  },
+  get keep() {
+    return t('Keep it')
+  },
+  get withdraw() {
+    return t('listing|Withdraw')
+  },
+}
 
 // ⭐⭐ ROUND 46 #1 – THE LISTED CARD'S TWO BUTTONS AND THE SECOND WORD ON THE SELL ONE (`shopSellRowNote`; the template's comment names this).
 // owner (shopSellRowNote), 05.10: «Когда выбрали залистить айтем на продажу появляется кнопка withdraw выше sell на карточке машин. Предлагаю в один ряд сделать, а ещё, если случился list, то sell заменять на sell now и жёлтую. На карточке домов кнопки лежат одна сверху другой. Надо проверить во всех разделах и сделать одинаково.»
@@ -94,23 +103,43 @@ export function useShop(week: ComputedRef<number>) {
   const SHOP_FAMILIES: { key: ShopRowView['family']; title: string; note: string }[] = [
     {
       key: 'investment',
-      title: 'Investments',
-      note: 'Money that stays money. Each one names a minimum, not a price – put in what you like above it.',
+      get title() {
+        return t('Investments')
+      },
+      get note() {
+        return t('Money that stays money. Each one names a minimum, not a price – put in what you like above it.')
+      },
     },
     {
       key: 'car',
-      title: 'Cars',
-      note: 'Every one of these is worth less next season than it is today. That is what a car is.',
+      get title() {
+        return t('Cars')
+      },
+      get note() {
+        return t('Every one of these is worth less next season than it is today. That is what a car is.')
+      },
     },
-    { key: 'house', title: 'Property', note: 'Slow, large, and the end of paying somebody else rent.' },
+    {
+      key: 'house',
+      get title() {
+        return t('Property')
+      },
+      get note() {
+        return t('Slow, large, and the end of paying somebody else rent.')
+      },
+    },
     // ⭐⭐ ROUND 29 PART FOUR P7 – THE PARENT'S OWN BUSINESS, and the first rung on the shelf that
     // EARNS. His words are in `shopBusinessNote` in the comment block below (Cyrillic may not appear
     // in a template, and this array is read into one). The note says what the family is FOR – §3's
     // own rule – and names the axis out loud: fame, never rank.
     {
       key: 'business',
-      title: 'The business',
-      note: 'The first thing on this shelf that earns. What it brings in follows how known she is – the shoots and the titles – not her ranking.',
+      get title() {
+        return t('The business')
+      },
+      get note() {
+        return t('The first thing on this shelf that earns. What it brings in follows how known she is – the shoots and the titles – not her ranking.')
+      },
     },
     // ⭐⭐ ROUND 29 #5 – THE THREE STOREYS THE OWNER ASKED FOR. His words are in `shopEliteNote` in the
     // comment block below (Cyrillic may not appear in a template, and this array is read into one).
@@ -118,20 +147,32 @@ export function useShop(week: ComputedRef<number>) {
     // is price is a list, not a decision».
     {
       key: 'boat',
-      title: 'On the water',
-      note: 'Ordered, not bought – the money goes now and the boat comes years later. Every one of them costs a wage a week to keep.',
+      get title() {
+        return t('On the water')
+      },
+      get note() {
+        return t('Ordered, not bought – the money goes now and the boat comes years later. Every one of them costs a wage a week to keep.')
+      },
     },
     {
       key: 'plane',
-      title: 'In the air',
-      note: 'The family aeroplane. It takes half the fare off every trip to a tournament, and it is kept the way an aeroplane is kept.',
+      get title() {
+        return t('In the air')
+      },
+      get note() {
+        return t('The family aeroplane. It takes half the fare off every trip to a tournament, and it is kept the way an aeroplane is kept.')
+      },
     },
     {
       key: 'academy',
-      title: 'Her academy',
+      get title() {
+        return t('Her academy')
+      },
       // ⭐ ROUND 29 PART FOUR P7 – the second sentence is «нам нужна академия, которая зарабатывает»
       // made visible: each stage earns weekly once built, scaled by the seasons she finished high.
-      note: 'Four stages, in order, and each one is a decision. Every stage earns once it is built – the higher and longer she placed, the more it brings in – and it outlives the career.',
+      get note() {
+        return t('Four stages, in order, and each one is a decision. Every stage earns once it is built – the higher and longer she placed, the more it brings in – and it outlives the career.')
+      },
     },
   ]
   function shopRowsOf(family: ShopRowView['family']): ShopRowView[] {
@@ -259,7 +300,7 @@ export function useShop(week: ComputedRef<number>) {
   /** The ring's spoken sentence – the visible figure is the ring's own default slot (N%). DRAFT for
    *  the owner's read, listed on the ledger item. Week through `weekLabel`, per R11-6. */
   function buildRingLabel(row: ShopRowView): string {
-    return `${Math.round(buildProgress(row) * 100)}% built – ready ${weekLabel(row.readyWeek ?? 0, game.snapshot?.startYear)}`
+    return t('{0}% built – ready {1}', [Math.round(buildProgress(row) * 100), weekLabel(row.readyWeek ?? 0, game.snapshot?.startYear)])
   }
   /** The stage this rung is waiting on, by NAME – the label off the row it names, never an id on
    *  screen. Empty when the requirement is met or there is none. */
@@ -280,11 +321,13 @@ export function useShop(week: ComputedRef<number>) {
     // in weeks; the months and years sentences stay byte-identical for boats and planes (their
     // shortest build is 52 weeks, so the weeks branch cannot reach them).
     if (row.buildWeeks < 9) {
-      return `Built to order – about ${row.buildWeeks} ${row.buildWeeks === 1 ? 'week' : 'weeks'} from the week it is ordered.`
+      return row.buildWeeks === 1
+        ? t('Built to order – about 1 week from the week it is ordered.')
+        : t('Built to order – about {0} weeks from the week it is ordered.', [row.buildWeeks])
     }
     const months = Math.round((row.buildWeeks / 52) * 12)
-    if (months < 24) return `Built to order – about ${months} months from the week it is ordered.`
-    return `Built to order – about ${Math.round(months / 12)} years from the week it is ordered.`
+    if (months < 24) return t('Built to order – about {0} months from the week it is ordered.', [months])
+    return t('Built to order – about {0} years from the week it is ordered.', [Math.round(months / 12)])
   }
   /** «loses 6% a season» / «+7% a season». ⚠ THE UNIT IS THE GAME'S OWN – a season IS the 52-week
    *  block every other figure on this screen is quoted over, and the spec's own «/yr» and «a season»
@@ -293,16 +336,16 @@ export function useShop(week: ComputedRef<number>) {
     // ⭐⭐⭐ ROUND 30 #9 – A BUSINESS IS NOT PRICED BY A RATE, so it does not read one out. Its worth is
     // years of what it takes in, and what it takes in is her fame – so this line is what the row is
     // ABOUT rather than a percentage it does not have. See `assetWorthCents`' third branch.
-    if (row.earningsMultipleX !== null) return `Worth ${row.earningsMultipleX} years of what it sells`
-    if (row.annualRatePct < 0) return `Loses ${-row.annualRatePct}% a season`
+    if (row.earningsMultipleX !== null) return t('Worth {0} years of what it sells', [row.earningsMultipleX])
+    if (row.annualRatePct < 0) return t('Loses {0}% a season', [-row.annualRatePct])
     // ⭐⭐⭐ ROUND 30 #11 – RE-WORDED, AND THE ENGINE WAS CHECKED BEFORE A WORD MOVED.
     //
     // owner (rateLine), 30.08: «И как будто бы Holds its value странно звучит тоже – это напрямую значит, что оно обесценивается»…
     // ⚠⚠ rateLine: HE IS RIGHT AND THE ENGINE SAYS SO – a rung at `annualRateBps: 0` is worth what was paid, so it does not depreciate.
     // ⚠ rateLine: THE PARALLEL IS THE POINT – its two siblings are about a RATE, and the third had better be a rate too.
     // → docs/notes/money/shop.md#round-30-11--rateline-why-the-words-changed-and-the-engine-was-checked-first
-    if (row.annualRatePct === 0) return 'Neither gains nor loses'
-    return `Gains about ${row.annualRatePct}% a season`
+    if (row.annualRatePct === 0) return t('Neither gains nor loses')
+    return t('Gains about {0}% a season', [row.annualRatePct])
   }
 
   // ⭐⭐⭐ ROUND 30 #14 – `shopUnitsNote`, HIS RULING, PARKED HERE AND NOT IN THE TEMPLATE, for the
@@ -340,9 +383,9 @@ export function useShop(week: ComputedRef<number>) {
    *  place they are written. Derived from the month count so the picker and the slice can never name
    *  different windows. */
   function rangeLabel(months: number): string {
-    if (months < 12) return `${months} months`
+    if (months < 12) return t('{0} months', [months])
     const years = months / 12
-    return years === 1 ? '1 year' : `${years} years`
+    return years === 1 ? t('1 year') : t('{0} years', [years])
   }
 
   /** The points inside the open window – the tail of the engine's series. ⚠ A SLICE AND NEVER A
@@ -430,7 +473,7 @@ export function useShop(week: ComputedRef<number>) {
    *  («с суммой и датой») and the month is the chart's OWN axis spelling (`monthLabel`), so the bubble
    *  and the strip under it cannot name a week two different ways. */
   function markLabel(buy: ShopPurchaseView): string {
-    return `Bought in ${monthLabel(buy.week, game.snapshot?.startYear)}, ${formatCents(buy.cents)}`
+    return t('Bought in {0}, {1}', [monthLabel(buy.week, game.snapshot?.startYear), formatCents(buy.cents)])
   }
 
   /** WHICH WAY THE BUBBLE LEANS – the left third of the plot pushes it right, the right third
@@ -460,11 +503,13 @@ export function useShop(week: ComputedRef<number>) {
   function chartSummary(row: ShopRowView): string {
     const points = chartPoints(row)
     const plot = chartPlot(row)
-    if (!plot || points.length === 0) return 'Not enough months to draw yet'
-    return (
-      `One unit, monthly, from ${monthLabel(points[0].week, game.snapshot?.startYear)} to ${monthLabel(points[points.length - 1].week, game.snapshot?.startYear)}: ` +
-      `${formatCents(plot.low)} to ${formatCents(plot.high)}`
-    )
+    if (!plot || points.length === 0) return t('Not enough months to draw yet')
+    return t('One unit, monthly, from {0} to {1}: {2} to {3}', [
+      monthLabel(points[0].week, game.snapshot?.startYear),
+      monthLabel(points[points.length - 1].week, game.snapshot?.startYear),
+      formatCents(plot.low),
+      formatCents(plot.high),
+    ])
   }
 
   /** ⭐ HOW MANY UNITS, AS A PERSON READS THEM. ⚠ THE ONE FRACTIONAL FIGURE ON THIS SCREEN, and the
@@ -529,8 +574,9 @@ export function useShop(week: ComputedRef<number>) {
    *  one thing this layout could genuinely lose. ⚠ IT IS BUILT FROM THE ENGINE'S OWN FIGURES
    *  (`entryCents`, `valueCents`), never typed, so a retune moves it with the money. */
   function stakeFieldLabel(row: ShopRowView): string {
-    const from = `Amount, from ${formatCents(row.entryCents)}`
-    return row.valueCents === null ? from : `${from} – leave it blank to sell all ${formatCents(row.valueCents)}`
+    return row.valueCents === null
+      ? t('Amount, from {0}', [formatCents(row.entryCents)])
+      : t('Amount, from {0} – leave it blank to sell all {1}', [formatCents(row.entryCents), formatCents(row.valueCents)])
   }
   /** Null when the box is empty or unusable – the caller then sells the whole holding.
    *  ⚠ sellCentsFor: CLAMPED NOWHERE: `sellAsset` re-derives the floor and the ceiling and returns its own sentence…
@@ -593,7 +639,7 @@ export function useShop(week: ComputedRef<number>) {
       // ⭐ ROUND 29 #11 – a top-up is a different sentence from a first purchase, because it is a
       // different act: «Buy an index fund» reads wrong on the fund they have held for six seasons.
       if (p.topUp) {
-        return `Put a further ${formatCents(p.amountCents)} into ${p.label}? It comes out of the family's money this week.`
+        return t("Put a further {0} into {1}? It comes out of the family's money this week.", [formatCents(p.amountCents), p.label])
       }
       // ⭐⭐ ROUND 29 #5, §3f – A COMMISSION ASKS A DIFFERENT QUESTION, because it commits the family to
       // three things and not one: the money now, the wait, and a bill every week for as long as they
@@ -601,23 +647,23 @@ export function useShop(week: ComputedRef<number>) {
       // actually decide it. ⚠ NOT A NUMBER ABOUT HER – the fatigue side of the plane is hidden by his
       // own ruling and no sentence here goes near it.
       if (p.buildWeeks) {
-        const keep = p.upkeepCents ? ` It then costs ${formatCents(p.upkeepCents)} a week to keep.` : ''
-        return `Order ${p.label} for ${formatCents(p.amountCents)}? The money goes this week and it arrives in ${p.buildWeeks} weeks.${keep}`
+        const keep = p.upkeepCents ? ` ${t('It then costs {0} a week to keep.', [formatCents(p.upkeepCents)])}` : ''
+        return `${t('Order {0} for {1}? The money goes this week and it arrives in {2} weeks.', [p.label, formatCents(p.amountCents), p.buildWeeks])}${keep}`
       }
-      return `Buy ${p.label} for ${formatCents(p.amountCents)}? It comes out of the family's money this week.`
+      return t("Buy {0} for {1}? It comes out of the family's money this week.", [p.label, formatCents(p.amountCents)])
     }
     const tail =
       p.changeCents === null || p.changeCents === 0
-        ? 'exactly what it cost'
+        ? t('exactly what it cost')
         : p.changeCents < 0
-          ? `${formatCents(-p.changeCents)} less than it cost`
-          : `${formatCents(p.changeCents)} more than it cost`
+          ? t('{0} less than it cost', [formatCents(-p.changeCents)])
+          : t('{0} more than it cost', [formatCents(p.changeCents)])
     // ⭐ ROUND 29 PART TWO #4 – a part sale asks a different question, because it leaves something
     // behind: «Sell the index fund» reads wrong on a family taking $10,000 out of one.
     if (p.partCents !== undefined) {
-      return `Take ${formatCents(p.partCents)} out of ${p.label}? That part is ${tail}, and the rest stays invested.`
+      return t('Take {0} out of {1}? That part is {2}, and the rest stays invested.', [formatCents(p.partCents), p.label, tail])
     }
-    return `Sell ${p.label} for ${formatCents(p.amountCents)}? That is ${tail}.`
+    return t('Sell {0} for {1}? That is {2}.', [p.label, formatCents(p.amountCents), tail])
   })
   function confirmShop(): void {
     const pending = pendingShop.value
@@ -664,13 +710,13 @@ export function useShop(week: ComputedRef<number>) {
     const lines = [
       // ⭐ S6: a quote at the horizon has no upper end to print – `weeksHi` is only where the engine stopped counting (`quote.atHorizon`, the engine's own flag).
       quote.atHorizon
-        ? `It may take ${weeksLo} weeks or more to sell – there may be no buyer at all.`
-        : `It may take ${weeksLo} to ${weeksHi} weeks to sell.`,
-      `Offers may range from ${priceLo} to ${priceHi}.`,
-      `Selling now pays ${fire}, at once.`,
+        ? t('It may take {0} weeks or more to sell – there may be no buyer at all.', [weeksLo])
+        : t('It may take {0} to {1} weeks to sell.', [weeksLo, weeksHi]),
+      t('Offers may range from {0} to {1}.', [priceLo, priceHi]),
+      t('Selling now pays {0}, at once.', [fire]),
     ]
-    if (quote.thinMarket) lines.push('Few buyers can pay this much – it may not sell at all.')
-    if (row.family === 'academy') lines.push('The academy sells as one lot – every stage goes together, not the courts alone.')
+    if (quote.thinMarket) lines.push(t('Few buyers can pay this much – it may not sell at all.'))
+    if (row.family === 'academy') lines.push(t('The academy sells as one lot – every stage goes together, not the courts alone.'))
     return lines
   }
   /** «List»: the ad goes up and the popup closes. Free and reversible (Withdraw), so no second question. `listAsset` re-derives every guard. */
@@ -706,10 +752,10 @@ export function useShop(week: ComputedRef<number>) {
   function listingBadge(row: ShopRowView): string | null {
     if (!row.listing) return null
     const weeks = Math.max(0, week.value - row.listing.sinceWeek)
-    const unit = weeks === 1 ? 'week' : 'weeks'
-    return listingIsStale(row)
-      ? `Interest has gone quiet · ${weeks} ${unit} on the market`
-      : `On the market · ${weeks} ${unit}`
+    if (listingIsStale(row)) {
+      return weeks === 1 ? t('Interest has gone quiet · 1 week on the market') : t('Interest has gone quiet · {0} weeks on the market', [weeks])
+    }
+    return weeks === 1 ? t('On the market · 1 week') : t('On the market · {0} weeks', [weeks])
   }
 
   // ⭐⭐ ROUND 43 #5 – `shelfShareNote`, WHY THE BUSINESS TAB NOW NAMES THE SPLIT. Parked here for
@@ -728,12 +774,60 @@ export function useShop(week: ComputedRef<number>) {
   // ⚠ SHELF_TAB_OPTIONS: AND `SHOP_FAMILIES` IS NOT REORDERED WITH IT, deliberately.
   // → docs/notes/money/shop.md#round-34-16--shelf_tab_options-business-beside-invest
   const SHELF_TAB_OPTIONS = [
-    { value: 'invest', label: 'Invest', title: 'Money that stays money' },
-    { value: 'business', label: 'Business', title: 'What the family owns that earns – the academy included' },
-    { value: 'cars', label: 'Cars', title: 'The garage' },
-    { value: 'property', label: 'Property', title: 'Somewhere to live' },
-    { value: 'water', label: 'Water', title: 'Boats, ordered rather than bought' },
-    { value: 'air', label: 'Air', title: 'The family aeroplane' },
+    {
+      value: 'invest',
+      get label() {
+        return t('Invest')
+      },
+      get title() {
+        return t('Money that stays money')
+      },
+    },
+    {
+      value: 'business',
+      get label() {
+        return t('Business')
+      },
+      get title() {
+        return t('What the family owns that earns – the academy included')
+      },
+    },
+    {
+      value: 'cars',
+      get label() {
+        return t('Cars')
+      },
+      get title() {
+        return t('The garage')
+      },
+    },
+    {
+      value: 'property',
+      get label() {
+        return t('Property')
+      },
+      get title() {
+        return t('Somewhere to live')
+      },
+    },
+    {
+      value: 'water',
+      get label() {
+        return t('Water')
+      },
+      get title() {
+        return t('Boats, ordered rather than bought')
+      },
+    },
+    {
+      value: 'air',
+      get label() {
+        return t('Air')
+      },
+      get title() {
+        return t('The family aeroplane')
+      },
+    },
   ]
   /** ⚠⚠ «Business (Academy is subdivision inside)» – THE ACADEMY IS NOT A SEVENTH TAB. It is a
    *  subdivision of Business, so that tab holds TWO families and the academy's four stages appear
@@ -785,7 +879,15 @@ export function useShop(week: ComputedRef<number>) {
   const SHELF_CATEGORY_CARDS = SHELF_CATEGORY_KEYS.map((key) => {
     const tab = SHELF_TAB_OPTIONS.find((o) => o.value === key)
     if (!tab) throw new Error(`no shelf segment for the category tile ${key}`)
-    return { key, label: tab.label, title: tab.title }
+    return {
+      key,
+      get label() {
+        return tab.label
+      },
+      get title() {
+        return tab.title
+      },
+    }
   })
 
   // ⭐⭐ ROUND 35 #5, #6, #7, #8, #9 – WHICH SIDE A RUNG'S PAINTING STANDS ON.
@@ -842,7 +944,7 @@ export function useShop(week: ComputedRef<number>) {
    *  cars and the academy to the house he said it of; round 39 #4 adds the boats and the planes –
    *  see the note above. */
   function shopRowPaidMeta(row: ShopRowView): string | undefined {
-    return SHELF_NO_PAID_META.includes(row.family) ? undefined : `paid ${formatCents(row.paidCents ?? 0)}`
+    return SHELF_NO_PAID_META.includes(row.family) ? undefined : t('paid {0}', [formatCents(row.paidCents ?? 0)])
   }
   /** #12 and #13's second clause: the control leaves the left of its row for the card's bottom-right
    *  corner. ⚠ IT STAYS IN THE FLOW rather than becoming `position: absolute` like the `--art-right`

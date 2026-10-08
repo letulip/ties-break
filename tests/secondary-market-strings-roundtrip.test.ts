@@ -99,7 +99,31 @@ function sourceOf(path: string): string {
  *  apostrophes – a row that reads `The mother's story` is `The mother\'s story` in the file. */
 function shipped(src: string, text: string): boolean {
   const spellings = [text, text.replaceAll("'", "\\'")]
-  return spellings.some((t) => ["'", '"', '`'].some((q) => src.includes(q + t + q)))
+  return spellings.some((t) => ["'", '"', '`'].some((q) => src.includes(q + t + q) || taggedCount(src, q, t) > 0))
+}
+
+/** ⚠ L2-6 (08.10): a wired row may carry a CONTEXT TAG in its `t()` key – `listing|Withdraw` is SM10's word for the catalog, the same English with a short lowercase
+ *  prefix that tells two Russians apart (docs/specs/i18n-2026-10.md §3.1). The row's TEXT is still one whole quoted literal in its home, so the pin accepts exactly
+ *  that spelling and nothing looser: a lowercase tag, a bar, then the row's words, between the same quotes. */
+function taggedCount(src: string, q: string, text: string): number {
+  const re = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return src.match(new RegExp(re(q) + '[a-z]+\\|' + re(text) + re(q), 'g'))?.length ?? 0
+}
+
+/** ⚠ L2-6 (08.10) – THE WIRED SPELLINGS. A row of the table is a DRAFT in the shape the code had before the call site called `t()`: its `${expr}` holes are
+ *  the template literal's. Once a site is wired the English is a MESSAGE – the holes are positional (`{0}`, `{1}`) and the figures are its params – so the
+ *  same words ship as a different literal, and the pin follows them there rather than losing the row. Two rows cut differently: a week count that used to
+ *  pick its unit with `${unit}` is its singular and its plural as two whole messages (the repo's counted-phrase rule), and the pin asks for both. The
+ *  table itself is not edited – it is the corpus as the owner read it. */
+const WIRED_SPLIT: Record<string, string[]> = {
+  SM11: ['On the market · 1 week', 'On the market · {0} weeks'],
+  SM12: ['Interest has gone quiet · 1 week on the market', 'Interest has gone quiet · {0} weeks on the market'],
+}
+function wiredForms(row: Row): string[] {
+  const split = WIRED_SPLIT[row.id]
+  if (split) return split
+  let n = 0
+  return [row.text.replace(/\$\{[^}]*\}/g, () => `{${n++}}`)]
 }
 
 /** ⭐ S5 (30.09) – HOW MANY WHOLE-LITERAL SPELLINGS OF THE ROW THE HOME HOLDS. `shipped` answers «at least one», and that is not enough for a row of ONE
@@ -109,7 +133,7 @@ function shipped(src: string, text: string): boolean {
 function literalCount(src: string, text: string): number {
   const spellings = [...new Set([text, text.replaceAll("'", "\\'")])]
   let n = 0
-  for (const t of spellings) for (const q of ["'", '"', '`']) n += src.split(q + t + q).length - 1
+  for (const t of spellings) for (const q of ["'", '"', '`']) n += src.split(q + t + q).length - 1 + taggedCount(src, q, t)
   return n
 }
 
@@ -133,13 +157,19 @@ describe('the secondary market – the strings table IS the corpus', () => {
   it('every row matches the shipped string character for character', () => {
     for (const row of rows) {
       const src = sourceOf(row.home)
-      expect(shipped(src, row.text), `${row.id}: ${row.home} does not ship the row's text as a whole string literal`).toBe(true)
+      const ok = shipped(src, row.text) || wiredForms(row).every((form) => shipped(src, form))
+      expect(ok, `${row.id}: ${row.home} does not ship the row's text as a whole string literal (nor as its wired message)`).toBe(true)
     }
   })
 
   it('⭐ (S5) every row is exactly ONE quoted literal in its home – a comment quoting it back cannot hold the pin up', () => {
     for (const row of rows) {
-      expect(literalCount(sourceOf(row.home), row.text), `${row.id}: ${row.home} quotes the row's text more than once (or not at all)`).toBe(1)
+      const src = sourceOf(row.home)
+      const whole = literalCount(src, row.text)
+      // the wired spelling: every message the row became is exactly ONE literal in its home (a row cut into two messages is two literals, once each)
+      const wired = wiredForms(row)
+      const count = whole === 1 ? 1 : wired.every((form) => literalCount(src, form) === 1) ? 1 : 0
+      expect(count, `${row.id}: ${row.home} quotes the row's text more than once (or not at all)`).toBe(1)
     }
   })
 

@@ -42,6 +42,7 @@ import { shelfArtUrl } from '../art/shelf'
 // ⭐ THE SECONDARY MARKET, S5 – the listed row's one control is a DRAFT word (SM10), declared beside the popup's three so the panel and the
 // popup cannot spell it two ways.
 import { SALE_LABELS, type ShopState } from '../composables/shop'
+import { t } from '../i18n'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
 import ProgressRing from './ui/ProgressRing.vue'
@@ -131,21 +132,19 @@ const screenTab = computed(() => props.screenTab)
        whether the family can reach it or not. A shop window is a thing you look into before you
        can afford it. -->
   <Card v-if="screenTab === 'shop' && shop && shopHome" class="money-panel money-shop">
-    <Eyebrow as="h2">The shelf</Eyebrow>
+    <Eyebrow as="h2">{{ t('The shelf') }}</Eyebrow>
     <p class="money-panel-note">
-      This is the family's own money, and none of it is hers. Nothing here makes her better,
-      faster or fitter - it is what the money becomes once the tennis has stopped needing it.
+      {{ t("This is the family's own money, and none of it is hers. Nothing here makes her better, faster or fitter - it is what the money becomes once the tennis has stopped needing it.") }}
     </p>
     <!-- ⭐ THE EMPTY SHELF'S OWN SENTENCE: a real thing at a real price. -->
     <p v-if="shopCheapest" class="money-panel-note is-empty-shelf">
-      You own nothing yet. The cheapest thing here is
-      {{ shopCheapest.label }}, from {{ formatCents(shopCheapest.entryCents) }}.
+      {{ t('You own nothing yet. The cheapest thing here is {0}, from {1}.', [shopCheapest.label, formatCents(shopCheapest.entryCents)]) }}
     </p>
     <StatRow
       v-else
       class="money-row"
-      label="What you own"
-      :meta="`${shop.ownedCount} ${shop.ownedCount === 1 ? 'thing' : 'things'}`"
+      :label="t('What you own')"
+      :meta="shop.ownedCount === 1 ? t('1 thing') : t('{0} things', [shop.ownedCount])"
       :value="formatCents(shop.ownedValueCents)"
       tone="positive"
     />
@@ -199,7 +198,7 @@ const screenTab = computed(() => props.screenTab)
     v-model="shelfTab"
     class="money-window money-subtabs shelf-tabs"
     :options="SHELF_TAB_OPTIONS"
-    group-label="Which part of the shelf"
+    :group-label="t('Which part of the shelf')"
   />
 
   <!-- ⭐⭐ ROUND 43 #5 – WHOSE MONEY THE FIGURES BELOW ARE. His words, ruled 16.09 as variant C of
@@ -214,8 +213,7 @@ const screenTab = computed(() => props.screenTab)
     v-if="screenTab === 'shop' && shop && !shopHome && shelfTab === 'business' && shop.kidBusinessSharePct > 0"
     class="shelf-share-line"
   >
-    She takes {{ shop.kidBusinessSharePct }}% of what these earn; the figures below are the
-    family's {{ 100 - shop.kidBusinessSharePct }}%. A holding's worth is the whole business.
+    {{ t("She takes {0}% of what these earn; the figures below are the family's {1}%. A holding's worth is the whole business.", [shop.kidBusinessSharePct, 100 - shop.kidBusinessSharePct]) }}
   </p>
 
   <!-- ===================== 8b. THE SHELF ITSELF, CARD BY CARD =====================
@@ -317,7 +315,7 @@ const screenTab = computed(() => props.screenTab)
                market, so this screen never decides which rung has a chart. It is drawn whether
                or not the family owns one, exactly like the unit price it plots. -->
           <div v-if="row.priceHistory" class="fund-chart">
-            <div class="fund-chart-ranges" role="group" aria-label="How far back the chart goes">
+            <div class="fund-chart-ranges" role="group" :aria-label="t('How far back the chart goes')">
               <button
                 v-for="months in SHOP_PRICE_RANGE_MONTHS"
                 :key="months"
@@ -402,13 +400,12 @@ const screenTab = computed(() => props.screenTab)
                   v-if="openMarkOf(row)!.buy.units !== null && openMarkOf(row)!.buy.unitPriceCents !== null"
                   class="fund-chart-pop-sub"
                 >
-                  {{ formatUnits(openMarkOf(row)!.buy.units!) }} units at
-                  {{ formatCents(openMarkOf(row)!.buy.unitPriceCents!) }} each
+                  {{ t('{0} units at {1} each', [formatUnits(openMarkOf(row)!.buy.units!), formatCents(openMarkOf(row)!.buy.unitPriceCents!)]) }}
                 </span>
               </div>
               </div>
             </div>
-            <p v-else class="fund-chart-empty">One month of prices so far &ndash; the chart starts next month.</p>
+            <p v-else class="fund-chart-empty">{{ t('One month of prices so far – the chart starts next month.') }}</p>
             <div v-if="chartPlot(row)" class="fund-chart-axis">
               <span>{{ monthLabel(chartPoints(row)[0].week, startYear) }}</span>
               <span class="fund-chart-span">
@@ -424,7 +421,7 @@ const screenTab = computed(() => props.screenTab)
                the decision actually lives». The engine computed it (`upkeepCents`); this screen
                does not divide a percentage by a year. -->
           <p v-if="row.upkeepCents > 0" class="shop-row-upkeep">
-            {{ formatCents(row.upkeepCents) }} a week to keep
+            {{ t('{0} a week to keep', [formatCents(row.upkeepCents)]) }}
           </p>
           <!-- ⭐⭐ ROUND 29 PART FOUR P7 – THE MIRROR LINE: what an owned earner brings in RIGHT
                NOW, the engine's own figure (`incomeCents`, the same arithmetic the till banks).
@@ -432,7 +429,7 @@ const screenTab = computed(() => props.screenTab)
                both read $0 and say nothing. Deliberately NOT netted against the upkeep line
                above (round 29 #10): two facts, two sentences. -->
           <p v-if="row.incomeCents > 0" class="shop-row-earning">
-            Brings in {{ formatCents(row.incomeCents) }} a week right now
+            {{ t('Brings in {0} a week right now', [formatCents(row.incomeCents)]) }}
           </p>
           <!-- ⭐ §3f – THE WAIT, ON THE ROW, BEFORE THE ORDER IS PLACED. Not a teaser and not a
                lock: the price is beside it and the control is pressable. -->
@@ -443,7 +440,7 @@ const screenTab = computed(() => props.screenTab)
                not a bar: the price stays on screen and the control is simply not pressable,
                which is §2's rule read one storey up. -->
           <p v-if="requiresLabel(row)" class="shop-row-wait">
-            {{ requiresLabel(row) }} has to come first.
+            {{ t('{0} has to come first.', [requiresLabel(row)]) }}
           </p>
           <!-- ⭐⭐ ROUND 29 #5, §3f – ORDERED, AND NOT HERE YET. «Between those two weeks the
                player owns a CONTRACT, not a boat», so there is nothing to value and nothing to
@@ -463,11 +460,11 @@ const screenTab = computed(() => props.screenTab)
           <div v-if="isBuilding(row)" class="shop-row-owned is-building">
             <StatRow
               class="money-row"
-              label="On order"
+              :label="t('On order')"
               :value="weekLabel(row.readyWeek ?? 0, startYear)"
               tone="plain"
             />
-            <p class="shop-row-change">It cannot be sold before it is delivered, and it costs nothing to keep until then.</p>
+            <p class="shop-row-change">{{ t('It cannot be sold before it is delivered, and it costs nothing to keep until then.') }}</p>
           </div>
           <!-- OWNED: what they paid, what it is worth, and the difference as ONE figure the
                engine computed. This screen subtracts nothing. -->
@@ -482,22 +479,22 @@ const screenTab = computed(() => props.screenTab)
                  reasoning and the quote are on `shopRowPaidMeta` in the script block, where
                  Cyrillic is allowed. Nothing about the VALUE changed - it was always the
                  current worth - and the gain still has its own line under this one. -->
-            <StatRow class="money-row" label="Worth now" :meta="shopRowPaidMeta(row)" :value="formatCents(row.valueCents)" tone="plain" />
+            <StatRow class="money-row" :label="t('Worth now')" :meta="shopRowPaidMeta(row)" :value="formatCents(row.valueCents)" tone="plain" />
             <!-- ⭐⭐⭐ ROUND 30 #14 – THE THREE FIGURES THE DECISION NEEDS. His words and the
                  reasoning are in `shopUnitsNote` in the script block (no Cyrillic in a template).
                  Every number is the engine's: `shopView` counted the units, divided the cost by
                  them and priced the week. This screen divides nothing. -->
             <p v-if="row.unitsHeld !== null && row.avgUnitPriceCents !== null && row.unitPriceCents !== null" class="shop-row-units">
-              {{ formatUnits(row.unitsHeld) }} units &ndash; bought at {{ formatCents(row.avgUnitPriceCents) }} each, {{ formatCents(row.unitPriceCents) }} now
+              {{ t('{0} units – bought at {1} each, {2} now', [formatUnits(row.unitsHeld), formatCents(row.avgUnitPriceCents), formatCents(row.unitPriceCents)]) }}
             </p>
             <!-- ⭐⭐⭐ ROUND 30 #8 AND #10 – WHAT THEY CALLED IT. See `shopNamingNote` in the
                  script block (no Cyrillic in a template). One line, the engine's own string,
                  and the row's own label above it is untouched. -->
-            <p v-if="row.name" class="shop-row-given-name">Trading as {{ row.name }}</p>
+            <p v-if="row.name" class="shop-row-given-name">{{ t('Trading as {0}', [row.name]) }}</p>
             <p class="shop-row-change" :class="{ 'is-down': (row.changeCents ?? 0) < 0 }">
               {{ formatCentsSigned(row.changeCents ?? 0) }}
-              <span v-if="row.changePct !== null">since you bought it ({{ row.changePct }}%)</span>
-              <span v-else>since you bought it</span>
+              <span v-if="row.changePct !== null">{{ t('since you bought it ({0}%)', [row.changePct]) }}</span>
+              <span v-else>{{ t('since you bought it') }}</span>
             </p>
             <!-- ⭐⭐ ROUND 29 #11 – PUT MORE IN. His words are in `shopTopUpNote` in the
                  script block (no Cyrillic in a template). The control is drawn for an 'open'
@@ -552,7 +549,7 @@ const screenTab = computed(() => props.screenTab)
                 :aria-label="stakeFieldLabel(row)"
               />
               <button v-if="isTopUp(row)" class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
-                Add more
+                {{ t('Add more') }}
               </button>
               <template v-if="row.listing">
                 <button class="shop-action" :disabled="!canWithdraw()" @click="withdrawListing(row)">
@@ -563,7 +560,7 @@ const screenTab = computed(() => props.screenTab)
                 </button>
               </template>
               <button v-else class="shop-action" :disabled="!canSell(row)" @click="askSell(row)">
-                Sell
+                {{ t('Sell') }}
               </button>
             </div>
           </div>
@@ -572,11 +569,11 @@ const screenTab = computed(() => props.screenTab)
             <!-- ⭐⭐ ROUND 30 #14 – THE ENTRY PRICE, BEFORE THERE IS A HOLDING. See
                  `shopUnitsNote` in the script block. -->
             <p v-if="row.unitPriceCents !== null" class="shop-row-units">
-              One unit is {{ formatCents(row.unitPriceCents) }} this week
+              {{ t('One unit is {0} this week', [formatCents(row.unitPriceCents)]) }}
             </p>
             <label v-if="row.stake === 'open'" class="shop-stake">
               <span class="shop-stake-label">
-                How much, from {{ formatCents(row.entryCents) }}
+                {{ t('How much, from {0}', [formatCents(row.entryCents)]) }}
               </span>
               <input
                 v-model="stakeDollars[row.id]"
@@ -597,7 +594,7 @@ const screenTab = computed(() => props.screenTab)
                  suggestion, so a player who never touches it still buys a brand with her name
                  on it. -->
             <div v-if="row.nameOptions.length > 0" class="shop-naming">
-              <span class="shop-stake-label">What is it called</span>
+              <span class="shop-stake-label">{{ t('What is it called') }}</span>
               <div class="shop-naming-chips">
                 <button
                   v-for="option in row.nameOptions"
@@ -615,15 +612,15 @@ const screenTab = computed(() => props.screenTab)
                 class="shop-stake-input shop-naming-input"
                 type="text"
                 :maxlength="ASSET_NAME_MAX_CHARS"
-                placeholder="or type your own"
-                aria-label="What it is called"
+                :placeholder="t('or type your own')"
+                :aria-label="t('What it is called')"
                 @input="nameDrafts[row.id] = ($event.target as HTMLInputElement).value"
               />
             </div>
             <!-- ⭐ §3f – A COMMISSIONED THING IS ORDERED, NOT BOUGHT, and the verb on the control
                  is the one difference the player can see before he presses it. -->
             <button class="shop-action" :disabled="!canBuy(row)" @click="askBuy(row)">
-              {{ row.stake === 'open' ? 'Put it in' : row.buildWeeks > 0 ? 'Order it' : 'Buy it' }}
+              {{ row.stake === 'open' ? t('Put it in') : row.buildWeeks > 0 ? t('Order it') : t('Buy it') }}
             </button>
           </div>
         </div>

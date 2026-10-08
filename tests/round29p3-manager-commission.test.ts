@@ -364,7 +364,9 @@ describe('round 29 P3 §4 – «контракт на полную сумму р
     // manager by name – a whole-file negative would be asserting that the code carries no comment.
     const inbox = componentFile('components/InboxSheet.vue')
     const feeClause = region(inbox, 'const feeClause =', 'const shoots =')
-    expect(feeClause, 'the confirm quotes the whole fee').toContain('A one-time fee of ${formatCents(t.cashCents)}')
+    // ⚠ L2-6 (08.10): the sentence is a whole message now, its hole part of the key (`{0}`) and the figure its param – and the terms local is `tm`
+    // (a local named `t` would shadow the `t()` the sheet imports). The claim is the same: the confirm quotes the WHOLE fee, un-split.
+    expect(feeClause, 'the confirm quotes the whole fee').toContain("t('A one-time fee of {0}, paid to her now', [formatCents(tm.cashCents)])")
     expect(feeClause, 'and it is paid to HER, which is the ruling').toContain('paid to her now')
     expect(feeClause, 'the old payee is gone').not.toContain('paid to the family now')
     expect(feeClause, 'and no split is quoted before the signature').not.toContain('manager')

@@ -54,6 +54,7 @@ import { latestNewsId } from '../../src/composables/inboxCue'
 import { mountInbox } from './inbox'
 import type { CareerMeta, KnockPrompt, SeasonSummary, Snapshot } from '../../src/shared/protocol'
 import { careerSnapshot } from '../helpers/career'
+import { tTransparent } from '../helpers/source'
 // ⚠ E-P11 (28.09) needs the PHONE, because the ladder only elides on one – see its own block at the
 // foot of this file. Nothing else here is viewport-dependent.
 import { PHONE, setViewport, type Viewport } from './fits'
@@ -503,7 +504,8 @@ describe('D13 - the one irreversible press has a name of its own', () => {
     if (!row) {
       // The fixture has no letter this week. Assert the shape at the source rather than silently
       // passing: the label is the fix, and a fixture drought may not hide it.
-      expect(readFileSync(resolve(__dirname, '../../src/components/InboxSheet.vue'), 'utf8'))
+      // ⚠ L2-6 (08.10): read through `tTransparent` – the label is `:confirm-label="t('Sign it')"` now, and the claim (the confirm's button has a name of its own) is the same.
+      expect(tTransparent(readFileSync(resolve(__dirname, '../../src/components/InboxSheet.vue'), 'utf8')))
         .toContain('confirm-label="Sign it"')
       wrapper.unmount()
       return

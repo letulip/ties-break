@@ -105,6 +105,10 @@ const FIXTURE_DIR = resolve(process.cwd(), 'tests/fixtures/shop-identity')
 const RECORD_FILE = resolve(FIXTURE_DIR, 'render.json')
 const CAREERS = resolve(process.cwd(), 'e2e/fixtures')
 const WRITING = process.env.TB_WRITE_SHOP_IDENTITY === '1'
+// ⚠ RE-RECORDED, L2-6 (08.10): the shop's copy calls `t()` now. The record is a text-node-by-text-node capture, and a paragraph that is only an interpolation
+// (`{{ t('…') }}`) loses the single space at each edge that Vue's condenser kept around the same words as bare text – 34 leaves moved, every one of them a space at the
+// edge of a text node, none a word: with all whitespace removed the old record and the new one are IDENTICAL (checked when it was rewritten, both ways). Rendered, the
+// difference is nil – inline whitespace at the edge of a block collapses – and the controls, the order, the counts and the tree hash did not move.
 
 // -------------------------------------------------------------------------------------------------
 // THE CAREERS. Real export files, decoded through the product's own `decodeExportFile`.
