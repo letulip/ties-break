@@ -1534,7 +1534,7 @@
     "Her birthday is a matter of record.": {"home":["src/composables/identityCopy.ts"],"area":["scripts"],"wrapped":true},
     "Her birthday on the road. She called when she got in; the candles can wait.": {"home":["src/engine/diary/travelNotes.ts"],"area":["diary"]},
     "Her birthday on the road. The first call was from the clinic; cake can wait.": {"home":["src/engine/diary/travelNotes.ts"],"area":["diary"]},
-    "Her birthday – {0}": {"home":["src/components/BirthdayDialog.vue"],"area":["screens"],"ph":[["weekLabel(prompt.week, startYear)"]]},
+    "Her birthday – {0}": {"home":["src/components/BirthdayDialog.vue"],"area":["screens"],"wrapped":true},
     "Her birthday, and the trip ended at the clinic. Cake tomorrow.": {"home":["src/engine/diary/travelNotes.ts"],"area":["diary"]},
     "Her birthday, somewhere between the draw and home. Cake tomorrow.": {"home":["src/engine/diary/travelNotes.ts"],"area":["diary"]},
     "Her birthday. No parcel – just the day, kept clear for each other.": {"home":["src/engine/world/birthday.ts"],"area":["ledger"]},
