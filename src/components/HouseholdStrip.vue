@@ -34,6 +34,7 @@
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
+import { t } from '../i18n'
 
 const game = useGameStore()
 
@@ -62,14 +63,14 @@ const academyIncomeCents = computed(() => household.value?.academyIncomeCents ??
 const businessCents = computed(() => merchCents.value + academyIncomeCents.value)
 const businessLine = computed(() => {
   const parts = []
-  if (merchCents.value > 0) parts.push(`merch ${formatCents(merchCents.value)}`)
-  if (academyIncomeCents.value > 0) parts.push(`the academy ${formatCents(academyIncomeCents.value)}`)
-  return `Their businesses bring in ${formatCents(businessCents.value)} a week of that – ${parts.join(', ')}.`
+  if (merchCents.value > 0) parts.push(t('merch {0}', [formatCents(merchCents.value)]))
+  if (academyIncomeCents.value > 0) parts.push(t('the academy {0}', [formatCents(academyIncomeCents.value)]))
+  return t('Their businesses bring in {0} a week of that – {1}.', [formatCents(businessCents.value), parts.join(', ')])
 })
 // ⚠ THE SIGN IS IN THE WORD, NOT ONLY IN THE MINUS. A household spending more than it earns is the
 // ordinary junior case, and "-$1,234.00 left over" is not a sentence; the magnitude is printed and
 // the noun says which way it points.
-const netLabel = computed(() => (netCents.value < 0 ? 'short' : 'left over'))
+const netLabel = computed(() => (netCents.value < 0 ? t('short') : t('left over')))
 const netMagnitude = computed(() => Math.abs(netCents.value))
 </script>
 
@@ -82,11 +83,11 @@ const netMagnitude = computed(() => Math.abs(netCents.value))
        words verbatim all over this codebase; the fence is the template, not the file.) -->
   <div class="household-strip">
     <p class="budget-household">
-      <span class="household-label">Household, every week</span>
+      <span class="household-label">{{ t('Household, every week') }}</span>
       <span class="household-figs">
-        <strong>{{ formatCents(inCents) }}</strong> in
+        <strong>{{ formatCents(inCents) }}</strong> {{ t('in') }}
         <i>–</i>
-        <strong>{{ formatCents(outCents) }}</strong> out
+        <strong>{{ formatCents(outCents) }}</strong> {{ t('out') }}
         <i>–</i>
         <strong :class="{ short: netCents < 0 }">{{ formatCents(netMagnitude) }}</strong>
         {{ netLabel }}
@@ -95,12 +96,12 @@ const netMagnitude = computed(() => Math.abs(netCents.value))
     <p v-if="shelfCents !== 0" class="hint budget-shelf">
       {{
         shelfCents > 0
-          ? `The shelf is in that – it adds ${formatCents(shelfCents)} a week at today's rates.`
-          : `The shelf is in that – it costs ${formatCents(-shelfCents)} a week at today's rates.`
+          ? t("The shelf is in that – it adds {0} a week at today's rates.", [formatCents(shelfCents)])
+          : t("The shelf is in that – it costs {0} a week at today's rates.", [formatCents(-shelfCents)])
       }}
     </p>
     <p v-if="upkeepCents > 0" class="hint budget-upkeep">
-      {{ `Keeping what you own is ${formatCents(upkeepCents)} a week of that, and it is real money.` }}
+      {{ t('Keeping what you own is {0} a week of that, and it is real money.', [formatCents(upkeepCents)]) }}
     </p>
     <p v-if="businessCents > 0" class="hint budget-business">
       {{ businessLine }}

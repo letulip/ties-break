@@ -78,6 +78,7 @@ import {
   PSY_FOCUS_LABEL,
   PSY_FOCUS_LINE,
 } from '../engine/world/psychologist'
+import { t } from '../i18n'
 // ⭐⭐⭐ v80, WAVE F2 – the third seat's refusal, from the engine that throws it (the R10-16 doctrine,
 // asked of one more seat). Nothing else of his is imported: his rung catalogue is `ECONOMY.sparring`
 // below, and every live fact is the snapshot's.
@@ -228,7 +229,7 @@ const masseurSalary = computed(() => formatCents(game.snapshot?.masseurSalaryCen
 const masseurLine = computed(() => {
   if (!masseurUnlocked.value) return MASSEUR_LOCKED_DETAIL
   if (masseurHired.value) return game.snapshot?.masseurNote ?? ''
-  return 'Table work at home every week, and a hand on every rehab – layoffs end sooner.'
+  return t('Table work at home every week, and a hand on every rehab – layoffs end sooner.')
 })
 // ⭐ v59 step 2 – THE DIAL, the owner's own idea («настройки сколько раз в неделю он дает свои
 // услуги»). Three rungs off the market catalogue; the ACTIVE one is the snapshot's, the click is a
@@ -287,11 +288,11 @@ const masseurTravelSub = computed(() => {
   // the session rate instead of the weekly figure above – the price READS off the card before the
   // switch is flipped, which is the whole legibility contract of this screen.
   const rule =
-    `Table work between rounds – one additional fare per trip to a paying event, and the week is billed per match there (${formatCents(masseurRateCents.value)} each) instead of the weekly rate.`
+    t('Table work between rounds – one additional fare per trip to a paying event, and the week is billed per match there ({0} each) instead of the weekly rate.', [formatCents(masseurRateCents.value)])
   const trips = game.snapshot?.masseurTravelTrips ?? 0
   if (trips === 0) return rule
-  const t = trips === 1 ? '1 trip' : `${trips} trips`
-  return `${rule} ${formatCents(game.snapshot?.masseurTravelFareCents ?? 0)} over the ${t} booked.`
+  const fare = formatCents(game.snapshot?.masseurTravelFareCents ?? 0)
+  return `${rule} ${trips === 1 ? t('{0} over the 1 trip booked.', [fare]) : t('{0} over the {1} trips booked.', [fare, trips])}`
 })
 // ⭐⭐ ROUND 42 #46 – WHAT HIS FARE BUYS, ONE SENTENCE PER STATE, and both are the owner's: he read
 // them on 16.09 and ruled «слова массажиста ок». They stand BESIDE the travel sub-line above rather
@@ -305,12 +306,12 @@ const masseurTravelSub = computed(() => {
 // exit and most on a deep run, which is what the sentence says and the only thing it says.
 const masseurFareLine = computed(() =>
   masseurTravels.value
-    ? 'Travels with her: table work between rounds. The deeper the run, the more it buys – a first-round exit buys nothing.'
-    : 'Stays home on tournament weeks. One fare saved on every trip.',
+    ? t('Travels with her: table work between rounds. The deeper the run, the more it buys – a first-round exit buys nothing.')
+    : t('Stays home on tournament weeks. One fare saved on every trip.'),
 )
 const masseur = computed<StaffMember>(() => ({
   id: 'masseur',
-  name: 'Masseur',
+  name: t('Masseur'),
   portrait: 'masseur',
   unlocked: masseurUnlocked.value,
   hired: masseurHired.value,
@@ -318,11 +319,11 @@ const masseur = computed<StaffMember>(() => ({
   priceLabel: masseurSalary.value,
   // Both directions ask, the screen's own doctrine (see the coach's `releasing` next door): a screen
   // that asks before it starts paying somebody and not before it stops is not neutral about the two.
-  hireMessage: `Hire a masseur for ${masseurSalary.value} a week (${masseurRungLabel.value.toLowerCase()})? You can end the arrangement any week, like the coach.`,
-  releaseMessage: 'Let the masseur go? The weekly salary stops, and rehab goes back to the clinic alone.',
+  hireMessage: t('Hire a masseur for {0} a week ({1})? You can end the arrangement any week, like the coach.', [masseurSalary.value, masseurRungLabel.value.toLowerCase()]),
+  releaseMessage: t('Let the masseur go? The weekly salary stops, and rehab goes back to the clinic alone.'),
   setHired: (hire: boolean) => game.hireMasseur(hire),
   dial: {
-    label: 'Masseur sessions per week',
+    label: t('Masseur sessions per week'),
     active: masseurSessions.value,
     rungs: MASSEUR_RUNGS.map((r) => ({
       value: r.sessions,
@@ -332,12 +333,12 @@ const masseur = computed<StaffMember>(() => ({
     set: setMasseurRung,
   },
   travel: {
-    title: 'Masseur travels to tournaments',
+    title: t('Masseur travels to tournaments'),
     sub: masseurTravelSub.value,
     on: masseurTravels.value,
-    onLabel: 'Masseur travels to tournaments – on. Press to keep the table work at home.',
+    onLabel: t('Masseur travels to tournaments – on. Press to keep the table work at home.'),
     offLabel:
-      'Masseur travels to tournaments – off. Press to buy one additional fare per trip, for table work between rounds.',
+      t('Masseur travels to tournaments – off. Press to buy one additional fare per trip, for table work between rounds.'),
     toggle: toggleMasseurTravel,
   },
   fareLine: masseurFareLine.value,
@@ -423,10 +424,7 @@ async function setPsychologistFocusChoice(focus: PsyFocus): Promise<void> {
  *  A confirmation's voice is COMPLETELY LITERAL, which is his rule and why this names the option and
  *  the lock and nothing else. */
 function psychologistFocusConfirm(label: string): string {
-  return (
-    `Set the psychologist's work for this season to ${label}? ` +
-    'The year\'s work is chosen once a season, and the next choice comes in the next off-season.'
-  )
+  return t("Set the psychologist's work for this season to {0}? The year's work is chosen once a season, and the next choice comes in the next off-season.", [label])
 }
 // ⭐⭐ 17.09 – THE MARKER, READ HERE EXACTLY AS IT IS READ ON THE OTHER TWO SURFACES: the shared
 // selector and nothing local. `HomeScreen.vue` and `CoachMarketScreen.vue` open with this same line,
@@ -449,26 +447,26 @@ const psychologistLine = computed(() => {
     const focus = psychologistFocus.value
     if (focus !== null) {
       const year = PSY_FOCUS_LINE[focus]
-      return `On retainer – ${year.charAt(0).toLowerCase()}${year.slice(1)}`
+      return t('On retainer – {0}', [`${year.charAt(0).toLowerCase()}${year.slice(1)}`])
     }
-    return 'On retainer – one call a week, wherever she is.'
+    return t('On retainer – one call a week, wherever she is.')
   }
-  return 'A call a week for her head – the year\'s work is chosen one year at a time.'
+  return t("A call a week for her head – the year's work is chosen one year at a time.")
 })
 const psychologist = computed<StaffMember>(() => ({
   id: 'psychologist',
-  name: 'Psychologist',
+  name: t('Psychologist'),
   portrait: 'psychologist',
   unlocked: psychologistUnlocked.value,
   hired: psychologistHired.value,
   line: psychologistLine.value,
   priceLabel: psychologistSalary.value,
   // Both directions ask, the screen's own doctrine – see the masseur's pair above.
-  hireMessage: `Hire a psychologist for ${psychologistSalary.value} a week (${psychologistRungLabel.value.toLowerCase()})? You can end the arrangement any week, like the coach.`,
-  releaseMessage: 'Let the psychologist go? The weekly salary stops, and the calls end with the week.',
+  hireMessage: t('Hire a psychologist for {0} a week ({1})? You can end the arrangement any week, like the coach.', [psychologistSalary.value, psychologistRungLabel.value.toLowerCase()]),
+  releaseMessage: t('Let the psychologist go? The weekly salary stops, and the calls end with the week.'),
   setHired: (hire: boolean) => game.hirePsychologist(hire),
   dial: {
-    label: 'Psychologist – who takes the weekly call',
+    label: t('Psychologist – who takes the weekly call'),
     active: psychologistRung.value,
     rungs: PSYCHOLOGIST_RUNGS.map((r, i) => ({
       value: i,
@@ -478,7 +476,7 @@ const psychologist = computed<StaffMember>(() => ({
     set: setPsychologistRungIndex,
   },
   focus: {
-    label: 'Psychologist – the year\'s work',
+    label: t("Psychologist – the year's work"),
     chosen: psychologistFocus.value,
     options: PSY_FOCUSES.map((f) => ({
       value: f,
@@ -504,7 +502,7 @@ const psychologist = computed<StaffMember>(() => ({
   // and without it a third seat on the payroll quietly reads as a third fare the player might be
   // missing, which is the exact half of #46 he said he could not tell.
   // ⚠ RE-DRAFT `46-c (v2)`, and it is the one string on this repair he has not yet read in play.
-  fareLine: 'No fare to pay: the sessions follow her as calls – at home, on the road, and through a layoff.',
+  fareLine: t('No fare to pay: the sessions follow her as calls – at home, on the road, and through a layoff.'),
 }))
 
 // --- the sparring partner (v80, wave F2) ---------------------------------------------------------
@@ -555,11 +553,11 @@ async function toggleSparringTravel(): Promise<void> {
 // clause below it is untouched – it is a figure, not a claim.
 const sparringTravelSub = computed(() => {
   const rule =
-    'Bring the hitting partner on tour for one additional fare per trip. Home practice is already covered; this extends the arrangement to travel weeks.'
+    t('Bring the hitting partner on tour for one additional fare per trip. Home practice is already covered; this extends the arrangement to travel weeks.')
   const trips = game.snapshot?.sparringTravelTrips ?? 0
   if (trips === 0) return rule
-  const t = trips === 1 ? '1 trip' : `${trips} trips`
-  return `${rule} ${formatCents(game.snapshot?.sparringTravelFareCents ?? 0)} over the ${t} booked.`
+  const fare = formatCents(game.snapshot?.sparringTravelFareCents ?? 0)
+  return `${rule} ${trips === 1 ? t('{0} over the 1 trip booked.', [fare]) : t('{0} over the {1} trips booked.', [fare, trips])}`
 })
 // The one line under his name, by state – the masseur's three-state shape exactly. LOCKED prints the
 // ENGINE's own refusal (SPARRING_LOCKED_DETAIL – the sentence `hireSparring` throws), the R10-16
@@ -579,14 +577,14 @@ const sparringStoodDown = computed(() => game.snapshot?.sparringStoodDown ?? fal
 const sparringLine = computed(() => {
   if (!sparringUnlocked.value) return SPARRING_LOCKED_DETAIL
   if (sparringHired.value && sparringStoodDown.value) {
-    return 'The hitting partner remains with the team, but is not working this week. No salary is charged.'
+    return t('The hitting partner remains with the team, but is not working this week. No salary is charged.')
   }
-  if (sparringHired.value) return 'Helps her keep her timing during weeks without a match.'
-  return 'A regular practice opponent for weeks when she is not competing.'
+  if (sparringHired.value) return t('Helps her keep her timing during weeks without a match.')
+  return t('A regular practice opponent for weeks when she is not competing.')
 })
 const sparring = computed<StaffMember>(() => ({
   id: 'sparring',
-  name: 'Hitting partner',
+  name: t('Hitting partner'),
   portrait: 'sparring',
   unlocked: sparringUnlocked.value,
   hired: sparringHired.value,
@@ -598,8 +596,8 @@ const sparring = computed<StaffMember>(() => ({
   // appearing inside confirmations and accessibility labels, where literal clarity matters». HIRE is
   // the verb («Put … on the payroll» is not one), «you can end the arrangement any week» says what
   // «Cancellable» meant, and the release names what actually stops rather than what she is left with.
-  hireMessage: `Hire a hitting partner for ${sparringSalary.value} a week (${sparringRungLabel.value.toLowerCase()})? You can end the arrangement any week, like the coach.`,
-  releaseMessage: 'Let the hitting partner go? The weekly salary stops, and regular match-style practice between events ends.',
+  hireMessage: t('Hire a hitting partner for {0} a week ({1})? You can end the arrangement any week, like the coach.', [sparringSalary.value, sparringRungLabel.value.toLowerCase()]),
+  releaseMessage: t('Let the hitting partner go? The weekly salary stops, and regular match-style practice between events ends.'),
   setHired: (hire: boolean) => game.hireSparring(hire),
   dial: {
     // ⭐⭐ HIS LABEL, AND IT IS THE SECOND OF THE TWO HE OFFERED, BECAUSE THE RUNGS WERE CHECKED. He
@@ -609,7 +607,7 @@ const sparring = computed<StaffMember>(() => ({
     // of standing, priced off the $50–80k/yr band in `docs/research/team-economics-2026-09.md` §4,
     // not tier 1/2/3 of a game system. ⚠ And the old label was the last «across the net» on this tab,
     // which he ruled unsuitable for a control: a label must say what the control CHANGES.
-    label: 'Hitting partner – experience level',
+    label: t('Hitting partner – experience level'),
     active: sparringRung.value,
     rungs: SPARRING_RUNGS.map((r, i) => ({
       value: i,
@@ -629,11 +627,11 @@ const sparring = computed<StaffMember>(() => ({
     // screen reader should announce exactly what the control changes». So each one states the state
     // it is in and then the state pressing it produces, in the terminology sheet's words, and neither
     // carries an image. «For a court on the road» is gone: the seat buys a person, not a venue.
-    title: 'Tournament travel',
+    title: t('Tournament travel'),
     sub: sparringTravelSub.value,
     on: sparringTravels.value,
-    onLabel: 'Hitting partner travel is on. Press to keep the hitting partner at the home club.',
-    offLabel: 'Hitting partner travel is off. Press to bring the hitting partner on tour; each trip adds one fare.',
+    onLabel: t('Hitting partner travel is on. Press to keep the hitting partner at the home club.'),
+    offLabel: t('Hitting partner travel is off. Press to bring the hitting partner on tour; each trip adds one fare.'),
     toggle: toggleSparringTravel,
   },
 }))
@@ -734,7 +732,7 @@ async function doSetFocus(): Promise<void> {
   <section v-for="m in members" :key="m.id" class="bare staff-block" :data-staff="m.id">
     <p class="tier-head">
       <span class="tier-name">{{ m.name }}</span>
-      <span class="tier-range">{{ m.priceLabel }} /wk</span>
+      <span class="tier-range">{{ t('{0} /wk', [m.priceLabel]) }}</span>
     </p>
     <!-- ⭐⭐ ROUND 43 #2: THE SEAT'S FACE, on the coach strip's principle and by his own ruling - the
          market row's treatment since round 42 #3, at a different aspect ratio. His words are quoted
@@ -753,9 +751,9 @@ async function doSetFocus(): Promise<void> {
         <span class="cm-load staff-line">{{ m.line }}</span>
       </span>
       <span class="staff-right">
-        <span v-if="!m.unlocked" class="cm-action is-locked">Locked</span>
-        <button v-else-if="!m.hired" :disabled="game.busy" @click="hiring = m.id">Hire</button>
-        <button v-else :disabled="game.busy" @click="releasing = m.id">Let go</button>
+        <span v-if="!m.unlocked" class="cm-action is-locked">{{ t('Locked') }}</span>
+        <button v-else-if="!m.hired" :disabled="game.busy" @click="hiring = m.id">{{ t('Hire') }}</button>
+        <button v-else :disabled="game.busy" @click="releasing = m.id">{{ t('Let go') }}</button>
       </span>
     </div>
     <!-- ⭐ v59 step 2: THE DIAL - the owner's own idea, three rungs off the market catalogue.
@@ -778,7 +776,7 @@ async function doSetFocus(): Promise<void> {
              is rendered ONLY where the catalogue supplies one - a seat whose ladder has no approved
              sentences shows no empty line where one would be. -->
         <span v-if="r.note" class="rung-note">{{ r.note }}</span>
-        <span class="rung-price">{{ r.priceLabel }}/wk</span>
+        <span class="rung-price">{{ t('{0}/wk', [r.priceLabel]) }}</span>
       </button>
     </div>
     <!-- ⭐⭐ v76 T3: THE YEAR'S WORK - the second radio group under this seat, and the one that says
@@ -854,14 +852,14 @@ async function doSetFocus(): Promise<void> {
   <ConfirmDialog
     v-if="hiringMember"
     :message="hiringMember.hireMessage"
-    confirm-label="Hire"
+    :confirm-label="t('Hire')"
     @confirm="doHire"
     @cancel="hiring = null"
   />
   <ConfirmDialog
     v-if="releasingMember"
     :message="releasingMember.releaseMessage"
-    confirm-label="Let go"
+    :confirm-label="t('Let go')"
     @confirm="doRelease"
     @cancel="releasing = null"
   />
@@ -871,7 +869,7 @@ async function doSetFocus(): Promise<void> {
   <ConfirmDialog
     v-if="focusingOption"
     :message="focusingOption.option.confirm"
-    confirm-label="Set it"
+    :confirm-label="t('Set it')"
     @confirm="doSetFocus"
     @cancel="focusing = null"
   />

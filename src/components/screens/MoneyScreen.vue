@@ -49,6 +49,7 @@
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { prefersReducedMotion } from '../../composables/reducedMotion'
+import { localizedList, t } from '../../i18n'
 // ⭐ ROUND 42 #11 – `staffResultShareBps` joins the same import, and for the reason round 29 #13
 // gave on the coaches page: the percentage a screen prints must be the one `finalizeTournament`
 // pays through, never a typed copy of it. See `coachShareNote` below.
@@ -282,10 +283,10 @@ const breakdownWindow = ref<'12w' | 'season'>('12w')
 // (34 weeks old on the save he reported from) while the history card below lists seasons that have
 // FINISHED. The rename was never the fix, so restoring the word re-opens no defect; it only stops
 // answering a question he did not ask. The two-seasons confusion waits for him to choose a repair.
-const WINDOW_OPTIONS = [
-  { value: '12w', label: 'Last 12 weeks', short: '12 weeks' },
-  { value: 'season', label: 'This season', short: 'This season' },
-]
+const WINDOW_OPTIONS = computed(() => [
+  { value: '12w', label: t('Last 12 weeks'), short: t('12 weeks') },
+  { value: 'season', label: t('This season'), short: t('This season') },
+])
 // The engine-side finance window for the active toggle (12w: last 12 weeks; season: the current
 // 52-week block) - category-accurate over the full retained history, not the trailing event feed.
 const activeFinance = computed<FinanceWindow | undefined>(() =>
@@ -330,10 +331,19 @@ const trainingBillNote = computed<string | null>(() => {
   const coach = snap.coachId ? true : false
   const split = snap.coachBilling.split
   const [lo, hi] = snap.coachBilling.weekRangeCents
-  const quote = coach
-    ? `Training quotes at ${formatCents(split.totalCents)} a week – ${formatCents(split.coachCents)} coaching, ${formatCents(split.facilityCents)} courts.`
-    : `Court time quotes at ${formatCents(split.facilityCents)} a week – you coach her, so there is no coaching line.`
-  return `${quote} No week bills exactly that: a session moves, a court books at a busier hour. Yours runs ${formatCents(lo)}–${formatCents(hi)}.`
+  return coach
+    ? t('Training quotes at {0} a week – {1} coaching, {2} courts. No week bills exactly that: a session moves, a court books at a busier hour. Yours runs {3}–{4}.', [
+        formatCents(split.totalCents),
+        formatCents(split.coachCents),
+        formatCents(split.facilityCents),
+        formatCents(lo),
+        formatCents(hi),
+      ])
+    : t('Court time quotes at {0} a week – you coach her, so there is no coaching line. No week bills exactly that: a session moves, a court books at a busier hour. Yours runs {1}–{2}.', [
+        formatCents(split.facilityCents),
+        formatCents(lo),
+        formatCents(hi),
+      ])
 })
 
 const incomeCents = computed(() => activeFinance.value?.incomeCents ?? 0)
@@ -377,7 +387,7 @@ const coachShareCents = computed(() => activeFinance.value?.coachCutCents ?? 0)
 /** Which window the figure is for, in the switcher's own two words. ⚠ The switcher's labels are the
  *  owner's (`This season` is invariant 4's own worked example), so the phrase is built from them
  *  rather than from a third spelling of the same period. */
-const coachShareWindow = computed(() => (breakdownWindow.value === 'season' ? 'this season' : 'in the last 12 weeks'))
+const coachShareWindow = computed(() => (breakdownWindow.value === 'season' ? t('this season') : t('in the last 12 weeks')))
 /** ⭐⭐⭐ ROUND 42 #41 (15.09) – ONE PERCENTAGE WHERE THERE WERE TWO, and the words are his.
  *
  *  The memo used to end «10% of a title cheque, 10% of a lost final.» – the same rate said twice,
@@ -391,8 +401,11 @@ const coachShareWindow = computed(() => (breakdownWindow.value === 'season' ? 't
  *  the one that pays a first-round exit – so the sentence reads the rate it actually claims. */
 const coachShareNote = computed<string | null>(() =>
   coachShareCents.value > 0
-    ? `Coach's results share – ${formatCents(coachShareCents.value)} ${coachShareWindow.value}, already inside Coaching above: ` +
-      `${staffResultShareBps('coach', 2) / 100}% of every prize cheque.`
+    ? t("Coach's results share – {0} {1}, already inside Coaching above: {2}% of every prize cheque.", [
+        formatCents(coachShareCents.value),
+        coachShareWindow.value,
+        staffResultShareBps('coach', 2) / 100,
+      ])
     : null,
 )
 
@@ -405,26 +418,26 @@ const coachShareNote = computed<string | null>(() =>
 // must never appear as a spending row, exactly as 'interest' must not.
 type ExpenseCategory = Exclude<WorldEventCategory, 'income' | 'sponsor' | 'interest' | 'academy' | 'business'>
 const EXPENSE_META: { key: ExpenseCategory; label: string }[] = [
-  { key: 'coaching', label: 'Coaching' },
+  { key: 'coaching', get label() { return t('Coaching') } },
   // ⚠ THE COURT IS ITS OWN ROW (v44, docs/specs/split-the-bill-2026-08.md, owner 08.08: «нам нужно
   // отдельной строчкой списывать тренера, а отдельной рент залов и прочего»). It sits immediately
   // under Coaching because the two are one bill split in two, and the reader should meet them
   // together: the man, then the place. A self-coached family has only the second, which is the
   // honest thing the split fixes - it was being shown "Coaching" for a parent who works free.
-  { key: 'facility', label: 'Courts & facility' },
-  { key: 'travel', label: 'Travel' },
-  { key: 'entry', label: 'Entry fees' },
-  { key: 'gear', label: 'Gear' },
-  { key: 'stringing', label: 'Stringing' },
-  { key: 'physio', label: 'Fitness & medical' },
+  { key: 'facility', get label() { return t('Courts & facility') } },
+  { key: 'travel', get label() { return t('spend|Travel') } },
+  { key: 'entry', get label() { return t('Entry fees') } },
+  { key: 'gear', get label() { return t('Gear') } },
+  { key: 'stringing', get label() { return t('Stringing') } },
+  { key: 'physio', get label() { return t('Fitness & medical') } },
   // v59, the travelling team: the SALARIED people beyond the coach – the masseur today. Its own row
   // beside the clinic bucket above, deliberately: a salary folded into 'Fitness & medical' would be
   // the academy's invisible $20,879 again (round 23 #16) – paid every week and findable nowhere.
-  { key: 'staff', label: 'Support staff' },
+  { key: 'staff', get label() { return t('Support staff') } },
   // Season planner (v13): the two planned spends get their own rows - a vacation package is a real
   // money sink the owner wants to see, and the practice court fee is the small recurring one.
-  { key: 'vacation', label: 'Vacations' },
-  { key: 'practice', label: 'Practice matches' },
+  { key: 'vacation', get label() { return t('Vacations') } },
+  { key: 'practice', get label() { return t('Practice matches') } },
   // ⭐⭐ THE COLLEGE BILL (round 21, docs/specs/the-college-tariff-2026-08.md; owner 17.08 asked for
   // legible rungs, transparent payment and an annual drawdown – his words are in the spec).
   //
@@ -438,7 +451,7 @@ const EXPENSE_META: { key: ExpenseCategory; label: string }[] = [
   // ⚠ IT SITS LAST BEFORE 'Other' RATHER THAN NEXT TO 'Coaching' because it is not a tennis cost –
   // `WorldEventCategory`'s own note calls it "the first cost in the game that is not tennis" – and
   // because it is the only row here that can be the whole bill for a year at a time.
-  { key: 'tuition', label: 'College tuition' },
+  { key: 'tuition', get label() { return t('College tuition') } },
   // ⚠ v63, THE SHOP – AND THIS ROW IS A NET, NOT A GROSS, WHICH IS THE ONE THING TO KNOW ABOUT IT.
   // Buying books a negative and selling books a positive under the SAME category (the idiom a
   // cancelled vacation already uses), and `financeWindow` folds signed totals – so a car bought for
@@ -447,8 +460,8 @@ const EXPENSE_META: { key: ExpenseCategory; label: string }[] = [
   // two gross prices are on the ledger tab, one row each way, where gross flows belong.
   // ⚠ A window in which the family only BOUGHT therefore shows the full price, which is correct and
   // is also why §2e-5 exists: the shelf must not be the biggest thing on this list before season 4.
-  { key: 'shop', label: 'The shop' },
-  { key: 'other', label: 'Other' },
+  { key: 'shop', get label() { return t('The shop') } },
+  { key: 'other', get label() { return t('Other') } },
 ]
 const EXPENSE_KEYS = new Set<string>(EXPENSE_META.map((m) => m.key))
 
@@ -644,7 +657,7 @@ const seasonRows = computed(() => {
       const recorded = typeof r.spentCents === 'number'
       return {
         seasonIndex: r.seasonIndex,
-        yearLabel: `Season ${r.seasonIndex + 1} – ${seasonYear(r.seasonIndex, startYear.value)}`,
+        yearLabel: t('Season {0} – {1}', [r.seasonIndex + 1, seasonYear(r.seasonIndex, startYear.value)]),
         recorded,
         // ⭐ ROUND-17 #13 – TWO FIGURES ABOUT ONE YEAR, and the third one is gone rather than joined
         // by a fourth. The owner, 12.08: «там некуда добавлять, и так же на "кашу" похоже, надо
@@ -670,7 +683,7 @@ const seasonRows = computed(() => {
         // same units, so a reader can relate them without being told to. The family's balance is on
         // this screen's own header, where a running total belongs.
         value: recorded ? formatCentsSigned(-r.spentCents!) : '–',
-        meta: recorded ? `${formatCentsSigned(r.earnedCents ?? 0)} in` : 'not recorded',
+        meta: recorded ? t('{0} in', [formatCentsSigned(r.earnedCents ?? 0)]) : t('not recorded'),
       }
     })
 })
@@ -789,16 +802,26 @@ const ledgerGroups = computed<LedgerGroup[]>(() => {
 //   * physio "$45-70/wk" / the rehab rate – `weeklyBand` prints the TRUE bounds of the corridor, so
 //     the figure is already an interval. "Around $45-70/wk" would qualify a range with a range.
 const kitLines = computed(() => game.snapshot?.kit ?? [])
-const LINE_TITLE: Record<string, string> = { strings: 'Strings', frame: 'Racket', shoes: 'Shoes' }
+const LINE_TITLE: Record<string, string> = {
+  get strings() {
+    return t('Strings')
+  },
+  get frame() {
+    return t('Racket')
+  },
+  get shoes() {
+    return t('Shoes')
+  },
+}
 
 /** Her condition on a line, in the parent's words rather than as a number. The bands are the wear
  *  model's own shape - fresh kit is 0 and a spent line is 1 - and the words stop at four, because a
  *  fifth would be a precision the model does not have. */
 function wearWord(wear: number): string {
-  if (wear < 0.25) return 'Fresh'
-  if (wear < 0.55) return 'Fine'
-  if (wear < 0.85) return 'Worn'
-  return 'Gone'
+  if (wear < 0.25) return t('Fresh')
+  if (wear < 0.55) return t('Fine')
+  if (wear < 0.85) return t('Worn')
+  return t('Gone')
 }
 
 // --- THE DEAL BEHIND THE KIT, AND WHAT IS LEFT OF IT (09.08) --------------------------------------
@@ -826,22 +849,38 @@ const adPortfolio = computed(() => game.snapshot?.adPortfolio ?? [])
 const fame = computed(() => game.snapshot?.fame ?? 0)
 /** The covered lines in the LETTER's words - the paper says "racquets", the equipment model says
  *  "frame", and a parent reading both must not meet two vocabularies for one thing. */
-const KIT_LINE_WORDS: Record<string, string> = { strings: 'strings', frame: 'racquets', shoes: 'shoes' }
+const KIT_LINE_WORDS: Record<string, string> = {
+  get strings() {
+    return t('strings')
+  },
+  get frame() {
+    return t('racquets')
+  },
+  get shoes() {
+    return t('shoes')
+  },
+}
 const dealCovers = computed(() => {
   const words = (kitDeal.value?.covers ?? []).map((l) => KIT_LINE_WORDS[l] ?? l)
   if (words.length === 0) return ''
   if (words.length === 1) return words[0]
-  return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
+  return t('{0} and {1}', [words.slice(0, -1).join(', '), words[words.length - 1]])
 })
 /** HOW LONG THE CONTRACT RUNS, which was persisted on the offer and printed nowhere (the owner:
  *  «Непонятно на какое количество лет спонсор контракт заключает, нигде не видно этой информации»).
  *  Seasons AND the two weeks that bound it, because "three seasons" alone still leaves the parent
  *  counting off a calendar he cannot see. */
-const SEASON_WORDS = ['', 'One season', 'Two seasons', 'Three seasons', 'Four seasons']
+const SEASON_WORDS = localizedList(
+  () => '',
+  () => t('One season'),
+  () => t('Two seasons'),
+  () => t('Three seasons'),
+  () => t('Four seasons'),
+)
 const dealTerm = computed(() => {
   const d = kitDeal.value
   if (!d) return ''
-  const seasons = SEASON_WORDS[d.seasons] ?? `${d.seasons} seasons`
+  const seasons = SEASON_WORDS[d.seasons] ?? t('{0} seasons', [d.seasons])
   return `${seasons} · ${weekLabel(d.fromWeek, startYear.value)} – ${weekLabel(d.untilWeek, startYear.value)}`
 })
 /** ⭐⭐ ROUND 41 #14 – THE BRACKET. His ask, 12.09: «На Bills на все выбранные позиции добавить в
@@ -959,12 +998,21 @@ function chooseRung(view: KitLineView, rung: KitLineView['rungs'][number]): void
 const kitConfirmMessage = computed(() => {
   const p = pendingKit.value
   if (!p) return ''
-  const tail = 'She plays with it from this week, and every replacement is billed at this level.'
-  if (p.payableCents >= p.priceCents) return `Buy the ${p.label} for ${formatCents(p.priceCents)}? ${tail}`
-  if (p.payableCents === 0) {
-    return `Buy the ${p.label}? Her sponsor covers it in full – ${formatCents(p.priceCents)} off her allowance. ${tail}`
+  if (p.payableCents >= p.priceCents) {
+    return t('Buy the {0} for {1}? She plays with it from this week, and every replacement is billed at this level.', [p.label, formatCents(p.priceCents)])
   }
-  return `Buy the ${p.label} for ${formatCents(p.payableCents)}? Her sponsor covers ${formatCents(p.priceCents - p.payableCents)} of the ${formatCents(p.priceCents)}. ${tail}`
+  if (p.payableCents === 0) {
+    return t('Buy the {0}? Her sponsor covers it in full – {1} off her allowance. She plays with it from this week, and every replacement is billed at this level.', [
+      p.label,
+      formatCents(p.priceCents),
+    ])
+  }
+  return t('Buy the {0} for {1}? Her sponsor covers {2} of the {3}. She plays with it from this week, and every replacement is billed at this level.', [
+    p.label,
+    formatCents(p.payableCents),
+    formatCents(p.priceCents - p.payableCents),
+    formatCents(p.priceCents),
+  ])
 })
 
 function confirmKit(): void {
@@ -1031,12 +1079,12 @@ function showAllTransactions(): void {
 // other three are about money that has already moved and this one is about money that has not.
 type MoneyTab = 'spend' | 'bills' | 'history' | 'shop'
 const screenTab = ref<MoneyTab>('spend')
-const TAB_OPTIONS = [
-  { value: 'spend', label: 'Spending', title: 'Where the money went in the chosen period' },
-  { value: 'bills', label: 'Bills', title: 'The recurring costs the family has signed up to' },
-  { value: 'history', label: 'History', title: 'Every season, and every transaction' },
-  { value: 'shop', label: 'Shop', title: 'What the family can buy with what is left' },
-]
+const TAB_OPTIONS = computed(() => [
+  { value: 'spend', label: t('Spending'), title: t('Where the money went in the chosen period') },
+  { value: 'bills', label: t('Bills'), title: t('The recurring costs the family has signed up to') },
+  { value: 'history', label: t('History'), title: t('Every season, and every transaction') },
+  { value: 'shop', label: t('Shop'), title: t('What the family can buy with what is left') },
+])
 
 // =================================================================================================
 // ⭐⭐ ROUND 30 #5 – A SECOND ROW OF TABS INSIDE BILLS AND INSIDE SHOP.
@@ -1062,10 +1110,10 @@ const TAB_OPTIONS = [
 // duplication is visible, cheap and his to remove with one sentence.
 type BillsTab = 'kit' | 'ads'
 const billsTab = ref<BillsTab>('kit')
-const BILLS_TAB_OPTIONS = [
-  { value: 'kit', label: 'Her Kit', title: 'What she plays with, and what replacing it costs' },
-  { value: 'ads', label: 'Advs Portfolio', title: 'The advertising categories, filled and open' },
-]
+const BILLS_TAB_OPTIONS = computed(() => [
+  { value: 'kit', label: t('Her Kit'), title: t('What she plays with, and what replacing it costs') },
+  { value: 'ads', label: t('Advs Portfolio'), title: t('The advertising categories, filled and open') },
+])
 /** The age the portfolio opens at, READ OUT OF THE ENGINE and never typed – the same constant
  *  `toSnapshot` gates the shelf on, so the empty tab's sentence and the gate cannot drift apart. */
 const adFromAgeYears = ECONOMY.advertising.fromAgeYears
@@ -1114,13 +1162,13 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
           class="back-link"
           variant="bare"
           icon="back"
-          label="Back to Home"
+          :label="t('screen|Back to Home')"
           @click="emit('navigate', 'home')"
         />
         <div class="money-head-id">
-          <h2 class="money-title">Family Budget</h2>
+          <h2 class="money-title">{{ t('Family Budget') }}</h2>
           <p class="money-sub" :class="{ negative: fundsCents < 0 }">
-            {{ funds }} in the account &middot; {{ weekLabel(week, startYear) }}
+            {{ t('{0} in the account · {1}', [funds, weekLabel(week, startYear)]) }}
           </p>
         </div>
       </div>
@@ -1133,9 +1181,9 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
            makes it a spell rather than a sentence. -->
       <p v-if="game.snapshot.debt" class="money-debt" role="status">
         <strong>{{ game.snapshot.debt.weeks }}</strong>
-        {{ game.snapshot.debt.weeks === 1 ? 'week' : 'weeks' }} below zero &middot;
+        {{ game.snapshot.debt.weeks === 1 ? t('week below zero') : t('weeks below zero') }} &middot;
         <strong>{{ Math.max(0, game.snapshot.debt.graceWeeks - game.snapshot.debt.weeks) }}</strong>
-        before the money runs out for good. One week back in the black clears it.
+        {{ t('before the money runs out for good. One week back in the black clears it.') }}
       </p>
 
       <!-- ========================= 1b. THE SECTION SWITCHER =========================
@@ -1147,22 +1195,22 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
         appearance="chapter"
         class="money-tabs"
         :options="TAB_OPTIONS"
-        group-label="Which part of the budget"
+        :group-label="t('Which part of the budget')"
         @click="openChapter"
       />
 
       <!-- ============================= 2. THE SUMMARY ============================= -->
       <Card v-if="screenTab === 'spend'" class="money-summary" pad="14px 4px">
         <div class="money-cell">
-          <p class="money-cell-label">Total income</p>
+          <p class="money-cell-label">{{ t('Total income') }}</p>
           <p class="money-cell-figure positive">{{ formatCents(incomeCents) }}</p>
         </div>
         <div class="money-cell money-cell-mid">
-          <p class="money-cell-label">Total spent</p>
+          <p class="money-cell-label">{{ t('Total spent') }}</p>
           <p class="money-cell-figure negative">{{ formatCents(-spentCents) }}</p>
         </div>
         <div class="money-cell money-cell-end">
-          <p class="money-cell-label">Balance</p>
+          <p class="money-cell-label">{{ t('spend|Balance') }}</p>
           <p class="money-cell-figure" :class="netCents < 0 ? 'negative' : 'positive'">
             {{ formatCentsSigned(netCents) }}
           </p>
@@ -1175,7 +1223,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
         v-model="breakdownWindow"
         class="money-window"
         :options="WINDOW_OPTIONS"
-        group-label="Budget period"
+        :group-label="t('Budget period')"
       />
 
       <!-- ================= 4. THE CATEGORY COLUMN + THE ARTEFACTS =================
@@ -1183,7 +1231,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
            as the export composes it. Below 340px of content the artefacts step out of the way
            rather than crowd the figures - see the media query in the style block. -->
       <p v-if="screenTab === 'spend' && !expenseRows.length" class="money-empty">
-        No spending in this window yet.
+        {{ t('No spending in this window yet.') }}
       </p>
 
       <div v-else-if="screenTab === 'spend'" class="money-body">
@@ -1223,7 +1271,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
           <StatRow
             v-if="incomeCents > 0"
             class="money-row"
-            label="Income"
+            :label="t('Income')"
             :value="formatCentsSigned(incomeCents)"
             tone="positive"
             :divider="false"
@@ -1257,7 +1305,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
           <p v-if="trainingBillNote" class="money-panel-note money-bill-note">{{ trainingBillNote }}</p>
 
           <PrimaryPill class="money-cta" variant="cta" @click="showAllTransactions">
-            View all transactions
+            {{ t('View all transactions') }}
           </PrimaryPill>
         </div>
 
@@ -1311,7 +1359,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
               :style="{ stroke: seg.color }"
             />
             <text class="donut-center-num" x="21" y="20.5">{{ formatCents(-totalExpenseCents) }}</text>
-            <text class="donut-center-cap" x="21" y="25">spent</text>
+            <text class="donut-center-cap" x="21" y="25">{{ t('spent') }}</text>
           </svg>
         </div>
       </div>
@@ -1319,15 +1367,14 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
       <!-- ============================== 5. THE LEVERS ==============================
            R9-5: recurring budget levers live with the money, not on Home. -->
       <Card v-if="screenTab === 'bills'" class="money-panel">
-        <Eyebrow as="h2">Budget</Eyebrow>
+        <Eyebrow as="h2">{{ t('Budget') }}</Eyebrow>
         <label class="physio-toggle">
           <input type="checkbox" :checked="physioActive" :disabled="game.busy" @change="togglePhysio" />
-          <span>Physio recovery</span>
+          <span>{{ t('Physio recovery') }}</span>
           <span class="hint physio-cost">{{ physioCostLabel }}</span>
         </label>
         <p class="money-panel-note">
-          Weekly retainer - lowers injury risk, shortens recoveries and adds a little condition each
-          week. Charged on the weeks she is fit.
+          {{ t('Weekly retainer - lowers injury risk, shortens recoveries and adds a little condition each week. Charged on the weeks she is fit.') }}
         </p>
         <!-- ⚠ THE SECOND RATE, AND IT IS NOT A SECOND LEVER (round-16 #15). Rehab is not something
              the family switches on: the engine bills it on every injured week whether the toggle is
@@ -1336,12 +1383,12 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
              would read as a second thing to turn off. Emphasised only while she is actually hurt,
              which is the week it stops being a number and starts being the bill. -->
         <p class="money-panel-note" :class="{ 'money-panel-note-live': injuredNow }">
-          <template v-if="injuredNow">She is hurt, so this week bills rehab:</template>
-          <template v-else>An injured week bills rehab instead:</template>
+          <template v-if="injuredNow">{{ t('She is hurt, so this week bills rehab:') }}</template>
+          <template v-else>{{ t('An injured week bills rehab instead:') }}</template>
           <b>{{ physioRehabLabel }}</b
-          >, with or without the retainer above.
+          >{{ t(', with or without the retainer above.') }}
         </p>
-        <p class="money-panel-note">Started this career with {{ startingBudget }}.</p>
+        <p class="money-panel-note">{{ t('Started this career with {0}.', [startingBudget]) }}</p>
       </Card>
 
       <!-- ===================== 5a. THE BILLS CHAPTER'S OWN TABS =====================
@@ -1355,7 +1402,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
         v-model="billsTab"
         class="money-window money-subtabs"
         :options="BILLS_TAB_OPTIONS"
-        group-label="Which bills"
+        :group-label="t('Which bills')"
       />
 
       <!-- ========================= 5b. HER KIT, AND WHAT IT COSTS ===================
@@ -1370,7 +1417,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
           <img :src="shelfArtUrl(BILLS_ART_KEYS.kit) ?? undefined" alt="" />
           <span class="card-art-scrim" aria-hidden="true"></span>
         </div>
-        <Eyebrow as="h2">Her kit</Eyebrow>
+        <Eyebrow as="h2">{{ t('Her kit') }}</Eyebrow>
         <!-- ⚠ THE OLD LINE SAID "plays truer" AND THAT WAS THE ONE THING IT DOES NOT DO (08.08).
              engine/equipment.ts is explicit: fresh kit is EXACTLY neutral at every rung, every
              multiplier is 1, and wear only ever subtracts - so a pro frame is not better than a new
@@ -1380,9 +1427,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
              included). He could not tell, and the reason is that the screen was promising an upside
              the model refuses to give. What it says now is the true and more interesting sentence. -->
         <p class="money-panel-note">
-          New kit plays the same whatever it cost – what a better rung buys is TIME before it goes
-          off, and it is billed every time the family replaces it, not once. The shop's price moves a
-          little between replacements, so the figures below are what a rung costs about.
+          {{ t("New kit plays the same whatever it cost – what a better rung buys is TIME before it goes off, and it is billed every time the family replaces it, not once. The shop's price moves a little between replacements, so the figures below are what a rung costs about.") }}
         </p>
         <!-- ⚠ THE SPONSOR'S RUNNING BALANCE, AND IT IS THE POINT OF THIS BLOCK. The allowance is a
              pot for the season, not a discount rate: once it is spent the same kit is billed to the
@@ -1399,13 +1444,12 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
             <span class="kit-deal-term">{{ dealTerm }} {{ dealWeeksLeft }}</span>
           </div>
           <p class="kit-deal-note">
-            They supply her {{ dealCovers }}, and she enters at least
-            {{ kitDeal.minEventsPerSeason }} tournaments a season.
+            {{ t('They supply her {0}, and she enters at least {1} tournaments a season.', [dealCovers, kitDeal.minEventsPerSeason]) }}
           </p>
           <StatRow
             class="money-row"
-            label="Allowance left this season"
-            :meta="`${formatCents(kitDeal.spentCents)} of ${formatCents(kitDeal.allowanceCents)} used`"
+            :label="t('Allowance left this season')"
+            :meta="t('{0} of {1} used', [formatCents(kitDeal.spentCents), formatCents(kitDeal.allowanceCents)])"
             :value="formatCents(kitDeal.remainingCents)"
             :tone="kitDeal.remainingCents > 0 ? 'positive' : 'negative'"
           />
@@ -1414,12 +1458,10 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
                read, the projection still inside it); mutually exclusive with the spent-out note
                below by construction (one wants `remainingCents > 0`, the other `=== 0`). -->
           <p v-if="kitAllowanceProjectedEmptyWeek !== null" class="kit-deal-note is-projected">
-            At this pace it runs out around {{ weekLabel(kitAllowanceProjectedEmptyWeek, startYear) }}.
+            {{ t('At this pace it runs out around {0}.', [weekLabel(kitAllowanceProjectedEmptyWeek, startYear)]) }}
           </p>
           <p v-if="kitDeal.remainingCents === 0" class="kit-deal-note is-spent">
-            The season's allowance is spent. Her {{ dealCovers }} are billed to the family at full
-            price until the new season starts – the deal still keeps them fresh, and it still pays
-            again from the first week of next season.
+            {{ t("The season's allowance is spent. Her {0} are billed to the family at full price until the new season starts – the deal still keeps them fresh, and it still pays again from the first week of next season.", [dealCovers]) }}
           </p>
         </div>
         <div v-for="view in kitLines" :key="view.line" class="kit-line">
@@ -1452,9 +1494,9 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
             >
               <span class="kit-rung-name">{{ rung.label }}</span>
               <span class="kit-rung-good">
-                {{ rung.goodWeeks }} good weeks
+                {{ t('{0} good weeks', [rung.goodWeeks]) }}
                 <span v-if="rung.owned && view.goodWeeksLeft !== null" class="kit-rung-left">
-                  ({{ view.goodWeeksLeft }} left)
+                  {{ t('({0} left)', [view.goodWeeksLeft]) }}
                 </span>
               </span>
               <!-- ⭐ ROUND-23 #17 – "Around" IN FRONT OF EVERY RUNG PRICE. The owner asked for the
@@ -1472,12 +1514,12 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
                      that spans a newline, so a bare line break here renders "Around$920" – the CSS
                      margin would still open a gap on screen, but the accessible name and every
                      copy-paste of this button would have the two words fused. -->
-                <span class="kit-rung-approx">Around</span>{{ ' ' }}
+                <span class="kit-rung-approx">{{ t('Around') }}</span>{{ ' ' }}
                 <s>{{ formatCents(rung.priceCents) }}</s>
-                {{ rung.payableCents === 0 ? 'free' : formatCents(rung.payableCents) }}
+                {{ rung.payableCents === 0 ? t('free') : formatCents(rung.payableCents) }}
               </span>
               <span v-else class="kit-rung-price">
-                <span class="kit-rung-approx">Around</span> {{ formatCents(rung.priceCents) }}
+                <span class="kit-rung-approx">{{ t('Around') }}</span> {{ formatCents(rung.priceCents) }}
               </span>
             </button>
           </div>
@@ -1488,19 +1530,13 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
                the allowance ending mid-purchase, not a discount rate. -->
           <p v-if="view.sponsored && kitDeal" class="kit-line-sponsored">
             <template v-if="kitDeal.remainingCents === 0">
-              Her sponsor keeps this line fresh, but the season's allowance is gone – this one is
-              the family's to buy until next season.
+              {{ t("Her sponsor keeps this line fresh, but the season's allowance is gone – this one is the family's to buy until next season.") }}
             </template>
             <template v-else-if="partCovered(view)">
-              Her sponsor supplies this line and keeps it fresh. Only
-              {{ formatCents(kitDeal.remainingCents) }} of the allowance is left, so a dearer rung is
-              part-paid – the struck price is the sticker and the price beside it is the family's
-              share.
+              {{ t("Her sponsor supplies this line and keeps it fresh. Only {0} of the allowance is left, so a dearer rung is part-paid – the struck price is the sticker and the price beside it is the family's share.", [formatCents(kitDeal.remainingCents)]) }}
             </template>
             <template v-else>
-              Her sponsor supplies this line – they keep it fresh whatever she plays, and they pay
-              for what she buys while {{ formatCents(kitDeal.remainingCents) }} of this season's
-              allowance is left.
+              {{ t("Her sponsor supplies this line – they keep it fresh whatever she plays, and they pay for what she buys while {0} of this season's allowance is left.", [formatCents(kitDeal.remainingCents)]) }}
             </template>
           </p>
         </div>
@@ -1521,7 +1557,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
           <img :src="shelfArtUrl(BILLS_ART_KEYS.ads) ?? undefined" alt="" />
           <span class="card-art-scrim" aria-hidden="true"></span>
         </div>
-        <Eyebrow as="h2">The advertising portfolio</Eyebrow>
+        <Eyebrow as="h2">{{ t('The advertising portfolio') }}</Eyebrow>
         <!-- ⭐⭐⭐ ROUND 29 PART THREE P3 – THE SECOND SENTENCE IS THE MANAGER'S COMMISSION, AND IT
              REPLACES THE ONE THAT DESCRIBED THE OLD SPLIT. It used to read «Fees run through the
              family's account with her share taken like any sponsor cheque», which was true while
@@ -1534,9 +1570,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
              it actually pays, so a retune of `ECONOMY.managerCommission` moves this line and the
              cheque together and they cannot drift apart. -->
         <p class="money-panel-note">
-          One deal per category – the cheque grows with her standing, the shelf itself does not.
-          Every fee is written to her at its full value, and the family banks the manager's
-          {{ commissionPct }}% of it.
+          {{ t("One deal per category – the cheque grows with her standing, the shelf itself does not. Every fee is written to her at its full value, and the family banks the manager's {0}% of it.", [commissionPct]) }}
         </p>
         <!-- ⭐ ROUND 29 PART FOUR P7/P8 – FAME'S ONE LINE, where the sponsors live. The stock of
              docs/specs/fame-and-the-shoots-2026-08.md, first surfaced here and deliberately
@@ -1544,42 +1578,40 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
              at the boundary), no meter and no gate re-derived. The full fame surface is a later
              wave; today it is the number the merch line follows. -->
         <p class="money-panel-note ad-fame-line">
-          How known she is – {{ fame }} of 100. The court sets that floor, and the shoots she has
-          done multiply it; the merch brand sells on it.
+          {{ t('How known she is – {0} of 100. The court sets that floor, and the shoots she has done multiply it; the merch brand sells on it.', [fame]) }}
         </p>
         <div v-for="row in adPortfolio" :key="row.category" class="ad-slot" :class="`is-${row.state}`">
           <div class="ad-slot-head">
             <span class="ad-slot-name">{{ row.label }}</span>
             <span v-if="row.state === 'filled'" class="ad-slot-brand">{{ row.brand }}</span>
-            <span v-else-if="row.state === 'open'" class="ad-slot-state">Open – nobody signed</span>
+            <span v-else-if="row.state === 'open'" class="ad-slot-state">{{ t('Open – nobody signed') }}</span>
             <span v-else class="ad-slot-state">
               <!-- ⭐ ROUND 39 #3 – the lifetime row's gate has two halves (the capstone's own tenure
                    read PLUS a Slam), so its closed line names both, counted plainly. DRAFT copy. -->
               {{ row.slamTitles && row.seasonsInTop10
-                ? `${row.slamTitles.held} of ${row.slamTitles.needed} Slams · ${row.seasonsInTop10.held} of ${row.seasonsInTop10.needed} top-10 seasons`
+                ? `${t('{0} of {1} Slams', [row.slamTitles.held, row.slamTitles.needed])} · ${t('{0} of {1} top-10 seasons', [row.seasonsInTop10.held, row.seasonsInTop10.needed])}`
                 : row.seasonsInTop10
-                  ? `${row.seasonsInTop10.held} of ${row.seasonsInTop10.needed} top-10 seasons`
+                  ? t('{0} of {1} top-10 seasons', [row.seasonsInTop10.held, row.seasonsInTop10.needed])
                   : row.opensAtRank
-                    ? `Opens inside WTA #${row.opensAtRank}`
-                    : 'Not open yet' }}
+                    ? t('Opens inside WTA #{0}', [row.opensAtRank])
+                    : t('Not open yet') }}
             </span>
           </div>
           <!-- ⭐ ROUND 39 #3 – a filled lifetime row says «for life» where the years-and-runs-to
                clause would be a lie: the paper has no term and no untilWeek at all. DRAFT copy. -->
           <p v-if="row.state === 'filled' && row.lifetime" class="ad-slot-note">
-            {{ formatCents(row.cashCents ?? 0) }} a year · for life
+            {{ t('{0} a year · for life', [formatCents(row.cashCents ?? 0)]) }}
           </p>
           <p v-else-if="row.state === 'filled'" class="ad-slot-note">
-            {{ formatCents(row.cashCents ?? 0) }} a year ·
-            {{ (row.termYears ?? 1) === 1 ? 'one year' : `${row.termYears} years` }} · runs to
+            {{ t('{0} a year ·', [formatCents(row.cashCents ?? 0)]) }}
+            {{ (row.termYears ?? 1) === 1 ? t('one year') : t('{0} years', [row.termYears]) }} · {{ t('runs to') }}
             <!-- ⭐⭐ ROUND 41 #14 – the same bracket the kit deal carries, off the same function
                  (`weeksLeftBracket`, script block). The lifetime row above has no `untilWeek` at
                  all and takes the other branch, so it is never asked for one. -->
             {{ weekLabel(row.untilWeek ?? 0, startYear) }} {{ weeksLeftBracket(row.untilWeek ?? 0, week) }}
           </p>
           <p v-else-if="row.state === 'open'" class="ad-slot-note">
-            A letter here writes about {{ formatCents(row.openCashCents ?? 0) }} a year at her
-            standing.
+            {{ t('A letter here writes about {0} a year at her standing.', [formatCents(row.openCashCents ?? 0)]) }}
           </p>
         </div>
       </Card>
@@ -1594,8 +1626,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
         v-if="screenTab === 'bills' && billsTab === 'ads' && adPortfolio.length === 0"
         class="money-panel-note money-subtab-empty"
       >
-        Nothing to show yet – the categories open at {{ adFromAgeYears }}, and they fill one letter
-        at a time as she climbs.
+        {{ t('Nothing to show yet – the categories open at {0}, and they fill one letter at a time as she climbs.', [adFromAgeYears]) }}
       </p>
 
       <!-- ======================= 5c. HER ACADEMY, AND WHAT IT HAS PAID ===============
@@ -1604,19 +1635,18 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
            the total is nowhere. `coveredCents` is the engine's own running figure since the last
            annual review, which is the same shape as the sponsor's allowance above it. -->
       <Card v-if="screenTab === 'bills' && academy" class="money-panel">
-        <Eyebrow as="h2">Her academy</Eyebrow>
+        <Eyebrow as="h2">{{ t('Her academy') }}</Eyebrow>
         <p class="money-panel-note">
-          They take {{ academyCoverPct }}% off every trip she enters – the travel figures on the
-          calendar and in the ledger are already net of it, and it is reviewed once a year.
+          {{ t('They take {0}% off every trip she enters – the travel figures on the calendar and in the ledger are already net of it, and it is reviewed once a year.', [academyCoverPct]) }}
         </p>
         <StatRow
           class="money-row"
-          label="Travel they have paid"
-          meta="since the last review"
+          :label="t('Travel they have paid')"
+          :meta="t('since the last review')"
           :value="formatCents(academy.coveredCents)"
           tone="positive"
         />
-        <p class="money-panel-note">With them since {{ weekLabel(academy.sinceWeek, startYear) }}.</p>
+        <p class="money-panel-note">{{ t('With them since {0}.', [weekLabel(academy.sinceWeek, startYear)]) }}</p>
       </Card>
 
       <!-- ============================== 6. THE CAREER, BY YEAR ======================
@@ -1629,9 +1659,9 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
              ⚠ ROUND 30 #4: its twin USED to read «Season so far» – that half was an unasked rename
              and is back to `This season`. This eyebrow is left as round 29 left it because he did
              not ask about it, so #8 stands OPEN: half-labelled is not solved. See WINDOW_OPTIONS. -->
-        <Eyebrow as="h2">Completed seasons</Eyebrow>
+        <Eyebrow as="h2">{{ t('Completed seasons') }}</Eyebrow>
         <p v-if="!seasonRows.length" class="money-panel-note">
-          Her first season is still running – it lands here when the year wraps up.
+          {{ t('Her first season is still running – it lands here when the year wraps up.') }}
         </p>
         <StatRow
           v-for="row in seasonRows"
@@ -1643,16 +1673,15 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
           :tone="row.recorded ? 'negative' : 'plain'"
         />
         <p v-if="seasonRows.some((r) => !r.recorded)" class="money-panel-note">
-          Seasons played before this version kept only the year's balance, so what they cost is not
-          on file. Every season from here on records it.
+          {{ t("Seasons played before this version kept only the year's balance, so what they cost is not on file. Every season from here on records it.") }}
         </p>
       </Card>
 
       <!-- ============================== 7. THE LEDGER ============================== -->
       <div v-if="screenTab === 'history'" ref="ledger">
         <Card class="money-panel">
-          <Eyebrow as="h2">All transactions</Eyebrow>
-          <p v-if="!ledgerGroups.length" class="money-panel-note">No transactions yet.</p>
+          <Eyebrow as="h2">{{ t('All transactions') }}</Eyebrow>
+          <p v-if="!ledgerGroups.length" class="money-panel-note">{{ t('No transactions yet.') }}</p>
           <div v-for="group in ledgerGroups" :key="group.week" class="ledger-week">
             <p class="ledger-week-label">{{ weekLabel(group.week, startYear) }}</p>
             <StatRow
@@ -1737,9 +1766,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
       <div v-if="kidShareNote && screenTab === 'spend'" class="money-share" role="note">
         <p class="money-share-text">
           <strong>{{ kidShareNote }}</strong>
-          Every prize cheque is split before it reaches this account: her part goes to her, the family
-          banks the rest. The prize rows above are what the family kept, and each one names the share
-          that left.
+          {{ t('Every prize cheque is split before it reaches this account: her part goes to her, the family banks the rest. The prize rows above are what the family kept, and each one names the share that left.') }}
         </p>
         <!-- ⚙ ROUND 36 REVIEW #14 – he asked for a bigger photograph on this card, and NOT ONE
              ATTRIBUTE HERE MOVED: the window grows from the style block, where a width can depend on
@@ -1751,7 +1778,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
       <ConfirmDialog
         v-if="pendingKit"
         :message="kitConfirmMessage"
-        confirm-label="Buy it"
+        :confirm-label="t('Buy it')"
         @confirm="confirmKit"
         @cancel="pendingKit = null"
       />
@@ -1773,7 +1800,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
       <ConfirmDialog
         v-if="pendingShop"
         :message="shopConfirmMessage"
-        :confirm-label="pendingShop.kind === 'sell' ? 'Sell it' : pendingShop.buildWeeks ? 'Order it' : 'Buy it'"
+        :confirm-label="pendingShop.kind === 'sell' ? t('Sell it') : pendingShop.buildWeeks ? t('Order it') : t('Buy it')"
         @confirm="confirmShop"
         @cancel="pendingShop = null"
       />
