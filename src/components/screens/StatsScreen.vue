@@ -28,8 +28,9 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { prefersReducedMotion } from '../../composables/reducedMotion'
-import { formatShortName, rankLabel } from '../../shared/format'
-import { LADDER_LABEL } from '../../shared/protocol'
+import { ladderName } from '../../composables/kidIdentity'
+import { formatShortName } from '../../shared/format'
+import { t } from '../../i18n'
 import { TIERS, TIER_SHORT } from '../../engine/season/calendar'
 import { BEST_N_BY_TRACK, RANKABLE_MIN } from '../../engine/season/ranking'
 import { finishPhrase } from '../../composables/tierState'
@@ -68,17 +69,55 @@ const shownModel = computed<string>({
 // to compile here until somebody writes its tooltip, and the options list is derived from the map,
 // so the switch can never silently trail the type again (the unit guard pins the derivation).
 const LADDER_TIP: Record<LadderTrack, string> = {
-  domestic: 'Local, Regional and National results. These are the points that open her next tier.',
-  itf: 'Junior Tour results only. A national title is worth nothing here – the two tables never meet.',
-  wta: 'W15 and up – the paid tour. Junior points never cross over.',
+  get domestic() {
+    return t('Local, Regional and National results. These are the points that open her next tier.')
+  },
+  get itf() {
+    return t('Junior Tour results only. A national title is worth nothing here – the two tables never meet.')
+  },
+  get wta() {
+    return t('W15 and up – the paid tour. Junior points never cross over.')
+  },
+}
+// L2-7 (08.10, RU-07 §2): THE TABLE'S NAME HAS THREE PROJECTIONS, and English spells all three the same word (`LADDER_LABEL`, which stays the English
+// source in shared/ – engine-importable, it can never call `t()`). The PICKER button wants the compact name (a 320px row cannot hold three full
+// adjectives), the TILE labels want the compact suffix, and the heading, the table's name and the strip want the FULL display name (`ladderName`, the
+// bare `National` / `International` / `Professional` keys the rank chip already reads). Three Russians for one English word is what the two tags are
+// for: `picker|` and `tile|`, each rendering the bare English word until the owner writes the rows. Every table of words here is GETTERS over `t()` and keeps its Record<LadderTrack, string>
+// type, so a locale flip reaches a mounted screen and the totality guard (a fourth table fails to compile until it has its sentence) is untouched.
+const LADDER_PICKER: Record<LadderTrack, string> = {
+  get domestic() {
+    return t('picker|National')
+  },
+  get itf() {
+    return t('picker|International')
+  },
+  get wta() {
+    return t('picker|Professional')
+  },
+}
+const LADDER_TILE: Record<LadderTrack, string> = {
+  get domestic() {
+    return t('tile|National')
+  },
+  get itf() {
+    return t('tile|International')
+  },
+  get wta() {
+    return t('tile|Professional')
+  },
 }
 const options = computed(() =>
-  (Object.keys(LADDER_TIP) as LadderTrack[]).map((t) => ({
-    value: t,
-    label: LADDER_LABEL[t],
-    title: LADDER_TIP[t],
+  (Object.keys(LADDER_TIP) as LadderTrack[]).map((track) => ({
+    value: track,
+    label: LADDER_PICKER[track],
+    title: LADDER_TIP[track],
   })),
 )
+// The shown table's FULL display name – the heading, the table's accessible name, the strip entry and the counting list's name all read it, and
+// `{0} ranking` is the frame the tournament flow already wired (RU04-T17 drops the word for the Russian: the full name already says it).
+const tileWord = computed(() => LADDER_TILE[shown.value])
+const fullName = computed(() => ladderName(shown.value))
 
 const ladder = computed(() => game.snapshot?.ladders[shown.value])
 const standings = computed(() => ladder.value?.standings ?? [])
@@ -102,7 +141,8 @@ const jPeak = computed<number | null>(() => {
 // `rank: null` IS the answer "not ranked in this table at all" – the engine decides it, so this
 // screen no longer counts results to work it out for itself.
 const ranked = computed(() => ladder.value?.rank !== null && ladder.value?.rank !== undefined)
-const rankText = computed(() => rankLabel(ladder.value?.rank ?? 0, ranked.value))
+// L2-7: `rankLabel`'s two shapes (shared/format.ts, engine-importable, so it cannot call `t()`) read through the catalog, as Home's chip does.
+const rankText = computed(() => (ranked.value ? t('#{rank}', { rank: ladder.value?.rank ?? 0 }) : t('Unranked')))
 // ⚠⚠ AND THE TABLE ITSELF CAN BE UNRANKED – round 24 #4, and this column is where the owner read it.
 // `LadderView.rank` has been nullable since the two-ladders wave so HER line says "Unranked"
 // honestly, but the standings beside it print `r.rank` for every row, and on a table where nobody
@@ -131,13 +171,30 @@ const countingResults = computed(() => ladder.value?.countingResults ?? [])
 // tournament summary's own sentence (`rankingDeltaSuffix`) quote one rule. Nothing is re-derived
 // here: if the engine ever stops withholding, the field goes and the line goes with it.
 const banked = computed(() => ladder.value?.banked ?? null)
-const bankedNote = computed(() =>
-  banked.value === null
-    ? null
-    : `${banked.value} pts banked. A ${LADDER_LABEL[shown.value].toLowerCase()} ranking needs ` +
-      `${RANKABLE_MIN.tournaments} events with points, or ${RANKABLE_MIN.points} points – ` +
-      `until then the table shows nothing, and every result below still counts towards it.`,
-)
+// L2-7 (RU-07 §5.2): the shown table's own word sits INSIDE the sentence («A national ranking needs…»), and the Russian draft never says it – the
+// sentence is about the table under the tiles. A hole the value does not read is a parity defect, so the three tables are three WHOLE messages (the
+// L2-5 injury circumstances' shape) and the English is character for character what the one template built, grammar included («A international»).
+const BANKED_NOTE: Record<LadderTrack, (pts: number) => string> = {
+  domestic: (pts) =>
+    t('{0} pts banked. A national ranking needs {1} events with points, or {2} points – until then the table shows nothing, and every result below still counts towards it.', [
+      pts,
+      RANKABLE_MIN.tournaments,
+      RANKABLE_MIN.points,
+    ]),
+  itf: (pts) =>
+    t('{0} pts banked. A international ranking needs {1} events with points, or {2} points – until then the table shows nothing, and every result below still counts towards it.', [
+      pts,
+      RANKABLE_MIN.tournaments,
+      RANKABLE_MIN.points,
+    ]),
+  wta: (pts) =>
+    t('{0} pts banked. A professional ranking needs {1} events with points, or {2} points – until then the table shows nothing, and every result below still counts towards it.', [
+      pts,
+      RANKABLE_MIN.tournaments,
+      RANKABLE_MIN.points,
+    ]),
+}
+const bankedNote = computed(() => (banked.value === null ? null : BANKED_NOTE[shown.value](banked.value)))
 
 // --- THE WINDOW BLOCK (W2-LADDER §3: the owner's «очковое окно возможностей», made visible) ------
 // Three facts the rolling window has always had and never said: how full it is against the shown
@@ -172,8 +229,16 @@ const windowInfo = computed(() => {
   const what =
     oldest.tier && finish >= 0
       ? `${TIER_SHORT[oldest.tier]} ${finishPhrase(finish, TIERS[oldest.tier].drawSize)}`
-      : 'Oldest result'
+      : t('Oldest result')
   return { cap, counted: list.length, full: list.length >= cap, weakest, what, dropPts: oldest.points, dropInWeeks }
+})
+// L2-7: the week count is a counted phrase, so the singular and the plural are two whole messages (RU-07 §7 asks for the Russian plural of the number).
+const dropLine = computed(() => {
+  const w = windowInfo.value
+  if (!w) return ''
+  return w.dropInWeeks === 1
+    ? t('Next drop: {0}, {1} pts – leaves the window in 1 week.', [w.what, w.dropPts])
+    : t('Next drop: {0}, {1} pts – leaves the window in {2} weeks.', [w.what, w.dropPts, w.dropInWeeks])
 })
 // This season's W-L, straight off the Snapshot (accumulated at finalizeTournament, reset each
 // season wrap-up).
@@ -204,14 +269,26 @@ const seasonLosses = computed(() => seasonRecord.value.losses)
 // The one sentence no arithmetic on this screen can imply, so it has to be said. Total maps, like
 // LADDER_TIP above and for the same reason: a fourth table cannot ship without its sentences.
 const NO_EXCHANGE: Record<LadderTrack, string> = {
-  domestic: 'National points open her next tier. They do not count towards her international ranking.',
-  itf: 'Junior Tour points only. National results do not count here.',
-  wta: 'Professional points only. Junior and national results do not count here.',
+  get domestic() {
+    return t('National points open her next tier. They do not count towards her international ranking.')
+  },
+  get itf() {
+    return t('Junior Tour points only. National results do not count here.')
+  },
+  get wta() {
+    return t('Professional points only. Junior and national results do not count here.')
+  },
 }
 const EMPTY_NOTE: Record<LadderTrack, string> = {
-  domestic: 'No national results yet – her first Local Open will put her on this table.',
-  itf: 'She has not played a Junior Tour event yet, so she has no international ranking. Her national standing is on the other tab.',
-  wta: 'She has not played a professional event yet. The paid tour starts at the World Tour 15, from age 16.',
+  get domestic() {
+    return t('No national results yet – her first Local Open will put her on this table.')
+  },
+  get itf() {
+    return t('She has not played a Junior Tour event yet, so she has no international ranking. Her national standing is on the other tab.')
+  },
+  get wta() {
+    return t('She has not played a professional event yet. The paid tour starts at the World Tour 15, from age 16.')
+  },
 }
 const noExchange = computed(() => NO_EXCHANGE[shown.value])
 const emptyNote = computed(() => EMPTY_NOTE[shown.value])
@@ -251,10 +328,10 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
  *  element that owns that section's heading - the two `<section>`s below, and SeasonHistoryTable's
  *  own root for the first. */
 const sections = computed(() => {
-  const list: { id: string; label: string }[] = [{ id: 'stats-seasons', label: 'Season by season' }]
+  const list: { id: string; label: string }[] = [{ id: 'stats-seasons', label: t('Season by season') }]
   if (!archiveShown.value) {
-    list.push({ id: 'stats-ranking', label: `${LADDER_LABEL[shown.value]} ranking` })
-    if (countingResults.value.length) list.push({ id: 'stats-results', label: 'Counting results' })
+    list.push({ id: 'stats-ranking', label: t('{0} ranking', [fullName.value]) })
+    if (countingResults.value.length) list.push({ id: 'stats-results', label: t('Counting results') })
   }
   return list
 })
@@ -316,7 +393,7 @@ function goToSection(id: string): void {
 <template>
   <template v-if="game.snapshot">
     <section>
-      <h2>Stats</h2>
+      <h2>{{ t('Stats') }}</h2>
       <!-- WHICH TABLE. Above the tiles, because it governs every figure under it. Carries this
            screen's own class because the shared plate comes off here - see .stats-ladder-row. -->
       <SegmentedRow
@@ -324,17 +401,20 @@ function goToSection(id: string): void {
         appearance="bare"
         class="stats-ladder-row"
         :options="options"
-        group-label="Which ranking table"
+        :group-label="t('Which ranking table')"
       />
       <!-- THE ARCHIVE PLATE (W2-LADDER): a closed junior career is a fact to keep, not a table to
            watch drain. It replaces the live tiles on this tab only - the rule and the peak, and
            nothing that still moves. -->
       <div v-if="archiveShown" class="stats-archive">
-        <p class="stats-archive-title">Junior career – closed at {{ J_MAX_AGE + 1 }}</p>
-        <p v-if="jPeak !== null" class="stats-archive-peak">Peaked #{{ jPeak }} at year-end</p>
+        <p class="stats-archive-title">{{ t('Junior career – closed at {0}', [J_MAX_AGE + 1]) }}</p>
+        <p v-if="jPeak !== null" class="stats-archive-peak">{{ t('Peaked #{0} at year-end', [jPeak]) }}</p>
         <p class="hint stats-archive-note">
-          The Junior Tour is under-{{ J_MAX_AGE + 1 }}, so this table is hers for good – it cannot
-          move again. Her live career is on the Pro tab.
+          {{
+            t('The Junior Tour is under-{0}, so this table is hers for good – it cannot move again. Her live career is on the Pro tab.', [
+              J_MAX_AGE + 1,
+            ])
+          }}
         </p>
       </div>
       <!-- R10-2: the three tiles are captions, not body copy – each label stays on ONE line
@@ -342,18 +422,18 @@ function goToSection(id: string): void {
            "Season points" is now "Season pts", which is what actually fits at 375px. -->
       <div v-if="!archiveShown" class="stats-header-row">
         <div class="stats-tile">
-          <span class="stats-tile-label">{{ LADDER_LABEL[shown] }} rank</span>
+          <span class="stats-tile-label">{{ t('{0} rank', [tileWord]) }}</span>
           <span class="stats-tile-value">{{ rankText }}</span>
         </div>
         <div class="stats-tile">
-          <span class="stats-tile-label">Points</span>
+          <span class="stats-tile-label">{{ t('Points') }}</span>
           <span class="stats-tile-value num">{{ points }}</span>
         </div>
         <!-- The label carries the ladder for the same reason the rank tile's does: three tiles that
              all change together must all say what they changed to. "W-L" alone, in a row where the
              two figures beside it are named, reads as the one figure that is about everything. -->
         <div class="stats-tile">
-          <span class="stats-tile-label">{{ LADDER_LABEL[shown] }} W–L</span>
+          <span class="stats-tile-label">{{ t('{0} W–L', [tileWord]) }}</span>
           <span class="stats-tile-value num">{{ seasonWins }}–{{ seasonLosses }}</span>
         </div>
       </div>
@@ -370,7 +450,7 @@ function goToSection(id: string): void {
          things it is not: it is not a picker (nothing is selected), it is not a `<nav>` (a second
          navigation landmark makes `getByRole('navigation')` ambiguous on this screen and reddens the
          suite's tab walk), and it never lists a section this category does not draw. -->
-    <div v-if="sections.length > 1" class="controls stats-jump" role="group" aria-label="Stats">
+    <div v-if="sections.length > 1" class="controls stats-jump" role="group" :aria-label="t('strip|Stats')">
       <button
         v-for="s in sections"
         :key="s.id"
@@ -390,19 +470,19 @@ function goToSection(id: string): void {
     <SeasonHistoryTable id="stats-seasons" :track="shown" />
 
     <section v-if="!archiveShown" id="stats-ranking">
-      <h2>{{ LADDER_LABEL[shown] }} ranking</h2>
+      <h2>{{ t('{0} ranking', [fullName]) }}</h2>
       <!-- D8: the table answers to a name (docs/specs/e2e-coverage.md §12). It says WHICH table,
            because all three render through this one element and a reader arriving by role has no
            other way to tell which one she landed in. -->
-      <table v-if="standings.length" :aria-label="`${LADDER_LABEL[shown]} ranking`">
+      <table v-if="standings.length" :aria-label="t('{0} ranking', [fullName])">
         <thead>
           <tr>
-            <th>#</th>
-            <th>Player</th>
+            <th>{{ t('#') }}</th>
+            <th>{{ t('Player') }}</th>
             <!-- THE AGE COLUMN - the owner's own ask, twice; his words are quoted at AGE_COLUMN in
                  the script block, where the house convention allows the original. -->
-            <th>Age</th>
-            <th>Pts</th>
+            <th>{{ t('Age') }}</th>
+            <th>{{ t('Pts') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -423,7 +503,7 @@ function goToSection(id: string): void {
           </template>
         </tbody>
       </table>
-      <p class="hint">Her rank: {{ rankText }}</p>
+      <p class="hint">{{ t('Her rank: {0}', [rankText]) }}</p>
       <p v-if="!ranked" class="hint">{{ emptyNote }}</p>
     </section>
 
@@ -431,27 +511,24 @@ function goToSection(id: string): void {
          a rank and the results that earned it have to come from one ladder or the explanation
          contradicts the number. This is the "points visualisation" the domestic rungs never had. -->
     <section v-if="!archiveShown && countingResults.length" id="stats-results">
-      <h2>Counting results</h2>
+      <h2>{{ t('Counting results') }}</h2>
       <!-- THE WINDOW, said out loud (W2-LADDER §3). One line for where the window stands, one for
            what it is about to let go - the points window of opportunity the owner asked to see
            (his phrase is quoted at `windowInfo` in the script, where the house convention allows
            the original). -->
       <template v-if="windowInfo">
         <p class="hint stats-window-line">
-          Counting {{ windowInfo.counted }} of a best-{{ windowInfo.cap }} window.
+          {{ t('Counting {0} of a best-{1} window.', [windowInfo.counted, windowInfo.cap]) }}
           <template v-if="windowInfo.full">
-            Weakest counted: {{ windowInfo.weakest }} pts – a new result must beat it to raise the total.
+            {{ t('Weakest counted: {0} pts – a new result must beat it to raise the total.', [windowInfo.weakest]) }}
           </template>
-          <template v-else>The window has room – any scoring result counts in full.</template>
+          <template v-else>{{ t('The window has room – any scoring result counts in full.') }}</template>
         </p>
-        <p class="hint stats-window-drop">
-          Next drop: {{ windowInfo.what }}, {{ windowInfo.dropPts }} pts – leaves the window in
-          {{ windowInfo.dropInWeeks }} {{ windowInfo.dropInWeeks === 1 ? 'week' : 'weeks' }}.
-        </p>
+        <p class="hint stats-window-drop">{{ dropLine }}</p>
       </template>
       <!-- D8 again: it says WHICH table's results, because the list changes with the picker above and
            a reader arriving by role has no other way to tell which one she is in. -->
-      <CountingResultsTable :results="countingResults" :label="`${LADDER_LABEL[shown]} counting results`" />
+      <CountingResultsTable :results="countingResults" :label="t('{0} counting results', [fullName])" />
     </section>
   </template>
 </template>

@@ -41,8 +41,9 @@ import { useGameStore } from '../stores/game'
 import { finishLabel } from '../engine/world'
 import { seasonYear } from '../shared/dates'
 import { formatCentsSigned } from '../shared/money'
-import { LADDER_LABEL, type SeasonHistoryEntry } from '../shared/protocol'
+import type { SeasonHistoryEntry } from '../shared/protocol'
 import type { LadderTrack } from '../engine/season/types'
+import { t } from '../i18n'
 import { useStartYear } from '../composables/startYear'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
@@ -61,10 +62,31 @@ const props = defineProps<{ track: LadderTrack }>()
 // prose; these are its abbreviations, and they exist because this column sits in a five-column table
 // on a 375px phone (see the 375px note above). A TOTAL Record, the house rule: a fourth table cannot
 // ship until somebody has decided what its column is called.
+// L2-7 (08.10, RU-07 §9.2): getters over `t()` – the table keeps its type and a locale flip reaches a table that is already on screen.
 const RANK_HEAD: Record<LadderTrack, string> = {
-  domestic: 'Nat. rank',
-  itf: 'Int. rank',
-  wta: 'Pro rank',
+  get domestic() {
+    return t('Nat. rank')
+  },
+  get itf() {
+    return t('Int. rank')
+  },
+  get wta() {
+    return t('Pro rank')
+  },
+}
+// L2-7 (RU-07 §9.1): THE TABLE'S ACCESSIBLE NAME IS THREE WHOLE MESSAGES, not a frame with a lowercased table word in it. English built it as
+// `Season by season, ${LADDER_LABEL[track].toLowerCase()} figures`; the Russian draft names the table by its FULL display name, and a hole holding a
+// lowercased English word is a hole the value cannot use (parity) or must lowercase a translated heading (the doc forbids it). Same English, character for character.
+const TABLE_NAME: Record<LadderTrack, string> = {
+  get domestic() {
+    return t('Season by season, national figures')
+  },
+  get itf() {
+    return t('Season by season, international figures')
+  },
+  get wta() {
+    return t('Season by season, professional figures')
+  },
 }
 
 const game = useGameStore()
@@ -139,38 +161,37 @@ const cells = computed(() =>
 
 <template>
   <section>
-    <h2>Season by season</h2>
+    <h2>{{ t('Season by season') }}</h2>
     <p v-if="!rows.length" class="hint" style="margin-top: 0">
-      Her first season is still running – it lands here at the year's wrap-up, and every season
-      after it stacks on top.
+      {{ t("Her first season is still running – it lands here at the year's wrap-up, and every season after it stacks on top.") }}
     </p>
     <!-- ⚠ SEASONS EXIST, BUT NONE OF THEM IS THIS TABLE'S (round-16 #4). Since the old folded rows
          stopped appearing under the two tabs they never belonged to, a career that spans the v46
          boundary can reach a tab with nothing on it – and an empty table under a heading reads as a
          screen that failed to load. It says which of the two it is. -->
     <p v-else-if="!cells.length" class="hint" style="margin-top: 0">
-      Nothing on this table yet – her finished seasons were played on another one.
+      {{ t('Nothing on this table yet – her finished seasons were played on another one.') }}
     </p>
     <template v-else>
       <!-- THE SCROLLER. `tabindex="0"` because a region that scrolls must be reachable without a
            pointer, and `role="group"` + a name so a screen reader says what it has landed in. -->
-      <div class="season-history-scroll" tabindex="0" role="group" aria-label="Season by season, scrollable">
+      <div class="season-history-scroll" tabindex="0" role="group" :aria-label="t('Season by season, scrollable')">
         <!-- D8 (docs/specs/e2e-coverage.md §12): every table on this screen answers to a NAME now, so
              `getByRole('table', { name })` reaches it. `aria-label` rather than a `<caption>` because
              the heading above already says "Season by season" on the page and a caption would print it
              twice; the name states which table's figures are inside, which is the fact a reader
              arriving by role cannot otherwise get. -->
-        <table :aria-label="`Season by season, ${LADDER_LABEL[track].toLowerCase()} figures`">
+        <table :aria-label="TABLE_NAME[track]">
           <thead>
             <tr>
-              <th>Season</th>
+              <th>{{ t('Season') }}</th>
               <!-- The rank column names its TABLE, because the figure under it changed meaning with
                    the picker above. It used to read "Int. rank" on all three tabs. -->
               <th style="white-space: nowrap">{{ RANK_HEAD[track] }}</th>
-              <th>Pts</th>
+              <th>{{ t('Pts') }}</th>
               <!-- narrow phones: "W–L" must not break across two lines (the column is the tightest) -->
-              <th style="white-space: nowrap">W–L</th>
-              <th>Funds</th>
+              <th style="white-space: nowrap">{{ t('W–L') }}</th>
+              <th>{{ t('Funds') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -189,7 +210,7 @@ const cells = computed(() =>
                    never ranked here (v46 omits `endRank` rather than printing the tie floor every
                    pointless player shares), or the season predates v46 and the only rank it kept
                    belongs to another table. -->
-              <td class="num">{{ c.rank === null ? '–' : `#${c.rank}` }}</td>
+              <td class="num">{{ c.rank === null ? '–' : t('#{rank}', { rank: c.rank }) }}</td>
               <td class="num">{{ c.points }}</td>
               <td class="num" style="white-space: nowrap">{{ c.wins }}–{{ c.losses }}</td>
               <!-- ⭐ ROUND-17 #13 – ONE FIGURE, NOT TWO. The owner's words and the measurement behind
@@ -214,7 +235,7 @@ const cells = computed(() =>
            needs saying, and for the original reason – the wallet is career-wide, so this column
            genuinely means something different from the four beside it. -->
       <p class="hint">
-        Funds is the season's net – the family's whole year, not this table's.
+        {{ t("Funds is the season's net – the family's whole year, not this table's.") }}
       </p>
     </template>
   </section>
