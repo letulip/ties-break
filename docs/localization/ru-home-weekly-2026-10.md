@@ -30,7 +30,7 @@ formatter:
 | RU03-F02 | `Jun 3 – Jun 9` | `3–9 июня` | same-month range |
 | RU03-F03 | `Jan 27 – Feb 2, 2031` | `27 января – 2 февраля 2031` | cross-month range |
 | RU03-F04 | `W14 '31` | `Нед. 14 · ’31` | compact row label only |
-| RU03-F05 | `{n} years old` | `{age} · {flag}` | the flag already separates identity; a bare localized age is enough |
+| RU03-F05 | `{age} years old {flag}` | `{age} · {flag}` | the flag already separates identity; a bare localized age is enough |
 
 For F05, `{age}` is a formatted phrase such as `14 лет`, `21 год`, `22 года`. Never append `лет` to
 a number at the component call site.
@@ -79,9 +79,9 @@ table label plus `№{n}` or `Без рейтинга`.
 
 | id | source | English | Russian |
 | --- | --- | --- | --- |
-| RU03-R01 | domestic chip title | national ranking explanation | `Её национальный рейтинг: результаты местных, региональных и национальных турниров. Эти очки открывают следующий уровень. Нажмите, чтобы увидеть расчёт.` |
-| RU03-R02 | international chip title | Junior Tour explanation | `Её международный рейтинг: учитываются только результаты юниорского тура. Национальные очки сюда не входят. Нажмите, чтобы увидеть расчёт.` |
-| RU03-R03 | professional chip title | paid-tour explanation | `Её профессиональный рейтинг: W15 и выше, оплачиваемый тур. Юниорские очки сюда не переносятся. Нажмите, чтобы увидеть расчёт.` |
+| RU03-R01 | domestic chip title | `Her national ranking – Local, Regional and National results. These are the points that open her next tier. Tap to see how they add up.` | `Её национальный рейтинг: результаты местных, региональных и национальных турниров. Эти очки открывают следующий уровень. Нажмите, чтобы увидеть расчёт.` |
+| RU03-R02 | international chip title | `Her international ranking – Junior Tour results only. National results do not count towards it. Tap to see how it adds up.` | `Её международный рейтинг: учитываются только результаты юниорского тура. Национальные очки сюда не входят. Нажмите, чтобы увидеть расчёт.` |
+| RU03-R03 | professional chip title | `Her professional ranking – W15 and up, the paid tour. Junior points never cross over. Tap to see how it adds up.` | `Её профессиональный рейтинг: W15 и выше, оплачиваемый тур. Юниорские очки сюда не переносятся. Нажмите, чтобы увидеть расчёт.` |
 
 The `#` rank prefix should be reviewed globally in RU-07. For this compact Home chip, `№{n}` is the
 natural Russian display candidate; the accessible reading should say `{n}-е место в рейтинге`, with
@@ -196,7 +196,7 @@ every four weeks, so each line must stand alone without sounding like a new diag
 | RU03-S06 | outgrown a11y | `{tier}: outgrown – {detail}` | `{tier}: возрастной уровень пройден – {detail}` |
 | RU03-S07 | locked a11y | `{tier}: locked – {detail}` | `{tier}: пока недоступен – {detail}` |
 | RU03-S08 | waiting a11y | `{tier}: open – {detail}` | `{tier}: доступен – {detail}` |
-| RU03-S09 | gap control | `Show {n} more level(s)` | `Показать ещё {countedLevels}` |
+| RU03-S09 | gap control | `Show {n} more levels` | `Показать ещё {countedLevels}` |
 | RU03-S10 | gap description | `{n} levels hidden ({from} to {to}) – tap to show the whole ladder` | `Скрыто: {countedLevels}, от {from} до {to}. Нажмите, чтобы показать всю лестницу.` |
 | RU03-S11 | collapse name | `Show only her current levels` | `Показать только актуальные уровни` |
 | RU03-S12 | collapse title | `Back to her current window` | `Вернуться к актуальному диапазону` |
@@ -228,8 +228,8 @@ English islands while that content is active.
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU03-K01 | `Play {College League}` | `Играть: {localizedFixture}` |
-| RU03-K02 | `Play {Nations Cup}` | `Играть: {localizedFixture}` |
+| RU03-K01 | `Play {fixture}` | `Играть: {localizedFixture}` |
+| RU03-K02 | `Play {fixture}` | `Играть: {localizedFixture}` |
 | RU03-K03 | `Finish the year` | `Закончить учебный год` |
 | RU03-K04 | `Play the first year` | `Начать первый год` |
 | RU03-K05 | `Play the final year` | `Начать последний год` |
@@ -267,9 +267,9 @@ the college card and can remain shorter.
 | RU03-CA03 | grid group | `The seven days of {dateLine}` | `Семь дней: {dateLine}` |
 | RU03-CA04 | paper label | `Notes` | `Заметки` |
 | RU03-CA05 | look-ahead heading | `Weeks after that` | `Следующие недели` |
-| RU03-CA06 | marker accessible suffix | `open this tournament` | `открыть турнир` |
+| RU03-CA06 | marker accessible suffix | `{note}, {label}, {dates} – open this tournament` | `открыть турнир` |
 | RU03-CA07 | entered chip | `Entered` | `Заявлена` |
-| RU03-CA08 | look-ahead footnote | suitable-event explanation | `Здесь отмечены только турниры, на которые она может заявиться. Полный календарь и все заявки – на экране «Сезон».` |
+| RU03-CA08 | look-ahead footnote | `Only tournaments she can enter are marked here – the whole calendar, and every booking, live on the Season tab.` | `Здесь отмечены только турниры, на которые она может заявиться. Полный календарь и все заявки – на экране «Сезон».` |
 | RU03-CA09 | sweep hint | `Tap anywhere to skip` | `Нажмите в любом месте, чтобы пропустить` |
 
 The look-ahead marker name is assembled from event label, week and dates. All three parts must be
@@ -421,7 +421,7 @@ here because the Calendar renders a complete copy of that card.
 | RU03-M05 | `closes {week}` | `заявки до {week}` |
 | RU03-M06 | `Entered` | `Заявлена` |
 | RU03-M07 | `wild card` | `уайлд-кард` |
-| RU03-M08 | wild-card tooltip | held host-nation places explanation | `Одно из {places}, которые турнир оставляет игрокам страны-хозяйки: в обычный список участниц она не проходит.` |
+| RU03-M08 | wild-card tooltip | `One of the {0} places this tournament holds for players of the host nation – she is outside the acceptance list.` | `Одно из {places}, которые турнир оставляет игрокам страны-хозяйки: в обычный список участниц она не проходит.` |
 | RU03-M09 | `First round vs {opponent}` | `Первый круг: {opponent}` |
 | RU03-M10 | exhaustion fallback | `Exhausted – racing risks injury.` | `Вымоталась – плотный график повышает риск травмы.` |
 | RU03-M11 | entered state | `She is in. Withdrawing lives on the Season tab.` | `Она заявлена. Сняться можно на экране «Сезон».` |

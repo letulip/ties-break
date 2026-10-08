@@ -46,6 +46,8 @@ import PrimaryPill from '../ui/PrimaryPill.vue'
 import PlanPresetRow from '../ui/PlanPresetRow.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
 import StoreError from '../ui/StoreError.vue'
+// L2-3 (08.10): RU-03 §19 – This Week's frame, the presets and the story's exit call `t()`.
+import { t } from '../../i18n'
 import { planWeek, presetOf } from '../../engine/plan'
 import { useStartYear } from '../../composables/startYear'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
@@ -197,9 +199,15 @@ const thisWeekScore = computed<string | null>(() => {
 // in one sense only: the engine draws ONE rate inside the band, so the bill lands between these. ---
 const PRESET_ORDER = ['grind', 'balanced', 'light'] as const
 const PRESET_LABEL: Record<(typeof PRESET_ORDER)[number], string> = {
-  grind: 'Grind 85/15',
-  balanced: 'Balanced 75/25',
-  light: 'Light 60/40',
+  get grind() {
+    return t('Grind 85/15')
+  },
+  get balanced() {
+    return t('Balanced 75/25')
+  },
+  get light() {
+    return t('Light 60/40')
+  },
 }
 /** ⚠ THE WORDS THIS SCREEN ALREADY RENDERED, HANDED TO THE SHARED ROW (E-02). `PRESET_LABEL` and
  *  `PRESET_ORDER` above are untouched – this block reads grind-first with the percentages in the label,
@@ -259,7 +267,7 @@ const spendRange = computed<[number, number]>(() => {
           class="back-link"
           variant="bare"
           icon="back"
-          label="Back to Home"
+          :label="t('Back to Home')"
           @click="emit('close')"
         />
         <span v-else class="week-topbar-slot" aria-hidden="true"></span>
@@ -277,8 +285,8 @@ const spendRange = computed<[number, number]>(() => {
           v-if="showStory"
           class="week-topbar-slot week-close"
           type="button"
-          aria-label="Close the week's story"
-          title="Close the week's story"
+          :aria-label="t('Close the week\'s story')"
+          :title="t('Close the week\'s story')"
           @click="dismissRecap"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
@@ -328,14 +336,14 @@ const spendRange = computed<[number, number]>(() => {
          round 30 #6 made it say and round 32 #2 re-bound it to – on the tournament arrival the plate
          is the only object on the page, which is now literally true. -->
     <section :class="{ bare: tournamentShown }">
-      <h2 v-if="!tournamentOnly">This week</h2>
+      <h2 v-if="!tournamentOnly">{{ t('This week') }}</h2>
       <div v-if="!tournamentOnly" class="this-week-status">
         <span v-if="nearestEntered" class="pill ok">
           {{ nearestEntered.label }} · {{ nearestEntered.surface }} · {{ weekLabel(nearestEntered.week, startYear) }}
         </span>
-        <span v-else class="hint" style="margin: 0">No event – training week</span>
+        <span v-else class="hint" style="margin: 0">{{ t('No event – training week') }}</span>
         <!-- Round-8 R8-4: latest played match score of this week's tournament, once available. -->
-        <span v-if="thisWeekScore" class="this-week-score num">Latest match: {{ thisWeekScore }}</span>
+        <span v-if="thisWeekScore" class="this-week-score num">{{ t('Latest match: {score}', { score: thisWeekScore }) }}</span>
       </div>
       <!-- ⭐⭐ ROUND 29 #8 – the owner clicked Home's "Next tournament" card and found emptiness. It
            is a door and this is what it opens onto; until now the tournament behind it was one pill
@@ -370,7 +378,7 @@ const spendRange = computed<[number, number]>(() => {
            reader at THIS node, so the group is named out of shipped copy and the two cannot drift. It
            is the only one of the three preset rows that can be named for free – the other two have a
            code comment above them and nothing visible, so they stay unnamed until the owner rules. -->
-      <h2 id="this-week-plan-title">Training plan</h2>
+      <h2 id="this-week-plan-title">{{ t('Training plan') }}</h2>
       <PlanPresetRow
         labelled-by="this-week-plan-title"
         style="margin-top: 10px"
@@ -382,11 +390,11 @@ const spendRange = computed<[number, number]>(() => {
       <!-- R9-8: the plan reads as unbordered plain text, ONE line, with this week's
            tournament name when one is entered (the pill frame is gone). -->
       <p class="this-week-plan">
-        Training {{ plan.train }}% · Rest {{ plan.rest }}%<template v-if="nearestEntered">
+        {{ t('Training {train}% · Rest {rest}%', { train: plan.train, rest: plan.rest }) }}<template v-if="nearestEntered">
           · {{ nearestEntered.label }} – {{ weekLabel(nearestEntered.week, startYear) }}</template>
       </p>
       <div class="spend-row">
-        <span class="hint">Planned spend</span>
+        <span class="hint">{{ t('Planned spend') }}</span>
         <span class="negative num">${{ spendRange[0] }}–${{ spendRange[1] }}</span>
       </div>
     </section>
@@ -398,7 +406,7 @@ const spendRange = computed<[number, number]>(() => {
          because this one silences a week's story on the way out. -->
     <template v-if="showStory" #footer>
       <div class="week-proceed floating-cta">
-        <PrimaryPill variant="cta" class="week-proceed-btn" @click="dismissRecap">Proceed to Home</PrimaryPill>
+        <PrimaryPill variant="cta" class="week-proceed-btn" @click="dismissRecap">{{ t('Proceed to Home') }}</PrimaryPill>
       </div>
     </template>
   </ScreenShell>

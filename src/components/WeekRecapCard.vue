@@ -53,9 +53,12 @@ import Eyebrow from './ui/Eyebrow.vue'
 import PaperNote from './ui/PaperNote.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import type { PortraitEmotion } from '../shared/avatarEmotion'
-import { LADDER_LABEL, activeLadderOfSnapshot } from '../shared/protocol'
+import { activeLadderOfSnapshot } from '../shared/protocol'
 import type { TravelHomeMood, TravelHomeScene, WorldEvent, WorldMatch } from '../shared/protocol'
 import { useStartYear } from '../composables/startYear'
+// L2-3 (08.10): RU-03 §20–§23 – the recap's frame, labels, alts, finance rows and memos, mood words and the goal scrap call `t()`.
+import { t } from '../i18n'
+import { ladderName } from '../composables/kidIdentity'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
 
@@ -111,15 +114,15 @@ const isVacationScene = computed(
 // The journey describes BOTH halves of its picture, because both carry meaning: `sleepy` is her
 // asleep, `happy` and `sad` are her awake at the window.
 const SCENE_ALT: Record<TravelHomeScene, string> = {
-  airport: 'in the airport on the way home',
-  plane: 'on the plane home',
-  bus: 'on the bus home',
-  car: 'in the car on the way home',
+  get airport() { return t('in the airport on the way home') },
+  get plane() { return t('on the plane home') },
+  get bus() { return t('on the bus home') },
+  get car() { return t('in the car on the way home') },
 }
 const MOOD_ALT: Record<TravelHomeMood, string> = {
-  sleepy: 'Asleep',
-  happy: 'Smiling',
-  sad: 'Quiet',
+  get sleepy() { return t('Asleep') },
+  get happy() { return t('Smiling') },
+  get sad() { return t('Quiet') },
 }
 // The holiday names WHICH of the six weeks away it was, off the catalogue's own label (economy.ts) –
 // never a second table in a screen; the Season feed's `packageLabel` reads the same one.
@@ -130,20 +133,20 @@ const artAlt = computed(() => {
     case 'travel':
       return `${MOOD_ALT[s.mood]} ${SCENE_ALT[s.scene]}`
     case 'vacation':
-      return `The family week away – ${vacationPackage(s.packageId)?.label ?? s.packageId}`
+      return t('The family week away – {package}', { package: vacationPackage(s.packageId)?.label ?? s.packageId })
     // The layoff painting is her on the bench with a brace on. It is the one arm whose subject is HER
     // rather than a place, and the alt says so plainly – the Mood card next to it already carries the
     // word ("On the mend"), so this does not try to be a second diagnosis.
     case 'rehab':
-      return 'On the bench, working her way back'
+      return t('On the bench, working her way back')
     // W6: the two at-home weeks. Both DO get spoken, on the same rule as the three above - each is the
     // only place on the page that says which kind of week this was. The knock line names the week and
     // not the part: the scrap under the painting names the part ("A week off the ankle"), and an alt
     // that repeated it would read the same fact out twice to the one reader who gets it read out.
     case 'exam':
-      return 'Revising at home – exams this week'
+      return t('Revising at home – exams this week')
     case 'knock':
-      return 'At home, off the court for the week'
+      return t('At home, off the court for the week')
     case 'week':
       return ''
   }
@@ -445,10 +448,12 @@ const grossSplit = computed(() => {
  *  the old `Family income` unreadable – he could not tell a week with none from a week the card had
  *  nothing to say about – and a column that changes length cannot be added up by eye. */
 const prizeIncomeCents = computed(() => weekFinance.value?.prizeIncomeCents ?? 0)
-const financeRows = computed<{ key: string; cents: number; tone: 'positive' | 'negative' }[]>(() => [
-  { key: 'Income', cents: prizeIncomeCents.value, tone: 'positive' },
-  { key: 'Family income', cents: incomeCents.value - prizeIncomeCents.value, tone: 'positive' },
-  { key: 'Spent', cents: expenseCents.value, tone: 'negative' },
+// L2-3: `key` stays the row's identity (and the v-for key); `label` is what the player reads. ⚠ CTX TAGS: `Income` here is the tournament cheque
+// (RU03-RF02, «Призовые»), while the Money screens' `Income` is all income; `Spent` is not the college card's `Spent`.
+const financeRows = computed<{ key: string; label: string; cents: number; tone: 'positive' | 'negative' }[]>(() => [
+  { key: 'Income', label: t('recap|Income'), cents: prizeIncomeCents.value, tone: 'positive' },
+  { key: 'Family income', label: t('Family income'), cents: incomeCents.value - prizeIncomeCents.value, tone: 'positive' },
+  { key: 'Spent', label: t('recap|Spent'), cents: expenseCents.value, tone: 'negative' },
 ])
 
 // ⭐⭐ ROUND 29 PART TWO #2 – THE SHORT SENTENCE IS BACK, AND ONLY THE DESTINATION IS LEFT IN IT.
@@ -547,10 +552,10 @@ const kidShareMemo = computed<string | null>(() => {
   if (kidCutCents.value <= 0) return null
   const prize = weekFinance.value?.kidShareParts?.find((p) => p.source === 'prize')
   if (!prize || prize.cents <= 0) return null
-  return `Her cut ${prize.pct}% – ${formatCents(prize.cents)} into her own account.`
+  return t('Her cut {pct}% – {amount} into her own account.', { pct: prize.pct, amount: formatCents(prize.cents) })
 })
 /** The old foot, on the old shape only – see the note above. */
-const kidShareFoot = computed(() => (kidCutCents.value > 0 && !grossSplit.value ? 'The income above is what the family kept.' : null))
+const kidShareFoot = computed(() => (kidCutCents.value > 0 && !grossSplit.value ? t('The income above is what the family kept.') : null))
 
 // ⭐⭐ ROUND 29 PART TWO #13 – THE COACH'S CUT, ON THE WEEKLY SCREEN.
 //
@@ -576,7 +581,7 @@ const kidShareFoot = computed(() => (kidCutCents.value > 0 && !grossSplit.value 
 const coachCutCents = computed(() => weekFinance.value?.coachCutCents ?? 0)
 const coachCutMemo = computed(() =>
   coachCutCents.value > 0
-    ? `Coach's cut ${weekFinance.value?.coachCutPct ?? 0}% – ${formatCents(coachCutCents.value)}, inside Spent above.`
+    ? t("Coach's cut {pct}% – {amount}, inside Spent above.", { pct: weekFinance.value?.coachCutPct ?? 0, amount: formatCents(coachCutCents.value) })
     : null,
 )
 
@@ -641,16 +646,17 @@ const { moodCropUrl, emotion } = useKidEmotion()
 /** Her face, as ONE word – D's "Tired", which is literally one of our seven emotions. Player copy,
  *  so it says what a parent would say rather than repeating the asset's file name. */
 const MOOD_WORD: Record<PortraitEmotion, string> = {
-  norm: 'Steady',
-  happy: 'Happy',
-  sad: 'Low',
-  serious: 'Focused',
-  tired: 'Tired',
-  injury: 'Hurt',
+  // ⚠ CTX TAGS (L2-3): Steady / Happy / Focused / Tired are ALSO the Kid screen's mood words, and RU-05 gives those a different Russian.
+  get norm() { return t('recap|Steady') },
+  get happy() { return t('recap|Happy') },
+  get sad() { return t('Low') },
+  get serious() { return t('recap|Focused') },
+  get tired() { return t('recap|Tired') },
+  get injury() { return t('Hurt') },
   // ⚠ `rehab` joined the faces with ui/art-rehab-sleepy - the STATE of a layoff, as against the
   // moment of going down. A word she wears for weeks, so it is not "Hurt" again.
-  rehab: 'On the mend',
-  angry: 'Frustrated',
+  get rehab() { return t('On the mend') },
+  get angry() { return t('Frustrated') },
 }
 // ⭐⭐ v72 (the private life, wave 1) – HER LIFE MAY TAKE THE WORD, AND ONLY WHEN IT TOOK THE FACE.
 // The engine hands one of the five approved Mood words on exactly the weeks the SPIRIT channel won
@@ -707,8 +713,10 @@ const rankMoveLine = computed<string | null>(() => {
   const ladder = snap?.ladders[snap.activeLadder]
   if (!ladder || ladder.rank === null || ladder.prevRank === null || ladder.prevRank === ladder.rank) return null
   const by = Math.abs(ladder.prevRank - ladder.rank)
-  const dir = ladder.prevRank > ladder.rank ? 'up' : 'down'
-  return `${LADDER_LABEL[snap.activeLadder]} rank ${dir} ${by} – now #${ladder.rank}`
+  const args = { ladder: ladderName(snap.activeLadder), n: by, rank: ladder.rank }
+  return ladder.prevRank > ladder.rank
+    ? t('{ladder} rank up {n} – now #{rank}', args)
+    : t('{ladder} rank down {n} – now #{rank}', args)
 })
 
 const highlights = computed<string[]>(() => {
@@ -779,7 +787,7 @@ const practiceWeekLabel = computed(() => weekLabel(week.value, startYear.value))
 </script>
 
 <template>
-  <section class="recap-card" :aria-label="`Week story, ${practiceWeekLabel}`">
+  <section class="recap-card" :aria-label="t('Week story, {week}', { week: practiceWeekLabel })">
     <!-- The week's painting. `week-art img` is shared vocabulary (style.css) with the Season feed's
          cards, so the two draw the same picture the same way.
          ⭐ ROUND-17 #26: a vacation week is the one arm whose painting is cropped 45% horizontally
@@ -828,7 +836,7 @@ const practiceWeekLabel = computed(() => weekLabel(week.value, startYear.value))
            (`--tb-card-pad`, src/style.css), which steps at 768/1024 like every other card that
            does not ask for something of its own. -->
       <Card class="recap-tile recap-finance">
-        <Eyebrow>Finances</Eyebrow>
+        <Eyebrow>{{ t('Finances') }}</Eyebrow>
         <!-- ⭐⭐⭐ ROUND 31 #2 – INCOME / FAMILY INCOME / SPENT, AND THE BALANCE UNDER THE HAIRLINE:
              the owner's own four lines, in his own order. His words are in the script block above and
              in tests/component/week-recap-kid-share.test.ts, because Cyrillic inside a <template> is
@@ -841,13 +849,13 @@ const practiceWeekLabel = computed(() => weekLabel(week.value, startYear.value))
              property he has asked for three times. No arithmetic here: `financeRows` is a list. -->
         <div class="recap-rows">
           <div v-for="row in financeRows" :key="row.key" class="recap-row">
-            <span class="recap-row-key">{{ row.key }}</span>
+            <span class="recap-row-key">{{ row.label }}</span>
             <span class="recap-row-val num" :class="row.tone">{{ formatCentsSigned(row.cents) }}</span>
           </div>
         </div>
         <span class="recap-hairline"></span>
         <div class="recap-row">
-          <span class="recap-row-key">Balance</span>
+          <span class="recap-row-key">{{ t('recap|Balance') }}</span>
           <span
             class="recap-balance num"
             :class="balanceCents < 0 ? 'negative' : 'positive'"
@@ -900,14 +908,14 @@ const practiceWeekLabel = computed(() => weekLabel(week.value, startYear.value))
            much, because a number there would unpick the radar on screen C – see the script.
            ⭐ ROUND 41 #11 – padding rides Card's own default now, see the Finances tile above. -->
       <Card class="recap-tile">
-        <Eyebrow>Training</Eyebrow>
+        <Eyebrow>{{ t('Training') }}</Eyebrow>
         <div class="recap-rows">
           <div class="recap-row">
-            <span class="recap-row-key">On court</span>
+            <span class="recap-row-key">{{ t('On court') }}</span>
             <span class="recap-row-val num">{{ plan.train }}%</span>
           </div>
           <div class="recap-row">
-            <span class="recap-row-key">Rest</span>
+            <span class="recap-row-key">{{ t('Rest') }}</span>
             <span class="recap-row-val num">{{ plan.rest }}%</span>
           </div>
         </div>
@@ -918,9 +926,9 @@ const practiceWeekLabel = computed(() => weekLabel(week.value, startYear.value))
             <span class="recap-train-text">{{ trainingRead.text }}</span>
           </p>
         </template>
-        <div class="recap-days" :aria-label="`${trainDayCount} of 7 days training`" role="img">
+        <div class="recap-days" :aria-label="t('{n} of 7 days training', { n: trainDayCount })" role="img">
           <div v-for="(d, i) in dayDots" :key="i" class="recap-day">
-            <span class="recap-dot" :class="d" :title="d === 'train' ? 'Training' : 'Rest'"></span>
+            <span class="recap-dot" :class="d" :title="d === 'train' ? t('dot|Training') : t('Rest')"></span>
             <span class="recap-day-letter">{{ DAY_LETTERS[i] }}</span>
           </div>
         </div>
@@ -928,13 +936,13 @@ const practiceWeekLabel = computed(() => weekLabel(week.value, startYear.value))
 
       <!-- MOOD – ⭐ ROUND 41 #11: padding rides Card's own default now, see the Finances tile above. -->
       <Card class="recap-tile">
-        <Eyebrow>Mood</Eyebrow>
+        <Eyebrow>{{ t('Mood') }}</Eyebrow>
         <div class="recap-mood">
           <img class="recap-face" :src="moodCropUrl" alt="" />
           <span class="recap-mood-word">{{ moodWord }}</span>
         </div>
         <div class="recap-energy">
-          <span class="recap-energy-key">Energy</span>
+          <span class="recap-energy-key">{{ t('Energy') }}</span>
           <span class="recap-energy-track">
             <span class="recap-energy-fill" :style="{ width: `${energy}%` }"></span>
           </span>
@@ -944,14 +952,14 @@ const practiceWeekLabel = computed(() => weekLabel(week.value, startYear.value))
 
       <!-- HIGHLIGHTS – ⭐ ROUND 41 #11: padding rides Card's own default now, see Finances above. -->
       <Card class="recap-tile">
-        <Eyebrow>Highlights</Eyebrow>
+        <Eyebrow>{{ t('Highlights') }}</Eyebrow>
         <ul v-if="highlights.length" class="recap-beats">
           <li v-for="(h, i) in highlights" :key="i" class="recap-beat">
             <span class="recap-bullet" aria-hidden="true"></span>
             <span>{{ h }}</span>
           </li>
         </ul>
-        <p v-else class="recap-beats-empty">A quiet week.</p>
+        <p v-else class="recap-beats-empty">{{ t('A quiet week.') }}</p>
       </Card>
     </div>
 
@@ -961,13 +969,13 @@ const practiceWeekLabel = computed(() => weekLabel(week.value, startYear.value))
          resolved this match inside the tick and the viewer re-simulates the stored record, so nothing
          here is live, and the sentence beside the button is already in the past tense. -->
     <div v-if="friendlyMatch" class="recap-watch">
-      <span class="hint">She played her practice match</span>
-      <PrimaryPill class="sfx-watch" @click="practiceLive = friendlyMatch">Watch the replay</PrimaryPill>
+      <span class="hint">{{ t('She played her practice match') }}</span>
+      <PrimaryPill class="sfx-watch" @click="practiceLive = friendlyMatch">{{ t('Watch the replay') }}</PrimaryPill>
     </div>
 
     <!-- The goal for the week ahead, taped on. -->
     <PaperNote class="recap-goal" :tilt="0.4" ruled torn="right" tape>
-      <span class="recap-goal-label">Next goal</span>
+      <span class="recap-goal-label">{{ t('Next goal') }}</span>
       <span class="recap-goal-text">{{ goalLine }}</span>
       <svg class="recap-doodle" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M8 4h8v4.5a4 4 0 0 1-8 0z" />

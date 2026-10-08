@@ -113,6 +113,8 @@ import ProgressRing from '../ui/ProgressRing.vue'
 import SurfaceMark from '../ui/SurfaceMark.vue'
 import type { UpcomingEvent } from '../../shared/protocol'
 import { useStartYear } from '../../composables/startYear'
+// L2-3 (08.10): RU-03 – the Calendar's frame, the day-kind words and the tournament marker card call `t()`.
+import { t } from '../../i18n'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
 
@@ -176,20 +178,22 @@ const layoffNote = computed(() => layoffNoteFor(game.snapshot))
 // --- the grid's vocabulary ---------------------------------------------------------------------
 // One word per day kind, and it is the ACCESSIBLE name rather than a caption: the cell shows a mark
 // and, on the two days that are not the week's default, a word. A screen reader gets the sentence.
+// L2-3 (RU03 §13): GETTERS, so the word follows the locale on the next render and the table keeps its type; the sentence around them is
+// ONE message (`{day} – {kind}`) because the Russian orders and inflects the pair itself.
 const KIND_WORD: Record<DayKind, string> = {
-  court: 'on court',
-  gym: 'in the gym',
-  rest: 'rest day',
-  match: 'practice match',
-  away: 'away at the tournament',
-  off: 'no tennis',
-  school: 'school exams',
-  rehab: 'rehab',
+  get court() { return t('on court') },
+  get gym() { return t('in the gym') },
+  get rest() { return t('rest day') },
+  get match() { return t('practice match') },
+  get away() { return t('away at the tournament') },
+  get off() { return t('no tennis') },
+  get school() { return t('school exams') },
+  get rehab() { return t('rehab') },
   // ⭐ ROUND 28 #6 – the sponsor's shoot. A day, not a week: the days around it are still the plan's.
-  shoot: 'at the shoot',
+  get shoot() { return t('at the shoot') },
 }
 function dayName(d: Pick<CalendarDay, 'index' | 'kind'>): string {
-  return `${DAY_LONG[d.index]} – ${KIND_WORD[d.kind]}`
+  return t('{day} – {kind}', { day: DAY_LONG[d.index], kind: KIND_WORD[d.kind] })
 }
 
 /** THE WEEK IN HOURS. Null only when there is no snapshot to draw one from.
@@ -378,7 +382,7 @@ const showGo = computed(() => !game.snapshot?.pending)
              week she is actually playing one still names its court, one card down. -->
         <div class="cal-topbar">
           <div>
-            <h2 class="cal-title">Calendar</h2>
+            <h2 class="cal-title">{{ t('Calendar') }}</h2>
             <p class="cal-dates">{{ dateLine }}</p>
           </div>
         </div>
@@ -408,7 +412,7 @@ const showGo = computed(() => !game.snapshot?.pending)
       <Card class="cal-week">
         <div class="cal-week-head">
           <Eyebrow>{{ calendar.title }}</Eyebrow>
-          <span v-if="injuredNow" class="pill avail-chip red" :title="layoffNote">injury</span>
+          <span v-if="injuredNow" class="pill avail-chip red" :title="layoffNote">{{ t('injury') }}</span>
         </div>
 
         <div v-if="grid" class="cal-time">
@@ -440,7 +444,7 @@ const showGo = computed(() => !game.snapshot?.pending)
                 :style="{ top: hourTop(h) }"
               >{{ hourLabel(h) }}</span>
             </div>
-            <ul class="cal-time-cols" :aria-label="`The seven days of ${dateLine}`">
+            <ul class="cal-time-cols" :aria-label="t('The seven days of {dateLine}', { dateLine })">
               <li
                 v-for="d in grid"
                 :key="d.index"
@@ -492,7 +496,7 @@ const showGo = computed(() => !game.snapshot?.pending)
            ⭐ B5: once she lives away the scrap is the week's MESSAGE, and a message can not exist –
            a `null` note is «no contact this week», so the paper itself stays off the wall. -->
       <PaperNote v-if="grid && fridgeNote" class="cal-note" :tilt="-0.8" ruled torn tape>
-        <span class="cal-note-label">Notes</span>
+        <span class="cal-note-label">{{ t('Notes') }}</span>
         <span class="cal-note-text">{{ fridgeNote }}</span>
       </PaperNote>
 
@@ -512,14 +516,14 @@ const showGo = computed(() => !game.snapshot?.pending)
         </p>
       </section>
       <section class="bare cal-ahead-block">
-        <h2>Weeks after that</h2>
+        <h2>{{ t('Weeks after that') }}</h2>
         <ul class="cal-ahead">
           <li v-for="row in lookAhead" :key="row.week" class="cal-ahead-item">
             <button
               v-if="row.event"
               class="cal-marker"
               type="button"
-              :aria-label="`${row.note}, ${row.label}, ${row.dates} – open this tournament`"
+              :aria-label="t('{note}, {label}, {dates} – open this tournament', { note: row.note, label: row.label, dates: row.dates })"
               @click="openMarker(row.event)"
             >
               <span class="cal-ahead-week">{{ row.label }}</span>
@@ -527,20 +531,19 @@ const showGo = computed(() => !game.snapshot?.pending)
                 <span class="cal-marker-name">{{ row.note }}</span>
                 <SurfaceMark :surface="row.event.surface" size="sm" />
               </span>
-              <span v-if="row.event.entered" class="pill ok">Entered</span>
-              <span v-else-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
+              <span v-if="row.event.entered" class="pill ok">{{ t('Entered') }}</span>
+              <span v-else-if="row.injured" class="pill avail-chip red" :title="layoffNote">{{ t('injury') }}</span>
               <AppIcon v-else class="cal-marker-go" name="dollar" :size="14" />
             </button>
             <div v-else class="cal-band" :class="`cal-band--${row.kind}`">
               <span class="cal-ahead-week">{{ row.label }}</span>
               <span class="cal-band-name">{{ row.note }}</span>
-              <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
+              <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">{{ t('injury') }}</span>
             </div>
           </li>
         </ul>
         <p class="hint cal-foot-note">
-          Only tournaments she can enter are marked here – the whole calendar, and every booking, live
-          on the Season tab.
+          {{ t('Only tournaments she can enter are marked here – the whole calendar, and every booking, live on the Season tab.') }}
         </p>
       </section>
 
@@ -551,7 +554,7 @@ const showGo = computed(() => !game.snapshot?.pending)
         <div class="cal-go floating-cta">
           <!-- A SKIP NOBODY IS TOLD ABOUT IS NOT A SKIP. The hint takes the same slot the blocked
                reason does, and the two can never collide: a blocked button cannot start a sweep. -->
-          <p v-if="skippable" class="cal-go-note floating-cta-note cal-go-skip">Tap anywhere to skip</p>
+          <p v-if="skippable" class="cal-go-note floating-cta-note cal-go-skip">{{ t('Tap anywhere to skip') }}</p>
           <!-- ⭐⭐ ROUND 42 #20 (ruled B) – the leave-anyway ask, in this screen's own note slot.
                The line is the shared DRAFT constant; the second press of the same button leaves.
                Above the blocked reason in the chain because the ask is the fact the press just
@@ -590,7 +593,7 @@ const showGo = computed(() => !game.snapshot?.pending)
         <span class="hint cal-card-when">{{ weekLabel(marker.week, startYear) }}</span>
       </template>
       <template #exit>
-        <IconButton icon="close" label="Close this tournament" title="Close" @click="closeMarker" />
+        <IconButton icon="close" :label="t('Close this tournament')" :title="t('Close')" @click="closeMarker" />
       </template>
 
       <Card variant="photo" pad="16px 16px 12px" class="cal-card">
@@ -608,16 +611,16 @@ const showGo = computed(() => !game.snapshot?.pending)
         <p v-if="surfaceVerdict(marker.surface)" class="cal-card-fit">{{ surfaceVerdict(marker.surface) }}</p>
 
         <div class="cal-card-money">
-          <p class="cal-card-money-label">Travel budget</p>
+          <p class="cal-card-money-label">{{ t('Travel budget') }}</p>
           <p class="cal-card-money-figure">{{ formatCents(marker.travelCostCents) }}</p>
-          <p v-if="academyCoverPct > 0" class="cal-card-money-sub">academy covers {{ academyCoverPct }}%</p>
+          <p v-if="academyCoverPct > 0" class="cal-card-money-sub">{{ t('academy covers {0}%', [academyCoverPct]) }}</p>
         </div>
 
         <div class="controls cal-card-chips">
           <!-- ⭐ #28: see SeasonScreen - "no entry fee" is a fact, "$0" is a hole. -->
           <span class="entry-fee">{{ entryFeeLabel(marker.entryFeeCents) }}</span>
-          <span class="pill">closes {{ weekLabel(marker.deadlineWeek, startYear) }}</span>
-          <span v-if="marker.entered" class="pill ok">Entered</span>
+          <span class="pill">{{ t('closes {week}', { week: weekLabel(marker.deadlineWeek, startYear) }) }}</span>
+          <span v-if="marker.entered" class="pill ok">{{ t('Entered') }}</span>
           <!-- ⭐ ROUND 41 #16 – THE WILD CARD, ON THIS SCREEN'S OWN COPY OF THE SAME CARD. Round 21
                #2b put this exact chip (flag, tooltip and words) on Season's event card; this marker
                IS that card again (see the note at `cal-card-days` above), so it was the one surface
@@ -625,9 +628,9 @@ const showGo = computed(() => !game.snapshot?.pending)
           <span
             v-if="marker.wildCard"
             class="pill wildcard-chip"
-            :title="`One of the ${wildCardSlots} places this tournament holds for players of the host nation – she is outside the acceptance list.`"
+            :title="t('One of the {0} places this tournament holds for players of the host nation – she is outside the acceptance list.', [wildCardSlots])"
           >
-            wild card
+            {{ t('wild card') }}
           </span>
         </div>
 
@@ -661,7 +664,7 @@ const showGo = computed(() => !game.snapshot?.pending)
           >
             <b>{{ Math.round(marker.preview.fieldChance * 100) }}</b><i>%</i>
           </ProgressRing>
-          <p v-if="marker.preview.drawMade" class="cal-card-odds-note">First round vs {{ marker.preview.opponentName }}</p>
+          <p v-if="marker.preview.drawMade" class="cal-card-odds-note">{{ t('First round vs {opponent}', { opponent: marker.preview.opponentName }) }}</p>
           <p v-else class="cal-card-odds-note">{{ DRAW_NOT_MADE_NOTE }}</p>
           <!-- ⚠⚠ THE "Rating 1642 vs 1801" LINE WAS HERE AND IS REMOVED BY OWNER RULING (round 21).
                His words, in translation because this file carries no Cyrillic: "I did not ask for
@@ -683,7 +686,7 @@ const showGo = computed(() => !game.snapshot?.pending)
              (she is under the tier's condition floor) and one is a person's read of her, so a card
              can carry either, both or neither. Neither is a block - the parent may push. -->
         <p v-if="marker.cautionReason === 'fatigued'" class="caution-note">
-          {{ marker.cautionDetail ?? 'Exhausted – racing risks injury.' }}
+          {{ marker.cautionDetail ?? t('Exhausted – racing risks injury.') }}
         </p>
         <p v-if="marker.coachCaution" class="coach-note">{{ marker.coachCaution }}</p>
 
@@ -695,7 +698,7 @@ const showGo = computed(() => !game.snapshot?.pending)
 
         <div class="controls cal-card-actions">
           <template v-if="marker.entered">
-            <p class="hint cal-card-done">She is in. Withdrawing lives on the Season tab.</p>
+            <p class="hint cal-card-done">{{ t('She is in. Withdrawing lives on the Season tab.') }}</p>
           </template>
           <template v-else>
             <!-- ⚠ THE NAME SAYS WHICH TOURNAMENT (defect D4, docs/specs/e2e-coverage.md §12). This
@@ -710,9 +713,9 @@ const showGo = computed(() => !game.snapshot?.pending)
               :aria-label="enterActionName(marker, startYear)"
               @click="enterMarker(marker)"
             >
-              Enter
+              {{ t('Enter') }}
             </PrimaryPill>
-            <span v-if="fundsShort(marker)" class="hint cal-card-broke">Not enough funds</span>
+            <span v-if="fundsShort(marker)" class="hint cal-card-broke">{{ t('Not enough funds') }}</span>
           </template>
         </div>
       </Card>

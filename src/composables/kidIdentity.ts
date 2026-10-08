@@ -49,6 +49,11 @@ const LADDER_NAME: Record<LadderTrack, () => string> = {
   wta: () => t('Professional'),
 }
 
+/** The table's name in the player's words – the chip's label, and (L2-3) the weekly recap's rank-movement line. */
+export function ladderName(track: LadderTrack): string {
+  return LADDER_NAME[track]()
+}
+
 const RANK_CHIP_TITLE: Record<LadderTrack, () => string> = {
   domestic: () =>
     t('Her national ranking – Local, Regional and National results. These are the points that open her next tier. Tap to see how they add up.'),

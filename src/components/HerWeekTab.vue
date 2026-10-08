@@ -35,6 +35,7 @@ import {
 } from '../engine/plan'
 import { coachHoursForPlan } from '../engine/coach'
 import { DAY_LONG, DAY_SHORT, useCalendarWeek } from '../composables/weekDays'
+import { t } from '../i18n'
 import { SESSION_KINDS, WEEK_PLAN_PRESETS, type SessionKind } from '../shared/protocol'
 import { formatCents } from '../shared/money'
 import PlanPresetRow from './ui/PlanPresetRow.vue'
@@ -131,7 +132,9 @@ const editable = computed(() => game.snapshot !== null)
  *  know which weeks the engine trains through, so it says what the week IS and claims nothing more. */
 const weekAheadNote = computed(() => {
   const title = calWeek.value?.title
-  return title && title !== 'Training week' && title !== 'Summer block' ? calWeek.value!.readout : null
+  // L2-3 (08.10): THE TITLE COMES OUT OF `t()` NOW (weekDays.ts), so the two quiet weeks are recognised by the SAME reading, not by an
+  // English literal – compared with `'Training week'` this note would have shown on every ordinary week the moment the locale changed.
+  return title && title !== t('Training week') && title !== t('Summer block') ? calWeek.value!.readout : null
 })
 
 /** MAY HE PRESS IT? Three limits, all of them the engine's, shown as a disabled box beside a filled

@@ -40,6 +40,7 @@
 import { TIERS, TIER_LADDER } from '../engine/season/calendar'
 import { RADAR_AXIS_LABEL } from '../engine/radar'
 import { finishPhrase } from './tierState'
+import { t } from '../i18n'
 import type { CountingResult, RadarAxis, Snapshot, UpcomingEvent } from '../shared/protocol'
 import type { TierId } from '../engine/season/types'
 
@@ -166,9 +167,11 @@ export function weeksOnRung(facts: Pick<GoalFacts, 'week' | 'ladders'>): number 
 /** The line a rung prints, given what to call the event. `where` is a tournament's own label when
  *  she is entered for one and the tier's label otherwise. */
 export function rungLine(rung: GoalRung, where: string): string {
-  if (rung.firstMatch) return `Win one match at the ${where}`
-  if (rung.finish === 0) return `Win the ${where}`
-  return `Reach the ${finishPhrase(rung.finish, TIERS[rung.tier].drawSize)} at the ${where}`
+  // L2-3 (RU03-RH08..RH10): three whole sentences with the event as a hole; `{round}` is the engine's English phrase (`finishPhrase`) until L3/RU-04
+  // give it a case-bearing locale form.
+  if (rung.firstMatch) return t('Win one match at the {event}', { event: where })
+  if (rung.finish === 0) return t('Win the {event}', { event: where })
+  return t('Reach the {round} at the {event}', { round: finishPhrase(rung.finish, TIERS[rung.tier].drawSize), event: where })
 }
 
 // =================================================================================================
@@ -199,7 +202,7 @@ export function skillGoalFor(facts: Pick<GoalFacts, 'radar'>): string | null {
   if (!spoken.length) return null
   let weakest = spoken[0]
   for (const axis of spoken) if (axis.shownValue < weakest.shownValue) weakest = axis
-  return `Work on her ${RADAR_AXIS_LABEL[weakest.key].toLowerCase()}`
+  return t('Work on her {axis}', { axis: RADAR_AXIS_LABEL[weakest.key].toLowerCase() })
 }
 
 /** ⚠ HOW LONG "STUCK" IS, AND IT IS A MEASURED NUMBER RATHER THAN A FELT ONE.

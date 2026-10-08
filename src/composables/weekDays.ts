@@ -100,15 +100,32 @@ import { weekLabel, weekSpan } from '../shared/dates'
 import type { Surface } from '../engine/match/types'
 import type { TierDef, TierId } from '../engine/season/types'
 import type { SessionKind, Snapshot, UpcomingEvent } from '../shared/protocol'
+// L2-3 (08.10): RU-03 §13/§14 – the day names, the week titles and the fixed readouts call `t()`. The counted / declined readouts of
+// §14.1 and the grid's block lexicon (weekGrid.ts) are NOT wired yet – see the L2-3 note in docs/specs/i18n-2026-10.md §8.
+import { localizedList, t } from '../i18n'
 
 /** The grid's column heads, Monday first – the same Monday..Sunday span `shared/dates.ts` builds
  *  every date range from, so the columns and the printed dates cannot disagree about which day is
  *  which. */
-export const DAY_SHORT = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'] as const
+export const DAY_SHORT: readonly string[] = localizedList(
+  () => t('MON'),
+  () => t('TUE'),
+  () => t('WED'),
+  () => t('THU'),
+  () => t('FRI'),
+  () => t('SAT'),
+  () => t('SUN'),
+)
 /** ...and their long names, for the one sentence that has room to say a day out loud. */
-export const DAY_LONG = [
-  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
-] as const
+export const DAY_LONG: readonly string[] = localizedList(
+  () => t('Monday'),
+  () => t('Tuesday'),
+  () => t('Wednesday'),
+  () => t('Thursday'),
+  () => t('Friday'),
+  () => t('Saturday'),
+  () => t('Sunday'),
+)
 
 /** ⚠ THE TUESDAY CONVENTION, AND NOTHING DRAWS FROM IT ANY MORE (v47, owner 10.08). The fitness day
  *  used to be claimed in THIS order among the days that were already sessions, which landed it on
@@ -695,14 +712,14 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
       // list her as entered next week – a committed entry survives a layoff and resolves as a
       // walkover – so this is the one refusal that is about her body rather than about the week.
       nextTripRounds: null,
-      title: 'On the bench',
+      title: t('On the bench'),
       // The RETURN WEEK is the same arithmetic every other surface prints (weekLabel of
       // week + weeksRemaining), so the date can never differ from the Season screen's injury
       // plaque. The lead differs on purpose: a calendar has room to name what is wrong with her,
       // and a 6px chip has not.
       readout: back === null
-        ? 'She is out – no training this week.'
-        : `Out with the ${snap.injury?.kind ?? 'injury'} – back ${weekLabel(back, snap.startYear)}.`,
+        ? t('She is out – no training this week.')
+        : t('Out with the {injury} – back {week}.', { injury: snap.injury?.kind ?? 'injury', week: weekLabel(back, snap.startYear) }),
       animates: base.animates,
     }
   }
@@ -749,10 +766,10 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
       // day and the practice day and off every match of the week at the entry rung. The trip's own
       // sessions are on the match days, in `trip.masseur` above.
       masseurDays: [],
-      title: 'Tournament week',
+      title: t('Tournament week'),
       readout: event
-        ? `She is away at ${event.label} – the draw owns the week.`
-        : 'She is away at a tournament – the draw owns the week.',
+        ? t('She is away at {event} – the draw owns the week.', { event: event.label })
+        : t('She is away at a tournament – the draw owns the week.'),
       // The tournament flow owns this week end to end. Crossing out days she is going to spend in a
       // draw would be the screen narrating a week it does not run.
       animates: false,
@@ -770,13 +787,13 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
       // ⚠ P15: the family is somewhere else and the week says «no tennis at all» out loud. It has no
       // Sunday evening to lend, and the engine agrees – a booked week refuses entries.
       nextTripRounds: null,
-      title: 'Family week',
+      title: t('Family week'),
       // ⚠ THE READOUT SAYS WHAT THIS PARTICULAR WEEK IS NOW. It used to be one sentence for all six
       // packages, which is the half of the owner's complaint the grid does not cover: «куда бы ни
       // поехала и расписание одинаковое, и week recap». The package's own blurb is already written,
       // already in the catalogue and already what the picker showed him when he chose it - so the
       // week reads back the promise he bought instead of a generic line under six different grids.
-      readout: pkg?.blurb ? `${label} – ${pkg.blurb.charAt(0).toLowerCase()}${pkg.blurb.slice(1)}` : `${label} – no tennis at all this week.`,
+      readout: pkg?.blurb ? `${label} – ${pkg.blurb.charAt(0).toLowerCase()}${pkg.blurb.slice(1)}` : t('{label} – no tennis at all this week.', { label }),
       vacationId: vacation.packageId,
     }
   }
@@ -820,12 +837,12 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
       shoot: shootDeal ? { brand: shootDeal.brand, days: shootDays } : null,
       // ⚠ P15: the tour is shut, so there is nothing next week to leave for.
       nextTripRounds: null,
-      title: 'Off-season',
+      title: t('Off-season'),
       // ⚠ AND SHE IS NOT AT HOME DOING NOTHING - see PRE_SEASON_ARC in weekGrid.ts. The tour is
       // shut, so there is nothing to play; the coach is still billed and her skills still move,
       // because this is the block where next year is built. The read-out used to say she was off
       // court, which contradicted her own bank statement.
-      readout: 'The tour is closed – this is the block where next year gets built.',
+      readout: t('The tour is closed – this is the block where next year gets built.'),
     }
   }
   // ⚠⚠ ROUND 32 #1 – THE EXAM FORTNIGHT HAS THE SAME LATENT GAP AND IS DELIBERATELY LEFT WITH IT.
@@ -849,7 +866,7 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
     return {
       ...base,
       days: uniform('school', null, 'Exams'),
-      title: 'Exams',
+      title: t('Exams'),
       // ⚠ IT USED TO SAY «School owns this week – nothing is hers to plan.» AND THE PICTURE NOW
       // CONTRADICTS IT. The calendar draws the exam fortnight as a grid of hours since 31.07, and the
       // owner's own reading of that week is that the daily school block breaks up into papers WHILE
@@ -859,8 +876,8 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
       // and the sentence read as though she spent the week at a desk. This says which is which.
       readout:
         sessions === 0
-          ? 'Exams this week – no tournaments, and no sessions booked either.'
-          : `Exams this week – no tournaments, but her ${sessions} sessions stand.`,
+          ? t('Exams this week – no tournaments, and no sessions booked either.')
+          : t('Exams this week – no tournaments, but her {sessions} sessions stand.', { sessions }),
     }
   }
 
@@ -923,10 +940,10 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
     // different weeks. A shoot is also the more specific fact: July is a season, a shoot is a date in
     // a signed letter.
     title: shooting
-      ? 'Shooting week'
+      ? t('Shooting week')
       : base.summer && !base.schoolOver && !resting
-        ? 'Summer block'
-        : 'Training week',
+        ? t('Summer block')
+        : t('Training week'),
     readout: trainingReadout({
       sessions,
       courtDays,
@@ -1135,18 +1152,18 @@ export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
     const note = vacation
       ? (vacationPackage(vacation.packageId)?.label ?? vacation.packageId)
       : practice
-        ? `Practice match${practice.withCoach ? ' + coach' : ''}`
+        ? practice.withCoach ? t('Practice match + coach') : t('Practice match')
         : event
           ? event.label
           : college
-            ? 'Leaves for college'
+            ? t('Leaves for college')
             : shoot
-              ? `${shootRow!.brand} shoot`
+              ? t('{brand} shoot', { brand: shootRow!.brand })
               : exam
-                ? 'Exams'
+                ? t('Exams')
                 : offSeason
-                  ? 'Off-season'
-                  : 'Training week'
+                  ? t('Off-season')
+                  : t('Training week')
     rows.push({
       week: w,
       label: weekLabel(w, snap.startYear),

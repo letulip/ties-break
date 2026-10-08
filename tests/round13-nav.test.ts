@@ -44,7 +44,8 @@ const homeLogic = componentLogic('components/screens/HomeScreen.vue')
 // ⚠ NEVER IN A NEGATIVE ASSERTION (tests/pin-hygiene.test.ts): `app` above is still the .vue alone
 // and is what every `not.toContain` in this file keeps using.
 const appLogic = componentLogic('App.vue')
-const weekScreen = read('../src/components/screens/ThisWeekScreen.vue')
+// L2-3 (08.10): This Week's copy is `t('…')` now (RU03 §19) – the words are what these pins claim; `tTransparent` reads them as written.
+const weekScreen = tTransparent(read('../src/components/screens/ThisWeekScreen.vue'))
 const tour = read('../src/components/OnboardingTour.vue')
 
 // ===========================================================================
@@ -916,7 +917,7 @@ describe('W1 — the end of a week lands on the story', () => {
 //   * «на week recap после отпуска можно использовать картинки соответствующих отпусков»
 // ===========================================================================
 describe('W4 — the story has a way out, and its painting is the week it is about', () => {
-  const card = read('../src/components/WeekRecapCard.vue')
+  const card = tTransparent(read('../src/components/WeekRecapCard.vue')) // L2-3 (08.10): the recap's copy is `t('…')` now (RU03 §20–§23)
   const season = read('../src/components/screens/SeasonScreen.vue')
 
   it('the Proceed pill is Home\'s CTA shape, centred at the bottom, and only on a story week', () => {
@@ -1056,7 +1057,7 @@ describe('R13-12 player copy', () => {
   // Russian went into each of their templates before this pin caught it. The rule is unchanged and no
   // assertion is relaxed; it simply now reads every template the touched items render through.
   it('no long dash, no Cyrillic in the rendered copy of the touched surfaces', () => {
-    const card = read('../src/components/WeekRecapCard.vue')
+    const card = tTransparent(read('../src/components/WeekRecapCard.vue')) // L2-3 (08.10): the recap's copy is `t('…')` now (RU03 §20–§23)
     const sheet = read('../src/components/PlanWeekSheet.vue')
     for (const src of [app, weekScreen, home, tour, card, sheet]) {
     // ⚠ RE-AIMED by U0 – the EXTRACTION, not the assertion. `slice(indexOf('<template>'))` ran to

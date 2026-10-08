@@ -27,7 +27,7 @@ import { coachSinceWeek, createWorld, hireCoach, tickWeek, toSnapshot } from '..
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE, type CoachTier } from '../src/shared/protocol'
 import { allTrainingReads, movedView, read, runCareer, synthView } from './radarFixtures'
-import { region } from './helpers/source'
+import { region, tTransparent } from './helpers/source'
 
 // ---------------------------------------------------------------------------
 // 6. THE COACH LADDER'S SECOND JOB
@@ -169,7 +169,8 @@ describe('training read – NOT ONE NUMBER reaches the card', () => {
     // A template fact, and templates are exactly what rots quietly. The tile is allowed two numbers,
     // and they are the PLAYER'S OWN slider (`plan.train` / `plan.rest`) - a decision he made, not a
     // measurement of her. Anything else interpolated into this block is a leak.
-    const card = readFileSync(new URL('../src/components/WeekRecapCard.vue', import.meta.url), 'utf8')
+    // L2-3 (08.10): the eyebrows are `{{ t('…') }}` now (RU03-RT01) – the cut below is by the WORD, so the card is read through `tTransparent`.
+    const card = tTransparent(readFileSync(new URL('../src/components/WeekRecapCard.vue', import.meta.url), 'utf8'))
     const from = card.indexOf('<Eyebrow>Training</Eyebrow>')
     const to = card.indexOf('</Card>', from)
     expect(from, 'the Training tile moved – re-aim this pin, do not delete it').toBeGreaterThan(0)
