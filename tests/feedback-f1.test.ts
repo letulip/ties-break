@@ -32,12 +32,12 @@ import { ERROR_BUFFER_CAPACITY, errorTail, installErrorBuffer, recordError } fro
 import {
   FEEDBACK_ADDRESS,
   MAILTO_BODY_MAX,
-  REPORT_ATTACH_LINE,
-  REPORT_NO_CAREER_LINE,
-  REPORT_NO_ERRORS_LINE,
-  REPORT_SUBJECT,
-  REPORT_TAIL_HEADING,
-  REPORT_TRUNCATED_LINE,
+  REPORT_ATTACH_LINE as reportAttachLine,
+  REPORT_NO_CAREER_LINE as reportNoCareerLine,
+  REPORT_NO_ERRORS_LINE as reportNoErrorsLine,
+  REPORT_SUBJECT as reportSubject,
+  REPORT_TAIL_HEADING as reportTailHeading,
+  REPORT_TRUNCATED_LINE as reportTruncatedLine,
   assembleReport,
   reportBridge,
   setReportBridge,
@@ -50,6 +50,16 @@ import { encodeExportFile } from '../src/engine/saveCodec'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 
 vi.mock('../src/worker/client', () => ({ request: vi.fn() }))
+
+// ⚠ L2-11 (RU-15, 08.10) – PREMISE MOVE, COUNTED: the six REPORT_* sentences are THUNKS over `t()` now (a module constant froze the language the
+// module was imported in; src/feedback.ts says so). This file never installs a catalog, so each thunk reads the English it read as a constant –
+// evaluated ONCE here, under the old names, and every assertion below is unchanged. The words are the module's, not retyped here.
+const REPORT_ATTACH_LINE = reportAttachLine()
+const REPORT_NO_CAREER_LINE = reportNoCareerLine()
+const REPORT_NO_ERRORS_LINE = reportNoErrorsLine()
+const REPORT_SUBJECT = reportSubject()
+const REPORT_TAIL_HEADING = reportTailHeading()
+const REPORT_TRUNCATED_LINE = reportTruncatedLine()
 
 type Spy = ReturnType<typeof vi.fn>
 interface Anchor {
@@ -403,7 +413,9 @@ describe('privacy and layering, by construction', () => {
     const errorBuffer = code('src/errorBuffer.ts')
     const feedback = code('src/feedback.ts')
     expect(specifiersOf(errorBuffer)).toEqual([])
-    expect(specifiersOf(feedback)).toEqual(['./composables/buildInfo', './errorBuffer', './worker/client'])
+    // ⚠ L2-11 (RU-15, 08.10) – PREMISE MOVE, COUNTED: the module's import set learns `./i18n` (its sentences call `t()`). The UI layer is not the
+    // engine, so the line below still holds the rule this arm is for; the new edge is named here instead of being forgiven by a looser match.
+    expect(specifiersOf(feedback)).toEqual(['./composables/buildInfo', './errorBuffer', './i18n', './worker/client'])
     for (const spec of [...specifiersOf(errorBuffer), ...specifiersOf(feedback)]) {
       expect(spec).not.toMatch(/(^|\/)engine(\/|$)/)
     }

@@ -18,9 +18,17 @@
 // ⚠ AND THERE IS NO THIRD THING HERE. This module is names only: the STATE lives in `audio/sfx.ts`
 // and `audio/music.ts`, each on its own localStorage key, and both surfaces call those directly.
 
+// ⭐ L2-11 (RU-13B) – GETTERS OVER `t()`, the identityCopy.ts shape: ONE declaration still serves More's two rows AND `MuteButton`'s accessible
+// name, and now both follow the locale (a module constant would freeze the language it was imported in). English is the same two words.
+import { t } from '../i18n'
+
 export const AUDIO_COPY = {
   /** More's `Sound effects` row (round 4 item 5), on the `tb-muted` key. */
-  sfx: 'Sound effects',
+  get sfx() {
+    return t('Sound effects')
+  },
   /** More's `Music` row (round-6 item 1), on the `tb-music-muted` key. */
-  music: 'Music',
+  get music() {
+    return t('Music')
+  },
 } as const

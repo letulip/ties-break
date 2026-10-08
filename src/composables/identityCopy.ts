@@ -164,7 +164,10 @@ export const WEIGHT_COPY = {
    *  ⚠ A DRAFT FOR HIS BLESSING (R46-S23 in docs/rounds/round-46.md, with two alternates).
    *  ⚠ IT IS ALSO THE SWITCH'S ACCESSIBLE NAME (`aria-labelledby` on the row), so a re-word moves
    *  the name list in `tests/component/a11y-sweep.test.ts` and the two e2e transcriptions with it. */
-  settingsLabel: 'Pregnancy loss and bereavement',
+  // ⭐ L2-11 (RU-13B) – WIRED AT LAST: L2-1 left it a plain string because no table row covers it (it is a draft for his blessing, R46-S23). It is
+  // the label of the switch on the More screen's Play tab, so it is a getter like its neighbours; the English is the same words, and the key
+  // waits for his row. It is NOT the table's `The weight` row – that is the heading above it (`title`).
+  get settingsLabel() { return t('Pregnancy loss and bereavement') },
   /** the settings row's own second line. ⚠ It is the SAME promise as `note` in the shape that row's
    *  neighbours use (Week story's «Off: …»), because a settings hint that said something different
    *  from the creation card would be two answers to one question. */

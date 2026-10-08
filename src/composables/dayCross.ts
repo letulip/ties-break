@@ -45,6 +45,7 @@
 // DEFAULT ON, like the other four: the absence of the key means the days cross themselves out.
 
 import { prefersReducedMotion } from './reducedMotion'
+import { t } from '../i18n'
 
 /** Which of the two paces. Both ship; the owner picks by eye (see the note above). */
 export type DayCrossPaceId = 'brisk' | 'gentle'
@@ -76,9 +77,15 @@ export const DAY_CROSS_PACE: Record<DayCrossPaceId, DayCrossPace> = {
   gentle: { sweepMs: 5000, holdMs: 900 },
 }
 
+// L2-11 (RU-13B) – GETTERS OVER `t()`: a module constant would freeze the language it was imported in. The record keeps its type, its keys and
+// its two call sites (`DAY_CROSS_PACE_LABEL[p]`); the words follow the locale on the next render.
 export const DAY_CROSS_PACE_LABEL: Record<DayCrossPaceId, string> = {
-  brisk: 'Brisk 3s',
-  gentle: 'Gentle 5s',
+  get brisk() {
+    return t('Brisk 3s')
+  },
+  get gentle() {
+    return t('Gentle 5s')
+  },
 }
 
 /** The paces in the order a picker shows them. */
@@ -101,13 +108,14 @@ export interface DayCrossSchedule {
 export function dayCrossSchedule(beats: readonly boolean[], pace: DayCrossPace): DayCrossSchedule {
   const step = beats.length > 0 ? pace.sweepMs / beats.length : 0
   const at: number[] = []
-  let t = 0
+  // L2-11 – this running clock was `t`, which is the name of the i18n call now imported at the top of the module; renamed, not reworded.
+  let clock = 0
   for (let i = 0; i < beats.length; i++) {
-    t += step
-    at.push(Math.round(t))
-    if (beats[i]) t += pace.holdMs
+    clock += step
+    at.push(Math.round(clock))
+    if (beats[i]) clock += pace.holdMs
   }
-  return { at, total: Math.round(t), strokeMs: Math.round(step) }
+  return { at, total: Math.round(clock), strokeMs: Math.round(step) }
 }
 
 // -------------------------------------------------------------------------------------------------

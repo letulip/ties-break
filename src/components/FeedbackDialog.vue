@@ -68,12 +68,14 @@ const prepared = shallowRef<Report | null>(null)
 const sending = ref(false)
 const errorCount = ref(errorTail().length)
 
-const buildLine = appBuildLine()
-const addressLine = feedbackAddressLine()
+// ⭐ L2-11 (RU-15) – COMPUTEDS, NOT CONSTANTS: the sentences are thunks over `t()` now (src/feedback.ts), and a line read once at setup
+// would keep the language the card was opened in. The build line and the address line are computeds for the same reason.
+const buildLine = computed(() => appBuildLine())
+const addressLine = computed(() => feedbackAddressLine())
 const errorLine = computed(() => errorCountLine(errorCount.value))
 const saveLine = computed(() => {
-  if (prepared.value === null) return FEEDBACK_SAVE_PENDING_LINE
-  return prepared.value.file === null ? REPORT_NO_CAREER_LINE : FEEDBACK_SAVE_LINE
+  if (prepared.value === null) return FEEDBACK_SAVE_PENDING_LINE()
+  return prepared.value.file === null ? REPORT_NO_CAREER_LINE() : FEEDBACK_SAVE_LINE()
 })
 
 async function prepare(): Promise<void> {
@@ -123,23 +125,23 @@ async function send(): Promise<void> {
       aria-labelledby="feedback-dialog-title"
       tabindex="-1"
     >
-      <p id="feedback-dialog-title" class="dialog-title">{{ FEEDBACK_LABEL }}</p>
+      <p id="feedback-dialog-title" class="dialog-title">{{ FEEDBACK_LABEL() }}</p>
       <template v-if="stage === 'ready'">
-        <p class="feedback-lead">{{ FEEDBACK_HOLDS_LINE }}</p>
+        <p class="feedback-lead">{{ FEEDBACK_HOLDS_LINE() }}</p>
         <ul class="feedback-holds">
           <li>{{ buildLine }}</li>
           <li>{{ errorLine }}</li>
           <li>{{ saveLine }}</li>
         </ul>
         <p class="hint">{{ addressLine }}</p>
-        <p class="hint">{{ FEEDBACK_PRIVACY_LINE }}</p>
+        <p class="hint">{{ FEEDBACK_PRIVACY_LINE() }}</p>
       </template>
-      <p v-else class="dialog-message">{{ REPORT_ATTACH_LINE }}</p>
+      <p v-else class="dialog-message">{{ REPORT_ATTACH_LINE() }}</p>
       <!-- Close is written FIRST, so it takes the initial focus: a player who presses Enter before reading
            closes the card rather than opening a share sheet. -->
       <div class="dialog-actions feedback-actions">
-        <button @click="emit('close')">{{ FEEDBACK_CLOSE_LABEL }}</button>
-        <button v-if="stage === 'ready'" class="primary" :disabled="prepared === null || sending" @click="send">{{ FEEDBACK_SEND_LABEL }}</button>
+        <button @click="emit('close')">{{ FEEDBACK_CLOSE_LABEL() }}</button>
+        <button v-if="stage === 'ready'" class="primary" :disabled="prepared === null || sending" @click="send">{{ FEEDBACK_SEND_LABEL() }}</button>
       </div>
     </div>
   </div>

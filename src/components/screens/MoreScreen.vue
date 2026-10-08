@@ -67,7 +67,9 @@ import { locale, setLocale, t } from '../../i18n'
 const startYear = useStartYear()
 
 const game = useGameStore()
-const buildStampLine = appBuildLine()
+// ⭐ L2-11 (RU-13B) – A COMPUTED NOW, NOT A PLAIN STRING: the frame and the fallback word of the line are the catalog's (`buildLine`
+// calls `t()`), so the line follows the locale; the SHA, the date and the schema inside it are still the baked constants.
+const buildStampLine = computed(() => appBuildLine())
 const fileInput = ref<HTMLInputElement | null>(null)
 const confirmingNewCareer = ref(false)
 // F2 (feedback channel): the report dialog's flag. The dialog prepares the report the moment it
@@ -127,10 +129,13 @@ const saveName = ref('')
 const seedCopied = ref(false)
 
 // One generic confirm-popup slot, reused for every destructive/switching action below.
+// ⭐ L2-11 (RU-13A) – THE MESSAGE AND THE LABEL ARE READERS, NOT HELD STRINGS: a string composed at the tap would keep the language it was
+// asked in, and a blocking card that is open while the locale changes (a catalog arriving late is enough) must re-label. Each reader
+// closes over what the old template literal closed over, so English is character for character what the tap used to build.
 interface PendingConfirm {
-  message: string
+  message: () => string
   danger?: boolean
-  confirmLabel?: string
+  confirmLabel?: () => string
   onConfirm: () => void | Promise<void>
 }
 const pendingConfirm = ref<PendingConfirm | null>(null)
@@ -154,13 +159,28 @@ function runConfirm(): void {
 // object, which stays readable after the picker closes). It is deliberately per-screen-visit
 // state: More mounts fresh on every visit (plain v-if chain in App.vue), and a Retry button that
 // outlived the list it acted on would be a trap.
+// ⭐ L2-11 (RU-13A) – GETTERS OVER `t()`, one `op|` family. These are the NOUNS the status row names an operation by (RU-13A: «Загрузка»,
+// «Экспорт»), and two of them collide with the VERB on a button of this very screen – `Load` (the career's and the slot's button) and
+// `Import` (the confirmation's button) – so the family takes one tag rather than a half-tagged six.
 const OP_LABEL: Record<SaveOpKind, string> = {
-  save: 'Save',
-  load: 'Load',
-  delete: 'Delete save',
-  'delete-career': 'Delete career',
-  export: 'Export',
-  import: 'Import',
+  get save() {
+    return t('op|Save')
+  },
+  get load() {
+    return t('op|Load')
+  },
+  get delete() {
+    return t('op|Delete save')
+  },
+  get 'delete-career'() {
+    return t('op|Delete career')
+  },
+  get export() {
+    return t('op|Export')
+  },
+  get import() {
+    return t('op|Import')
+  },
 }
 const retrySaveAction = ref<(() => void) | null>(null)
 /** run a save operation AND remember it as the Retry target */
@@ -222,12 +242,12 @@ function careerAge(c: CareerMeta): number {
 function relTime(ts: number): string {
   const diffMs = Date.now() - ts
   const minutes = Math.round(diffMs / 60_000)
-  if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes} min ago`
+  if (minutes < 1) return t('just now')
+  if (minutes < 60) return t('{0} min ago', [minutes])
   const hours = Math.round(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return t('{0}h ago', [hours])
   const days = Math.round(hours / 24)
-  return `${days}d ago`
+  return t('{0}d ago', [days])
 }
 
 const activeCareerId = computed(() => game.snapshot?.careerId ?? '')
@@ -237,15 +257,15 @@ const activeCareerId = computed(() => game.snapshot?.careerId ?? '')
 function askLoadCareer(c: CareerMeta): void {
   if (c.careerId === activeCareerId.value) return
   pendingConfirm.value = {
-    message: `Load ${c.kidName}'s career? Your currently active career stays saved.`,
+    message: () => t("Load {0}'s career? Your currently active career stays saved.", [c.kidName]),
     onConfirm: () => tracked(() => game.loadCareer(c.careerId)),
   }
 }
 function askDeleteCareer(c: CareerMeta): void {
   pendingConfirm.value = {
-    message: `Delete ${c.kidName}'s career? This removes ALL of its saves – autosave and named – for good.`,
+    message: () => t("Delete {0}'s career? This removes ALL of its saves – autosave and named – for good.", [c.kidName]),
     danger: true,
-    confirmLabel: 'Delete',
+    confirmLabel: () => t('Delete'),
     onConfirm: () => tracked(() => game.deleteCareer(c.careerId)),
   }
 }
@@ -257,9 +277,9 @@ function askDeleteCareer(c: CareerMeta): void {
  *  behind it. Ordinary reversible settings on this screen stay immediate. */
 function askDeleteSlot(name: string, slot: string): void {
   pendingConfirm.value = {
-    message: `Delete the save "${name}"? There is no undo.`,
+    message: () => t('Delete the save "{0}"? There is no undo.', [name]),
     danger: true,
-    confirmLabel: 'Delete',
+    confirmLabel: () => t('Delete'),
     onConfirm: () => tracked(() => game.deleteSlot(slot)),
   }
 }
@@ -283,7 +303,7 @@ function askRestorePrevious(): void {
   const prev = previousAutosave.value
   if (!prev) return
   pendingConfirm.value = {
-    message: 'Restore the previous autosave? This replaces your current progress with the earlier generation.',
+    message: () => t('Restore the previous autosave? This replaces your current progress with the earlier generation.'),
     // W1-INTEGRITY-A (TB-01): `restoreSlot`, not `load` — the worker commits the restored state as
     // the NEWEST autosave before answering, so closing the app right here keeps the restore
     // (the old `load` swapped memory only, and a relaunch silently rolled back to pre-restore).
@@ -310,9 +330,9 @@ function trySaveAs(): void {
   const collides = namedSlots.value.some((s) => s.name === sanitized)
   if (collides) {
     pendingConfirm.value = {
-      message: `A save named "${sanitized}" already exists. Overwrite it?`,
+      message: () => t('A save named "{0}" already exists. Overwrite it?', [sanitized]),
       danger: true,
-      confirmLabel: 'Overwrite',
+      confirmLabel: () => t('Overwrite'),
       onConfirm: () => doSaveAs(sanitized),
     }
   } else {
@@ -348,17 +368,23 @@ async function doSaveAs(name: string): Promise<void> {
 // null for a hostile, truncated or unreadable file; that is "cannot say", it takes the cautious
 // wording, and the REAL import then fails through `saveOp` with the actual typed reason – one error
 // row, at the moment the player asked for the operation, not two.
+//
+// ⭐ L2-11 (RU-13A) – THREE WHOLE MESSAGES, ONE PER BRANCH, as the owner's table has them (the weeks and her name are holes; the week label is
+// the date formatter's English form, RU-13D's, and stays one form across locales until its rows are approved).
 function importConfirmMessage(peek: SavePeek | null, existing: CareerMeta | undefined): string {
   if (!peek) {
-    return 'This file could not be read here. Import it anyway? If it holds a career you already have, importing replaces it – there is no undo.'
+    return t('This file could not be read here. Import it anyway? If it holds a career you already have, importing replaces it – there is no undo.')
   }
   if (existing) {
-    return (
-      `Overwrite ${existing.kidName}'s career? You have her at ${weekLabel(existing.week, startYear.value)} and this file is ` +
-      `${weekLabel(peek.week, startYear.value)}. The file becomes the career you play from now on – there is no undo.`
+    return t(
+      "Overwrite {0}'s career? You have her at {1} and this file is {2}. The file becomes the career you play from now on – there is no undo.",
+      [existing.kidName, weekLabel(existing.week, startYear.value), weekLabel(peek.week, startYear.value)],
     )
   }
-  return `Import ${peek.kidName}'s career at ${weekLabel(peek.week, startYear.value)}? It is not on this device, so nothing here is replaced – it is added alongside your careers and becomes the one you play. Your current career stays saved.`
+  return t(
+    "Import {0}'s career at {1}? It is not on this device, so nothing here is replaced – it is added alongside your careers and becomes the one you play. Your current career stays saved.",
+    [peek.kidName, weekLabel(peek.week, startYear.value)],
+  )
 }
 
 async function onImportPicked(e: Event) {
@@ -370,11 +396,11 @@ async function onImportPicked(e: Event) {
   const peek = await game.peekSave(file)
   const existing = peek ? game.careers.find((c) => c.careerId === peek.careerId) : undefined
   pendingConfirm.value = {
-    message: importConfirmMessage(peek, existing),
+    message: () => importConfirmMessage(peek, existing),
     // Destructive ONLY when it really is: an import that replaces nothing is not a red button, and
     // colouring it red anyway is the same mistake as warning identically in both cases.
     danger: existing !== undefined,
-    confirmLabel: existing ? 'Overwrite' : 'Import',
+    confirmLabel: () => (existing ? t('Overwrite') : t('Import')),
     // The File object outlives the picker, so this closure – and Retry after it – can re-read the
     // same file after a transient failure (worker hiccup, storage pressure) without asking the
     // player to find it again.
@@ -574,11 +600,12 @@ function pickMatchView(v: ViewMode): void {
 // 02.08 Stats ruling - see `.more-tabs` in the style block.
 type MoreTab = 'play' | 'saves' | 'about'
 const screenTab = ref<MoreTab>('play')
-const TAB_OPTIONS = [
-  { value: 'play', label: 'Play', title: 'Sound, animations and how a match opens' },
-  { value: 'saves', label: 'Saves', title: 'Careers, save slots, import and export' },
-  { value: 'about', label: 'About', title: 'Version, seed and privacy' },
-]
+// ⭐ L2-11 (RU-13A) – A COMPUTED: the labels and titles are `t()` calls, and a constant array would keep the language it was imported in.
+const TAB_OPTIONS = computed(() => [
+  { value: 'play', label: t('Play'), title: t('Sound, animations and how a match opens') },
+  { value: 'saves', label: t('Saves'), title: t('Careers, save slots, import and export') },
+  { value: 'about', label: t('About'), title: t('Version, seed and privacy') },
+])
 </script>
 
 <template>
@@ -589,20 +616,20 @@ const TAB_OPTIONS = [
     appearance="chapter"
     class="more-tabs"
     :options="TAB_OPTIONS"
-    group-label="Which settings"
+    :group-label="t('Which settings')"
   />
 
   <section v-if="screenTab === 'saves'">
-    <h2>Careers</h2>
-    <p v-if="!game.careers.length" class="hint">No careers yet.</p>
+    <h2>{{ t('Careers') }}</h2>
+    <p v-if="!game.careers.length" class="hint">{{ t('No careers yet.') }}</p>
     <div v-for="c in game.careers" :key="c.careerId" class="career-row">
       <div class="career-info">
         <div class="career-name">
           {{ c.kidName }} {{ flagEmoji(c.country) }}
-          <span v-if="c.careerId === activeCareerId" class="pill ok">Active</span>
+          <span v-if="c.careerId === activeCareerId" class="pill ok">{{ t('Active') }}</span>
         </div>
         <div class="hint">
-          {{ weekLabel(c.week, startYear) }} · age {{ careerAge(c) }} · last played {{ fmtDate(c.lastPlayedAt) }}
+          {{ t('{0} · age {1} · last played {2}', [weekLabel(c.week, startYear), careerAge(c), fmtDate(c.lastPlayedAt)]) }}
         </div>
       </div>
       <!-- D11 – TWO CONTROLS CALLED `Load` COEXIST ON THIS SCREEN, and two called `Delete`: one pair
@@ -614,39 +641,39 @@ const TAB_OPTIONS = [
       <div class="controls">
         <button
           :disabled="game.busy || c.careerId === activeCareerId"
-          :aria-label="`Load career – ${c.kidName}`"
+          :aria-label="t('Load career – {0}', [c.kidName])"
           @click="askLoadCareer(c)"
-        >Load</button>
+        >{{ t('Load') }}</button>
         <button
           class="danger"
           :disabled="game.busy"
-          :aria-label="`Delete career – ${c.kidName}`"
+          :aria-label="t('Delete career – {0}', [c.kidName])"
           @click="askDeleteCareer(c)"
-        >Delete</button>
+        >{{ t('Delete') }}</button>
       </div>
     </div>
   </section>
 
   <section v-if="screenTab === 'saves' && game.snapshot">
-    <h2>Saves</h2>
+    <h2>{{ t('Saves') }}</h2>
     <div class="save-row">
       <div>
-        <div>Autosave</div>
-        <div class="hint">{{ currentAutosave ? relTime(currentAutosave.savedAt) : 'none yet' }}</div>
+        <div>{{ t('Autosave') }}</div>
+        <div class="hint">{{ currentAutosave ? relTime(currentAutosave.savedAt) : t('none yet') }}</div>
       </div>
-      <button v-if="previousAutosave" class="link" @click="askRestorePrevious">Restore previous</button>
+      <button v-if="previousAutosave" class="link" @click="askRestorePrevious">{{ t('Restore previous') }}</button>
     </div>
 
     <!-- D8 – A TABLE WITH NO NAME cannot be reached by `getByRole('table', { name })`, and a screen
          reader announces it as "table, 5 columns" with nothing said about what is in it. This screen
          has two, so both are named and the names say which. -->
-    <table v-if="namedSlots.length" style="margin-top: 12px" aria-label="Named saves">
+    <table v-if="namedSlots.length" style="margin-top: 12px" :aria-label="t('Named saves')">
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Saved</th>
-          <th>Week</th>
-          <th>Size</th>
+          <th>{{ t('saves|Name') }}</th>
+          <th>{{ t('Saved') }}</th>
+          <th>{{ t('Week') }}</th>
+          <th>{{ t('Size') }}</th>
           <th></th>
         </tr>
       </thead>
@@ -655,7 +682,7 @@ const TAB_OPTIONS = [
           <td>{{ s.name }}</td>
           <td>{{ fmtDate(s.savedAt) }}</td>
           <td class="num">{{ weekLabel(s.week, startYear) }}</td>
-          <td class="num">{{ (s.bytes / 1024).toFixed(1) }} KB</td>
+          <td class="num">{{ t('{0} KB', [(s.bytes / 1024).toFixed(1)]) }}</td>
           <td>
             <!-- W1-INTEGRITY-A (TB-01): loading a named save makes it the ACTIVE state, so it
                  goes through restoreSlot - committed as the newest autosave before the button
@@ -663,16 +690,16 @@ const TAB_OPTIONS = [
                  `tracked` so the TB-19 status row can offer Retry on exactly this operation. -->
             <button
               :disabled="game.busy"
-              :aria-label="`Load save ${s.name}`"
+              :aria-label="t('Load save {0}', [s.name])"
               @click="tracked(() => game.restoreSlot(s.slot))"
-            >Load</button>
+            >{{ t('Load') }}</button>
             <!-- TB-19: the delete beside it is routed through the shared ConfirmDialog - it was
                  the screen's one unconfirmed irreversible action. See askDeleteSlot. -->
             <IconButton
               variant="bare"
               icon="close"
               :icon-size="14"
-              :label="`Delete save ${s.name}`"
+              :label="t('Delete save {0}', [s.name])"
               :disabled="game.busy"
               @click="askDeleteSlot(s.name, s.slot)"
             />
@@ -689,20 +716,20 @@ const TAB_OPTIONS = [
       <input
         v-model="saveName"
         type="text"
-        placeholder="save name"
-        aria-label="Save name"
+        :placeholder="t('save name')"
+        :aria-label="t('Save name')"
         :disabled="game.busy"
         @keyup.enter="trySaveAs"
       />
-      <button :disabled="game.busy || !saveName.trim()" @click="trySaveAs">Save as…</button>
+      <button :disabled="game.busy || !saveName.trim()" @click="trySaveAs">{{ t('Save as…') }}</button>
     </div>
 
     <div class="controls" style="margin-top: 12px">
-      <button :disabled="game.busy" @click="tracked(() => game.exportSave())">Export to file</button>
-      <button :disabled="game.busy" @click="fileInput?.click()">Import from file</button>
+      <button :disabled="game.busy" @click="tracked(() => game.exportSave())">{{ t('Export to file') }}</button>
+      <button :disabled="game.busy" @click="fileInput?.click()">{{ t('Import from file') }}</button>
       <input ref="fileInput" type="file" accept=".tsave" hidden @change="onImportPicked" />
       <span class="pill" :class="{ ok: game.persisted }">
-        storage: {{ game.persisted === null ? 'unknown' : game.persisted ? 'persistent' : 'best-effort' }}
+        {{ game.persisted === null ? t('storage: unknown') : game.persisted ? t('storage: persistent') : t('storage: best-effort') }}
       </span>
     </div>
 
@@ -710,28 +737,27 @@ const TAB_OPTIONS = [
          on success, and a failure stays on screen WITH a Retry – previously all of these ended in
          silence on this screen, success and failure alike. -->
     <p v-if="game.saveOp?.status === 'pending'" class="hint save-op-row">
-      {{ OP_LABEL[game.saveOp.op] }}…
+      {{ t('{0}…', [OP_LABEL[game.saveOp.op]]) }}
     </p>
     <p v-else-if="game.saveOp?.status === 'ok' && okVisible" class="hint save-op-row">
-      {{ OP_LABEL[game.saveOp.op] }} – done
+      {{ t('{0} – done', [OP_LABEL[game.saveOp.op]]) }}
     </p>
     <p v-else-if="game.saveOp?.status === 'error'" class="error save-op-row">
-      {{ OP_LABEL[game.saveOp.op] }} failed – {{ game.saveOp.message }}
+      {{ t('{0} failed – {1}', [OP_LABEL[game.saveOp.op], game.saveOp.message]) }}
       <button
         v-if="retrySaveAction"
         class="link"
         style="margin-left: 8px"
         :disabled="game.busy"
         @click="retrySaveAction()"
-      >Retry</button>
+      >{{ t('Retry') }}</button>
     </p>
 
     <p v-if="game.persisted === false" class="hint">
-      Your browser may clear saves under storage pressure – export a backup file now and then.
+      {{ t('Your browser may clear saves under storage pressure – export a backup file now and then.') }}
     </p>
     <p class="hint">
-      Export files hold this career's readable data – name, progress, finances – so treat a backup
-      like the personal file it is.
+      {{ t("Export files hold this career's readable data – name, progress, finances – so treat a backup like the personal file it is.") }}
     </p>
   </section>
 
@@ -760,17 +786,17 @@ const TAB_OPTIONS = [
        a snapshot and the report has a sentence for «no career». The exact spot is the owner's, at his
        strings pass. -->
   <section v-if="screenTab === 'saves'">
-    <button class="primary" @click="feedbackOpen = true">{{ FEEDBACK_LABEL }}</button>
+    <button class="primary" @click="feedbackOpen = true">{{ FEEDBACK_LABEL() }}</button>
   </section>
 
   <section v-if="screenTab === 'saves'">
-    <h2>Danger zone</h2>
-    <button v-if="!confirmingNewCareer" class="danger" @click="askNewCareer">New career</button>
+    <h2>{{ t('Danger zone') }}</h2>
+    <button v-if="!confirmingNewCareer" class="danger" @click="askNewCareer">{{ t('New career') }}</button>
     <template v-else>
-      <p class="hint">Your current career stays saved – you can switch back anytime in Careers.</p>
+      <p class="hint">{{ t('Your current career stays saved – you can switch back anytime in Careers.') }}</p>
       <div class="controls">
-        <button class="primary" @click="confirmNewCareer">Confirm</button>
-        <button @click="cancelNewCareer">Cancel</button>
+        <button class="primary" @click="confirmNewCareer">{{ t('Confirm') }}</button>
+        <button @click="cancelNewCareer">{{ t('Cancel') }}</button>
       </div>
     </template>
 
@@ -782,7 +808,7 @@ const TAB_OPTIONS = [
          are not the owner, the one-line `v-if="isDev"` returns - tests/dev-fast-forward.test.ts
          documents both halves of that bargain. -->
     <hr class="card-divider" />
-    <button :disabled="game.busy || !game.snapshot" @click="game.tick(52)">▶▶ 52 (dev)</button>
+    <button :disabled="game.busy || !game.snapshot" @click="game.tick(52)">{{ t('▶▶ 52 (dev)') }}</button>
     <!-- ⭐ ROUND 46 #22 – THE DEV LIFE-EVENT BOOST (the owner, 05.10: «wanted to wait for her to give birth, but it never
          happened - … a switch that raises the chances of these events many times over, for debugging»; verbatim in docs/rounds/round-46.md). Same
          bargain as the fast-forward above: ships in every build, dev-only LABEL (not player copy). It is a
@@ -794,7 +820,7 @@ const TAB_OPTIONS = [
         :disabled="game.busy || !game.snapshot"
         @change="game.setLifeBoost(($event.target as HTMLInputElement).checked)"
       />
-      ▶ life events ×{{ LIFE_EVENT_BOOST_FACTOR }} (dev)
+      {{ t('▶ life events ×{0} (dev)', [LIFE_EVENT_BOOST_FACTOR]) }}
     </label>
     <!-- The screen's one NON-save operation. Save results render in the Saves strip above; this
          line catches everything else (the fast-forward refusing over an open knock/reveal), which
@@ -820,7 +846,7 @@ const TAB_OPTIONS = [
        left half is a label PLUS a hint, only the label carries the id - a switch called "Haptics" and
        not "Haptics Not supported on this device". -->
   <section v-if="screenTab === 'play'">
-    <h2>Sound</h2>
+    <h2>{{ t('Sound') }}</h2>
     <div class="career-row">
       <div id="more-sfx-label">{{ AUDIO_COPY.sfx }}</div>
       <button
@@ -832,7 +858,7 @@ const TAB_OPTIONS = [
         @click="toggleSound"
       >
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
-        <span class="sound-switch-label">{{ soundMuted ? 'OFF' : 'ON' }}</span>
+        <span class="sound-switch-label">{{ soundMuted ? t('OFF') : t('ON') }}</span>
       </button>
     </div>
     <div class="career-row">
@@ -846,13 +872,13 @@ const TAB_OPTIONS = [
         @click="toggleMusic"
       >
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
-        <span class="sound-switch-label">{{ musicMuted ? 'OFF' : 'ON' }}</span>
+        <span class="sound-switch-label">{{ musicMuted ? t('OFF') : t('ON') }}</span>
       </button>
     </div>
     <div class="career-row">
       <div>
-        <span id="more-haptics-label">Haptics</span>
-        <span v-if="!hapticsSupported" class="hint" style="margin: 2px 0 0">Not supported on this device</span>
+        <span id="more-haptics-label">{{ t('Haptics') }}</span>
+        <span v-if="!hapticsSupported" class="hint" style="margin: 2px 0 0">{{ t('Not supported on this device') }}</span>
       </div>
       <button
         class="sound-switch"
@@ -863,7 +889,7 @@ const TAB_OPTIONS = [
         @click="toggleHaptics"
       >
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
-        <span class="sound-switch-label">{{ hapticsOff ? 'OFF' : 'ON' }}</span>
+        <span class="sound-switch-label">{{ hapticsOff ? t('OFF') : t('ON') }}</span>
       </button>
     </div>
   </section>
@@ -871,17 +897,17 @@ const TAB_OPTIONS = [
   <!-- W5: the week's story. Its own section rather than a fourth row under "Sound", because it is not
        a sound - and the hint is load-bearing copy: OFF stops the page appearing, not the page. -->
   <section v-if="screenTab === 'play'">
-    <h2>Week story</h2>
+    <h2>{{ t('Week story') }}</h2>
     <div class="career-row">
       <div>
-        <span id="more-weekstory-label">Open at the end of a week</span>
+        <span id="more-weekstory-label">{{ t('Open at the end of a week') }}</span>
         <!-- ⚠ `display: block`, and it is not a nicety: `.hint` is styled for a <p> and this is a
              <span>, so at 375 the sentence ran on from the label ("...end of a week Off: the story
              stays...") and read as one line of nonsense. Caught in the browser. Haptics' own hint has
              the same shape and gets away with it only because it is four words on a device that
              mostly hides it. -->
         <span class="hint" style="display: block; margin: 2px 0 0">
-          Off: the story stays on the This week tab – tap over whenever you like
+          {{ t('Off: the story stays on the This week tab – tap over whenever you like') }}
         </span>
       </div>
       <button
@@ -893,7 +919,7 @@ const TAB_OPTIONS = [
         @click="toggleWeekStory"
       >
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
-        <span class="sound-switch-label">{{ weekStoryOff ? 'OFF' : 'ON' }}</span>
+        <span class="sound-switch-label">{{ weekStoryOff ? t('OFF') : t('ON') }}</span>
       </button>
     </div>
   </section>
@@ -927,7 +953,7 @@ const TAB_OPTIONS = [
         @click="toggleWeight"
       >
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
-        <span class="sound-switch-label">{{ weightEnabled ? 'ON' : 'OFF' }}</span>
+        <span class="sound-switch-label">{{ weightEnabled ? t('ON') : t('OFF') }}</span>
       </button>
     </div>
   </section>
@@ -936,30 +962,30 @@ const TAB_OPTIONS = [
        there is no state here to be on or off, and the three switches above would start meaning less
        if a fourth row that runs something wore their shape. -->
   <section v-if="screenTab === 'play'">
-    <h2>Interface tour</h2>
+    <h2>{{ t('Interface tour') }}</h2>
     <div class="career-row">
       <div>
-        <span>The coach marks for new players</span>
+        <span>{{ t('The coach marks for new players') }}</span>
         <span class="hint" style="display: block; margin: 2px 0 0">
-          Walks the header, the cards and every tab, one tap at a time
+          {{ t('Walks the header, the cards and every tab, one tap at a time') }}
         </span>
       </div>
-      <button :disabled="!game.snapshot" @click="emit('show-tour')">Show the tour</button>
+      <button :disabled="!game.snapshot" @click="emit('show-tour')">{{ t('Show the tour') }}</button>
     </div>
   </section>
 
   <!-- The calendar's crossing-out sweep. Its own section, beside the week story rather than under
        "Sound", because the two are the same kind of thing: beats around the end of a week. -->
   <section v-if="screenTab === 'play'">
-    <h2>Calendar animation</h2>
+    <h2>{{ t('Calendar animation') }}</h2>
     <div class="career-row">
       <div>
-        <span id="more-daycross-label">Cross out the days</span>
+        <span id="more-daycross-label">{{ t('Cross out the days') }}</span>
         <span class="hint" style="display: block; margin: 2px 0 0">
-          Off: the week plays straight through, as before
+          {{ t('Off: the week plays straight through, as before') }}
         </span>
         <span v-if="reducedMotion" class="hint" style="display: block; margin: 2px 0 0">
-          Your device asks for reduced motion – the sweep stays off
+          {{ t('Your device asks for reduced motion – the sweep stays off') }}
         </span>
       </div>
       <button
@@ -971,13 +997,13 @@ const TAB_OPTIONS = [
         @click="toggleDayCross"
       >
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
-        <span class="sound-switch-label">{{ dayCrossOff ? 'OFF' : 'ON' }}</span>
+        <span class="sound-switch-label">{{ dayCrossOff ? t('OFF') : t('ON') }}</span>
       </button>
     </div>
     <!-- Both paces ship so the owner can pick by eye. Hidden while the sweep is off: a pace for an
          animation that does not run is a control that does nothing. -->
     <div v-if="!dayCrossOff" class="career-row">
-      <div>Pace</div>
+      <div>{{ t('Pace') }}</div>
       <div class="option-row">
         <button
           v-for="p in DAY_CROSS_PACES"
@@ -996,12 +1022,12 @@ const TAB_OPTIONS = [
        animation sections: same kind of thing, a beat the player watches. The rows read only the
        stored default; the pills inside a running match keep working and never write back here. -->
   <section v-if="screenTab === 'play'">
-    <h2>Match playback</h2>
+    <h2>{{ t('Match playback') }}</h2>
     <div class="career-row">
       <div>
-        Speed
+        {{ t('Speed') }}
         <span class="hint" style="display: block; margin: 2px 0 0">
-          How fast a match plays when it opens
+          {{ t('How fast a match plays when it opens') }}
         </span>
       </div>
       <div class="option-row">
@@ -1018,9 +1044,9 @@ const TAB_OPTIONS = [
     </div>
     <div class="career-row">
       <div>
-        How much to watch
+        {{ t('How much to watch') }}
         <span class="hint" style="display: block; margin: 2px 0 0">
-          Full: every point · Key: key points only · Skip: straight to the result
+          {{ t('Full: every point · Key: key points only · Skip: straight to the result') }}
         </span>
       </div>
       <div class="option-row">
@@ -1039,22 +1065,22 @@ const TAB_OPTIONS = [
   </section>
 
   <section v-if="screenTab === 'about'">
-    <h2>About</h2>
+    <h2>{{ t('About') }}</h2>
     <!-- D8, the screen's second table. See the note beside the saves table above. -->
-    <table aria-label="About this app">
+    <table :aria-label="t('About this app')">
       <tbody>
         <tr>
-          <th>App</th>
-          <td>Ties Break <span class="pill">Ace Parent</span></td>
+          <th>{{ t('App') }}</th>
+          <td>{{ t('Ties Break') }} <span class="pill">{{ t('Ace Parent') }}</span></td>
         </tr>
         <tr>
-          <th>Save schema</th>
+          <th>{{ t('Save schema') }}</th>
           <td class="num">v{{ game.snapshot?.schemaVersion }}</td>
         </tr>
         <tr v-if="game.snapshot">
-          <th>Seed</th>
+          <th>{{ t('about|Seed') }}</th>
           <td>
-            <button class="seed-value" title="Copy seed" @click="copySeed">
+            <button class="seed-value" :title="t('Copy seed')" @click="copySeed">
               {{ game.snapshot.seed }} {{ seedCopied ? '✓' : '📋' }}
             </button>
           </td>
@@ -1065,23 +1091,23 @@ const TAB_OPTIONS = [
              shown two rows up. `color: inherit` because nothing in the app styles a bare <a> yet:
              browser-default blue on the dark theme would be the loudest thing on the screen. -->
         <tr>
-          <th>Privacy</th>
+          <th>{{ t('Privacy') }}</th>
           <td>
-            Everything stays on this device – no accounts, no analytics.
+            {{ t('Everything stays on this device – no accounts, no analytics.') }}
             <span class="hint" style="display: block; margin: 2px 0 0">
               <a
                 href="https://github.com/letulip/ties-break/blob/main/PRIVACY.md"
                 target="_blank"
                 rel="noopener"
                 style="color: inherit"
-              >Privacy note</a>
+              >{{ t('Privacy note') }}</a>
               ·
               <a
                 href="https://github.com/letulip/ties-break/issues"
                 target="_blank"
                 rel="noopener"
                 style="color: inherit"
-              >GitHub Issues</a>
+              >{{ t('GitHub Issues') }}</a>
             </span>
           </td>
         </tr>
@@ -1106,9 +1132,10 @@ const TAB_OPTIONS = [
 
   <ConfirmDialog
     v-if="pendingConfirm"
-    :message="pendingConfirm.message"
+    :message="pendingConfirm.message()"
     :danger="pendingConfirm.danger"
-    :confirm-label="pendingConfirm.confirmLabel"
+    :confirm-label="pendingConfirm.confirmLabel ? pendingConfirm.confirmLabel() : t('Confirm')"
+    :cancel-label="t('Cancel')"
     @confirm="runConfirm"
     @cancel="pendingConfirm = null"
   />

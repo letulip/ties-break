@@ -47,6 +47,7 @@
 
 import { appBuildLine } from './composables/buildInfo'
 import { errorTail, type ErrorEntry } from './errorBuffer'
+import { t } from './i18n'
 import { request } from './worker/client'
 
 /** Where reports go. Ruled 30.09 (the brAke spelling was his typo); provisional until the domain
@@ -57,19 +58,26 @@ export const FEEDBACK_ADDRESS = 'feedback@ties-break.com'
 // ⚠ Every user-visible sentence this module can produce is a constant below, one home apiece, so
 // the table can find them. All of them are DRAFT until his strings pass: written here because the
 // adapter has to say SOMETHING, not because the wording is settled.
+//
+// ⭐ L2-11 (RU-15 F01–F16, 08.10) – EVERY SENTENCE CONSTANT IS A THUNK OVER `t()` NOW, AND KEEPS ITS NAME AND ITS HOME. A module constant would
+// freeze the language the module was imported in (the dialog is opened long after that), so `FEEDBACK_LABEL` is `() => t('Send feedback')` and
+// is read where it is used – the dialog, the control in More, the report text and the mail's subject and body. ⚠ English is character for
+// character what it was (`t()` renders its own key when no catalog says otherwise). ⚠ THE REPORT IS COMPOSED AT THE MOMENT THE DIALOG OPENS
+// (see FeedbackDialog.vue), so its text follows the locale that was current THEN; the raw diagnostic rows, the address, the file name and the
+// build line's SHA / date / schema are identifiers and go through untouched.
 
 /** The share sheet's title and the email's subject. DRAFT. */
-export const REPORT_SUBJECT = 'Ties Break feedback'
+export const REPORT_SUBJECT = (): string => t('Ties Break feedback')
 /** The fallback's first body line: `mailto:` cannot attach a file, so the player must. DRAFT. */
-export const REPORT_ATTACH_LINE = 'Please attach the save file that was just downloaded before sending this email.'
+export const REPORT_ATTACH_LINE = (): string => t('Please attach the save file that was just downloaded before sending this email.')
 /** In the report text when there is no save to attach. DRAFT. */
-export const REPORT_NO_CAREER_LINE = 'No save is attached: no career is open, or it could not be read.'
+export const REPORT_NO_CAREER_LINE = (): string => t('No save is attached: no career is open, or it could not be read.')
 /** The tail's heading when the ring holds something. DRAFT. */
-export const REPORT_TAIL_HEADING = 'Recent errors, newest first:'
+export const REPORT_TAIL_HEADING = (): string => t('Recent errors, newest first:')
 /** The tail's only line when the ring is empty. DRAFT. */
-export const REPORT_NO_ERRORS_LINE = 'No errors were recorded in this session.'
+export const REPORT_NO_ERRORS_LINE = (): string => t('No errors were recorded in this session.')
 /** Closes an email body that had to be cut to fit `mailto:`. DRAFT. */
-export const REPORT_TRUNCATED_LINE = '[The rest was cut to fit an email link.]'
+export const REPORT_TRUNCATED_LINE = (): string => t('[The rest was cut to fit an email link.]')
 
 // ── F2's DRAFT SENTENCES – the control and the dialog (docs/plans/feedback-strings-2026-09.md) ──────
 // ⚠ ONE HOME FOR ALL OF THEM, HERE, on purpose: the owner's wording pass edits one file, the two Vue
@@ -78,29 +86,29 @@ export const REPORT_TRUNCATED_LINE = '[The rest was cut to fit an email link.]'
 // the address – their template literals are rows of their own, placeholder and all.
 
 /** The More screen's control AND the dialog's title – one label in two places. DRAFT. */
-export const FEEDBACK_LABEL = 'Send feedback'
+export const FEEDBACK_LABEL = (): string => t('Send feedback')
 /** Over the dialog's list of what the report holds. DRAFT. */
-export const FEEDBACK_HOLDS_LINE = 'The report contains:'
+export const FEEDBACK_HOLDS_LINE = (): string => t('The report contains:')
 /** The list's save line when the report carries a career's file. DRAFT. */
-export const FEEDBACK_SAVE_LINE = 'The save of the active career'
+export const FEEDBACK_SAVE_LINE = (): string => t('The save of the active career')
 /** The save line for the moment before the report is prepared. DRAFT. */
-export const FEEDBACK_SAVE_PENDING_LINE = 'Checking for a save…'
+export const FEEDBACK_SAVE_PENDING_LINE = (): string => t('Checking for a save…')
 /** Under the list: the player's own last tap, in another app, is what sends. DRAFT. */
-export const FEEDBACK_PRIVACY_LINE = 'Nothing is sent until you choose where to send it.'
+export const FEEDBACK_PRIVACY_LINE = (): string => t('Nothing is sent until you choose where to send it.')
 /** The dialog's two buttons. DRAFT. */
-export const FEEDBACK_SEND_LABEL = 'Send'
-export const FEEDBACK_CLOSE_LABEL = 'Close'
+export const FEEDBACK_SEND_LABEL = (): string => t('Send')
+export const FEEDBACK_CLOSE_LABEL = (): string => t('Close')
 
 /** The dialog's error line: `REPORT_NO_ERRORS_LINE` for an empty ring, else the count. DRAFT. */
 export function errorCountLine(n: number): string {
-  if (n === 0) return REPORT_NO_ERRORS_LINE
-  if (n === 1) return '1 recent error'
-  return `${n} recent errors`
+  if (n === 0) return REPORT_NO_ERRORS_LINE()
+  if (n === 1) return t('1 recent error')
+  return t('{0} recent errors', [n])
 }
 
 /** Where the report goes. Shown because a share sheet cannot address the mail – the player types it. DRAFT. */
 export function feedbackAddressLine(): string {
-  return `Send it to ${FEEDBACK_ADDRESS}`
+  return t('Send it to {0}', [FEEDBACK_ADDRESS])
 }
 
 /** `mailto:` bodies are safe to about 2 KB. This bounds the ENCODED body, so the whole link – address,
@@ -159,10 +167,10 @@ export async function assembleReport(): Promise<Report> {
   const file = await activeCareerFile()
   const tail = errorTail().reverse()
   const lines: string[] = [appBuildLine()]
-  if (file === null) lines.push(REPORT_NO_CAREER_LINE)
+  if (file === null) lines.push(REPORT_NO_CAREER_LINE())
   lines.push('')
-  if (tail.length === 0) lines.push(REPORT_NO_ERRORS_LINE)
-  else lines.push(REPORT_TAIL_HEADING, ...tail.map(formatEntry))
+  if (tail.length === 0) lines.push(REPORT_NO_ERRORS_LINE())
+  else lines.push(REPORT_TAIL_HEADING(), ...tail.map(formatEntry))
   return { text: lines.join('\n'), file }
 }
 
@@ -200,7 +208,7 @@ function fitBody(raw: string): string {
   const crlf = raw.replace(/\n/g, '\r\n')
   const whole = enc(crlf)
   if (whole.length <= MAILTO_BODY_MAX) return whole
-  const mark = enc(`\r\n${REPORT_TRUNCATED_LINE}`)
+  const mark = enc(`\r\n${REPORT_TRUNCATED_LINE()}`)
   let lo = 0
   let hi = crlf.length
   while (lo < hi) {
@@ -223,9 +231,9 @@ function downloadFile(file: File): void {
 }
 
 function openMailto(report: Report): void {
-  const raw = (report.file !== null ? `${REPORT_ATTACH_LINE}\n\n` : '') + report.text
+  const raw = (report.file !== null ? `${REPORT_ATTACH_LINE()}\n\n` : '') + report.text
   const a = document.createElement('a')
-  a.href = `mailto:${FEEDBACK_ADDRESS}?subject=${enc(REPORT_SUBJECT)}&body=${fitBody(raw)}`
+  a.href = `mailto:${FEEDBACK_ADDRESS}?subject=${enc(REPORT_SUBJECT())}&body=${fitBody(raw)}`
   a.click()
 }
 
@@ -249,7 +257,7 @@ export async function shareReport(prepared?: Report): Promise<ShareOutcome> {
     navigator.canShare?.({ files: [file] }) === true
   ) {
     try {
-      await navigator.share({ files: [file], text: report.text, title: REPORT_SUBJECT })
+      await navigator.share({ files: [file], text: report.text, title: REPORT_SUBJECT() })
       return 'shared'
     } catch (err) {
       if (isAbort(err)) return 'nothing'

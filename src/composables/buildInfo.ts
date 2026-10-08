@@ -24,6 +24,7 @@
 
 import { SAVE_SCHEMA_VERSION } from '../engine/world'
 import { RAW_BUILD_SHA, RAW_BUILD_DATE } from '../buildStamp'
+import { t } from '../i18n'
 
 /** What a field says when nothing honest can fill it. ⚠ Kept in step with `UNKNOWN` in
  *  scripts/build-stamp.mjs – the build-side fallback and the render-side fallback must read the same
@@ -45,14 +46,24 @@ const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
  * line that says `abcdefg` when no such commit exists costs him the whole investigation.
  */
 export function shortSha(raw: unknown): string {
-  const s = typeof raw === 'string' ? raw.trim().toLowerCase() : ''
-  return SHORT_SHA_RE.test(s) ? s.slice(0, 7) : BUILD_UNKNOWN
+  return shaOrNull(raw) ?? BUILD_UNKNOWN
 }
 
 /** The build date, or `unknown`. Same argument as `shortSha`: a malformed date is not printed. */
 export function buildDay(raw: unknown): string {
+  return dayOrNull(raw) ?? BUILD_UNKNOWN
+}
+
+// ⭐ L2-11 (RU-13B) – THE TWO FIELDS, AS `null` WHEN NOTHING HONEST FILLS THEM. `shortSha` / `buildDay` keep their contract (the English
+// word `unknown`, which scripts/build-stamp.mjs mirrors and the tests pin); the LINE below asks these instead, so the fallback word is the
+// catalog's `t('unknown')` and no code ever compares a result to an English literal to learn that a field was missing.
+function shaOrNull(raw: unknown): string | null {
+  const s = typeof raw === 'string' ? raw.trim().toLowerCase() : ''
+  return SHORT_SHA_RE.test(s) ? s.slice(0, 7) : null
+}
+function dayOrNull(raw: unknown): string | null {
   const s = typeof raw === 'string' ? raw.trim() : ''
-  return ISO_DATE_RE.test(s) ? s : BUILD_UNKNOWN
+  return ISO_DATE_RE.test(s) ? s : null
 }
 
 /**
@@ -60,9 +71,14 @@ export function buildDay(raw: unknown): string {
  * without a build and without a browser.
  *
  * ⚠ NO CYRILLIC AND NO LONG DASH – it renders in a `<template>`, and both are house law.
+ *
+ * ⭐ L2-11 (RU-13B) – THE WORDS CALL `t()`, THE SHA, THE DATE AND THE SCHEMA STAY RAW. The frame (`Build … · … · save schema v…`) and the
+ * fallback word are the catalog's; the seven-character SHA, the ISO date stamp and the schema number are technical identifiers that go into
+ * the holes untouched (RU-15's own note on the report: the build line's identifiers are not translated). English is the same line character for character, and a line
+ * read twice in two locales is two lines – this is a function, not a module constant, so it follows the locale on the next read.
  */
 export function buildLine(rawSha: unknown, rawDate: unknown, schema: number): string {
-  return `Build ${shortSha(rawSha)} · ${buildDay(rawDate)} · save schema v${schema}`
+  return t('Build {0} · {1} · save schema v{2}', [shaOrNull(rawSha) ?? t('unknown'), dayOrNull(rawDate) ?? t('unknown'), String(schema)])
 }
 
 /** What the app prints: the pure formatter applied to the baked constants. */
