@@ -42,6 +42,9 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
 import { weekLabel } from '../shared/dates'
+// ⚙ L2-10b (08.10) – the graduation card's own words are catalog keys (RU-12D). `Banked` here is the SIGNED total over every year, the year card's is the year the balance ROSE: two
+// Russians in one table, so this one carries the tag `total|Banked` and the card keeps the bare key.
+import { t } from '../i18n'
 import { ENDINGS } from '../engine/ending'
 import { finishedTheCourse } from '../shared/avatarEmotion'
 import { GRADUATED_ART_STEM, graduatedUrl } from '../art/preload'
@@ -78,7 +81,7 @@ const artStyle = (() => {
 })()
 
 const title = computed(() =>
-  graduated.value ? 'She has graduated.' : 'She has left the scholarship.',
+  graduated.value ? t('She has graduated.') : t('She has left the scholarship.'),
 )
 
 /** What the years did to the family's balance, summed off the rows the engine banked. Arithmetic
@@ -90,14 +93,14 @@ const callUps = computed(() => years.value.filter((y) => y.callUp !== null).leng
 
 const callLine = computed(() => {
   const n = callUps.value
-  if (n === 0) return 'Her country never called.'
-  return `Her country called in ${n} of them, and paid her nothing, which is what it pays everybody.`
+  if (n === 0) return t('Her country never called.')
+  return t('Her country called in {0} of them, and paid her nothing, which is what it pays everybody.', [n])
 })
 
 /** #A -> #B, or a dash at either end where she was on no list at all. `null` IS NOT #1 – the same
  *  contract `LadderView.rank` keeps. */
 function rankMark(rank: number | null): string {
-  return rank === null ? '–' : `#${rank}`
+  return rank === null ? '–' : t('#{rank}', { rank })
 }
 </script>
 
@@ -116,7 +119,7 @@ function rankMark(rank: number | null): string {
       <!-- The graduate's picture, and hers alone – see the header. A leaver's card opens on the
            kicker, exactly as every card here did before T14. -->
       <img v-if="graduated" class="college-done-art" :src="artUrl" :style="artStyle" alt="" />
-      <p id="college-done-kicker" class="season-summary-kicker">College · {{ weekLabel(college.doneWeek ?? 0, startYear) }}</p>
+      <p id="college-done-kicker" class="season-summary-kicker">{{ t('College · {0}', [weekLabel(college.doneWeek ?? 0, startYear)]) }}</p>
       <h2 id="college-done-title" class="season-summary-title">{{ title }}</h2>
 
       <!-- THE YEARS, AS THE ENGINE BANKED THEM. One row each, and the two ends of each year are the
@@ -124,28 +127,28 @@ function rankMark(rank: number | null): string {
            `pruneResults` has deleted the results these ranks were built from. -->
       <ul class="college-done-years">
         <li v-for="y in years" :key="y.index">
-          <span class="college-done-year">Year {{ y.index }}</span>
-          <span class="college-done-rank">{{ rankMark(y.startRank) }} to {{ rankMark(y.endRank) }}</span>
+          <span class="college-done-year">{{ t('Year {0}', [y.index]) }}</span>
+          <span class="college-done-rank">{{ t('{0} to {1}', [rankMark(y.startRank), rankMark(y.endRank)]) }}</span>
           <span class="college-done-money">{{ formatCents(y.fundsDeltaCents) }}</span>
         </li>
       </ul>
 
       <dl class="college-done-totals">
         <div>
-          <dt>Years</dt>
+          <dt>{{ t('Years') }}</dt>
           <dd>{{ years.length }}</dd>
         </div>
         <div>
-          <dt>Banked</dt>
+          <dt>{{ t('total|Banked') }}</dt>
           <dd>{{ formatCents(bankedCents) }}</dd>
         </div>
       </dl>
 
       <p class="college-done-call">{{ callLine }}</p>
-      <p class="college-done-next">Qualifying is the way forward again. Her week is on the home screen.</p>
+      <p class="college-done-next">{{ t('Qualifying is the way forward again. Her week is on the home screen.') }}</p>
 
       <div class="college-done-actions">
-        <PrimaryPill @click="emit('continue')">Continue</PrimaryPill>
+        <PrimaryPill @click="emit('continue')">{{ t('Continue') }}</PrimaryPill>
       </div>
     </div>
   </div>

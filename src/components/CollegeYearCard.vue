@@ -30,6 +30,11 @@ import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
 import { formatShortName } from '../shared/format'
 import { weekLabel } from '../shared/dates'
+// ⚙ L2-10b (08.10) – EVERY SENTENCE THIS CARD AUTHORS IS A CATALOG KEY NOW (docs/localization/ru-college-year-2026-10.md, RU-12D); the engine's words inside them
+// – the place names, the league and squad labels, the league exit label, the round labels, the opponents – are holes or raw, and the engine's receipts are L3.
+// A sentence that English builds from a counted clause is a whole message per shape (the same count fork the old template literals made), so nothing here
+// composes a plural in code. English renders itself, so not one word on this card moved.
+import { t } from '../i18n'
 import { KID_ID } from '../engine/world/constants'
 import { COLLEGE_TRIP_WEEKS } from '../engine/world'
 import { WEEKS_PER_YEAR } from '../engine/season/calendar'
@@ -89,14 +94,18 @@ const lastYear = computed(() => college.value?.last ?? null)
 const collegeHeading = computed(() => {
   const c = college.value
   if (!c) return ''
-  if (c.yearsDone >= c.totalYears) return `All ${c.totalYears} years spent`
-  const spent = c.yearsDone === 0 ? 'none spent' : `${c.yearsDone} spent`
+  if (c.yearsDone >= c.totalYears) return t('All {0} years spent', [c.totalYears])
+  const none = c.yearsDone === 0
   // ⭐ ROUND 24's BIRTHDAY PAUSE IS A STATE HERE TOO. `yearInProgress` is the engine's own fact and
   // the bottom control already reads it («Finish the year»); a heading calling the year NEXT while
   // it is half-run would part from the button it stands over by exactly one press.
   return c.yearInProgress
-    ? `Year ${c.yearsDone + 1} of ${c.totalYears} under way – ${spent}`
-    : `Year ${c.yearsDone + 1} of ${c.totalYears} is next – ${spent}`
+    ? none
+      ? t('Year {0} of {1} under way – none spent', [c.yearsDone + 1, c.totalYears])
+      : t('Year {0} of {1} under way – {2} spent', [c.yearsDone + 1, c.totalYears, c.yearsDone])
+    : none
+      ? t('Year {0} of {1} is next – none spent', [c.yearsDone + 1, c.totalYears])
+      : t('Year {0} of {1} is next – {2} spent', [c.yearsDone + 1, c.totalYears, c.yearsDone])
 })
 
 /** ⭐⭐ ROUND 26 #11 – WHICH YEAR THE REPORT UNDER IT IS, and it is the year that CLOSED. The facts,
@@ -108,7 +117,7 @@ const collegeHeading = computed(() => {
  *  before the first year, where there is no report to head. */
 const collegeReportHead = computed(() => {
   const y = lastYear.value
-  return y === null ? null : `Year ${y.index}, as it happened`
+  return y === null ? null : t('Year {0}, as it happened', [y.index])
 })
 
 /** ⭐⭐ ROUND 26 #11 – THE YEAR'S RESULT AS A FACT, and not only as a sentence. «На 4й год увидел
@@ -125,7 +134,7 @@ const collegeReportHead = computed(() => {
 const leagueFact = computed(() => {
   const run = league.value
   if (run === null) return null
-  return wonTheLeague(run) ? 'Won it' : leagueExitLabel(run)
+  return wonTheLeague(run) ? t('Won it') : leagueExitLabel(run)
 })
 
 /**
@@ -146,8 +155,9 @@ const leagueFact = computed(() => {
  * deliberate: it is a term of the scholarship rather than a footnote to a result, and the year she
  * most needs to be told is the one where she has not seen it yet.
  */
-const collegeAwardsNothing =
-  'None of it pays ranking points or prize money. A student field and a national squad award neither.'
+const collegeAwardsNothing = computed(() =>
+  t('None of it pays ranking points or prize money. A student field and a national squad award neither.'),
+)
 
 /** The one-line answer to "what was that year". Empty before the first one is spent. */
 const collegeLead = computed(() => {
@@ -156,13 +166,16 @@ const collegeLead = computed(() => {
   if (c.yearsDone === 0) {
     // ⭐ 17.08 – IT NAMES THE PLACE SHE PICKED. ⚠ NULL ON A CAREER THAT ENTERED BEFORE THE CHOICE
     // EXISTED – it says nothing rather than naming a place it was never told.
-    const place = c.tier ? `${COLLEGE_PLACE[c.tier]}. ` : ''
     // R2-18: «a closed league that pays no ranking points» moved to `collegeAwardsNothing`, which
     // is on the card above this line in every year rather than only in the first.
-    return `${place}A scholarship, and the family pays whatever the award does not. She can leave at the end of any year.`
+    return c.tier
+      ? t('{0}. A scholarship, and the family pays whatever the award does not. She can leave at the end of any year.', [COLLEGE_PLACE[c.tier]])
+      : t('A scholarship, and the family pays whatever the award does not. She can leave at the end of any year.')
   }
-  if (c.final) return 'One year of the scholarship left. After it she is out either way.'
-  return `${c.yearsDone} ${c.yearsDone === 1 ? 'year' : 'years'} spent, ${c.totalYears - c.yearsDone} left on the scholarship.`
+  if (c.final) return t('One year of the scholarship left. After it she is out either way.')
+  return c.yearsDone === 1
+    ? t('1 year spent, {0} left on the scholarship.', [c.totalYears - c.yearsDone])
+    : t('{0} years spent, {1} left on the scholarship.', [c.yearsDone, c.totalYears - c.yearsDone])
 })
 
 /** ⭐⭐ ROUND 21 – WHAT THE NEXT YEAR COSTS, said before she agrees to it.
@@ -175,7 +188,7 @@ const collegeLead = computed(() => {
 const collegeBillLine = computed(() => {
   const cents = college.value?.billPerYearCents ?? 0
   if (cents <= 0) return null
-  return `${formatCents(cents)} for the year, charged weekly`
+  return t('{0} for the year, charged weekly', [formatCents(cents)])
 })
 
 /** ⚠ THE PRICE LINE LEFT THE BUTTON WITH THE BUTTON. It used to be the second line of «Another
@@ -186,18 +199,18 @@ const nextYearLine = computed(() => {
   const bill = collegeBillLine.value
   // R2-18: this line is about the PRICE of the next year; the ranking rule is stated once at the
   // top of the same card and does not need repeating inside a sentence about money.
-  return bill === null ? 'Student tennis again, and the award covers the whole year.' : `Student tennis again – ${bill}.`
+  return bill === null ? t('Student tennis again, and the award covers the whole year.') : t('Student tennis again – {0}.', [bill])
 })
 
 /** #A -> #B across the year, or a dash at either end where she is on no list at all. `null` is not
  *  #1 – the same contract `LadderView.rank` keeps, and the reason this is not a number. */
 function rankMark(rank: number | null): string {
-  return rank === null ? '–' : `#${rank}`
+  return rank === null ? '–' : t('#{rank}', { rank })
 }
 
 const collegeRankSpan = computed(() => {
   const y = lastYear.value
-  return y === null ? '' : `${rankMark(y.startRank)} to ${rankMark(y.endRank)}`
+  return y === null ? '' : t('{0} to {1}', [rankMark(y.startRank), rankMark(y.endRank)])
 })
 
 /** THE ONE WEEK OF THE YEAR THAT WAS NOT HERS. Her country picks the squad and there is no declining
@@ -205,15 +218,13 @@ const collegeRankSpan = computed(() => {
 const collegeCallNote = computed(() => {
   const y = lastYear.value
   if (y === null) return ''
-  if (y.callUp === null) return 'Nobody wrote to her this year.'
+  if (y.callUp === null) return t('Nobody wrote to her this year.')
   const c = y.callUp
-  const court =
-    c.rubbersPlayed === 0
-      ? 'named in the squad, never on court'
-      : `${c.rubbersWon} of ${c.rubbersPlayed} rubbers won`
   // R2-18: the tail «No prize money and no ranking points; there are none to award» is the card's
   // one rule line now. What is left is the fact this note exists to report.
-  return `Her country called – ${court}, and the nation finished ${c.nationFinish}th.`
+  return c.rubbersPlayed === 0
+    ? t('Her country called – named in the squad, never on court, and the nation finished {0}th.', [c.nationFinish])
+    : t('Her country called – {0} of {1} rubbers won, and the nation finished {2}th.', [c.rubbersWon, c.rubbersPlayed, c.nationFinish])
 })
 
 // --- ⭐⭐ THE COMPETITION, WATCHED ---------------------------------------------------------------
@@ -257,18 +268,29 @@ const leagueNote = computed(() => {
   const run = league.value
   if (run === null) return ''
   const played = leagueMatchesPlayed(run)
-  const matches = `${played} ${played === 1 ? 'match' : 'matches'}, ${run.roundsWon} ${run.roundsWon === 1 ? 'win' : 'wins'}`
+  const wins = run.roundsWon
+  // ⚙ L2-10b: the counted clause is part of each sentence – eight whole messages, the same fork the old `matches` / `wins` template made.
   // R2-18: as for the call-up note – the rule is on the card once, the result is here.
-  return wonTheLeague(run)
-    ? `She won it – ${matches}.`
-    : `She went out in the ${leagueExitLabel(run)} – ${matches}.`
+  if (wonTheLeague(run)) {
+    if (played === 1) return wins === 1 ? t('She won it – 1 match, 1 win.') : t('She won it – 1 match, {0} wins.', [wins])
+    return wins === 1 ? t('She won it – {0} matches, 1 win.', [played]) : t('She won it – {0} matches, {1} wins.', [played, wins])
+  }
+  const exit = leagueExitLabel(run)
+  if (played === 1) {
+    return wins === 1
+      ? t('She went out in the {0} – 1 match, 1 win.', [exit])
+      : t('She went out in the {0} – 1 match, {1} wins.', [exit, wins])
+  }
+  return wins === 1
+    ? t('She went out in the {0} – {1} matches, 1 win.', [exit, played])
+    : t('She went out in the {0} – {1} matches, {2} wins.', [exit, played, wins])
 })
 
 /** ⭐ THE ONE LINE ON THIS CARD THAT NAMES A MECHANISM, and it is a fact rather than advice: the
  *  national selectors read this result. Ruling 4 forbids a RECOMMENDATION, not an explanation – and
  *  a stake the player cannot see is not a stake. */
 const leagueStakeLine = computed(() =>
-  league.value === null ? '' : `${NATIONAL_TEAM.label} selectors read this result when they pick the squad.`,
+  league.value === null ? '' : t('{0} selectors read this result when they pick the squad.', [NATIONAL_TEAM.label]),
 )
 
 /** ⚠ OFF THE FIRST MATCH OF THE RUN, so the picture belongs to a fixture that really happened rather
@@ -293,7 +315,7 @@ function leagueLabel(match: WorldMatch): string {
 /** "Rubber 2 – L. Kovac" – which one it was and who it was against, off the FROZEN record rather
  *  than off today's world, exactly like the box score's own names. */
 function rubberLabel(match: WorldMatch, index: number): string {
-  return `Rubber ${index + 1} – ${formatShortName(match.oppName)}`
+  return t('Rubber {0} – {1}', [index + 1, formatShortName(match.oppName)])
 }
 
 /** Won or lost, in the record's own words and with no adjective anywhere near it (§6: the game does
@@ -308,8 +330,15 @@ function rubberLabel(match: WorldMatch, index: number): string {
 // sheet's: "Lost 6-4 2-1 ret" is her walking off, "Won 6-4 2-1 ret" is the other woman doing it.
 function rubberOutcome(match: WorldMatch): string {
   const score = match.score ?? ''
-  const verb = match.winnerId === KID_ID ? 'Won' : 'Lost'
-  return `${verb} ${score}${match.retiredId ? ' ret' : ''}`.trim()
+  const won = match.winnerId === KID_ID
+  const row = match.retiredId
+    ? won
+      ? t('Won {0} ret', [score])
+      : t('Lost {0} ret', [score])
+    : won
+      ? t('Won {0}', [score])
+      : t('Lost {0}', [score])
+  return row.trim()
 }
 
 // --- ⭐⭐ ROUND 24 #3 – THE YEAR'S OWN CALENDAR --------------------------------------------------
@@ -362,20 +391,25 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
       rows.push({
         week: w,
         label: COLLEGE_LEAGUE.label,
-        what: `A draw of ${COLLEGE_LEAGUE.drawSize}, every year – her matches can be watched`,
+        what: t('A draw of {0}, every year – her matches can be watched', [COLLEGE_LEAGUE.drawSize]),
       })
     } else if (seasonWeek === NATIONAL_TEAM.seasonWeek) {
       rows.push({
         week: w,
         label: NATIONAL_TEAM.label,
-        what: 'If the selectors call her off the championship, the rubbers can be watched',
+        what: t('If the selectors call her off the championship, the rubbers can be watched'),
       })
     } else if ((COLLEGE_TRIP_WEEKS as readonly number[]).includes(seasonWeek)) {
       const n = matchesPerTrip.value
       rows.push({
         week: w,
-        label: 'Squad trip',
-        what: n > 0 ? `${n} dual ${n === 1 ? 'match' : 'matches'} for the programme` : 'Dual matches for the programme',
+        label: t('Squad trip'),
+        what:
+          n > 0
+            ? n === 1
+              ? t('1 dual match for the programme')
+              : t('{0} dual matches for the programme', [n])
+            : t('Dual matches for the programme'),
       })
     }
   }
@@ -385,7 +419,7 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
 
 <template>
   <Card v-if="college" as="section" class="college-card">
-    <Eyebrow as="h2">College</Eyebrow>
+    <Eyebrow as="h2">{{ t('College') }}</Eyebrow>
     <div class="college-year">
       <p class="college-heading">{{ collegeHeading }}</p>
       <p class="college-lead">{{ collegeLead }}</p>
@@ -407,17 +441,17 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
              the number said. `Math.abs` on the amount, because the label already carries the sign –
              «Spent -$3,200» would say it twice. -->
         <div>
-          <dt>{{ lastYear.fundsDeltaCents < 0 ? 'Spent' : 'Banked' }}</dt>
+          <dt>{{ lastYear.fundsDeltaCents < 0 ? t('Spent') : t('Banked') }}</dt>
           <dd>{{ formatCents(Math.abs(lastYear.fundsDeltaCents)) }}</dd>
         </div>
         <!-- ⭐⭐ THE YEAR'S BILL, BESIDE WHAT THE YEAR BANKED (round 21). One is what the family
              paid, the other is what the balance did anyway. Neither is an opinion about the other. -->
         <div v-if="collegeBillLine">
-          <dt>Tuition</dt>
+          <dt>{{ t('Tuition') }}</dt>
           <dd>{{ formatCents(college.billPerYearCents) }}</dd>
         </div>
         <div>
-          <dt>Rank</dt>
+          <dt>{{ t('Rank') }}</dt>
           <dd>{{ collegeRankSpan }}</dd>
         </div>
         <!-- ⭐⭐ ROUND 26 #11 – THE YEAR'S COMPETITION, AT THE RANK OF A FACT. It spans the row
@@ -448,7 +482,7 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
             <button class="college-rubber college-league-match" type="button" @click="watch(m, COLLEGE_LEAGUE.label)">
               <span class="rubber-who">{{ leagueLabel(m) }}</span>
               <span class="rubber-score">{{ rubberOutcome(m) }}</span>
-              <span class="rubber-watch">Watch</span>
+              <span class="rubber-watch">{{ t('Watch') }}</span>
             </button>
           </li>
         </ul>
@@ -464,14 +498,14 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
           <button class="college-rubber" type="button" @click="watch(m, NATIONAL_TEAM.label)">
             <span class="rubber-who">{{ rubberLabel(m, i) }}</span>
             <span class="rubber-score">{{ rubberOutcome(m) }}</span>
-            <span class="rubber-watch">Watch</span>
+            <span class="rubber-watch">{{ t('Watch') }}</span>
           </button>
         </li>
       </ul>
 
       <!-- ⭐⭐ THE YEAR AHEAD. Home's own calendar, for the one stretch of the game that had none. -->
       <div v-if="collegeCalendar.length > 0" class="college-calendar">
-        <p class="college-calendar-head">The year ahead</p>
+        <p class="college-calendar-head">{{ t('The year ahead') }}</p>
         <ul>
           <li v-for="row in collegeCalendar" :key="row.week">
             <span class="college-week">{{ weekLabel(row.week, startYear) }}</span>

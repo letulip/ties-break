@@ -54,6 +54,11 @@ import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
 import { formatCents } from '../shared/money'
 import { weekLabel } from '../shared/dates'
+// ⚙ L2-10b (08.10) – THE CARD'S OWN WORDS ARE CATALOG KEYS (docs/localization/ru-school-fork-2026-10.md, RU-12E): the kicker, the lede, the five facts, the quotes' frames, the three
+// answers and the summary under the one that commits her. The college places' names (`COLLEGE_TIER_NAME`), the tier short (`TIER_SHORT`) and the week label are the ENGINE'S words
+// and stay holes. The table of funding bands is GETTERS over `t()` and keeps its type; the ladder's name is the chip's own (`ladderName`), lowercased where English lowercased it.
+import { t } from '../i18n'
+import { ladderName } from '../composables/kidIdentity'
 import { activeLadderOfSnapshot, type CollegeTier, type ForkAnswer } from '../shared/protocol'
 import { useStartYear } from '../composables/startYear'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
@@ -79,8 +84,8 @@ const snap = computed(() => game.snapshot ?? null)
 // a standing. `LadderView.rank` IS nullable and means it, so the honest branch is live again.
 // `label` comes off the helper itself, so this card cannot invent a name for a table.
 const ladder = computed(() => activeLadderOfSnapshot(snap.value))
-const rankHead = computed(() => `Her ${ladder.value.label.toLowerCase()} rank`)
-const rankValue = computed(() => (ladder.value.rank === null ? 'unranked' : `#${ladder.value.rank}`))
+const rankHead = computed(() => t('Her {0} rank', [ladderName(ladder.value.track).toLowerCase()]))
+const rankValue = computed(() => (ladder.value.rank === null ? t('unranked') : t('#{rank}', { rank: ladder.value.rank })))
 
 // ⚠ #8's RUNG LOOKUP WENT WITH #8's SENTENCE (16.08). It read `TIER_SHORT[ENDINGS.collegeClosedFromTier]`
 // and existed so no rung name was ever typed into this file – a rule this component still keeps, and
@@ -113,7 +118,7 @@ const rankValue = computed(() => (ladder.value.rank === null ? 'unranked' : `#${
 // her rank, said in the card's own idiom, and the player does the comparing.
 const TOUR_RUNG = 'wta250' as const
 const tourAdmits = computed(() => TIERS[TOUR_RUNG].acceptsRank ?? null)
-const tourHead = computed(() => `${TIER_SHORT[TOUR_RUNG]} admits down to`)
+const tourHead = computed(() => t('{0} admits down to', [TIER_SHORT[TOUR_RUNG]]))
 
 // ⭐⭐ WHAT THE THIRD ANSWER COSTS – v51, docs/specs/what-the-college-place-costs-2026-08.md.
 //
@@ -151,11 +156,21 @@ const offer = computed(() => fork.value?.offer ?? null)
 // into the noun.
 const TIER_LABEL = COLLEGE_TIER_NAME
 const BAND_LABEL: Record<CollegeFundingBand, string> = {
-  full: 'A full ride',
-  most: 'Most of the bill',
-  half: 'About half the bill',
-  part: 'Part of the bill',
-  none: 'Nothing at all',
+  get full() {
+    return t('A full ride')
+  },
+  get most() {
+    return t('Most of the bill')
+  },
+  get half() {
+    return t('About half the bill')
+  },
+  get part() {
+    return t('Part of the bill')
+  },
+  get none() {
+    return t('Nothing at all')
+  },
 }
 const pct = (share: number): string => `${Math.round(share * 100)}%`
 
@@ -223,14 +238,14 @@ const rows = computed<TierRow[]>(() =>
       // hundred, measured when. It is a COUNT OF CAREERS – of a hundred girls who took this place,
       // how many touched the world top 100 in the four years after they left – and the line now says
       // that, with the same figure it always carried. The window stays under the list, once.
-      odds: `${COLLEGE_TIER_ODDS[q.tier].top100In100} in 100 reach the world top 100`,
-      price: `${formatCents(q.costPerYearCents)} a year`,
+      odds: t('{0} in 100 reach the world top 100', [COLLEGE_TIER_ODDS[q.tier].top100In100]),
+      price: t('{0} a year', [formatCents(q.costPerYearCents)]),
       // ⚠ THE BAND IS THE HEADLINE AND THE PERCENTAGE IS THE WORKING – the name is a summary of the
       // figure and not a replacement for it. A walk-on is named as one: nobody funded her, and she may
       // still enrol and pay, which is the owner's ruling of 16.08 read on a row instead of a button.
       award:
         q.athleticShare <= 0 && q.needShare <= 0
-          ? 'Walk-on, no award'
+          ? t('Walk-on, no award')
           : `${BAND_LABEL[fundingBandOf(coveredShareOf(q))]} (${pct(coveredShareOf(q))})`,
       // ⚠ THE WEEK IS THE UNIT THE ENGINE CHARGES IN. `resolveCollegeBill` debits one fifty-second of
       // the year every week she is enrolled, out of the same balance the coach came out of, so a family
@@ -249,8 +264,11 @@ const rows = computed<TierRow[]>(() =>
       // engine charges in and a card quoting only a year would describe a different mechanic.
       bill:
         q.familyPerYearCents <= 0
-          ? 'Family pays nothing'
-          : `Family pays ${formatCents(Math.round(q.familyPerYearCents / WEEKS_PER_YEAR))} a week – ${formatCents(q.familyPerYearCents)} a year`,
+          ? t('Family pays nothing')
+          : t('Family pays {0} a week – {1} a year', [
+              formatCents(Math.round(q.familyPerYearCents / WEEKS_PER_YEAR)),
+              formatCents(q.familyPerYearCents),
+            ]),
       affordable: offer.value ? canAfford(offer.value, q) : null,
     }
   }),
@@ -268,7 +286,7 @@ function pick(row: TierRow): void {
  *  it should read as the season fact rather than crash the lede. */
 const departsLabel = computed(() => {
   const w = snap.value?.collegeDepartsWeek ?? null
-  return w === null ? 'next September' : weekLabel(w, startYear.value)
+  return w === null ? t('next September') : weekLabel(w, startYear.value)
 })
 
 /** ⚠ A FACT, NOT A REFUSAL. She may take a place the family cannot pay for – it goes into debt, not
@@ -279,11 +297,13 @@ const effectiveLine = computed(() => {
   // ⚠ THE WHOLE COURSE, ON THE CONTROL THAT COMMITS HER TO IT. She is answering a question about four
   // years; a per-year number alone asks her to do the multiplication on the most expensive click in
   // the game. A free ride says so instead of printing $0.
-  const course =
-    q.familyPerYearCents <= 0
-      ? 'Nothing to pay'
-      : `${formatCents(q.familyPerYearCents * ENDINGS.collegeYears)} over ${ENDINGS.collegeYears} years`
-  return `${TIER_LABEL[q.tier]}. ${course}, and no ranking points.`
+  return q.familyPerYearCents <= 0
+    ? t('{0}. Nothing to pay, and no ranking points.', [TIER_LABEL[q.tier]])
+    : t('{0}. {1} over {2} years, and no ranking points.', [
+        TIER_LABEL[q.tier],
+        formatCents(q.familyPerYearCents * ENDINGS.collegeYears),
+        ENDINGS.collegeYears,
+      ])
 })
 
 const stage = computed(() => portraitStage(snap.value?.ageYears ?? 19))
@@ -339,20 +359,18 @@ useDialogFocus(card)
     >
       <img class="fork-art" :src="artUrl" :style="artStyle" alt="" />
       <!-- BOTH LINES ARE THE NAME, in the order they are read: her age, then what has happened. -->
-      <p id="fork-dialog-kicker" class="fork-kicker dialog-kicker">She is {{ fork.ageYears }}</p>
-      <h2 id="fork-dialog-title" class="fork-title dialog-title">School is over.</h2>
+      <p id="fork-dialog-kicker" class="fork-kicker dialog-kicker">{{ t('She is {0}', [fork.ageYears]) }}</p>
+      <h2 id="fork-dialog-title" class="fork-title dialog-title">{{ t('School is over.') }}</h2>
       <!-- ⚠ ROUND 24 #5 – the lede carries the ONE new fact of the redesign: college is a
            reservation taken up at the academic year's start, and the season until then is played.
            It may not recommend (ruling 4), so it states the three roads' timing and stops. -->
       <p class="fork-lede">
-        The junior rungs close on age at nineteen – the season ahead is the last of them. A college
-        place is reserved today and taken up when the academic year starts ({{ departsLabel }});
-        the other two roads begin now. Nobody has to keep going.
+        {{ t('The junior rungs close on age at nineteen – the season ahead is the last of them. A college place is reserved today and taken up when the academic year starts ({0}); the other two roads begin now. Nobody has to keep going.', [departsLabel]) }}
       </p>
 
       <dl class="fork-facts">
         <div>
-          <dt>The family has</dt>
+          <dt>{{ t('The family has') }}</dt>
           <dd>{{ formatCents(snap?.fundsCents ?? 0) }}</dd>
         </div>
         <div>
@@ -365,11 +383,11 @@ useDialogFocus(card)
              read off its own shelf as untrue. Same figure the epilogue prints, same one fold
              (`careerMoney`, engine/world/ledger.ts). The two labels are untouched. -->
         <div>
-          <dt>Spent so far</dt>
+          <dt>{{ t('Spent so far') }}</dt>
           <dd>{{ formatCents(snap?.careerMoney.outlayCents ?? 0) }}</dd>
         </div>
         <div>
-          <dt>The tennis has paid</dt>
+          <dt>{{ t('The tennis has paid') }}</dt>
           <dd>{{ formatCents(snap?.careerMoney.prizeCents ?? 0) }}</dd>
         </div>
         <!-- ⭐⭐ P4's result arm – a fifth figure, not a fifth opinion. It sits beside her rank on
@@ -377,7 +395,7 @@ useDialogFocus(card)
              to say about her chances, and the comparison is the player's to make. -->
         <div v-if="tourAdmits !== null">
           <dt>{{ tourHead }}</dt>
-          <dd>#{{ tourAdmits }}</dd>
+          <dd>{{ t('#{rank}', { rank: tourAdmits }) }}</dd>
         </div>
       </dl>
 
@@ -402,7 +420,7 @@ useDialogFocus(card)
       <section v-if="rows.length" class="fork-places-block">
         <!-- ⚠ A LABEL, NOT A LEAD-IN. It states the condition the block is about and says nothing
              about whether to take it – the conditional is what keeps it out of ruling 4's way. -->
-        <h3 class="fork-places-head">If she goes to college, these are the three places</h3>
+        <h3 class="fork-places-head">{{ t('If she goes to college, these are the three places') }}</h3>
         <ul class="fork-places">
           <li v-for="row in rows" :key="row.tier">
             <button
@@ -433,7 +451,7 @@ useDialogFocus(card)
               <span class="fork-place-line">{{ row.bill }}</span>
               <!-- ⚠ A FACT, NEVER A REFUSAL. She may take a place the family cannot pay for: it goes
                    into debt, not away (owner, 16.08). -->
-              <span v-if="row.affordable === false" class="fork-place-line">Beyond what the family has</span>
+              <span v-if="row.affordable === false" class="fork-place-line">{{ t('Beyond what the family has') }}</span>
               <!-- ⭐⭐⭐⭐ A REFUSAL LINE STOOD HERE UNTIL ROUND 26 #2's SECOND PASS, and it is gone
                    with the rule it explained – the owner's ruling that a home university exists in
                    every country (his own words are in the round ledger and in
@@ -456,7 +474,7 @@ useDialogFocus(card)
              ⚠⚠ AND IT IS ONE SHORT LINE BECAUSE THE FIRST DRAFT WAS TWO AND THE MOUNTED 320x568
              ASSERTION WENT RED – the dismiss control sat at y=-25, which is round-20 #3 arriving on
              this card by exactly the route CLAUDE.md describes: one honest sentence at a time. -->
-        <p class="fork-places-note">Four years after she leaves, over 53 careers.</p>
+        <p class="fork-places-note">{{ t('Four years after she leaves, over 53 careers.') }}</p>
       </section>
 
       <!-- ⚠⚠ U-02 – THE STORE'S REFUSAL, ABOVE THE THREE ANSWERS AND BELOW EVERYTHING ELSE.
@@ -472,8 +490,8 @@ useDialogFocus(card)
 
       <div class="fork-answers">
         <button class="fork-answer dialog-option" type="button" :disabled="game.busy" @click="answer('continue')">
-          <strong>Turn professional</strong>
-          <span>W15 and up. Real cheques, real bills, and the family keeps paying.</span>
+          <strong>{{ t('Turn professional') }}</strong>
+          <span>{{ t('W15 and up. Real cheques, real bills, and the family keeps paying.') }}</span>
         </button>
         <!-- ⭐⭐ THE THIRD ANSWER IS UNCONDITIONAL (owner, 16.08). Round-17 #6 had made it depend on
              `fork.collegeOpen`, on the reasoning that a girl who had scored at W75 or above had spent
@@ -497,18 +515,18 @@ useDialogFocus(card)
         >
           <!-- ⚠ "RESERVE", NOT "TAKE" (round 24 #5): the click books the place; she leaves when the
                academic year starts and plays until then. The lede above carries the week. -->
-          <strong>Reserve the college place</strong>
+          <strong>{{ t('Reserve the college place') }}</strong>
           <!-- ⚠ THE OLD LINE SAID "the money goes the other way" AND IT WAS A CLAIM THE ENGINE DID
                NOT HONOUR. It was true of the balance – she stops travelling, the coach stops billing
                – and false about the scholarship, which paid $0 and covered a bill that did not
                exist. The line below states the same trade without asserting the direction, and the
                figures under it are what the direction actually is this career. -->
           <span v-if="effectiveLine">{{ effectiveLine }}</span>
-          <span v-else>Four years of student tennis on a college scholarship, from the next academic year. No ranking points.</span>
+          <span v-else>{{ t('Four years of student tennis on a college scholarship, from the next academic year. No ranking points.') }}</span>
         </button>
         <button class="fork-answer dialog-option" type="button" :disabled="game.busy" @click="answer('stop')">
-          <strong>Stop here</strong>
-          <span>She had a childhood in the sport. That is a whole thing to have had.</span>
+          <strong>{{ t('Stop here') }}</strong>
+          <span>{{ t('She had a childhood in the sport. That is a whole thing to have had.') }}</span>
         </button>
       </div>
     </div>

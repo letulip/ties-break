@@ -21,19 +21,34 @@ import '../../src/style.css'
 
 import EndingScreen from '../../src/components/EndingScreen.vue'
 import RetirementDialog from '../../src/components/RetirementDialog.vue'
+import CollegeYearCard from '../../src/components/CollegeYearCard.vue'
+import CollegeDoneDialog from '../../src/components/CollegeDoneDialog.vue'
+import ForkDialog from '../../src/components/ForkDialog.vue'
+import LifeMomentOverlay from '../../src/components/LifeMomentOverlay.vue'
 import { useGameStore } from '../../src/stores/game'
 import { moneyOf } from '../helpers/careerMoney'
 import { dynastyOf } from '../helpers/dynastyHandover'
-import { formatCentsCompact } from '../../src/shared/money'
+import { formatCents, formatCentsCompact } from '../../src/shared/money'
 import { formatShortName } from '../../src/shared/format'
-import { lastWordLine, plateauLede } from '../../src/engine/ending'
+import { ENDINGS, lastWordLine, plateauLede } from '../../src/engine/ending'
 import { declineRung, herLastWinterLine } from '../../src/composables/declineVoice'
+import { COLLEGE_LEAGUE, leagueExitLabel, leagueMatchesPlayed, wonTheLeague } from '../../src/engine/collegeLeague'
+import { NATIONAL_TEAM } from '../../src/engine/nationalTeam'
+import { COLLEGE_TIERS, COLLEGE_TIER_NAME, COLLEGE_TIER_ODDS, canAfford, coveredShareOf, fundingBandOf } from '../../src/engine/collegeOffer'
+import { TIERS, TIER_SHORT, WEEKS_PER_YEAR } from '../../src/engine/season/calendar'
+import { KID_ID } from '../../src/engine/world/constants'
+import { createWorld, measureCollegeOffer, toSnapshot, type WorldState } from '../../src/engine/world'
+import { LIFE_MOMENT_CONFIRM } from '../../src/engine/world/lifeMomentCopy'
+import { resetLifeMomentForTests } from '../../src/composables/lifeMoment'
+import { ladderName } from '../../src/composables/kidIdentity'
+import { buildCatalog } from '../../tools/i18n-extract'
+import { DEFAULT_PROFILE, activeLadderOfSnapshot } from '../../src/shared/protocol'
 import { listDocs, readRows } from '../../tools/i18n-import'
 import { installCatalog, missCount, missedKeys, resetI18nForTests, resetMisses, setLocale } from '../../src/i18n'
 import { installMemoryStorage } from './setup'
 import { NARROW_PHONE, PHONE, assertDismissReachable, assertInlineRowFits, availableWidth, demandedWidth, setViewport, type Viewport } from './fits'
 import { DEFAULT_ALLOW, expandRendered, hardcodeLeaks, installPseudoLocale } from './pseudoloc'
-import type { AlbumPage, CareerEndingType, CareerMoney, EndingView, RetirementOffer, Snapshot } from '../../src/shared/protocol'
+import type { AlbumPage, CareerEndingType, CareerMoney, CollegeProgressView, CollegeYear, EndingView, RetirementOffer, Snapshot, WorldMatch } from '../../src/shared/protocol'
 
 /** His approved Russian, as the importer compiled it. Every Russian expectation below is read from here by key. */
 const RU = JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string, string>
@@ -650,6 +665,703 @@ describe('L2-10a xx sweep – the retirement card: the shell is bracketed, and t
       card.style.overflowY = ''
       assertDismissReachable(card, last, vp, 'RetirementDialog (xx, cap restored)')
       w.unmount()
+    })
+  }
+})
+
+// ===================================================================================================================
+// RU-12D – THE COLLEGE YEAR CARD AND THE GRADUATION CARD (L2-10b)
+// ===================================================================================================================
+
+function collegeYear(over: Partial<CollegeYear> = {}): CollegeYear {
+  return {
+    index: 1,
+    fromWeek: 281,
+    untilWeek: 333,
+    startSkill: 58.6,
+    endSkill: 58.9,
+    startRank: null,
+    endRank: null,
+    fundsDeltaCents: -3_806_075,
+    callUp: null,
+    league: { week: 293, roundsWon: 2, rounds: 3 },
+    ...over,
+  } as CollegeYear
+}
+
+function collegeView(over: Partial<CollegeProgressView> = {}): CollegeProgressView {
+  return {
+    yearsDone: 1,
+    totalYears: ENDINGS.collegeYears,
+    last: collegeYear(),
+    final: false,
+    billPerYearCents: 8_673_00,
+    tier: 'state',
+    rubbers: [],
+    league: { week: 293, roundsWon: 2, rounds: 3 },
+    leagueMatches: [],
+    yearInProgress: false,
+    leagueIsNextStop: false,
+    callUpIsNextStop: false,
+    ...over,
+  } as CollegeProgressView
+}
+
+function fixture(eventId: string, opp: string, winnerId: string, score: string, retiredId?: string): WorldMatch {
+  return { eventId, round: 0, oppName: opp, winnerId, score, retiredId, surface: 'hard' } as unknown as WorldMatch
+}
+
+function mountCard(view: CollegeProgressView, vp: Viewport = PHONE): VueWrapper {
+  setViewport(vp)
+  // ⚠ ASSIGNED, NOT `$patch`ed: a patch deep-merges into the snapshot already in the store, and a second mount in one test would overwrite the arrays of the FIRST view –
+  // the shared fixtures below (CARD_STATES) were being emptied that way, and a later arm saw a card with no rubbers.
+  useGameStore().snapshot = { week: 281, seed: 'l210-card', ending: { college: view }, college: { untilWeek: 333 } } as unknown as Snapshot
+  return mount(CollegeYearCard, { attachTo: document.body })
+}
+
+// ---- the OLD composition, recomputed: the template literals the wiring replaced, copied here so the parity is character for character ----
+const oldMark = (r: number | null): string => (r === null ? '–' : `#${r}`)
+function oldHeading(c: CollegeProgressView): string {
+  if (c.yearsDone >= c.totalYears) return `All ${c.totalYears} years spent`
+  const spent = c.yearsDone === 0 ? 'none spent' : `${c.yearsDone} spent`
+  return c.yearInProgress ? `Year ${c.yearsDone + 1} of ${c.totalYears} under way – ${spent}` : `Year ${c.yearsDone + 1} of ${c.totalYears} is next – ${spent}`
+}
+function oldLead(c: CollegeProgressView): string {
+  if (c.yearsDone === 0) {
+    const place = c.tier ? `${COLLEGE_TIER_NAME[c.tier]}. ` : ''
+    return `${place}A scholarship, and the family pays whatever the award does not. She can leave at the end of any year.`
+  }
+  if (c.final) return 'One year of the scholarship left. After it she is out either way.'
+  return `${c.yearsDone} ${c.yearsDone === 1 ? 'year' : 'years'} spent, ${c.totalYears - c.yearsDone} left on the scholarship.`
+}
+const oldBill = (c: CollegeProgressView): string | null => ((c.billPerYearCents ?? 0) <= 0 ? null : `${formatCents(c.billPerYearCents)} for the year, charged weekly`)
+function oldNext(c: CollegeProgressView): string {
+  const bill = oldBill(c)
+  return bill === null ? 'Student tennis again, and the award covers the whole year.' : `Student tennis again – ${bill}.`
+}
+function oldCall(y: CollegeYear): string {
+  if (y.callUp === null) return 'Nobody wrote to her this year.'
+  const c = y.callUp
+  const court = c.rubbersPlayed === 0 ? 'named in the squad, never on court' : `${c.rubbersWon} of ${c.rubbersPlayed} rubbers won`
+  return `Her country called – ${court}, and the nation finished ${c.nationFinish}th.`
+}
+function oldLeagueNote(run: { roundsWon: number; rounds: number }): string {
+  const played = leagueMatchesPlayed(run)
+  const matches = `${played} ${played === 1 ? 'match' : 'matches'}, ${run.roundsWon} ${run.roundsWon === 1 ? 'win' : 'wins'}`
+  return wonTheLeague(run) ? `She won it – ${matches}.` : `She went out in the ${leagueExitLabel(run)} – ${matches}.`
+}
+function oldOutcome(m: WorldMatch): string {
+  const verb = m.winnerId === KID_ID ? 'Won' : 'Lost'
+  return `${verb} ${m.score ?? ''}${m.retiredId ? ' ret' : ''}`.trim()
+}
+
+const CALL_UP = (over: Record<string, number> = {}) => ({ rubbersPlayed: 2, rubbersWon: 1, nationFinish: 2, ...over }) as unknown as CollegeYear['callUp']
+/** Five states of the card, each a real shape the engine can bank, between them every branch of every sentence. */
+const CARD_STATES: { label: string; view: CollegeProgressView }[] = [
+  { label: 'year one under way (no report yet)', view: collegeView({ yearsDone: 0, last: null, yearInProgress: true, league: null, leagueMatches: [] }) },
+  { label: 'year two next, a spent year, out in the final', view: collegeView({ yearsDone: 1, last: collegeYear({ startRank: null, endRank: 12 }) }) },
+  {
+    label: 'a banked year, a title, an unplayed call-up, no bill',
+    view: collegeView({
+      yearsDone: 2,
+      last: collegeYear({ index: 2, fundsDeltaCents: 1_250_00, startRank: 40, endRank: 12, callUp: CALL_UP({ rubbersPlayed: 0, rubbersWon: 0, nationFinish: 3 }) }),
+      billPerYearCents: 0,
+      league: { week: 293, roundsWon: 3, rounds: 3 },
+    }),
+  },
+  {
+    label: 'the last year ahead, two rubbers played',
+    view: collegeView({
+      yearsDone: 3,
+      final: true,
+      last: collegeYear({ index: 3, startRank: 12, endRank: null, callUp: CALL_UP() }),
+      league: { week: 293, roundsWon: 0, rounds: 3 },
+      rubbers: [fixture('r1', 'Ana Petrova', KID_ID, '6-3 6-4'), fixture('r2', 'Ina Boll', 'opp', '3-6', 'kid')],
+      leagueMatches: [fixture('l1', 'Eva Roth', 'opp', '2-6 1-6')],
+    }),
+  },
+  { label: 'every year spent, a place unknown', view: collegeView({ yearsDone: ENDINGS.collegeYears, tier: null, last: collegeYear({ index: ENDINGS.collegeYears }) }) },
+]
+
+describe('L2-10b parity – the year card as it shipped, with no catalog: every sentence against the OLD composition recomputed', () => {
+  for (const { label, view } of CARD_STATES) {
+    it(`${label}`, () => {
+      const w = mountCard(view)
+      expect(flat(w.get('.college-card h2').text())).toBe('College')
+      expect(flat(w.get('.college-heading').text())).toBe(oldHeading(view))
+      expect(flat(w.get('.college-lead').text())).toBe(oldLead(view))
+      expect(flat(w.get('.college-rule').text())).toBe('None of it pays ranking points or prize money. A student field and a national squad award neither.')
+      expect(flat(w.get('.college-next').text())).toBe(oldNext(view))
+      const y = view.last
+      expect(w.find('.college-report-head').exists()).toBe(y !== null)
+      if (y !== null) {
+        expect(flat(w.get('.college-report-head').text())).toBe(`Year ${y.index}, as it happened`)
+        const facts = w.findAll('.college-facts > div').map((d) => [flat(d.get('dt').text()), flat(d.get('dd').text())])
+        expect(facts[0]).toEqual([y.fundsDeltaCents < 0 ? 'Spent' : 'Banked', formatCents(Math.abs(y.fundsDeltaCents))])
+        const hasBill = oldBill(view) !== null
+        expect(facts.some(([k]) => k === 'Tuition'), 'the tuition fact follows the bill').toBe(hasBill)
+        expect(facts.find(([k]) => k === 'Rank')?.[1]).toBe(`${oldMark(y.startRank)} to ${oldMark(y.endRank)}`)
+        expect(flat(w.get('.college-call').text())).toBe(oldCall(y))
+      }
+      if (view.league) {
+        expect(flat(w.get('.college-league-note').text())).toBe(oldLeagueNote(view.league))
+        expect(flat(w.get('.college-league-stake').text())).toBe(`${NATIONAL_TEAM.label} selectors read this result when they pick the squad.`)
+        expect(flat(w.get('.college-league-head').text())).toBe(COLLEGE_LEAGUE.label)
+        const fact = w.findAll('.college-facts .college-fact-wide dd')
+        if (y !== null) expect(fact).toHaveLength(1)
+      }
+      const rows = w.findAll('.college-rubber')
+      expect(rows.map((r) => flat(r.get('.rubber-score').text()))).toEqual([...view.leagueMatches, ...view.rubbers].map((m) => oldOutcome(m)))
+      for (const r of rows) expect(flat(r.get('.rubber-watch').text())).toBe('Watch')
+      w.unmount()
+    })
+  }
+
+  it('the eight shapes of the championship sentence, against the old template over every run the engine can bank', () => {
+    const runs = [
+      { roundsWon: 0, rounds: 3 },
+      { roundsWon: 1, rounds: 3 },
+      { roundsWon: 2, rounds: 3 },
+      { roundsWon: 3, rounds: 3 },
+      { roundsWon: 1, rounds: 1 },
+      { roundsWon: 0, rounds: 1 },
+    ]
+    for (const run of runs) {
+      const w = mountCard(collegeView({ league: { week: 293, ...run } }))
+      expect(flat(w.get('.college-league-note').text()), JSON.stringify(run)).toBe(oldLeagueNote(run))
+      w.unmount()
+    }
+  })
+
+  it('the rubber rows and the year-ahead calendar: labels, outcomes, the trip count and its unknown form', () => {
+    const w = mountCard(CARD_STATES[3]!.view)
+    expect(w.findAll('.college-rubbers').at(-1)!.findAll('.rubber-who').map((n) => flat(n.text()))).toEqual([`Rubber 1 – ${formatShortName('Ana Petrova')}`, `Rubber 2 – ${formatShortName('Ina Boll')}`])
+    expect(flat(w.get('.college-calendar-head').text())).toBe('The year ahead')
+    const rowsOf = (m: VueWrapper) => m.findAll('.college-calendar li').map((li) => [flat(li.get('.college-week-label').text()), flat(li.get('.college-week-what').text())])
+    const trips = COLLEGE_TIERS.state.matchesPerWeek
+    expect(rowsOf(w)).toEqual(
+      expect.arrayContaining([
+        [COLLEGE_LEAGUE.label, `A draw of ${COLLEGE_LEAGUE.drawSize}, every year – her matches can be watched`],
+        [NATIONAL_TEAM.label, 'If the selectors call her off the championship, the rubbers can be watched'],
+        ['Squad trip', trips === 1 ? '1 dual match for the programme' : `${trips} dual matches for the programme`],
+      ]),
+    )
+    w.unmount()
+    const none = mountCard(collegeView({ tier: null }))
+    expect(rowsOf(none)).toEqual(expect.arrayContaining([['Squad trip', 'Dual matches for the programme']]))
+    none.unmount()
+  })
+})
+
+describe('L2-10b parity – the graduation card as it shipped', () => {
+  function mountDone(years: CollegeYear[], doneWeek: number | null = 590, vp: Viewport = PHONE): VueWrapper {
+    setViewport(vp)
+    useGameStore().snapshot = { week: 590, college: { years, doneWeek } } as unknown as Snapshot
+    return mount(CollegeDoneDialog, { attachTo: document.body, global: { stubs: { teleport: true } } })
+  }
+  const years = (n: number, callUps: number): CollegeYear[] =>
+    Array.from({ length: n }, (_, i) => collegeYear({ index: i + 1, startRank: i === 0 ? null : 30 - i, endRank: 28 - i, fundsDeltaCents: i % 2 === 0 ? -3_000_00 : 1_200_00, callUp: i < callUps ? CALL_UP() : null }))
+
+  it('a graduate with two call-ups, and a leaver who was never called', () => {
+    const grad = mountDone(years(ENDINGS.collegeYears, 2))
+    expect(flat(grad.get('.season-summary-kicker').text())).toMatch(/^College · W\d+ '\d\d$/)
+    expect(flat(grad.get('.season-summary-title').text())).toBe('She has graduated.')
+    expect(grad.findAll('.college-done-year').map((n) => flat(n.text()))).toEqual(Array.from({ length: ENDINGS.collegeYears }, (_, i) => `Year ${i + 1}`))
+    expect(flat(grad.get('.college-done-rank').text())).toBe('– to #28')
+    expect(grad.findAll('.college-done-totals dt').map((n) => flat(n.text()))).toEqual(['Years', 'Banked'])
+    expect(flat(grad.get('.college-done-call').text())).toBe('Her country called in 2 of them, and paid her nothing, which is what it pays everybody.')
+    expect(flat(grad.get('.college-done-next').text())).toBe('Qualifying is the way forward again. Her week is on the home screen.')
+    expect(flat(grad.get('.college-done-actions').text())).toBe('Continue')
+    grad.unmount()
+    const left = mountDone(years(1, 0))
+    expect(flat(left.get('.season-summary-title').text())).toBe('She has left the scholarship.')
+    expect(flat(left.get('.college-done-call').text())).toBe('Her country never called.')
+    left.unmount()
+  })
+})
+
+describe('L2-10b completeness – the college cards are wired; the engine\'s words and receipts are holes or raw', () => {
+  it('no CERTAIN string homed in either college component is left unwrapped', () => {
+    for (const file of ['src/components/CollegeYearCard.vue', 'src/components/CollegeDoneDialog.vue']) {
+      const open = Object.entries(CATALOG.keys).filter(([, v]) => v.home.includes(file) && !v.wrapped).map(([k]) => k)
+      expect(open, file).toEqual([])
+    }
+  })
+
+  it('all eight championship sentences, the four outcome rows and the three call-up shapes exist as keys, and the card asks for them', () => {
+    const source = SRC('src/components/CollegeYearCard.vue')
+    const keys = [
+      'She won it – 1 match, 1 win.',
+      'She won it – 1 match, {0} wins.',
+      'She won it – {0} matches, 1 win.',
+      'She won it – {0} matches, {1} wins.',
+      'She went out in the {0} – 1 match, 1 win.',
+      'She went out in the {0} – 1 match, {1} wins.',
+      'She went out in the {0} – {1} matches, 1 win.',
+      'She went out in the {0} – {1} matches, {2} wins.',
+      'Won {0}',
+      'Lost {0}',
+      'Won {0} ret',
+      'Lost {0} ret',
+      'Nobody wrote to her this year.',
+      'Her country called – named in the squad, never on court, and the nation finished {0}th.',
+      'Her country called – {0} of {1} rubbers won, and the nation finished {2}th.',
+    ]
+    for (const key of keys) {
+      expect(CATALOG.keys[key]?.wrapped, key).toBe(true)
+      expect(source, key).toContain(`t('${key}'`)
+    }
+    // the engine's words are holes, never keys of this card
+    for (const hole of ['COLLEGE_PLACE[c.tier]', 'NATIONAL_TEAM.label', 'leagueExitLabel(run)', 'formatShortName(match.oppName)']) expect(source, hole).toContain(hole)
+    for (const bare of ['{{ COLLEGE_LEAGUE.label }}', '{{ row.label }}', '{{ weekLabel(row.week, startYear) }}']) expect(source, bare).toContain(bare)
+  })
+
+  it('`engine/collegeLeague.ts`, `engine/nationalTeam.ts` and `engine/collegeOffer.ts` still do not call `t()` (invariant 1)', () => {
+    for (const file of ['src/engine/collegeLeague.ts', 'src/engine/nationalTeam.ts', 'src/engine/collegeOffer.ts']) {
+      expect(/from '(?:\.\.\/)+i18n'/.test(SRC(file)), `${file} learned to call t()`).toBe(false)
+    }
+  })
+})
+
+describe('L2-10b seams – a flip re-labels a MOUNTED year card; the engine\'s names, the scores and every sum of money stay exactly as they were', () => {
+  it('labels, sentences and the counted clauses follow the locale; the place, the league, the opponents and the money do not', async () => {
+    const view = CARD_STATES[1]!.view
+    const w = mountCard(view)
+    const money = w.findAll('.college-facts dd').map((n) => flat(n.text()))
+    const before = { place: flat(w.get('.college-lead').text()), league: flat(w.get('.college-league-head').text()) }
+    installCatalog('ru', {
+      College: 'COLL',
+      Spent: 'SPENT-L',
+      Tuition: 'TUIT-L',
+      Rank: 'RANK-L',
+      'Year {0} of {1} is next – {2} spent': 'NEXT<{0}|{1}|{2}>',
+      '{0} to {1}': 'SPAN<{0}|{1}>',
+      '#{rank}': 'N{rank}',
+      'She went out in the {0} – {1} matches, {2} wins.': 'OUT<{0}|{1}|{2}>',
+      'The year ahead': 'AHEAD-L',
+      '{0} for the year, charged weekly': 'BILL<{0}>',
+    })
+    await setLocale('ru')
+    await nextTick()
+    expect(flat(w.get('.college-card h2').text())).toBe('COLL')
+    expect(flat(w.get('.college-heading').text())).toBe(`NEXT<2|${ENDINGS.collegeYears}|1>`)
+    expect(w.findAll('.college-facts dt').map((n) => flat(n.text()))).toEqual(expect.arrayContaining(['SPENT-L', 'TUIT-L', 'RANK-L']))
+    expect(flat(w.get('.college-facts').text())).toContain('SPAN<–|N12>')
+    expect(flat(w.get('.college-league-note').text())).toBe(`OUT<${leagueExitLabel(view.league!)}|3|2>`)
+    expect(flat(w.get('.college-calendar-head').text())).toBe('AHEAD-L')
+    // the engine's words and the money stay as they were
+    expect(w.findAll('.college-facts dd').map((n) => flat(n.text())).filter((s) => s.startsWith('$'))).toEqual(money.filter((s) => s.startsWith('$')))
+    expect(flat(w.get('.college-league-head').text())).toBe(before.league)
+    expect(flat(w.get('.college-lead').text()), 'the lead has no stand-in: English, counted').toBe(before.place)
+    w.unmount()
+  })
+})
+
+// ===================================================================================================================
+// RU-12E – THE SCHOOL-LEAVING FORK (L2-10b)
+// ===================================================================================================================
+
+/** ⚠ A REAL CAREER STANDING AT THE FORK (round24-fork-places' recipe): the offer is the engine's own, her junior record is set by hand so the awards are non-zero. */
+function atTheFork(seed: string, country: string): WorldState {
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, country })
+  world.bestFinishByTier.j300 = 3
+  world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
+  return world
+}
+function mountFork(world: WorldState, vp: Viewport = PHONE, tweak?: (s: Snapshot) => void): { w: VueWrapper; snap: Snapshot } {
+  setViewport(vp)
+  const snap = toSnapshot(world)
+  tweak?.(snap)
+  useGameStore().snapshot = snap
+  return { w: mount(ForkDialog, { attachTo: document.body, global: { stubs: { teleport: true } } }), snap }
+}
+const pctOf = (share: number): string => `${Math.round(share * 100)}%`
+const BAND: Record<string, string> = { full: 'A full ride', most: 'Most of the bill', half: 'About half the bill', part: 'Part of the bill', none: 'Nothing at all' }
+/** The old composition of one place's three lines. */
+type ForkOffer = NonNullable<NonNullable<Snapshot['fork']>['offer']>
+type ForkQuote = ForkOffer['quotes'][number]
+function oldRow(q: ForkQuote, offer: ForkOffer) {
+  return {
+    name: COLLEGE_TIER_NAME[q.tier],
+    odds: `${COLLEGE_TIER_ODDS[q.tier].top100In100} in 100 reach the world top 100`,
+    price: `${formatCents(q.costPerYearCents)} a year`,
+    award: q.athleticShare <= 0 && q.needShare <= 0 ? 'Walk-on, no award' : `${BAND[fundingBandOf(coveredShareOf(q))]} (${pctOf(coveredShareOf(q))})`,
+    bill:
+      q.familyPerYearCents <= 0
+        ? 'Family pays nothing'
+        : `Family pays ${formatCents(Math.round(q.familyPerYearCents / WEEKS_PER_YEAR))} a week – ${formatCents(q.familyPerYearCents)} a year`,
+    beyond: !canAfford(offer, q),
+  }
+}
+const oldSummary = (q: ForkQuote): string => {
+  const course = q.familyPerYearCents <= 0 ? 'Nothing to pay' : `${formatCents(q.familyPerYearCents * ENDINGS.collegeYears)} over ${ENDINGS.collegeYears} years`
+  return `${COLLEGE_TIER_NAME[q.tier]}. ${course}, and no ranking points.`
+}
+
+describe('L2-10b parity – the school-leaving fork as it shipped, with no catalog: a real career at the fork against the OLD composition', () => {
+  for (const country of ['US', 'CZ']) {
+    it(`${country}: kicker, title, lede, the five facts, three quotes with their award and bill lines, the note and the three answers`, async () => {
+      const world = atTheFork(`l210-fork-${country}`, country)
+      const { w, snap } = mountFork(world)
+      const ladder = activeLadderOfSnapshot(snap)
+      expect(flat(w.get('.fork-kicker').text())).toBe(`She is ${snap.fork!.ageYears}`)
+      expect(flat(w.get('.fork-title').text())).toBe('School is over.')
+      expect(flat(w.get('.fork-lede').text())).toContain('The junior rungs close on age at nineteen – the season ahead is the last of them. A college place is reserved today and taken up when the academic year starts (')
+      expect(flat(w.get('.fork-lede').text())).toMatch(/the other two roads begin now\. Nobody has to keep going\.$/)
+      const departs = /\(([^)]+)\); the other two roads begin now\./.exec(flat(w.get('.fork-lede').text()))?.[1]
+      expect(departs, 'the hole is a week label on a live career and the fixed fallback otherwise').toBe(snap.collegeDepartsWeek == null ? 'next September' : departs)
+      if (snap.collegeDepartsWeek != null) expect(departs).toMatch(/^W\d+ '\d\d$/)
+      const facts = w.findAll('.fork-facts > div').map((d) => [flat(d.get('dt').text()), flat(d.get('dd').text())])
+      expect(facts[0]).toEqual(['The family has', formatCents(snap.fundsCents)])
+      expect(facts[1]).toEqual([`Her ${ladder.label.toLowerCase()} rank`, ladder.rank === null ? 'unranked' : `#${ladder.rank}`])
+      expect(facts[2]).toEqual(['Spent so far', formatCents(snap.careerMoney.outlayCents)])
+      expect(facts[3]).toEqual(['The tennis has paid', formatCents(snap.careerMoney.prizeCents)])
+      const cutoff = TIERS.wta250.acceptsRank ?? null
+      if (cutoff !== null) expect(facts[4]).toEqual([`${TIER_SHORT.wta250} admits down to`, `#${cutoff}`])
+      expect(flat(w.get('.fork-places-head').text())).toBe('If she goes to college, these are the three places')
+      const offer = snap.fork!.offer!
+      const quotes = offer.quotes
+      const places = w.findAll('.fork-place')
+      expect(places).toHaveLength(quotes.length)
+      quotes.forEach((q, i) => {
+        const o = oldRow(q, offer)
+        const p = places[i]!
+        expect(flat(p.get('strong').text())).toBe(o.name)
+        expect(flat(p.get('em').text())).toBe(o.price)
+        const lines = p.findAll('.fork-place-line').map((l) => flat(l.text()))
+        expect(lines.slice(0, 2)).toEqual([`${o.odds} · ${o.award}`, o.bill])
+        expect(lines.includes('Beyond what the family has'), `${o.name}: the affordability line`).toBe(o.beyond)
+      })
+      expect(flat(w.get('.fork-places-note').text())).toBe('Four years after she leaves, over 53 careers.')
+      const answers = w.findAll('.fork-answer').map((b) => [flat(b.get('strong').text()), flat(b.get('span').text())])
+      expect(answers[0]).toEqual(['Turn professional', 'W15 and up. Real cheques, real bills, and the family keeps paying.'])
+      expect(answers[1]![0]).toBe('Reserve the college place')
+      expect(answers[1]![1], 'the summary under the answer that commits her: the CHEAPEST place by default').toBe(oldSummary(quotes[0]!))
+      expect(answers[2]).toEqual(['Stop here', 'She had a childhood in the sport. That is a whole thing to have had.'])
+      // picking a place moves the summary to it, whichever branch (fully funded / family pays) it falls in
+      for (let i = 0; i < places.length; i++) {
+        await places[i]!.trigger('click')
+        expect(flat(w.findAll('.fork-answer')[1]!.get('span').text()), `place ${i}`).toBe(oldSummary(quotes[i]!))
+      }
+      w.unmount()
+    })
+  }
+
+  it('the migrated fixture: a fork with no offer prints the fixed summary sentence and no quotes', () => {
+    const { w } = mountFork(atTheFork('l210-fork-migrated', 'US'), PHONE, (s) => {
+      s.fork = { ...s.fork!, offer: undefined as never }
+    })
+    expect(flat(w.findAll('.fork-answer')[1]!.get('span').text())).toBe('Four years of student tennis on a college scholarship, from the next academic year. No ranking points.')
+    expect(w.find('.fork-places-block').exists()).toBe(false)
+    w.unmount()
+  })
+})
+
+describe('L2-10b completeness – the fork\'s own words are wired; the engine\'s place names stay holes', () => {
+  const FILE = 'src/components/ForkDialog.vue'
+  it('no CERTAIN string homed in ForkDialog is left unwrapped, and the funding bands are a table of getters that keeps its type', () => {
+    const open = Object.entries(CATALOG.keys).filter(([, v]) => v.home.includes(FILE) && !v.wrapped).map(([k]) => k)
+    expect(open).toEqual([])
+    const source = SRC(FILE)
+    expect(source).toContain('const BAND_LABEL: Record<CollegeFundingBand, string> = {')
+    for (const band of ["return t('A full ride')", "return t('Most of the bill')", "return t('About half the bill')", "return t('Part of the bill')", "return t('Nothing at all')"]) {
+      expect(source, band).toContain(band)
+    }
+    for (const call of [
+      "t('Her {0} rank', [ladderName(ladder.value.track).toLowerCase()])",
+      "t('{0} admits down to', [TIER_SHORT[TOUR_RUNG]])",
+      "t('{0}. Nothing to pay, and no ranking points.', [TIER_LABEL[q.tier]])",
+      "t('{0}. {1} over {2} years, and no ranking points.', [",
+      "t('Family pays {0} a week – {1} a year', [",
+      "t('{0} in 100 reach the world top 100', [COLLEGE_TIER_ODDS[q.tier].top100In100])",
+    ]) {
+      expect(source, call).toContain(call)
+    }
+    expect(source, 'the place names are the engine\'s').toContain('name: TIER_LABEL[q.tier]')
+  })
+
+  it('the ladder\'s name for the rank head is the chip\'s own word, lowercased where English lowercased it: the three tracks agree with the protocol label', () => {
+    for (const track of ['domestic', 'itf', 'wta'] as const) {
+      expect(ladderName(track).toLowerCase()).toBe(activeLadderOfSnapshot({ activeLadder: track, ladders: {} } as unknown as Snapshot).label.toLowerCase())
+    }
+  })
+})
+
+describe('L2-10b seams – a flip re-labels a MOUNTED fork; the place names, the odds, the money and her choice stay as they were', () => {
+  it('the frame, the facts and the answers follow the locale; the picked place survives the flip and keeps the engine\'s name', async () => {
+    const { w, snap } = mountFork(atTheFork('l210-fork-seam', 'US'))
+    const quotes = snap.fork!.offer!.quotes
+    await w.findAll('.fork-place')[1]!.trigger('click')
+    installCatalog('ru', {
+      'School is over.': 'SCHOOL-L',
+      'Turn professional': 'PRO-L',
+      'Stop here': 'STOP-L',
+      'The family has': 'HAS-L',
+      'unranked': 'UNR-L',
+      '#{rank}': 'N{rank}',
+      '{0}. {1} over {2} years, and no ranking points.': 'SUM<{0}|{1}|{2}>',
+      '{0}. Nothing to pay, and no ranking points.': 'FREE<{0}>',
+      'Family pays {0} a week – {1} a year': 'FAM<{0}|{1}>',
+      'A full ride': 'FULL-L',
+    })
+    await setLocale('ru')
+    await nextTick()
+    expect(flat(w.get('.fork-title').text())).toBe('SCHOOL-L')
+    expect(w.findAll('.fork-answer').map((b) => flat(b.get('strong').text()))).toEqual(['PRO-L', 'Reserve the college place', 'STOP-L'])
+    expect(flat(w.get('.fork-facts').text())).toContain('HAS-L')
+    const q = quotes[1]!
+    expect(w.findAll('.fork-place')[1]!.classes('is-picked'), 'the choice survives the flip').toBe(true)
+    expect(flat(w.findAll('.fork-place')[1]!.get('strong').text()), 'the engine\'s name of the place').toBe(COLLEGE_TIER_NAME[q.tier])
+    const summary = flat(w.findAll('.fork-answer')[1]!.get('span').text())
+    expect(summary).toBe(q.familyPerYearCents <= 0 ? `FREE<${COLLEGE_TIER_NAME[q.tier]}>` : `SUM<${COLLEGE_TIER_NAME[q.tier]}|${formatCents(q.familyPerYearCents * ENDINGS.collegeYears)}|${ENDINGS.collegeYears}>`)
+    w.unmount()
+  })
+})
+
+// ===================================================================================================================
+// THE ONE MORE DYNAMIC SEAT – LifeMomentOverlay's `Continue` (L2-10b)
+// ===================================================================================================================
+
+function mountMoment(vp: Viewport = PHONE, line = 'engine line for the day'): VueWrapper {
+  setViewport(vp)
+  resetLifeMomentForTests()
+  useGameStore().snapshot = {
+    ageYears: 24,
+    lifeMoment: { kind: 'wedding', week: 1200, face: 'bride', line, confirm: LIFE_MOMENT_CONFIRM },
+  } as unknown as Snapshot
+  return mount(LifeMomentOverlay, { attachTo: document.body, global: { stubs: { teleport: true } } })
+}
+
+describe('L2-10b dynamic seat – LifeMomentOverlay reads the engine\'s one control label through the catalog and owns no sentence', () => {
+  it('parity: the card prints the engine\'s line and the engine\'s label and nothing else', () => {
+    const w = mountMoment()
+    expect(w.text()).toBe(`engine line for the day${LIFE_MOMENT_CONFIRM}`)
+    expect(LIFE_MOMENT_CONFIRM).toBe('Continue')
+    w.unmount()
+  })
+
+  it('completeness: exactly ONE dynamic seat in the file; the only string the engine hands it is a wired catalog key; the gate counts four dynamic calls in all', () => {
+    const source = SRC('src/components/LifeMomentOverlay.vue')
+    expect(source.match(/\{\{\s*t\(/g)?.length, 'exactly one dynamic seat').toBe(1)
+    expect(source).toContain('{{ t(moment.confirm) }}')
+    expect(source).toContain('{{ moment.line }}')
+    expect(CATALOG.keys[LIFE_MOMENT_CONFIRM]?.wrapped, 'the label is a wired key').toBe(true)
+    const lines = SRC('src/engine/world/lifeMomentCopy.ts').match(/LIFE_MOMENT_CONFIRM\s*=/g) ?? []
+    expect(lines, 'one label constant, one string').toHaveLength(1)
+    expect(/from '(?:\.\.\/)+i18n'/.test(SRC('src/engine/world/lifeMomentCopy.ts'))).toBe(false)
+    const { stats } = buildCatalog()
+    expect(stats.dynamicCalls, 'the gate\'s «dynamic t() calls unreadable»: 3 (L2-9b) + this seat').toBe(4)
+  })
+
+  it('seams: the label follows the locale, the line does not; a label with no row falls back to the engine\'s English and is COUNTED', async () => {
+    const w = mountMoment()
+    installCatalog('ru', { Continue: 'GO-ON' })
+    await setLocale('ru')
+    await nextTick()
+    expect(flat(w.get('.life-moment-go').text())).toBe('GO-ON')
+    expect(flat(w.get('.life-moment-line').text())).toBe('engine line for the day')
+    installCatalog('ru', {})
+    resetMisses()
+    await setLocale('ru')
+    await nextTick()
+    w.unmount()
+    const bare = mountMoment()
+    expect(flat(bare.get('.life-moment-go').text())).toBe('Continue')
+    expect(missedKeys()).toContain('Continue')
+    bare.unmount()
+  })
+
+  it('smoke and sweep: under the REAL ru.json «Continue» is not approved (English, counted); under xx it is bracketed, and the one control stays inside a 375x667 phone', async () => {
+    installCatalog('ru', RU)
+    await setLocale('ru')
+    resetMisses()
+    const w = mountMoment()
+    expect(RU.Continue, 'no approved row for «Continue» yet – the day one is, this arm wakes').toBeUndefined()
+    expect(flat(w.get('.life-moment-go').text())).toBe('Continue')
+    expect(missedKeys()).toContain('Continue')
+    w.unmount()
+    resetI18nForTests(null)
+    await installPseudoLocale()
+    const x = mountMoment(PHONE)
+    const engine = new Set(['engine line for the day'])
+    expect(hardcodeLeaks(x.element, ALLOW).filter((l) => !engine.has(l)), 'the label is bracketed – the proof the dynamic seat reaches the catalog').toEqual([])
+    expandRendered(x.element, ALLOW)
+    const card = document.querySelector('.life-moment') as HTMLElement
+    const fit = assertDismissReachable(card, card.querySelector('.life-moment-go')!, PHONE, 'LifeMomentOverlay (xx)')
+    console.log(`[L2-10b xx] life-moment overlay 375x667: the one control at y=${fit.dismissTop.toFixed(0)}..${fit.dismissBottom.toFixed(0)} of ${PHONE.height}`)
+    x.unmount()
+  })
+})
+
+// ===================================================================================================================
+// CONTEXT TAGS, SMOKE AND SWEEP FOR THE SECOND BATCH (L2-10b)
+// ===================================================================================================================
+
+describe('L2-10b context tags – `Spent` and `Banked`, measured with the importer\'s own row reader', () => {
+  it('⚠ THE SPENT TRAP: two rows carry the English «Spent» with two Russians – the year card\'s (RU-12D) and the weekly recap\'s (RU-03, already `recap|Spent`) – and the ending screen\'s row is gone; the card keeps the BARE key because the other live surface already took its tag', () => {
+    const rows = rowsFor('Spent')
+    expect(rows.map((r) => r.doc.replace(/^ru-|-2026-\d\d\.md$/g, '')).sort()).toEqual(['college-year', 'home-weekly'])
+    expect(new Set(rows.map((r) => r.russian)).size, 'two surfaces, two Russians').toBe(2)
+    expect(CATALOG.keys['recap|Spent'], 'the recap\'s side took its tag in L2-3').toBeTruthy()
+    expect(CATALOG.keys.Spent?.home, 'the bare key is the year card\'s alone').toEqual(['src/components/CollegeYearCard.vue'])
+    expect(CATALOG.keys.Spent?.wrapped).toBe(true)
+    // the ending screen's old «Spent» is not a surface any more (it became «Tennis & trips», round 48 #3) – nothing there asks for the word
+    expect(SRC('src/components/EndingScreen.vue')).not.toMatch(/['>]Spent['<]/)
+    expect(Object.keys(CATALOG.keys).filter((k) => k.endsWith('|Spent'))).toEqual(['recap|Spent'])
+  })
+
+  it('«Banked» has two rows with two Russians inside ONE table (the year card\'s balance ROSE; the graduation card\'s SIGNED total): the card keeps the bare key, the graduation card takes `total|Banked`', () => {
+    const rows = rowsFor('Banked')
+    expect(rows).toHaveLength(2)
+    expect(new Set(rows.map((r) => r.russian)).size).toBe(2)
+    expect(CATALOG.keys.Banked?.home).toEqual(['src/components/CollegeYearCard.vue'])
+    expect(CATALOG.keys['total|Banked']?.home).toEqual(['src/components/CollegeDoneDialog.vue'])
+    expect(SRC('src/components/CollegeDoneDialog.vue')).toContain("{{ t('total|Banked') }}")
+  })
+
+  it('every other word of the two college cards and the fork has one Russian across the tables, so it stays bare', () => {
+    for (const english of ['Watch', 'College', 'Continue', 'Rank', 'Tuition', 'Years', 'The year ahead', 'Won it', 'Squad trip', 'Spent so far', 'The family has', 'The tennis has paid', 'unranked', 'Stop here', 'Turn professional', 'Reserve the college place']) {
+      const rows = rowsFor(english)
+      expect(rows.length, english).toBeGreaterThanOrEqual(1)
+      expect(new Set(rows.map((r) => r.russian)).size, `${english}: the tables agree`).toBe(1)
+      expect(Object.keys(CATALOG.keys).filter((k) => k.endsWith(`|${english}`) && !['recap|Spent'].includes(k)), `${english} grew a tag`).toEqual([])
+    }
+  })
+
+  it('the pairs that cannot join a cut key are reported, not hidden: the rank span (`#` is inside the holes because a null rank is a dash) and `She is {age}` (two Russians, two key spellings)', () => {
+    expect(rowsFor('#{start} to #{end}').length, 'the two owner rows for the span').toBe(2)
+    expect(CATALOG.keys['{0} to {1}']?.wrapped).toBe(true)
+    expect(CATALOG.keys['She is {0}']?.wrapped, 'the fork\'s positional spelling').toBe(true)
+    expect(CATALOG.keys['She is {age}']?.wrapped, 'the prologue\'s named spelling (L2-2)').toBe(true)
+    expect(new Set(rowsFor('She is {age}').map((r) => r.russian)).size, 'two surfaces, two Russians').toBe(2)
+  })
+})
+
+describe('L2-10b Russian smoke – ru.json read by key, no Cyrillic typed here', () => {
+  it('no row of these cards is approved yet: English on screen, each word a counted miss', async () => {
+    installCatalog('ru', RU)
+    await setLocale('ru')
+    resetMisses()
+    const card = mountCard(CARD_STATES[3]!.view)
+    const fork = mountFork(atTheFork('l210-fork-smoke', 'US'))
+    const homes = ['src/components/CollegeYearCard.vue', 'src/components/CollegeDoneDialog.vue', 'src/components/ForkDialog.vue']
+    const wiredHere = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.some((h) => homes.includes(h)))
+    for (const key of wiredHere) expect(seen(card.element) + seen(fork.w.element), `${key} is approved and wired`).toContain(RU[key]!)
+    expect(flat(card.get('.college-card h2').text())).toBe('College')
+    for (const key of ['College', 'Spent', 'Rank', 'Tuition', 'Watch', 'The year ahead']) expect(missedKeys(), key).toContain(key)
+    for (const key of ['School is over.', 'Turn professional', 'Stop here', 'The family has']) expect(missedKeys(), key).toContain(key)
+    console.log(`[L2-10b smoke] ru.json: ${Object.keys(RU).length} keys; approved AND wired on the college cards and the fork: ${wiredHere.length}; distinct misses on two mounted surfaces: ${missedKeys().length}`)
+    card.unmount()
+    fork.w.unmount()
+  })
+})
+
+describe('L2-10b xx sweep – nothing the chrome wrote is unbracketed, and the BLOCKING fork and graduation card keep their ways on inside a 375x667 phone with every word longer', () => {
+  /** The engine's words the sweep allows (counted): the places, the league and squad names, the stage words, the opponents. */
+  const engineWords = (): Set<string> =>
+    new Set([...Object.values(COLLEGE_TIER_NAME), COLLEGE_LEAGUE.label, NATIONAL_TEAM.label, 'Ana Petrova', 'Ina Boll', 'Eva Roth', 'A. Petrova', 'I. Boll', 'E. Roth', 'Quarterfinal', 'Final', 'Semifinal'])
+
+  it('zero leaks beyond the engine\'s words on the year card (five states), the graduation card and the fork', async () => {
+    await installPseudoLocale()
+    // `leagueLabel` stays raw on purpose: its owner row is the identity `{stage} – {opponent}`, and both halves are the engine's (a round word, an opponent's name)
+    const allow = [...ALLOW, /^(?:Q|S)F$|^R\d+$|^F$/, /^(?:Round of \d+|Quarterfinal|Semifinal|Final)$/, /^the (?:College League|Nations Cup)$/, /^[A-Za-z0-9 ]+ – [A-Z]\. [A-Za-z]+$/]
+    const eng = engineWords()
+    for (const { label, view } of CARD_STATES) {
+      const w = mountCard(view)
+      const leaks = hardcodeLeaks(w.element, allow).filter((l) => !eng.has(l))
+      console.log(`[L2-10b xx] year card (${label}) leaks: ${JSON.stringify(leaks)}`)
+      expect(leaks, label).toEqual([])
+      w.unmount()
+    }
+    const { w, snap } = mountFork(atTheFork('l210-fork-xx', 'CZ'))
+    const forkLeaks = hardcodeLeaks(w.element, allow).filter((l) => !eng.has(l) && !/^W\d+ '\d\d$/.test(l))
+    console.log(`[L2-10b xx] fork leaks: ${JSON.stringify(forkLeaks)} (${snap.fork!.offer!.quotes.length} places)`)
+    expect(forkLeaks).toEqual([])
+    w.unmount()
+  })
+
+  it('375x667: the year card (a Home card) holds the phone with every word longer – numbers printed, no unbreakable word wider than its room', async () => {
+    const measure = async (xx: boolean) => {
+      if (xx) await installPseudoLocale()
+      const w = mountCard(CARD_STATES[3]!.view)
+      if (xx) expandRendered(w.element, ALLOW)
+      const r = widest(w.get('.college-card').element, PHONE)
+      w.unmount()
+      return r
+    }
+    const en = await measure(false)
+    resetI18nForTests(null)
+    const xx = await measure(true)
+    console.log(
+      `[L2-10b xx] year card 375x667: ${en.boxes} text boxes, ${en.chars} -> ${xx.chars} chars; widest line ${pct(en.line.r)} («${en.line.at}») -> ${pct(xx.line.r)} («${xx.line.at}»); longest word ${pct(en.word.r)} («${en.word.at}») -> ${pct(xx.word.r)} («${xx.word.at}»)`,
+    )
+    expect(xx.chars).toBeGreaterThan(en.chars)
+    expect(xx.word.r, `the card: «${xx.word.at}» overflows its box under xx`).toBeLessThanOrEqual(1)
+  })
+
+  for (const vp of [PHONE, NARROW_PHONE]) {
+    it(`${vp.width}x${vp.height}: the fork (the longest of two careers, a place selected) – the last answer is reachable under xx; strip the cap and the SAME assertion goes red`, async () => {
+      const worlds = ['CZ', 'US'].map((c) => atTheFork(`l210-fork-fit-${c}`, c))
+      const en = mountFork(worlds[0]!, vp)
+      let card = document.querySelector('.fork-card') as HTMLElement
+      const enFit = assertDismissReachable(card, card.querySelector('.fork-answers')!.lastElementChild!, vp, `ForkDialog (English, ${vp.width}x${vp.height})`)
+      const english = (card.textContent ?? '').length
+      en.w.unmount()
+      await installPseudoLocale()
+      const x = mountFork(worlds[0]!, vp)
+      card = document.querySelector('.fork-card') as HTMLElement
+      card.querySelector('.fork-place')!.dispatchEvent(new Event('click'))
+      await nextTick()
+      const last = card.querySelector('.fork-answers')!.lastElementChild as HTMLElement
+      expandRendered(card, ALLOW)
+      const xxChars = (card.textContent ?? '').length
+      expect(xxChars).toBeGreaterThan(english)
+      const fit = assertDismissReachable(card, last, vp, `ForkDialog (xx, ${vp.width}x${vp.height})`)
+      console.log(
+        `[L2-10b xx] fork ${vp.width}x${vp.height}: card text ${english} -> ${xxChars} chars; content wants ${enFit.contentFloor.toFixed(0)} -> ${fit.contentFloor.toFixed(0)}px of a ${fit.available.height.toFixed(0)}px room ` +
+          `(${fit.contentFloor > fit.available.height ? 'scrolls inside the cap' : 'fits whole'}); the last answer at ${enFit.dismissTop.toFixed(0)}..${enFit.dismissBottom.toFixed(0)} -> ${fit.dismissTop.toFixed(0)}..${fit.dismissBottom.toFixed(0)} of ${vp.height}`,
+      )
+      expect(fit.dismissBottom).toBeLessThanOrEqual(vp.height)
+      card.style.maxHeight = 'none'
+      card.style.overflowY = 'visible'
+      expect(() => assertDismissReachable(card, last, vp, 'ForkDialog (xx, unbounded)')).toThrow(/declares no height bound|taller than the screen|outside the viewport/)
+      card.style.maxHeight = ''
+      card.style.overflowY = ''
+      assertDismissReachable(card, last, vp, 'ForkDialog (xx, cap restored)')
+      x.w.unmount()
+    })
+
+    it(`${vp.width}x${vp.height}: the graduation card (a graduate with all her years) – Continue is reachable under xx; strip the cap and the SAME assertion goes red`, async () => {
+      const yrs = Array.from({ length: ENDINGS.collegeYears }, (_, i) => collegeYear({ index: i + 1, startRank: 30 - i, endRank: 28 - i, callUp: CALL_UP() }))
+      const mountDoneCard = (): VueWrapper => {
+        setViewport(vp)
+        useGameStore().snapshot = { week: 590, college: { years: yrs, doneWeek: 590 } } as unknown as Snapshot
+        return mount(CollegeDoneDialog, { attachTo: document.body, global: { stubs: { teleport: true } } })
+      }
+      const en = mountDoneCard()
+      let card = document.querySelector('.college-done') as HTMLElement
+      const enFit = assertDismissReachable(card, card.querySelector('.college-done-actions > *')!, vp, `CollegeDoneDialog (English, ${vp.width}x${vp.height})`)
+      const english = (card.textContent ?? '').length
+      en.unmount()
+      await installPseudoLocale()
+      const x = mountDoneCard()
+      card = document.querySelector('.college-done') as HTMLElement
+      const go = card.querySelector('.college-done-actions > *') as HTMLElement
+      expandRendered(card, ALLOW)
+      const xxChars = (card.textContent ?? '').length
+      expect(xxChars).toBeGreaterThan(english)
+      const fit = assertDismissReachable(card, go, vp, `CollegeDoneDialog (xx, ${vp.width}x${vp.height})`)
+      console.log(
+        `[L2-10b xx] graduation card ${vp.width}x${vp.height}: card text ${english} -> ${xxChars} chars; content wants ${enFit.contentFloor.toFixed(0)} -> ${fit.contentFloor.toFixed(0)}px of a ${fit.available.height.toFixed(0)}px room; Continue at ${enFit.dismissTop.toFixed(0)}..${enFit.dismissBottom.toFixed(0)} -> ${fit.dismissTop.toFixed(0)}..${fit.dismissBottom.toFixed(0)} of ${vp.height}`,
+      )
+      expect(fit.dismissBottom).toBeLessThanOrEqual(vp.height)
+      card.style.maxHeight = 'none'
+      card.style.overflowY = 'visible'
+      expect(() => assertDismissReachable(card, go, vp, 'CollegeDoneDialog (xx, unbounded)')).toThrow(/declares no height bound|taller than the screen|outside the viewport/)
+      card.style.maxHeight = ''
+      card.style.overflowY = ''
+      assertDismissReachable(card, go, vp, 'CollegeDoneDialog (xx, cap restored)')
+      x.unmount()
     })
   }
 })
