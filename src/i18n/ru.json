@@ -1,6 +1,11 @@
 {
   "Ace Parent": "Ace Parent",
+  "Home": "Дом",
+  "Middle class": "Средний достаток",
   "Raise another": "Новая история",
   "Tennis & trips": "Теннис и поездки",
-  "Ties Break": "Ties Break"
+  "Ties Break": "Ties Break",
+  "Wealthy": "Обеспеченная семья",
+  "Working class": "Скромный бюджет",
+  "nav|Stats": "Рейтинг"
 }

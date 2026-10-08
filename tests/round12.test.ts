@@ -212,7 +212,8 @@ describe('R12-15 — the dead Play button after an injury (the round\'s worst it
     const map = region(app, 'const STOP_REASON_TEXT', 'const stopReasons')
     expect(map).toContain('walkover:')
     // Player copy: short dash, no Cyrillic.
-    const copy = map.match(/walkover: '([^']*)'/)![1]
+    // L2-1 (08.10): RE-AIMED – the table's entries are readers over `t()`; the sentence asserted is the same one.
+    const copy = map.match(/walkover: \(\) => t\('([^']*)'\)/)![1]
     expect(copy).not.toContain('—')
     expect(copy).not.toMatch(/[Ѐ-ӿ]/)
     // and it is in the precedence list, or the filter would silently drop it (R11-1's bug class)

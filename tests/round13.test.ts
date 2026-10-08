@@ -316,7 +316,8 @@ describe('R13-8 — a paused tournament owns the primary button', () => {
     // the label keeps promising the championship, tier named off the pending run itself
     expect(composable).toContain('TIER_SHORT[snap.pending.tier]')
     // ...and a fixture with no rung is named by the competition's own label, never by an invented one
-    expect(composable).toContain('`Watch ${snap.pending.tierLabel}`')
+    // L2-1 (08.10): RE-AIMED – the label is a `t()` call; the competition's own label is still what fills it.
+    expect(composable).toContain("t('Watch {tierLabel}', { tierLabel: snap.pending.tierLabel })")
   })
 
   it('the click re-opens the overlay instead of ticking past the pause', () => {

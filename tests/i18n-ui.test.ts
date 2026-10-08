@@ -157,18 +157,21 @@ describe('a loaded catalog renders, ICU plurals included', () => {
   })
 
   it('is reactive: a computed over t() flips with the locale and with a late catalog', async () => {
-    const label = computed(() => t('Home'))
-    expect(label.value).toBe('Home')
-    installCatalog('ru', { Home: '[ru] Home' })
+    // L2-1 (08.10): THE PROBE KEY IS MADE UP NOW. This case used `Home`, which was in no catalog until the shell landed; it is
+    // a real `ru.json` entry since L2-1 (his ruling of 01.10), and the late-chunk half below loads the real file.
+    const probe = 'Reactivity probe'
+    const label = computed(() => t(probe))
+    expect(label.value).toBe(probe)
+    installCatalog('ru', { [probe]: '[ru] Home' })
     await setLocale('ru')
     expect(label.value).toBe('[ru] Home')
     await setLocale('en')
-    expect(label.value).toBe('Home')
+    expect(label.value).toBe(probe)
     // the catalog arrives AFTER the player already asked for the language (the late-chunk case)
     resetI18nForTests()
     await setLocale('ru')
-    expect(label.value).toBe('Home')
-    installCatalog('ru', { Home: '[ru] late' })
+    expect(label.value).toBe(probe)
+    installCatalog('ru', { [probe]: '[ru] late' })
     expect(label.value).toBe('[ru] late')
   })
 

@@ -85,7 +85,7 @@ import { useWeekAction } from '../../composables/weekAction'
 import { useDayCrossSweep } from '../../composables/dayCrossSweep'
 // ⭐⭐ ROUND 42 #20 (ruled B) – the leave-anyway guard and its one DRAFT line, shared with the shell
 // so the two projections of the week press cannot drift (see the composable's header).
-import { SOFT_LEAVE_LINE, useSoftLeaveGuard } from '../../composables/softLeave'
+import { softLeaveLine, useSoftLeaveGuard } from '../../composables/softLeave'
 import { weekDateLine, weekDayNumbers, weekLabel, weekRange } from '../../shared/dates'
 import { formatCents, entryFeeLabel } from '../../shared/money'
 // D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with Season.
@@ -556,7 +556,7 @@ const showGo = computed(() => !game.snapshot?.pending)
                The line is the shared DRAFT constant; the second press of the same button leaves.
                Above the blocked reason in the chain because the ask is the fact the press just
                made, and a blocked button could not have consumed the ask at all. -->
-          <p v-else-if="softLeave.asking.value" class="cal-go-note floating-cta-note">{{ SOFT_LEAVE_LINE }}</p>
+          <p v-else-if="softLeave.asking.value" class="cal-go-note floating-cta-note">{{ softLeaveLine() }}</p>
           <!-- R10-16's doctrine: a disabled control says why, on screen, rather than being dead. -->
           <p v-else-if="action.blockedNote" class="cal-go-note floating-cta-note">{{ action.blockedNote }}</p>
           <PrimaryPill

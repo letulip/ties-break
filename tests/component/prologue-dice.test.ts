@@ -273,7 +273,9 @@ describe('⭐ the wizard and the card roll the SAME dice', () => {
     const wizardTemplate = regionToLast(wizard, '<template>', '</template>')
     const cardTemplate = regionToLast(card, '<template>', '</template>')
     for (const label of [FIRST_DIE, LAST_DIE]) {
-      expect(wizardTemplate, `the wizard no longer says «${label}»`).toContain(`aria-label="${label}"`)
+      // L2-1 (08.10): the wizard's label is a `t()` call now (RU-02A-I03/I04), the card's is still the plain attribute until the
+      // prologue's own landing (RU-02B). The WORDS are the same twelve and thirteen characters, which is the claim.
+      expect(wizardTemplate, `the wizard no longer says «${label}»`).toContain(`:aria-label="t('${label}')"`)
       expect(cardTemplate, `the card no longer says «${label}»`).toContain(`aria-label="${label}"`)
     }
     // ...and the card took the wizard's own die faces, both of them – the second face has three

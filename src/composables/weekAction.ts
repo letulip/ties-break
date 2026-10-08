@@ -51,6 +51,7 @@
 // CONDITION is `spanWorthOffering` in engine/world/multiWeek.ts, read by `multiOffered` below.
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
+import { t } from '../i18n'
 import { blockingOverlay } from './blockingOverlay'
 import { MULTI_WEEK_SPAN, spanWeeksFor, spanWorthOffering } from '../engine/world/multiWeek'
 import { useWeekAhead, type WeekAheadKind } from './weekAhead'
@@ -134,7 +135,7 @@ export function useWeekAction(): ComputedRef<WeekAction> {
         label,
         mode: 'advance',
         disabled: true,
-        blockedNote: `Her ${knock.part} is waiting on your call – nothing moves until you answer.`,
+        blockedNote: t('Her {part} is waiting on your call – nothing moves until you answer.', { part: knock.part }),
         multi: null,
       }
     }
@@ -154,7 +155,7 @@ export function useWeekAction(): ComputedRef<WeekAction> {
         label,
         mode: 'advance',
         disabled: true,
-        blockedNote: 'She has something to say – nothing moves until you hear her out.',
+        blockedNote: t('She has something to say – nothing moves until you hear her out.'),
         multi: null,
       }
     }
@@ -178,7 +179,7 @@ export function useWeekAction(): ComputedRef<WeekAction> {
       // button – see `multiSpanOf`.
       multi: (() => {
         const weeks = multiSpanOf(snap, kind)
-        return weeks === 0 ? null : { weeks, label: `Next ${weeks} weeks` }
+        return weeks === 0 ? null : { weeks, label: t('Next {weeks} weeks', { weeks }) }
       })(),
     }
   })

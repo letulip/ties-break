@@ -1102,7 +1102,8 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
     const app = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
     const map = region(app, 'const STOP_REASON_TEXT', 'const stopReasons')
     expect(map).toContain('offer:')
-    const copy = map.match(/\n {2}offer: '([^']*)'/)![1]
+    // L2-1 (08.10): RE-AIMED – the table's entries are readers over `t()`; the sentence asserted is the same one.
+    const copy = map.match(/\n {2}offer: \(\) => t\('([^']*)'\)/)![1]
     expect(copy, 'the short dash, never the long one').not.toContain('—')
     expect(copy, 'no Cyrillic in player copy').not.toMatch(/[Ѐ-ӿ]/)
     // ...and the sentence keeps the promise only a DECISION can keep. It says the letter can be

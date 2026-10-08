@@ -130,7 +130,9 @@ function globToRegExp(pattern: string): RegExp {
 describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Home in the centre', () => {
   it('TABS carries exactly the five entries, in order, and no Kid entry', () => {
     const tabs = region(app, 'const TABS', '/** The one writer')
-    const labels = [...tabs.matchAll(/label: '([^']+)'/g)].map((m) => m[1])
+    // L2-1 (08.10): RE-AIMED – each label is a getter over `t()` (the Stats one carries the nav context tag, stripped here: the tab
+    // still READS `Stats` in English). The five labels asserted are the five that shipped.
+    const labels = [...tabs.matchAll(/get label\(\) \{ return t\('(?:nav\|)?([^']+)'\) \}/g)].map((m) => m[1])
     expect(labels).toEqual(['Season', 'Calendar', 'Home', 'Stats', 'Trophies'])
     const ids = [...tabs.matchAll(/id: '([^']+)'/g)].map((m) => m[1])
     expect(ids).toEqual(['play', 'calendar', 'home', 'stats', 'trophies'])
@@ -158,7 +160,7 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
   })
 
   it('the Trophies tab is LIVE: a real screen, a real glyph, and the cabinet art it draws', () => {
-    expect(app).toContain(`{ id: 'trophies', icon: 'trophy', label: 'Trophies' }`)
+    expect(app).toContain(`{ id: 'trophies', icon: 'trophy', get label() { return t('Trophies') } }`) // L2-1: RE-AIMED, the label is a getter
     expect(app).toContain(`<TrophiesScreen v-else-if="tab === 'trophies'" />`)
     expect(app).toContain("import TrophiesScreen from './components/screens/TrophiesScreen.vue'")
     expect(existsSync(new URL('../public/icons/trophy.svg', import.meta.url))).toBe(true)
@@ -267,7 +269,7 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
   // WHAT IS UNCHANGED, and it is the seat itself: the entry is still the second of five, still
   // week.svg, still labelled Calendar, and Home is still the middle slot (the test above).
   it('the Calendar slot is LIVE: it routes to screen H, and the placeholder machinery is gone', () => {
-    expect(app).toContain(`{ id: 'calendar', icon: 'week', label: 'Calendar' }`)
+    expect(app).toContain(`{ id: 'calendar', icon: 'week', get label() { return t('Calendar') } }`) // L2-1: RE-AIMED, the label is a getter
     expect(app).toContain(`<CalendarScreen\n        v-else-if="tab === 'calendar'"`)
     expect(app).toContain("import CalendarScreen from './components/screens/CalendarScreen.vue'")
     // `openNav` is still the ONE writer of `tab` from the bar, and it no longer has a slot to refuse.
