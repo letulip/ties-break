@@ -241,12 +241,14 @@ describe('L2-4 completeness – every string of the batch files is a wired key, 
   })
 
   it('the rows RU-04 names have a wired key each, and the file that owns each really calls t() with it', () => {
+    // ⚠ L2-11b (09.10) – PREMISE MOVE, COUNTED: the friendly's seed label asks for `friendly|Seed` now. The bare `Seed` is the About row's (RU-13B's is the only CLEAN row for the
+    // word, and the importer joins a clean row to the bare key), while this field's row (RU04-F06) is described, not quoted. One literal in SeasonScreen.vue; the rendered word is unchanged.
     const SITES: [string, string[]][] = [
       ['src/components/screens/SeasonScreen.vue', ['Season Planner', 'Tour guide', 'Pro entries, birthday to birthday: {used} of {limit}', '{0} left to enter over {1} weeks', '+{n} lower', '{0} of them on the cards below',
         'She is worn out – maybe a family week?', 'She could use a week off – maybe a family week?', 'See the options', 'Not now', 'This week\'s tournament', 'My entries', 'Travel budget', 'academy covers {0}%',
         'closes {week}', 'Closed {week}', 'Entered', 'wild card', 'defending {0} pts', 'Outgrown – she is past this level', 'Your read:', 'Coach says:', 'Withdraw', 'Cancel entry',
         'Entries closed {0}', 'Enter', 'Not enough funds', 'Exhausted – race anyway? Rest would be wiser.', '+ Plan week', 'Exams this week', 'Off-season', 'Exams', 'Shooting week', 'Training week',
-        '+{0} condition', 'Skipping {0}.', 'instead of {0}', 'Practice match', 'Practice match + coach', 'Play it and watch', 'Cancel', 'School owns this week.', 'Friendly match', 'Top seed', 'Play match', 'Seed', 'optional',
+        '+{0} condition', 'Skipping {0}.', 'instead of {0}', 'Practice match', 'Practice match + coach', 'Play it and watch', 'Cancel', 'School owns this week.', 'Friendly match', 'Top seed', 'Play match', 'friendly|Seed', 'optional',
         'Close the friendly', 'Injured – rest up', 'Not cleared to play', 'Tour age rule – {used} of {limit}', 'Year limit – {used} of {limit}', 'Year limit reached', 'Family vacation – {package}', 'Not available this week',
         '{caution} Enter {event} ({week}, {surface}) anyway? {fee}', '{caution} Enter {event} ({week}, {surface})? {fee}', 'Enter {event} ({week}, {surface})? {fee}', 'Push through', 'Enter anyway',
         'Withdraw from {event} ({week})? Entry fee {fee} will be refunded.', 'No entry fee – the trip is still yours to pay for.', 'Entry fee {fee}.', 'Cancel the entry',

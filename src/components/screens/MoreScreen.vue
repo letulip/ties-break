@@ -159,9 +159,9 @@ function runConfirm(): void {
 // object, which stays readable after the picker closes). It is deliberately per-screen-visit
 // state: More mounts fresh on every visit (plain v-if chain in App.vue), and a Retry button that
 // outlived the list it acted on would be a trap.
-// ⭐ L2-11 (RU-13A) – GETTERS OVER `t()`, one `op|` family. These are the NOUNS the status row names an operation by (RU-13A: «Загрузка»,
-// «Экспорт»), and two of them collide with the VERB on a button of this very screen – `Load` (the career's and the slot's button) and
-// `Import` (the confirmation's button) – so the family takes one tag rather than a half-tagged six.
+// ⭐ L2-11 (RU-13A) – GETTERS OVER `t()`, one `op|` family. These are the NOUNS the status row names an operation by (RU-13A writes the six in
+// one cell, apart from the verbs of the buttons), and two of them collide with the VERB on a button of this very screen – `Load` (the career's
+// and the slot's button) and `Import` (the confirmation's button) – so the family takes one tag rather than a half-tagged six.
 const OP_LABEL: Record<SaveOpKind, string> = {
   get save() {
     return t('op|Save')
@@ -1078,7 +1078,7 @@ const TAB_OPTIONS = computed(() => [
           <td class="num">v{{ game.snapshot?.schemaVersion }}</td>
         </tr>
         <tr v-if="game.snapshot">
-          <th>{{ t('about|Seed') }}</th>
+          <th>{{ t('Seed') }}</th>
           <td>
             <button class="seed-value" :title="t('Copy seed')" @click="copySeed">
               {{ game.snapshot.seed }} {{ seedCopied ? '✓' : '📋' }}

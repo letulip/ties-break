@@ -40,8 +40,8 @@ export const MATCH_VIEWS: readonly ViewMode[] = ['full', 'key', 'skip']
 // ⭐ L2-11 (RU-13B) – THE THREE TABLES ARE GETTERS OVER `t()` (a module constant would freeze the language it was imported in) and keep their
 // types, their keys and their call sites. They SHARE the match viewer's keys (L2-8, `MatchControls.vue`) wherever the words repeat – `1×` `2×`
 // `4×`, `Full`, `Key`, and the three full titles – because RU-08 §2.1 and RU-13B give the one control the same compact and full Russian.
-// ⚠ ONE EXCEPTION, MEASURED: the compact `Skip` is `view|Skip`. RU-13B writes the pill `Итог`; the bare `Skip` already belongs to the
-// tournament flow's button (RU04-T35, `Пропустить`) – one English, two Russians, two surfaces.
+// ⚠ ONE EXCEPTION, MEASURED: the compact `Skip` is `view|Skip`. RU-13B words the pill one way; the bare `Skip` already belongs to the
+// tournament flow's button, which RU04-T35 words another – one English, two Russians, two surfaces.
 export const MATCH_SPEED_LABEL: Record<MatchSpeed, string> = {
   get 1() {
     return t('1×')

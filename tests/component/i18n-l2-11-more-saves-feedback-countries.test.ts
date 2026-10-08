@@ -23,6 +23,11 @@ import { readFileSync } from 'node:fs'
 import '../../src/style.css'
 
 import MoreScreen from '../../src/components/screens/MoreScreen.vue'
+import OnboardingWizard from '../../src/components/OnboardingWizard.vue'
+import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES } from '../../src/composables/countries'
+import { PLAYABLE_COUNTRIES } from '../../src/shared/countries'
+import { MONTHS, monthDayLabel } from '../../src/composables/identityCopy'
+import { birthDateLabel, monthLabel, seasonWeekRange, weekDateLine, weekRange, weekSpan, weekYearLabel, weeksLeftBracket } from '../../src/shared/dates'
 import { useGameStore } from '../../src/stores/game'
 import { ageAtWeek } from '../../src/engine/world'
 import { SAVE_SCHEMA_VERSION } from '../../src/engine/world'
@@ -485,7 +490,7 @@ describe('L2-11 completeness – the chrome is wired; the date formatter, the st
   it('the keys the family wakes exist as wired keys in the right homes, the shared ones with BOTH homes', () => {
     const wired = (k: string): boolean => CATALOG.keys[k]?.wrapped === true
     for (const k of [
-      'op|Save', 'op|Load', 'op|Delete save', 'op|Delete career', 'op|Export', 'op|Import', 'saves|Name', 'about|Seed', 'view|Skip',
+      'op|Save', 'op|Load', 'op|Delete save', 'op|Delete career', 'op|Export', 'op|Import', 'saves|Name', 'friendly|Seed', 'view|Skip',
       '{0}…', '{0} – done', '{0} failed – {1}', '{0} min ago', '{0}h ago', '{0}d ago', 'just now', '{0} KB', 'storage: unknown', 'storage: persistent', 'storage: best-effort',
       '{0} · age {1} · last played {2}', 'Load career – {0}', 'Delete career – {0}', 'Load save {0}', 'Delete save {0}',
       "Load {0}'s career? Your currently active career stays saved.",
@@ -631,7 +636,7 @@ describe('L2-11 seams – a flip re-labels a mounted More and a blocking confirm
       'Match playback': 'PLAYBACK-H',
       About: 'ABOUT-X',
       'Build {0} · {1} · save schema v{2}': 'BUILD<{0}|{1}|{2}>',
-      'about|Seed': 'SEED-X',
+      Seed: 'SEED-X',
       'Copy seed': 'COPY-SEED-X',
       'Ties Break': 'TB-X',
     })
@@ -717,16 +722,17 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
     expect(CATALOG.keys.Week?.home).toContain('src/components/screens/MoreScreen.vue')
   })
 
-  it('⚠ THE SEED TRAP: the About row `Seed` and the friendly match\'s seed field are two surfaces with two Russians – About takes `about|Seed`', () => {
+  it('⚠ THE SEED TRAP: the About row `Seed` and the friendly match\'s seed field are two surfaces with two Russians – the BARE key follows the one CLEAN row (About\'s), so the FIELD takes `friendly|Seed`', () => {
     const about = rowsFor('Seed')
-    expect(about).toHaveLength(1)
+    expect(about, 'RU-13B\'s is the only clean row for the word').toHaveLength(1)
     expect(about[0]!.doc).toContain('play-about-settings')
     const friendly = cellsOf('ru-season-tournaments-2026-10.md', 'RU04-F06')
-    expect(friendly[1]).toBe('seed field label')
+    expect(friendly[1], 'the field\'s row is DESCRIBED, not quoted: its English cell can never join a key').toBe('seed field label')
     expect(friendly[2]).not.toBe(about[0]!.russian)
-    expect(CATALOG.keys.Seed?.home).toContain('src/components/screens/SeasonScreen.vue')
-    expect(CATALOG.keys.Seed?.home).not.toContain('src/components/screens/MoreScreen.vue')
-    expect(CATALOG.keys['about|Seed']?.home).toEqual(['src/components/screens/MoreScreen.vue'])
+    // the importer joins a clean row to the bare key – so the bare key must be About\'s, or the About Russian would land on the field silently
+    expect(CATALOG.keys.Seed?.home).toEqual(['src/components/screens/MoreScreen.vue'])
+    expect(CATALOG.keys['friendly|Seed']?.home).toEqual(['src/components/screens/SeasonScreen.vue'])
+    expect(CATALOG.keys['about|Seed']).toBeUndefined()
   })
 
   it('⚠ THE SKIP TRAP: the settings pill `Skip` (its compact word) and the tournament flow\'s `Skip` button are two Russians – the pill takes `view|Skip`', () => {
@@ -976,4 +982,166 @@ describe('L2-11 xx sweep – nothing the chrome wrote is unbracketed on the thre
       f.w.unmount()
     })
   }
+})
+
+// ===================================================================================================================
+// RU-13D – THE 24 COUNTRY NAMES AND THE FORMATTER SHELLS (L2-11b)
+// ===================================================================================================================
+
+/** The table as it shipped, retyped: code -> English name, in the table's own order. */
+const OLD_NAMES: [string, string][] = [
+  ['US', 'United States'], ['GB', 'United Kingdom'], ['FR', 'France'], ['ES', 'Spain'], ['IT', 'Italy'], ['DE', 'Germany'],
+  ['RU', 'Russia'], ['RS', 'Serbia'], ['CH', 'Switzerland'], ['CZ', 'Czechia'], ['PL', 'Poland'], ['UA', 'Ukraine'],
+  ['KZ', 'Kazakhstan'], ['BY', 'Belarus'], ['AU', 'Australia'], ['JP', 'Japan'], ['CN', 'China'], ['KR', 'South Korea'],
+  ['IN', 'India'], ['BR', 'Brazil'], ['AR', 'Argentina'], ['CA', 'Canada'], ['NL', 'Netherlands'], ['SE', 'Sweden'],
+]
+const POPULAR_NAMES = ['United States', 'United Kingdom', 'Australia', 'Canada', 'Germany', 'France', 'Spain', 'Italy', 'Japan']
+
+/** The wizard, walked with its real controls to the country step (the picker with the nine popular tiles). */
+async function mountPicker(vp: Viewport = PHONE): Promise<VueWrapper> {
+  setViewport(vp)
+  const w = mount(OnboardingWizard, { attachTo: document.body })
+  for (let guard = 0; guard < 6 && !w.find('.ob-country').exists(); guard++) await w.get('.ob-cta').trigger('click')
+  expect(w.find('.ob-country').exists(), 'the walk reached the country step').toBe(true)
+  return w
+}
+const tileNames = (w: VueWrapper): string[] => w.findAll('.ob-tile-name').map((n) => flat(n.text()))
+
+describe('L2-11b parity – the 24 names as they shipped, with no catalog', () => {
+  it('every code reads the English the table gave it, in the table\'s order; the code list, the flags and the unknown-code fallback are untouched', () => {
+    expect(Object.entries(COUNTRY_NAMES).map(([code, name]) => [code, name])).toEqual(OLD_NAMES)
+    expect(new Set(Object.keys(COUNTRY_NAMES))).toEqual(new Set<string>(PLAYABLE_COUNTRIES))
+    expect(COUNTRIES).toEqual(PLAYABLE_COUNTRIES)
+    expect(POPULAR_COUNTRIES.map((code) => COUNTRY_NAMES[code])).toEqual(POPULAR_NAMES)
+    // a code the table does not know is not an error: every call site writes `?? code`, and that is still what it prints
+    expect(COUNTRY_NAMES.ZZ ?? 'ZZ').toBe('ZZ')
+  })
+
+  it('the picker on the country step: the nine popular tiles, their flags, and the search finding a name by its English letters', async () => {
+    const w = await mountPicker()
+    expect(tileNames(w)).toEqual(POPULAR_NAMES)
+    expect(w.findAll('.ob-flag').map((n) => n.text())).toEqual(POPULAR_COUNTRIES.map((c) => String.fromCodePoint(...[...c].map((ch) => 0x1f1e6 + ch.charCodeAt(0) - 65))))
+    await w.get('.ob-search-input').setValue('fran')
+    expect(tileNames(w)).toEqual(['France'])
+    await w.get('.ob-search-input').setValue('')
+    w.unmount()
+  })
+})
+
+describe('L2-11b completeness – the names are wired; the formatters and the date words stay the single spelling they were', () => {
+  it('all 24 names are wired keys homed ONLY in the countries module; the module keeps its type and imports `t` from the UI layer, not the engine', () => {
+    for (const [, name] of OLD_NAMES) {
+      expect(CATALOG.keys[name]?.wrapped, name).toBe(true)
+      expect(CATALOG.keys[name]?.home, `${name}: no other surface asks for this word`).toEqual(['src/composables/countries.ts'])
+    }
+    const src = SRC('src/composables/countries.ts')
+    expect(src).toContain("import { t } from '../i18n'")
+    expect(src).toContain('const NAMES: Record<PlayableCountry, string> = {')
+    expect(src).toContain('export const COUNTRY_NAMES: Record<string, string> = NAMES')
+    expect(SRC('src/shared/countries.ts')).not.toMatch(/\bt\(|from '[^']*i18n'/)
+  })
+
+  it('⚠ THE FORMATTERS ARE NOT WIRED, ON PURPOSE: `shared/dates.ts` and `shared/money.ts` are engine-importable and call no `t()`, and every English shape still prints as it did', () => {
+    for (const f of ['src/shared/dates.ts', 'src/shared/money.ts']) expect(SRC(f), f).not.toMatch(/\bt\(|from '[^']*i18n'/)
+    const FORMS: [string, string][] = [
+      [weekYearLabel(26), 'W27 2031'],
+      [weekSpan(26), 'Jul 7 – Jul 13'],
+      [weekDateLine(26), 'W27 2031 · Jul 7 – Jul 13'],
+      [weekLabel(13), "W14 '31"],
+      [monthLabel(0), "Jan '31"],
+      [weekRange(0), 'Jan 6–12, 2031'],
+      [weekRange(3), 'Jan 27 – Feb 2, 2031'],
+      [weekRange(51), 'Dec 29, 2031 – Jan 4, 2032'],
+      [seasonWeekRange(0, 9), 'W1-10'],
+      [birthDateLabel(6, 12), '12 June'],
+      [weeksLeftBracket(20, 6), '(14 weeks left)'],
+      [weeksLeftBracket(7, 6), '(1 week left)'],
+      [weeksLeftBracket(6, 6), '(last week)'],
+    ]
+    for (const [got, expected] of FORMS) expect(got).toBe(expected)
+    // …and these ARE the English column of RU-13D's date rows – formatter OUTPUTS, not literals: no key in the catalog carries any of them, which is why those rows
+    // stay `dead` (and the APPROVED short-year row `W14 '31` stays `unmatched`: no key can be spelled with a number in it). The importer would need a hint cell or a pattern row.
+    for (const [, shape] of FORMS.filter(([, e]) => e !== 'W27 2031 · Jul 7 – Jul 13' && e !== 'Jul 7 – Jul 13' && e !== 'W27 2031')) expect(CATALOG.keys[shape], `«${shape}»`).toBeUndefined()
+    const approved = rowsFor("W14 '31").filter((r) => r.status === 'APPROVED') // RU-03 writes the same form too, as a DRAFT; RU-13D's row is the one APPROVED (§9.9d)
+    expect(approved).toHaveLength(1)
+    expect(approved[0]!.doc).toContain('formatters-countries')
+    expect(RU["W14 '31"], 'the approved short-year row compiles nowhere today').toBeUndefined()
+  })
+
+  it('the only UI-authored date words are already wired (L2-1 / L2-2): the twelve month names and the month-day shell read through `t()`; none is left over for this wave', () => {
+    expect([...MONTHS]).toEqual(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'])
+    expect(monthDayLabel(6, 12)).toBe('June 12')
+    for (const k of ['January', 'December', 'June {day}', 'October {day}']) expect(CATALOG.keys[k]?.wrapped, k).toBe(true)
+    // …and no unwrapped CERTAIN string in the UI layer is a bare week/date shell RU-13D's table could join
+    const leftovers = Object.entries(CATALOG.keys)
+      .filter(([k, v]) => !v.wrapped && v.home.some((h) => /^src\/(components|composables|viz)\//.test(h)) && /^(Week|W)\{?[0-9]?\}?( |$)|^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) /.test(k))
+      .map(([k]) => k)
+    expect(leftovers).toEqual([])
+  })
+})
+
+describe('L2-11b seams – a flip re-labels the mounted picker and the search follows the displayed name; the codes and the flags stay', () => {
+  it('tiles, the search and a wizard summary line read the locale; the flag and the code do not move', async () => {
+    const w = await mountPicker()
+    const flags = w.findAll('.ob-flag').map((n) => n.text())
+    installCatalog('ru', { France: 'FR-NAME', Canada: 'CA-NAME', 'United States': 'US-NAME' })
+    await setLocale('ru')
+    await nextTick()
+    expect(tileNames(w)).toEqual(['US-NAME', 'United Kingdom', 'Australia', 'CA-NAME', 'Germany', 'FR-NAME', 'Spain', 'Italy', 'Japan'])
+    expect(w.findAll('.ob-flag').map((n) => n.text())).toEqual(flags)
+    await w.get('.ob-search-input').setValue('fr-n')
+    expect(tileNames(w)).toEqual(['FR-NAME']) // the search matches what is on screen
+    await w.get('.ob-search-input').setValue('france')
+    expect(tileNames(w)).toEqual([]) // …and not the English word it no longer shows
+    await w.get('.ob-search-input').setValue('')
+    w.unmount()
+  })
+})
+
+describe('L2-11b context tags – none: each of the 24 has two rows in two tables and ONE Russian, all DRAFT, and nothing wakes', () => {
+  it('24 names, 48 rows (RU-13D and RU-02A), one Russian each; none APPROVED, so ru.json holds none and every name renders English and is counted', async () => {
+    for (const [, name] of OLD_NAMES) {
+      // two tables write each name – RU-13D's list and RU-02A's country tiles – and they agree on ONE Russian, so no tag is needed
+      const rows = rowsFor(name)
+      expect(rows, name).toHaveLength(2)
+      expect(rows.map((r) => r.doc).sort().map((d) => d.replace(/-2026-\d\d\.md$/, ''))).toEqual(['ru-formatters-countries', 'ru-onboarding'])
+      expect(new Set(rows.map((r) => r.russian)).size, `${name}: one Russian in both tables`).toBe(1)
+      expect(rows.map((r) => r.status), name).toEqual(['DRAFT', 'DRAFT'])
+      expect(RU[name], `${name} is not in ru.json`).toBeUndefined()
+    }
+    installCatalog('ru', RU)
+    await setLocale('ru')
+    resetMisses()
+    const w = await mountPicker()
+    expect(tileNames(w)).toEqual(POPULAR_NAMES)
+    expect(missedKeys()).toEqual(expect.arrayContaining(POPULAR_NAMES))
+    console.log(`[L2-11b smoke] 24 country keys wired, 24 DRAFT rows joined, 0 in ru.json (${Object.keys(RU).length} keys); the nine popular tiles render English and are ${POPULAR_NAMES.length} counted misses`)
+    w.unmount()
+  })
+})
+
+describe('L2-11b xx sweep – the picker: nothing the chrome wrote is unbracketed, and the nine tiles hold a 375x667 phone with every name longer', () => {
+  it('zero leaks beyond the player\'s own text on the country step, and the tile grid measured English -> xx', async () => {
+    const measure = async (xx: boolean) => {
+      if (xx) await installPseudoLocale()
+      const w = await mountPicker()
+      if (xx) expandRendered(w.element, ALLOW)
+      const grid = widest(w.get('.ob-tiles').element, PHONE)
+      const leaks = xx ? hardcodeLeaks(w.get('.ob-country').element, ALLOW) : []
+      const names = tileNames(w)
+      w.unmount()
+      return { grid, leaks, names }
+    }
+    const en = await measure(false)
+    resetI18nForTests(null)
+    const xx = await measure(true)
+    console.log(
+      `[L2-11b xx] 375x667, country tiles English -> xx: ${en.grid.boxes} text boxes, ${en.grid.chars} -> ${xx.grid.chars} chars; widest line ${pct(en.grid.line.r)} («${en.grid.line.at}») -> ${pct(xx.grid.line.r)} («${xx.grid.line.at}»); ` +
+        `longest word ${pct(en.grid.word.r)} («${en.grid.word.at}») -> ${pct(xx.grid.word.r)} («${xx.grid.word.at}»); leaks on the step: ${JSON.stringify(xx.leaks)}`,
+    )
+    expect(xx.leaks).toEqual([])
+    expect(xx.grid.chars).toBeGreaterThan(en.grid.chars)
+    expect(xx.names.every((n) => n.startsWith('⟦'))).toBe(true)
+    expect(xx.grid.word.r, `a tile name «${xx.grid.word.at}» overflows its tile under xx`).toBeLessThanOrEqual(1)
+  })
 })

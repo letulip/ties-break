@@ -2177,7 +2177,7 @@ function closeExhibition(): void {
            keystroke, which is exactly when the field is hardest to identify. The placeholder stays
            as the hint it always was, with the word the label now carries taken out of it. -->
       <div class="controls friendly-seed">
-        <label class="hint friendly-seed-label" for="friendly-seed">{{ t('Seed') }}</label>
+        <label class="hint friendly-seed-label" for="friendly-seed">{{ t('friendly|Seed') }}</label>
         <input id="friendly-seed" v-model="exhibitionSeed" type="text" :placeholder="t('optional')" />
       </div>
       <!-- ⚠ THE VIEWER USED TO BE RIGHT HERE, INLINE, and that was the fourth-place bug the owner
