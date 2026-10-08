@@ -22,7 +22,7 @@
 // the engine stores `PlayerProfile` and never renders a word of it – so both live with the view
 // helpers and invariant 1 stays intact.
 
-import { t } from '../i18n'
+import { localizedList, t } from '../i18n'
 
 /** Her birth month in full, January first – the option labels on the birthday select.
  *
@@ -38,14 +38,9 @@ export const MONTHS: readonly string[] = localizedList(
   () => t('July'), () => t('August'), () => t('September'), () => t('October'), () => t('November'), () => t('December'),
 )
 
-/** L2-1 (08.10) – A LIST WHOSE ITEMS ARE READ THROUGH `t()` AT THE MOMENT THEY ARE INDEXED. `MONTHS` keeps its type and its
- *  callers (`MONTHS[i]`, `v-for`, `.map`), and the month names follow the locale on the next render instead of freezing the
- *  language the module was imported in. Twelve keys, the picker's NOMINATIVE form – a date needs its own (see below). */
-function localizedList(...readers: (() => string)[]): readonly string[] {
-  const list: string[] = []
-  readers.forEach((read, i) => Object.defineProperty(list, i, { get: read, enumerable: true }))
-  return list
-}
+/** L2-1 (08.10) – `MONTHS` is a list whose items are read through `t()` at the moment they are indexed (`localizedList`, which L2-2
+ *  moved to `src/i18n` so the prologue's coach pools share it): the month names follow the locale on the next render instead of
+ *  freezing the language the module was imported in. Twelve keys, the picker's NOMINATIVE form – a date needs its own (see below). */
 
 /** ⭐ L2-1 (08.10) – THE DATE, AS ITS OWN KEYS (RU-02A «Months and dates»). A date is not the picker list plus a day: Russian
  *  puts the day first and declines the month, which a localized picker array cannot be interpolated into. English is

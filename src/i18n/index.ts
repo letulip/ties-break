@@ -68,6 +68,16 @@ export function renderCopy(ref: CopyRef): string {
   return renderCopyRef(ref, context())
 }
 
+/** A LIST WHOSE ITEMS ARE READ THROUGH `t()` AT THE MOMENT THEY ARE INDEXED – L2-1 wrote it for `MONTHS`, L2-2 shares it with the
+ *  prologue's coach pools. The list keeps its type and its callers (`list[i]`, `v-for`, `.map`, `.indexOf`, `.length`), the words
+ *  follow the locale on the next render instead of freezing the language the module was imported in, and – the reason it is an
+ *  array of getters and not a function – ONE array object can still be shared by reference between two keys. */
+export function localizedList(...readers: (() => string)[]): readonly string[] {
+  const list: string[] = []
+  readers.forEach((read, i) => Object.defineProperty(list, i, { get: read, enumerable: true }))
+  return list
+}
+
 /** For components that want the three in one destructure. */
 export function useI18n(): { t: typeof t; renderCopy: typeof renderCopy; locale: typeof locale } {
   return { t, renderCopy, locale }

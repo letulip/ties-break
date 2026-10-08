@@ -210,25 +210,25 @@ The weight copy is shared by the wizard, prologue and settings. Its localization
 The tour must teach the Russian labels actually visible underneath it. `Дом` and `Рейтинг` are
 owner-approved and therefore appear here as settled terminology.
 
-| id | source | English title | Russian title | Russian text |
-| --- | --- | --- | --- | --- |
-| RU02A-O01 | `OnboardingTour.vue:96` | `You are the parent` | `Вы – родитель` | `Матчи играет она, а вы помогаете ей расти. На экране «Дом» – её неделя, фотография и главное о том, как у неё дела.` |
-| RU02A-O02 | `OnboardingTour.vue:102` | `Her page` | `Её профиль` | `Нажмите на фотографию, чтобы открыть полный профиль: навыки, физическую форму, школу и тренера.` |
-| RU02A-O03 | `OnboardingTour.vue:108` | `News and letters` | `Новости и письма` | `Колокольчик показывает новости прошедшей недели. В конверте – предложения и письма; точка означает, что одно из них ждёт ответа.` |
-| RU02A-O04 | `OnboardingTour.vue:114` | `The money is yours` | `Семейный бюджет` | `Заявки, поездки, тренер и экипировка оплачиваются из семейного бюджета. Нажмите на карточку, чтобы увидеть расходы.` |
-| RU02A-O05 | `OnboardingTour.vue:120` | `This week` | `Эта неделя` | `Нажмите на карточку турнира, чтобы выбрать план тренировок на следующую неделю и прочитать итоги предыдущей.` |
-| RU02A-O06 | `OnboardingTour.vue:126` | `Season – where you enter` | `Сезон – заявки на турниры` | `На вкладке «Сезон» видны доступные по рейтингу турниры, их стоимость и положение в таблице.` |
-| RU02A-O07 | `OnboardingTour.vue:132` | `Calendar` | `Календарь` | `Весь её год по неделям: заявки на турниры, школьные экзамены, каникулы и отдых.` |
-| RU02A-O08 | `OnboardingTour.vue:138` | `Stats` | `Рейтинг` | `Здесь видно главное на длинной дистанции: как с начала карьеры менялись её рейтинг и навыки.` |
-| RU02A-O09 | `OnboardingTour.vue:144` | `Trophies` | `Трофеи` | `Здесь остаётся каждый выигранный титул и сезон, в котором она его завоевала.` |
-| RU02A-O10 | `OnboardingTour.vue:150` | `Settings` | `Настройки` | `За шестерёнкой – звук, анимация, сохранения и карьеры. Здесь же можно снова открыть это обучение.` |
-| RU02A-O11 | `OnboardingTour.vue:156` | `Now play a week` | `Теперь – сыграть неделю` | `Кнопка проводит одну неделю и показывает, что в ней произошло. План, заявка, игра – и следующая неделя.` |
+| id | source | English title | Russian title | English text | Russian text |
+| --- | --- | --- | --- | --- | --- |
+| RU02A-O01 | `OnboardingTour.vue:101` | `You are the parent` | `Вы – родитель` | `You do not play the matches – you raise the player. This is Home: her diary for the week, her photo and how she is doing.` | `Матчи играет она, а вы помогаете ей расти. На экране «Дом» – её неделя, фотография и главное о том, как у неё дела.` |
+| RU02A-O02 | `OnboardingTour.vue:107` | `Her page` | `Её профиль` | `Tap her photo any time – her full profile lives behind it: skills, body, school and her coach.` | `Нажмите на фотографию, чтобы открыть полный профиль: навыки, физическую форму, школу и тренера.` |
+| RU02A-O03 | `OnboardingTour.vue:113` | `News and letters` | `Новости и письма` | `The bell is the week just gone. The envelope beside it holds offers and letters – a dot means one is waiting on you.` | `Колокольчик показывает новости прошедшей недели. В конверте – предложения и письма; точка означает, что одно из них ждёт ответа.` |
+| RU02A-O04 | `OnboardingTour.vue:119` | `The money is yours` | `Семейный бюджет` | `Entry fees, travel, coaching and kit all come out of the family budget. Tap the card to see where it went.` | `Заявки, поездки, тренер и экипировка оплачиваются из семейного бюджета. Нажмите на карточку, чтобы увидеть расходы.` |
+| RU02A-O05 | `OnboardingTour.vue:125` | `This week` | `Эта неделя` | `Tap the tournament card to set the training plan for the week ahead and to read the last week recap.` | `Нажмите на карточку турнира, чтобы выбрать план тренировок на следующую неделю и прочитать итоги предыдущей.` |
+| RU02A-O06 | `OnboardingTour.vue:131` | `Season – where you enter` | `Сезон – заявки на турниры` | `The Season tab lists the tournaments open to her rank, what each one costs, and how the standings look.` | `На вкладке «Сезон» видны доступные по рейтингу турниры, их стоимость и положение в таблице.` |
+| RU02A-O07 | `OnboardingTour.vue:137` | `Calendar` | `Календарь` | `Her year, week by week: what she is entered for, school exams, holidays and the weeks she is resting.` | `Весь её год по неделям: заявки на турниры, школьные экзамены, каникулы и отдых.` |
+| RU02A-O08 | `OnboardingTour.vue:143` | `Stats` | `Рейтинг` | `The long view – her ranking, her skills, and how both have moved since she started.` | `Здесь видно главное на длинной дистанции: как с начала карьеры менялись её рейтинг и навыки.` |
+| RU02A-O09 | `OnboardingTour.vue:149` | `Trophies` | `Трофеи` | `Every title she wins is kept here, with the season it came from.` | `Здесь остаётся каждый выигранный титул и сезон, в котором она его завоевала.` |
+| RU02A-O10 | `OnboardingTour.vue:155` | `Settings` | `Настройки` | `Sound, animations, saves and your careers live behind the gear – and so does this tour, if you want it again.` | `За шестерёнкой – звук, анимация, сохранения и карьеры. Здесь же можно снова открыть это обучение.` |
+| RU02A-O11 | `OnboardingTour.vue:161` | `Now play a week` | `Теперь – сыграть неделю` | `This plays one week and tells you what that week holds. Plan, enter, play, repeat – that is the whole game.` | `Кнопка проводит одну неделю и показывает, что в ней произошло. План, заявка, игра – и следующая неделя.` |
 
 | id | source | English | Russian |
 | --- | --- | --- | --- |
-| RU02A-O12 | `OnboardingTour.vue:262` | `Skip tour` | `Пропустить обучение` |
-| RU02A-O13 | `OnboardingTour.vue:263` | `Next` | `Далее` |
-| RU02A-O14 | `OnboardingTour.vue:263` | `Got it` | `Понятно` |
+| RU02A-O12 | `OnboardingTour.vue:266` | `Skip tour` | `Пропустить обучение` |
+| RU02A-O13 | `OnboardingTour.vue:267` | `Next` | `Далее` |
+| RU02A-O14 | `OnboardingTour.vue:267` | `Got it` | `Понятно` |
 
 ## 10. Technical and LQA consequences
 

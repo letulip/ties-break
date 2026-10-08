@@ -56,6 +56,13 @@
 // shapes cannot drift apart without a red gate. Same for `APPETITE_AT` below.
 import type { SessionKind } from '../shared/protocol'
 import { FIRST_COURT_AGE } from '../shared/protocol'
+// ⚠ L2-2 (08.10) – THE TABLE'S WORDS ARE READ THROUGH `t()` NOW, ONE GETTER PER STRING, AND THE ENGLISH IS THE KEY. Nothing about
+// the table's shape moved (`card.kicker` is still a `string` to every reader; the getters make the language follow the locale on
+// the next render instead of freezing the one the module was imported in – `composables/identityCopy.ts` is the precedent), and
+// the words are byte for byte the ones that shipped (CLAUDE.md invariant 4). A long string is ONE literal – the `+` joins the
+// table used to carry are folded – because the extractor reads a `t()` key only when its first argument is a plain literal.
+// This is the first `src/prologue` import of the UI layer; the module is still imported by no framework-free zone.
+import { t } from '../i18n'
 
 /** ONE YEAR AS THE MODEL SEES IT – the structural twin of `engine/childhood.ts`'s `ChildhoodYear`.
  *
@@ -285,28 +292,30 @@ export interface PrologueCard {
 export const PROLOGUE_CARDS: readonly PrologueCard[] = [
   {
     age: 5,
-    kicker: 'She is five',
+    get kicker() { return t('She is five') },
     // ⚠ THE OWNER, 02.09: «хочется спросить "что она еле держит"… если здесь речь о ракетке, то так
     // и напишем.» It was «She can barely hold it.» and the it was never named – the racket is in the
     // NEXT sentence, one paragraph down, which is a sentence too late for a title.
-    title: 'She can barely hold the racket.',
-    lede:
-      'It is too big for her and she swings it like a shovel. She misses, and then she ' +
-      'does it again, and she is still doing it twenty minutes later. Nobody has decided anything.',
+    get title() { return t('She can barely hold the racket.') },
+    get lede() {
+      return t('It is too big for her and she swings it like a shovel. She misses, and then she does it again, and she is still doing it twenty minutes later. Nobody has decided anything.')
+    },
     her: {
-      cool: 'She thinks the game is to hit the ball into the fence.',
-      warm: 'She thinks the game is to hit the ball into the fence.',
+      get cool() { return t('She thinks the game is to hit the ball into the fence.') },
+      get warm() { return t('She thinks the game is to hit the ball into the fence.') },
     },
     coach: {
-      cool: 'Nobody is teaching her. She is five.',
-      warm: 'Nobody is teaching her. She is five.',
+      get cool() { return t('Nobody is teaching her. She is five.') },
+      get warm() { return t('Nobody is teaching her. She is five.') },
     },
-    continueLabel: 'Go on',
+    get continueLabel() { return t('Go on') },
     // ⭐ DRAFT – THE QUESTION THAT WAS MISSING (owner, 02.09; see `question` on `PrologueCard`). It
     // names the thing the three buttons are about and what answering decides, and it does so
     // FACTUALLY: not «choose your difficulty» – §7 keeps a difficulty menu out of v1 – but the plain
     // statement of what the answer sets.
-    question: 'Where does she grow up? It decides what the family can spend on tennis for the next nine years.',
+    get question() {
+      return t('Where does she grow up? It decides what the family can spend on tennis for the next nine years.')
+    },
     share: 0.35,
     teaching: 0.1,
     focus: 'general',
@@ -323,20 +332,20 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
     origins: [
       {
         id: 'working',
-        label: 'A small town, and you both work.',
-        note: 'There is nothing spare. Everything after this is a real decision.',
+        get label() { return t('A small town, and you both work.') },
+        get note() { return t('There is nothing spare. Everything after this is a real decision.') },
         costCents: 0,
       },
       {
         id: 'middle',
-        label: 'A city, and the bills are paid.',
-        note: 'There is some room. Not a lot of it.',
+        get label() { return t('A city, and the bills are paid.') },
+        get note() { return t('There is some room. Not a lot of it.') },
         costCents: 0,
       },
       {
         id: 'wealthy',
-        label: 'Money is not the question in this house.',
-        note: 'You still have to decide where she goes and who teaches her.',
+        get label() { return t('Money is not the question in this house.') },
+        get note() { return t('You still have to decide where she goes and who teaches her.') },
         costCents: 0,
       },
     ],
@@ -348,23 +357,22 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
     // childhood passes through this scene at this age – which is what makes one constant honest for
     // both readers.
     age: FIRST_COURT_AGE,
-    kicker: 'She is six',
+    get kicker() { return t('She is six') },
     // ⚠ THE OWNER, 02.09: «She asks to go back – куда обратно?… Я бы интерпретировал из заголовка,
     // что она хочет домой.» Read cold, under a kicker that says her age and above a scene about a
     // summer session, «go back» took its destination from the reader – and the reading he got was
     // that she wanted to go HOME, which is the opposite of what the card is about. The place is
     // named in the title now instead of two sentences later.
-    title: 'She asks to go back to the court.',
-    lede:
-      'Somebody handed her a racket at a summer session and she has asked about it every week ' +
-      'since. There is a group at the municipal court on Tuesdays. It costs almost nothing and it ' +
-      'is twenty minutes away.',
-    her: { cool: 'She likes it. That is all you know.', warm: 'She likes it. That is all you know.' },
-    coach: {
-      cool: 'The coach who runs the group learns her name in the second week.',
-      warm: 'The coach who runs the group learns her name in the second week.',
+    get title() { return t('She asks to go back to the court.') },
+    get lede() {
+      return t('Somebody handed her a racket at a summer session and she has asked about it every week since. There is a group at the municipal court on Tuesdays. It costs almost nothing and it is twenty minutes away.')
     },
-    continueLabel: 'Sign her up',
+    her: { get cool() { return t('She likes it. That is all you know.') }, get warm() { return t('She likes it. That is all you know.') } },
+    coach: {
+      get cool() { return t('The coach who runs the group learns her name in the second week.') },
+      get warm() { return t('The coach who runs the group learns her name in the second week.') },
+    },
+    get continueLabel() { return t('Sign her up') },
     share: 0.65,
     teaching: 0.35,
     focus: 'general',
@@ -373,21 +381,20 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
 
   {
     age: 7,
-    kicker: 'She is seven',
-    title: 'The group works.',
+    get kicker() { return t('She is seven') },
+    get title() { return t('The group works.') },
     // ⚠ THE OWNER, 02.09: «she has not noticed – чего она не заметила?» The sentence left the object
     // of «noticed» to the reader, and the object is the clause immediately before it, which is
     // exactly the shape that stops reading as a sentence and starts reading as a riddle. Named.
-    lede:
-      'Twice a week, eight children, one court. She is not the best of the eight, and she has not ' +
-      'noticed that she is not. A year goes by like this and none of it costs you anything you ' +
-      'have to think about.',
-    her: { cool: 'She still asks to go.', warm: 'She still asks to go.' },
-    coach: {
-      cool: 'The coach says she listens – at seven that is a compliment.',
-      warm: 'The coach says she listens – at seven that is a compliment.',
+    get lede() {
+      return t('Twice a week, eight children, one court. She is not the best of the eight, and she has not noticed that she is not. A year goes by like this and none of it costs you anything you have to think about.')
     },
-    continueLabel: 'A year passes',
+    her: { get cool() { return t('She still asks to go.') }, get warm() { return t('She still asks to go.') } },
+    coach: {
+      get cool() { return t('The coach says she listens – at seven that is a compliment.') },
+      get warm() { return t('The coach says she listens – at seven that is a compliment.') },
+    },
+    get continueLabel() { return t('A year passes') },
     share: 0.7,
     teaching: 0.4,
     focus: 'general',
@@ -396,27 +403,27 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
 
   {
     age: 8,
-    kicker: 'She is eight',
-    title: 'There is a club across town.',
-    lede:
-      'The municipal court has one coach and no wall. The club has four courts, a programme, and ' +
-      'the coaches other families drive their children to. It is forty minutes each way.',
+    get kicker() { return t('She is eight') },
+    get title() { return t('There is a club across town.') },
+    get lede() {
+      return t('The municipal court has one coach and no wall. The club has four courts, a programme, and the coaches other families drive their children to. It is forty minutes each way.')
+    },
     // Card 8 follows a quiet year, so there is nothing behind it for the two arms to differ on.
     her: {
-      cool: 'She has a forehand now and she wants you to watch it.',
-      warm: 'She has a forehand now and she wants you to watch it.',
+      get cool() { return t('She has a forehand now and she wants you to watch it.') },
+      get warm() { return t('She has a forehand now and she wants you to watch it.') },
     },
     coach: {
-      cool: 'The coach says she could do more than this group gives her.',
-      warm: 'The coach says she could do more than this group gives her.',
+      get cool() { return t('The coach says she could do more than this group gives her.') },
+      get warm() { return t('The coach says she could do more than this group gives her.') },
     },
-    continueLabel: 'Go on',
+    get continueLabel() { return t('Go on') },
     options: [
       {
         id: 'municipal',
-        label: 'Stay at the municipal court',
+        get label() { return t('Stay at the municipal court') },
         // ⚠ the baseline the note on the next option is measured against – 1_800_00 / 600_00 = 3.
-        note: 'What you are already paying. She keeps the group and you keep your evenings.',
+        get note() { return t('What you are already paying. She keeps the group and you keep your evenings.') },
         costCents: 600_00,
         share: 0.6,
         teaching: 0.3,
@@ -424,8 +431,8 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       },
       {
         id: 'club',
-        label: 'The club across town',
-        note: 'About three times the municipal court, every month, and the drive on top.',
+        get label() { return t('The club across town') },
+        get note() { return t('About three times the municipal court, every month, and the drive on top.') },
         costCents: 1_800_00,
         share: 0.95,
         teaching: 0.95,
@@ -452,26 +459,25 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
   //     gone. What is left – eight children and one court – is the group card 7 already described.
   {
     age: 9,
-    kicker: 'She is nine',
-    title: 'Eight children are waiting for one court.',
-    lede:
-      'Two sessions a week, and much of each one she spends in the queue for a turn. The club also ' +
-      'sells an hour a week with a coach to herself: the same hour of her week, with nobody else ' +
-      'on the court.',
+    get kicker() { return t('She is nine') },
+    get title() { return t('Eight children are waiting for one court.') },
+    get lede() {
+      return t('Two sessions a week, and much of each one she spends in the queue for a turn. The club also sells an hour a week with a coach to herself: the same hour of her week, with nobody else on the court.')
+    },
     her: {
-      cool: 'She is doing what the group does and no more.',
-      warm: 'She is one of the ones who stays behind afterwards.',
+      get cool() { return t('She is doing what the group does and no more.') },
+      get warm() { return t('She is one of the ones who stays behind afterwards.') },
     },
     coach: {
-      cool: 'The coach says she is fine, and says it about all eight of them.',
-      warm: 'The coach is the one who offered you the hour.',
+      get cool() { return t('The coach says she is fine, and says it about all eight of them.') },
+      get warm() { return t('The coach is the one who offered you the hour.') },
     },
-    continueLabel: 'Go on',
+    get continueLabel() { return t('Go on') },
     options: [
       {
         id: 'group',
-        label: 'Keep her in the group',
-        note: 'The same money as this year. She keeps her place in the queue.',
+        get label() { return t('Keep her in the group') },
+        get note() { return t('The same money as this year. She keeps her place in the queue.') },
         costCents: 1_800_00,
         share: 0.6,
         teaching: 0.25,
@@ -479,9 +485,11 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       },
       {
         id: 'one-to-one',
-        label: 'Buy the hour, one to one',
+        get label() { return t('Buy the hour, one to one') },
         // 7_200_00 / 1_800_00 = 4.
-        note: 'About four times the group, and it buys one hour a week with nobody else on the court.',
+        get note() {
+          return t('About four times the group, and it buys one hour a week with nobody else on the court.')
+        },
         costCents: 7_200_00,
         share: 0.85,
         teaching: 1,
@@ -492,25 +500,25 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
 
   {
     age: 10,
-    kicker: 'She is ten',
-    title: 'There is a Local Open in six weeks.',
-    lede:
-      'Under-twelves, one weekend, forty minutes down the motorway. An entry, a hotel night if she ' +
-      'wins on the Saturday, and a draw sheet with her name on it.',
+    get kicker() { return t('She is ten') },
+    get title() { return t('There is a Local Open in six weeks.') },
+    get lede() {
+      return t('Under-twelves, one weekend, forty minutes down the motorway. An entry, a hotel night if she wins on the Saturday, and a draw sheet with her name on it.')
+    },
     her: {
-      cool: 'She plays on Tuesdays and she thinks about it on Tuesdays.',
-      warm: 'She has started watching how other people serve.',
+      get cool() { return t('She plays on Tuesdays and she thinks about it on Tuesdays.') },
+      get warm() { return t('She has started watching how other people serve.') },
     },
     coach: {
-      cool: 'The coach has not mentioned the tournament to you.',
-      warm: 'The coach thinks she would not embarrass herself in a draw.',
+      get cool() { return t('The coach has not mentioned the tournament to you.') },
+      get warm() { return t('The coach thinks she would not embarrass herself in a draw.') },
     },
-    continueLabel: 'Go on',
+    get continueLabel() { return t('Go on') },
     options: [
       {
         id: 'stay-home',
-        label: 'Not this year',
-        note: 'Nothing extra. She practises that weekend like any other.',
+        get label() { return t('Not this year') },
+        get note() { return t('Nothing extra. She practises that weekend like any other.') },
         costCents: 1_800_00,
         share: 0.7,
         teaching: 0.5,
@@ -518,9 +526,9 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       },
       {
         id: 'enter',
-        label: 'Enter her',
+        get label() { return t('Enter her') },
         // 1_950_00 - 1_800_00 = 150_00, and a month of the group is 1_800_00 / 12 = 150_00.
-        note: 'An entry and a weekend – about a month of the group, once.',
+        get note() { return t('An entry and a weekend – about a month of the group, once.') },
         costCents: 1_950_00,
         share: 0.8,
         // ⚠ THE SAME `teaching` AS NOT ENTERING, DELIBERATELY. Playing a tournament is not more
@@ -535,25 +543,25 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
 
   {
     age: 11,
-    kicker: 'She is eleven',
-    title: 'The sports school takes children at eleven.',
-    lede:
-      'Mornings on court, lessons after. Every child there is doing this. The ones who stop at ' +
-      'fourteen have no ordinary school to go back to, and everybody knows that and sends them.',
+    get kicker() { return t('She is eleven') },
+    get title() { return t('The sports school takes children at eleven.') },
+    get lede() {
+      return t('Mornings on court, lessons after. Every child there is doing this. The ones who stop at fourteen have no ordinary school to go back to, and everybody knows that and sends them.')
+    },
     her: {
-      cool: 'She plays when it is on the timetable.',
-      warm: 'She has asked whether she can go more often.',
+      get cool() { return t('She plays when it is on the timetable.') },
+      get warm() { return t('She has asked whether she can go more often.') },
     },
     coach: {
-      cool: 'The coach says she has kept up, and nothing more than that.',
-      warm: 'The coach says the limit on this is her week, not her hands.',
+      get cool() { return t('The coach says she has kept up, and nothing more than that.') },
+      get warm() { return t('The coach says the limit on this is her week, not her hands.') },
     },
-    continueLabel: 'Go on',
+    get continueLabel() { return t('Go on') },
     options: [
       {
         id: 'ordinary-school',
-        label: 'Ordinary school',
-        note: 'No change to what you pay. Her afternoons stay hers.',
+        get label() { return t('Ordinary school') },
+        get note() { return t('No change to what you pay. Her afternoons stay hers.') },
         costCents: 2_400_00,
         share: 0.5,
         teaching: 0.25,
@@ -561,9 +569,9 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       },
       {
         id: 'sports-school',
-        label: 'The sports school',
+        get label() { return t('The sports school') },
         // 4_800_00 / 2_400_00 = 2.
-        note: 'About twice the club, and it takes most of her week with it.',
+        get note() { return t('About twice the club, and it takes most of her week with it.') },
         costCents: 4_800_00,
         share: 1,
         teaching: 1,
@@ -573,13 +581,13 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
     // ⭐ THE SECOND ASKING, AND IT IS THE COACH. DRAFT. A year ago the tournament was a poster on a
     // motorway; this year somebody who watches her every week has an opinion about it.
     tournament: {
-      lede:
-        'There is a Local Open in the spring, and the coach has mentioned it twice now – once to ' +
-        'her, once to you.',
-      enterLabel: 'Put her name down',
-      enterNote: 'An entry and a weekend, on top of the year.',
-      declineLabel: 'Not this year',
-      declineNote: 'Nothing extra. She practises that weekend like any other.',
+      get lede() {
+        return t('There is a Local Open in the spring, and the coach has mentioned it twice now – once to her, once to you.')
+      },
+      get enterLabel() { return t('Put her name down') },
+      get enterNote() { return t('An entry and a weekend, on top of the year.') },
+      get declineLabel() { return t('Not this year') },
+      get declineNote() { return t('Nothing extra. She practises that weekend like any other.') },
     },
   },
 
@@ -591,28 +599,28 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
   // arise, because there is nothing here to roll badly.
   {
     age: 12,
-    kicker: 'She is twelve',
-    title: 'She does not want to go on Thursday.',
-    lede:
-      // ⚠ THE «not a mystery» CLAUSE IS GONE FROM BOTH FACES OF THE FORK. It existed to introduce
-      // the three-line list under it; the list is one folded sentence now (`TWELFTH_REASONS`), and
-      // that sentence introduces itself.
-      'Three weeks of this now. There was no scene and she has not said anything. She simply ' +
-      'finds something else to be doing at six o\'clock.',
+    get kicker() { return t('She is twelve') },
+    get title() { return t('She does not want to go on Thursday.') },
+    // ⚠ THE «not a mystery» CLAUSE IS GONE FROM BOTH FACES OF THE FORK. It existed to introduce
+    // the three-line list under it; the list is one folded sentence now (`TWELFTH_REASONS`), and
+    // that sentence introduces itself.
+    get lede() {
+      return t('Three weeks of this now. There was no scene and she has not said anything. She simply finds something else to be doing at six o\'clock.')
+    },
     her: {
-      cool: 'She has stopped talking about it at dinner.',
-      warm: 'She is not tired of tennis. She is tired of this week.',
+      get cool() { return t('She has stopped talking about it at dinner.') },
+      get warm() { return t('She is not tired of tennis. She is tired of this week.') },
     },
     coach: {
-      cool: 'The coach has seen it before and is not surprised by it.',
-      warm: 'The coach says she is not the first to go quiet at twelve.',
+      get cool() { return t('The coach has seen it before and is not surprised by it.') },
+      get warm() { return t('The coach says she is not the first to go quiet at twelve.') },
     },
-    continueLabel: 'Go on',
+    get continueLabel() { return t('Go on') },
     options: [
       {
         id: 'let-her-stop',
-        label: 'Let her stop for a season',
-        note: 'A quarter of what this year was going to cost. She keeps her Thursdays.',
+        get label() { return t('Let her stop for a season') },
+        get note() { return t('A quarter of what this year was going to cost. She keeps her Thursdays.') },
         costCents: 600_00,
         share: 0.2,
         teaching: 0.1,
@@ -620,8 +628,8 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
       },
       {
         id: 'finish-the-year',
-        label: 'Ask her to finish the year',
-        note: 'What you are paying now, for one more year of it.',
+        get label() { return t('Ask her to finish the year') },
+        get note() { return t('What you are paying now, for one more year of it.') },
         costCents: 2_400_00,
         share: 0.8,
         teaching: 0.65,
@@ -633,32 +641,32 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
     // that is the whole reason the ask lives on a card row: `TWELFTH_WANTS_MORE` carries its own,
     // and on that one it is HER.
     tournament: {
-      lede:
-        'The coach asked about the Local Open again, and asked you to think about it before ' +
-        'answering this time.',
-      enterLabel: 'Put her name down',
-      enterNote: 'An entry and a weekend, on top of the year.',
-      declineLabel: 'Not this year',
-      declineNote: 'Nothing extra. She practises that weekend like any other.',
+      get lede() {
+        return t('The coach asked about the Local Open again, and asked you to think about it before answering this time.')
+      },
+      get enterLabel() { return t('Put her name down') },
+      get enterNote() { return t('An entry and a weekend, on top of the year.') },
+      get declineLabel() { return t('Not this year') },
+      get declineNote() { return t('Nothing extra. She practises that weekend like any other.') },
     },
   },
 
   {
     age: 13,
-    kicker: 'She is thirteen',
-    title: 'The junior tour opens at fourteen.',
-    lede:
-      'The club puts the calendar on the wall in January. Entry lists, ranking points, a whole ' +
-      'year of it. She reads it like a timetable. Whether you go is not this year\'s question.',
+    get kicker() { return t('She is thirteen') },
+    get title() { return t('The junior tour opens at fourteen.') },
+    get lede() {
+      return t('The club puts the calendar on the wall in January. Entry lists, ranking points, a whole year of it. She reads it like a timetable. Whether you go is not this year\'s question.')
+    },
     her: {
-      cool: 'She knows which of the girls on the board are going.',
-      warm: 'She knows which of the girls on the board are going, and when.',
+      get cool() { return t('She knows which of the girls on the board are going.') },
+      get warm() { return t('She knows which of the girls on the board are going, and when.') },
     },
     coach: {
-      cool: 'The coach will tell you what it looks like in the spring.',
-      warm: 'The coach will tell you what it looks like in the spring.',
+      get cool() { return t('The coach will tell you what it looks like in the spring.') },
+      get warm() { return t('The coach will tell you what it looks like in the spring.') },
     },
-    continueLabel: 'Wait for the coach',
+    get continueLabel() { return t('Wait for the coach') },
     // ⭐⭐⭐ v87 (the weight, wave 11 T1) – THE ONE SWITCH IN THE GAME, ON THE LAST CARD OF THE WALK,
     // WHICH IS THE CARD THAT CREATES THE CAREER. ⚠⚠ THE PLAN SAID «THE PROLOGUE'S OPENING» AND IT IS
     // HERE INSTEAD, AND THE REASON IS A MEASUREMENT RATHER THAN A PREFERENCE. The age-5 card already
@@ -679,11 +687,11 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
     // сама»). Nobody mentions it to you this year; the date is already on the wall in her writing,
     // which is a harder question to say no to than either of the two before it. DRAFT.
     tournament: {
-      lede: 'She has written the date of the Local Open on the kitchen calendar herself.',
-      enterLabel: 'Put her name down',
-      enterNote: 'An entry and a weekend, on top of the year.',
-      declineLabel: 'Not this year',
-      declineNote: 'Nothing extra. She practises that weekend like any other.',
+      get lede() { return t('She has written the date of the Local Open on the kitchen calendar herself.') },
+      get enterLabel() { return t('Put her name down') },
+      get enterNote() { return t('An entry and a weekend, on top of the year.') },
+      get declineLabel() { return t('Not this year') },
+      get declineNote() { return t('Nothing extra. She practises that weekend like any other.') },
     },
   },
 ]
@@ -693,32 +701,31 @@ export const PROLOGUE_CARDS: readonly PrologueCard[] = [
  *  swapping it into any other card. Nine cards, ten scenes, one of which is never seen. */
 export const TWELFTH_WANTS_MORE: PrologueCard = {
   age: 12,
-  kicker: 'She is twelve',
+  get kicker() { return t('She is twelve') },
   // ⚠⚠ THE ASK IS ON THE CARD NOW (owner, 02.09): «как будто и запроса не было, она не просила
   // год». The second answer is worded «the year she is asking for» and nothing above it said she
   // had asked for anything – she asked a QUESTION about other girls, which is not the same act. Two
   // ways to fix that, and this is the one that keeps his own answer labels: say what she asked for.
-  title: 'She has asked you for more than she is getting.',
-  lede:
-    'She has started asking about the girls whose names are on the board at the club – where they ' +
-    'went, and at what age. Then she asked you for the same thing they had: more hours, a better ' +
-    'coach, a year built around it.',
+  get title() { return t('She has asked you for more than she is getting.') },
+  get lede() {
+    return t('She has started asking about the girls whose names are on the board at the club – where they went, and at what age. Then she asked you for the same thing they had: more hours, a better coach, a year built around it.')
+  },
   her: {
     // ⚠ NOT «She is asking for more than she has been given» any more: the title says she asked, so
     // this line would have been the card saying it twice. It says how big the ask is instead.
-    cool: 'She is asking for a year bigger than any she has had.',
-    warm: 'She has worked out what the next step is and she wants it.',
+    get cool() { return t('She is asking for a year bigger than any she has had.') },
+    get warm() { return t('She has worked out what the next step is and she wants it.') },
   },
   coach: {
-    cool: 'The coach says she is asking the right question a little early.',
-    warm: 'The coach has been waiting for her to ask.',
+    get cool() { return t('The coach says she is asking the right question a little early.') },
+    get warm() { return t('The coach has been waiting for her to ask.') },
   },
-  continueLabel: 'Go on',
+  get continueLabel() { return t('Go on') },
   options: [
     {
       id: 'keep-the-size',
-      label: 'Keep it the size it is',
-      note: 'What you are paying now. She stays where she is for a year.',
+      get label() { return t('Keep it the size it is') },
+      get note() { return t('What you are paying now. She stays where she is for a year.') },
       costCents: 2_400_00,
       share: 0.7,
       teaching: 0.6,
@@ -726,9 +733,9 @@ export const TWELFTH_WANTS_MORE: PrologueCard = {
     },
     {
       id: 'give-her-the-year',
-      label: 'Give her the year she is asking for',
+      get label() { return t('Give her the year she is asking for') },
       // 6_000_00 / 2_400_00 = 2.5.
-      note: 'About two and a half times what you pay now, for as long as it lasts.',
+      get note() { return t('About two and a half times what you pay now, for as long as it lasts.') },
       costCents: 6_000_00,
       share: 1,
       teaching: 1,
@@ -740,11 +747,13 @@ export const TWELFTH_WANTS_MORE: PrologueCard = {
   // through the FORK rather than around it: the childhood that carried her reaches her own asking
   // sooner, and the one that did not hears it from the coach for one more year. DRAFT.
   tournament: {
-    lede: 'She wants to enter the Local Open in the spring. She asked twice, on two different days.',
-    enterLabel: 'Put her name down',
-    enterNote: 'An entry and a weekend, on top of the year.',
-    declineLabel: 'Not this year',
-    declineNote: 'Nothing extra. She practises that weekend like any other.',
+    get lede() {
+      return t('She wants to enter the Local Open in the spring. She asked twice, on two different days.')
+    },
+    get enterLabel() { return t('Put her name down') },
+    get enterNote() { return t('An entry and a weekend, on top of the year.') },
+    get declineLabel() { return t('Not this year') },
+    get declineNote() { return t('Nothing extra. She practises that weekend like any other.') },
   },
 }
 
@@ -770,20 +779,20 @@ export const TWELFTH_WANTS_MORE: PrologueCard = {
 export const TWELFTH_REASONS = {
   /** DRAFT – the fold. `{a}`, `{b}` and `{c}` are the three clauses below, in this order, and they
    *  are the ONLY things `run.ts` substitutes: every other character here is copy. */
-  sentence: 'The years behind it: {a}, {b}, {c}.',
+  get sentence() { return t('The years behind it: {a}, {b}, {c}.') },
   oneToOne: {
-    none: 'never a coach to herself',
-    some: 'some of it one to one',
-    most: 'most of it with somebody to herself',
+    get none() { return t('never a coach to herself') },
+    get some() { return t('some of it one to one') },
+    get most() { return t('most of it with somebody to herself') },
   },
   tournaments: {
-    none: 'nothing entered',
-    some: 'one draw sheet with her name on it',
+    get none() { return t('nothing entered') },
+    get some() { return t('one draw sheet with her name on it') },
   },
   light: {
-    none: 'and no year left to look after itself',
-    some: 'and one year you kept light',
-    many: 'and more than one year you kept light',
+    get none() { return t('and no year left to look after itself') },
+    get some() { return t('and one year you kept light') },
+    get many() { return t('and more than one year you kept light') },
   },
 } as const
 
@@ -874,11 +883,11 @@ export const LOCAL_OPEN_COPY = {
   /** DRAFT – what the weekend is called, above her match. It is the age-10 card's own words for the
    *  thing («There is a Local Open in six weeks»), so the screen the player arrives on is named the
    *  same way the screen that sold it to them was. */
-  kicker: 'The Local Open',
+  get kicker() { return t('The Local Open') },
 
   /** DRAFT – the way on at the end of one of her matches. `MatchViewer` holds the press until it is
    *  pressed (`proceedLabel`), which is what stops a finished match ejecting the player. */
-  proceed: 'Go on',
+  get proceed() { return t('Go on') },
 
   /** ⭐⭐⭐ ROUND 35 #1 – THE TWO CONTROLS THE WEEKEND GREW WHEN IT BECAME A FLOW.
    *
@@ -891,14 +900,14 @@ export const LOCAL_OPEN_COPY = {
    *  starts a tournament and the affirmative on its pre-match card – so the weekend the prologue
    *  plays is worded like the weekends the rest of the game plays, and swapping either of them is a
    *  table edit exactly as every other line here is. DRAFT like everything else on this screen. */
-  begin: 'Begin',
-  watchMatch: 'Watch match',
+  get begin() { return t('Begin') },
+  get watchMatch() { return t('Watch match') },
 
   /** ⭐ DRAFT – THE WAY PAST THE REST OF THE WEEKEND, and it is the ten-minute budget's own control.
    *  The viewer already ships a per-match escape («Skip to the result», MatchControls.vue) and that
    *  one is untouched; this is the one that leaves the whole draw at once, because a player who is
    *  not here for tennis should not have to press the other one three times a year for four years. */
-  skipRest: 'Skip the rest of the weekend',
+  get skipRest() { return t('Skip the rest of the weekend') },
 
   /** ⭐⭐ ROUND 39 #15a – WHAT THE PARENT KNOWS WHEN SHE STOPS MID-MATCH. DRAFT.
    *
@@ -915,9 +924,9 @@ export const LOCAL_OPEN_COPY = {
    *  same moment opens a real layoff with weeks on it, so this sentence there would be a lie the
    *  injury report contradicts one screen later. The viewer takes it as an optional note
    *  (`hurtNote`), null everywhere but here – rendered under the popup's reason, quiet, one line. */
-  hurtNote:
-    'She is alright – worn out, nothing more. She sleeps the whole drive home, and in a few days ' +
-    'she is asking to play again.',
+  get hurtNote() {
+    return t('She is alright – worn out, nothing more. She sleeps the whole drive home, and in a few days she is asking to play again.')
+  },
 
   /** ⭐⭐ THE THREE RESULT SCENES. DRAFT. The face each one hangs is NOT written here – it is
    *  `OUTCOME_FACES` in art/prologue.ts, which is art direction and not copy, the same split
@@ -936,28 +945,28 @@ export const LOCAL_OPEN_COPY = {
    *  real. */
   result: {
     won: {
-      kicker: 'The Local Open',
-      title: 'She won it.',
-      lede: 'Three matches on one weekend, and she is the last one still on the court.',
-      her: 'She has not put the cup down since.',
-      coach: 'The coach says the draw was small and she still had to win it.',
-      continueLabel: 'Go on',
+      get kicker() { return t('The Local Open') },
+      get title() { return t('She won it.') },
+      get lede() { return t('Three matches on one weekend, and she is the last one still on the court.') },
+      get her() { return t('She has not put the cup down since.') },
+      get coach() { return t('The coach says the draw was small and she still had to win it.') },
+      get continueLabel() { return t('Go on') },
     },
     final: {
-      kicker: 'The Local Open',
-      title: 'She got to the final.',
-      lede: 'Saturday, then Sunday morning, then one more match she did not win.',
-      her: 'She wants to know when the next one is.',
-      coach: 'The coach says the last one is the hard one.',
-      continueLabel: 'Go on',
+      get kicker() { return t('The Local Open') },
+      get title() { return t('She got to the final.') },
+      get lede() { return t('Saturday, then Sunday morning, then one more match she did not win.') },
+      get her() { return t('She wants to know when the next one is.') },
+      get coach() { return t('The coach says the last one is the hard one.') },
+      get continueLabel() { return t('Go on') },
     },
     lost: {
-      kicker: 'The Local Open',
-      title: 'She went out before the final.',
-      lede: 'A long drive, a court she had never seen, and it was over sooner than the journey.',
-      her: 'She watched the girls who were still in it.',
-      coach: 'The coach says the first one is never the one that counts.',
-      continueLabel: 'Go on',
+      get kicker() { return t('The Local Open') },
+      get title() { return t('She went out before the final.') },
+      get lede() { return t('A long drive, a court she had never seen, and it was over sooner than the journey.') },
+      get her() { return t('She watched the girls who were still in it.') },
+      get coach() { return t('The coach says the first one is never the one that counts.') },
+      get continueLabel() { return t('Go on') },
     },
   } as Readonly<Record<LocalOpenOutcome, LocalOpenResultCopy>>,
 
@@ -983,14 +992,14 @@ export const LOCAL_OPEN_COPY = {
    *  outcome's own face (`OUTCOME_FACES` is untouched): a weekend she left early is still the
    *  weekend the bracket says it was. */
   hurt: {
-    kicker: 'The Local Open',
-    title: 'You walk out to her.',
-    lede:
-      'Worn out, nothing worse – you can see that for yourself by the time you reach her. The ' +
-      'rest of the weekend goes on without you, and none of it matters.',
-    her: 'She is asleep before you reach the motorway.',
-    coach: 'The coach says a quiet week is all this needs.',
-    continueLabel: 'Hold her',
+    get kicker() { return t('The Local Open') },
+    get title() { return t('You walk out to her.') },
+    get lede() {
+      return t('Worn out, nothing worse – you can see that for yourself by the time you reach her. The rest of the weekend goes on without you, and none of it matters.')
+    },
+    get her() { return t('She is asleep before you reach the motorway.') },
+    get coach() { return t('The coach says a quiet week is all this needs.') },
+    get continueLabel() { return t('Hold her') },
   } as LocalOpenResultCopy,
 
   /** ⭐⭐⭐ ROUND 41 #4 – WHAT THE COACH SAYS WHEN IT IS NOT HER FIRST WEEKEND. DRAFT, all seven.
@@ -1027,19 +1036,21 @@ export const LOCAL_OPEN_COPY = {
    *  things this scene has seen – the same rule the three above are written under. */
   coachAgain: {
     /** her first title, and not her first weekend */
-    firstTitle: 'The coach says the first one she wins is the one she will remember.',
+    get firstTitle() { return t('The coach says the first one she wins is the one she will remember.') },
     /** she has won one of these before */
-    wonBefore: 'The coach says that is not the first cup she has carried home.',
+    get wonBefore() { return t('The coach says that is not the first cup she has carried home.') },
     /** a final, and not her first weekend */
-    finalAgain: 'The coach says she knows these weekends now – the last match is still the hard one.',
+    get finalAgain() {
+      return t('The coach says she knows these weekends now – the last match is still the hard one.')
+    },
     /** out in her first match, and the weekend before it ended the same way */
-    outFirstAgain: 'The coach says this is the part nobody tells you about, and that it passes.',
+    get outFirstAgain() { return t('The coach says this is the part nobody tells you about, and that it passes.') },
     /** out in her first match, but the weekend before it went further */
-    outFirst: 'The coach says she has had better weekends than this one, and will again.',
+    get outFirst() { return t('The coach says she has had better weekends than this one, and will again.') },
     /** her first weekend, and she won a match before going out – the reading the owner met */
-    pastFirstOnce: 'The coach says she got past the first one, and that is where it starts.',
+    get pastFirstOnce() { return t('The coach says she got past the first one, and that is where it starts.') },
     /** past the first match and out before the final, and not her first weekend */
-    pastFirst: 'The coach says she is winning matches at these weekends now, not just turning up.',
+    get pastFirst() { return t('The coach says she is winning matches at these weekends now, not just turning up.') },
   },
 } as const
 
@@ -1052,7 +1063,9 @@ export const LOCAL_OPEN_COPY = {
  *  – the same argument `playLocalOpen` makes about `rounds`, and for the same reason: a pool too
  *  small to fill the draw would otherwise be described by a constant that never noticed. */
 export function localDrawLine(drawSize: number): string {
-  return `${drawSize}-player draw`
+  // L2-2 (08.10): the career flow's sentence is already this key (`{0}-player draw`, TournamentFlow / NextTournamentPanel) – one
+  // phrase, one translation (RU02B-LO-F1). The number reaches it as a plain `String(n)`, exactly what the template literal printed.
+  return t('{0}-player draw', [drawSize])
 }
 
 /** ⭐ ONE WEEKEND AS A COACH LINE NEEDS TO SEE IT – two numbers off the bracket and nothing else.

@@ -67,7 +67,7 @@ import { mount } from '@vue/test-utils'
 import '../../src/style.css'
 import { readFileSync } from 'node:fs'
 import { assertDismissReachable, setViewport, PHONE } from './fits'
-import { regionToLast } from '../helpers/source'
+import { regionToLast, tTransparent } from '../helpers/source'
 import PrologueCardView from '../../src/components/PrologueCard.vue'
 import { CARD_AGES, PROLOGUE_CARDS } from '../../src/prologue/cards'
 import { WALK_COPY } from '../../src/prologue/handover'
@@ -271,10 +271,12 @@ describe('⭐ the wizard and the card roll the SAME dice', () => {
     // they ARE declared twice, and this is what stops the two copies drifting: a rename in one
     // template without the other reddens here, naming both spellings.
     const wizardTemplate = regionToLast(wizard, '<template>', '</template>')
-    const cardTemplate = regionToLast(card, '<template>', '</template>')
+    // L2-2 (08.10): THE CARD'S LABELS ARE `:aria-label="t('…')"` NOW (RU02B, contract rule 6) – the assertion below is the ORIGINAL line,
+    // untouched, fed through `tTransparent`: the words are the claim, the spelling of the call is not, and a changed word still fails.
+    const cardTemplate = tTransparent(regionToLast(card, '<template>', '</template>'))
     for (const label of [FIRST_DIE, LAST_DIE]) {
-      // L2-1 (08.10): the wizard's label is a `t()` call now (RU-02A-I03/I04), the card's is still the plain attribute until the
-      // prologue's own landing (RU-02B). The WORDS are the same twelve and thirteen characters, which is the claim.
+      // L2-1 (08.10): the wizard's label is a `t()` call now (RU-02A-I03/I04). L2-2 (08.10): so is the card's (RU02B) – read through
+      // `tTransparent` above. The WORDS are the same twelve and thirteen characters, which is the claim.
       expect(wizardTemplate, `the wizard no longer says «${label}»`).toContain(`:aria-label="t('${label}')"`)
       expect(cardTemplate, `the card no longer says «${label}»`).toContain(`aria-label="${label}"`)
     }
