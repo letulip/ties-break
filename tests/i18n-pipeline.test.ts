@@ -539,3 +539,33 @@ describe('the xx pseudo-locale', () => {
   })
 })
 
+
+// =================================================================================================
+// ⭐⭐ L2-1 FINDINGS 1 + 2 (08.10), FIXED BY THE ARCHITECT – the regression arms.
+// =================================================================================================
+describe('08.10 – the twin-key bug and the header classifier', () => {
+  it('a template t() literal is a KEY once, never also a plain scanned string (finding 1)', () => {
+    const before = { certain: certain.length, calls: callKeys.length }
+    scanVue('fixtures/twin.vue', `<template><p>{{ t('Step {step} of {count}', { step, count }) }}</p></template>`)
+    const newCalls = callKeys.slice(before.calls)
+    const newCertain = certain.slice(before.certain)
+    expect(newCalls.map((c) => c.key), 'the call key is recorded exactly once').toEqual(['Step {step} of {count}'])
+    expect(
+      newCertain.filter((c) => c.text.includes('Step')),
+      'no plain-string twin of the key (the escaped-brace twin blocked the editorial join)',
+    ).toEqual([])
+  })
+
+  it('an «English title» header is an English column, and `source` is not misread (finding 2)', () => {
+    const table = [
+      '| id | source | English title | Russian title |',
+      '| --- | --- | --- | --- |',
+      "| T01 | `OnboardingTour.vue:96` | `You are the parent` | `Вы – родитель` |",
+    ].join('\n')
+    const { rows } = parseTables('fixture-tour.md', table)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].english, 'the English comes from the English-titled column, not from `source`').toBe(
+      'You are the parent',
+    )
+  })
+})

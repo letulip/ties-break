@@ -404,6 +404,20 @@ function pushVue(file: string, line: number, text: string, reason: string, holes
 
 // `t('…')` inside a template expression. The census reads expressions with a regex (EXPR_LIT above), so the
 // call detection is the same kind of reader: a literal first argument is a key, anything else is counted.
+// ⚠ L2-1 FINDING 1 (08.10): a literal that IS t()'s first argument must not ALSO be scanned as a plain
+// string – the double read minted a twin key with its braces escaped («Step \{step\} of \{count\}») and
+// the twin blocked the editorial join. `exprLiteralsOutsideT` removes one occurrence per recorded key;
+// a literal appearing BOTH as a key and separately in the same expression keeps its second occurrence.
+function exprLiteralsOutsideT(expr: string): string[] {
+  const keys: string[] = []
+  for (const m of expr.matchAll(EXPR_T)) keys.push((m[1] ?? m[2] ?? m[3] ?? '').replace(/\\(['"`\\])/g, '$1'))
+  const out = exprLiterals(expr)
+  for (const k of keys) {
+    const i = out.indexOf(k)
+    if (i >= 0) out.splice(i, 1)
+  }
+  return out
+}
 const EXPR_T = /(?<![\w$.])t\(\s*(?:'((?:\\.|[^'\\\n])*)'|"((?:\\.|[^"\\\n])*)"|`((?:\\.|[^`\\])*)`)/g
 const EXPR_T_ANY = /(?<![\w$.])t\(\s*(?!\d)/g
 function recordExprCalls(file: string, line: number, expr: string): void {
@@ -428,7 +442,7 @@ function walkTemplate(file: string, node: VNode): void {
     } else if (p.type === 7 && p.exp?.content) {
       const bound = p.name === 'bind' ? p.arg?.content : undefined
       const isCopyAttr = bound !== undefined && VUE_ATTRS.has(bound)
-      for (const lit of exprLiterals(p.exp.content)) literal(file, 'vue', line, lit, NO_CTX, true, isCopyAttr ? 'vue-attr-bound' : undefined)
+      for (const lit of exprLiteralsOutsideT(p.exp.content)) literal(file, 'vue', line, lit, NO_CTX, true, isCopyAttr ? 'vue-attr-bound' : undefined)
       recordExprCalls(file, line, p.exp.content)
     }
   }
@@ -451,7 +465,7 @@ function walkTemplate(file: string, node: VNode): void {
       run.push('${…}')
       const inner = typeof c.content === 'object' ? (c.content.content ?? '') : ''
       runHoles.push(inner.replace(/\s+/g, ' ').trim())
-      for (const lit of exprLiterals(inner)) literal(file, 'vue', c.loc?.start.line ?? 0, lit, NO_CTX, true)
+      for (const lit of exprLiteralsOutsideT(inner)) literal(file, 'vue', c.loc?.start.line ?? 0, lit, NO_CTX, true)
       recordExprCalls(file, c.loc?.start.line ?? 0, inner)
     } else {
       flush()

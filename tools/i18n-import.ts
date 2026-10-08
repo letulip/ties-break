@@ -128,7 +128,11 @@ function classify(header: string[]): Shape | 'glossary' | 'no-english' | 'no-rus
   const en: number[] = []
   const ru: number[] = []
   h.forEach((c, i) => {
-    if (/^(?:english(?: (?:source|form|pool line))?|английск\S*(?: \S+)?)$/.test(c)) en.push(i)
+    // ⚠ L2-1 FINDING 2 (08.10): the tour table's «English title» header fell through the old
+    // suffix whitelist and the `source` fallback then read the WRONG column as English. Any header
+    // BEGINNING with `english` is an English column – «English concept» cannot reach here, the
+    // glossary test above returns first.
+    if (/^(?:english(?:\s.+)?|английск\S*(?: \S+)?)$/.test(c)) en.push(i)
     else if (/(?:russian|русск)/.test(c) && !/(?:old|retired|dead)/.test(c)) ru.push(i)
   })
   // With no English column, a column literally called `source` IS the English text (diary and commentary tables).
