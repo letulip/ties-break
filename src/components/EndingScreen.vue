@@ -573,8 +573,9 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
                creates; the script block above says why the route retired the question rather than an
                agent retiring the words, and the strings table's §8 carries the removal for his pass.
                `Raise another` is his label and is untouched.
-               ⭐⭐ 08.10 – THE ACCENT LEFT THIS PILL: «наверное эту кнопку надо желтой сделать, а не
-               соседнюю, которая про новый старт» – the yellow belongs to the door that CONTINUES her
+               ⭐⭐ 08.10 – THE ACCENT LEFT THIS PILL on the owner's ruling (his words are quoted in
+               docs/decisions.md under 08.10; a template comment may not carry the Cyrillic itself –
+               tests/template-copy-rules.test.ts): the yellow belongs to the door that CONTINUES her
                line, not to the unrelated fresh start, so this one is `ghost` now and the dynasty door
                below carries `cta`. The college branch above keeps its `cta`: it stands alone there and
                is the way forward. `ending-door-start` is a TEST HOOK, not a style. -->
