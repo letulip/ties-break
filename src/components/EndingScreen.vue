@@ -240,7 +240,9 @@ const DYNASTY_LIVED = 'Raise her daughter'
  *  round ledger and in docs/decisions.md under 07.10 – a `.vue` file carries no Cyrillic, comments included), so the
  *  spelling is his and this is no longer a draft. ⚠ ONLY THIS LABEL MOVED: the lived variant above still says
  *  «daughter», and nothing on this page names or ages her. */
-const DYNASTY_AFTER = 'A child came later'
+// ⭐⭐ 08.10 SECOND RULING ON THIS LABEL, same morning («Династия берём, меняй обе стороны»): his
+// «Ребёнок позже» stood one message with a stated dislike; the cross-language one-word option won.
+const DYNASTY_AFTER = 'Dynasty'
 
 const continueLabel = computed(() => (dynasty.value?.raisedOnTour ? DYNASTY_LIVED : DYNASTY_AFTER))
 
@@ -560,7 +562,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
              a snapshot that carries no dynasty block): the equal halves are declared for the PAIR only
              (`.ending-doors > .tb-pill:not(:only-child)` below), so a lone pill keeps the width its label gives it,
              which is the page it was before. ⚠ ONE WORDING MOVED HERE AND HE ASKED FOR IT: the line door's epilogue
-             label is «A child came later» (the script block above carries the ruling). Everything else is a box. -->
+             label is «Dynasty» (the script block above carries both rulings). Everything else is a box. -->
         <div class="ending-doors">
           <PrimaryPill v-if="resumes !== null" variant="cta" @click="resumeCollege">
             Another year –
@@ -570,8 +572,14 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
                three capital cards that used to stand here left with the career this file no longer
                creates; the script block above says why the route retired the question rather than an
                agent retiring the words, and the strings table's §8 carries the removal for his pass.
-               `Raise another` is his label and is untouched. -->
-          <PrimaryPill v-else variant="cta" :disabled="game.busy" @click="raiseAnother">
+               `Raise another` is his label and is untouched.
+               ⭐⭐ 08.10 – THE ACCENT LEFT THIS PILL on the owner's ruling (his words are quoted in
+               docs/decisions.md under 08.10; a template comment may not carry the Cyrillic itself –
+               tests/template-copy-rules.test.ts): the yellow belongs to the door that CONTINUES her
+               line, not to the unrelated fresh start, so this one is `ghost` now and the dynasty door
+               below carries `cta`. The college branch above keeps its `cta`: it stands alone there and
+               is the way forward. `ending-door-start` is a TEST HOOK, not a style. -->
+          <PrimaryPill v-else class="ending-door-start" variant="ghost" :disabled="game.busy" @click="raiseAnother">
             Raise another
           </PrimaryPill>
 
@@ -586,7 +594,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
           <PrimaryPill
             v-if="resumes === null && dynasty"
             class="ending-line"
-            variant="ghost"
+            variant="cta"
             :disabled="game.busy"
             @click="continueLine"
           >

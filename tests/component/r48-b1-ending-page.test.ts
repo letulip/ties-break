@@ -10,7 +10,7 @@
 //       button) and, rendered through the card, at the engine's sites; the final offer's opening stays hers.
 //       The engine strings are asserted to the byte in `tests/r48-b1-voice-flip.test.ts`.
 //   5   «for life» is bold.
-//   6   the two doors are ONE ROW, the second one reads «A child came later», and the row fits a phone.
+//   6   the two doors are ONE ROW, the second one reads «Dynasty» (⚠ 08.10 re-ruled from «A child came later»), and the row fits a phone.
 //
 // ⚠⚠ THE WORDS ARE HIS (invariant 4) AND EVERY WORDING MOVE HERE WAS ASKED FOR: the rename in 3a and the child in 6
 // are his own spellings, the voice flip in 4 is his ruling, and «for life» in 5 is a weight and no word at all. Every
@@ -385,17 +385,17 @@ describe('⭐⭐⭐ round 48 #5 – «for life» is bold', () => {
 // ==================================================================================================================
 // 6 – THE TWO DOORS ARE ONE ROW, AND THE SECOND ONE SAYS «A CHILD CAME LATER»
 // ==================================================================================================================
-describe('⭐⭐⭐ round 48 #6 – the dynasty door reads «A child came later»', () => {
+describe('⭐⭐⭐ round 48 #6 – the dynasty door reads «Dynasty» (⚠ re-aimed 08.10: his cross-language pick superseded «A child came later» the next morning)', () => {
   beforeEach(() => setActivePinia(createPinia()))
   afterEach(() => {
     document.body.innerHTML = ''
   })
 
-  it('⭐⭐⭐ the epilogue variant is «A child came later», and the old label is nowhere on the page', () => {
+  it('⭐⭐⭐ the epilogue variant is «Dynasty», and the older labels are nowhere on the page', () => {
     const w = mountEnding(endingView({ dynasty: dynastyOf({ raisedOnTour: false }) }))
     // ⚠⚠ THE ARM. Put `DYNASTY_AFTER` back to its old word and this goes red: measured 07.10, RED [2 tests here – this one
     // and the row-structure test, which reads the label too – plus 1 in wave10-dynasty-door].
-    expect(w.get('.ending-line').text()).toBe('A child came later')
+    expect(w.get('.ending-line').text()).toBe('Dynasty')
     expect(w.text()).not.toContain('daughter came later')
     w.unmount()
   })
@@ -414,7 +414,7 @@ describe('⭐⭐⭐ round 48 #6 – «Raise another» and the line door share ON
   })
 
   const VARIANTS = [
-    { raisedOnTour: false, label: 'A child came later' },
+    { raisedOnTour: false, label: 'Dynasty' },
     { raisedOnTour: true, label: 'Raise her daughter' },
   ] as const
 

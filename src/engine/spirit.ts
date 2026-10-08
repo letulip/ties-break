@@ -110,7 +110,7 @@ import { vacationForWeek } from './world/bookings'
 // is the leaf this file already reaches for, it knows `WorldState` as a TYPE ONLY, and it draws on no
 // stream (its own banner). The receipt the recovery focus prints at the clear is the one player-facing
 // ROW this module has ever written; see the ⚠⚠ note beside `RECOVERY_RECEIPT` for why it is here.
-import { addEvent, seasonStartWeek } from './world/ledger'
+import { addEvent, seasonIndexOf, seasonStartWeek } from './world/ledger'
 // ⚠⚠ FROM `world/loveEpisodes` AND DELIBERATELY NOT FROM `world/lifeBeat`, WHICH IS WHERE IT WAS
 // DECLARED UNTIL T4. `lifeBeat.ts` imports six values from THIS file at runtime (`applyBondDelta`,
 // `bondBandOf`, `moodRegisterOf`, `spiritBandOf`, `temperamentFor`, `temperamentOpenness`), so an
@@ -1407,13 +1407,20 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean, expo
     // ⚠ THE KEEP FLAG IS §4's OWN PROPOSAL AND IT IS UNRULED: «keep the first exposure row of a
     // season, drop repeats». The first exposure week of a season leaves a permanent trace (the album
     // can find the thread seasons later); the repeats are ordinary rows and prune with everything
-    // else, so a famous career does not fill its save with a hundred identical sentences. ⚠ THE
-    // QUESTION IS ASKED OF THE SEASON AND OF THIS ROW'S OWN TEXT, through `seasonStartWeek` – the
-    // same helper `seasonWrapsWithNoVacation` above already reads, so «which season is this» keeps
-    // one spelling in this module.
-    const from = seasonStartWeek(world.week)
-    const firstOfSeason = !world.events.some((e) => e.week >= from && e.text === EXPOSURE_ROW)
+    // else, so a famous career does not fill its save with a hundred identical sentences.
+    // ⭐⭐ THE QUESTION IS ASKED OF STATE NOW, NOT OF THE FEED (the localization intake, 07.10 –
+    // «чиним безусловно»). What stood here was a feed scan by TEXT identity
+    // (`e.week >= seasonStartWeek(world.week) && e.text === EXPOSURE_ROW`), and the RU work breaks
+    // it: a stored row whose text a locale layer rewrites stops matching and every week becomes
+    // «first». It could not move to `lifeKind` alone either – the press leak (`lifeBeat/leak.ts`)
+    // writes the SAME `lifeKind: 'exposure'` with `keep: true`, and a leak week would eat the
+    // season's spotlight keep. `world.spotlightKeepSeason` (state.ts carries the precedent note and
+    // the one acknowledged old-save cost) answers by season index – translation-proof, leak-proof,
+    // zero draws, and the same `seasonIndexOf` spelling the wrap-up uses.
+    const season = seasonIndexOf(world.week)
+    const firstOfSeason = world.spotlightKeepSeason !== season
     addEvent(world, { week: world.week, type: 'life', lifeKind: 'exposure', text: EXPOSURE_ROW, ...(firstOfSeason ? { keep: true } : {}) })
+    if (firstOfSeason) world.spotlightKeepSeason = season
   }
 
   // 3. AND THE STANDING, ON THE SAME PASS – one weekly function, two numbers. Same shape, same

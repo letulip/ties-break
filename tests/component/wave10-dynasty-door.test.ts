@@ -27,7 +27,7 @@
 //   · the `v-if`'s `resumes === null` dropped: **1 red** – the college case; an ending that can
 //     still be resumed must not offer a line beside its own way forward.
 //
-// ⭐⭐⭐ RE-AIMED 07.10 BY HIS ROUND 48 #6 (docs/rounds/round-48.md): the epilogue label is 'A child came later' (his own ruling,
+// ⭐⭐⭐ RE-AIMED 07.10 BY HIS ROUND 48 #6 (docs/rounds/round-48.md): the epilogue label is 'Dynasty' (⚠ 08.10 second ruling; before it, briefly, 'A child came later' –
 // «child is better»), and the two doors stand in ONE ROW (`.ending-doors`) – so the stacking assertion in the round-20 case
 // below became «one shared bottom» plus «the row sits above the record link», and the arm recorded above for the stacking line
 // is the one that now reddens the second. Each moved line says so beside it. The row's own claims (flex row, equal halves, the
@@ -122,7 +122,7 @@ describe('wave 10 T4 – the door never closes', () => {
     // (docs/decisions.md, 07.10), so the epilogue label is 'A child came later'. Only this variant moved; the lived one below
     // is still 'Raise her daughter'. This is a pin that asserts what the string IS, so it moved with it – the dated note is
     // what makes that accountable.
-    expect(line.text()).toBe('A child came later')
+    expect(line.text()).toBe('Dynasty')
     // ...beside «Raise another», never instead of it: two different things.
     expect(w.text()).toContain('Raise another')
     w.unmount()
@@ -199,7 +199,11 @@ describe('wave 10 T4 – the door never closes', () => {
       const takeover = w.find('.ending').element
       const card = w.find('.ending-album').element
       const room = availableWidth(takeover, vp)
-      const fits = ['.ending-foot .tb-pill--cta:not(.ending-door-album)', '.ending-line'].map((sel) => {
+      // ⚠ 08.10 (loc/intake tail) – RE-AIMED: the CTA variant moved to the LINE door on the owner's
+      // ruling («эту кнопку надо желтой сделать, а не соседнюю»), so a `--cta` selector would now
+      // grab the line pill twice and miss «Raise another». `ending-door-start` is the start door's
+      // own hook (EndingScreen.vue), variant-agnostic like `.ending-line`.
+      const fits = ['.ending-door-start', '.ending-line'].map((sel) => {
         const control = w.find(sel)
         expect(control.exists(), `${sel} is on the last page`).toBe(true)
         const fit = assertDismissReachable(card, control.element, vp, `epilogue ${sel}`)
@@ -692,5 +696,24 @@ describe('SUCCESSION W1 – the head-start line (his ruling 14) and the twenty-c
       document.body.innerHTML = ''
     }
     setViewport(PHONE)
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ 08.10 (loc/intake tail) – THE YELLOW DOOR IS THE LINE, NOT THE FRESH START. The owner:
+// «наверное эту кнопку надо желтой сделать, а не соседнюю, которая про новый старт» – the accent
+// belongs to the door that CONTINUES her story. Mutation: swap the two variants back in
+// EndingScreen.vue's pair branch and both arms go red; the college branch is NOT in this claim
+// (its lone «Another year –» keeps `cta` as the only way forward there).
+// =================================================================================================
+describe('08.10 – the accent sits on the line door', () => {
+  it('the line door is cta and «Raise another» is ghost, in the pair branch', () => {
+    const w = mountEpilogue(endingView({ dynasty: dynastyOf({ raisedOnTour: true }) }))
+    const line = w.get('.ending-line').element
+    const start = w.get('.ending-door-start').element
+    expect(line.classList.contains('tb-pill--cta'), 'the line door carries the yellow').toBe(true)
+    expect(line.classList.contains('tb-pill--ghost')).toBe(false)
+    expect(start.classList.contains('tb-pill--ghost'), '«Raise another» went quiet').toBe(true)
+    expect(start.classList.contains('tb-pill--cta')).toBe(false)
   })
 })
