@@ -112,7 +112,6 @@ docs/review/     2026-08 full review + P1–P9 proposals
 
 ## Gotchas
 
-- **A source pin over a surface the i18n waves may wrap reads through `tTransparent`** (tests/helpers/source.ts, 08.10): it folds `t('…')` back to the bare literal, so wrapping a call site cannot break a shape pin – and a genuinely changed word still fails. L2-1 paid 17 re-aims before it existed; nobody pays again.
 - **Prefer a mounted test to a source pin.** `tests/component/` mounts real components (vitest project `component`, happy-dom). Source pins break on contact with a refactor and prove nothing about behaviour; MatchViewer and SeasonScreen now have mutation-verified nets there, which is what makes them safe to split. Mutate the thing you think you are covering and watch it fail before you believe a green run.
 - **A screen that restates an engine verdict is the parity class** – the screen holds a predicate the engine does not (three defects in round 29 alone). Call the engine's own primitive, or pair a mounted test over one snapshot with its mutation table: [engine-ui-parity-2026-09.md](docs/specs/engine-ui-parity-2026-09.md).
 - Some tests are **source-pin tests**: they read engine source text and assert on structure. When moving code, read it through `tests/worldSource.ts` (`worldSource()`, `diarySource()`, or `engineModuleSource(name)` for any decomposed module) rather than pinning a path.
