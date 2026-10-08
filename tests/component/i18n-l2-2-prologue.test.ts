@@ -98,8 +98,13 @@ function mountCard(card: PrologueCard, extra: Record<string, unknown> = {}): Vue
 const pickedOf = (card: PrologueCard): Record<string, unknown> => (card.options && card.tournament ? { picked: card.options[0]!.id } : {})
 
 /** The twelve screens a childhood can show on the card component: nine years, the fork's other face, and the Local Open's result scenes. */
-function everyScene(): { name: string; card: PrologueCard; extra: Record<string, unknown> }[] {
-  const out = PROLOGUE_CARDS.map((c) => ({
+interface Scene {
+  name: string
+  card: PrologueCard
+  extra: Record<string, unknown>
+}
+function everyScene(): Scene[] {
+  const out: Scene[] = PROLOGUE_CARDS.map((c) => ({
     name: `age ${c.age}`,
     card: cardFor(c.age, EMPTY_RUN),
     extra: { ...pickedOf(c), ...(c.age === 12 ? { reason: readTwelfth(EMPTY_RUN).reason } : {}) },
