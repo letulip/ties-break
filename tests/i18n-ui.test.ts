@@ -32,28 +32,13 @@ import { cp } from '../src/shared/i18n'
 import { computed } from 'vue'
 
 // This runner has no `localStorage` (Node's experimental global is an own property holding
-// `undefined`), so the file supplies the browser's own object – the same shim, the same reason, as
-// tests/component/setup.ts's `installMemoryStorage`, which is scoped to the component project.
-const backing = new Map<string, string>()
-let storageMode: 'ok' | 'throws' = 'ok'
+// `undefined`). ⚠ T5.14: the shim has ONE home – `installMemoryStorage` in tests/component/setup.ts
+// (the ratchet caught this file spelling its own copy on 08.10; the helper is project-agnostic and
+// the import costs nothing in the unit runner).
+import { installMemoryStorage, type MemoryStorage } from './component/setup'
+let store: MemoryStorage
 beforeEach(() => {
-  backing.clear()
-  storageMode = 'ok'
-  Object.defineProperty(globalThis, 'localStorage', {
-    configurable: true,
-    value: {
-      getItem: (k: string) => {
-        if (storageMode === 'throws') throw new Error('SecurityError')
-        return backing.has(k) ? backing.get(k)! : null
-      },
-      setItem: (k: string, v: string) => {
-        if (storageMode === 'throws') throw new Error('QuotaExceededError')
-        backing.set(k, String(v))
-      },
-      removeItem: (k: string) => void backing.delete(k),
-      clear: () => backing.clear(),
-    },
-  })
+  store = installMemoryStorage()
   resetI18nForTests()
 })
 afterEach(() => {
@@ -173,21 +158,21 @@ describe('a loaded catalog renders, ICU plurals included', () => {
 describe('the preference is app state: one localStorage flag, never a save', () => {
   it('the answer is written under `tb-locale` and read back', async () => {
     await setLocale('ru')
-    expect(backing.get(LOCALE_STORAGE_KEY)).toBe('ru')
+    expect(store.backing.get(LOCALE_STORAGE_KEY)).toBe('ru')
     expect(readStoredLocale()).toBe('ru')
     await setLocale('en')
-    expect(backing.get(LOCALE_STORAGE_KEY)).toBe('en')
+    expect(store.backing.get(LOCALE_STORAGE_KEY)).toBe('en')
   })
 
   it('an unknown stored value reads as «never asked»', () => {
-    backing.set(LOCALE_STORAGE_KEY, 'klingon')
+    store.backing.set(LOCALE_STORAGE_KEY, 'klingon')
     expect(readStoredLocale()).toBeNull()
-    backing.set(LOCALE_STORAGE_KEY, '')
+    store.backing.set(LOCALE_STORAGE_KEY, '')
     expect(readStoredLocale()).toBeNull()
   })
 
   it('a private-mode browser (storage throws) still answers for the session, and never throws', async () => {
-    storageMode = 'throws'
+    store.mode = 'throws'
     expect(readStoredLocale()).toBeNull()
     await expect(setLocale('ru')).resolves.toBeUndefined()
     expect(locale.value).toBe('ru')
@@ -195,7 +180,7 @@ describe('the preference is app state: one localStorage flag, never a save', () 
   })
 
   it('a relaunch with a stored Russian boots into Russian, and is not settled until its catalog is', async () => {
-    backing.set(LOCALE_STORAGE_KEY, 'ru')
+    store.backing.set(LOCALE_STORAGE_KEY, 'ru')
     resetI18nForTests(readStoredLocale())
     const { loader, release } = gatedCatalog()
     registerCatalogLoader('ru', loader)
@@ -210,11 +195,11 @@ describe('the preference is app state: one localStorage flag, never a save', () 
     expect(locale.value).toBe('ru')
     expect(t('Home')).toBe('[ru] Home')
     // booting never writes the preference
-    expect(backing.get(LOCALE_STORAGE_KEY)).toBe('ru')
+    expect(store.backing.get(LOCALE_STORAGE_KEY)).toBe('ru')
   })
 
   it('English is settled the instant a stored English is read – the common launch has no blank frame', () => {
-    backing.set(LOCALE_STORAGE_KEY, 'en')
+    store.backing.set(LOCALE_STORAGE_KEY, 'en')
     resetI18nForTests(readStoredLocale())
     expect(needsLocaleChoice.value).toBe(false)
     expect(localeSettled.value).toBe(true)
