@@ -8,6 +8,7 @@
 //   1. `countMiss` made a no-op -> the miss-counter cases go red (ruling 4 would read zero forever).
 //   2. `setLocale` stops writing storage -> the persistence and relaunch cases go red.
 //   3. `setLocale` stops honouring the newest request -> the «second tap wins» case goes red.
+import { readFileSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   CATALOG_TIMEOUT_MS,
@@ -28,6 +29,7 @@ import {
   t,
   useI18n,
 } from '../src/i18n'
+import type { Locale } from '../src/i18n'
 import { cp } from '../src/shared/i18n'
 import { computed } from 'vue'
 
@@ -85,11 +87,19 @@ describe('English costs nothing', () => {
   })
 })
 
-describe('a locale with no catalog file yet (today\'s Russian) renders English and COUNTS it', () => {
+// ⚠ RUSSIAN STOPPED BEING THE EXAMPLE OF «NO CATALOG» WHEN L1b WROTE `src/i18n/ru.json` (08.10): the glob in
+// catalog.ts now finds it, so `catalogStatus('ru')` is `ready` – exactly as the file's own header said it
+// would once the importer had run. What these three cases cover (a locale with no file renders English and
+// COUNTS every key) is still the contract, so they say it about a locale that has no file BY CONSTRUCTION:
+// a made-up code. Not `es` – Spanish stops being file-less at L5 and this would break a third time.
+// `setLocale` does not validate its argument, which is what lets a test say so.
+const NO_FILE = 'zz' as Locale
+
+describe('a locale with no catalog file renders English and COUNTS it', () => {
   it('every key is a miss: English text, one count per render, distinct keys listed', async () => {
-    await setLocale('ru')
-    expect(locale.value).toBe('ru')
-    expect(catalogStatus('ru')).toBe('absent')
+    await setLocale(NO_FILE)
+    expect(locale.value).toBe(NO_FILE)
+    expect(catalogStatus(NO_FILE)).toBe('absent')
     expect(t('Start a new career')).toBe('Start a new career')
     expect(t('Start a new career')).toBe('Start a new career')
     expect(t('Home')).toBe('Home')
@@ -98,7 +108,7 @@ describe('a locale with no catalog file yet (today\'s Russian) renders English a
   })
 
   it('switching back to English stops the counting', async () => {
-    await setLocale('ru')
+    await setLocale(NO_FILE)
     t('Home')
     expect(missCount()).toBe(1)
     await setLocale('en')
@@ -108,9 +118,24 @@ describe('a locale with no catalog file yet (today\'s Russian) renders English a
   })
 
   it('a CopyRef counts per key – the nested ones included', async () => {
-    await setLocale('ru')
+    await setLocale(NO_FILE)
     expect(renderCopy(cp`Rain washed out ${cp`the ${'hitting'} session`}`)).toBe('Rain washed out the hitting session')
     expect(missCount()).toBe(2)
+  })
+})
+
+describe('the shipped Russian catalog (the importer\'s ru.json) is a real catalog now', () => {
+  it('loads as `ready`, translates the rows it holds, and still counts every key it does not', async () => {
+    await setLocale('ru')
+    expect(catalogStatus('ru')).toBe('ready')
+    // ⚠ Read back from the file, never re-typed: the wording is the owner's (invariant 4).
+    const shipped = JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string, string>
+    const keys = Object.keys(shipped)
+    expect(keys.length, 'an empty ru.json would make this case vacuous').toBeGreaterThan(0)
+    for (const k of keys) expect(t(k)).toBe(shipped[k])
+    expect(missCount(), 'a key that IS in the catalog is not a miss').toBe(0)
+    expect(t('A sentence that is in no catalog at all')).toBe('A sentence that is in no catalog at all')
+    expect(missCount()).toBe(1)
   })
 })
 

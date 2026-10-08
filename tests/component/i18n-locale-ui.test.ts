@@ -63,6 +63,12 @@ async function launch() {
     import('../../src/AppRoot.vue'),
     import('../../src/i18n'),
   ])
+  // ⚠ THE FLOW IS WHAT THESE CASES MEASURE, NOT THE SHIPPED CATALOG. Until L1b there was no `src/i18n/ru.json`,
+  // so choosing Russian settled at once. Now the glob finds the real file and its loader is a genuine dynamic
+  // import that takes real ticks – one `flushPromises` no longer settles the language, and the prompt (which
+  // waits for it by design) stays up. A stand-in EMPTY catalog keeps the original premise – «an empty catalog
+  // still gets there» – and keeps these cases independent of what the owner's approved rows say.
+  i18n.registerCatalogLoader('ru', async () => ({}))
   const wrapper = vtu.mount(rootModule.default, { attachTo: document.body, global: { stubs: { teleport: true } } })
   await vtu.flushPromises()
   return { wrapper, i18n, flush: vtu.flushPromises }
@@ -289,6 +295,8 @@ describe('the More switcher – beside the save controls, flipping the one prefe
   })
 
   it('answering from here ends the first-run question for good (one preference, two doors)', async () => {
+    // An empty catalog: the preference is what this case is about, not the shipped file (see `launch`).
+    installCatalog('ru', {})
     const w = mountMore(true)
     await openTab(w, 'Saves')
     await pill(w, 'Russian').trigger('click')

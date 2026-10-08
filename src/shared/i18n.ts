@@ -230,6 +230,38 @@ function parseMessage(src: string): Node[] {
   return nodes(false, false)
 }
 
+/** What a message reads and which branches it carries – the view `npm run i18n:check` takes of every
+ *  catalog entry (wave L1b). It is built on the parser the renderer uses, so the gate and the render can
+ *  never disagree about what is valid syntax; a bad message throws `MessageError` exactly as it would at
+ *  render time. */
+export interface MessageShape {
+  /** Every argument name the message reads – plain `{x}` and the subject of a plural/select – sorted, unique. */
+  args: string[]
+  /** One entry per `{n, plural, …}`: its subject and the selectors it carries (`one`, `few`, `=0`, `other`…). */
+  plurals: { name: string; selectors: string[] }[]
+  /** One entry per `{g, select, …}`, the same shape. */
+  selects: { name: string; selectors: string[] }[]
+}
+
+export function analyzeMessage(src: string): MessageShape {
+  const args = new Set<string>()
+  const plurals: MessageShape['plurals'] = []
+  const selects: MessageShape['selects'] = []
+  const walk = (nodes: readonly Node[]): void => {
+    for (const node of nodes) {
+      if (typeof node === 'string' || node.t === 'hash') continue
+      args.add(node.name)
+      if (node.t === 'arg') continue
+      const entry = { name: node.name, selectors: node.branches.map((b) => b.sel) }
+      if (node.t === 'plural') plurals.push(entry)
+      else selects.push(entry)
+      for (const b of node.branches) walk(b.body)
+    }
+  }
+  walk(parseMessage(src))
+  return { args: [...args].sort(), plurals, selects }
+}
+
 const compiled = new Map<string, Node[]>()
 function compile(template: string): Node[] {
   let nodes = compiled.get(template)

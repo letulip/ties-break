@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-275 TRACKED TypeScript files: **58 live**, **217 archival**
+282 TRACKED TypeScript files: **65 live**, **217 archival**
 (of which **113 frozen** out of `check:tools` and **104 still swept**).
 
 ## Why the split exists
@@ -49,6 +49,8 @@ gate's verdict is a function of the commit, never of whatever else a checkout ha
 | `chemistry-bench.ts` | `npm run bench:chemistry` |
 | `childhood-bench.ts` | `npm run bench:childhood` |
 | `coach-raise-bench.ts` | `npm run bench:coachraise` |
+| `copy-census-walk.ts` | imported by the test suite |
+| `copy-text.ts` | imported by the test suite |
 | `dead-week-probe.ts` | `npm run bench:deadweek` |
 | `demo-save.ts` | writes the demo career used for screenshots and manual playtests |
 | `dual-universe-bench.ts` | `npm run bench:dual` |
@@ -61,6 +63,11 @@ gate's verdict is a function of the commit, never of whatever else a checkout ha
 | `form-bench.ts` | `npm run bench:form` |
 | `form-g-sweep.ts` | `npm run bench:gsweep` |
 | `frozen-key-diff.ts` | diffs a frozen RNG capture against a live run – the instrument for "which draw moved?" when the pinned hash changes |
+| `i18n-check.ts` | imported by the test suite |
+| `i18n-cli.ts` | `npm run i18n:extract` |
+| `i18n-extract.ts` | imported by the test suite |
+| `i18n-import.ts` | imported by the test suite |
+| `i18n-pseudoloc.ts` | imported by the test suite |
 | `injury-landscape.ts` | the whole-career injury census behind docs/specs/the-injury-landscape-2026-08.md; re-run whenever injury rates are touched |
 | `knock-rate.ts` | `npm run bench:knock` |
 | `ladder-floor.ts` | `npm run bench:floor` |
