@@ -290,7 +290,9 @@ function payloadFor(entry: FixtureEntry, options: CareerAtOptions): SeedPayload 
       // write no real commit could produce (see SEEDED_REVISION).
       revision: records[records.length - 1].revision,
     },
-    storage: options.localStorage ?? {},
+    // ⚠ The language question is already answered (L1a): the seed's `localStorage.clear()` would otherwise
+    // put the first-run prompt in front of the splash this fixture clicks. See playwright.config.ts.
+    storage: { 'tb-locale': 'en', ...(options.localStorage ?? {}) },
   }
 }
 

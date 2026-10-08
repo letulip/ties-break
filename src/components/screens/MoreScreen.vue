@@ -62,6 +62,7 @@ import { flagEmoji } from '../../composables/countries'
 // plain string rather than a `computed`.
 import { appBuildLine } from '../../composables/buildInfo'
 import { useStartYear } from '../../composables/startYear'
+import { locale, setLocale, t } from '../../i18n'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
 
@@ -534,6 +535,19 @@ function pickMatchView(v: ViewMode): void {
   matchView.value = v
 }
 
+// --- THE LANGUAGE SWITCHER (L1a, spec §3.4; owner 07.10: the switcher lives in More BY THE SAVE) -------
+//
+// Rendered on the SAVES tab, as its own section directly after the Saves strip – the same «beside the
+// Saves strip» spot the feedback control takes, and for the same reason it needs no career: the
+// language is APP state (`tb-locale`, the family of the switches on the Play tab) and is never
+// written into a save. ⚠ The Play tab is where the tab taxonomy below would put a device preference;
+// the owner asked for it by the save, so it sits here, and moving it is moving one `<section>`.
+// The first-run prompt (`LocalePrompt`) is the other door to the same preference.
+//
+// ⚠ DRAFT STRINGS (invariant 4): `Language`, `English` and `Russian` are new, written once, and his to
+// replace – rows RU01-L05 (`Language`) and RU01-L03/L04 (`English`, `Russian`, shared with the prompt) in
+// docs/localization/ru-ui-shell-2026-09.md, Russian column empty.
+
 // --- THE SCREEN'S OWN TABS (owner, 04.08: «Давай настройки тоже сделаем группировку со вкладками
 // внутри, они постепенно разрастаются и сложно ориентироваться») ----------------------------------
 //
@@ -719,6 +733,26 @@ const TAB_OPTIONS = [
       Export files hold this career's readable data – name, progress, finances – so treat a backup
       like the personal file it is.
     </p>
+  </section>
+
+  <!-- The language switcher, beside the Saves strip (owner 07.10). App state, not career state: it needs no
+       career and writes nothing into a save. The labels are DRAFT strings (L1a) – see the script note. -->
+  <section v-if="screenTab === 'saves'" class="locale-switcher">
+    <h2>{{ t('Language') }}</h2>
+    <div class="option-row" role="group" :aria-label="t('Language')">
+      <button
+        class="option-pill"
+        :class="{ selected: locale === 'en' }"
+        :aria-pressed="locale === 'en'"
+        @click="setLocale('en')"
+      >{{ t('English') }}</button>
+      <button
+        class="option-pill"
+        :class="{ selected: locale === 'ru' }"
+        :aria-pressed="locale === 'ru'"
+        @click="setLocale('ru')"
+      >{{ t('Russian') }}</button>
+    </div>
   </section>
 
   <!-- F2 (feedback channel, docs/specs/feedback-channel-2026-09.md): the control sits BESIDE the Saves

@@ -5,7 +5,7 @@ import { installErrorBuffer } from './errorBuffer'
 import { setReportBridge, type ReportBridge } from './feedback'
 import { installGlobalSfx } from './audio/sfx'
 import { startArtPreloader } from './art/autoPreload'
-import App from './App.vue'
+import AppRoot from './AppRoot.vue'
 import './style.css'
 
 // The feedback report's error ring (src/errorBuffer.ts) starts before anything else, so a boot
@@ -18,7 +18,8 @@ initPwa()
 // Enable audio on the first user gesture anywhere + a quiet click cue on primary controls.
 installGlobalSfx()
 
-createApp(App).use(createPinia()).mount('#app')
+// AppRoot = the first-run language prompt in front of App.vue (spec §3.4); it is the whole of what changed here.
+createApp(AppRoot).use(createPinia()).mount('#app')
 
 // R11-9: warm her age band's portraits (Kid screen + the finale splash) as soon as a career is
 // loaded, so a popup never renders ahead of its art. Must come after the pinia install – the

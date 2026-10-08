@@ -131,3 +131,24 @@ caller must not invent a synonym merely because it lives in another file.
    wrapper produces mixed-language buttons.
 5. Body-part names need grammatical forms if the localized copy is to keep naming the injured part.
    RU01-W12 is a truthful temporary sentence that avoids a bad declension, not the ideal final form.
+
+## 8. Language choice – the first-run prompt and the More switcher (L1a, 08.10)
+
+Two new surfaces, both ruled by the owner on 07.10 (spec `docs/specs/i18n-2026-10.md` §3.4, §9.4): the
+**first-run prompt** – shown once, before the splash, on a device that has never answered, and never
+again – and the **More switcher** on the Saves tab, beside the save controls. Both write the same
+device preference; neither touches a save. Every English line below is a new string written by the
+L1a builder as a **`DRAFT` for the owner's pass** (invariant 4), and the Russian column is **left
+empty on purpose** – the builder writes no Russian; the cells are his.
+
+The prompt shows *before* any answer exists, so it renders in English; a Russian cell for it is only
+ever drawn if he chooses to make the prompt carry a Russian line too (a player who cannot read the
+English one is exactly who the prompt is for). The two language names are the labels of both surfaces.
+
+| id | source | English | Russian | note | status |
+| --- | --- | --- | --- | --- | --- |
+| RU01-L01 | `src/components/LocalePrompt.vue:43` | `Choose your language` | | first-run prompt title, an `h2` on a 320 px dialog card; the card is the first thing a new device sees | `DRAFT` |
+| RU01-L02 | `src/components/LocalePrompt.vue:44` | `You can change this later in Settings.` | | one short sentence under the title; `Settings` is the existing label of the gear on Home and the Kid screen (its `aria-label`/`title`), which opens the More screen | `DRAFT` |
+| RU01-L03 | `src/components/LocalePrompt.vue:46`, `src/components/screens/MoreScreen.vue:747` | `English` | | the language's own NAME, a button on the prompt and a pill on the switcher; the usual convention is that a language is written in itself, so `English` may stay `English` in Russian mode – his call; two buttons share one 320 px card, so keep it short | `DRAFT` |
+| RU01-L04 | `src/components/LocalePrompt.vue:47`, `src/components/screens/MoreScreen.vue:753` | `Russian` | | the same, for Russian: a prompt button and a switcher pill; the same convention would give the language's own name here – his call | `DRAFT` |
+| RU01-L05 | `src/components/screens/MoreScreen.vue:740` | `Language` | | switcher heading on the Saves tab (an `h2`, like `Saves` and `Danger zone`) and the accessible name of the two-pill group (`MoreScreen.vue:741`) | `DRAFT` |
