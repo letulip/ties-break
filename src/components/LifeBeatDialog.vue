@@ -11,6 +11,16 @@
 // `tests/component/life-beat-dialog.test.ts` asserts the rendered text is EXACTLY the prompt's own
 // strings and nothing else, so a sentence added here fails rather than ships.
 //
+// ⚙ L2-9b (08.10) – THE LAW HOLDS, AND THREE OF THE ENGINE'S LABELS ARE NOW READ THROUGH THE CATALOG. `t(option.label)`,
+// `t(prompt.confirm)` and `t(replying.done)` look the ENGINE'S OWN literal up as a DYNAMIC key: the answers are `LIFE_BEAT_OPTIONS` and the
+// small-talk stances (RU-10G and the situation volumes' shared stance labels), the two buttons are `CONFIRM_LABEL` and `LISTEN_DONE_LABEL`,
+// and every one of them is a CERTAIN key in the catalog – `tests/component/i18n-l2-9-diary-birthday-life-beats.test.ts` walks every string
+// the engine can hand these three seats and fails on one that is not a key, which is what keeps a call the extractor cannot read honest.
+// English renders itself (`t(x)` is `x` when no catalog speaks), so this file still prints EXACTLY the prompt's own strings and owns no
+// sentence; a label no row covers falls back to English and is counted as a miss under another locale. ⚠ THE HEADING, HER LINE AND HER
+// REPLIES ARE NOT READ THROUGH A KEY: they are the engine's prose – the RU-10 presence frames, openers, headings and replies – whose
+// translation is L3's `cp` refactor, not a lookup of a string the engine has already assembled and interpolated.
+//
 // ⭐⭐⭐ v74 T15 – AND IT NOW SERVES TWO ENTRANCES ON ONE CONTRACT. `snapshot.lifeBeatPrompt` is the
 // blocking one (the week is stopped and this card is why); `snapshot.softBeat.prompt` is tier 1's,
 // opened from a Home card the player chose to tap, on a week that never stopped at all. ⚠ THE ONLY
@@ -67,6 +77,7 @@ import { useDialogFocus } from '../composables/dialogFocus'
 import { onRadioGroupKey } from '../composables/radioGroupKeys'
 import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
+import { t } from '../i18n'
 
 const game = useGameStore()
 
@@ -350,7 +361,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
           @click="select(option.id)"
         >
           <span class="life-beat-mark" aria-hidden="true"></span>
-          <span class="life-beat-choice-label">{{ option.label }}</span>
+          <span class="life-beat-choice-label">{{ t(option.label) }}</span>
         </button>
       </div>
 
@@ -366,7 +377,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         :disabled="busy"
         @click="finishReply()"
       >
-        {{ replying.done }}
+        {{ t(replying.done) }}
       </button>
 
       <!-- ⭐⭐⭐ ROUND 42 #8 – THE PROCEED, the prologue's round-41 #9 shape on the owner's own ask.
@@ -386,7 +397,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         :disabled="busy"
         @click="confirm()"
       >
-        {{ prompt.confirm }}
+        {{ t(prompt.confirm) }}
       </button>
     </div>
   </div>
