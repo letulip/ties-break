@@ -16,6 +16,7 @@
 import { ref } from 'vue'
 import { useDialogFocus } from '../../composables/dialogFocus'
 import type { AlbumChapter } from '../../shared/protocol'
+import { t } from '../../i18n'
 
 defineProps<{ chapters: readonly AlbumChapter[]; currentChapter: number }>()
 const emit = defineEmits<{ pick: [number]; close: [] }>()
@@ -31,7 +32,7 @@ useDialogFocus(card, () => emit('close'))
       class="dialog-card album-chapters-card"
       role="dialog"
       aria-modal="true"
-      aria-label="Chapters"
+      :aria-label="t('Chapters')"
     >
       <ul class="album-chapters-list">
         <li v-for="c in chapters" :key="c.index">
@@ -51,7 +52,7 @@ useDialogFocus(card, () => emit('close'))
           </button>
         </li>
       </ul>
-      <button type="button" class="album-chapters-close" @click="emit('close')">Close</button>
+      <button type="button" class="album-chapters-close" @click="emit('close')">{{ t('Close') }}</button>
     </div>
   </div>
 </template>

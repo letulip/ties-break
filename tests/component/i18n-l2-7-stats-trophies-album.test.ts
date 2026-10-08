@@ -22,6 +22,8 @@ import '../../src/style.css'
 
 import StatsScreen from '../../src/components/screens/StatsScreen.vue'
 import SeasonHistoryTable from '../../src/components/SeasonHistoryTable.vue'
+import TrophiesScreen from '../../src/components/screens/TrophiesScreen.vue'
+import AlbumScreen from '../../src/components/screens/AlbumScreen.vue'
 import CountingResultsTable from '../../src/components/CountingResultsTable.vue'
 import { useGameStore } from '../../src/stores/game'
 import { toSnapshot, type WorldState } from '../../src/engine/world'
@@ -29,7 +31,10 @@ import { migrateSave } from '../../src/engine/migrations'
 import { TIERS, TIER_SHORT } from '../../src/engine/season/calendar'
 import { BEST_N_BY_TRACK, RANKABLE_MIN } from '../../src/engine/season/ranking'
 import { finishPhrase } from '../../src/composables/tierState'
-import { LADDER_LABEL, LADDER_TRACKS, type Snapshot } from '../../src/shared/protocol'
+import { LADDER_LABEL, LADDER_TRACKS, SHEET_STEP_PX, type Snapshot } from '../../src/shared/protocol'
+import { seasonYear } from '../../src/shared/dates'
+import { TIER_LADDER } from '../../src/engine/season/calendar'
+import { bookOf } from './albumFixture'
 import { formatShortName } from '../../src/shared/format'
 import type { LadderTrack } from '../../src/engine/season/types'
 import { installCatalog, missCount, missedKeys, resetI18nForTests, resetMisses, setLocale, t } from '../../src/i18n'
@@ -568,6 +573,361 @@ describe('L2-7 xx sweep – no unwrapped literal in the stats frames, and the ph
     // the tiles are captions that wrap or fit; the table's cells live in a scroller, so for it the bound that matters is a single WORD: no unbreakable word may be wider than the room itself
     expect(xx[0]!.r.line.r, `the tiles: «${xx[0]!.r.line.at}» cannot wrap and overflows its box under xx`).toBeLessThanOrEqual(1)
     for (const x of xx) expect(x.r.word.r, `${x.label}: the word «${x.r.word.at}» overflows its box under xx`).toBeLessThanOrEqual(1)
+    expect(xx.every((x, i) => x.r.chars > english[i]!.r.chars), 'xx made a surface no longer – the measurement did not see the words').toBe(true)
+  })
+})
+
+
+// =================================================================================================================
+// L2-7b – THE TROPHY CABINET AND THE ALBUM'S CHROME
+// =================================================================================================================
+
+type Ledger = Record<string, { titles: number[]; finals: number[] }>
+/** The golden career's trophy ledger with some tiers replaced – `{}` empties the cabinet. */
+function cabinet(over: Ledger, base: 'golden' | 'empty' = 'empty'): Snapshot {
+  const empty = Object.fromEntries(TIER_LADDER.map((tier) => [tier, { titles: [], finals: [] }])) as Ledger
+  const ledger = base === 'golden' ? { ...golden.trophiesByTier, ...over } : { ...empty, ...over }
+  return patched(golden, { trophiesByTier: ledger })
+}
+function mountTrophies(snapshot: Snapshot = golden): VueWrapper {
+  setViewport(PHONE)
+  useGameStore().snapshot = snapshot
+  return mount(TrophiesScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
+}
+/** The two-digit year the cabinet prints for a career week (`seasonYear(floor(week / 52))` – the season's display year, never the calendar one). */
+const yy = (week: number): string => String(seasonYear(Math.floor(week / 52), golden.startYear) % 100).padStart(2, '0')
+const cellOf = (w: VueWrapper, tier: string, metal: 'gold' | 'silver'): ReturnType<VueWrapper['get']> => {
+  const index = TIER_LADDER.indexOf(tier as (typeof TIER_LADDER)[number])
+  return w.findAll('.trophy-shelf')[index]!.findAll('.trophy-cell')[metal === 'gold' ? 0 : 1]!
+}
+
+const MOBILE_ALBUM = { width: 390, height: 844 }
+function mountAlbum(snapshot: Snapshot = golden, n = 3): VueWrapper {
+  setViewport(MOBILE_ALBUM)
+  useGameStore().snapshot = snapshot
+  return mount(AlbumScreen, { props: { book: bookOf(n) }, attachTo: document.body })
+}
+
+describe('L2-7b parity – the trophy cabinet and the album chrome as they shipped, with no catalog', () => {
+  it('the cabinet on the golden career: the title, eighteen cells in nine shelves, the finish words, the count badge, the chips newest first, and the dash-free «Not yet»', () => {
+    const w = mountTrophies()
+    expect(w.get('.trophy-title').text()).toBe('Trophy cabinet')
+    // one shelf per rung of the ladder, gold and silver each (the screen's own header still says «nine» and «eighteen»; the ladder has grown – counted, not quoted)
+    expect(w.findAll('.trophy-shelf')).toHaveLength(TIER_LADDER.length)
+    expect(w.findAll('.trophy-cell')).toHaveLength(TIER_LADDER.length * 2)
+    expect(w.findAll('.trophy-metal').map((n) => n.text())).toEqual(Array.from({ length: TIER_LADDER.length }, () => ['Champion', 'Runner-up']).flat())
+    const ledger = golden.trophiesByTier
+    const locked = TIER_LADDER.flatMap((tier) => [ledger[tier]!.titles.length, ledger[tier]!.finals.length]).filter((n) => n === 0).length
+    expect(w.findAll('.trophy-empty').map((n) => n.text())).toEqual(Array.from({ length: locked }, () => 'Not yet'))
+    // the local tier: 8 titles in two seasons (weeks 5..32 are season 0, 52..63 season 1), newest year first
+    const gold = cellOf(w, 'local', 'gold')
+    expect(gold.get('.trophy-count').text()).toBe('x8')
+    expect(gold.findAll('.trophy-year').map((n) => n.text())).toEqual([`3x'${yy(52)}`, `5x'${yy(5)}`])
+    w.unmount()
+  })
+
+  it('the summary under the title: empty, one title, only lost finals, both counts – every singular and plural form is its own English', () => {
+    const say = (over: Ledger): string => {
+      const w = mountTrophies(cabinet(over))
+      const text = w.get('.trophy-sub').text()
+      w.unmount()
+      return text
+    }
+    expect(say({})).toBe('Empty for now – her first final puts something in it.')
+    expect(say({ local: { titles: [3], finals: [] } })).toBe('1 title')
+    expect(say({ local: { titles: [3, 60], finals: [] } })).toBe('2 titles')
+    expect(say({ local: { titles: [], finals: [9] } })).toBe('1 lost final')
+    expect(say({ local: { titles: [], finals: [9, 70, 130] } })).toBe('3 lost finals')
+    expect(say({ local: { titles: [3], finals: [9] } })).toBe('1 title · 1 lost final')
+    expect(say({ local: { titles: [3, 60], finals: [9, 70, 130] }, j60: { titles: [4, 5, 6], finals: [] } })).toBe('5 titles · 3 lost finals')
+  })
+
+  it('the accessible name of a cell: locked, once and many – the compact chips are still what the name reads (the spoken years wait for the owner)', () => {
+    const w = mountTrophies(cabinet({ local: { titles: [5, 7, 60], finals: [] }, regional: { titles: [61], finals: [] } }))
+    expect(cellOf(w, 'local', 'gold').attributes('aria-label')).toBe(`${TIERS.local.label}, Champion: 3 times – 1x'${yy(60)}, 2x'${yy(5)}`.replace(`1x'${yy(60)}, 2x'${yy(5)}`, `1x'${yy(60)}, 2x'${yy(5)}`))
+    expect(cellOf(w, 'regional', 'gold').attributes('aria-label')).toBe(`${TIERS.regional.label}, Champion: 1 time – 1x'${yy(61)}`)
+    expect(cellOf(w, 'national', 'silver').attributes('aria-label')).toBe(`${TIERS.national.label}, Runner-up: not won yet`)
+    // the same three names, by role: a locked cell and a short won cell are images, never buttons
+    expect(cellOf(w, 'national', 'silver').attributes('role')).toBe('img')
+    expect(cellOf(w, 'regional', 'gold').attributes('role')).toBe('img')
+    w.unmount()
+  })
+
+  it('a cell that folds: three year groups and the +N chip, a button until it is opened, and the count badge is never folded', async () => {
+    const weeks = [10, 70, 130, 190, 250]
+    const w = mountTrophies(cabinet({ local: { titles: weeks, finals: [] } }))
+    const gold = cellOf(w, 'local', 'gold')
+    expect(gold.element.tagName).toBe('BUTTON')
+    expect(gold.attributes('aria-expanded')).toBe('false')
+    expect(gold.get('.trophy-count').text()).toBe('x5')
+    expect(gold.findAll('.trophy-year').map((n) => n.text())).toEqual([`1x'${yy(250)}`, `1x'${yy(190)}`, `1x'${yy(130)}`, '+2'])
+    await gold.trigger('click')
+    expect(gold.attributes('aria-expanded')).toBe('true')
+    expect(gold.findAll('.trophy-year').map((n) => n.text())).toEqual(weeks.slice().reverse().map((wk) => `1x'${yy(wk)}`))
+    w.unmount()
+  })
+
+  it('the album chrome: back, chapter line, half label, the pager, the count, the chapters button and the rail', () => {
+    const w = mountAlbum()
+    expect(w.get('.album-back').attributes('aria-label')).toBe('Back to Home')
+    expect(w.get('.album-head-chapter').text()).toBe('Chapter 1 of 1')
+    expect(w.get('.album-half-label').text()).toBe('Left half')
+    expect(w.get('.album-half-next').attributes('aria-label')).toBe('Next half')
+    expect(w.findAll('.album-step').map((n) => n.attributes('aria-label'))).toEqual(['Previous sheet', 'Next sheet'])
+    expect(w.findAll('.album-dot').map((n) => n.attributes('aria-label'))).toEqual(['Sheet 1', 'Sheet 2', 'Sheet 3'])
+    expect(w.get('.album-count').text()).toBe('Sheet 1 of 3')
+    expect(w.get('.album-chapters-btn').text()).toBe('Chapters')
+    expect(w.get('nav.album-rail').attributes('aria-label')).toBe('Chapters')
+    expect(w.findAll('.album-title-no').length).toBeGreaterThan(0)
+    expect(w.findAll('.album-title-no').every((n) => n.text() === '– Chapter 1')).toBe(true)
+    w.unmount()
+  })
+
+  it('the album: the second sheet is the RIGHT half, the chapters sheet names itself and closes, and her mother\'s book has its one control', async () => {
+    const w = mountAlbum(patched(golden, { hasHeirloom: true }))
+    const pan = w.get('.album-pan')
+    ;(pan.element as HTMLElement).scrollLeft = SHEET_STEP_PX
+    await pan.trigger('scroll')
+    expect(w.get('.album-half-label').text()).toBe('Right half')
+    expect(w.get('.album-count').text()).toBe('Sheet 2 of 3')
+    expect(w.get('.album-heirloom').text()).toBe('Her mother’s album')
+    await w.get('.album-chapters-btn').trigger('click')
+    const card = w.get('.album-chapters-card')
+    expect(card.attributes('aria-label')).toBe('Chapters')
+    expect(w.get('.album-chapters-close').text()).toBe('Close')
+    w.unmount()
+  })
+})
+
+describe('L2-7b completeness – every string of the trophy and album files is a wired key, and the sites this wave names call t()', () => {
+  const FILES = [
+    'src/components/screens/TrophiesScreen.vue', 'src/components/screens/AlbumScreen.vue', 'src/components/album/AlbumChapterRail.vue',
+    'src/components/album/AlbumChaptersSheet.vue', 'src/components/album/AlbumSheetTitle.vue',
+  ]
+  it('no CERTAIN string homed in these files is left unwrapped', () => {
+    const open = Object.entries(CATALOG.keys)
+      .filter(([, v]) => v.home.some((h) => FILES.includes(h)) && !v.wrapped)
+      .map(([k]) => k)
+    expect(open).toEqual([])
+  })
+
+  it('the rows RU-07 names have a wired key each, and the file that owns each really calls t() with it', () => {
+    const SITES: [string, string[]][] = [
+      ['src/components/screens/TrophiesScreen.vue', ['{0}x\'{1}', 'Champion', 'Runner-up', 'Empty for now – her first final puts something in it.', '1 title', '{0} titles', '1 lost final',
+        '{0} lost finals', '{0}, {1}: not won yet', '{0}, {1}: 1 time – {2}', '{0}, {1}: {2} times – {3}', 'Trophy cabinet', 'x{0}', 'Not yet']],
+      ['src/components/screens/AlbumScreen.vue', ['album|Back to Home', 'Chapter {0} of {1}', 'Right half', 'Left half', 'Next half', 'Previous sheet', 'Sheet {0}', 'Next sheet', 'Sheet {0} of {1}',
+        'Chapters', 'Her mother’s album']],
+      ['src/components/album/AlbumChapterRail.vue', ['Chapters']],
+      ['src/components/album/AlbumChaptersSheet.vue', ['Chapters', 'Close']],
+      ['src/components/album/AlbumSheetTitle.vue', ['– Chapter {0}']],
+    ]
+    const unwired: string[] = []
+    const absent: string[] = []
+    for (const [file, keys] of SITES) {
+      const source = SRC(file)
+      for (const key of keys) {
+        if (!CATALOG.keys[key]?.wrapped) unwired.push(`${file}: ${key}`)
+        const literal = key.replaceAll("'", "\\'")
+        if (!source.includes(`'${literal}'`) && !source.includes(`"${key}"`) && !source.includes(`\`${key}\``)) absent.push(`${file}: ${key}`)
+      }
+    }
+    expect(unwired).toEqual([])
+    expect(absent, 'a key the table names that its own file does not call').toEqual([])
+  })
+})
+
+describe('L2-7b seams – the cabinet and the chrome follow the locale without a remount', () => {
+  it('the finish words, the summary, the badge, the chips and «Not yet» are computed over the catalog: a flip re-labels a mounted cabinet', async () => {
+    installCatalog('ru', {
+      'Trophy cabinet': 'CABINET*', Champion: 'CHAMP*', 'Runner-up': 'RUNNER*', 'Not yet': 'NOPE*', '{0} titles': 'TITLES* {0}', '1 lost final': 'ONELOST*', 'x{0}': 'MUL{0}', "{0}x'{1}": '{0}*{1}',
+    })
+    const w = mountTrophies(cabinet({ local: { titles: [3, 60], finals: [9] } }))
+    expect(w.get('.trophy-sub').text()).toBe('2 titles · 1 lost final')
+    await setLocale('ru')
+    await nextTick()
+    expect(w.get('.trophy-title').text()).toBe('CABINET*')
+    expect(w.get('.trophy-sub').text()).toBe('TITLES* 2 · ONELOST*')
+    expect(w.findAll('.trophy-metal').map((n) => n.text()).slice(0, 2)).toEqual(['CHAMP*', 'RUNNER*'])
+    expect(w.findAll('.trophy-empty')[0]!.text()).toBe('NOPE*')
+    const gold = cellOf(w, 'local', 'gold')
+    expect(gold.get('.trophy-count').text()).toBe('MUL2')
+    expect(gold.findAll('.trophy-year').map((n) => n.text())).toEqual([`1*${yy(60)}`, `1*${yy(3)}`])
+    w.unmount()
+  })
+
+  it('the accessible name is three whole messages: locked, once and many each ask for their own key', async () => {
+    installCatalog('ru', { '{0}, {1}: not won yet': 'LOCKED* {0}|{1}', '{0}, {1}: 1 time – {2}': 'ONCE* {0}|{1}|{2}', '{0}, {1}: {2} times – {3}': 'MANY* {0}|{1}|{2}|{3}' })
+    await setLocale('ru')
+    const w = mountTrophies(cabinet({ local: { titles: [5, 7], finals: [] }, regional: { titles: [61], finals: [] } }))
+    expect(cellOf(w, 'national', 'gold').attributes('aria-label')).toMatch(/^LOCKED\* .+\|Champion$/)
+    expect(cellOf(w, 'regional', 'gold').attributes('aria-label')).toMatch(/^ONCE\* .+\|Champion\|1x'\d\d$/)
+    expect(cellOf(w, 'local', 'gold').attributes('aria-label')).toMatch(/^MANY\* .+\|Champion\|2\|2x'\d\d$/)
+    w.unmount()
+  })
+
+  it('the album chrome re-labels on a flip: the back control, the chapter line, the halves, the pager, the count, the chapters sheet and the sheet titles', async () => {
+    installCatalog('ru', {
+      'album|Back to Home': 'BACK*', 'Chapter {0} of {1}': 'CH* {0}/{1}', 'Left half': 'LEFT*', 'Next half': 'NEXTHALF*', 'Previous sheet': 'PREV*', 'Next sheet': 'NEXT*', 'Sheet {0}': 'SHEET* {0}',
+      'Sheet {0} of {1}': 'COUNT* {0}/{1}', Chapters: 'CHAPTERS*', Close: 'CLOSE*', '– Chapter {0}': 'TITLE* {0}', 'Her mother’s album': 'MOTHER*',
+    })
+    const w = mountAlbum(patched(golden, { hasHeirloom: true }))
+    await setLocale('ru')
+    await nextTick()
+    expect(w.get('.album-back').attributes('aria-label')).toBe('BACK*')
+    expect(w.get('.album-head-chapter').text()).toBe('CH* 1/1')
+    expect(w.get('.album-half-label').text()).toBe('LEFT*')
+    expect(w.get('.album-half-next').attributes('aria-label')).toBe('NEXTHALF*')
+    expect(w.findAll('.album-step').map((n) => n.attributes('aria-label'))).toEqual(['PREV*', 'NEXT*'])
+    expect(w.findAll('.album-dot').map((n) => n.attributes('aria-label'))).toEqual(['SHEET* 1', 'SHEET* 2', 'SHEET* 3'])
+    expect(w.get('.album-count').text()).toBe('COUNT* 1/3')
+    expect(w.get('.album-chapters-btn').text()).toBe('CHAPTERS*')
+    expect(w.get('nav.album-rail').attributes('aria-label')).toBe('CHAPTERS*')
+    expect(w.get('.album-heirloom').text()).toBe('MOTHER*')
+    expect(w.findAll('.album-title-no')[0]!.text()).toBe('TITLE* 1')
+    await w.get('.album-chapters-btn').trigger('click')
+    expect(w.get('.album-chapters-card').attributes('aria-label')).toBe('CHAPTERS*')
+    expect(w.get('.album-chapters-close').text()).toBe('CLOSE*')
+    w.unmount()
+  })
+})
+
+describe('L2-7b context tag – album|Back to Home (measured against every batch table)', () => {
+  it('is a wired key that renders the bare English, and the album asks for it, never the two other Back-to-Home keys', async () => {
+    // THREE Russians for one English: Home's tournament-only control (RU-03 and the shell say one), the profile and the money screen (RU-05 and RU-06 agree on a second,
+    // `screen|Back to Home`) and the album (RU-07 §17 says a third). The album takes its own tag; the owner's alignment pass may fold them – it is listed for his читка.
+    expect(CATALOG.keys['album|Back to Home']?.wrapped).toBe(true)
+    expect(t('album|Back to Home')).toBe('Back to Home')
+    installCatalog('ru', { 'album|Back to Home': 'ALBUM-BACK*', 'screen|Back to Home': 'SCREEN*', 'Back to Home': 'BARE*' })
+    await setLocale('ru')
+    const w = mountAlbum()
+    expect(w.get('.album-back').attributes('aria-label')).toBe('ALBUM-BACK*')
+    w.unmount()
+  })
+
+  it('`Champion`, `Runner-up` and `Not yet` are the BARE keys the tournament poster and the coach market already ask for: one Russian across RU-04 and RU-07 §11', async () => {
+    installCatalog('ru', { Champion: 'CHAMP*', 'Runner-up': 'RUNNER*', 'Not yet': 'NOPE*' })
+    await setLocale('ru')
+    const w = mountTrophies()
+    expect(w.findAll('.trophy-metal').map((n) => n.text()).slice(0, 2)).toEqual(['CHAMP*', 'RUNNER*'])
+    expect(w.findAll('.trophy-empty')[0]!.text()).toBe('NOPE*')
+    w.unmount()
+  })
+})
+
+describe('L2-7b Russian smoke – the cabinet and the album chrome from the REAL ru.json', () => {
+  it('every approved row on these surfaces renders his Russian; every unapproved one renders English and is counted', async () => {
+    installCatalog('ru', RU)
+    await setLocale('ru')
+    resetMisses()
+    const trophies = mountTrophies()
+    const album = mountAlbum(patched(golden, { hasHeirloom: true }))
+    const mounted = [trophies, album]
+    const everything = mounted.map((m) => seen(m.element)).join('\n')
+    const HERE = /TrophiesScreen|AlbumScreen|components\/album\//
+    const wiredHere = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.some((h) => HERE.test(h)))
+    for (const key of wiredHere) expect(everything, `${key} is approved and wired, so his Russian must render`).toContain(RU[key]!)
+    expect(everything).toContain('Trophy cabinet')
+    expect(missCount(), 'unapproved rows must be counted as misses').toBeGreaterThan(10)
+    for (const key of ['Trophy cabinet', 'Champion', 'Chapters', 'album|Back to Home', 'Sheet {0} of {1}']) expect(missedKeys(), key).toContain(key)
+    console.log(`[L2-7b smoke] ru.json: ${Object.keys(RU).length} keys; approved AND wired on these screens: ${wiredHere.length}; distinct misses on two mounted surfaces: ${missedKeys().length}`)
+    mounted.forEach((m) => m.unmount())
+  })
+})
+
+describe('L2-7b xx sweep – the cabinet and the album chrome', () => {
+  const ENGINE_BORN: RegExp[] = [/^W\d+( \d{4}| ['’]\d{2})?$/, /^[−-]?\$[\d,.]+/, /^#\d+$/, /^\d+$/, /^\d+–\d+$/, /^[—–-]$/, /^\+\d+$/, /^[x×]\d+$/, /^\d+x['’]\d\d$/]
+  const allow = [...DEFAULT_ALLOW, ...ENGINE_BORN]
+  /** Every string leaf of an object, raw – NOT `JSON.stringify`, which escapes the quotation marks inside the album's handwriting. */
+  const leaves = (v: unknown): string[] => (typeof v === 'string' ? [v] : v && typeof v === 'object' ? Object.values(v).flatMap(leaves) : [])
+  const corpusOf = (snap: Snapshot, extra: unknown[] = []): string =>
+    [JSON.stringify(snap), JSON.stringify(Object.values(TIERS).map((x) => x.label)), JSON.stringify(TIER_SHORT), ...extra.flatMap(leaves)].join('\n')
+  const leaksOf = (root: Element, corpus: string): string[] => hardcodeLeaks(root, allow).filter((l) => !(l.length > 2 && corpus.includes(l)))
+
+  it('the cabinet (golden, folded, empty) and the album (book, right half, chapters sheet, mother\'s control): nothing the SCREEN wrote is left unbracketed', async () => {
+    await installPseudoLocale()
+    const results: [string, string[]][] = []
+    const folded = cabinet({ local: { titles: [10, 70, 130, 190, 250], finals: [20] } }, 'golden')
+    for (const [name, snap] of [['golden', golden], ['folded', folded], ['empty', cabinet({})]] as const) {
+      const w = mountTrophies(snap)
+      results.push([`trophies/${name}`, leaksOf(w.element, corpusOf(snap))])
+      w.unmount()
+    }
+    const book = bookOf(3)
+    const snap = patched(golden, { hasHeirloom: true })
+    const w = mountAlbum(snap)
+    const corpus = corpusOf(snap, [book])
+    results.push(['album/first sheet', leaksOf(w.element, corpus)])
+    const pan = w.get('.album-pan')
+    ;(pan.element as HTMLElement).scrollLeft = SHEET_STEP_PX
+    await pan.trigger('scroll')
+    results.push(['album/second sheet', leaksOf(w.element, corpus)])
+    await w.get('.album-chapters-btn').trigger('click')
+    results.push(['album/chapters sheet', leaksOf(w.element, corpus)])
+    w.unmount()
+    console.log(`[L2-7b xx] leaks: ${JSON.stringify(results)}`)
+    for (const [surface, leaks] of results) expect(leaks, `${surface}: copy the SCREEN wrote that did not go through t()`).toEqual([])
+  })
+
+  /** The same two numbers as the stats surfaces (L2-3's `widest`), over the trophy shelf card: both cells, the badge, three chips and the +N chip. */
+  function widest(root: Element): { boxes: number; chars: number; line: { r: number; at: string }; word: { r: number; at: string } } {
+    let boxes = 0
+    let chars = 0
+    const line = { r: 0, at: '' }
+    const word = { r: 0, at: '' }
+    for (const el of Array.from(root.querySelectorAll('*'))) {
+      const own = Array.from(el.childNodes).filter((n) => n.nodeType === 3).map((n) => n.nodeValue ?? '').join(' ').replace(/\s+/g, ' ').trim()
+      if (!/\p{L}/u.test(own)) continue
+      boxes++
+      chars += own.length
+      const room = Math.max(1, availableWidth(el, PHONE))
+      const lineRatio = demandedWidth(el, room) / room
+      if (lineRatio > line.r) Object.assign(line, { r: lineRatio, at: own.slice(0, 28) })
+      const longest = own.split(' ').reduce((a, b) => (b.length > a.length ? b : a), '')
+      const probe = document.createElement('span')
+      probe.textContent = longest + longest.slice(0, Math.ceil(longest.length * 0.4))
+      probe.style.whiteSpace = 'nowrap'
+      probe.style.fontSize = getComputedStyle(el).fontSize
+      el.appendChild(probe)
+      const wordRatio = demandedWidth(probe, room) / room
+      probe.remove()
+      if (wordRatio > word.r) Object.assign(word, { r: wordRatio, at: longest })
+    }
+    return { boxes, chars, line, word }
+  }
+  const pct = (r: number): string => `${(r * 100).toFixed(0)}%`
+
+  it('a trophy shelf card (the Grand-Slam-width tier, a folded cell and a locked one) and the album\'s foot hold a 375x667 phone with every word longer (numbers printed)', async () => {
+    const snap = cabinet({ local: { titles: [10, 70, 130, 190, 250, 310, 370, 430], finals: [] } })
+    const measure = (): { label: string; r: ReturnType<typeof widest> }[] => {
+      const w = mountTrophies(snap)
+      const card = w.findAll('.trophy-shelf')[TIER_LADDER.indexOf('local')]!
+      expect(card.findAll('.trophy-cell'), 'both cells of the shelf are in the card').toHaveLength(2)
+      expect(card.find('.trophy-more').exists(), 'the folded cell shows its +N chip').toBe(true)
+      expect(card.find('.trophy-empty').exists(), 'the silver cell is locked').toBe(true)
+      const a = { label: 'the trophy shelf card (folded gold + locked silver)', r: widest(card.element) }
+      w.unmount()
+      const album = mountAlbum()
+      const b = { label: 'the album foot (pager + count + chapters button)', r: widest(album.get('.album-foot').element) }
+      album.unmount()
+      return [a, b]
+    }
+    const english = measure()
+    resetI18nForTests(null)
+    await installPseudoLocale()
+    const xx = measure()
+    console.log(
+      '[L2-7b xx] 375x667, share of the box\'s room, English -> xx: ' +
+        english
+          .map((e, i) => {
+            const x = xx[i]!
+            return `${e.label}: ${e.r.boxes} text boxes, ${e.r.chars} -> ${x.r.chars} chars; widest line ${pct(e.r.line.r)} («${e.r.line.at}») -> ${pct(x.r.line.r)} («${x.r.line.at}»); longest word ${pct(e.r.word.r)} («${e.r.word.at}») -> ${pct(x.r.word.r)} («${x.r.word.at}»)`
+          })
+          .join(' · '),
+    )
+    for (const x of xx) {
+      expect(x.r.line.r, `${x.label}: «${x.r.line.at}» cannot wrap and overflows its box under xx`).toBeLessThanOrEqual(1)
+      expect(x.r.word.r, `${x.label}: the word «${x.r.word.at}» overflows its box under xx`).toBeLessThanOrEqual(1)
+    }
     expect(xx.every((x, i) => x.r.chars > english[i]!.r.chars), 'xx made a surface no longer – the measurement did not see the words').toBe(true)
   })
 })

@@ -79,6 +79,7 @@ import AlbumChaptersSheet from '../album/AlbumChaptersSheet.vue'
 import { useGameStore } from '../../stores/game'
 import { SHEET_GAP_PX, SHEET_STEP_PX } from '../../shared/protocol'
 import type { AlbumBook } from '../../shared/protocol'
+import { t } from '../../i18n'
 
 // ⭐ THE SHAPE IS THE ENGINE'S NOW (19.09, the seam wave). `AlbumBook` was built here against a
 // declared stand-in (`components/album/albumWire.ts`) while the engine half was in flight on the
@@ -219,12 +220,12 @@ watch(
         class="back-link album-back"
         variant="bare"
         icon="back"
-        label="Back to Home"
+        :label="t('album|Back to Home')"
         @click="emit('back')"
       />
       <div v-if="sheet" class="album-head-id">
         <p class="album-head-chapter">
-          Chapter {{ sheet.chapterIndex }} of {{ chapters.length || sheet.chapterIndex }}
+          {{ t('Chapter {0} of {1}', [sheet.chapterIndex, chapters.length || sheet.chapterIndex]) }}
         </p>
         <h2 class="album-head-title">{{ sheet.chapterTitle }}</h2>
         <p class="album-head-age">{{ sheet.ageLabel }}</p>
@@ -259,7 +260,7 @@ watch(
       <span v-if="!atFilmEnd" class="album-edge" aria-hidden="true"></span>
 
       <div v-if="sheets.length" class="album-half">
-        <span class="album-half-label">{{ onRightHalf ? 'Right half' : 'Left half' }}</span>
+        <span class="album-half-label">{{ onRightHalf ? t('Right half') : t('Left half') }}</span>
         <span class="album-half-track" :class="{ 'is-right': onRightHalf }" aria-hidden="true">
           <span class="album-half-dot"></span>
         </span>
@@ -270,7 +271,7 @@ watch(
         <IconButton
           class="album-half-next"
           variant="bare"
-          label="Next half"
+          :label="t('Next half')"
           :disabled="current >= sheets.length - 1"
           @click="goTo(current + 1)"
         >
@@ -293,7 +294,7 @@ watch(
       <div class="album-pager">
         <IconButton
           class="album-step"
-          label="Previous sheet"
+          :label="t('Previous sheet')"
           :disabled="current === 0"
           @click="goTo(current - 1)"
         >
@@ -305,7 +306,7 @@ watch(
               type="button"
               class="album-dot"
               :class="{ 'is-current': i === current }"
-              :aria-label="`Sheet ${i + 1}`"
+              :aria-label="t('Sheet {0}', [i + 1])"
               :aria-current="i === current ? 'true' : undefined"
               @click="goTo(i)"
             ></button>
@@ -313,7 +314,7 @@ watch(
         </ol>
         <IconButton
           class="album-step"
-          label="Next sheet"
+          :label="t('Next sheet')"
           :disabled="current >= sheets.length - 1"
           @click="goTo(current + 1)"
         >
@@ -324,9 +325,9 @@ watch(
       <div class="album-foot-row">
         <!-- ⚠ THE REAL COUNT, NEVER TWELVE. Spec §3: the album has as many sheets as the career
              earned, and the counter says so. -->
-        <p class="album-count">Sheet {{ current + 1 }} of {{ sheets.length }}</p>
+        <p class="album-count">{{ t('Sheet {0} of {1}', [current + 1, sheets.length]) }}</p>
         <button type="button" class="album-chapters-btn" @click="chaptersOpen = true">
-          Chapters
+          {{ t('Chapters') }}
         </button>
       </div>
     </footer>
@@ -344,7 +345,7 @@ watch(
       :disabled="heirloomLoading"
       @click="toggleHeirloom"
     >
-      Her mother’s album
+      {{ t('Her mother’s album') }}
     </button>
 
     <AlbumChaptersSheet
