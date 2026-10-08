@@ -14,7 +14,8 @@
 // A comment saying "do not merge these" would not have held – tests/pin-hygiene.test.ts exists for
 // exactly that reason. This file makes the wrong merge FAIL.
 import { describe, it, expect } from 'vitest'
-import { after, at, before, codeOf, lastAt, lineAt, region, regionToLast, regions, scriptCodeOf, stripComments } from './helpers/source'
+import { readFileSync } from 'node:fs'
+import { after, at, before, codeOf, lastAt, lineAt, region, regionToLast, regions, scriptCodeOf, stripComments, tTransparent } from './helpers/source'
 import { fnv1a, fnv1aHex } from './helpers/hash'
 
 describe('codeOf and scriptCodeOf are two helpers on purpose', () => {
@@ -281,5 +282,83 @@ describe('fnv1a is one hash with two spellings', () => {
 
   it('is not a constant function – the vectors above are not vacuous', () => {
     expect(fnv1a('a')).not.toBe(fnv1a('b'))
+  })
+})
+
+// =================================================================================================
+// ⭐ L2-2 (08.10) – `tTransparent`: THE READER THAT ENDS THE RE-AIM CHURN (L2-1 finding 7)
+// =================================================================================================
+// A source-shape pin is written against the wording, and the wording does not change when a site is
+// wrapped in `t()`. These arms hold three things: (1) a wrapped site and its unwrapped twin read
+// IDENTICALLY, across every seat a wrapped string sits in; (2) a CHANGED WORD never reads the same
+// (the reader forgives the spelling of the call, not the words); (3) it throws on nothing and leaves
+// alone whatever it cannot read as a plain literal. And the mutation: a reader that does nothing
+// reddens the wrapped-fixture arm, so the arm is not green by construction.
+describe('tTransparent – a pin reads the same whether or not the site is wrapped', () => {
+  // [seat, the site wrapped in t(), the same site as it was written before the wrap]
+  const TWINS: [string, string, string][] = [
+    ['a bare call', "label = t('Coach yourself')", "label = 'Coach yourself'"],
+    ['a call with params (nested parens, braces, strings)', "t('Week {week} of {total}', { week, total: fmt(2, [1], ')') })", "'Week {week} of {total}'"],
+    ['double quotes', `t("Don't stop")`, `"Don't stop"`],
+    ['a backtick literal with no substitution', 'x = t(`Back`)', 'x = `Back`'],
+    ['an escaped quote', String.raw`t('She is born into her mother\'s family')`, String.raw`'She is born into her mother\'s family'`],
+    ['a call split over lines', "t(\n    'Skip the childhood',\n    { a }\n  )", "'Skip the childhood'"],
+    ['an object getter (the table shape)', "{ id: 'a', get label() { return t('Coach yourself') }, cost: 1 }", "{ id: 'a', label: 'Coach yourself', cost: 1 }"],
+    ['a multi-line getter with a quoted name', "{ get 'Huge potential'() {\n    return t('Huge')\n  } }", "{ 'Huge potential': 'Huge' }"],
+    ['an arrow reader', "{ walkover: () => t('Stopped: too injured.') }", "{ walkover: 'Stopped: too injured.' }"],
+    ['template text', "<button>{{ t('Back') }}</button>", '<button>Back</button>'],
+    ['a bound attribute', `<button :aria-label="t('Random first name')" />`, '<button aria-label="Random first name" />'],
+    ['a bound prop with an apostrophe', String.raw`<IconButton :label="t('Don\'t')" />`, `<IconButton label="Don't" />`],
+  ]
+
+  it.each(TWINS)('%s: wrapped and unwrapped read identically', (_seat, wrapped, bare) => {
+    expect(tTransparent(wrapped)).toBe(tTransparent(bare))
+    expect(tTransparent(wrapped)).toBe(bare)
+  })
+
+  it('⭐ a CHANGED WORD never reads the same – the reader forgives the call, not the wording', () => {
+    expect(tTransparent("label: t('Coach yourselfX')")).not.toBe(tTransparent("label: 'Coach yourself'"))
+    expect(tTransparent("get label() { return t('Coach yourselfX') }")).toContain("label: 'Coach yourselfX'")
+    expect(tTransparent("get label() { return t('Coach yourselfX') }")).not.toContain("label: 'Coach yourself'")
+    expect(tTransparent("<b>{{ t('Back up') }}</b>")).not.toBe('<b>Back</b>')
+  })
+
+  it('leaves alone what it cannot read as one plain literal – a pin over those says so itself', () => {
+    const alone = [
+      "format('x')", "emit('x')", "x.t('y')", "$t('z')", "split('a')", 't(variable)', "t('a' + 'b')", 't(`a${b}`)', 't()', 't( )',
+      "t('never closes", "t('open'", "t('x', { a: 1 ", 't("a\nb")', 'const t = 1', "get label() { return compute('x') }",
+    ]
+    for (const src of alone) expect(tTransparent(src), src).toBe(src)
+  })
+
+  it('⚠ throws on nothing: every prefix of a real wrapped file reads without an exception, and the reader is idempotent', () => {
+    const real = readFileSync(new URL('../src/composables/identityCopy.ts', import.meta.url), 'utf8').slice(0, 4000)
+    for (let n = 0; n <= real.length; n += 7) expect(() => tTransparent(real.slice(0, n))).not.toThrow()
+    for (const junk of ['', ' ', '\\', "t('", 't(`', "'''", '{{', "{{ 'x", ':a="\'x', 'get x() { return', "get x() { return t('y') ", '))))((((']) {
+      expect(() => tTransparent(junk), junk).not.toThrow()
+    }
+    const once = tTransparent(real)
+    expect(tTransparent(once)).toBe(once)
+  })
+
+  it('reads the real L2-1 wrapping: the getters in identityCopy.ts come back as the properties they replaced', () => {
+    const real = readFileSync(new URL('../src/composables/identityCopy.ts', import.meta.url), 'utf8')
+    expect(real).toContain("get firstName() { return t('First name') }")
+    const bare = tTransparent(real)
+    expect(bare).toContain("firstName: 'First name'")
+    expect(bare).toContain("searchPlaceholder: 'Search countries...'")
+    expect(bare).not.toContain('get firstName()')
+  })
+
+  it('⭐⭐ MUTATION: a reader that does nothing reddens the wrapped-fixture arm – the arm is not green by construction', () => {
+    const identity = (s: string): string => s
+    // the pin, written once, against the UNWRAPPED spelling
+    const pin = (read: (s: string) => string, src: string): boolean => read(src).includes("label: 'Coach yourself'")
+    const wrapped = "{ id: 'self', get label() { return t('Coach yourself') } }"
+    const unwrapped = "{ id: 'self', label: 'Coach yourself' }"
+    expect(pin(tTransparent, wrapped)).toBe(true)
+    expect(pin(tTransparent, unwrapped)).toBe(true)
+    expect(pin(identity, unwrapped)).toBe(true)
+    expect(pin(identity, wrapped), 'with the reader mutated to identity the wrapped site is invisible to the pin').toBe(false)
   })
 })

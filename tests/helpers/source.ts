@@ -368,6 +368,151 @@ export function lineAt(src: string, marker: string): string {
   return end < 0 ? src.slice(from) : src.slice(from, end)
 }
 
+// =================================================================================================
+// ⭐ L2-2 (08.10) – THE `t()`-TRANSPARENT READER, AND IT EXISTS TO END A CHURN (L2-1 finding 7).
+// =================================================================================================
+//
+// THE CHURN. Every landing wave wraps player-facing strings in `t('…')`, and a source-SHAPE pin
+// (`expect(src).toContain("label: 'Coach yourself'")`, `/aria-label="Dismiss"/`) is written against
+// the wording AS WRAPPED OR NOT. L2-1 re-aimed seventeen of them by hand, one dated note each, and
+// the next wave would have re-aimed its own seventeen – every one of them for a reason that is not
+// a premise dying: the STRING is the same, only the way it is spelled in source moved.
+//
+// WHAT THIS DOES. It reads source the way the pin was written, whether or not the site is wrapped:
+//   · `t('LIT')`, `t("LIT")`, `` t(`LIT`) `` and `t('LIT', params…)` become the bare literal;
+//   · the three seats a wrapped string sits in become what the unwrapped one looked like –
+//     `get label() { return LIT }` → `label: LIT`, `label: () => LIT` → `label: LIT`, and, in a
+//     template, `{{ LIT }}` → the bare text and `:aria-label="LIT"` → `aria-label="…"`.
+//
+// ⚠⚠ WHAT IT MUST NEVER DO: HIDE A WORDING CHANGE. A pin whose asserted STRING changed must still
+// fail, and it does – `t('Coach yourselfX')` reads `'Coach yourselfX'`, which is not
+// `'Coach yourself'`. The reader forgives the SPELLING of the call, never the words. (CLAUDE.md
+// invariant 4's corollary – a wording change is the one diff no test catches – is why this stays a
+// literal-for-literal rewrite and not a fuzzy match.)
+//
+// ⚠ WHAT IT LEAVES ALONE, ON PURPOSE – a call it cannot read as a plain literal is not a literal:
+// `t(variable)`, `t('a' + 'b')`, `` t(`a${b}`) ``, `format('x')`, `emit('x')`, `obj.t('x')`, `$t('x')`.
+// A pin over one of those has to say so itself; guessing would be the silent widening this file's
+// whole header is about.
+//
+// PURE STRING TRANSFORM, THROWS ON NOTHING: an unterminated literal, an unbalanced call or an empty
+// string comes back as it went in. `tests/helpers.test.ts` pins that, and the mutation that proves
+// the reader is load-bearing (a reader that did nothing turns the wrapped-fixture arm red).
+//
+// ⚠ APPLY IT TO THE PINS A WAVE WOULD OTHERWISE RE-AIM, not as a reflex: `tTransparent(src)` in the
+// reader of a pin that asserts a string's spelling; a pin whose premise is "this site calls `t()`"
+// (the wiring itself) reads the raw source. L2-1's seventeen are done and are not retrofitted.
+
+/** Characters that make a `t` part of a longer name (`emit(`, `obj.t(`, `$t(`). */
+const NAME_CHAR = /[A-Za-z0-9_$.]/
+
+/** End (exclusive) of the PLAIN string literal that opens at `from`, or -1: single, double, or a backtick
+ *  literal with no `${`. A literal that never closes (or a single/double one that runs onto a new line) is -1. */
+function plainLiteralEnd(src: string, from: number): number {
+  const quote = src[from]
+  if (quote !== "'" && quote !== '"' && quote !== '`') return -1
+  for (let i = from + 1; i < src.length; i++) {
+    const ch = src[i]
+    if (ch === '\\') {
+      i++
+      continue
+    }
+    if (quote === '`' && ch === '$' && src[i + 1] === '{') return -1
+    if (ch === quote) return i + 1
+    if (ch === '\n' && quote !== '`') return -1
+  }
+  return -1
+}
+
+/** End (exclusive) of ANY string literal opening at `from` – a backtick literal may hold `${…}` – or -1. */
+function anyLiteralEnd(src: string, from: number): number {
+  const quote = src[from]
+  for (let i = from + 1; i < src.length; i++) {
+    const ch = src[i]
+    if (ch === '\\') {
+      i++
+      continue
+    }
+    if (quote === '`' && ch === '$' && src[i + 1] === '{') {
+      const close = closerAt(src, i + 2, '}')
+      if (close < 0) return -1
+      i = close
+      continue
+    }
+    if (ch === quote) return i + 1
+  }
+  return -1
+}
+
+/** The first `closer` at nesting depth 0 at or after `from`, reading string literals whole; -1 if none. */
+function closerAt(src: string, from: number, closer: ')' | '}'): number {
+  let depth = 0
+  for (let i = from; i < src.length; i++) {
+    const ch = src[i]
+    if (ch === "'" || ch === '"' || ch === '`') {
+      const end = anyLiteralEnd(src, i)
+      if (end < 0) return -1
+      i = end - 1
+      continue
+    }
+    if (ch === '(' || ch === '[' || ch === '{') depth++
+    else if (ch === ')' || ch === ']' || ch === '}') {
+      if (depth === 0) return ch === closer ? i : -1
+      depth--
+    }
+  }
+  return -1
+}
+
+/** `t(LIT)` / `t(LIT, …)` starting at `i` (which holds the `t`): the literal text and where the call ends, or null. */
+function tCallAt(src: string, i: number): { literal: string; end: number } | null {
+  const skip = (j: number): number => {
+    while (/\s/.test(src[j] ?? 'x')) j++
+    return j
+  }
+  let j = skip(i + 1)
+  if (src[j] !== '(') return null
+  j = skip(j + 1)
+  const litEnd = plainLiteralEnd(src, j)
+  if (litEnd < 0) return null
+  const k = skip(litEnd)
+  if (src[k] === ')') return { literal: src.slice(j, litEnd), end: k + 1 }
+  if (src[k] !== ',') return null
+  const close = closerAt(src, k + 1, ')')
+  return close < 0 ? null : { literal: src.slice(j, litEnd), end: close + 1 }
+}
+
+const LIT = String.raw`'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|` + '`(?:[^`\\\\$]|\\\\.|\\$(?!\\{))*`'
+const PROP = String.raw`[A-Za-z_$][\w$]*|'[^'\n]*'|"[^"\n]*"`
+const GETTER_SEAT = new RegExp(String.raw`\bget\s+(${PROP})\s*\(\s*\)\s*\{\s*return\s+(${LIT})\s*;?\s*\}`, 'g')
+const THUNK_SEAT = new RegExp(String.raw`(${PROP})(\s*:\s*)\(\s*\)\s*=>\s*(${LIT})`, 'g')
+const MUSTACHE_SEAT = new RegExp(String.raw`\{\{\s*('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*")\s*\}\}`, 'g')
+const BOUND_ATTR_SEAT = new RegExp(String.raw`(\s):([A-Za-z][\w:.-]*)="'((?:[^'"\\\n]|\\.)*)'"`, 'g')
+const unescapeQuotes = (inner: string): string => inner.replace(/\\(['"\\])/g, '$1')
+
+/**
+ * The source as the pin was written, wrapped in `t()` or not – see the block above for what it rewrites,
+ * what it refuses to touch and why it can never hide a wording change. Pure; throws on nothing.
+ */
+export function tTransparent(source: string): string {
+  let bare = ''
+  for (let i = 0; i < source.length; ) {
+    const hit = source[i] === 't' && !NAME_CHAR.test(source[i - 1] ?? ' ') ? tCallAt(source, i) : null
+    if (hit) {
+      bare += hit.literal
+      i = hit.end
+    } else {
+      bare += source[i]
+      i++
+    }
+  }
+  return bare
+    .replace(GETTER_SEAT, '$1: $2')
+    .replace(THUNK_SEAT, '$1$2$3')
+    .replace(MUSTACHE_SEAT, (_m, lit: string) => unescapeQuotes(lit.slice(1, -1)))
+    .replace(BOUND_ATTR_SEAT, (_m, space: string, name: string, inner: string) => `${space}${name}="${unescapeQuotes(inner)}"`)
+}
+
 function abbreviate(marker: string): string {
   const oneLine = marker.replace(/\n/g, '\\n')
   return oneLine.length > 60 ? `${oneLine.slice(0, 57)}...` : oneLine
