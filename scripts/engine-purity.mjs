@@ -26,8 +26,11 @@ import { join } from 'node:path'
 const ZONES = ['src/engine', 'src/worker', 'src/db', 'src/shared']
 const BANNED = /from\s+['"](vue|pinia|@vue\/|@vueuse\/|vue-router)['"]|from\s+['"](vue\/|pinia\/)/
 /** The UI's own directories. A relative specifier that walks into one of them from a zone file is the
- *  same invariant breach as importing vue, and it is the one this gate used to miss. */
-const UI_DIRS = /from\s+['"][^'"]*(?:^|\/)(components|composables|stores|viz)\// 
+ *  same invariant breach as importing vue, and it is the one this gate used to miss.
+ *  `i18n` joined on 08.10 (localization L1a): `src/i18n` is the UI half of the language layer (reactive locale,
+ *  `t()`, catalogs) and the engine must never import it – `src/shared/i18n.ts`, the framework-free core,
+ *  is the only door, and its specifier has no trailing slash so it does not match. */
+const UI_DIRS = /from\s+['"][^'"]*(?:^|\/)(components|composables|stores|viz|i18n)\// 
 
 const offenders = []
 function walk(dir) {
