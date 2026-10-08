@@ -27,6 +27,7 @@
 // record DOES pin is which cue fired on which paint, and that caught every other arm.
 import { computed } from 'vue'
 import { playSfx } from '../audio/sfx'
+import { t } from '../i18n'
 import type { ViewMode } from '../viz/types'
 import type { MatchSpeed } from '../composables/matchDefaults'
 import PrimaryPill from './ui/PrimaryPill.vue'
@@ -71,14 +72,57 @@ const emit = defineEmits<{
 // THE CAPABILITY IS UNTOUCHED - `viewMode` still takes 'skip' and every path that reads it
 // (resetPlayback -> jumpToEnd, retimeForMode's exemption, More's default-view picker) is exactly as
 // it was. What moved is the door: `.mv-skip` below, which says what it does out loud.
+// L2-8 (08.10): RU-08 §2 – the two option tables are GETTERS over `t()` (they keep their `as const` shape, and a flip reaches a mounted bar
+// because SegmentedRow reads `label` / `short` on every render). The compact `1×` / `2×` / `4×` are keys too: the table gives them the same
+// characters in Russian, and a key that renders itself costs nothing while it keeps the three speeds one vocabulary.
 const VIEW_OPTIONS = [
-  { value: 'full', label: 'Every point', short: 'Full' },
-  { value: 'key', label: 'Key points only', short: 'Key' },
+  {
+    value: 'full',
+    get label() {
+      return t('Every point')
+    },
+    get short() {
+      return t('Full')
+    },
+  },
+  {
+    value: 'key',
+    get label() {
+      return t('Key points only')
+    },
+    get short() {
+      return t('Key')
+    },
+  },
 ] as const
 const SPEED_OPTIONS = [
-  { value: '1', label: 'Normal speed', short: '1×' },
-  { value: '2', label: 'Double speed', short: '2×' },
-  { value: '4', label: 'Quadruple speed', short: '4×' },
+  {
+    value: '1',
+    get label() {
+      return t('Normal speed')
+    },
+    get short() {
+      return t('1×')
+    },
+  },
+  {
+    value: '2',
+    get label() {
+      return t('Double speed')
+    },
+    get short() {
+      return t('2×')
+    },
+  },
+  {
+    value: '4',
+    get label() {
+      return t('Quadruple speed')
+    },
+    get short() {
+      return t('4×')
+    },
+  },
 ] as const
 
 const viewSeg = computed({
@@ -139,7 +183,7 @@ function skipToResult(): void {
        The two callers with nowhere to proceed to pass no label and keep the plates, because for
        them there is no third thing this bar could say. -->
   <div v-if="finished && proceedLabel" class="mv-controls mv-controls-done">
-    <PrimaryPill class="sfx-watch" variant="ghost" @click="$emit('restart')">Watch again ↻</PrimaryPill>
+    <PrimaryPill class="sfx-watch" variant="ghost" @click="$emit('restart')">{{ t('Watch again ↻') }}</PrimaryPill>
     <PrimaryPill class="sfx-watch" @click="$emit('proceed')">{{ proceedLabel }}</PrimaryPill>
   </div>
   <div v-else class="mv-controls">
@@ -147,9 +191,9 @@ function skipToResult(): void {
       v-model="viewSeg"
       class="mv-seg"
       :options="VIEW_OPTIONS"
-      group-label="How much of the match to watch"
+      :group-label="t('How much of the match to watch')"
     />
-    <SegmentedRow v-model="speedSeg" class="mv-seg" :options="SPEED_OPTIONS" group-label="Playback speed" />
+    <SegmentedRow v-model="speedSeg" class="mv-seg" :options="SPEED_OPTIONS" :group-label="t('Playback speed')" />
     <!-- ⚠ SHOUT IS IN THE PINNED BLOCK (owner, 30.07: keep the shout button in the sticky block on the live match screen). It used to sit below the bar in `.mv-actions`, on the
          argument that the bar carries SETTINGS and this is an ACTION - and the argument was wrong
          about this one button. Shouting at your kid is the thing you would reach for mid-rally,
@@ -178,10 +222,10 @@ function skipToResult(): void {
          the blinking Live and minus shouting", and the owner said it again on 30.07 (there is no Shout on a replay at all - it need not even be shown, same principle as live). After this
          round three of the four callers are replays, so this is a Season-sandbox control. -->
     <div v-if="live && !finished" class="mv-shout">
-      <select v-model="shoutPhrase" class="mv-shout-pick" aria-label="What to shout">
+      <select v-model="shoutPhrase" class="mv-shout-pick" :aria-label="t('What to shout')">
         <option v-for="phrase in phrases" :key="phrase" :value="phrase">{{ phrase }}</option>
       </select>
-      <button class="mv-shout-go" @click="$emit('shout')">Shout 📣</button>
+      <button class="mv-shout-go" @click="$emit('shout')">{{ t('Shout 📣') }}</button>
     </div>
     <!-- ⚠ WHERE "Skip" WENT (owner, 06.08). It was the third pill of the view plate, beside Full
          and Key, and it does not belong in a switch: those two are resolutions and this one ends
@@ -191,7 +235,7 @@ function skipToResult(): void {
          asked to give its height to the court and the log. Same shape as the log's own
          "Show more ⌄" a few lines up, which is the app's existing vocabulary for this weight of
          control. Hidden once the match is over, because there is nothing left to skip. -->
-    <button v-if="!finished" class="link mv-skip" @click="skipToResult">Skip to the result</button>
+    <button v-if="!finished" class="link mv-skip" @click="skipToResult">{{ t('Skip to the result') }}</button>
   </div>
 </template>
 

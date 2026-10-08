@@ -3,7 +3,7 @@ import { componentLogic, componentFile } from './worldSource'
 // The marker helpers (R2-12). Every one of them THROWS on an absent marker instead of letting
 // `indexOf`'s -1 reach a `slice` bound and widen the region to the rest of the file – the family
 // this repo has been burned by, and which had bitten this very file (see the shout row below).
-import { after, region, regionToLast } from './helpers/source'
+import { after, region, regionToLast, tTransparent } from './helpers/source'
 import { readdirSync, readFileSync } from 'node:fs'
 import { courtToCanvas, courtScale, type Viewport } from '../src/viz/geometry'
 import { COURT } from '../src/viz/types'
@@ -233,7 +233,10 @@ describe('screen I – the design and the rulings it has to keep', () => {
     // ...and the phrase the picker writes goes UP to the viewer, which owns the pool and the log.
     expect(transportFile).toMatch(/'update:shoutPhrase': \[string\]/)
     // A handful, in the parent's voice, short dash only and no Cyrillic in copy the player reads.
-    const pool = /const SHOUT_PHRASES = \[([\s\S]*?)\] as const/.exec(viewer)?.[1] ?? ''
+    // ⚠ RE-AIMED 08.10 (L2-8) – A GENUINE PREMISE MOVE, NOT A SPELLING ONE: the pool is no longer a literal tuple, it is a `localizedList` of
+    // readers (`() => t('Still here.'),` one per line), because a held English string would match no option the moment the locale changed.
+    // The four facts asserted below are the same four, on the same six phrases – read through `tTransparent`, so a changed WORD still fails.
+    const pool = /const SHOUT_PHRASES = localizedList\(([\s\S]*?)\n\)/.exec(tTransparent(viewer))?.[1] ?? ''
     const phrases = [...pool.matchAll(/'([^']+)'/g)].map((m) => m[1])
     expect(phrases.length, 'a handful, not a phrasebook').toBeGreaterThanOrEqual(4)
     expect(phrases.length).toBeLessThanOrEqual(8)
@@ -748,7 +751,8 @@ describe('one header slot per match screen, and it says where it takes you', () 
     // Owner: «let's remove practice match sign nearby a court since we already have one on top of
     // the screen as a header, and let's put To results instead of Close». The head row held only
     // those two things, so it went with them – 34px (a 22px pill plus its 12px of air).
-    const markup = markupOf(practice)
+    // L2-8 (08.10): read through `tTransparent` – the title and the Done button are `t()` calls now, and this pin asserts their SPELLING.
+    const markup = tTransparent(markupOf(practice))
     expect((markup.match(/Practice match/g) ?? []).length, 'said once, in the header title').toBe(1)
     // ⚠ RE-AIMED 30.07: the title is a PROP on `ui/TakeoverShell.vue` now, not a `.tf-title` element
     // this screen writes. The `.tf-title` div still exists once, in the shell, and it still carries
@@ -992,7 +996,11 @@ describe('who is serving is said twice, attached to something, and never in a sp
     expect(styles).toMatch(/\.ends-labels > span \{[^}]*border: 1px solid transparent/)
     // ...and the word stays, because colour and an outline are both decoration and neither reaches a
     // screen reader or a monochrome screen.
-    expect(markup).toContain("' · serving'")
+    // ⚠ RE-AIMED 08.10 (L2-8) – A GENUINE PREMISE MOVE: the word is a key now and the space before the dot is an EXPLICIT character in the
+    // template (` ' ' + t('· serving')`), not the first character of the string – a key with an edge space would hand the translator a value
+    // that must carry the same edge space, and the importer trims every cell. English renders ` · serving` exactly as before (the mounted
+    // `match-viewer` net reads it); what this pin keeps is "the word stays", on both ends.
+    expect(markup.match(/' ' \+ t\('· serving'\)/g)?.length, 'the word stays, on both ends').toBe(2)
   })
 
   it('the third saying of it - the bottom pill - is gone, and the two that are left are attached', () => {
@@ -1058,7 +1066,9 @@ describe('who is serving is said twice, attached to something, and never in a sp
     // and the new one, so it could not have caught the defect it is here to guard: "points" alone
     // reads as RANKING points, which this flow writes one screen later as «+130 pts», and the owner
     // filed a WTA 1000 first round as paying 163 three times before it turned out to be a word.
-    expect(viewer).toMatch(/const scoreReadout = computed\([\s\S]{0,80}pointsPlayed\.value\} points played/)
+    // ⚠ RE-AIMED 08.10 (L2-8) – A GENUINE PREMISE MOVE: the count is the HOLE of one whole message now (`{0} points played`), so the template
+    // literal `${pointsPlayed.value} points played` became `t('{0} points played', [pointsPlayed.value])`. The word is still the assertion.
+    expect(viewer).toMatch(/const scoreReadout = computed\([\s\S]{0,80}t\('\{0\} points played', \[pointsPlayed\.value\]\)/)
     expect(viewer).toMatch(/const courtScore = computed\(/)
     expect(markup).toContain('v-else-if="scoreReadout"')
   })
