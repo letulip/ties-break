@@ -147,7 +147,9 @@ describe('the surface mark on the Season card (R11-15, reversed by the owner in 
     // line under it. Wave 2 removed the standalone caption because the card grew a coach's plaque,
     // and his sentence is the natural home for "the court suits her game". Still consumed from the
     // engine, still said once.
-    expect(seasonScreen).toContain('const fit = surfaceFit(e.surface)')
+    // ⚠ RE-AIMED 08.10 (L2-4, a genuine premise move): the coach reads the court sentence off the composable (`courtRead`, from the engine's
+    // affinity) – the screen no longer slices the engine's hint at an English dash. Still consumed from the engine, still said once.
+    expect(seasonScreen).toContain('const court = courtRead(e.surface)')
     expect(seasonScreen).toContain('coachSays(ev)')
     expect(seasonScreen.split('coachSays(ev)').length - 1).toBe(1)
     expect(seasonScreen).not.toContain('surface-caption')
@@ -239,7 +241,9 @@ describe('R11-2 — no win/loss avatar swap for practice matches', () => {
 // ===========================================================================
 describe('R11-14 — "Practice match + coach" is one line in the calendar', () => {
   it('the label is a single uninterrupted expression', () => {
-    expect(seasonScreen).toContain("🎾 Practice match{{ row.practice.withCoach ? ' + coach' : '' }}")
+    // ⚠ RE-AIMED 08.10 (L2-4, a genuine premise move): the label is two whole catalog messages (RU-04 W07 / W08) chosen by one expression –
+    // still ONE uninterrupted mustache on one line, which is what this pin protects.
+    expect(seasonScreen).toContain("🎾 {{ row.practice.withCoach ? t('Practice match + coach') : t('Practice match') }}")
   })
 
   it('the controls sit in their own band, so they can never squeeze the text again', () => {

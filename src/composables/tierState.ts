@@ -48,6 +48,7 @@ import { UPCOMING_WEEKS } from '../engine/world/constants'
 // restated – see `tierOpensWhen`'s points clause.
 import { WINDOW_BY_TRACK } from '../engine/season/ranking'
 import { weekRange } from '../shared/dates'
+import { t } from '../i18n'
 import { LADDER_POINTS_LABEL, type EntryCapUsage, type TierRefusal } from '../shared/protocol'
 import type { LadderTrack, TierId } from '../engine/season/types'
 
@@ -489,8 +490,8 @@ export function pointsLockNote(tier: TierId, pointsToEnter: number, points?: num
   // A FRACTION WHEN THE CALLER KNOWS WHERE SHE STANDS. "112 / 250 pts" answers both halves of the
   // player's question in one glance - what opens this, and how far off is she - where "Reach 250 pts"
   // answered only the first and left the second on a screen she had to go and find.
-  if (points === undefined) return `Reach ${pointsToEnter} ${unit}`
-  return `${points} / ${pointsToEnter} ${unit}`
+  if (points === undefined) return t('Reach {required} {unit}', { required: pointsToEnter, unit })
+  return t('{current} / {required} {unit}', { current: points, required: pointsToEnter, unit })
 }
 
 /**
@@ -524,8 +525,8 @@ export function tierOpensWhen(id: TierId, acceptsRank?: number): string {
   if (tier.minAgeYears !== undefined) {
     clauses.push(
       tier.maxAgeYears !== undefined
-        ? `age ${tier.minAgeYears}-${tier.maxAgeYears}`
-        : `age ${tier.minAgeYears}`,
+        ? t('age {min}-{max}', { min: tier.minAgeYears, max: tier.maxAgeYears })
+        : t('age {age}', { age: tier.minAgeYears }),
     )
   }
   const [minPoints] = tier.enterPointBand
@@ -543,9 +544,9 @@ export function tierOpensWhen(id: TierId, acceptsRank?: number): string {
     // the static fallbacks say the same thing in whichever unit the rung is written in.
     const fallback =
       tier.acceptsRank !== undefined
-        ? `the top ${tier.acceptsRank} internationally`
-        : `the top ${Math.round(tier.enterPct! * 100)}% internationally`
-    clauses.push(acceptsRank !== undefined ? `the top ${acceptsRank} internationally` : fallback)
+        ? t('the top {cut} internationally', { cut: tier.acceptsRank })
+        : t('the top {pct}% internationally', { pct: Math.round(tier.enterPct! * 100) })
+    clauses.push(acceptsRank !== undefined ? t('the top {cut} internationally', { cut: acceptsRank }) : fallback)
   } else if (minPoints > 0) {
     // The band's OWN currency (01.08): this clause fires for the domestic rungs and both on-ramps,
     // and w15's band is ITF junior points – "age 16 and 120 national pts" was the same wrong-label
@@ -572,13 +573,17 @@ export function tierOpensWhen(id: TierId, acceptsRank?: number): string {
     // longer hypothetical. Same discipline as the acceptance cut two clauses up: read the gate, do
     // not restate it. Every track is `'rolling52'` now, so no rung carries the clause.
     const track = entryBandTrack(id)
-    const window = WINDOW_BY_TRACK[track] === 'seasonToDate' ? ' in one season' : ''
-    clauses.push(`${minPoints} ${LADDER_POINTS_LABEL[track]}${window}`)
+    const unit = LADDER_POINTS_LABEL[track]
+    clauses.push(
+      WINDOW_BY_TRACK[track] === 'seasonToDate'
+        ? t('{points} {unit} in one season', { points: minPoints, unit })
+        : t('gate|{points} {unit}', { points: minPoints, unit }),
+    )
   }
   // Local: no age gate, no floor. "Open from the start" rather than "0 pts" – a threshold of zero is
   // not a threshold, and printing one invites the player to look for progress against it.
-  if (clauses.length === 0) return 'open from the start'
-  return clauses.join(' and ')
+  if (clauses.length === 0) return t('open from the start')
+  return clauses.reduce((all, clause) => t('gate|{0} and {1}', [all, clause]))
 }
 
 /** How a finish READS in a sentence. `finishLabel` gives "Semifinalist", which is a person; a gap is
@@ -785,7 +790,7 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
     return {
       id,
       kind: 'age-locked',
-      note: `Under-${tier.maxAgeYears! + 1}`,
+      note: t('Under-{n}', { n: tier.maxAgeYears! + 1 }),
       // No `tierOpensWhen` here on purpose: every clause it can write is a condition she could still
       // meet, and none of them is true any more. The tooltip states the rule and her age against it.
       //
@@ -803,7 +808,7 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
     return {
       id,
       kind: 'age-locked',
-      note: `Opens at ${tier.minAgeYears}`,
+      note: t('Opens at {age}', { age: tier.minAgeYears }),
       // ⚠ THE WHOLE CONDITION, not just the clause that happens to be binding today. An age-locked
       // J30 also wants 250 national points, and a plaque that mentions only the birthday tells a
       // twelve-year-old she is one year from the Junior Tour when she is a year AND a domestic
@@ -1026,7 +1031,7 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
     return {
       id,
       kind: 'locked',
-      note: cut !== undefined ? `Opens in the top ${cut}` : 'Not on the list yet',
+      note: cut !== undefined ? t('Opens in the top {cut}', { cut }) : t('Not on the list yet'),
       // ⭐ THE ENGINE'S OWN SENTENCE WHEN IT HAS ONE. `detail` names the table the cut is actually
       // read off – «World Tour 35 takes the top 700 – she has no professional ranking yet» – where
       // the sentence below says "international ranking" for every rung, which is true of the J
@@ -1079,7 +1084,9 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       id,
       kind: 'capped',
       entryCap: cap,
-      note: `${isCappedProTier(id) ? 'Tour age rule' : 'Year limit'} – ${cap.used} of ${cap.limit}`,
+      note: isCappedProTier(id)
+        ? t('Tour age rule – {used} of {limit}', { used: cap.used, limit: cap.limit })
+        : t('Year limit – {used} of {limit}', { used: cap.used, limit: cap.limit }),
       title: input.refusal.detail,
     }
   }
@@ -1089,7 +1096,7 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       id,
       kind: 'capped',
       entryCap: input.entryCap,
-      note: `Year limit – ${used} of ${limit}`,
+      note: t('Year limit – {used} of {limit}', { used, limit }),
       title:
         `${tier.label} – she has used all ${limit} of her international events for this year ` +
         `(age ${input.ageYears}). Not locked: a fresh allowance arrives on her next birthday.`,
@@ -1104,7 +1111,7 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       id,
       kind: 'capped',
       entryCap: input.proEntryCap,
-      note: `Tour age rule – ${used} of ${limit}`,
+      note: t('Tour age rule – {used} of {limit}', { used, limit }),
       title:
         `${tier.label} – the tour's age rule allows ${limit} pro entries at ${input.ageYears} and ` +
         `she has used all ${used}. Not locked: a fresh allowance arrives on her next birthday, and ` +
@@ -1127,7 +1134,7 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       kind: 'scheduled',
       nextWeek,
       ...(outgrown ? { outgrown } : {}),
-      note: outgrown ? 'Past this level – still open' : 'Open – on the calendar',
+      note: outgrown ? t('Past this level – still open') : t('Open – on the calendar'),
       // The DATE, not the week number: R11-6 owns week-number rendering, and a date needs no
       // in-season/absolute decision to be correct.
       title: outgrown
@@ -1139,7 +1146,9 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
     id,
     kind: 'unscheduled',
     ...(outgrown ? { outgrown } : {}),
-    note: outgrown ? `Past this level – none in ${input.horizonWeeks} weeks` : `Open – none in ${input.horizonWeeks} weeks`,
+    note: outgrown
+      ? t('Past this level – none in {weeks} weeks', { weeks: input.horizonWeeks })
+      : t('Open – none in {weeks} weeks', { weeks: input.horizonWeeks }),
     title:
       `${tier.label} – ${outgrown ? 'past this level but still hers to enter' : 'open to her'}, but none is scheduled in the next ${input.horizonWeeks} weeks. ` +
       `This tier comes round less often than the others; it is not locked.`,

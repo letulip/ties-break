@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { ECONOMY } from '../src/engine/economy'
 import { flipScore, isExamWeek } from '../src/engine/world'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { after, region, regions } from './helpers/source'
+import { after, region, regions, tTransparent } from './helpers/source'
 
 // ---------------------------------------------------------------------------
 // Round 12, wave B — PRESENTATION ONLY. No engine file is touched by any of these items;
@@ -22,7 +22,8 @@ import { after, region, regions } from './helpers/source'
 // and those are exactly the facts that silently rot. Same discipline as round10/round11-view.
 // ---------------------------------------------------------------------------
 
-const seasonScreen = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
+// ⚠ L2-4 (08.10): READ THROUGH `tTransparent` – the screen's labels are `t()` calls now and these pins assert the words, not the wrapper.
+const seasonScreen = tTransparent(readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8'))
 const planSheet = readFileSync(new URL('../src/components/PlanWeekSheet.vue', import.meta.url), 'utf8')
 // world.ts AND every world/*.ts part (P4 split): kidMatchEvent lives in world/matchNews.ts now
 const worldSrc = worldSource()

@@ -127,7 +127,10 @@ function codeOnly(text: string, path: string): string {
  *  a substring of the longer sentence (S2's arm A13, 30.09: an `s` appended in the source stayed green) – so growth, shrinkage and substitution now fail the same row.
  *  ⚠ THE ESCAPED SPELLING IS LOAD-BEARING, exactly as it was: the doc quotes the RUNTIME spelling, and a single-quoted source literal escapes its apostrophes. */
 function shipped(src: string, text: string): boolean {
-  const spellings = [text, text.replaceAll("'", "\\'")]
+  // ⚠ 08.10 (L2-4): A WIRED KEY NAMES ITS HOLES. PF4 is tabled as `${cap.used}`; the `t()` literal that ships it spells the same hole `{used}` (the
+  // last property of the expression). The third spelling is that – the whole literal is still demanded, only the hole's spelling is allowed to be the key's.
+  const wired = text.replace(/\$\{(?:[\w$]+\.)*([\w$]+)\}/g, '{$1}')
+  const spellings = [text, text.replaceAll("'", "\\'"), wired]
   return spellings.some((t) => ["'", '"', '`'].some((q) => src.includes(q + t + q)))
 }
 

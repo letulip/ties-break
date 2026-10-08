@@ -823,7 +823,11 @@ describe('the marker opens ONE event, with enter-or-close', () => {
     // (the SFC PLUS its composables) because the claim is POSITIVE - `screen`, the .vue alone, is
     // the right corpus for the negative claims below and stays bound to it (CLAUDE.md pin hygiene,
     // enforced by tests/pin-hygiene.test.ts).
-    expect(screenLogic).toContain('surfaceStyleHint(game.snapshot.profile.playStyle, surface)')
+    // ⚠ RE-AIMED 08.10 (L2-4, a genuine premise move): the composable no longer hands over the engine's FINISHED sentence (three screens sliced it
+    // at an English «– »); it asks the engine's own pure verdict, `surfaceStyleAffinity`, and words the same two sentences through the catalog
+    // (`surfaceHint`, RU-04 §2). The protected fact – the verdict is the ENGINE's, this card does not decide it – is unchanged.
+    expect(screenLogic).toContain('surfaceHint(game.snapshot.profile.playStyle, surface)')
+    expect(screenLogic, "the verdict is the engine's affinity").toContain('surfaceStyleAffinity(style, surface)')
     expect(screen, 'the card must consume the verdict, not re-word it').toContain('surfaceVerdict(marker.surface)')
   })
 

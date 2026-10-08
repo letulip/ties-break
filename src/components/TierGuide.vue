@@ -21,6 +21,7 @@ import { useDialogFocus } from '../composables/dialogFocus'
 import { TIERS, TIER_LADDER } from '../engine/season/calendar'
 import { tierOpensWhen } from '../composables/tierState'
 import { formatCents } from '../shared/money'
+import { t } from '../i18n'
 import type { TierId } from '../engine/season/types'
 import IconButton from './ui/IconButton.vue'
 
@@ -65,25 +66,25 @@ interface TierRow {
 }
 const rows = computed<TierRow[]>(() =>
   TIER_ORDER.map((id) => {
-    const t = TIERS[id]
+    const tier = TIERS[id]
     return {
       id,
-      label: t.label,
-      drawSize: t.drawSize,
+      label: tier.label,
+      drawSize: tier.drawSize,
       // ⭐ ROUND 17 #28, THE LAST SURFACE – flagged 13.08, marked `[x]`, and this cell was still
       // printing «$0». `shared/money.ts`' own rule: «A fact ("no entry fee") and a missing value
       // ("$0") must not look the same», and the only rung this can fire on is the slam, where it is
       // true. ⚠ NOT `entryFeeLabel` here, and the column is why: this is a `.num` cell under a
       // header that already reads «Entry fee», so the helper's full sentence would print «no entry
       // fee» under «Entry fee» and wrap a numeric column. One word is the same fact in this idiom.
-      entryFee: t.entryFeeCents === 0 ? 'none' : formatCents(t.entryFeeCents),
-      travelRange: `${formatCents(t.travelCostCents[0])}–${formatCents(t.travelCostCents[1])}`,
-      points: t.points.join(' / '),
+      entryFee: tier.entryFeeCents === 0 ? t('fee|none') : formatCents(tier.entryFeeCents),
+      travelRange: `${formatCents(tier.travelCostCents[0])}–${formatCents(tier.travelCostCents[1])}`,
+      points: tier.points.join(' / '),
       // The gate the ENGINE applies, in one clause per condition – see `tierOpensWhen`. The live
       // acceptance cut comes off the snapshot for the two rungs that have one, so the guide quotes
       // the same number the entry gate and the Home plaque do.
       opensAt: tierOpensWhen(id, game.snapshot?.tierAcceptance?.[id]),
-      locked: t.everyNWeeks === 0,
+      locked: tier.everyNWeeks === 0,
     }
   }),
 )
@@ -102,18 +103,18 @@ const rows = computed<TierRow[]>(() =>
       aria-labelledby="tier-guide-title"
       tabindex="-1"
     >
-      <IconButton class="replay-close" icon="close" label="Close tier guide" title="Close" @click="emit('close')" />
-      <p id="tier-guide-title" class="guide-title">Tour guide</p>
+      <IconButton class="replay-close" icon="close" :label="t('Close tier guide')" :title="t('Close')" @click="emit('close')" />
+      <p id="tier-guide-title" class="guide-title">{{ t('Tour guide') }}</p>
       <div class="guide-table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Tier</th>
-              <th>Opens at</th>
-              <th>Draw</th>
-              <th>Entry fee</th>
-              <th>Travel</th>
-              <th>Points (W / F / SF / …)</th>
+              <th>{{ t('Tier') }}</th>
+              <th>{{ t('Opens at') }}</th>
+              <th>{{ t('Draw') }}</th>
+              <th>{{ t('Entry fee') }}</th>
+              <th>{{ t('Travel') }}</th>
+              <th>{{ t('Points (W / F / SF / …)') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -133,10 +134,7 @@ const rows = computed<TierRow[]>(() =>
            on national points and the top two open on a place in the international table, and the two
            never convert into one another. -->
       <p class="hint">
-        The bands overlap on purpose – there is always more than one place to go. The first four rungs
-        open on national points; the top two take the best of the international ranking instead, and
-        the two tables never meet. The Junior Tour is international travel from age 13, and it pays no
-        prize money: points only, until the pro tour.
+        {{ t('The bands overlap on purpose – there is always more than one place to go. The first four rungs open on national points; the top two take the best of the international ranking instead, and the two tables never meet. The Junior Tour is international travel from age 13, and it pays no prize money: points only, until the pro tour.') }}
       </p>
     </div>
   </div>
