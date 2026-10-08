@@ -26,7 +26,7 @@ import NextTournamentPanel from '../../src/components/NextTournamentPanel.vue'
 import TournamentFlow from '../../src/components/TournamentFlow.vue'
 import BracketTabs from '../../src/components/BracketTabs.vue'
 import { useGameStore } from '../../src/stores/game'
-import { dominantSurface, SURFACE_BLOCKS } from '../../src/engine/season/calendar'
+import { dominantSurface, SURFACE_BLOCKS, TIERS } from '../../src/engine/season/calendar'
 import { surfaceStyleAffinity, surfaceStyleHint } from '../../src/engine/match/style'
 import {
   createWorld,
@@ -40,6 +40,7 @@ import {
 import { rngFromSeed } from '../../src/engine/rng'
 import { courtSentence, surfaceHint } from '../../src/composables/eventCard'
 import { DEFAULT_PROFILE, type FullBracketMatch, type PlayStyle, type Snapshot } from '../../src/shared/protocol'
+import { formatShortName } from '../../src/shared/format'
 import { installCatalog, missCount, missedKeys, resetI18nForTests, resetMisses, setLocale, t } from '../../src/i18n'
 import { careerSnapshot } from '../helpers/career'
 import { after } from '../helpers/source'
@@ -436,25 +437,31 @@ describe('L2-4 Russian smoke – ru.json read by key, no Cyrillic typed here', (
 // --- 6. the xx sweep -------------------------------------------------------------------------------------------
 
 describe('L2-4 xx sweep – no unwrapped literal in the frames, and the phone still holds longer words', () => {
-  /** What is NOT frame copy and is allow-listed BY NAME or by shape: names, dates and week labels, money, tier labels and the engine's own words
-   *  (coach caution, ineligibility detail, news and plaque text, the ladder and round labels), the lowercase surface a stylesheet capitalises is NOT
-   *  here – it goes through the catalog now. */
+  /** What is NOT frame copy and is allow-listed by SHAPE: week labels, dates, money and bare numbers.
+   *  ⚠ NO NAME-SHAPED PATTERNS HERE (L2-5's rule, applied to this file at L2-6 step 0): a «First Last» regex swallowed `Season Planner`, a «Word» regex
+   *  swallowed any one-word heading (`Travel`, `Winner`), and the tier-prefix regex swallowed every string that began with `Local`, `National` or `Pro` – a
+   *  capitalised unwrapped HEADING passed this arm in all three shapes. A name is allowed because the SNAPSHOT (or an engine table the screens read directly) carries it – see `engineProse` –
+   *  never because it is capitalised. */
   const ENGINE_BORN: RegExp[] = [
-    /^[A-Z][a-z]+ [A-Z]\.?$/, /^[A-Z][a-z]+$/, /^[A-Z][a-z]+ [A-Z][a-z]+$/, /^[A-Z]\. [A-Z][a-z]+$/,
     /^W\d+( \d{4}| ’\d{2})?$/, /^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d+(?: – (?:[A-Za-z]+ )?\d+)?(?:, \d{4})?$/, /^\$[\d,.]+[KMB]?$/, /^[−-]?\$[\d,.]+/,
-    /^(?:Local Open|Regional Championship|National Series|Junior Tour \d+|World Tour \d+|Grand Slam)(?: 🔒)?$/, /^(?:Local|Regional|National|Junior|Pro|W\d+|J\d+|WTA|ITF)\b/,
-    // ⚠ THE NAMED LEFTOVERS OF THIS WAVE, each for its reason: the week label after the season year (`weekOnly`, RU-13D's formatter) and the card's fee pill
-    // (`entryFeeLabel`, shared/money.ts – engine-importable, no RU-04 row; Calendar shares it, so it is one decision for both screens).
-    /^· W\d+$/, /^(?:entry \$[\d,.]+|no entry fee)$/,
+    // ⚠ THE NAMED LEFTOVERS OF THIS WAVE, each for its reason: the week label after the season year (`weekOnly`, RU-13D's formatter), the planner's
+    // phase ranges and the week-range rows (`W1-10`, `W42 · Oct 20–26, 2031` – `weekRange`, the same formatter, anchored on the `W<digits>` it starts
+    // with, so it cannot swallow a heading) and the card's fee pill (`entryFeeLabel`, shared/money.ts – engine-importable, no RU-04 row; Calendar
+    // shares it, so it is one decision for both screens).
+    /^· W\d+$/, /^W\d+(?:-\d+)?(?: · .+)?$/, /^(?:entry \$[\d,.]+|no entry fee)$/,
     /^\d+°?$/, /^#\d+$/, /^[\d,]+$/, /^\d+(?:-\d+)*$/, /^[—–-]$/, /^\?$/, /^%$/, /^\d+(?:\.\d+)?%$/,
   ]
 
-  /** A leak that IS the engine's prose: written in the snapshot the screen was handed, so it never passed through a template literal. */
+  /** A leak that IS the engine's prose: written in the snapshot the screen was handed, or read by the screen straight from an engine table, so it never
+   *  passed through a template literal. A person's SHORT form (`A. Martin`, `formatShortName`) is derived from the full names the snapshot carries; the
+   *  tier labels (`TIERS`, the guide's rungs) are the engine's own table. A decorative pictograph at EITHER end (the guide's lock) is not part of the prose. */
   const engineProse = (snap: Snapshot) => {
     const json = JSON.stringify(snap)
+    const shorts = Array.from(json.matchAll(/"([A-Z][a-z]+ [A-Z][a-z]+)"/g), (m) => formatShortName(m[1]!))
+    const corpus = [json, ...shorts, ...Object.values(TIERS).map((tier) => tier.label)].join('\n')
     return (leak: string): boolean => {
-      const prose = leak.replace(/^[\p{Extended_Pictographic}‍️\s]+/u, '').trim()
-      return prose.length > 2 && json.includes(prose)
+      const prose = leak.replace(/^[\p{Extended_Pictographic}‍️\s]+|[\p{Extended_Pictographic}‍️\s]+$/gu, '').trim()
+      return prose.length > 2 && corpus.includes(prose)
     }
   }
   const screenLeaks = (root: Element, snap: Snapshot): string[] => hardcodeLeaks(root, ENGINE_BORN).filter((l) => !engineProse(snap)(l))
