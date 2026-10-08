@@ -38,6 +38,7 @@ import { onRadioGroupKey } from '../composables/radioGroupKeys'
 import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
 import { weekLabel } from '../shared/dates'
+import { t } from '../i18n'
 import { useStartYear } from '../composables/startYear'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
@@ -113,9 +114,9 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            and whether it has happened before, the title says which part of her. Either one alone
            would name the dialog worse than the card names itself to somebody looking at it. -->
       <p id="knock-dialog-kicker" class="season-summary-kicker">
-        {{ prompt.repeat ? 'The same knock again' : 'A knock' }} – {{ weekLabel(week, startYear) }}
+        {{ prompt.repeat ? t('The same knock again – {0}', [weekLabel(week, startYear)]) : t('A knock – {0}', [weekLabel(week, startYear)]) }}
       </p>
-      <h2 id="knock-dialog-title" class="season-summary-title">Her {{ prompt.part }}.</h2>
+      <h2 id="knock-dialog-title" class="season-summary-title">{{ t('Her {0}.', [prompt.part]) }}</h2>
       <p class="knock-line">{{ prompt.line }}</p>
       <p class="hint knock-read">{{ prompt.read }}</p>
 
@@ -165,7 +166,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         >
           <span class="knock-mark" aria-hidden="true"></span>
           <span class="knock-choice-text">
-            <span class="knock-choice-verb">Rest it</span>
+            <span class="knock-choice-verb">{{ t('Rest it') }}</span>
             <span class="knock-choice-cost">{{ prompt.restCost }}</span>
           </span>
         </button>
@@ -179,7 +180,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         >
           <span class="knock-mark" aria-hidden="true"></span>
           <span class="knock-choice-text">
-            <span class="knock-choice-verb">Train through it</span>
+            <span class="knock-choice-verb">{{ t('Train through it') }}</span>
             <span class="knock-choice-cost">{{ prompt.pushCost }}</span>
           </span>
         </button>
@@ -190,7 +191,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            the phone-fit measurement reads the way out off. The word is the prologue's shipped
            confirm vocabulary (round 41 #9), not a coinage. -->
       <button v-if="chosen !== null" class="knock-proceed dialog-proceed" type="button" :disabled="sending" @click="confirm()">
-        Proceed
+        {{ t('Proceed') }}
       </button>
     </div>
   </div>

@@ -55,7 +55,7 @@ import PlanPresetRow from '../ui/PlanPresetRow.vue'
 import AppIcon from '../ui/AppIcon.vue'
 import ProgressRing from '../ui/ProgressRing.vue'
 import { coachPortraitUrl, preloadCoachMarketArt } from '../../art/preload'
-import { COACH_TIER_LABEL, coachHoursForPlan, HIREABLE_TIERS, styleFitBetween, type StyleFit } from '../../engine/coach'
+import { coachHoursForPlan, HIREABLE_TIERS, styleFitBetween, type StyleFit } from '../../engine/coach'
 import { planWeek, presetOf } from '../../engine/plan'
 // ⭐ ROUND-23 #5 / #1 – TWO PURE LOOKUPS, in the same register as `COACH_TIER_LABEL` above and for the
 // same reason: they are label tables keyed on data the row already carries, not decisions. `coachBlurb`
@@ -81,7 +81,9 @@ import { WEEK_PLAN_PRESETS, psychologistFocusNudge, type CoachMarketRow, type Co
 import { formatCents } from '../../shared/money'
 // ⭐ ROUND 36 PHASE 6 – the budget meter's own arithmetic, now shared with the rail's dashboard card.
 // See the note at its call site below for why it left this file.
-import { TEAM_BUDGET_LABEL, useCoachingBudget } from '../../composables/coachingBudget'
+import { teamBudgetLabel, useCoachingBudget } from '../../composables/coachingBudget'
+import { COACH_TIER_WORD } from '../../composables/coachWords'
+import { t } from '../../i18n'
 
 const game = useGameStore()
 const emit = defineEmits<{ back: [] }>()
@@ -103,9 +105,24 @@ const psychologistNudge = computed(() => psychologistFocusNudge(game.snapshot))
  *  has carried the default plate since v47. Growing a control he did not ask about would be
  *  inventing a decision inside a fix that is supposed to MOVE something, so the row is untouched. */
 const TABS = [
-  { value: 'week', label: 'Her week' },
-  { value: 'coaches', label: 'Coaches' },
-  { value: 'staff', label: 'Support staff' },
+  {
+    value: 'week',
+    get label() {
+      return t('Her week')
+    },
+  },
+  {
+    value: 'coaches',
+    get label() {
+      return t('Coaches')
+    },
+  },
+  {
+    value: 'staff',
+    get label() {
+      return t('market|Support staff')
+    },
+  },
 ] as const
 
 /** ⭐⭐ ROUND 42 #28 – THE OFF-SEASON MARKER ON THE SUPPORT-STAFF ENTRY. The owner asked for the dot
@@ -117,7 +134,7 @@ const TABS = [
  *  ⚠ THE THREE LABELS ARE UNTOUCHED – the row is the shipped one with one boolean per option, and
  *  only the `staff` segment can ever carry it. */
 const tabsWithMarker = computed(() =>
-  TABS.map((t) => (t.value === 'staff' ? { ...t, dot: psychologistNudge.value } : t)),
+  TABS.map((entry) => (entry.value === 'staff' ? { ...entry, dot: psychologistNudge.value } : entry)),
 )
 
 /** ⭐ ROUND-18 #3 – THE SCREEN CHOOSES ITS LANDING TAB, AND A HIRED COACH LANDS ON THE COACHES
@@ -155,21 +172,39 @@ const tab = computed<string>({
 })
 
 const PLAY_STYLE_LABEL: Record<PlayStyle, string> = {
-  aggressive: 'Aggressive baseliner',
-  counterpuncher: 'Counterpuncher',
-  'serve-first': 'Big serve',
-  'all-court': 'All-court',
+  get aggressive() {
+    return t('Aggressive baseliner')
+  },
+  get counterpuncher() {
+    return t('Counterpuncher')
+  },
+  get 'serve-first'() {
+    return t('Big serve')
+  },
+  get 'all-court'() {
+    return t('All-court')
+  },
 }
 // The "specialisations" slot the design puts beside the fit pill. It is the game HE coaches - which
 // is both the shortest true answer and the thing the fit pill is computed from, so the row explains
 // its own verdict. (An earlier draft put a per-rung blurb here; at 375px it truncated to "Group
 // ses…" and pushed the uplift off the row entirely, which is the one number the owner asked for.)
-const FIT_LABEL: Record<StyleFit, string> = { great: 'Great fit', good: 'Good fit', off: 'Off-style' }
+const FIT_LABEL: Record<StyleFit, string> = {
+  get great() {
+    return t('Great fit')
+  },
+  get good() {
+    return t('Good fit')
+  },
+  get off() {
+    return t('Off-style')
+  },
+}
 const FIT_CLASS: Record<StyleFit, string> = { great: 'fit-great', good: 'fit-good', off: 'fit-off' }
 
 /** One decimal, and always a range - the luck band is real spread and the copy must carry it. */
 function formatUplift([lo, hi]: [number, number]): string {
-  return `+${lo.toFixed(1)}-${hi.toFixed(1)}% a season`
+  return t('+{0}-{1}% a season', [lo.toFixed(1), hi.toFixed(1)])
 }
 
 /** WHAT THE PRICE BRACKET BUYS PER MATCH (docs/specs/coach-match-edge.md §4), in the owner's own
@@ -186,7 +221,7 @@ function formatUplift([lo, hi]: [number, number]): string {
  *  bracket is measured to a precision it does not have. The realised value below quotes two - it IS
  *  a measurement of one person, and that is exactly the difference the two formats carry. */
 function formatEdge([lo, hi]: [number, number]): string {
-  return `+${lo.toFixed(1)}-${hi.toFixed(1)}% per match`
+  return t('+{0}-{1}% per match', [lo.toFixed(1), hi.toFixed(1)])
 }
 
 /** ⭐⭐ ROUND-21 #2, THE LAST OPEN ITEM – WHAT THE RUNG IS WORTH WITH THE COACH ON THE TRIP.
@@ -211,7 +246,7 @@ function formatEdge([lo, hi]: [number, number]): string {
  *  app's one fixed "she". Same one decimal as the corridor beside it, for the same reason - these are
  *  brackets, and a second digit would imply a precision a bracket does not have. */
 function formatEdgeTravel([lo, hi]: [number, number]): string {
-  return `+${lo.toFixed(1)}-${hi.toFixed(1)}% travelling with her`
+  return t('+{0}-{1}% travelling with her', [lo.toFixed(1), hi.toFixed(1)])
 }
 
 // --- the style lens (design decision 2) ---------------------------------------------------------
@@ -241,12 +276,24 @@ function cycleStyle(): void {
 // keeps one idiom; inventing a fourth one here would make this screen the odd one out AND fire a
 // command per drag frame.
 const PLAN_ORDER = ['light', 'balanced', 'grind'] as const
-const planLabel = (k: (typeof PLAN_ORDER)[number]) =>
-  `${k[0].toUpperCase()}${k.slice(1)} ${coachHoursForPlan(WEEK_PLAN_PRESETS[k])}/wk`
+// L2-5: the preset's word is read through `t()` (the same three words HerWeekTab prints); the hours stay a number.
+const PLAN_WORD: Record<(typeof PLAN_ORDER)[number], string> = {
+  get light() {
+    return t('Light')
+  },
+  get balanced() {
+    return t('Balanced')
+  },
+  get grind() {
+    return t('Grind')
+  },
+}
+const planLabel = (k: (typeof PLAN_ORDER)[number]) => t('{0} {1}/wk', [PLAN_WORD[k], coachHoursForPlan(WEEK_PLAN_PRESETS[k])])
 /** ⚠ THE WORDS THIS SCREEN ALREADY RENDERED, HANDED TO THE SHARED ROW (E-02). `planLabel` above is
  *  untouched, so every pill reads exactly what it read – this row's labels are its own and not the
  *  dials tab's, which is what «labels as props» buys. */
-const PLAN_OPTIONS = PLAN_ORDER.map((value) => ({ value, label: planLabel(value) }))
+// A computed, not a const: the labels are words now, and a const would freeze the language the module was imported in.
+const PLAN_OPTIONS = computed(() => PLAN_ORDER.map((value) => ({ value, label: planLabel(value) })))
 /** ⚠ WHICH PRESET IS HERS IS THE ENGINE'S ANSWER SINCE E-02 (ruling 7a, 26.09). This compared
  *  `plan.train` alone – and `planShapeError` admits only 4..6 sessions while `planTrainPct` maps 4/5/6
  *  onto exactly the three presets' `train`, so EVERY legal hand-arranged week lit a pill here while the
@@ -321,7 +368,7 @@ const travelsOnEventWeeks = computed(() => billing.value?.onEventWeeks ?? false)
  *  this exact screen, which is the guard doing precisely its job. "The coach's seat" is the phrase
  *  that survives it, and the daughter is the app's one fixed "she". */
 const travelSubLine = computed(() => {
-  if (!hasCoach.value) return 'You are coaching her yourself – there is nobody to send. Turn it on and it takes effect when you hire somebody.'
+  if (!hasCoach.value) return t('You are coaching her yourself – there is nobody to send. Turn it on and it takes effect when you hire somebody.')
   const b = billing.value
   const covered = b?.travelCovered ?? false
   // ROUND-21 #2, 17.08: a sponsor's travel share now comes off the SECOND seat too at the events that
@@ -331,15 +378,16 @@ const travelSubLine = computed(() => {
   // does not do. The percentage is the engine's own term and is never derived from the totals.
   const byBrand = b?.coachFareCoverPct ?? 0
   const rule = byBrand > 0
-    ? `Your sponsor pays ${byBrand}% of the second seat at the events that pay prize money – the rest is yours.`
+    ? t('Your sponsor pays {0}% of the second seat at the events that pay prize money – the rest is yours.', [byBrand])
     : covered
-      ? 'The support does not pay for the second seat – hers is discounted, the coach travels at the full fare.'
-      : 'One additional fare per trip – a second seat beside hers.'
+      ? t('The support does not pay for the second seat – hers is discounted, the coach travels at the full fare.')
+      : t('One additional fare per trip – a second seat beside hers.')
   if (!b || b.travelTrips === 0) return rule
-  const trips = b.travelTrips === 1 ? '1 trip' : `${b.travelTrips} trips`
+  // L2-5: the count is its own whole phrase (English spells `1 trip` / `N trips` as two literals), so a locale builds its own plural.
+  const trips = b.travelTrips === 1 ? t('1 trip') : t('{0} trips', [b.travelTrips])
   return covered || byBrand > 0
-    ? `${rule} Her seats cost ${formatCents(b.travelHerFareCents)} over the ${trips} ahead; the second seat adds ${formatCents(b.travelFareCents)}.`
-    : `${rule} ${formatCents(b.travelFareCents)} over the ${trips} she has booked this season.`
+    ? t('{0} Her seats cost {1} over the {2} ahead; the second seat adds {3}.', [rule, formatCents(b.travelHerFareCents), trips, formatCents(b.travelFareCents)])
+    : t('{0} {1} over the {2} she has booked this season.', [rule, formatCents(b.travelFareCents), trips])
 })
 
 async function toggleTravel() {
@@ -366,10 +414,10 @@ const travelsToJuniors = computed(() => billing.value?.onJuniorEvents ?? false)
 
 const juniorSubLine = computed(() => {
   const b = billing.value
-  const rule = 'Junior and domestic events pay no prize money – the fare buys presence, and nothing comes back.'
+  const rule = t('Junior and domestic events pay no prize money – the fare buys presence, and nothing comes back.')
   if (!b || b.travelJuniorTrips === 0) return rule
-  const trips = b.travelJuniorTrips === 1 ? '1 more trip' : `${b.travelJuniorTrips} more trips`
-  return `${rule} ${formatCents(b.travelJuniorCents)} over the ${trips} on her card this season.`
+  const trips = b.travelJuniorTrips === 1 ? t('1 more trip') : t('{0} more trips', [b.travelJuniorTrips])
+  return t('{0} {1} over the {2} on her card this season.', [rule, formatCents(b.travelJuniorCents), trips])
 })
 
 const askingJuniors = ref(false)
@@ -378,11 +426,8 @@ const askingJuniors = ref(false)
  *  every one of those bankruptcies happened before she turned twenty. It ends by handing the
  *  decision back, because it IS his: «есть деньги - едет тренер, нет - не едет, или едет, но быстрее
  *  банкротится». */
-const juniorConfirmMessage =
-  'Send the coach to junior and domestic tournaments too? Those rungs pay no prize money, so the ' +
-  'second fare is a bill against an income she does not have yet. Measured over 30 careers a cell, ' +
-  'an unlimited junior fare bankrupted 8 of 30 wealthy families and 15 of 30 middle ones – every one ' +
-  'of them before she turned twenty. Your money, your call.'
+// L2-5: ONE literal (the extractor reads a plain first argument) and a computed (a const would freeze the language it was imported in).
+const juniorConfirmMessage = computed(() => t('Send the coach to junior and domestic tournaments too? Those rungs pay no prize money, so the second fare is a bill against an income she does not have yet. Measured over 30 careers a cell, an unlimited junior fare bankrupted 8 of 30 wealthy families and 15 of 30 middle ones – every one of them before she turned twenty. Your money, your call.'))
 
 async function toggleJuniors() {
   if (game.busy) return
@@ -547,7 +592,7 @@ const groups = computed<TierGroup[]>(() =>
     const prices = inTier.map((r) => r.weeklyCents)
     return {
       tier,
-      label: COACH_TIER_LABEL[tier],
+      label: COACH_TIER_WORD[tier],
       rows: sorted,
       loCents: prices.length ? Math.min(...prices) : 0,
       hiCents: prices.length ? Math.max(...prices) : 0,
@@ -584,10 +629,10 @@ const groups = computed<TierGroup[]>(() =>
 function rowLabel(r: Row): string {
   const state =
     r.current
-      ? 'her coach now'
+      ? t('her coach now')
       : r.lockedPoints !== null
-        ? `locked, ${r.lockedPoints} ranking points short`
-        : 'hire'
+        ? t('locked, {0} ranking points short', [r.lockedPoints])
+        : t('hire')
   // ⭐⭐ ROUND 44 – AND THE READING IS IN THE NAME WHEN THERE IS ONE, which is C12 read literally.
   // The owner kept the figure on the gauge «как раз для тех, кто плохо считывает цвета или
   // расположение шкалы» (his words are in docs/specs/the-chemistry-2026-09.md §8a), and a listener is
@@ -597,8 +642,8 @@ function rowLabel(r: Row): string {
   // defect the round 42 #42 note above records.
   // ⚠ ONLY WHEN THERE IS A READING. A stranger's card says nothing rather than «chemistry unknown»,
   // because a name should not grow a clause that is true of most of the list.
-  const chem = r.chemistry === null ? '' : `, chemistry ${chemSpoken(r.chemistry)}%`
-  return `${r.name}, ${COACH_TIER_LABEL[r.tier]} tier, ${FIT_LABEL[r.fitNow]}, ${formatCents(r.weeklyCents)} a week${chem} – ${state}`
+  const chem = r.chemistry === null ? '' : t(', chemistry {0}%', [chemSpoken(r.chemistry)])
+  return t('{0}, {1} tier, {2}, {3} a week{4} – {5}', [r.name, COACH_TIER_WORD[r.tier], FIT_LABEL[r.fitNow], formatCents(r.weeklyCents), chem, state])
 }
 
 // =================================================================================================
@@ -702,7 +747,7 @@ function chemSpoken(level: number): string {
  *  is a picture and the component requires it to say what it is. He rules all three; an agent may not
  *  take a fourth. */
 function chemLabel(level: number | null): string {
-  return level === null ? 'Chemistry with her: not known yet' : `Chemistry with her: ${chemSpoken(level)}%`
+  return level === null ? t('Chemistry with her: not known yet') : t('Chemistry with her: {0}%', [chemSpoken(level)])
 }
 
 // --- the budget meter ---------------------------------------------------------------------------
@@ -797,11 +842,11 @@ const confirmMessage = computed(() => {
   const delta = r.weeklyCents - now
   const change =
     delta === 0
-      ? 'Your weekly coaching bill does not change.'
+      ? t('Your weekly coaching bill does not change.')
       : delta > 0
-        ? `Your weekly coaching bill rises by ${formatCents(delta)}.`
-        : `Your weekly coaching bill falls by ${formatCents(-delta)}.`
-  return `Hire ${r.name} at ${formatCents(r.weeklyCents)} a week? ${change}`
+        ? t('Your weekly coaching bill rises by {0}.', [formatCents(delta)])
+        : t('Your weekly coaching bill falls by {0}.', [formatCents(-delta)])
+  return t('Hire {0} at {1} a week? {2}', [r.name, formatCents(r.weeklyCents), change])
 })
 function askHire(row: Row): void {
   if (row.current || row.lockedPoints !== null) return
@@ -830,14 +875,11 @@ async function doHire(): Promise<void> {
  *  to guarantee. */
 const releasing = ref(false)
 const releaseMessage = computed(() => {
-  const name = rows.value.find((r) => r.current)?.name ?? 'your coach'
+  const name = rows.value.find((r) => r.current)?.name ?? t('your coach')
   // ⚠ NO PRONOUN FOR THE COACH. The roster is mixed and carries no gender - a first draft read "his
   // read of her goes with him" and the screen showed it under Sabine Kobayashi. "She" is safe
   // because "she" is always the daughter, which is this whole app's one fixed referent.
-  return (
-    `Let ${name} go? She is self-coached from this week: the weekly bill becomes court time only, ` +
-    `and the trained eye you were paying for goes too.`
-  )
+  return t('Let {0} go? She is self-coached from this week: the weekly bill becomes court time only, and the trained eye you were paying for goes too.', [name])
 })
 async function doRelease(): Promise<void> {
   releasing.value = false
@@ -875,12 +917,12 @@ function scrollToTier(tier: CoachTier): void {
     <StoreError />
 
     <section class="bare market-head">
-      <IconButton class="back-link" variant="bare" icon="back" label="Back" @click="emit('back')" />
+      <IconButton class="back-link" variant="bare" icon="back" :label="t('Back')" @click="emit('back')" />
       <div>
-        <h2 class="market-title">Coach Market</h2>
+        <h2 class="market-title">{{ t('Coach Market') }}</h2>
         <p class="market-sub">
           {{ headline }} &middot; <strong>{{ PLAY_STYLE_LABEL[kidStyle] }}</strong> &middot;
-          {{ rows.length }} coaches
+          {{ t('{0} coaches', [rows.length]) }}
         </p>
       </div>
     </section>
@@ -889,7 +931,7 @@ function scrollToTier(tier: CoachTier): void {
       v-model="tab"
       class="cm-tabs"
       :options="tabsWithMarker"
-      group-label="What this screen is about"
+      :group-label="t('What this screen is about')"
     />
 
     <!-- ⭐ ROUND-18 #4 – THE SELF-COACHING TICK IS A SECOND DOOR ONTO THIS SCREEN'S OWN DECISIONS,
@@ -916,15 +958,15 @@ function scrollToTier(tier: CoachTier): void {
              spellings of one name is the drift this whole composable exists to make impossible.
              ⚠ IT IS THE ONLY WORD ON THIS TILE THAT MOVED – invariant 4 binds the rest, so
              `/week free`, `committed` and `weekly cap` are untouched to the character. -->
-        <span class="budget-label">{{ TEAM_BUDGET_LABEL }}</span>
+        <span class="budget-label">{{ teamBudgetLabel() }}</span>
         <span class="budget-free"
-          ><strong>{{ formatCents(freeCents) }}</strong> /week free</span
+          ><strong>{{ formatCents(freeCents) }}</strong> {{ t('/week free') }}</span
         >
       </div>
       <div class="budget-bar"><i :style="{ width: meterPct + '%' }"></i></div>
       <p class="budget-legend">
-        <span class="legend-dot committed"></span>{{ formatCents(committedCents) }} committed
-        <span class="legend-dot cap"></span>{{ formatCents(capCents) }} weekly cap
+        <span class="legend-dot committed"></span>{{ t('{0} committed', [formatCents(committedCents)]) }}
+        <span class="legend-dot cap"></span>{{ t('{0} weekly cap', [formatCents(capCents)]) }}
       </p>
 
       <!-- ⭐⭐ ROUND 42 #23's OTHER HALF – EVERY FILLED SEAT, WITH WHAT IT COSTS A WEEK. The tile
@@ -938,7 +980,7 @@ function scrollToTier(tier: CoachTier): void {
            spelling of «a week». -->
       <p v-for="seat in seats" :key="seat.key" class="budget-seat" :data-seat="seat.key">
         <span class="seat-name">{{ seat.label }}</span>
-        <span class="seat-cost">{{ formatCents(seat.weeklyCents) }} /wk</span>
+        <span class="seat-cost">{{ t('{0} /wk', [formatCents(seat.weeklyCents)]) }}</span>
       </p>
 
       <!-- ⭐⭐ ROUND-28 #8 – AND THE WHOLE HOUSEHOLD UNDER IT. The meter above is the coaching
@@ -962,7 +1004,7 @@ function scrollToTier(tier: CoachTier): void {
          one screen where the player is looking at their faces. The owner's own fix: drop it and join
          the two halves with a dash. -->
     <p class="hint cm-plan-note">
-      Every price below is {{ sessionsNow }} sessions a week – more sessions, more money.
+      {{ t('Every price below is {0} sessions a week – more sessions, more money.', [sessionsNow]) }}
     </p>
 
     <!-- ⭐⭐ ROUND-21 #2 – THE TOURNAMENT-TRAVEL TOGGLE IS LIVE, ON HIS THIRD ASK.
@@ -1022,7 +1064,7 @@ function scrollToTier(tier: CoachTier): void {
          `tests/component/coach-travel-row.test.ts` mounts a professional career and holds the row to it. -->
     <section v-if="billing" class="cm-travel">
       <div class="cm-travel-text">
-        <p class="cm-travel-title">Coach travels to tournaments</p>
+        <p class="cm-travel-title">{{ t('Coach travels to tournaments') }}</p>
         <p class="cm-travel-sub">{{ travelSubLine }}</p>
       </div>
       <button
@@ -1032,8 +1074,8 @@ function scrollToTier(tier: CoachTier): void {
         :disabled="game.busy"
         :aria-label="
           travelsOnEventWeeks
-            ? 'Coach travels to tournaments with her – on. Press to send the coach home for competition weeks.'
-            : 'Coach travels to tournaments with her – off. Press to buy one additional fare per trip.'
+            ? t('Coach travels to tournaments with her – on. Press to send the coach home for competition weeks.')
+            : t('Coach travels to tournaments with her – off. Press to buy one additional fare per trip.')
         "
         @click="toggleTravel"
       >
@@ -1057,7 +1099,7 @@ function scrollToTier(tier: CoachTier): void {
          says so plainly before the first fare is charged and then does as it is told. -->
     <section v-if="billing && travelsOnEventWeeks" class="cm-travel cm-travel-nested">
       <div class="cm-travel-text">
-        <p class="cm-travel-title">...and to junior events too</p>
+        <p class="cm-travel-title">{{ t('...and to junior events too') }}</p>
         <p class="cm-travel-sub">{{ juniorSubLine }}</p>
       </div>
       <button
@@ -1067,8 +1109,8 @@ function scrollToTier(tier: CoachTier): void {
         :disabled="game.busy"
         :aria-label="
           travelsToJuniors
-            ? 'Coach travels to junior and domestic tournaments – on. Press to stop paying the additional fare on the trips that pay no prize money.'
-            : 'Coach travels to junior and domestic tournaments – off. Press to buy the additional fare on those trips too.'
+            ? t('Coach travels to junior and domestic tournaments – on. Press to stop paying the additional fare on the trips that pay no prize money.')
+            : t('Coach travels to junior and domestic tournaments – off. Press to buy the additional fare on those trips too.')
         "
         @click="toggleJuniors"
       >
@@ -1078,8 +1120,8 @@ function scrollToTier(tier: CoachTier): void {
     <ConfirmDialog
       v-if="askingJuniors"
       :message="juniorConfirmMessage"
-      confirm-label="Send the coach"
-      cancel-label="Not yet"
+      :confirm-label="t('Send the coach')"
+      :cancel-label="t('Not yet')"
       @cancel="askingJuniors = false"
       @confirm="doSendToJuniors"
     />
@@ -1095,8 +1137,7 @@ function scrollToTier(tier: CoachTier): void {
          reversal actually changed, and the one he is deciding against. `billedWeeks` is the engine's
          own count, so a booked holiday shows up in both figures or in neither. -->
     <p v-if="billing" class="hint cm-travel-cost">
-      <strong>{{ formatCents(billing.weeklyCents) }}</strong> a week at her current plan –
-      {{ formatCents(billing.seasonCents) }} over {{ billing.billedWeeks }} weeks.
+      <strong>{{ formatCents(billing.weeklyCents) }}</strong> {{ t('a week at her current plan – {0} over {1} weeks.', [formatCents(billing.seasonCents), billing.billedWeeks]) }}
     </p>
 
     <!-- ⭐⭐ ROUND 29 #13 – THE OTHER HALF OF WHAT A COACH COSTS, AND IT IS SAID EXACTLY ONCE.
@@ -1127,8 +1168,7 @@ function scrollToTier(tier: CoachTier): void {
          he wrote (invariant 4). The percentage stays RENDERED rather than typed, which is why the
          line reads the every-finish arm of the very table the till divides by. -->
     <p class="hint cm-share-note">
-      Every coach here also takes <strong>{{ everySharePct }}%</strong> of every prize cheque she
-      collects.
+      {{ t('Every coach here also takes') }} <strong>{{ everySharePct }}%</strong> {{ t('of every prize cheque she collects.') }}
     </p>
 
     <!-- ⚠ HOW MUCH ROOM IS LEFT IN HER, and it is the context every percentage below is relative to.
@@ -1172,7 +1212,7 @@ function scrollToTier(tier: CoachTier): void {
         aria-describedby="cm-style-value"
         @click="cycleStyle"
       >
-        <span id="cm-style-label" class="drop-label">Style</span>
+        <span id="cm-style-label" class="drop-label">{{ t('Style') }}</span>
         <strong id="cm-style-value">{{ PLAY_STYLE_LABEL[lensStyle] }}</strong>
       </button>
       <button
@@ -1181,20 +1221,20 @@ function scrollToTier(tier: CoachTier): void {
         aria-describedby="cm-sort-value"
         @click="toggleSort"
       >
-        <span id="cm-sort-label" class="drop-label">Sort</span>
-        <strong id="cm-sort-value">{{ sort === 'fit' ? 'Best fit' : 'Price' }}</strong>
+        <span id="cm-sort-label" class="drop-label">{{ t('Sort') }}</span>
+        <strong id="cm-sort-value">{{ sort === 'fit' ? t('Best fit') : t('Price') }}</strong>
       </button>
     </div>
     <p v-if="styleLens !== null" class="hint market-lens-note">
-      Showing fit against {{ PLAY_STYLE_LABEL[lensStyle] }}, not the game she plays.
+      {{ t('Showing fit against {0}, not the game she plays.', [PLAY_STYLE_LABEL[lensStyle]]) }}
     </p>
 
     <section v-for="g in groups" :key="g.tier" :id="`coach-tier-${g.tier}`" class="bare tier-block">
       <p class="tier-head" :class="`tier-${g.tier}`">
         <span class="tier-dot"></span>
-        <span class="tier-name">{{ g.label }} tier</span>
-        <span class="tier-count">{{ g.rows.length }} coaches</span>
-        <span class="tier-range">{{ formatCents(g.loCents) }}-{{ formatCents(g.hiCents) }} /wk</span>
+        <span class="tier-name">{{ t('{0} tier', [g.label]) }}</span>
+        <span class="tier-count">{{ t('{0} coaches', [g.rows.length]) }}</span>
+        <span class="tier-range">{{ t('{0}-{1} /wk', [formatCents(g.loCents), formatCents(g.hiCents)]) }}</span>
       </p>
 
       <!-- The portrait is FULL-BLEED down the left edge, sized by height, masked into the card -
@@ -1342,12 +1382,12 @@ function scrollToTier(tier: CoachTier): void {
              it rather than asserting it. -->
         <span class="cm-right">
           <span class="cm-money">
-            <span class="cm-price">{{ formatCents(r.weeklyCents) }}<i>/wk</i></span>
-            <span v-if="r.current" class="cm-action is-current">Current</span>
+            <span class="cm-price">{{ formatCents(r.weeklyCents) }}<i>{{ t('/wk') }}</i></span>
+            <span v-if="r.current" class="cm-action is-current">{{ t('Current') }}</span>
             <span v-else-if="r.lockedPoints !== null" class="cm-action is-locked"
-              >{{ r.lockedPoints }} pts short</span
+              >{{ t('{0} pts short', [r.lockedPoints]) }}</span
             >
-            <span v-else class="cm-action is-hire">Hire &rsaquo;</span>
+            <span v-else class="cm-action is-hire">{{ t('Hire ›') }}</span>
           </span>
           <!-- THE MARKER. The mark above the gauge keeps the wave's accent yellow and the gauge's
                gradient belongs to the ring alone, so the two never compete for the eye - his round
@@ -1389,11 +1429,11 @@ function scrollToTier(tier: CoachTier): void {
       <p class="hint" style="margin-top: 0">
         {{
           current
-            ? 'You can always take her back onto the court yourself. The weekly bill becomes court time only.'
-            : 'You are coaching her yourself. The weekly bill is court time only.'
+            ? t('You can always take her back onto the court yourself. The weekly bill becomes court time only.')
+            : t('You are coaching her yourself. The weekly bill is court time only.')
         }}
       </p>
-      <button v-if="current" :disabled="game.busy" @click="releasing = true">Coach her yourself</button>
+      <button v-if="current" :disabled="game.busy" @click="releasing = true">{{ t('Coach her yourself') }}</button>
     </section>
 
     </template>
@@ -1401,7 +1441,7 @@ function scrollToTier(tier: CoachTier): void {
     <ConfirmDialog
       v-if="pending"
       :message="confirmMessage"
-      confirm-label="Hire"
+      :confirm-label="t('Hire')"
       @confirm="doHire"
       @cancel="pending = null"
     />
@@ -1412,7 +1452,7 @@ function scrollToTier(tier: CoachTier): void {
     <ConfirmDialog
       v-if="releasing"
       :message="releaseMessage"
-      confirm-label="Coach her yourself"
+      :confirm-label="t('Coach her yourself')"
       @confirm="doRelease"
       @cancel="releasing = false"
     />

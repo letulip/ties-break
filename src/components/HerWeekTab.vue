@@ -51,11 +51,21 @@ const emit = defineEmits<{ release: []; coaches: [] }>()
  *  (`development.ts` owns the kind -> SKILL table); the subtitle here is that table in the parent's
  *  language, so the tab explains its own consequence without a second source of truth for it. */
 const KIND_LABEL: Record<SessionKind, string> = {
-  general: 'General practice',
-  serve: 'Serve & return',
-  rally: 'Rally',
-  fitness: 'Fitness',
-  matchplay: 'Match play',
+  get general() {
+    return t('General practice')
+  },
+  get serve() {
+    return t('Serve & return')
+  },
+  get rally() {
+    return t('Rally')
+  },
+  get fitness() {
+    return t('Fitness')
+  },
+  get matchplay() {
+    return t('Match play')
+  },
 }
 // ⚠ AND THERE IS NO SUBTITLE UNDER THE NAME. §2's "what it works on" column was drawn as a second
 // line per block in the first build and measured at +85px down a tab whose whole argument is that it
@@ -64,14 +74,21 @@ const KIND_LABEL: Record<SessionKind, string> = {
 
 const PLAN_ORDER = ['light', 'balanced', 'grind'] as const
 const PRESET_LABEL: Record<(typeof PLAN_ORDER)[number], string> = {
-  light: 'Light',
-  balanced: 'Balanced',
-  grind: 'Grind',
+  get light() {
+    return t('Light')
+  },
+  get balanced() {
+    return t('Balanced')
+  },
+  get grind() {
+    return t('Grind')
+  },
 }
 /** ⚠ THE WORDS THIS TAB ALREADY RENDERED, HANDED TO THE SHARED ROW (E-02). The row is one component
  *  across three screens and each of them keeps its own label set and its own order, so nothing about
  *  what is on screen moves – `PRESET_LABEL` above is untouched and this is the only new line. */
-const PRESET_OPTIONS = PLAN_ORDER.map((value) => ({ value, label: PRESET_LABEL[value] }))
+// A computed, not a const: the labels are words now, and a const would freeze the language the component was set up in.
+const PRESET_OPTIONS = computed(() => PLAN_ORDER.map((value) => ({ value, label: PRESET_LABEL[value] })))
 
 // --- the week he is editing ---------------------------------------------------------------------
 // ⚠ A LOCAL DRAFT THAT IS RE-SYNCED FROM THE SNAPSHOT, NOT A SECOND SOURCE OF TRUTH. Every tick fires
@@ -184,11 +201,13 @@ const activePreset = computed(() => presetOf(draft.value))
  *  never local arithmetic, which is the same rule the market's own price note keeps. */
 const readout = computed(() => {
   const money = game.snapshot?.coachBilling.weeklyCents
-  const off = daysOff.value === 1 ? '1 day off' : `${daysOff.value} days off`
+  // L2-5: every counted phrase is a whole message (English spells `1 day off` / `N days off` as two literals), so a locale builds its own plurals;
+  // the frame keeps the English «sessions»/«hours» exactly as they were (`1 sessions` included) – parity first, grammar in the Russian value.
+  const off = daysOff.value === 1 ? t('1 day off') : t('{0} days off', [daysOff.value])
   const doubled = lived.value.filter((day) => day.length > 1).length
-  const shape = doubled > 0 ? `, ${doubled} of them two sessions a day` : ''
-  const bill = money === undefined ? '' : ` ${formatCents(money)} this week.`
-  return `${sessions.value} sessions, ${hours.value} hours${shape} – ${off}.${bill}`
+  const shape = doubled > 0 ? t(', {0} of them two sessions a day', [doubled]) : ''
+  const bill = money === undefined ? '' : ` ${t('{0} this week.', [formatCents(money)])}`
+  return t('{0} sessions, {1} hours{2} – {3}.{4}', [sessions.value, hours.value, shape, off, bill])
 })
 
 /** ⚠ THE LIMIT IN WORDS AS WELL AS IN DOTS, AND IT IS THE HALF THE OWNER ASKED FOR BY NAME («Есть
@@ -212,10 +231,10 @@ const schoolRunsNextWeek = computed(() => {
  *  the only half that names school, and it names it off her BIRTH MONTH like every other surface. */
 const capacityNote = computed(() =>
   capacity.value > 1
-    ? 'No school this week – a day can take two sessions, if you want them.'
+    ? t('No school this week – a day can take two sessions, if you want them.')
     : schoolRunsNextWeek.value
-      ? 'One session a day while school is on – the dots are the room each day has left.'
-      : 'One session a day this week – the dots are the room each day has left.',
+      ? t('One session a day while school is on – the dots are the room each day has left.')
+      : t('One session a day this week – the dots are the room each day has left.'),
 )
 
 /** ⚠ WHO WRITES THIS WEEK - and since 13.08 the answer is a CONTROL rather than a sentence.
@@ -247,7 +266,7 @@ const coachName = computed(() => game.snapshot?.coachMarket.find((r) => r.curren
 const selfCoached = computed(() => (game.snapshot?.coachId ?? null) === null)
 /** The control's own words, used by the lock's sentence as well, so the instruction and the thing it
  *  instructs cannot drift apart. */
-const SELF_LABEL = 'I coach her myself'
+const selfLabel = computed(() => t('I coach her myself'))
 
 /** ⚠ THE PANEL IS LIVE ONLY WHILE THE FAMILY IS COACHING HER. Every control below asks this - the
  *  three preset pills through their own `:disabled`, the thirty-five boxes through `locked()` - so
@@ -265,8 +284,8 @@ const panelLive = computed(() => editable.value && selfCoached.value)
  *
  *  It names the coach because the answer to "why can I not touch this" is a person, and it names the
  *  way back because a lock with no key is a dead end. */
-const lockTitle = computed(() => `${coachName.value ?? 'Your coach'} sets her week.`)
-const lockNote = `Tick "${SELF_LABEL}" to plan it again – it lets the coach go.`
+const lockTitle = computed(() => t('{0} sets her week.', [coachName.value ?? t('Your coach')]))
+const lockNote = computed(() => t('Tick "{0}" to plan it again – it lets the coach go.', [selfLabel.value]))
 
 /** THE SECOND DOOR, AND IT PERFORMS NOTHING ITSELF - which is the whole of its design.
  *
@@ -291,10 +310,10 @@ function toggleSelf(): void {
 /** WHY A BOX IS DISABLED, once, under the grid – so a full week does not read as a broken screen. */
 const limitNote = computed(() => {
   if (sessions.value >= PLAN_MAX_SESSIONS) {
-    return `${PLAN_MAX_SESSIONS} sessions is her maximum – untick one to move it.`
+    return t('{0} sessions is her maximum – untick one to move it.', [PLAN_MAX_SESSIONS])
   }
   if (sessions.value <= PLAN_MIN_SESSIONS) {
-    return `${PLAN_MIN_SESSIONS} sessions is her minimum – tick another before you take one away.`
+    return t('{0} sessions is her minimum – tick another before you take one away.', [PLAN_MIN_SESSIONS])
   }
   return ''
 })
@@ -306,10 +325,10 @@ function filledDots(day: number): number {
 }
 /** What a day head says out loud: its name, and what it is holding out of what it may hold. */
 function dayHeadLabel(day: number): string {
-  return `${DAY_LONG[day]} – ${filledDots(day)} of ${capacity.value} sessions`
+  return t('{0} – {1} of {2} sessions', [DAY_LONG[day], filledDots(day), capacity.value])
 }
 function boxLabel(kind: SessionKind, day: number): string {
-  return `${KIND_LABEL[kind]} on ${DAY_LONG[day]}`
+  return t('{0} on {1}', [KIND_LABEL[kind], DAY_LONG[day]])
 }
 </script>
 
@@ -334,7 +353,7 @@ function boxLabel(kind: SessionKind, day: number): string {
       @click="toggleSelf"
     >
       <span class="hw-box" :class="{ on: selfCoached }" aria-hidden="true"></span>
-      <span class="hw-self-label">{{ SELF_LABEL }}</span>
+      <span class="hw-self-label">{{ selfLabel }}</span>
     </button>
 
     <!-- 1. THE PANEL. Live while the family coaches her; with a coach hired every control in it is
@@ -361,7 +380,7 @@ function boxLabel(kind: SessionKind, day: number): string {
              tests/round13-nav.test.ts) is that no Cyrillic appears inside one, comments included. I
              put the quote here first and the guard caught it, which is the guard working - the same
              note CoachMarketScreen.vue carries. -->
-        <div class="hw-heads" role="group" aria-label="The week, day by day">
+        <div class="hw-heads" role="group" :aria-label="t('The week, day by day')">
           <div v-for="d in days" :key="d" class="hw-head" role="img" :aria-label="dayHeadLabel(d)">
             <span class="hw-head-name" aria-hidden="true">{{ DAY_SHORT[d] }}</span>
             <span class="hw-dots" aria-hidden="true">
@@ -382,7 +401,7 @@ function boxLabel(kind: SessionKind, day: number): string {
         <div v-for="kind in SESSION_KINDS" :key="kind" class="hw-block">
           <p class="hw-block-head">
             <span class="hw-block-name">{{ KIND_LABEL[kind] }}</span>
-            <span class="hw-block-hours">{{ perKind[kind] }} h</span>
+            <span class="hw-block-hours">{{ t('{0} h', [perKind[kind]]) }}</span>
           </p>
           <div class="hw-row">
             <label v-for="d in days" :key="d" class="hw-cell" :class="{ locked: locked(kind, d) }">
@@ -423,7 +442,7 @@ function boxLabel(kind: SessionKind, day: number): string {
     <!-- ...and what the coming week IS, when it is not an ordinary training week. The sentence is
          the calendar's, so the two screens cannot describe one week differently - and it claims
          nothing about whether the plan runs in it, which the screen does not know. -->
-    <p v-if="weekAheadNote" class="hint hw-not-now">Next week – {{ weekAheadNote }}</p>
+    <p v-if="weekAheadNote" class="hint hw-not-now">{{ t('Next week – {0}', [weekAheadNote]) }}</p>
   </div>
 </template>
 

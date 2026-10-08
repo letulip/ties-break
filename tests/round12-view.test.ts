@@ -24,7 +24,9 @@ import { after, region, regions, tTransparent } from './helpers/source'
 
 // ⚠ L2-4 (08.10): READ THROUGH `tTransparent` – the screen's labels are `t()` calls now and these pins assert the words, not the wrapper.
 const seasonScreen = tTransparent(readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8'))
-const planSheet = readFileSync(new URL('../src/components/PlanWeekSheet.vue', import.meta.url), 'utf8')
+// ⚠ L2-5 (08.10): READ THROUGH `tTransparent` too – the planner's labels are `t()` calls now. `planSheetRaw` is for the one pin whose premise moved.
+const planSheetRaw = readFileSync(new URL('../src/components/PlanWeekSheet.vue', import.meta.url), 'utf8')
+const planSheet = tTransparent(planSheetRaw)
 // world.ts AND every world/*.ts part (P4 split): kidMatchEvent lives in world/matchNews.ts now
 const worldSrc = worldSource()
 const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
@@ -244,7 +246,9 @@ describe('R12-8b — a red "injury" chip on every card the layoff covers', () =>
     const vacation = slice(planSheet, '<!-- ---------------- Vacation', '\n      </template>')
     // The fact is still on screen while the parent is choosing...
     expect(vacation).toContain('v-if="layoff"')
-    expect(vacation).toContain('{{ layoffNote }}')
+    // ⚠ L2-5 (08.10) – A GENUINE PREMISE MOVE, re-aimed: the engine's layoff head is the FIRST HOLE of the sentence's `t()` now
+    // (`{0} A week away is still hers to book – …`), so the note is looked for where it lives – as the argument of that message.
+    expect(slice(planSheetRaw, '<!-- ---------------- Vacation', '\n      </template>')).toContain('[layoffNote])')
     // ...and it is no longer a blocker on the one control this tab has. A Book that could only throw
     // would be the R10-16 dead control, which is why the ENGINE gate came off first.
     expect(vacation).toContain(':disabled="!row.affordable || game.busy"')

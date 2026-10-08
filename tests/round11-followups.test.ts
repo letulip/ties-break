@@ -31,7 +31,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { TIERS } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 import type { InjurySeverity } from '../src/shared/protocol'
-import { after } from './helpers/source'
+import { after, tTransparent } from './helpers/source'
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
 
@@ -365,7 +365,8 @@ describe('F45-2 — an injury withdraws only the entries inside the layoff', () 
   })
 
   it('the injury popup no longer reads as "your season is cancelled"', () => {
-    const dialog = read('../src/components/InjuryStopDialog.vue')
+    // ⚠ L2-5 (08.10): READ THROUGH `tTransparent` – the dialog's words are `t()` calls now and this pin asserts the words, not the wrapper.
+    const dialog = tTransparent(read('../src/components/InjuryStopDialog.vue'))
     // the row is about what was CANCELLED, and the empty case says so out loud – "None affected"
     // was ambiguous the moment some entries started surviving.
     expect(dialog).toContain('<th>Cancelled</th>')

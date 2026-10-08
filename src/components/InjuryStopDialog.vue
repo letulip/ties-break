@@ -52,6 +52,7 @@ import type { InjurySeverity } from '../shared/protocol'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { weekLabel } from '../shared/dates'
+import { t } from '../i18n'
 import { formatCents } from '../shared/money'
 import { facePoint } from '../art/faceRects'
 import { useStartYear } from '../composables/startYear'
@@ -66,10 +67,18 @@ const report = computed(() => game.snapshot?.injuryReport ?? null)
 const week = computed(() => game.snapshot?.week ?? 0)
 
 const SEVERITY_LABEL: Record<InjurySeverity, string> = {
-  minor: 'Minor',
-  moderate: 'Moderate',
-  major: 'Major',
-  severe: 'Severe',
+  get minor() {
+    return t('Minor')
+  },
+  get moderate() {
+    return t('Moderate')
+  },
+  get major() {
+    return t('Major')
+  },
+  get severe() {
+    return t('Severe')
+  },
 }
 const severityLabel = computed(() => (injury.value ? SEVERITY_LABEL[injury.value.severity] : ''))
 const backWeek = computed(() => week.value + (injury.value?.weeksRemaining ?? 0))
@@ -110,12 +119,20 @@ const retired = computed(() => report.value?.kind === 'retired-match' || report.
  *  and the diary are held to: say only what the model knows. */
 const circumstance = computed(() => {
   const r = report.value
-  if (!r || r.kind === 'off-court') return 'Off court – it came on between matches.'
-  const against = r.oppName ? ` against ${r.oppName}` : ''
-  if (r.kind === 'retired-friendly') return `On court – she had to stop during a practice match${against}.`
+  if (!r || r.kind === 'off-court') return t('Off court – it came on between matches.')
+  // L2-5: each combination of the two optional facts is a WHOLE message – English «against X» / «in the Y» are never glued onto a sentence, so a
+  // locale reorders or drops them as its grammar wants. (RU-05 §20.2 wants the opponent and the stage as separate sentences; that is the semantic
+  // route, left to L3 – these seven messages keep the English byte-identical meanwhile.)
+  const opp = r.oppName
+  if (r.kind === 'retired-friendly') {
+    return opp ? t('On court – she had to stop during a practice match against {0}.', [opp]) : t('On court – she had to stop during a practice match.')
+  }
   // The round is a fact the draw sheet carries, so it is said when there is one.
-  const where = r.stage ? ` in the ${r.stage}` : ''
-  return `On court – she had to stop mid-match${against}${where}. The round she had reached is hers.`
+  const stage = r.stage
+  if (opp && stage) return t('On court – she had to stop mid-match against {0} in the {1}. The round she had reached is hers.', [opp, stage])
+  if (opp) return t('On court – she had to stop mid-match against {0}. The round she had reached is hers.', [opp])
+  if (stage) return t('On court – she had to stop mid-match in the {0}. The round she had reached is hers.', [stage])
+  return t('On court – she had to stop mid-match. The round she had reached is hers.')
 })
 
 // The painting of the moment, in her own age band. Already warmed: `injury` stays in the preloaded
@@ -188,65 +205,63 @@ useDialogFocus(card, () => emit('continue'))
       <!-- BOTH LINES ARE THE NAME, in the order they are read: which week it happened, then whether
            she went down on court. Either alone would name the card worse than it names itself to
            somebody looking at it. -->
-      <p id="injury-stop-kicker" class="season-summary-kicker">Injury – {{ weekLabel(onsetWeek, startYear) }}</p>
-      <h2 id="injury-stop-title" class="season-summary-title">{{ retired ? 'She had to stop.' : "She's hurt." }}</h2>
+      <p id="injury-stop-kicker" class="season-summary-kicker">{{ t('Injury – {0}', [weekLabel(onsetWeek, startYear)]) }}</p>
+      <h2 id="injury-stop-title" class="season-summary-title">{{ retired ? t('She had to stop.') : t("She's hurt.") }}</h2>
       <table class="season-summary-table">
         <tbody>
           <tr>
-            <th>Injury</th>
+            <th>{{ t('Injury') }}</th>
             <td>{{ injury.kind }}</td>
           </tr>
           <tr>
-            <th>Severity</th>
+            <th>{{ t('Severity') }}</th>
             <td>{{ severityLabel }}</td>
           </tr>
           <tr>
-            <th>How</th>
+            <th>{{ t('How') }}</th>
             <td>{{ circumstance }}</td>
           </tr>
           <tr>
-            <th>Out for</th>
+            <th>{{ t('Out for') }}</th>
             <td>
-              ~{{ injury.totalWeeks }} wk{{ injury.totalWeeks === 1 ? '' : 's' }} – back around
-              {{ weekLabel(backWeek, startYear) }}
+              {{ injury.totalWeeks === 1 ? t('~{0} wk – back around {1}', [injury.totalWeeks, weekLabel(backWeek, startYear)]) : t('~{0} wks – back around {1}', [injury.totalWeeks, weekLabel(backWeek, startYear)]) }}
               <!-- ROUND 41 #19: the masseur's own forecast, beside the clinic's number rather than
                    instead of it. Rendered only when the engine sent one – see `expectedWeeks`. -->
               <div v-if="expectedWeeks !== null" class="hint injury-stop-projection">
-                With the masseur – more like {{ expectedWeeks }} wk{{ expectedWeeks === 1 ? '' : 's' }}, back around
-                {{ weekLabel(expectedBackWeek, startYear) }}.
+                {{ expectedWeeks === 1 ? t('With the masseur – more like {0} wk, back around {1}.', [expectedWeeks, weekLabel(expectedBackWeek, startYear)]) : t('With the masseur – more like {0} wks, back around {1}.', [expectedWeeks, weekLabel(expectedBackWeek, startYear)]) }}
               </div>
             </td>
           </tr>
           <tr>
-            <th>Cancelled</th>
+            <th>{{ t('Cancelled') }}</th>
             <td>
               <template v-if="cancelled.length">
-                <div v-for="row in cancelled" :key="row.id">Withdrawn: {{ entryLine(row) }}</div>
-                <div v-if="refundCents > 0" class="positive num">Fees refunded: +{{ formatCents(refundCents) }}</div>
+                <div v-for="row in cancelled" :key="row.id">{{ t('Withdrawn: {0}', [entryLine(row)]) }}</div>
+                <div v-if="refundCents > 0" class="positive num">{{ t('Fees refunded: +{0}', [formatCents(refundCents)]) }}</div>
               </template>
               <!-- ROUND-20 #2: nothing was cancelled AND something was still lost. The lists had
                    closed, so she keeps her place and does not appear - which is a walkover and a
                    forfeited fee, not an entry that "stands". -->
               <template v-else-if="stranded.length">
-                <div>Nothing – those lists had closed.</div>
-                <div v-for="row in stranded" :key="row.id">Forfeited: {{ entryLine(row) }}</div>
+                <div>{{ t('Nothing – those lists had closed.') }}</div>
+                <div v-for="row in stranded" :key="row.id">{{ t('Forfeited: {0}', [entryLine(row)]) }}</div>
               </template>
-              <template v-else>Nothing – the layoff reaches no entry she holds</template>
+              <template v-else>{{ t('Nothing – the layoff reaches no entry she holds') }}</template>
             </td>
           </tr>
         </tbody>
       </table>
       <p class="hint season-summary-note">
-        Only the weeks she is out are cancelled – anything from {{ weekLabel(backWeek, startYear) }} on is still booked.
+        {{ t('Only the weeks she is out are cancelled – anything from {0} on is still booked.', [weekLabel(backWeek, startYear)]) }}
       </p>
       <!-- ROUND 39 #15a, wave D2 - the warm opening ON TOP OF the clinical close, exactly as wave D
            drafted it and the owner approved it (his words are in docs/rounds/round-39.md under 15a;
            no Cyrillic in a template, comments included). «She comes back from this» is TRUE here in
            a way the prologue's own reassurance would not be: the layoff above already says how long,
            so the sentence promises nothing the table contradicts. Nothing else on this card moved. -->
-      <p class="hint season-summary-note">She comes back from this. Rest and rehab now – the news feed tracks her recovery.</p>
+      <p class="hint season-summary-note">{{ t('She comes back from this. Rest and rehab now – the news feed tracks her recovery.') }}</p>
       <div class="dialog-actions">
-        <button class="primary" @click="$emit('continue')">Continue</button>
+        <button class="primary" @click="$emit('continue')">{{ t('Continue') }}</button>
       </div>
     </div>
   </div>

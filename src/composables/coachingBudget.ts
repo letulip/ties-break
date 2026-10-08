@@ -22,6 +22,7 @@
 //     by the engine rather than reverse-engineered on a screen, which is round-21 #12's own fix.
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
+import { t } from '../i18n'
 
 // =================================================================================================
 // ⭐⭐⭐ ROUND 42 #23 – «TEAM BUDGET», AND THE TILE LISTS THE WHOLE TEAM
@@ -78,6 +79,9 @@ import { useGameStore } from '../stores/game'
  *  only word on the tile that changes: invariant 4 binds the rest of it, so `/week free`,
  *  `committed` and `weekly cap` are untouched to the character. */
 export const TEAM_BUDGET_LABEL = 'Team budget'
+/** L2-5: the label as the screens PRINT it. `TEAM_BUDGET_LABEL` stays the English source (and what the pins read); both readers – the Coach Market's
+ *  meter and Home's rail card – call this, so the one shared name still cannot say two things. */
+export const teamBudgetLabel = (): string => t('Team budget')
 
 /** ⭐ ONE FILLED SEAT ON THE PAYROLL, with what it costs a week. */
 export interface TeamSeat {
@@ -163,10 +167,10 @@ export function useCoachingBudget(): CoachingBudget {
     const snap = game.snapshot
     if (!snap) return []
     const out: TeamSeat[] = []
-    if (snap.coachId !== null) out.push({ key: 'coach', label: 'Coach', weeklyCents: coachWeeklyCents.value })
-    if (snap.masseurHired) out.push({ key: 'masseur', label: 'Masseur', weeklyCents: snap.masseurSalaryCents })
+    if (snap.coachId !== null) out.push({ key: 'coach', label: t('Coach'), weeklyCents: coachWeeklyCents.value })
+    if (snap.masseurHired) out.push({ key: 'masseur', label: t('Masseur'), weeklyCents: snap.masseurSalaryCents })
     if (snap.psychologistHired) {
-      out.push({ key: 'psychologist', label: 'Psychologist', weeklyCents: snap.psychologistSalaryCents })
+      out.push({ key: 'psychologist', label: t('Psychologist'), weeklyCents: snap.psychologistSalaryCents })
     }
     // ⭐⭐⭐ 17.09 – THE FOURTH SEAT, AND ITS ABSENCE WAS NOT COSMETIC. The owner, off his own play:
     // «спарринг не учитывается в недельных расходах на верхней плашке на вкладке тренеров, его там
@@ -186,7 +190,7 @@ export function useCoachingBudget(): CoachingBudget {
     // snapshot's own hired flags rather than against a list typed in a test, so a FIFTH seat
     // reddens it by existing instead of repeating this.
     if (snap.sparringHired) {
-      out.push({ key: 'sparring', label: 'Hitting partner', weeklyCents: snap.sparringSalaryCents })
+      out.push({ key: 'sparring', label: t('Hitting partner'), weeklyCents: snap.sparringSalaryCents })
     }
     return out
   })

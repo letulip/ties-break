@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { after, region } from './helpers/source'
+import { after, region, tTransparent } from './helpers/source'
 import { componentLogic } from './worldSource'
 
 // SCREEN T - COACH MARKET. Facts about a template, which is exactly the kind of fact that silently
@@ -10,7 +10,8 @@ import { componentLogic } from './worldSource'
 // states, the fit pills, the tier sections and the tokens they are drawn with - plus the one rule
 // this screen must not break: it renders what the engine computed and derives no money of its own.
 const read = (rel: string) => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8')
-const market = read('../src/components/screens/CoachMarketScreen.vue')
+// ⚠ L2-5 (08.10): READ THROUGH `tTransparent` – the screen's words are `t()` calls now and these pins assert the words, not the wrapper.
+const market = tTransparent(read('../src/components/screens/CoachMarketScreen.vue'))
 const css = read('../src/style.css')
 const tokens = read('../docs/design/tokens.css')
 /** ⚠ THE TRAINING REGULATOR'S ROW LEFT THIS FILE ON 27.09 (T4.12 / E-02) and is now one component
@@ -88,7 +89,11 @@ describe('screen T renders what the design specified', () => {
     // The owner's ask, and the rule that goes with it: computed, a range, never a guarantee.
     expect(market).toContain('upliftPct')
     expect(market).toContain('formatUplift')
-    expect(market).toMatch(/\+\$\{lo\.toFixed\(1\)\}-\$\{hi\.toFixed\(1\)\}% a season/)
+    // ⚠ L2-5 (08.10) – A GENUINE PREMISE MOVE, re-aimed: the two bounds are the HOLES of one whole message now (`+{0}-{1}% a season`, so a locale
+    // can order and punctuate its own range), and the reader strips the wrapper but keeps the holes. The numbers it is called with are still the
+    // engine's `lo` and `hi`, to one decimal – pinned on the raw source.
+    expect(market).toMatch(/\+\{0\}-\{1\}% a season/)
+    expect(read('../src/components/screens/CoachMarketScreen.vue')).toContain("t('+{0}-{1}% a season', [lo.toFixed(1), hi.toFixed(1)])")
     // No hand-written band anywhere the player can SEE - the numbers live in the engine or nowhere.
     // (The script's banner quotes the owner's own sketch; that is a comment, and the point of it is
     // to record that those figures were NOT copied into the code.)
@@ -240,7 +245,7 @@ describe('screen T, round 3', () => {
   // this asserts: strip the character and the two screens spell the same word. Without the pin the
   // next reader deletes a character they cannot see and the scrap silently clips again.
   it('the Kid screen\'s scrap wraps the long one WITHOUT leaving the vocabulary', () => {
-    const kid = read('../src/components/screens/KidScreen.vue')
+    const kid = tTransparent(read('../src/components/screens/KidScreen.vue'))
     const match = kid.match(/counterpuncher: '([^']+)'/)
     expect(match, 'the Kid screen still names her style').not.toBeNull()
     expect(match![1]).toContain('­')
