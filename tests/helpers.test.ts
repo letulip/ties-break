@@ -306,6 +306,7 @@ describe('tTransparent – a pin reads the same whether or not the site is wrapp
     ['an object getter (the table shape)', "{ id: 'a', get label() { return t('Coach yourself') }, cost: 1 }", "{ id: 'a', label: 'Coach yourself', cost: 1 }"],
     ['a multi-line getter with a quoted name', "{ get 'Huge potential'() {\n    return t('Huge')\n  } }", "{ 'Huge potential': 'Huge' }"],
     ['an arrow reader', "{ walkover: () => t('Stopped: too injured.') }", "{ walkover: 'Stopped: too injured.' }"],
+    ['a list of readers, one per line (the localizedList shape – L2-3)', "pool: localizedList(\n    () => t('She hits like it owes her money'),\n    () => t('First strike'),\n  ),", "pool: localizedList(\n    'She hits like it owes her money',\n    'First strike',\n  ),"],
     ['template text', "<button>{{ t('Back') }}</button>", '<button>Back</button>'],
     ['a bound attribute', `<button :aria-label="t('Random first name')" />`, '<button aria-label="Random first name" />'],
     ['a bound prop with an apostrophe', String.raw`<IconButton :label="t('Don\'t')" />`, `<IconButton label="Don't" />`],
@@ -321,6 +322,10 @@ describe('tTransparent – a pin reads the same whether or not the site is wrapp
     expect(tTransparent("get label() { return t('Coach yourselfX') }")).toContain("label: 'Coach yourselfX'")
     expect(tTransparent("get label() { return t('Coach yourselfX') }")).not.toContain("label: 'Coach yourself'")
     expect(tTransparent("<b>{{ t('Back up') }}</b>")).not.toBe('<b>Back</b>')
+    // L2-3: the list seat forgives the thunk, never the word – and never a lambda in running code.
+    expect(tTransparent("pool: localizedList(\n    () => t('First strikeX'),\n  )")).not.toContain("'First strike',")
+    expect(tTransparent("const n = computed(() => 'x')")).toBe("const n = computed(() => 'x')")
+    expect(tTransparent("xs.map(() => 'y')\n  ys.map(\n    () => 'z')")).toBe("xs.map(() => 'y')\n  ys.map(\n    () => 'z')")
   })
 
   it('leaves alone what it cannot read as one plain literal – a pin over those says so itself', () => {

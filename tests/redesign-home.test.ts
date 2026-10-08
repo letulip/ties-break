@@ -24,13 +24,15 @@ import { TIER_LADDER } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 import type { Surface } from '../src/engine/match/types'
 import type { DiaryFacts, FamilyBackground, FinanceWeek } from '../src/shared/protocol'
-import { after, at, region, regionToLast } from './helpers/source'
+import { after, at, region, regionToLast, tTransparent } from './helpers/source'
 import { componentLogic } from './worldSource'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 const ROOT = fileURLToPath(new URL('../', import.meta.url))
 
-const home = read('../src/components/screens/HomeScreen.vue')
+// L2-3 (08.10): HOME'S COPY IS `t('…')` NOW (RU-03) – every claim below is about WORDS and SHAPE (the pool's twenty lines, the eyebrows), and the
+// words did not change. `tTransparent` reads the wrapped source the way these pins were written: a changed word still fails.
+const home = tTransparent(read('../src/components/screens/HomeScreen.vue'))
 const app = read('../src/App.vue')
 const css = read('../src/style.css')
 

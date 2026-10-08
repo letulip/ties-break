@@ -16,7 +16,7 @@ import type { Snapshot, WorldEvent } from '../src/shared/protocol'
 // Comments are not code – the house helper, now in tests/helpers/source.ts. This codebase documents
 // at length, INCLUDING documenting what it deliberately no longer does, so a `not.toContain` over
 // raw source fails on a note that merely names the thing it forbids.
-import { after, at, codeOf, region, regionToLast } from './helpers/source'
+import { after, at, codeOf, region, regionToLast, tTransparent } from './helpers/source'
 // ⚠ T6.4 · F-09 (28.09) – a class attribute is a set of tokens; see the helper's header for why the
 // exact-attribute pin below became a whole-token one.
 import { carriesClasses } from './helpers/markup'
@@ -25,7 +25,8 @@ import { componentLogic, engineModuleSource } from './worldSource'
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
 const app = read('../src/App.vue')
-const home = read('../src/components/screens/HomeScreen.vue')
+// L2-3 (08.10): HOME'S COPY IS `t('…')` NOW (RU-03) – the eyebrows and labels this file pins are the same words; read through `tTransparent`.
+const home = tTransparent(read('../src/components/screens/HomeScreen.vue'))
 // ⚠ RE-AIMED BY ROUND 36's SECOND PASS, P2-6 – THE SFC **PLUS THE COMPOSABLES IT IMPORTS**, which is
 // the helper CLAUDE.md names for a POSITIVE claim that must survive an extraction. Her face, the
 // week's strings, the rank chip's five derived facts and the one-time callout's ref moved out of

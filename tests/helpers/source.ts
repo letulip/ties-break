@@ -487,6 +487,10 @@ const PROP = String.raw`[A-Za-z_$][\w$]*|'[^'\n]*'|"[^"\n]*"`
 const GETTER_SEAT = new RegExp(String.raw`\bget\s+(${PROP})\s*\(\s*\)\s*\{\s*return\s+(${LIT})\s*;?\s*\}`, 'g')
 const THUNK_SEAT = new RegExp(String.raw`(${PROP})(\s*:\s*)\(\s*\)\s*=>\s*(${LIT})`, 'g')
 const MUSTACHE_SEAT = new RegExp(String.raw`\{\{\s*('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*")\s*\}\}`, 'g')
+// L2-3 (08.10): a LIST OF READERS, one per line – `localizedList(\n    () => t('A'),\n    () => t('B'),\n  )` (the coach pools' shape). Once the
+// `t()` calls are stripped a line that is ONLY `() => 'A',` is a list item that was `'A',` before the wrap; the seat is anchored to a whole
+// line so a lambda in running code (`computed(() => 'x')`, `xs.map(() => 'y')`) is never rewritten.
+const LIST_THUNK_SEAT = new RegExp(String.raw`^([ \t]+)\(\)\s*=>\s*(${LIT})(,?)[ \t]*$`, 'gm')
 const BOUND_ATTR_SEAT = new RegExp(String.raw`(\s):([A-Za-z][\w:.-]*)="'((?:[^'"\\\n]|\\.)*)'"`, 'g')
 const unescapeQuotes = (inner: string): string => inner.replace(/\\(['"\\])/g, '$1')
 
@@ -509,6 +513,7 @@ export function tTransparent(source: string): string {
   return bare
     .replace(GETTER_SEAT, '$1: $2')
     .replace(THUNK_SEAT, '$1$2$3')
+    .replace(LIST_THUNK_SEAT, '$1$2$3')
     .replace(MUSTACHE_SEAT, (_m, lit: string) => unescapeQuotes(lit.slice(1, -1)))
     .replace(BOUND_ATTR_SEAT, (_m, space: string, name: string, inner: string) => `${space}${name}="${unescapeQuotes(inner)}"`)
 }
