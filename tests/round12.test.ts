@@ -37,7 +37,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { buildSeason, isOffSeasonWeek, TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { STOP_PRECEDENCE, type LossStreak } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
-import { region } from './helpers/source'
+import { region, tTransparent } from './helpers/source'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
@@ -507,7 +507,8 @@ describe('R12-S2 — "Best result: best Champion"', () => {
     // `<span class="season-key">`. The PROTECTED FACT is untouched and is what both lines below
     // still assert: this consumer prints the banked string RAW, under a label that already carries
     // the word "best", so nothing here depends on the value arriving with a "best " prefix.
-    const dialog = read('../src/components/SeasonSummaryDialog.vue')
+    // ⭐ L4-2b (10.10): the card's labels read through `t()` now, so the pin reads the source the way it was written (`tTransparent`) – a wrapped label is the same word, and a changed word still reddens.
+    const dialog = tTransparent(read('../src/components/SeasonSummaryDialog.vue'))
     expect(dialog).toContain('>Best result</span>')
     expect(dialog).toContain('{{ summary.bestResultText }}')
     // ...the Stats season table never used the string at all – it renders the stored INDEX through

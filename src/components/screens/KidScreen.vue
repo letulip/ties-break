@@ -57,7 +57,6 @@ import { useKidEmotion } from '../../composables/kidEmotion'
 // will not let the two be confused.
 import { readingColor } from '../../composables/readingColor'
 import { birthDateLabel, weekLabel } from '../../shared/dates'
-import { rankLabel } from '../../shared/format'
 // ⚠ MERGE: `FamilyBackground` left with the Family tile (screen C now draws the export's six, and
 // family background lives on the Money screen where it prices things). `PortraitEmotion`, not
 // `AvatarEmotion` - `rehab` joined the faces with ui/art-rehab-sleepy and the Mood tile can wear it
@@ -236,7 +235,10 @@ const bestN = computed(() => BEST_N_BY_TRACK[activeLadder.value])
 // middle of an English sentence. Cheaper to keep than to re-discover.
 const BEST_N_WORDS: Record<number, string> = { 6: 'six', 16: 'sixteen', 18: 'eighteen' }
 const bestNWord = computed(() => BEST_N_WORDS[bestN.value] ?? String(bestN.value))
-const rankText = computed(() => rankLabel(ladder.value?.rank ?? 0, ladder.value?.rank != null))
+// ⭐ L4-2b (10.10): `rankLabel`'s two shapes (shared/format.ts, engine-importable, so it cannot call `t()`) read through the catalog at THIS call site, as Stats does.
+const rankText = computed(() =>
+  ladder.value?.rank != null ? t('#{rank}', { rank: ladder.value?.rank ?? 0 }) : t('Unranked'),
+)
 const pointsTotal = computed(() => ladder.value?.points ?? 0)
 const pointsText = computed(() =>
   countingResults.value.length ? t('{0} pts', [pointsTotal.value.toLocaleString('en-US')]) : t('No points yet'),

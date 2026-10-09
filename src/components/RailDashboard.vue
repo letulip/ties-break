@@ -96,7 +96,7 @@ const entries = computed(() => enteredEvents(game.snapshot?.upcoming ?? []))
        the harness's selector fails the boundary test rather than silently widening the hole. -->
   <div v-if="game.snapshot" class="rail-dash">
     <Card as="article" class="rail-dash-card">
-      <Eyebrow as="h2" class="rail-dash-title">In the account</Eyebrow>
+      <Eyebrow as="h2" class="rail-dash-title">{{ t('In the account') }}</Eyebrow>
       <!-- The negative tint is Home's own `.budget-total.negative` rule, on the same figure. -->
       <p class="rail-dash-figure" :class="{ negative: fundsCents < 0 }">{{ funds }}</p>
     </Card>
@@ -142,7 +142,7 @@ const entries = computed(() => enteredEvents(game.snapshot?.upcoming ?? []))
 
     <!-- Silent with nothing entered – the same condition the Season strip carries. -->
     <Card v-if="entries.length" as="article" class="rail-dash-card">
-      <Eyebrow as="h2" class="rail-dash-title">My entries</Eyebrow>
+      <Eyebrow as="h2" class="rail-dash-title">{{ t('My entries') }}</Eyebrow>
       <p v-for="e in entries" :key="e.id" class="rail-dash-figure rail-dash-entry">
         {{ e.label }} · {{ weekLabel(e.week, startYear) }}
       </p>

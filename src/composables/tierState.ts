@@ -801,7 +801,9 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       // second bullet exactly, «the screen re-authored a sentence the engine composed». The age check
       // runs before the refusal is read, so the engine's words were simply discarded. The fallback is
       // the old line, for the pure callers that hand no `refusal` at all.
-      title: input.refusal?.detail ?? `${tier.label} is under-${tier.maxAgeYears! + 1} – at ${input.ageYears} she has aged out of it.`,
+      title:
+        input.refusal?.detail ??
+        t('{tier} is under-{n} – at {age} she has aged out of it.', { tier: tier.label, n: tier.maxAgeYears! + 1, age: input.ageYears }),
     }
   }
   if (ageBlock === 'young') {
@@ -813,7 +815,7 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       // J30 also wants 250 national points, and a plaque that mentions only the birthday tells a
       // twelve-year-old she is one year from the Junior Tour when she is a year AND a domestic
       // career from it. The chip has room for the nearest gate; the tooltip has room for all of it.
-      title: `${tier.label} – opens at ${tierOpensWhen(id, input.acceptsRank)}`,
+      title: t('{tier} – opens at {when}', { tier: tier.label, when: tierOpensWhen(id, input.acceptsRank) }),
     }
   }
   // ⭐⭐ A LOCK THAT IS NOT A GAP (round 28 #12 Part 0, docs/specs/the-calendar-she-can-reach-
@@ -847,8 +849,8 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       id,
       kind: 'outgrown',
       outgrown: true,
-      note: 'Outgrown',
-      title: input.refusal.detail ?? `${tier.label} – she is past this level.`,
+      note: t('Outgrown'),
+      title: input.refusal.detail ?? t('{tier} – she is past this level.', { tier: tier.label }),
     }
   }
   // ⚠ THE BAND IS COMPARED IN ITS OWN CURRENCY (01.08, round-15's find). `input.points` is her
@@ -952,12 +954,28 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
     // instead of writing it: round 34 built this clause, round 42 deleted it, and the cost of the
     // second ruling was a constant in `season/ranking.ts`. The clause comes back, unprompted and
     // correct, the day `tools/domestic-season-to-date.ts` patches the constant for its B arm.
+    // ⭐ L4-2b (10.10): the domestic sentence is one whole message per window form (the second is not reachable while the table rolls 52 weeks – `tools/domestic-season-to-date.ts` patches the constant for its B arm).
     const earnedAt: Record<'domestic' | 'itf', string> = {
       domestic:
-        'National points come from Local, Regional and National events' +
-        (WINDOW_BY_TRACK.domestic === 'seasonToDate' ? ', and the table starts again each season.' : '.'),
-      itf: 'International points come from Junior Tour events.',
+        WINDOW_BY_TRACK.domestic === 'seasonToDate'
+          ? t('National points come from Local, Regional and National events, and the table starts again each season.')
+          : t('National points come from Local, Regional and National events.'),
+      itf: t('International points come from Junior Tour events.'),
     }
+    // ... and the TITLE is one whole message per form (with the results plan or without it), the engine words – the tier's name, the points table's unit, the plan
+    // phrase – and the figures its params. `gapInResultsNote`'s own English frame around an engine finish stays an engine-born phrase inside a wired frame (L2-4's named leftover).
+    const gap = bandTrack === 'domestic' ? gapInResultsNote(toEnter - bandPoints, bandPoints) : null
+    const lockParams = {
+      tier: tier.label,
+      more: toEnter - bandPoints,
+      unit: LADDER_POINTS_LABEL[bandTrack],
+      has: bandPoints,
+      need: toEnter,
+      earned: earnedAt[bandTrack],
+    }
+    const lockedTitle = gap
+      ? t('{tier} – locked: {more} more {unit} (she has {has} of {need}) – {gap}. {earned}', { ...lockParams, gap })
+      : t('{tier} – locked: {more} more {unit} (she has {has} of {need}). {earned}', lockParams)
     return {
       id,
       kind: 'locked',
@@ -972,11 +990,7 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       // The gap-in-results plan is DOMESTIC arithmetic (gapInResultsNote reads the domestic rungs
       // only - the two ladders have no exchange rate), so an ITF-denominated gap states the table
       // and stops rather than offering a plan priced in the wrong currency.
-      title:
-        `${tier.label} – locked: ${toEnter - bandPoints} more ${LADDER_POINTS_LABEL[bandTrack]} ` +
-        `(she has ${bandPoints} of ${toEnter})` +
-        `${bandTrack === 'domestic' && gapInResultsNote(toEnter - bandPoints, bandPoints) ? ` – ${gapInResultsNote(toEnter - bandPoints, bandPoints)}` : ''}` +
-        `. ${earnedAt[bandTrack]}`,
+      title: lockedTitle,
     }
   }
   // ⚠ OUTGROWN COMES BEFORE THE ENGINE FALLBACK, and it did not used to (30.07, fix/ranking-truth).
@@ -1000,8 +1014,8 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
     return {
       id,
       kind: 'outgrown',
-      note: 'Outgrown',
-      title: `${tier.label} – outgrown: she is past this level`,
+      note: t('Outgrown'),
+      title: t('{tier} – outgrown: she is past this level', { tier: tier.label }),
     }
   }
   // In band and STILL refused: an ITF rung she is not high enough in the table for. The band cannot
@@ -1025,8 +1039,6 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
   // a live caller (both come from `acceptanceRank`); `rankToEnter` is the fallback, and it is the
   // ONLY number for W15's junior reserved place, which `acceptanceRank` does not answer for.
   if (input.engineOpen === false || refusedOnRank) {
-    const standing =
-      input.itfRank != null ? ` – she is #${input.itfRank}` : ' – she has no international ranking yet'
     const cut = input.acceptsRank ?? input.refusal?.rankToEnter
     return {
       id,
@@ -1037,10 +1049,19 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       // the sentence below says "international ranking" for every rung, which is true of the J
       // rungs it was written for and false of the W ones. Same discipline as the `outgrown` arm
       // twelve lines up: the UI decorates, the engine speaks.
+      // ⭐ L4-2b (10.10): the standing clause is one whole message per form (ranked or not), the tier's name and the opening condition its params.
       title:
         input.refusal?.detail ??
-        `${tier.label} – opens at ${tierOpensWhen(id, input.acceptsRank)}. Entry here is an ` +
-          `acceptance list read off her international ranking${standing}.`,
+        (input.itfRank != null
+          ? t('{tier} – opens at {when}. Entry here is an acceptance list read off her international ranking – she is #{rank}.', {
+              tier: tier.label,
+              when: tierOpensWhen(id, input.acceptsRank),
+              rank: input.itfRank,
+            })
+          : t('{tier} – opens at {when}. Entry here is an acceptance list read off her international ranking – she has no international ranking yet.', {
+              tier: tier.label,
+              when: tierOpensWhen(id, input.acceptsRank),
+            })),
     }
   }
   // The tier is hers on points. Has she any of the year's international allowance left?
@@ -1097,9 +1118,10 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       kind: 'capped',
       entryCap: input.entryCap,
       note: t('Year limit – {used} of {limit}', { used, limit }),
-      title:
-        `${tier.label} – she has used all ${limit} of her international events for this year ` +
-        `(age ${input.ageYears}). Not locked: a fresh allowance arrives on her next birthday.`,
+      title: t(
+        '{tier} – she has used all {limit} of her international events for this year (age {age}). Not locked: a fresh allowance arrives on her next birthday.',
+        { tier: tier.label, limit, age: input.ageYears },
+      ),
     }
   }
   // The PRO cap's arm (W2-LADDER §5), in the same slot for the same reason - and its copy NAMES
@@ -1112,10 +1134,10 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       kind: 'capped',
       entryCap: input.proEntryCap,
       note: t('Tour age rule – {used} of {limit}', { used, limit }),
-      title:
-        `${tier.label} – the tour's age rule allows ${limit} pro entries at ${input.ageYears} and ` +
-        `she has used all ${used}. Not locked: a fresh allowance arrives on her next birthday, and ` +
-        `the junior and national events stay open.`,
+      title: t(
+        `{tier} – the tour's age rule allows {limit} pro entries at {age} and she has used all {used}. Not locked: a fresh allowance arrives on her next birthday, and the junior and national events stay open.`,
+        { tier: tier.label, limit, age: input.ageYears, used },
+      ),
     }
   }
   // She can enter it. The only question left is whether the calendar has one.
@@ -1138,8 +1160,11 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       // The DATE, not the week number: R11-6 owns week-number rendering, and a date needs no
       // in-season/absolute decision to be correct.
       title: outgrown
-        ? `${tier.label} – she is past this level, and it is still hers to enter: next one ${weekRange(nextWeek, input.startYear)}. The stronger rung on a week takes the card.`
-        : `${tier.label} – open to her, next one ${weekRange(nextWeek, input.startYear)}`,
+        ? t('{tier} – she is past this level, and it is still hers to enter: next one {when}. The stronger rung on a week takes the card.', {
+            tier: tier.label,
+            when: weekRange(nextWeek, input.startYear),
+          })
+        : t('{tier} – open to her, next one {when}', { tier: tier.label, when: weekRange(nextWeek, input.startYear) }),
     }
   }
   return {
@@ -1149,9 +1174,15 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
     note: outgrown
       ? t('Past this level – none in {weeks} weeks', { weeks: input.horizonWeeks })
       : t('Open – none in {weeks} weeks', { weeks: input.horizonWeeks }),
-    title:
-      `${tier.label} – ${outgrown ? 'past this level but still hers to enter' : 'open to her'}, but none is scheduled in the next ${input.horizonWeeks} weeks. ` +
-      `This tier comes round less often than the others; it is not locked.`,
+    title: outgrown
+      ? t(
+          '{tier} – past this level but still hers to enter, but none is scheduled in the next {weeks} weeks. This tier comes round less often than the others; it is not locked.',
+          { tier: tier.label, weeks: input.horizonWeeks },
+        )
+      : t(
+          '{tier} – open to her, but none is scheduled in the next {weeks} weeks. This tier comes round less often than the others; it is not locked.',
+          { tier: tier.label, weeks: input.horizonWeeks },
+        ),
   }
 }
 

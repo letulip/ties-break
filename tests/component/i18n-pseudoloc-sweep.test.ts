@@ -18,6 +18,7 @@
 //   3. `hardcodeLeaks` allow-listing everything                                     -> «reported by name» goes red.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { h } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
 import LocalePrompt from '../../src/components/LocalePrompt.vue'
@@ -100,7 +101,9 @@ function tourBriefing(): Mounted {
 const DIALOGS: readonly [string, () => Mounted, 'wrapped' | 'unwrapped'][] = [
   ['RetirementDialog (last winter)', retirement, 'unwrapped'],
   ['LocalePrompt (first run)', localePrompt, 'wrapped'],
-  ['TourBriefingDialog', tourBriefing, 'unwrapped'],
+  // ⭐ L4-2b (10.10) RE-AIM, NOT RELAXED: the tour briefing's chrome (kicker, title, both headings, Continue) is wrapped now – it was this harness's named «unwrapped» example – so it is swept
+  // under the `xx` catalog like the locale prompt. The cap-strip mutation proof below keeps it by name: it reads layout, not copy.
+  ['TourBriefingDialog', tourBriefing, 'wrapped'],
 ]
 
 describe('xx overflow – the dismiss law holds with the text 30% longer, at 375x667', () => {
@@ -124,7 +127,7 @@ describe('xx overflow – the dismiss law holds with the text 30% longer, at 375
   }
 
   it('⚠⚠ MUTATION PROOF – strip the height cap and the SAME assertion goes red on the dialogs that scroll', async () => {
-    for (const [name, mountIt] of DIALOGS.filter(([, , copy]) => copy === 'unwrapped')) {
+    for (const [name, mountIt] of DIALOGS.filter(([n, , copy]) => copy === 'unwrapped' || n === 'TourBriefingDialog')) {
       document.body.innerHTML = ''
       setActivePinia(createPinia())
       setViewport(PHONE)
@@ -151,13 +154,19 @@ describe('xx hardcode leaks – unbracketed text under the pseudo-locale is an u
     m.unmount()
   })
 
-  it('an unwrapped surface (the tour briefing) is reported, by name', async () => {
+  it('an unwrapped surface is reported, by name', async () => {
+    // ⭐ L4-2b (10.10) RE-AIM, NOT RELAXED. This case used the tour briefing as its unmigrated screen, and the briefing is wrapped now (the carpet, tests/component/i18n-l4-2-xx-carpet-overlays.test.ts,
+    // judges the real one). The MECHANISM still needs a screen that leaks, so the stand-in is a render function with one literal button – exactly the shape of the `Continue` this case used to find.
     setViewport(PHONE)
     await installPseudoLocale()
-    const m = tourBriefing()
+    const w = mount({ render: () => h('div', { class: 'dialog-card' }, [h('button', 'Continue')]) }, { attachTo: document.body })
     const leaks = hardcodeLeaks(document.body)
     expect(leaks.length, 'nothing reported – the sweep would pass an unmigrated screen').toBeGreaterThan(0)
-    expect(leaks, 'the Continue button is a literal in the template today').toContain('Continue')
+    expect(leaks, 'the Continue button is a literal in the stand-in').toContain('Continue')
+    w.unmount()
+    // ...and the REAL briefing, mounted under the same catalog, is clean – the mirror of the stand-in, so the pair cannot both pass by the sweep reporting nothing at all
+    const m = tourBriefing()
+    expect(hardcodeLeaks(document.body)).toEqual([])
     m.unmount()
   })
 

@@ -27,7 +27,8 @@ import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { LADDER_LABEL, LADDER_TRACKS } from '../shared/protocol'
-import { rankLabel } from '../shared/format'
+// ⭐ L4-2b (10.10): `rankLabel`'s two shapes (shared/format.ts, engine-importable, so it cannot call `t()`) read through the catalog at THIS call site, as the Stats tile does.
+import { t } from '../i18n'
 import type { LadderTrack } from '../engine/season/types'
 import CountingResultsTable from './CountingResultsTable.vue'
 import IconButton from './ui/IconButton.vue'
@@ -84,30 +85,44 @@ const game = useGameStore()
  *  card that moved. ⚠ ONE SENTENCE AND NO OTHER: the three block lines above, the two bullets beside
  *  it and every heading are exactly as he last read them (invariant 4 – a string nobody touched
  *  cannot regress). */
+// ⭐ L4-2b (10.10): BOTH TABLES ARE GETTERS OVER `t()` – the record keeps its type and its readers, and the sentences follow the locale on the next render.
 const LADDER_RULE: Record<LadderTrack, string> = {
-  domestic: 'Her best 6 results from the last 52 weeks.',
-  itf: 'Her best 6 Junior Tour results from the last 52 weeks.',
-  wta: 'Her best 18 results from the last 52 weeks. She appears on it after 3 scoring tournaments, or 10 points.',
+  get domestic() {
+    return t('Her best 6 results from the last 52 weeks.')
+  },
+  get itf() {
+    return t('Her best 6 Junior Tour results from the last 52 weeks.')
+  },
+  get wta() {
+    return t('Her best 18 results from the last 52 weeks. She appears on it after 3 scoring tournaments, or 10 points.')
+  },
 }
 
 /** What an empty table means, per table – «nothing yet» is a different sentence on each one. */
 const LADDER_EMPTY: Record<LadderTrack, string> = {
-  domestic: 'Nothing here until she plays her first Local Open.',
-  itf: 'Nothing here until she plays a Junior Tour event – national results do not count towards this ranking.',
-  wta: 'Nothing here until she plays a W-series event – junior points do not cross over.',
+  get domestic() {
+    return t('Nothing here until she plays her first Local Open.')
+  },
+  get itf() {
+    return t('Nothing here until she plays a Junior Tour event – national results do not count towards this ranking.')
+  },
+  get wta() {
+    return t('Nothing here until she plays a W-series event – junior points do not cross over.')
+  },
 }
 
 const blocks = computed(() =>
-  LADDER_TRACKS.map((t) => {
-    const l = game.snapshot?.ladders[t]
+  // (the loop variable is `track`, not `t` – a local `t` would shadow the catalog reader above)
+  LADDER_TRACKS.map((track) => {
+    const l = game.snapshot?.ladders[track]
     return {
-      track: t,
-      label: LADDER_LABEL[t],
-      rank: rankLabel(l?.rank ?? 0, l?.rank !== null && l?.rank !== undefined),
+      track,
+      label: LADDER_LABEL[track],
+      rank: l?.rank !== null && l?.rank !== undefined ? t('#{rank}', { rank: l?.rank ?? 0 }) : t('Unranked'),
       points: l?.points ?? 0,
       results: l?.countingResults ?? [],
-      rule: LADDER_RULE[t],
-      empty: LADDER_EMPTY[t],
+      rule: LADDER_RULE[track],
+      empty: LADDER_EMPTY[track],
     }
   }),
 )
@@ -126,15 +141,14 @@ const blocks = computed(() =>
       aria-labelledby="rank-help-title"
       tabindex="-1"
     >
-      <IconButton class="replay-close" icon="close" label="Close" title="Close" @click="emit('close')" />
-      <p id="rank-help-title" class="guide-title">How ranking points work</p>
+      <IconButton class="replay-close" icon="close" :label="t('Close')" :title="t('Close')" @click="emit('close')" />
+      <p id="rank-help-title" class="guide-title">{{ t('How ranking points work') }}</p>
       <!-- ROUND 41 #1: «two» was the count of the hardcoded array below it, not of the game. -->
       <p class="hint">
-        She has three rankings and they are counted separately – a result pays into one table only, and
-        the totals never add up together.
+        {{ t('She has three rankings and they are counted separately – a result pays into one table only, and the totals never add up together.') }}
       </p>
       <section v-for="b in blocks" :key="b.track" class="rank-help-block">
-        <p class="rank-help-heading">{{ b.label }} – {{ b.rank }} · {{ b.points }} pts</p>
+        <p class="rank-help-heading">{{ t('{0} – {1} · {2} pts', [b.label, b.rank, b.points]) }}</p>
         <!-- ROUND 41 #1: each table says how IT counts. One shared sentence could carry two windows
              and two best-Ns; it could not carry three, and the one it carried was wrong for the
              National table (season-to-date under round 23 #12 at the time). ⚠ ROUND 42 #7 re-ruled
@@ -152,9 +166,9 @@ const blocks = computed(() =>
              line had room for neither. The eleven reserved slots stay deliberately unspelled here:
              they convert to open ones for a player who has never been in a Slam or a 1000 draw, which
              is every player this dialog is read by until she is inside the top 50. -->
-        <li class="hint">A new result only raises the total if it beats the weakest counted one.</li>
-        <li class="hint">On every table, results older than 52 weeks drop out – points must be defended.</li>
-        <li class="hint">National points are what open her next tier. The Junior Tour reads her international rank.</li>
+        <li class="hint">{{ t('A new result only raises the total if it beats the weakest counted one.') }}</li>
+        <li class="hint">{{ t('On every table, results older than 52 weeks drop out – points must be defended.') }}</li>
+        <li class="hint">{{ t('National points are what open her next tier. The Junior Tour reads her international rank.') }}</li>
       </ul>
     </div>
   </div>

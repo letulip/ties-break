@@ -834,10 +834,10 @@ const seasonChips = computed<TierChip[]>(() =>
     // is spoken; what is NEW to the ear is exactly the engine's own sentence.
     const title =
       state === 'reached'
-        ? `Best ${short} finish · ${avail.title}`
+        ? t('Best {0} finish · {1}', [short, avail.title])
         : state === 'outgrown'
           ? best !== undefined
-            ? `Outgrown – her best ${short} result stays on the books · ${avail.title}`
+            ? t('Outgrown – her best {0} result stays on the books · {1}', [short, avail.title])
             : avail.title
           : avail.title
     return {
@@ -850,7 +850,7 @@ const seasonChips = computed<TierChip[]>(() =>
       // The two arms whose visible label was abbreviated for the row's width keep the whole sentence
       // here; every other chip's visible label IS its name.
       ...(state === 'waiting' && cappedSpend !== undefined ? { spoken: avail.note } : {}),
-      ...(state === 'unlocked' ? { spoken: 'Unlocked – enter your first!' } : {}),
+      ...(state === 'unlocked' ? { spoken: t('Unlocked – enter your first!') } : {}),
       // ⚠ HIS RULING A ON THE RIG WAVE'S Q2 (25.09) – the `locked` arm's own idiom, letter first:
       // the reader hears the finish she earned (where one exists) and then the ENGINE's sentence,
       // never the screen-authored fragment. Composed HERE because this is the one site that knows

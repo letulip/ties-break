@@ -46,7 +46,7 @@ import { weekLabel } from '../shared/dates'
 import { formatCentsSigned } from '../shared/money'
 import { useStartYear } from '../composables/startYear'
 // v93 (L3-0): a ledger row's sentence is `c` rendered under the locale when the row has one, its stored `text` otherwise.
-import { eventText } from '../i18n'
+import { eventText, t } from '../i18n'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
 
@@ -74,6 +74,13 @@ const heading = computed(() =>
  *  four there would be the button lying about what it spent. */
 const weeksSpent = computed(() => Math.max(0, props.to - props.from))
 
+/** ⭐ L4-2b (10.10): THE LEAD IS ONE WHOLE MESSAGE PER COUNT FORM – English spells «1 week» and «N weeks» as two literals (the `Show 1 more level` precedent), so the locale owns its own plural. */
+const lead = computed(() =>
+  weeksSpent.value === 1
+    ? t('1 week passed. Everything they raised is below.')
+    : t('{n} weeks passed. Everything they raised is below.', { n: weeksSpent.value }),
+)
+
 const card = useTemplateRef<HTMLElement>('card')
 useDialogFocus(card, () => emit('close'))
 </script>
@@ -84,10 +91,10 @@ useDialogFocus(card, () => emit('close'))
       <h2 :id="titleId" class="week-span-title">{{ heading }}</h2>
       <!-- The sentence names the number of weeks the press actually bought, which is the one thing
            the card knows that the rows do not say. -->
-      <p class="week-span-lead">{{ weeksSpent }} {{ weeksSpent === 1 ? 'week' : 'weeks' }} passed. Everything they raised is below.</p>
+      <p class="week-span-lead">{{ lead }}</p>
       <!-- R10-16's doctrine, in the one state that can produce it: a card with nothing on it is the
            empty-popup bug, so the empty case says what it means instead of rendering a blank. -->
-      <p v-if="digest.length === 0" class="week-span-empty">Nothing was raised in that time.</p>
+      <p v-if="digest.length === 0" class="week-span-empty">{{ t('Nothing was raised in that time.') }}</p>
       <section v-for="w in digest" :key="w.week" class="week-span-week">
         <h3 class="week-span-week-head">{{ weekLabel(w.week, startYear) }}</h3>
         <ul class="week-span-rows">
@@ -103,7 +110,7 @@ useDialogFocus(card, () => emit('close'))
         </ul>
       </section>
       <div class="dialog-actions">
-        <button class="primary" @click="emit('close')">Close</button>
+        <button class="primary" @click="emit('close')">{{ t('Close') }}</button>
       </div>
     </div>
   </div>

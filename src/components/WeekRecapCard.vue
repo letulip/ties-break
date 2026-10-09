@@ -57,7 +57,7 @@ import { activeLadderOfSnapshot } from '../shared/protocol'
 import type { TravelHomeMood, TravelHomeScene, WorldEvent, WorldMatch } from '../shared/protocol'
 import { useStartYear } from '../composables/startYear'
 // L2-3 (08.10): RU-03 §20–§23 – the recap's frame, labels, alts, finance rows and memos, mood words and the goal scrap call `t()`.
-import { eventText, t } from '../i18n'
+import { eventText, localizedList, t } from '../i18n'
 import { ladderName } from '../composables/kidIdentity'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
@@ -153,7 +153,19 @@ const artAlt = computed(() => {
 })
 
 // Mon–Sun letters shown under the day dots (round-7 item 5b).
-const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+// ⭐ L4-2b (10.10): THE SEVEN INITIALS ARE SEVEN KEYS BY POSITION (`localizedList`, the day names' precedent in composables/weekDays.ts). English spells Tuesday
+// and Thursday `T`, Saturday and Sunday `S`, and RU-03 §22 asks for the Calendar's own two-letter set (the day heads wired in composables/weekDays.ts) – seven different words, so a bare `T` or `S`
+// could not carry them, and a bare single letter is the collision the stage code and the path letter already needed a tag for (`stage|F`, `path|W`). All
+// seven take a `dayN|` tag (N = 1 Monday .. 7 Sunday) so the set is one table and not two kinds of key. English reads the same seven letters.
+const DAY_LETTERS: readonly string[] = localizedList(
+  () => t('day1|M'),
+  () => t('day2|T'),
+  () => t('day3|W'),
+  () => t('day4|T'),
+  () => t('day5|F'),
+  () => t('day6|S'),
+  () => t('day7|S'),
+)
 
 // WHICH DAYS SHE TRAINED, and it is THE SAME ANSWER THE CALENDAR GIVES.
 //

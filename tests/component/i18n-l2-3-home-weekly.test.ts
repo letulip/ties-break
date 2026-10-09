@@ -395,10 +395,10 @@ describe('L2-3 xx sweep – no unwrapped literal in the frames, and the phone st
     const recap = mountRecap()
     for (const label of ['Finances', 'Training', 'Mood', 'Highlights', 'Energy']) expect(seen(recap.element), label).toMatch(new RegExp(`⟦${label}`))
     expect(recap.get('.recap-card').attributes('aria-label')).toMatch(/^⟦Week story, /)
-    // ⚠ THE ONE NAMED LEFTOVER ON THE RECAP: the seven day initials (M T W T F S S). RU-03 §22 ruled that the Russian recap takes Calendar's
-    // two-letter set rather than a second one-letter table; English has one-letter initials, `T` and `S` each stand for two days, so the key
-    // design (seven context-tagged keys, or a locale-owned initial) is the owner's to choose – see the L2-3 note in the spec.
-    expect(screenLeaks(recap.element, base)).toEqual(['M', 'T', 'W', 'T', 'F', 'S', 'S'])
+    // ⭐ L4-2b (10.10) RE-AIM, NOT RELAXED. The seven day initials (M T W T F S S) were this arm's one named leftover: RU-03 §22 ruled that the Russian recap takes Calendar's two-letter
+    // set rather than a second one-letter table, and English has one-letter initials where `T` and `S` each stand for two days – so a bare key could not carry them. They are seven keys
+    // BY POSITION now (`day1|M` .. `day7|S`, `localizedList` in WeekRecapCard.vue), and the recap leaks nothing under `xx`: the expectation moves from the seven letters to none.
+    expect(screenLeaks(recap.element, base)).toEqual([])
     recap.unmount()
     const week = mountWeek()
     for (const label of ['This week', 'Training plan', 'Planned spend']) expect(seen(week.element), label).toMatch(new RegExp(`⟦${label}`))

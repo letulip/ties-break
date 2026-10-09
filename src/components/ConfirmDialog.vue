@@ -32,10 +32,11 @@ let messageSeq = 0
 // the first control in document order and Cancel is written first. Recorded because it is the safe
 // half – a player who answers a confirm with the keyboard before reading it backs out of the act
 // rather than into it – and because reordering the two buttons would silently move it.
-import { useTemplateRef } from 'vue'
+import { computed, useTemplateRef } from 'vue'
 import { useDialogFocus } from '../composables/dialogFocus'
+import { t } from '../i18n'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     message: string
     confirmLabel?: string
@@ -43,8 +44,15 @@ withDefaults(
     /** Styles the confirm button as destructive (delete-career, delete-slot, ...). */
     danger?: boolean
   }>(),
-  { confirmLabel: 'Confirm', cancelLabel: 'Cancel', danger: false },
+  { danger: false },
 )
+
+// ⭐ L4-2b (10.10): THE TWO DEFAULT LABELS ARE COMPUTED OVER `t()`, NOT PROP DEFAULTS. Vue resolves a prop default ONCE per instance and caches
+// it, so `{ cancelLabel: 'Cancel' }` could neither be wrapped (the extractor wants a call) nor follow a locale flip while the card is up. A
+// caller that passes its own label (every caller but the inbox's sign question) is untouched: `??` only fires on an absent prop, which is
+// exactly when Vue applied the English default. The inbox's sign question relied on the default and was the carpet's one `Cancel` finding.
+const cancelText = computed(() => props.cancelLabel ?? t('Cancel'))
+const confirmText = computed(() => props.confirmLabel ?? t('Confirm'))
 
 const emit = defineEmits<{ confirm: []; cancel: [] }>()
 
@@ -83,8 +91,8 @@ useDialogFocus(card, () => emit('cancel'))
            can never be announced as a generic "Confirm". -->
       <p :id="messageId" class="dialog-message">{{ message }}</p>
       <div class="dialog-actions">
-        <button @click="emit('cancel')">{{ cancelLabel }}</button>
-        <button :class="danger ? 'danger' : 'primary'" @click="emit('confirm')">{{ confirmLabel }}</button>
+        <button @click="emit('cancel')">{{ cancelText }}</button>
+        <button :class="danger ? 'danger' : 'primary'" @click="emit('confirm')">{{ confirmText }}</button>
       </div>
     </div>
   </div>

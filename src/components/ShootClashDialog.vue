@@ -25,6 +25,7 @@ import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import StoreError from './ui/StoreError.vue'
 import { formatCents } from '../shared/money'
+import { t } from '../i18n'
 import type { ShootClashChoice } from '../shared/protocol'
 
 const game = useGameStore()
@@ -50,10 +51,17 @@ async function decide(choice: ShootClashChoice): Promise<void> {
 const withdrawCost = computed(() => {
   const p = prompt.value
   if (!p) return ''
-  const fee = p.entryRefunded
-    ? `the ${formatCents(p.entryFeeCents)} entry comes back`
-    : `the ${formatCents(p.entryFeeCents)} entry is forfeited`
-  return p.mandatoryPenalty ? `${fee}, and a late withdrawal counts against her.` : `${fee}.`
+  // ⭐ L4-2b (10.10): ONE WHOLE MESSAGE PER FORM (refunded or forfeited, with or without the late-withdrawal clause) – English glued the clause onto the
+  // fee with a template and a ternary, which no other language can reorder; the fee is the only param and it is money, already formatted.
+  const fee = formatCents(p.entryFeeCents)
+  if (p.entryRefunded) {
+    return p.mandatoryPenalty
+      ? t('She shoots, and the {0} entry comes back, and a late withdrawal counts against her.', [fee])
+      : t('She shoots, and the {0} entry comes back.', [fee])
+  }
+  return p.mandatoryPenalty
+    ? t('She shoots, and the {0} entry is forfeited, and a late withdrawal counts against her.', [fee])
+    : t('She shoots, and the {0} entry is forfeited.', [fee])
 })
 
 const card = useTemplateRef<HTMLElement>('card')
@@ -70,11 +78,11 @@ useDialogFocus(card)
       aria-labelledby="shoot-clash-kicker shoot-clash-title"
       tabindex="-1"
     >
-      <p id="shoot-clash-kicker" class="season-summary-kicker">Two things at once – {{ prompt.weekLabel }}</p>
+      <p id="shoot-clash-kicker" class="season-summary-kicker">{{ t('Two things at once – {0}', [prompt.weekLabel]) }}</p>
       <h2 id="shoot-clash-title" class="season-summary-title">
-        {{ prompt.brand }} want her that week, and so does the {{ prompt.eventLabel }}.
+        {{ t('{0} want her that week, and so does the {1}.', [prompt.brand, prompt.eventLabel]) }}
       </h2>
-      <p class="hint knock-read">Something has to give. All four answers are hers to make.</p>
+      <p class="hint knock-read">{{ t('Something has to give. All four answers are hers to make.') }}</p>
 
       <!-- ⚠⚠ W2 (26.09) – THE STORE'S REFUSAL, ABOVE THE FOUR ANSWERS – ForkDialog's own arrangement
            and its reason. There is no dismiss on this card and two of its four arms stop being
@@ -92,8 +100,8 @@ useDialogFocus(card)
 
       <div class="knock-choices">
         <button class="knock-choice" :disabled="sending" @click="decide('withdraw')">
-          <span class="knock-choice-verb">Pull out of the {{ prompt.eventLabel }}</span>
-          <span class="knock-choice-cost">She shoots, and {{ withdrawCost }}</span>
+          <span class="knock-choice-verb">{{ t('Pull out of the {0}', [prompt.eventLabel]) }}</span>
+          <span class="knock-choice-cost">{{ withdrawCost }}</span>
         </button>
         <button
           v-if="prompt.moveToWeek !== null"
@@ -101,21 +109,20 @@ useDialogFocus(card)
           :disabled="sending"
           @click="decide('move-shoot')"
         >
-          <span class="knock-choice-verb">Move the shoot to {{ prompt.moveToLabel }}</span>
-          <span class="knock-choice-cost">She plays as planned and the campaign waits – nothing is paid for it.</span>
+          <span class="knock-choice-verb">{{ t('Move the shoot to {0}', [prompt.moveToLabel]) }}</span>
+          <span class="knock-choice-cost">{{ t('She plays as planned and the campaign waits – nothing is paid for it.') }}</span>
         </button>
         <button class="knock-choice" :disabled="sending" @click="decide('cancel-shoot')">
-          <span class="knock-choice-verb">Cancel the shoot</span>
-          <span class="knock-choice-cost"
-            >She plays as planned, and {{ prompt.brand }} take back {{ formatCents(prompt.cancelShootCents) }} of the
-            campaign fee.</span
-          >
+          <span class="knock-choice-verb">{{ t('Cancel the shoot') }}</span>
+          <span class="knock-choice-cost">{{
+            t('She plays as planned, and {0} take back {1} of the campaign fee.', [prompt.brand, formatCents(prompt.cancelShootCents)])
+          }}</span>
         </button>
         <button class="knock-choice knock-choice--push" :disabled="sending" @click="decide('play-both')">
-          <span class="knock-choice-verb">Do both</span>
-          <span class="knock-choice-cost"
-            >Lights, flights and a draw in one week – {{ prompt.conditionCost }} condition off the week.</span
-          >
+          <span class="knock-choice-verb">{{ t('Do both') }}</span>
+          <span class="knock-choice-cost">{{
+            t('Lights, flights and a draw in one week – {0} condition off the week.', [prompt.conditionCost])
+          }}</span>
         </button>
       </div>
     </div>

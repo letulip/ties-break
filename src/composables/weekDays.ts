@@ -1019,14 +1019,22 @@ function trainingReadout(x: {
   // about: the block is visible for the first time and he is the one who takes it.
   const plan =
     x.sessions === 0
-      ? 'No sessions – a full week off court.'
+      ? t('No sessions – a full week off court.')
       : x.doubled > 0
-        ? `${x.sessions} sessions over ${x.trainingDays} days – ${x.doubled} of them two sessions a day.`
+        ? t('{sessions} sessions over {days} days – {doubled} of them two sessions a day.', {
+            sessions: x.sessions,
+            days: x.trainingDays,
+            doubled: x.doubled,
+          })
         : x.canDouble
-          ? `${x.sessions} sessions, one a day – no school, so there is room to double up.`
+          ? t('{sessions} sessions, one a day – no school, so there is room to double up.', { sessions: x.sessions })
           : x.gymDays === 0
-            ? `${x.sessions} sessions, all of them on court.`
-            : `${x.sessions} sessions – ${x.courtDays} on court, ${x.gymDays} in the gym.`
+            ? t('{sessions} sessions, all of them on court.', { sessions: x.sessions })
+            : t('{sessions} sessions – {court} on court, {gym} in the gym.', {
+                sessions: x.sessions,
+                court: x.courtDays,
+                gym: x.gymDays,
+              })
   const match = x.matchIndex === null ? '' : ` Practice match on ${DAY_LONG[x.matchIndex]}.`
   const knock = x.knockPart === null ? '' : ` She is training on a sore ${x.knockPart}.`
   return `${plan}${match}${knock}${shoot}${table}`

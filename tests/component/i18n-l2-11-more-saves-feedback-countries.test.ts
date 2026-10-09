@@ -477,7 +477,7 @@ const HOMES = [
   'src/composables/buildInfo.ts',
 ] as const
 
-describe('L2-11 completeness – the chrome is wired; the date formatter, the store\'s error text and the shared dialog\'s defaults are left raw on purpose', () => {
+describe('L2-11 completeness – the chrome is wired; the date formatter and the store\'s error text are left raw on purpose (the shared dialog\'s defaults were wired by L4-2b)', () => {
   it('no CERTAIN string homed in the six modules is left unwrapped', () => {
     for (const home of HOMES) {
       const unwrapped = Object.entries(CATALOG.keys).filter(([, v]) => v.home.includes(home) && !v.wrapped).map(([k]) => k)
@@ -511,7 +511,7 @@ describe('L2-11 completeness – the chrome is wired; the date formatter, the st
     expect(CATALOG.keys['storage: {0}']).toBeUndefined()
   })
 
-  it('left raw on purpose, and asserted raw: the date formatter, the store\'s error text, the shared dialog\'s own defaults, and no engine edge', () => {
+  it('left raw on purpose, and asserted raw: the date formatter, the store\'s error text, and no engine edge – and the shared dialog\'s defaults are read through t()', () => {
     const more = SRC('src/components/screens/MoreScreen.vue')
     // the last-played and saved dates keep ONE form across locales until the formatter rows are approved (§9.6)
     expect(more).toContain("toLocaleString('en-GB'")
@@ -519,8 +519,14 @@ describe('L2-11 completeness – the chrome is wired; the date formatter, the st
     // this is that wave, so the hole is now read THROUGH THE SENTENCE'S CODE (`errorText`): a code the build knows is the `t()` of that very sentence, any other is the raw message as before
     // (tests/i18n-l3-7-errors.test.ts holds each key equal to the engine's / the store's own spelling; tests/component/i18n-l3-7-errors-display.test.ts mounts it)
     expect(more).toContain("t('{0} failed – {1}', [OP_LABEL[game.saveOp.op], errorText(game.saveOp.code, game.saveOp.message ?? '')])")
-    // the shared dialog keeps its own defaults (L2-6's decision: its `Cancel` is a conflict between tables, his call) – More passes both labels itself
-    expect(SRC('src/components/ConfirmDialog.vue')).not.toMatch(/\bt\(/)
+    // ⭐ L4-2b (10.10) RE-AIM, NOT RELAXED. The shared dialog's own defaults were «left raw on purpose» (L2-6: its `Cancel` is a conflict between tables, his call) and this pin asserted the
+    // file held no `t(` at all. The carpet then found the one caller that relies on them (the inbox's sign question), so they are wired – as COMPUTED defaults over the BARE keys `Cancel`
+    // and `Confirm` (what every other wired caller of the bare word says; no context tag was needed), not as prop defaults (Vue resolves a prop default once per instance, so it could
+    // neither carry a call the extractor reads nor follow a locale flip). The conflict is not decided here: a caller that passes its own label – More does, `plan|Cancel` does – is untouched.
+    const confirm = SRC('src/components/ConfirmDialog.vue')
+    expect(confirm).toContain("props.cancelLabel ?? t('Cancel')")
+    expect(confirm).toContain("props.confirmLabel ?? t('Confirm')")
+    expect(confirm, 'the props carry no English default any more – the whole defaults object is the boolean').toContain('  { danger: false },\n)')
     expect(more).toContain(`:cancel-label="t('Cancel')"`)
     // the build line's identifiers are never keys
     expect(SRC('src/composables/buildInfo.ts')).toContain('shaOrNull(rawSha) ?? t(\'unknown\')')
