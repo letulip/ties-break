@@ -515,8 +515,10 @@ describe('L2-11 completeness – the chrome is wired; the date formatter, the st
     const more = SRC('src/components/screens/MoreScreen.vue')
     // the last-played and saved dates keep ONE form across locales until the formatter rows are approved (§9.6)
     expect(more).toContain("toLocaleString('en-GB'")
-    // the error text is the store's own English – a hole, not a key (RU-13A asks for typed error codes: a classifier, not this wave)
-    expect(more).toContain("t('{0} failed – {1}', [OP_LABEL[game.saveOp.op], game.saveOp.message])")
+    // the error text is a HOLE of the frame, not a key of its own – ⭐ L3-7 (10.10) RE-AIM, NOT RELAXED: it used to be the store's raw English («RU-13A asks for typed error codes: a classifier, not this wave»);
+    // this is that wave, so the hole is now read THROUGH THE SENTENCE'S CODE (`errorText`): a code the build knows is the `t()` of that very sentence, any other is the raw message as before
+    // (tests/i18n-l3-7-errors.test.ts holds each key equal to the engine's / the store's own spelling; tests/component/i18n-l3-7-errors-display.test.ts mounts it)
+    expect(more).toContain("t('{0} failed – {1}', [OP_LABEL[game.saveOp.op], errorText(game.saveOp.code, game.saveOp.message ?? '')])")
     // the shared dialog keeps its own defaults (L2-6's decision: its `Cancel` is a conflict between tables, his call) – More passes both labels itself
     expect(SRC('src/components/ConfirmDialog.vue')).not.toMatch(/\bt\(/)
     expect(more).toContain(`:cancel-label="t('Cancel')"`)

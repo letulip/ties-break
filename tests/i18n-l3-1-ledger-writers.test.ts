@@ -24,6 +24,8 @@ import { cp, joinCopy, renderCopyRef, splitContext, SOURCE_LOCALE, type CopyRef 
 import { LADDER_LABEL } from '../src/shared/protocol'
 import { rankingDeltaSuffix, tournamentSummaryRef } from '../src/engine/world/tournamentClose'
 import { ACADEMY_NOTICE } from '../src/engine/world/phaseObligations'
+import { NATIONAL_TEAM } from '../src/engine/nationalTeam'
+import { COLLEGE_LEAGUE } from '../src/engine/collegeLeague'
 import { EXPOSURE_ROW, PUBLIC_LIFE_RECEIPT, RECOVERY_RECEIPT } from '../src/engine/spirit'
 import { chargeMandatoryPenalty } from '../src/engine/world/mandatory'
 import { bankSponsorCheque } from '../src/engine/world/sponsors'
@@ -84,6 +86,33 @@ const NEW_KEYS: readonly string[] = [
   // page's strings and the scroll's labels and details. The page and the record are assembled at SNAPSHOT time off `world.ending` and never stored; the fragments are stored once, NESTED in the params of the latch row
   // (whose own key is the table's), so no old save holds one as a key. The list lives in tests/helpers/l3-6-ending-keys.ts, generated from the scan and held to it by tests/i18n-l3-6-endings-album.test.ts §1.
   ...ENDING_CLASS_B_KEYS,
+  // ⭐ L3-7 (10.10): THE KNOCK PROMPT, CLASS (b) AS WELL – the dialog's five sentences (what happened, the coach's read, the named cause, the two costs). `buildKnockPrompt` assembles them at SNAPSHOT time
+  // from the knock's own facts and never stores them, so no old save holds one and the frozen v92 table has none. The commentary and the preview are outside this scan (src/viz) and carry a list of their own
+  // (tests/helpers/l3-7-viz-keys.ts, held to the scan by tests/i18n-l3-7-viz.test.ts §1).
+  'It is the {0} again. She mentioned it in the car, then said it was nothing.',
+  'The same {0}. She rolled it out on the kitchen floor and did not look up.',
+  'Her {0} is talking to her again. She knows we noticed.',
+  'She came off court on Friday holding her {0}.',
+  'Her {0} was sore all week. She only said so on Sunday.',
+  'Ice on her {0} after Thursday. She says it is fine.',
+  'She has been favouring the {0} since midweek.',
+  'The coach was blunter this time – has seen this one before, and does not like it.',
+  'The coach remembers the last time – would sit her down, and said so twice.',
+  'The coach asked how long it has been doing this – and did not like the answer.',
+  'The coach thinks she is running on empty and the body is saying so.',
+  'The coach has seen her tired for weeks – would take the week.',
+  'The coach says a body this flat picks things up – and would rather not find out.',
+  'The coach is not worried – and is not telling us to ignore it either.',
+  'The coach shrugged – would let her train and keep an eye on it.',
+  'The coach says it is probably nothing – probably, and that word is not ours.',
+  'The coach says these come and go at her age – and left the decision with us.',
+  'We sent her back out with a knock to her {0} before. Now the same place is troubling her again.',
+  'No single choice explains this one. We had been careful. Bodies still have bad weeks.',
+  'She began the week already tired. Her body had less room for the work we asked of it.',
+  'We set a hard week. It asked more of her body than an ordinary one.',
+  'A hug, the sofa, and a week of next to no tennis. That week of work is gone.',
+  'She trains as planned. If this one goes, it goes properly – and it will be the same {0}.',
+  'She trains as planned, and for the next three weeks the odds are against us.',
 ]
 
 /** Pieces a writer joins with `joinCopy` – never a sentence on their own, never emitted alone. §5 renders every assembled sentence against the table. */
@@ -93,6 +122,16 @@ const FRAGMENTS: readonly string[] = [
   ' (ranking total +{0})', // … when it displaces an older result
   ' – she retired hurt', // … the injury clause
   ", the manager's {0}% of {1}", // sponsors.ts – bankSponsorCheque's commission clause
+  // ⭐ L3-7 (10.10): the college epilogue's four parts (world/college.ts `collegeEpilogueRef`) – `joinCopy` assembles them into the 24 sentences of the table (proven in tests/i18n-l3-7-feeds.test.ts)
+  '{0} year of student tennis, lived one season at a time.',
+  '{0} years of student tennis, lived one season at a time.',
+  'Her country never called.',
+  'Her country called once, and paid her nothing, which is what it pays everybody.',
+  'Her country called {0} times, and paid her nothing, which is what it pays everybody.',
+  'The family is ${0} further under than the week she went in.',
+  'The family is ${0} better off than the week she went in.',
+  'She comes back at {0}, with no professional ranking. Qualifying is the front door again.',
+  'She comes back at {0}, with a ranking of #{1}. Qualifying is the way forward again.',
 ]
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -124,6 +163,9 @@ const KNOWN_CONSTANTS: Record<string, string> = {
   'ACADEMY_NOTICE.arrived': ACADEMY_NOTICE.arrived,
   'ACADEMY_NOTICE.reviewed': ACADEMY_NOTICE.reviewed,
   'ACADEMY_NOTICE.ended': ACADEMY_NOTICE.ended,
+  // ⭐ L3-7 (10.10): the two college fixtures' labels – the frozen table inlined them («the Nations Cup: …», «the College League: …»), the match rows spell them as constants
+  'NATIONAL_TEAM.label': NATIONAL_TEAM.label,
+  'COLLEGE_LEAGUE.label': COLLEGE_LEAGUE.label,
 }
 
 function eachNode(sf: ts.SourceFile, visit: (n: ts.Node) => void): void {
@@ -490,6 +532,13 @@ const NOT_ISOMORPHIC: Record<string, string> = {
     'the text is the named constant (its note quotes the owner, so it does not move), c spells the same sentence as a `cp` key – l3-6 §1 reads the constant out of the source and holds it equal to that key.',
   'src/engine/world/phaseAiWeek.ts::`🏆 ${playerShortName(world, championId)} won th':
     'the text appends `championNote(...)`, a helper that returns one of four clauses; c is `championRef` over the SAME `championClause` facts – l3-3 §4 renders all four against the text, and the twin plays them.',
+  // ⭐ L3-7 (10.10): four pairs whose `text` is one call and whose `c` is another (or a helper that spells the table's sentences): the scan cannot compare two functions' bodies, so the check that stands in is
+  // `tests/i18n-l3-7-feeds.test.ts` – it renders the ref of EVERY combination of each (the call-up's rubbers x finish, the league's exits x counts, the epilogue's 24, the injury row's 24) against the text and
+  // against the frozen table's keys, through the real writers.
+  'src/engine/world/college.ts::callUpLine(asPlayed)': 'text is `callUpLine`, the ref is `callUpRef` (two functions) – tests/i18n-l3-7-feeds.test.ts §1 renders every combination of rubbers and finish against the text and the table.',
+  'src/engine/world/college.ts::collegeLeagueLine(run)': 'text is `collegeLeagueLine`, the ref is `collegeLeagueRef` (two functions) – tests/i18n-l3-7-feeds.test.ts §1 renders the eight shapes against the text and the table.',
+  'src/engine/world/tick.ts::collegeEpilogueLine(world)': 'text is `collegeEpilogueLine`, the ref is `collegeEpilogueRef` (a `joinCopy` of four parts, two sinks) – tests/i18n-l3-7-feeds.test.ts §1 renders all 24 combinations against the text and the table.',
+  "src/engine/world/injury.ts::cause === 'retirement' ? band.severity === 'seve": 'the row is one nested ternary of six templates and the ref is `injuryRowRef` (six shapes x niggle x wk/wks = 24) – tests/i18n-l3-7-feeds.test.ts §1 plays every combination through the real writer.',
 }
 
 /** Pairs where `c` is a PROPER SUBSET of what `text` can say: the text's syntax admits combinations the program cannot reach (the frozen table, built by the same
@@ -512,7 +561,7 @@ describe('§2 text / c pairs', () => {
     // + 4 (L3-4, part 2): the travel scrap's two fallback sentences and its static pick, and the coach's pick (`weekNoteLine` returns `{ text, c: { k: text } }` by SHORTHAND – not a pair here)
     // + 12 (L3-5): the life beats' twelve sinks – the answer row, the two kept news rows, the ended-now row, the divorce row and its milestone, the leak, the key, the pause, the birth milestone, the loss, the wedding day
     // + 8 (L3-6): the endings' eight sinks – the latch row, the school row, the offer row, the return row, the leaving voice, the college place, turning professional, «one more year»
-    expect(all.length, 'pairs of text + c in src/engine').toBe(155)
+    expect(all.length, 'pairs of text + c in src/engine').toBe(170)
   })
 
   it('every pair expands to the SAME sentences – each branch, each inlined ternary, the same holes in the same order – or is announced', () => {
@@ -582,11 +631,9 @@ const TEXT_ONLY: Record<string, number> = {
   // ⭐ L3-5 (10.10) CONVERTED 12 MORE – ALL THE LIFE BEATS': lifeBeat.ts 3 (the answer row, the two kept news rows), ended.ts 3 (the ended-now row, the divorce row, the divorce milestone), leak.ts 1, ownKey.ts 1,
   // pregnancy.ts 2 (the pause row, the birth milestone), weight.ts 1 (the loss row), wedding.ts 1 (the wedding-day milestone). 24 are left, and they are L3-6's and L3-7's.
   // ⭐ L3-6 (10.10) CONVERTED 8 MORE – ALL THE ENDINGS': endings.ts 8 (the latch row, the school row, the offer row, the return row, the leaving voice, the college place, turning professional, «one more year»). 16 are left, all L3-7's.
-  'src/engine/world/college.ts': 4, // L3-7 (RU-12F, the college engine feed) – the tuition row (money) is L3-1's and converted
-  'src/engine/world/injury.ts': 3, // L3-7 (RU-11J, the medical feed) – the two money rows (physio, medical) are L3-1's and converted
-  'src/engine/world/knock.ts': 4, // L3-7
-  'src/engine/world/phaseHerWeek.ts': 3, // L3-7 (RU-11J)
-  'src/engine/world/tick.ts': 2, // L3-7 (the college epilogue, twice)
+  // ⭐ L3-7 (10.10) CONVERTED THE LAST 16 – THE LAYER CLOSES, 141 OF 141: college.ts 4 (the call-up milestone, the league milestone, the Nations Cup and College League match rows), tick.ts 2 (the college epilogue, twice),
+  // injury.ts 3 (the rehab receipt, the recovery, the injury row), knock.ts 4 (the arrival, the coach's doubt, the coach's call, the family's decision), phaseHerWeek.ts 3 (the walkover, the withdrawal, the doctor's warning).
+  // Nothing is left on `text` alone: a NEW text-only writer is a failure of this test and must be converted or argued here.
 }
 
 describe('§3 the writers still on `text` alone', () => {
@@ -594,11 +641,11 @@ describe('§3 the writers still on `text` alone', () => {
     expect(sinks().bare, 'a count moved: a wave converted a sink (lower the number) or a NEW text-only writer appeared (decide it: convert it, or list it with the wave that owns it)').toEqual(TEXT_ONLY)
   })
 
-  it('the books close: 141 sinks (the L3-0 sweep\'s count), 125 of them converted (L3-1: 78, L3-3: 26, L3-4: 1, L3-5: 12, L3-6: 8), 16 left to L3-7', () => {
+  it('the books close: 141 sinks (the L3-0 sweep\'s count), 141 of them converted (L3-1: 78, L3-3: 26, L3-4: 1, L3-5: 12, L3-6: 8, L3-7: 16), none left', () => {
     const { bare, converted } = sinks()
     const left = Object.values(bare).reduce((a, b) => a + b, 0)
-    expect(left, 'sinks still on `text` alone').toBe(16)
-    expect(converted, 'sinks that write `c`').toBe(125)
+    expect(left, 'sinks still on `text` alone').toBe(0)
+    expect(converted, 'sinks that write `c`').toBe(141)
     expect(converted + left, 'every sink there is').toBe(141)
   })
 

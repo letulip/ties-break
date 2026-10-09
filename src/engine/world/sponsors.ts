@@ -23,7 +23,7 @@ import { netTravelCents, travelCoverShare } from '../academy'
 // The rung ladder, for the cameo's coach cut. coach.ts is a leaf (it imports ECONOMY and rng and
 // nothing else), so this runs one way exactly as every other import in this file does.
 import { COACH_TIERS } from '../coach'
-import { AD_CATEGORIES, isOfferLive, activeAdDealIn, activeAdDeals, activeKitDeal, adBandFor, adCapstoneTerms, adFeeFor, adJuniorAt, adJuniorFeeCents, adJuniorOpen, adJuniorTerms, adLetterRng, adLifetimeTerms, adSpokenFor, adTermsForCategory, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, lastSignedAdBrand, letDownThisWindow, pickAdHouse, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
+import { AD_CATEGORIES, isOfferLive, offerRefusal, activeAdDealIn, activeAdDeals, activeKitDeal, adBandFor, adCapstoneTerms, adFeeFor, adJuniorAt, adJuniorFeeCents, adJuniorOpen, adJuniorTerms, adLetterRng, adLifetimeTerms, adSpokenFor, adTermsForCategory, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, lastSignedAdBrand, letDownThisWindow, pickAdHouse, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, type AdCategory, type AdOfferTerms, type AdPortfolioRow, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer, type SaleOfferTerms, type WorldEventCategory } from '../../shared/protocol'
 import { accrueKidShare, addEvent } from './ledger'
@@ -1170,7 +1170,7 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
   // is no longer owned, no longer listed or no longer delivered is refused with the sentence a gone letter already gets, and NOTHING is
   // written – the worker commits a command only if it returns, so a refusal that half-wrote would be rolled back anyway.
   if (sale && isOfferLive(sale, world.week) && !saleLotSettles(world, (sale.terms as SaleOfferTerms).itemId)) {
-    throw new Error(offerAnswerErrorFor(world, offerId))
+    throw offerRefusal(offerAnswerErrorFor(world, offerId))
   }
   // ⭐⭐⭐ ROUND 45 #3 – A STAFF RAISE REQUEST IS RE-VALIDATED AGAINST THE WORLD TOO (invariant 1): a live
   // request whose seat has left the payroll since the letter was written is refused with the sentence
@@ -1192,10 +1192,10 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
                 // paper that cannot raise anybody's fee. `coachRaiseStands`, world/coachDeal.ts.
                 coachRaiseStands(world, askLetter)
               : false
-    if (!stands) throw new Error(offerAnswerErrorFor(world, offerId))
+    if (!stands) throw offerRefusal(offerAnswerErrorFor(world, offerId))
   }
   const signed = signOfferIn(world.offers, offerId, world.week)
-  if (!signed) throw new Error(offerAnswerErrorFor(world, offerId))
+  if (!signed) throw offerRefusal(offerAnswerErrorFor(world, offerId))
   // ⭐ THE MONEY MOVES HERE, AT THE PRICE PRINTED ON THE PAPER – `t.priceCents`, never a number asked of the market now (offers-and-the-
   // inbox law). ONE body, two doors: the wallet, the ledger sentence and the row removal are `settleAssetSale`'s, the very body
   // `sellAsset` ends in, and it also lapses the lot's other open letters (the thing is sold). Zero draws.
@@ -1265,7 +1265,7 @@ export function declineOffer(world: WorldState, offerId: string): Offer {
   if (world.offers.some((o) => o.id === offerId && o.kind === 'sale')) guardNotEndedForGood(world)
   else guardNotEnded(world)
   const refused = refuseOfferIn(world.offers, offerId, world.week)
-  if (!refused) throw new Error(offerAnswerErrorFor(world, offerId))
+  if (!refused) throw offerRefusal(offerAnswerErrorFor(world, offerId))
   return refused
 }
 

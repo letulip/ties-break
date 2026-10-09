@@ -6,6 +6,8 @@
 // Part of the `shared/protocol` module set – see src/shared/protocol.ts, which re-exports every
 // name below under the historical public path. Nothing here imports that barrel back.
 
+import type { CopyRef } from '../i18n'
+
 /** Injury severity (Season-Life). Slice B wires the field but never populates it; Slice C does. */
 export type InjurySeverity = 'minor' | 'moderate' | 'major' | 'severe'
 
@@ -211,4 +213,12 @@ export interface KnockPrompt {
    *  spending. The player must be able to see what he traded. */
   restCost: string
   pushCost: string
+  /** ⭐ L3-7 (10.10): THE FIVE SENTENCES AS COPYREFS, BESIDE THE ENGLISH (the `LifeMoment.lineC` shape). The prompt is class (b) – assembled at snapshot time, never stored – so the engine emits the refs and the
+   *  dialog draws them through `eventText`; the strings above stay what older readers and fixtures print. The body part is a param (an engine-born noun). Optional, so a fixture that overrides the English
+   *  drops the ref beside it (L3-4's lesson). */
+  lineC?: CopyRef
+  readC?: CopyRef
+  causeC?: CopyRef
+  restCostC?: CopyRef
+  pushCostC?: CopyRef
 }

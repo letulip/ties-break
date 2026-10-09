@@ -15,7 +15,11 @@ import { stageLabel } from '../../src/engine/world/labels'
 import { buildKnockPrompt } from '../../src/engine/knock'
 import { buildCommentary, type Beat, type CommentaryCoach, type CommentaryEvent, type CommentaryLineage, type CommentaryPrivateLife } from '../../src/viz/commentary'
 import { buildPreview, occasionOf, type PreviewInput } from '../../src/viz/preview'
-import { tickWeek, toSnapshot, type WorldState } from '../../src/engine/world'
+import { airBoothMention, boothPrivateLifeAt, createWorld, tickWeek, toSnapshot, type WorldState } from '../../src/engine/world'
+import { ECONOMY } from '../../src/engine/economy'
+import { DEFAULT_PROFILE } from '../../src/shared/protocol'
+import { standHerAt } from './newsStanding'
+import { loveEpisode, married } from './scenarios/love'
 import { endCollegeEarly } from '../../src/engine/world/tick'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../../tools/econ-bench'
 import { atCollege, pressCollegeYear, finishAnyReveal } from './scenarios/college'
@@ -134,6 +138,52 @@ export function commentaryDigests(): { digests: Record<string, string>; builds: 
   const digests: Record<string, string> = {}
   for (const [k, rows] of [...bucket.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) digests[k] = sha(rows.join('\n##\n'))
   return { digests, builds, beats }
+}
+
+/** ⭐ THE FAMOUS CAREER PRESET – the booth's packets as the ENGINE issues them. A girl the ladder knows (`standHerAt` 'known'), a public love episode posed in each of its three states (there is somebody, it is over,
+ *  the marriage is over) and each right or wrong, aired through the real writer (`airBoothMention`, on a big stage) and read back through the real reader (`boothPrivateLifeAt`) – the two functions the weekly tick and
+ *  the snapshot call. Six packets, every one of them the engine's decision; the viewer adds only the side. The poses are wave6-booth-channel's and wave12-parting's own. */
+export function famousPackets(): Array<{ label: string; packet: { kind: 'met' | 'ended' | 'divorced'; wrong: boolean } | null }> {
+  const out: Array<{ label: string; packet: { kind: 'met' | 'ended' | 'divorced'; wrong: boolean } | null }> = []
+  const stage = (label: string, week: number, row: ReturnType<typeof loveEpisode>): void => {
+    const world = createWorld(`l37-famous-${label}`, { ...DEFAULT_PROFILE })
+    world.week = week
+    standHerAt(world, 'known', week - 1)
+    world.loveEpisodes = [row]
+    airBoothMention(world, ECONOMY.spotlight.stageTierMin)
+    out.push({ label, packet: boothPrivateLifeAt(world, week) })
+  }
+  for (const wrong of [false, true]) {
+    stage(`met/${wrong}`, 500, loveEpisode(480, 482, { publicWeek: 498, publicWrong: wrong }))
+    stage(`ended/${wrong}`, 900, loveEpisode(600, 602, { endedWeek: 899, publicWeek: 750, airedMetWeek: 752, publicWrong: wrong }))
+    stage(`divorced/${wrong}`, 900, married(600, 700, { endedWeek: 899, publicWeek: 750, airedMetWeek: 752, publicWrong: wrong }))
+  }
+  return out
+}
+
+/** the commentary of ten matches on the big occasions under each engine-issued packet, on both sides of the net */
+export function famousDigest(): { packets: Array<{ label: string; packet: { kind: string; wrong: boolean } | null }>; digest: string; builds: number; beats: number; booth: number } {
+  const packets = famousPackets()
+  const events = vizEvents().filter((e) => e.label === 'friendly' || e.label === `wta250#${Math.log2(TIERS.wta250.drawSize) - 1}` || e.label === `slam#${Math.log2(TIERS.slam.drawSize) - 1}`)
+  const rows: string[] = []
+  let builds = 0
+  let beats = 0
+  let booth = 0
+  for (const m of vizMatches().slice(0, 10)) {
+    for (const e of events) {
+      for (const { label, packet } of packets) {
+        if (!packet) continue
+        for (const side of [0, 1] as Side[]) {
+          const built = buildCommentary(m.match, m.nameA, m.nameB, e.event, null, { side, ...packet }, null)
+          builds++
+          beats += built.length
+          booth += built.filter((b) => b.kind === 'booth').length
+          rows.push(`${m.label}/${e.label}/${label}/${side}::${digestBeats(built)}`)
+        }
+      }
+    }
+  }
+  return { packets, digest: sha(rows.join('\n##\n')), builds, beats, booth }
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------

@@ -61,6 +61,7 @@ import {
   callUpPlayedThisWeek,
   callUpRevealOpen,
   collegeEpilogueLine,
+  collegeEpilogueRef,
   collegeLeaguePlayedThisWeek,
   collegeLeagueRevealOpen,
   leaveCollege as leaveCollegeState,
@@ -911,6 +912,7 @@ export function endCollegeEarly(world: WorldState): void {
     type: 'milestone',
     keep: true,
     text: collegeEpilogueLine(world),
+    c: collegeEpilogueRef(world),
   })
 }
 
@@ -922,5 +924,6 @@ function finishCollege(world: WorldState): void {
     type: 'milestone',
     keep: true,
     text: collegeEpilogueLine(world),
+    c: collegeEpilogueRef(world),
   })
 }

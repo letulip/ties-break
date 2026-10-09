@@ -6,14 +6,14 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import {
-  commentaryDigests, previewDigests, knockDigest, playBench, playCollege, watchedDigest, rowsDigest, worldMinusRefs, snapshotMinusRefs, sha,
+  commentaryDigests, previewDigests, knockDigest, famousDigest, playBench, playCollege, watchedDigest, rowsDigest, worldMinusRefs, snapshotMinusRefs, sha,
 } from './helpers/l3-7-play'
 
 const FIXTURE = resolve(__dirname, 'fixtures/l3-7/old-arm.json')
 const CAREERS: Array<[number, number]> = [[5, 0], [8, 0], [0, 1], [6, 1], [5, 1]]
 
 interface Capture {
-  viz: { commentary: ReturnType<typeof commentaryDigests>; preview: ReturnType<typeof previewDigests>; knock: ReturnType<typeof knockDigest> }
+  viz: { commentary: ReturnType<typeof commentaryDigests>; preview: ReturnType<typeof previewDigests>; knock: ReturnType<typeof knockDigest>; famous: ReturnType<typeof famousDigest> }
   careers: Record<string, { rows: number; rowsDigest: string; rows150: number; rowsDigest150: string; watched: ReturnType<typeof watchedDigest>; next3: number[]; world: string; snapshot: string }>
   college: Record<string, { rows: number; rowsDigest: string; watched: ReturnType<typeof watchedDigest>; next3: number[]; world: string; snapshot: string; weeks: number }>
 }
@@ -46,7 +46,7 @@ function capture(): Capture {
       world: sha(worldMinusRefs(p.world)), snapshot: sha(snapshotMinusRefs(p.world)),
     }
   }
-  return { viz: { commentary: commentaryDigests(), preview: previewDigests(), knock: knockDigest() }, careers, college }
+  return { viz: { commentary: commentaryDigests(), preview: previewDigests(), knock: knockDigest(), famous: famousDigest() }, careers, college }
 }
 
 const target = process.env.L37_CAPTURE
@@ -57,7 +57,7 @@ if (target) {
       mkdirSync(dirname(target), { recursive: true })
       writeFileSync(target, JSON.stringify(out, null, 1) + '\n')
       expect(existsSync(target)).toBe(true)
-    }, 600_000)
+    }, 60_000)
   })
 } else {
   describe('L3-7 the twin – this tree reproduces the pre-wave tree\'s English', () => {
@@ -71,6 +71,11 @@ if (target) {
     it('preview: every digest of the grid is the pre-wave tree\'s', () => {
       expect(now.viz.preview.builds).toBe(old.viz.preview.builds)
       expect(now.viz.preview.digests).toEqual(old.viz.preview.digests)
+    })
+    it('the famous career: the booth\'s six packets as the ENGINE issues them, and the commentary of ten matches under each, are the pre-wave tree\'s', () => {
+      expect(now.viz.famous.packets.filter((p) => p.packet).length, 'a non-empty denominator: all six packets were issued').toBe(6)
+      expect(now.viz.famous.booth, 'the booth really spoke').toBeGreaterThan(0)
+      expect(now.viz.famous).toEqual(old.viz.famous)
     })
     it('the knock prompt grid is the pre-wave tree\'s', () => {
       expect(now.viz.knock).toEqual(old.viz.knock)

@@ -69,6 +69,7 @@ import { useTabSeen } from './composables/tabSeen'
 import { softLeaveLine, useSoftLeaveGuard } from './composables/softLeave'
 // L2-1 (08.10): the shell speaks through `t()` – every literal passed to it is its own key; English renders itself.
 import { t } from './i18n'
+import { errorText } from './composables/errorText'
 // The trophy that flies to the Trophies tab. ⚠ WAVE B: its DOT went to composables/tabSeen.ts with
 // the other three; what the shell keeps is the flight itself, because the flying element is rendered
 // at the root of this component and nothing else can draw the whole path.
@@ -1615,7 +1616,7 @@ function reopenTour(): void {
     </div>
     <input ref="recoveryFileInput" type="file" accept=".tsave" hidden @change="onRecoveryImportPicked" />
     <p v-if="game.saveOp?.op === 'import' && game.saveOp.status === 'error'" class="error">
-      {{ game.saveOp.message }}
+      {{ errorText(game.saveOp.code, game.saveOp.message ?? '') }}
     </p>
     <p class="hint">
       {{ t('Nothing has been deleted – if storage comes back, your careers will still be here.') }}

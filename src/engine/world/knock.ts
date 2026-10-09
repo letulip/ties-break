@@ -27,6 +27,7 @@ import { schoolIsOver } from '../kidLife'
 import type { KnockChoice } from '../../shared/protocol'
 import { axisConfidence, axisEvidence, shownSkill, type RadarWorldView } from '../radar'
 import { addEvent } from './ledger'
+import { cp } from '../../shared/i18n'
 import { KID_ID, knockRunning, UNKNOWN_CHOICE_REFUSAL } from './constants'
 import { ageAtWeek } from './age'
 import { playedWeeksInTrailing4 } from './injury'
@@ -149,6 +150,7 @@ export function rollKnock(world: WorldState): void {
     text: knock.repeat
       ? `Her ${knock.part} is sore again – the same one.`
       : `She has picked up a sore ${knock.part}. Not an injury – yet.`,
+    c: knock.repeat ? cp`Her ${knock.part} is sore again – the same one.` : cp`She has picked up a sore ${knock.part}. Not an injury – yet.`,
   })
   // ⚠ AND IF THE FAMILY IS PAYING SOMEBODY, HE ANSWERS IT – docs/specs/coach-as-load-manager.md §8.
   // This single line is the routing the whole slice is about: `pendingKnock` is false immediately, so
@@ -252,7 +254,14 @@ export function coachDecidesKnock(world: WorldState): void {
         : k.repeat
           ? `The coach wants to talk about her ${k.part} before anyone decides.`
           : `The coach is in two minds about the ${k.part} – and is asking us.`
-    addEvent(world, { week: world.week, type: 'info', text })
+    // ⭐ L3-7: the ref follows the same three-way choice as `text` above (the warn week, the repeat, the doubt)
+    const ref =
+      clearance === 'warn'
+        ? cp`The coach is not calling the ${k.part} alone – not on a week like this.`
+        : k.repeat
+          ? cp`The coach wants to talk about her ${k.part} before anyone decides.`
+          : cp`The coach is in two minds about the ${k.part} – and is asking us.`
+    addEvent(world, { week: world.week, type: 'info', text, c: ref })
     return
   }
   const choice = coachKnockCall(view, k.repeat)
@@ -267,6 +276,10 @@ export function coachDecidesKnock(world: WorldState): void {
       choice === 'rest'
         ? `The coach is keeping her off the court this week – the ${k.part}.`
         : `The coach is happy for her to train through the ${k.part}.`,
+    c:
+      choice === 'rest'
+        ? cp`The coach is keeping her off the court this week – the ${k.part}.`
+        : cp`The coach is happy for her to train through the ${k.part}.`,
   })
 }
 
@@ -407,6 +420,7 @@ export function decideKnock(world: WorldState, choice: KnockChoice): void {
       choice === 'rest'
         ? `Resting the ${k.part} – a week off the training court.`
         : `Training through the ${k.part}. The coach knows.`,
+    c: choice === 'rest' ? cp`Resting the ${k.part} – a week off the training court.` : cp`Training through the ${k.part}. The coach knows.`,
   })
 }
 

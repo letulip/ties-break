@@ -86,6 +86,12 @@ import { rngFromSeed } from './rng'
 import { planWeek, planSessions, sessionCounts } from './plan'
 import { SESSION_KINDS, type SessionKind } from '../shared/protocol'
 import type { Knock, KnockChoice, KnockPrompt, KnockRecord, WeekPlan } from '../shared/protocol'
+// ⭐ L3-7 (10.10): the prompt's five sentences are CopyRefs made with `cp` (class (b): assembled at snapshot time, never stored); the English the dialog always showed is the ref rendered under the
+// source locale, so the string and its translation cannot drift. The pools, the picks and the sub-stream (`seed:knockread:<sinceWeek>`) are untouched.
+import { cp, renderCopyRef, SOURCE_LOCALE, type CopyRef } from '../shared/i18n'
+
+/** the English of a ref – the prompt still carries the string beside it */
+const en = (c: CopyRef): string => renderCopyRef(c, { locale: SOURCE_LOCALE })
 
 // =================================================================================================
 // 1. THE KNOBS
@@ -401,20 +407,20 @@ export function knockGoverns(knock: Knock | null, week: number): boolean {
 //                  never a number.
 
 /** The parent's sentence. Selected by part, not by luck: the shoulder line is about a shoulder. */
-function knockLineFor(part: string, repeat: boolean, pick: number): string {
+function knockLineFor(part: string, repeat: boolean, pick: number): CopyRef {
   if (repeat) {
     const pool = [
-      `It is the ${part} again. She mentioned it in the car, then said it was nothing.`,
-      `The same ${part}. She rolled it out on the kitchen floor and did not look up.`,
-      `Her ${part} is talking to her again. She knows we noticed.`,
+      cp`It is the ${part} again. She mentioned it in the car, then said it was nothing.`,
+      cp`The same ${part}. She rolled it out on the kitchen floor and did not look up.`,
+      cp`Her ${part} is talking to her again. She knows we noticed.`,
     ]
     return pool[pick % pool.length]
   }
   const pool = [
-    `She came off court on Friday holding her ${part}.`,
-    `Her ${part} was sore all week. She only said so on Sunday.`,
-    `Ice on her ${part} after Thursday. She says it is fine.`,
-    `She has been favouring the ${part} since midweek.`,
+    cp`She came off court on Friday holding her ${part}.`,
+    cp`Her ${part} was sore all week. She only said so on Sunday.`,
+    cp`Ice on her ${part} after Thursday. She says it is fine.`,
+    cp`She has been favouring the ${part} since midweek.`,
   ]
   return pool[pick % pool.length]
 }
@@ -430,28 +436,28 @@ function knockLineFor(part: string, repeat: boolean, pick: number): string {
  *  dash so nothing has to guess. The VOICE is the thing that must survive it - these are somebody
  *  speaking, and a line rewritten into the passive to dodge a pronoun would trade one wrong note for
  *  a worse one. */
-function knockReadFor(condition: number, repeat: boolean, pick: number): string {
+function knockReadFor(condition: number, repeat: boolean, pick: number): CopyRef {
   if (repeat) {
     const pool = [
-      'The coach was blunter this time – has seen this one before, and does not like it.',
-      'The coach remembers the last time – would sit her down, and said so twice.',
-      'The coach asked how long it has been doing this – and did not like the answer.',
+      cp`The coach was blunter this time – has seen this one before, and does not like it.`,
+      cp`The coach remembers the last time – would sit her down, and said so twice.`,
+      cp`The coach asked how long it has been doing this – and did not like the answer.`,
     ]
     return pool[pick % pool.length]
   }
   if (condition < 50) {
     const pool = [
-      'The coach thinks she is running on empty and the body is saying so.',
-      'The coach has seen her tired for weeks – would take the week.',
-      'The coach says a body this flat picks things up – and would rather not find out.',
+      cp`The coach thinks she is running on empty and the body is saying so.`,
+      cp`The coach has seen her tired for weeks – would take the week.`,
+      cp`The coach says a body this flat picks things up – and would rather not find out.`,
     ]
     return pool[pick % pool.length]
   }
   const pool = [
-    'The coach is not worried – and is not telling us to ignore it either.',
-    'The coach shrugged – would let her train and keep an eye on it.',
-    'The coach says it is probably nothing – probably, and that word is not ours.',
-    'The coach says these come and go at her age – and left the decision with us.',
+    cp`The coach is not worried – and is not telling us to ignore it either.`,
+    cp`The coach shrugged – would let her train and keep an eye on it.`,
+    cp`The coach says it is probably nothing – probably, and that word is not ours.`,
+    cp`The coach says these come and go at her age – and left the decision with us.`,
   ]
   return pool[pick % pool.length]
 }
@@ -515,21 +521,26 @@ function knockReadFor(condition: number, repeat: boolean, pick: number): string 
  *  it: `buildKnockPrompt` is holding the whole `Knock`. «Do not use vague place language when the
  *  real one is to hand.» Required rather than optional for `plan`'s own reason: a defaulted part
  *  would let a forgetful call site ship a sentence with a hole in it. */
-export function knockCause(condition: number, plan: WeekPlan, repeat: boolean, part: string): string {
-  if (repeat) return `We sent her back out with a knock to her ${part} before. Now the same place is troubling her again.`
+export function knockCauseRef(condition: number, plan: WeekPlan, repeat: boolean, part: string): CopyRef {
+  if (repeat) return cp`We sent her back out with a knock to her ${part} before. Now the same place is troubling her again.`
   const fatigue = (100 - condition) * KNOCK_FATIGUE_SLOPE
   const load = (plan.train - KNOCK_TRAIN_PIVOT) * KNOCK_TRAIN_SLOPE
   // ⚠ SIGNED, AND THE SIGN IS THE WHOLE OF THE CAREFUL BRANCH. `KNOCK_TRAIN_SLOPE`'s own docblock
   // says the term is «MINUS it below» Balanced, so a light week is a credit against her fatigue and
   // the sum is what the family is actually responsible for.
   if (fatigue + load <= 0) {
-    return 'No single choice explains this one. We had been careful. Bodies still have bad weeks.'
+    return cp`No single choice explains this one. We had been careful. Bodies still have bad weeks.`
   }
   // ⚠ `>=` HANDS A TIE TO FATIGUE ON PURPOSE. A dead heat means she was as worn as the week was hard,
   // and of the two that is the one a parent can act on this week: the rest slider moves tomorrow,
   // whereas the week she has already trained is spent.
-  if (fatigue >= load) return 'She began the week already tired. Her body had less room for the work we asked of it.'
-  return 'We set a hard week. It asked more of her body than an ordinary one.'
+  if (fatigue >= load) return cp`She began the week already tired. Her body had less room for the work we asked of it.`
+  return cp`We set a hard week. It asked more of her body than an ordinary one.`
+}
+
+/** ⭐ L3-7 (10.10): THE ENGLISH OF `knockCauseRef`, the string every older reader and test asks for. The ref is the source; this renders it under the source locale. */
+export function knockCause(condition: number, plan: WeekPlan, repeat: boolean, part: string): string {
+  return en(knockCauseRef(condition, plan, repeat, part))
 }
 
 /** Everything the dialog shows, assembled at SNAPSHOT time.
@@ -542,18 +553,29 @@ export function buildKnockPrompt(knock: Knock, seed: string, condition: number, 
   const rng = rngFromSeed(`${seed}:knockread:${knock.sinceWeek}`)
   const linePick = Math.floor(rng() * 97)
   const readPick = Math.floor(rng() * 97)
+  // ⭐ L3-7: the five sentences are refs first, and the strings are their English – `lineC` .. `pushCostC` ride beside `line` .. `pushCost` (class (b); body parts stay params).
+  const lineC = knockLineFor(knock.part, knock.repeat, linePick)
+  const readC = knockReadFor(condition, knock.repeat, readPick)
+  const causeC = knockCauseRef(condition, plan, knock.repeat, knock.part)
+  const restCostC = cp`A hug, the sofa, and a week of next to no tennis. That week of work is gone.`
+  const pushCostC = knock.repeat
+    ? cp`She trains as planned. If this one goes, it goes properly – and it will be the same ${knock.part}.`
+    : cp`She trains as planned, and for the next three weeks the odds are against us.`
   return {
     part: knock.part,
     repeat: knock.repeat,
-    line: knockLineFor(knock.part, knock.repeat, linePick),
-    read: knockReadFor(condition, knock.repeat, readPick),
+    line: en(lineC),
+    lineC,
+    read: en(readC),
+    readC,
     // ⭐⭐⭐ ROUND 43 #10 – WHY, and it is the same pair `knockChance` reads. ⚠ `plan` IS A REQUIRED
     // PARAMETER AND NOT AN OPTIONAL ONE: a defaulted plan would make `knockCause` answer «nothing we
     // did» at every call site that forgot to pass one, which is the single wrong answer this card
     // must never give by accident. The compiler is what keeps every caller honest.
     // ⚠ DERIVED, NOT DRAWN. Zero draws on any stream – the two `rng()` calls above are unchanged and
     // in the same order, so a career's knock wording is byte-identical to what it was.
-    cause: knockCause(condition, plan, knock.repeat, knock.part),
+    cause: en(causeC),
+    causeC,
     // THE TWO COSTS, and they are the deliverable. One sentence each, naming the currency and not
     // the number - "a week of work" is a thing a parent understands, "loadFactor 0.35" is not.
     //
@@ -564,10 +586,9 @@ export function buildKnockPrompt(knock: Knock, seed: string, condition: number, 
     // VERBATIM («That week of work is gone»): warmth may not blur the legibility rule this dialog
     // exists for, and the push branch stays cold on purpose – it is a warning, and a warm warning
     // is a worse one.
-    restCost: 'A hug, the sofa, and a week of next to no tennis. That week of work is gone.',
-    pushCost: knock.repeat
-      ? 'She trains as planned. If this one goes, it goes properly – and it will be the same ' +
-        `${knock.part}.`
-      : 'She trains as planned, and for the next three weeks the odds are against us.',
+    restCost: en(restCostC),
+    restCostC,
+    pushCost: en(pushCostC),
+    pushCostC,
   }
 }

@@ -63,6 +63,7 @@ import { flagEmoji } from '../../composables/countries'
 import { appBuildLine } from '../../composables/buildInfo'
 import { useStartYear } from '../../composables/startYear'
 import { locale, setLocale, t } from '../../i18n'
+import { errorText } from '../../composables/errorText'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
 
@@ -743,7 +744,7 @@ const TAB_OPTIONS = computed(() => [
       {{ t('{0} – done', [OP_LABEL[game.saveOp.op]]) }}
     </p>
     <p v-else-if="game.saveOp?.status === 'error'" class="error save-op-row">
-      {{ t('{0} failed – {1}', [OP_LABEL[game.saveOp.op], game.saveOp.message]) }}
+      {{ t('{0} failed – {1}', [OP_LABEL[game.saveOp.op], errorText(game.saveOp.code, game.saveOp.message ?? '')]) }}
       <button
         v-if="retrySaveAction"
         class="link"

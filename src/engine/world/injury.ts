@@ -33,7 +33,7 @@ import { masseurRehabWeeksAhead, masseurRungOf, masseurWorksThisWeek } from './m
 import { releaseEntry } from './entries'
 import { retireKnock } from './knockHistory'
 import type { WorldState } from '../world'
-import { cp } from '../../shared/i18n'
+import { cp, type CopyRef } from '../../shared/i18n'
 
 // --- Season-Life: injuries + physio (slice C) ---------------------------------
 // ALL of this slice's randomness lives on the PRIVATE per-week sub-streams
@@ -353,6 +353,60 @@ export function injuryTau(world: WorldState): number {
 // import this file (world -> diary is the direction; the reverse would be a cycle). The move touches
 // no draw: see the note at the top of body.ts for why that is load-bearing.
 
+/** ⭐ L3-7 (10.10): THE INJURY ROW'S REF, one of the 24 sentences the frozen v92 table keeps for it – six shapes (a retirement that is serious / pushed through / plain, and the same three off court) x
+ *  a niggle or the severity's descriptor (the table spells «niggle» into its key and the descriptor as a hole, because the code reads `'niggle'` as a literal in one arm and a lookup in the other) x «wk» or «wks».
+ *  The English is the row's `text`, character for character; `tests/i18n-l3-7-feeds.test.ts` plays every combination through the real writer. */
+export function injuryRowRef(retirement: boolean, severe: boolean, pushing: boolean, part: string, descriptor: string, niggle: boolean, weeksOut: number): CopyRef {
+  const one = weeksOut === 1
+  const four = (a: CopyRef, b: CopyRef, c: CopyRef, d: CopyRef): CopyRef => (niggle ? (one ? a : b) : one ? c : d)
+  if (retirement) {
+    if (severe) {
+      return four(
+        cp`She stopped, and this time it is serious: ${part} niggle – out ~${weeksOut} wk. The dream takes a hit.`,
+        cp`She stopped, and this time it is serious: ${part} niggle – out ~${weeksOut} wks. The dream takes a hit.`,
+        cp`She stopped, and this time it is serious: ${part} ${descriptor} – out ~${weeksOut} wk. The dream takes a hit.`,
+        cp`She stopped, and this time it is serious: ${part} ${descriptor} – out ~${weeksOut} wks. The dream takes a hit.`,
+      )
+    }
+    if (pushing) {
+      return four(
+        cp`She had to stop: ${part} niggle – out ~${weeksOut} wk. The knock we trained through, in front of everybody.`,
+        cp`She had to stop: ${part} niggle – out ~${weeksOut} wks. The knock we trained through, in front of everybody.`,
+        cp`She had to stop: ${part} ${descriptor} – out ~${weeksOut} wk. The knock we trained through, in front of everybody.`,
+        cp`She had to stop: ${part} ${descriptor} – out ~${weeksOut} wks. The knock we trained through, in front of everybody.`,
+      )
+    }
+    return four(
+      cp`She had to stop: ${part} niggle – out ~${weeksOut} wk.`,
+      cp`She had to stop: ${part} niggle – out ~${weeksOut} wks.`,
+      cp`She had to stop: ${part} ${descriptor} – out ~${weeksOut} wk.`,
+      cp`She had to stop: ${part} ${descriptor} – out ~${weeksOut} wks.`,
+    )
+  }
+  if (severe) {
+    return four(
+      cp`Bad news from the clinic: ${part} niggle – out ~${weeksOut} wk. The dream takes a hit.`,
+      cp`Bad news from the clinic: ${part} niggle – out ~${weeksOut} wks. The dream takes a hit.`,
+      cp`Bad news from the clinic: ${part} ${descriptor} – out ~${weeksOut} wk. The dream takes a hit.`,
+      cp`Bad news from the clinic: ${part} ${descriptor} – out ~${weeksOut} wks. The dream takes a hit.`,
+    )
+  }
+  if (pushing) {
+    return four(
+      cp`Injury: ${part} niggle – out ~${weeksOut} wk. The knock we trained through.`,
+      cp`Injury: ${part} niggle – out ~${weeksOut} wks. The knock we trained through.`,
+      cp`Injury: ${part} ${descriptor} – out ~${weeksOut} wk. The knock we trained through.`,
+      cp`Injury: ${part} ${descriptor} – out ~${weeksOut} wks. The knock we trained through.`,
+    )
+  }
+  return four(
+    cp`Injury: ${part} niggle – out ~${weeksOut} wk.`,
+    cp`Injury: ${part} niggle – out ~${weeksOut} wks.`,
+    cp`Injury: ${part} ${descriptor} – out ~${weeksOut} wk.`,
+    cp`Injury: ${part} ${descriptor} – out ~${weeksOut} wks.`,
+  )
+}
+
 // kind = "<part> <descriptor>". A 1-week minor reads as a "niggle", a 2-week one as "soreness" –
 // deterministic variety off the already-drawn weeks-out, no extra pull.
 export const SEVERITY_DESCRIPTOR: Record<InjurySeverity, string> = {
@@ -423,6 +477,7 @@ export function rollInjury(world: WorldState): void {
           week: world.week,
           type: 'info',
           text: 'Rehab ahead of schedule – the masseur bought a week back.',
+          c: cp`Rehab ahead of schedule – the masseur bought a week back.`,
         })
       }
     }
@@ -464,6 +519,7 @@ export function rollInjury(world: WorldState): void {
           weeksSaved > 0
             ? 'Back on court – cleared to play, ahead of schedule.'
             : 'Back on court – cleared to play.',
+        c: weeksSaved > 0 ? cp`Back on court – cleared to play, ahead of schedule.` : cp`Back on court – cleared to play.`,
       })
     }
     return
@@ -698,6 +754,7 @@ export function onsetInjury(
           : pushing
             ? `Injury: ${kind} – out ~${wks}. The knock we trained through.`
             : `Injury: ${kind} – out ~${wks}.`,
+    c: injuryRowRef(cause === 'retirement', band.severity === 'severe', pushing, part, descriptor, band.severity === 'minor' && weeksOut === 1, weeksOut),
   })
   // ...and the knock is retired, marked with what it cost. An injury SUPERSEDES a knock in both
   // directions: there is nothing left to load (she is not training) and nothing left to decide, and

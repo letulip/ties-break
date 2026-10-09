@@ -27,12 +27,13 @@ import { WEEKS_PER_YEAR } from '../season/calendar'
 // ⭐ ROUND 42 #25 – `ECONOMY.kidShare.fromAgeYears` is the one place «the ramp starts at eighteen»
 // is written, and `collegePausedShareYears` reads it rather than repeating the number.
 import { ECONOMY, parentIncomeForWeekCents } from '../economy'
-import { NATIONAL_TEAM, callUpLine, callUpOpponent, rollCallUp, type CallUp, type CallUpOpponent } from '../nationalTeam'
+import { NATIONAL_TEAM, callUpLine, callUpOpponent, callUpRef, rollCallUp, type CallUp, type CallUpOpponent } from '../nationalTeam'
 import {
   COLLEGE_LEAGUE,
   COLLEGE_LEAGUE_ROUNDS,
   collegeLeagueLine,
   collegeLeagueOpponent,
+  collegeLeagueRef,
   type CollegeLeagueResult,
 } from '../collegeLeague'
 import { simulateMatch, recordedMatchOptions } from '../match/engine'
@@ -59,7 +60,7 @@ import { birthdayTurning, kidAgeYears } from './age'
 // coachMarket). `kidLadderRank` is a composition of ladder functions and now lives with them.
 import { kidLadderRank } from './ladder'
 import type { WorldState } from '../world'
-import { cp } from '../../shared/i18n'
+import { cp, joinCopy, type CopyRef } from '../../shared/i18n'
 
 /** ⭐⭐ WHAT A COLLEGE PROGRAMME IS SHOWN WHEN IT LOOKS HER UP – the world side of P4's decoupled-leaf
  *  pattern, and here the decoupling is the fairness property rather than a tidiness one.
@@ -403,6 +404,7 @@ export function resolveCallUp(world: WorldState): void {
     type: 'milestone',
     keep: true,
     text: callUpLine(asPlayed),
+    c: callUpRef(asPlayed),
   })
 }
 
@@ -573,6 +575,15 @@ function playCallUpRubbers(world: WorldState, rubbers: number): number {
       text:
         `${NATIONAL_TEAM.label}: ${kidShort} ${verb} ` +
         `${formatShortName(opp.name)} (${nation}) ${score} – no ranking points`,
+      // ⭐ L3-7: the four verbs are four sentences of the frozen v92 table (the label is inlined there, as it is a constant here – `NATIONAL_TEAM.label` is «the Nations Cup»)
+      c:
+        retiredId === KID_ID
+          ? cp`the Nations Cup: ${kidShort} had to stop against ${formatShortName(opp.name)} (${nation}) ${score} – no ranking points`
+          : retiredId
+            ? cp`the Nations Cup: ${kidShort} was playing a retiring ${formatShortName(opp.name)} (${nation}) ${score} – no ranking points`
+            : kidWon
+              ? cp`the Nations Cup: ${kidShort} beat ${formatShortName(opp.name)} (${nation}) ${score} – no ranking points`
+              : cp`the Nations Cup: ${kidShort} lost to ${formatShortName(opp.name)} (${nation}) ${score} – no ranking points`,
       match,
     })
   }
@@ -771,6 +782,7 @@ export function resolveCollegeLeague(world: WorldState): void {
     type: 'milestone',
     keep: true,
     text: collegeLeagueLine(run),
+    c: collegeLeagueRef(run),
   })
 }
 
@@ -935,6 +947,15 @@ function playCollegeLeague(world: WorldState): CollegeLeagueResult {
       text:
         `${COLLEGE_LEAGUE.label}: ${kidShort} ${verb} ` +
         `${formatShortName(opp.name)} ${score} – no ranking points`,
+      // ⭐ L3-7: as the Nations Cup row above – `COLLEGE_LEAGUE.label` is «the College League»
+      c:
+        retiredId === KID_ID
+          ? cp`the College League: ${kidShort} had to stop against ${formatShortName(opp.name)} ${score} – no ranking points`
+          : retiredId
+            ? cp`the College League: ${kidShort} was playing a retiring ${formatShortName(opp.name)} ${score} – no ranking points`
+            : kidWon
+              ? cp`the College League: ${kidShort} beat ${formatShortName(opp.name)} ${score} – no ranking points`
+              : cp`the College League: ${kidShort} lost to ${formatShortName(opp.name)} ${score} – no ranking points`,
       match,
     })
     if (!kidWon) break
@@ -1226,6 +1247,35 @@ export function collegeEpilogueLine(world: WorldState): string {
       : `a ranking of #${rank}. Qualifying is the way forward again`
   const yearsLine = `${years} ${years === 1 ? 'year' : 'years'} of student tennis, lived one season at a time.`
   return `${yearsLine} ${played}. ${moneyClause(banked)} She comes back at ${age}, with ${standing}.`
+}
+
+/** ⭐ L3-7 (10.10): THE REF OF `collegeEpilogueLine`, beside it. The row is the join of four parts (the years, her country, the money, the way back), so the ref is `joinCopy` of the four – exactly the
+ *  spelling the frozen v92 table gives each of the 24 combinations (2 year forms x 3 calls x 2 money signs x 2 standings), which `tests/i18n-l3-7-feeds.test.ts` proves against the table for every
+ *  combination. The nine part keys are FRAGMENTS (never emitted alone). The English is `collegeEpilogueLine`'s, character for character. */
+export function collegeEpilogueRef(world: WorldState): CopyRef {
+  const college = world.college
+  if (!college) return joinCopy(' ', [])
+  const years = college.years.length
+  const banked = college.years.reduce((sum, y) => sum + y.fundsDeltaCents, 0)
+  const calls = college.years.filter((y) => y.callUp !== null).length
+  const rank = kidLadderRank(world, 'wta')
+  const age = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
+  const dollars = Math.round(banked / 100)
+  const money = Math.abs(dollars).toLocaleString('en-US')
+  const yearsPart = years === 1 ? cp`${years} year of student tennis, lived one season at a time.` : cp`${years} years of student tennis, lived one season at a time.`
+  const calledPart =
+    calls === 0
+      ? cp`Her country never called.`
+      : calls === 1
+        ? cp`Her country called once, and paid her nothing, which is what it pays everybody.`
+        : cp`Her country called ${calls} times, and paid her nothing, which is what it pays everybody.`
+  const moneyPart =
+    dollars < 0 ? cp`The family is $${money} further under than the week she went in.` : cp`The family is $${money} better off than the week she went in.`
+  const wayBackPart =
+    rank === null
+      ? cp`She comes back at ${age}, with no professional ranking. Qualifying is the front door again.`
+      : cp`She comes back at ${age}, with a ranking of #${rank}. Qualifying is the way forward again.`
+  return joinCopy(' ', [yearsPart, calledPart, moneyPart, wayBackPart])
 }
 
 /** ⚠ THE SIGN IS A DIFFERENT SENTENCE, NOT A DIFFERENT NUMBER IN THE SAME ONE. The scholarship

@@ -113,7 +113,13 @@ export interface SaveOpStatus {
   op: SaveOpKind
   status: 'pending' | 'ok' | 'error'
   message?: string
+  /** ⭐ L3-7: the stable code of `message`, when it has one – the row prints `errorText(code, message)` */
+  code?: StoreErrorCode
 }
+
+/** ⭐ L3-7 (10.10): THE CODES A STORE ERROR CAN CARRY – the worker's (`WorkerErrorCode`: the two concurrency kinds, the payload refusal, the seven save-file kinds and the coded refusals) and the store's own
+ *  three (`store-restarted`, `store-restarted-from-save`, `store-crashed`). `composables/errorText.ts` is the one place they meet their sentences. */
+export type StoreErrorCode = WorkerErrorCode | 'store-restarted' | 'store-restarted-from-save' | 'store-crashed'
 
 /** ⚠⚠ A PLAIN COPY OF THE INHERITANCE BLOCK, AND IT IS A BUG FIX RATHER THAN HYGIENE (v86, wave 10
  *  T4). The block starts life on `Snapshot.ending.dynasty`, which Pinia has made REACTIVE, and a Vue
@@ -188,6 +194,10 @@ export const useGameStore = defineStore('game', {
     // `StoreError` draw the Reload. EVERY write to `error` below is paired with a write here – a stale
     // kind would show Reload under an UNRELATED refusal, and that is the bug this pairing exists to prevent.
     errorKind: '' as '' | 'save-conflict',
+    // ⭐ L3-7 (10.10) – THE STABLE CODE OF THE SENTENCE `error` HOLDS, when it has one: the worker's code on a refusal (`CommandRejected.code`), or one of the store's own four. `StoreError` and the
+    // rows that print the sentence ask `errorText(errorCode, error)` – a known code is the `t()` of that sentence, an unknown or absent one is the raw `error` (which is why a fixture that writes
+    // `error` by assignment keeps working). EVERY write to `error` below is paired with a write here, like `errorKind`.
+    errorCode: '' as StoreErrorCode | '',
     ready: false,
     /** INIT IS A TOTAL TRANSITION (W1-INTEGRITY-B, TB-06): `loading -> ready | recovery`, no third
      *  exit. `ready` (above) stays as the legacy boolean every screen already reads; this field is
@@ -326,6 +336,7 @@ export const useGameStore = defineStore('game', {
       if (!options?.keepError) {
         this.error = ''
         this.errorKind = ''
+        this.errorCode = ''
       }
       try {
         return await fn()
@@ -361,10 +372,12 @@ export const useGameStore = defineStore('game', {
           // T7.0: the kind rides with the sentence above – it is what earns `StoreError` its Reload control
           // (`SAVE_CONFLICT_RELOAD_LABEL`, top of file). Every other write to `error` sets it back to ''.
           this.errorKind = 'save-conflict'
+          this.errorCode = 'SAVE_CONFLICT'
           return undefined
         }
         this.error = err instanceof Error ? err.message : String(err)
         this.errorKind = ''
+        this.errorCode = err instanceof CommandRejected && err.code ? err.code : ''
       } finally {
         this.busy = false
       }
@@ -377,6 +390,7 @@ export const useGameStore = defineStore('game', {
       if (!careerId) {
         this.error = 'The simulation restarted. Try again.'
         this.errorKind = ''
+        this.errorCode = 'store-restarted'
         return
       }
       try {
@@ -387,11 +401,13 @@ export const useGameStore = defineStore('game', {
         // under TB-03 nothing past the last ok response ever existed, and that is the saved week.
         this.error = 'Simulation restarted from the last saved week.'
         this.errorKind = ''
+        this.errorCode = 'store-restarted-from-save'
       } catch {
         // Even the reload failed (storage denied, second crash): stay honest, stay recoverable —
         // the next tap retries through another fresh worker.
         this.error = 'The simulation crashed. Try again, or reopen the app to continue.'
         this.errorKind = ''
+        this.errorCode = 'store-crashed'
       }
     },
     async refreshAfterStale(err: CommandRejected) {
@@ -426,6 +442,7 @@ export const useGameStore = defineStore('game', {
       // not the message.
       this.error = 'That action was based on an outdated screen – it was refreshed. Try again.'
       this.errorKind = ''
+      this.errorCode = 'STALE_REVISION'
     },
     /** `run`, plus a visible outcome (TB-19). Save-management actions route through this so the
      *  result – pending, then ok or a typed error – is STATE the More screen renders, instead of
@@ -433,7 +450,7 @@ export const useGameStore = defineStore('game', {
     async runOp<T>(op: SaveOpKind, fn: () => Promise<T>): Promise<T | undefined> {
       this.saveOp = { op, status: 'pending' }
       const out = await this.run(fn)
-      this.saveOp = this.error ? { op, status: 'error', message: this.error } : { op, status: 'ok' }
+      this.saveOp = this.error ? { op, status: 'error', message: this.error, ...(this.errorCode ? { code: this.errorCode } : {}) } : { op, status: 'ok' }
       return out
     },
     /**

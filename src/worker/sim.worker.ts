@@ -79,7 +79,7 @@ import {
   touchCareer,
 } from '../db/saves'
 // ⭐⭐ A-05 (26.09): three shape checks now, not one – the profile, the childhood and the inheritance.
-import { CommandRefusedError, dynastyShapeError, profileShapeError, prologueShapeError } from '../shared/protocol'
+import { CodedRefusalError, CommandRefusedError, dynastyShapeError, profileShapeError, prologueShapeError } from '../shared/protocol'
 import type { ErrorReply, Snapshot, SnapshotReply, StopReason, ToWorker, ToUI } from '../shared/protocol'
 
 // The worker owns the authoritative world state (plain objects, non-reactive) for the ACTIVE career.
@@ -998,6 +998,11 @@ function errorMsg(id: number, err: unknown): ErrorReply {
   // kinds above (tests/worker-reply-correlation.test.ts asserts its absence alongside the code).
   if (err instanceof CommandRefusedError) {
     return { id, ok: false, error: err.message, code: 'INVALID_COMMAND' }
+  }
+  // ⭐ L3-7 (10.10) – A REFUSAL THAT CARRIES ITS OWN CODE (a letter that cannot be answered, a last offer that is not a question). The sentence is still the `error`; the code is what the UI keys the
+  // translation by. NO `revision`, for the same reason `INVALID_COMMAND` has none: nothing was measured against one.
+  if (err instanceof CodedRefusalError) {
+    return { id, ok: false, error: err.message, code: err.code }
   }
   // ⭐⭐ E-05 (05.09 engine review) – AND THE SAVE-FILE CODE CROSSES THE BOUNDARY TOO. `SaveFileError`
   // has carried seven machine-readable kinds since the import gate was written, and that gate's own

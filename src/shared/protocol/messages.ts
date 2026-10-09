@@ -106,7 +106,34 @@ export interface SavePeek {
  *  more); the import is erased at compile time, so the runtime graph is unchanged and invariant 1
  *  holds – `saveGuard.ts` imports `SAVE_SCHEMA_VERSION` from the engine at RUNTIME, and a value
  *  import here would put the whole engine behind every protocol consumer. */
-export type WorkerErrorCode = 'STALE_REVISION' | 'SAVE_CONFLICT' | 'INVALID_COMMAND' | SaveFileErrorCode
+export type WorkerErrorCode = 'STALE_REVISION' | 'SAVE_CONFLICT' | 'INVALID_COMMAND' | SaveFileErrorCode | RefusalCode
+
+/**
+ * ⭐ L3-7 (10.10) – THE FOUR SENTENCES OF A LETTER THAT CANNOT BE ANSWERED, AND THE ONE OF A LAST OFFER THAT IS NOT A QUESTION, NOW HAVE A STABLE CODE.
+ * docs/specs/i18n-2026-10.md §8 row L3-7; the ask is RU-13A's and RU-15's («an English exception in the middle of a Russian row is not a completed translation»).
+ *
+ * ⚠ THE SENTENCE STAYS ON THE ERROR AND THE CODE IS BESIDE IT, never instead: `error` is still the English sentence (the raw `message` is the fallback for any code a build does not know, and what
+ * every older reader, log and test sees), and `code` is what the UI keys the translation by – `composables/errorText.ts` maps each code to a `t()` whose key is that very English sentence, byte for byte
+ * (`tests/i18n-l3-7-errors.test.ts` holds the two spellings equal). The codes are kebab-case, like `SaveFileErrorCode`'s seven; they name the REASON, not the screen.
+ *   offer-not-in-inbox         the letter is not on the paper any more (or never was)
+ *   offer-already-signed       the deal was signed already
+ *   offer-gone                 expired, refused, or past its deadline – ONE sentence for the three ways of being gone (C-P10)
+ *   offer-next-season-signed   a strictly weaker kit rung than the one she is already signed for
+ *   last-offer-not-a-question  a `retire: false` aimed at a final offer, which no card can produce
+ */
+export type RefusalCode = 'offer-not-in-inbox' | 'offer-already-signed' | 'offer-gone' | 'offer-next-season-signed' | 'last-offer-not-a-question'
+
+/** An engine refusal that carries its code across the worker boundary – `StaleRevisionError`'s and `CommandRefusedError`'s own shape: an Error holding the player's sentence, mapped to a machine-readable
+ *  code by the worker's `errorMsg`. `toThrow('…the sentence…')` still matches it, because the message is the sentence. */
+export class CodedRefusalError extends Error {
+  constructor(
+    readonly code: RefusalCode,
+    message: string,
+  ) {
+    super(message)
+    this.name = 'CodedRefusalError'
+  }
+}
 
 /**
  * ⭐⭐ E-06 (05.09 engine review) – A COMMAND WHOSE PAYLOAD THE ENGINE WILL NOT TAKE.

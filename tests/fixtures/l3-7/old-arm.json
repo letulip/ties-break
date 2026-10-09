@@ -136,6 +136,56 @@
   "knock": {
    "digest": "e3e3f0a87911",
    "prompts": 1200
+  },
+  "famous": {
+   "packets": [
+    {
+     "label": "met/false",
+     "packet": {
+      "kind": "met",
+      "wrong": false
+     }
+    },
+    {
+     "label": "ended/false",
+     "packet": {
+      "kind": "ended",
+      "wrong": false
+     }
+    },
+    {
+     "label": "divorced/false",
+     "packet": {
+      "kind": "divorced",
+      "wrong": false
+     }
+    },
+    {
+     "label": "met/true",
+     "packet": {
+      "kind": "met",
+      "wrong": true
+     }
+    },
+    {
+     "label": "ended/true",
+     "packet": {
+      "kind": "ended",
+      "wrong": true
+     }
+    },
+    {
+     "label": "divorced/true",
+     "packet": {
+      "kind": "divorced",
+      "wrong": true
+     }
+    }
+   ],
+   "digest": "de4a73151432",
+   "builds": 360,
+   "beats": 6036,
+   "booth": 360
   }
  },
  "careers": {

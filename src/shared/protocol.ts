@@ -296,6 +296,7 @@ export type {
   CareerMeta,
   SavePeek,
   WorkerErrorCode,
+  RefusalCode,
   ToWorker,
   ToUI,
   OkReply,
@@ -312,4 +313,5 @@ export type {
 export {
   REPLY_BY_COMMAND,
   CommandRefusedError,
+  CodedRefusalError,
 } from './protocol/messages'

@@ -47,6 +47,7 @@ import {
 } from '../ending'
 // ⭐ L3-6 (10.10): the endings' feed rows write `c` beside `text` (the refs themselves are the leaf's: `lastWordRef`, `leavingLineRef`, `endingRowRef`).
 import { cp } from '../../shared/i18n'
+import { CodedRefusalError } from '../../shared/protocol'
 import type { AcademyEpilogue, AdOfferTerms, CareerEnding, CollegeTier, DebtView, DynastyHandover, EndingView, FamilyBackground, ForkAnswer, TierTrophies } from '../../shared/protocol'
 // ⭐ ROUND 29 PART TWO #10 – the epilogue's academy line reads the LEAVES, never `world/shop.ts`
 // (shop imports THIS file, so the leaf split in `world/assets.ts`' header is what makes this legal):
@@ -1254,7 +1255,7 @@ export function answerRetirement(world: WorldState, retire: boolean): void {
   guardNotEnded(world)
   const offer = world.retirementOffer
   if (offer === null) throw new Error('Nobody has asked her')
-  if (!retire && offer.final) throw new Error(LAST_OFFER_NOT_A_QUESTION)
+  if (!retire && offer.final) throw new CodedRefusalError('last-offer-not-a-question', LAST_OFFER_NOT_A_QUESTION)
   world.retirementOffer = null
   if (!retire) {
     world.oneMoreYearCount += 1

@@ -237,10 +237,17 @@ describe('L3-2 §6 – the engine writes no letter prose (the finding, counted)'
   }
 
   it('offers.ts holds only the four answer errors and the apparel house\'s own trade clause; staffLetters.ts holds none', () => {
+    // ⭐ L3-7 (10.10) RE-AIM, NOT RELAXED: the four answer errors appear TWICE now – once as the literals `offerAnswerError` returns (tests/principles-e07-offer-live.test.ts pins those) and once as the KEYS of
+    // `OFFER_REFUSAL_CODES`, the table that gives each its stable code (typed store-error codes, RU-13A). The same four sentences, no fifth: the code table's keys are held equal to the function's returns by
+    // tests/i18n-l3-7-errors.test.ts §2, so this count can only move with a sentence that has a code.
     expect(prose('src/engine/offers.ts').sort()).toEqual([
       'That deal is already signed.',
+      'That deal is already signed.',
+      'That letter is not in the inbox.',
       'That letter is not in the inbox.',
       'That offer has already gone.',
+      'That offer has already gone.',
+      'She is already signed for next season.',
       'She is already signed for next season.',
       'We make her kit',
       'We make her kit',
