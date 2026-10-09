@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 165 dated entries, newest 2026-10-08. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 166 dated entries, newest 2026-10-10. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 7 | [FOURTH BATCH: THE SUPPORTS' REFUSALS BANK LIKE THE COACH'S, AT THEIR OWN SCALE](#02102026--fourth-batch-the-supports-refusals-bank-like-the-coachs-at-their-own-scale) | 2026-10-02 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 17 | [THE TARIFF IS HIS LEVER: J 1-2-3, W BY STAGE, THE SHOOT PAYS PER DAY](#02102026--the-tariff-is-his-lever-j-1-2-3-w-by-stage-the-shoot-pays-per-day) | 2026-10-02 |
-| general | 34 | [THE LOCALIZATION MERGES AS ONE](#08102026--the-localization-merges-as-one) | 2026-10-08 |
+| general | 35 | [L4 JOINS THE SINGLE MERGE: THE NIGHT ORDER](#10102026--l4-joins-the-single-merge-the-night-order) | 2026-10-10 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -6031,3 +6031,15 @@ wave-10 strings table's D2 row, RU-12A, README and the records.
 the per-wave PRs die: the L-waves STACK on the one branch (`loc/l1a`), each wave still its own
 commits, gates and body refresh, and the owner merges the whole rig once at the end. The spec's
 §8 per-wave-branch line is amended by this ruling.
+
+## 10.10.2026 – L4 JOINS THE SINGLE MERGE: THE NIGHT ORDER
+
+«очень хорошо, но L4 тоже надо в эту ветку на единый мерж, вся локализация идет одним куском,
+после LB-note бери в работу пожалуйста так же пошагово и до конца без остановок, все вопросы
+собирай, я утром разберу.» The L4 ladder runs overnight on `loc/l1a`: L4-1 fonts (the P3 spec
+executes – the cmap probe, the lang-scoped wiring, HIS T2 sample sheet for the morning pick),
+L4-2 the whole-app pseudo-locale sweep, L4-3 the LQA runner over RU-14's acceptance matrix plus
+the RU-13C technical half (lang tag, manifest, the policy route with its EN fallback until his
+rows approve). The honest frame stands in §8: the closure gates – 100% of his chosen batch set
+and the zero miss counter – WAIT on his читка by design; the night builds every machine that
+measures them. Questions pile for the morning, his word resumes the levers.
