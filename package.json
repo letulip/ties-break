@@ -85,7 +85,8 @@
     "shell:backup": "node shells/backup.mjs",
     "i18n:extract": "vite-node tools/i18n-cli.ts extract",
     "i18n:import": "vite-node tools/i18n-cli.ts import",
-    "i18n:check": "vite-node tools/i18n-cli.ts check"
+    "i18n:check": "vite-node tools/i18n-cli.ts check",
+    "fonts:probe": "vite-node tools/font-cmap-probe.ts"
   },
   "engines": {
     "node": ">=22"

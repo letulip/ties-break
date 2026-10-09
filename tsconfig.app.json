@@ -51,6 +51,7 @@
     "tools/econ-bench.ts",
     "tools/endings-bench.ts",
     "tools/fatigue-bench.ts",
+    "tools/font-cmap-probe.ts",
     "tools/form-bench.ts",
     "tools/form-g-sweep.ts",
     "tools/frozen-key-diff.ts",

@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-285 TRACKED TypeScript files: **67 live**, **218 archival**
+286 TRACKED TypeScript files: **68 live**, **218 archival**
 (of which **113 frozen** out of `check:tools` and **105 still swept**).
 
 ## Why the split exists
@@ -60,6 +60,7 @@ gate's verdict is a function of the commit, never of whatever else a checkout ha
 | `econ-bench.ts` | `npm run bench:econ` |
 | `endings-bench.ts` | `npm run bench:endings` |
 | `fatigue-bench.ts` | `npm run bench:fatigue` |
+| `font-cmap-probe.ts` | `npm run fonts:probe` |
 | `form-bench.ts` | `npm run bench:form` |
 | `form-g-sweep.ts` | `npm run bench:gsweep` |
 | `frozen-key-diff.ts` | diffs a frozen RNG capture against a live run – the instrument for "which draw moved?" when the pinned hash changes |

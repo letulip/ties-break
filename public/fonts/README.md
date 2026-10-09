@@ -19,9 +19,12 @@ copyright lines included.
 
 Notes:
 
-- The woff2 files are **latin subset only**. The planned RU localization
-  (`docs/plan.md`, post-v1 backlog) will need Cyrillic subsets of at least Manrope
-  and Caveat – swap the files, keep the names, and the OFL texts stay valid as is.
+- The three woff2 files above are **latin subset only** – measured, not assumed: `npm run fonts:probe` reads each
+  file's `cmap` and finds 0 Cyrillic code points in all three (L4-1, 10.10). The RU locale gets its Cyrillic as
+  ADDITIONAL files – `manrope-cyr.woff2` and `caveat-cyr.woff2`, declared in `src/style.css` with a Cyrillic-only
+  `unicode-range` – so the files above are not swapped and English renders from exactly the bytes it always did. Those
+  two are **not on disk yet**; the generation commands and the checklist for the day they land (rows in the table above
+  included) are in `docs/specs/ru-typography-2026-09.md` §T3. The OFL texts stay valid as they are: same two families.
 - Vite copies `public/` into `dist/` verbatim, so the deployed site carries the license
   texts next to the fonts automatically. The service-worker precache glob
   (`vite.config.ts`) covers `woff2` but not `.txt`/`.md`, so none of this adds a byte

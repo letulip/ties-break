@@ -64,6 +64,7 @@
     "tools/feed-audit.ts",
     "tools/first-number-one-probe.ts",
     "tools/first-pair-replay.ts",
+    "tools/font-cmap-probe.ts",
     "tools/fork-birthday-probe.ts",
     "tools/form-bench.ts",
     "tools/form-g-sweep.ts",
