@@ -1651,7 +1651,7 @@ async function leaveCollege(): Promise<void> {
            below the fold. It is a door, so it is a `button` and it lifts under the finger; the four
            cards below keep their own grid and their own geometry, untouched. -->
       <Card v-if="softBeat" as="button" class="soft-beat-card" @click="emit('softBeat')">
-        <p class="soft-beat-line">{{ softBeat.card }}</p>
+        <p class="soft-beat-line">{{ eventText({ text: softBeat.card, c: softBeat.cardC }) }}</p>
       </Card>
 
       <!-- 3. THE CARD GRID – the visual signature. Two of the four are doors, and they say so by

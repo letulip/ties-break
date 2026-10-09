@@ -3033,6 +3033,7 @@ import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-ben
 // The wave adds no MAIN draw anywhere (the spec's §8 row 8 predicts it), so a red freeze beside this
 // re-stamp would mean something other than the weight moved.
 export const FROZEN = {
+  // ⭐ RE-STAMPED 10.10.2026 (the localization rig, L3-5) – ONE OF THE ELEVEN LIVE CELLS moved, `eliteGrinder` (8/0), and in all three registers that hash it (this one, `PRE_R28B`'s and `PRE_NAME_VERA`'s – the shared-cell rule), for the same ONE KEY, `events`: L3-5 converts the life beats' twelve sinks (the answer feed, the kept news and ending rows, the divorce, the leak, the key, the pause, the birth, the loss, the wedding day), and the 120k career lives one life row inside its 156 weeks – a kept row that now carries `c` beside its `text`. Per-key protocol run FIRST, control = the stack head (0b60a1b3) in a detached worktree, on all five preset/policy pairs (5/0, 8/0, 0/1, 6/1, 5/1): **`events` is the ONLY key that moved, and only on 8/0** (of 103) – the other four careers hold no life row in 156 weeks and are byte-identical on every key – and `rngMain` is identical on all five: 5/0 `1dbff28caca2` · 8/0 `aebc8101d6df` · 0/1 `d84bcbf0c481`, the three canonical fingerprints reproduced. The other ten cells (`middleGrinder`, `selfTravelling`, `highPlayer`, `middlePlayer` in every register) are UNCHANGED, and `careerHashAtSchema` already peels `c`, so every `PRE_V*` rung HOLDS. The frozen MAIN capture is unmoved: 41550 / `e6b0c709`.
   // ⭐ RE-STAMPED 10.10.2026 (the localization rig, L3-3) – THE ELEVEN LIVE CELLS moved AGAIN for the same ONE KEY, `events`: L3-3 converts the news / results / notices writers (fieldNews, the kid-match and retirement rows, the champion line, the milestones, the academy notices, the shoot notes, the first kept row, the calendar and birthday rows, the spirit feed), so more rows of a frozen career carry `c` beside their `text`. Per-key protocol run FIRST, control = the stack head (8d0ab8b7) in a detached worktree, on all five preset/policy pairs (5/0, 8/0, 0/1, 6/1, 5/1): **`events` is the ONLY key that moved on every one** (of 103–104), and `rngMain` is byte-identical – 5/0 `1dbff28caca2` · 8/0 `aebc8101d6df` · 0/1 `d84bcbf0c481`, the three canonical fingerprints reproduced. `careerHashAtSchema` already peels `c` off every row below 93, so every `PRE_V*` rung HOLDS (the rollback to 92 still returns `PRE_V93` character for character); `PRE_R28B`'s five and `PRE_NAME_VERA`'s three re-stamped with these (the shared-cell rule). The frozen MAIN capture is unmoved: 41550 / `e6b0c709`.
   // ⭐ RE-STAMPED 10.10.2026 (the localization rig, L3-1) – THE ELEVEN LIVE CELLS moved for ONE KEY: `WorldEvent.c`. L3-0 added the field and nothing wrote it (its note below: «the first writer that sets `c` turns these red on purpose»); L3-1 is that writer – every ledger / receipt row of a frozen career now carries its sentence as a CopyRef beside its `text`. Per-key protocol run FIRST, control = the stack head (87dedd86) in a detached worktree, on all five preset/policy pairs (5/0, 8/0, 0/1, 6/1, 5/1): **`events` is the ONLY key that moved on every one**, and `rngMain` is byte-identical – 5/0 `1dbff28caca2` · 8/0 `aebc8101d6df` · 0/1 `d84bcbf0c481`, the three canonical fingerprints reproduced. `careerHashAtSchema` gained the peel (`c` off every row for any rollback below 93) and `careerHashAtSchema(·, ·, 92)` returns `PRE_V93` character for character, which is the same claim from the other end; `PRE_R28B`'s five and `PRE_NAME_VERA`'s three re-stamped with them (the shared-cell rule). The frozen MAIN capture is unmoved: 41550 / `e6b0c709`.
   // ⭐ RE-STAMPED 09.10.2026 (the localization rig, L3-0, v93) – THE ELEVEN LIVE CELLS moved for the VERSION NUMBER ALONE (`WorldEvent.c` exists and nothing writes it): `PRE_V93` holds the v92 values and `careerHashAtSchema(·, ·, 92)` returns them character for character; `PRE_R28B`'s five and `PRE_NAME_VERA`'s three re-stamped with them.
@@ -3626,7 +3627,7 @@ export const FROZEN = {
    *  NOT A CAREER MOVING TWICE: 8/0's inbox is character for character what it was
    *  (`kit-47`/`kit-99`/`kit-151`, all on slot 0), and the mover is round 41's own economy, already
    *  recorded in the three re-stamp blocks at the head of this file. */
-  eliteGrinder: '946ad8533f4edd3cc53b1bac7fc816b10c2f7530f7ed7c2d84dd41b580ad04ff',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+  eliteGrinder: '4604a3c662af61ab324fb3c024a1cfc1a2f402fc7eb1a035c58657b20c08bdea',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -4816,7 +4817,7 @@ export const PRE_V69 = {
  *  02.09 identity is about a name, and no part of v79 touches one. */
 export const PRE_NAME_VERA = {
   middleGrinder: '2383a6467700b0873e89914c9832f03a31fe9138c42f00734cb91161cbcf329b',
-  eliteGrinder: '409a985e6506dd76abafb30b426295d5f7bac1591975588c3de931da9c678a90',
+  eliteGrinder: 'e07024ca45673a32d520bb27142b95fdcf5efbe0f9e5a99cd28e55a40880fb18',
   selfTravelling: '67dfb18562c4b763ad33112b48efbabb5cf40fa0e68281765329955e20da9963',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v67 – the identity that proves the v68 re-freeze
@@ -5161,7 +5162,7 @@ export const PRE_V66 = {
  *  careers under it moved. */
 export const PRE_R28B = {
   middleGrinder: 'efb24c356612811168df98dec0c2f667a45fbdae7bb40c85af204cf422a8e4c7',
-  eliteGrinder: '946ad8533f4edd3cc53b1bac7fc816b10c2f7530f7ed7c2d84dd41b580ad04ff',
+  eliteGrinder: '4604a3c662af61ab324fb3c024a1cfc1a2f402fc7eb1a035c58657b20c08bdea',
   selfTravelling: 'aa2a180cf4eb1265c9c1447ba5b8b0256524ae3e2a308dba0b20a656ef1dec2b',
   /** ⭐⭐ PRESETS[6] · 25k middle · HIGH coach · PLAYER policy – THE WITNESS, restored 12.09.2026 by
    *  the union merge after preset 8 / policy 1 stopped discriminating (the block above dates it to

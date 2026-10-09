@@ -750,7 +750,8 @@ describe('wave 6 T6 F – the parent learns it from the headline', () => {
     hRow.publicWeek = null
     const plain = buildLifeBeatPrompt(headline)!
     expect(framed.heading, 'only the frame moves').not.toBe(plain.heading)
-    expect({ ...framed, heading: '' }, 'and NOTHING else does').toEqual({ ...plain, heading: '' })
+    // ⭐ RE-AIMED 10.10 BY L3-5: the heading's ref is the heading's own seat (`headingC: { k: heading }`), so it moves with the frame and is blanked beside it – the frame is ONE fact written twice
+    expect({ ...framed, heading: '', headingC: undefined }, 'and NOTHING else does').toEqual({ ...plain, heading: '', headingC: undefined })
   })
 
   it('⭐⭐ a parent who ALREADY KNOWS is not un-told – the date never moves later', () => {

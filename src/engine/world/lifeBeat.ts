@@ -83,6 +83,7 @@ import { psychologistWorkingRung, psychologistWorksThisWeek } from './psychologi
 // ⚠ hub: AND THE WHOLE `./spotlight` IMPORT LEFT WITH §9 AND §10 ON 28.09 (A-06 / T6.8).
 // → docs/notes/life-beats/hub.md#v77-t6--the-spotlights-one-gate-and-the-stock-behind-it
 import { awayVoice } from '../diary/words'
+import { cp, type CopyRef } from '../../shared/i18n'
 import { diaryLifeStageFor } from '../diary/facts'
 // ⭐ v83 T5 – THE TWO TRAVEL BANDS JOIN `schoolIsOver` ON AN ARROW THAT ALREADY EXISTS. They are the
 // friends tile's own thresholds («a season lived out of a suitcase»: `weeksAway >= AWAY_OFTEN` of
@@ -1044,6 +1045,22 @@ function smallTalkOpener(column: SmallTalkVoiceEntry, presence: BeatPresence, fr
   return `${smallTalkFrameOf(frame, presence)} ${column.opener}`
 }
 
+/** ⭐⭐ L3-5 (10.10) – THE REF BESIDE HER LINE, from the same facts `lifeBeatSaid` read. A pool cell is a SEAT (`{ k: said }`: the string IS the key, and every pool lives in a copy
+ *  leaf or a hub table the census reads); the ONE composed line is small talk's – a frame joined to a spoken opener – and it is `{0} {1}` over two seats, so the catalog holds the
+ *  frame and the opener as keys of their own and never the (frame x opener) product. Class (b): zero draws, nothing stored; the frame is the row's stamped id. The net renders every
+ *  situation x voice x frame against `lifeBeatSaid` (tests/i18n-l3-5-life-beats.test.ts §2). Exported for the net only – not on the barrel. */
+export function lifeBeatSaidRef(
+  kind: LifeBeatKind,
+  detail: string,
+  voice: Temperament,
+  stage: DiaryLifeStage,
+  frame: string | undefined,
+  said: string,
+): CopyRef {
+  const column = kind === 'small-talk' ? smallTalkVoiceOf(detail, voice) : null
+  return column === null ? { k: said } : cp`${{ k: smallTalkFrameOf(frame, presenceOf(stage)) }} ${{ k: column.opener }}`
+}
+
 // 3e. `'ended'` – THE COPY MOVED TO `world/lifeBeat/endedCopy.ts` (A-06 / T6.8, 28.09) – A
 // pure leaf, and the two types and two rosters of this beat's own shape went with it.
 //
@@ -1210,7 +1227,7 @@ function endedHeadingFor(endsRegister: EndsRegister, read: EndsRead, heard: Hear
 //
 // ⚠ §11, the wedding's HAZARD half, is still in this file: it calls back into the hub and its names reach `world.ts` through the hub's…
 // → docs/notes/life-beats/hub.md#lifebeatts-3g--engaged--the-copy-moved
-import { ENGAGED_DRY, ENGAGED_HEADING, ENGAGED_HER_LINE, engagedWithTogether } from './lifeBeat/weddingCopy'
+import { ENGAGED_DRY, ENGAGED_HEADING, ENGAGED_HER_LINE, engagedWithTogether, engagedWithTogetherRef } from './lifeBeat/weddingCopy'
 
 // 3h. `'spouse-view'` – THE COPY MOVED TO `world/lifeBeat/spouseViewCopy.ts` (A-06 / T6.8,
 // 28.09) – A pure leaf: only the dispatcher hub below read it, so it left whole and the hub
@@ -2226,16 +2243,16 @@ export function lifeBeatFollowUps(
     // unchanged. It is named here rather than left to fall through, because «this cell is still the
     // old beat» is a fact the handoff reports and a reader has to be able to find.
     if (column === null) return []
-    return SMALL_TALK_STANCES.map((stance) => ({
-      optionId: SMALL_TALK_STANCE_ID[stance],
-      said: column.shared === undefined
+    return SMALL_TALK_STANCES.map((stance) => {
+      const said = column.shared === undefined
         ? [column.branches[stance].said]
-        : [column.shared, column.branches[stance].said],
-      done: stance === 'invite' ? LISTEN_DONE_LABEL : CONFIRM_LABEL,
-    }))
+        : [column.shared, column.branches[stance].said]
+      // ⭐ L3-5 (10.10): each paragraph is a seat – the corpus string IS its key (`saidC[i]` renders to `said[i]`; the net walks all 51 situations x 4 voices x 3 stances)
+      return { optionId: SMALL_TALK_STANCE_ID[stance], said, saidC: said.map((k) => ({ k })), done: stance === 'invite' ? LISTEN_DONE_LABEL : CONFIRM_LABEL }
+    })
   }
   const listen = lifeBeatListenFollowUp(kind, detail, voice, bond)
-  return listen === null ? [] : [{ optionId: 'listen', said: [listen], done: LISTEN_DONE_LABEL }]
+  return listen === null ? [] : [{ optionId: 'listen', said: [listen], saidC: [{ k: listen }], done: LISTEN_DONE_LABEL }]
 }
 
 /** ⭐ THE SITUATION'S OWN WORDS FOR THE THREE STANCES (§3 / §8d.1), as the label overlay
@@ -2361,7 +2378,19 @@ export function pendingLifeBeatOptions(world: WorldState): readonly LifeBeatAnsw
  */
 export function buildLifeBeatPrompt(world: WorldState): LifeBeatPrompt | null {
   const pending = pendingLifeBeat(world)
-  return pending === null ? null : lifeBeatPromptFor(world, pending)
+  return pending === null ? null : withRefs(world, pending, lifeBeatPromptFor(world, pending))
+}
+
+/** ⭐⭐ L3-5 (10.10) – THE PROMPT'S REFS, BESIDE ITS ENGLISH. `lifeBeatPromptFor` (below) is the shipped assembly and is UNTOUCHED – not a character of it moved; this reads its finished strings and the row's
+ *  stamped facts and writes the CopyRef next to each: the heading is a pool cell, so its ref is its own seat (`{ k: heading }`); her line is `lifeBeatSaidRef` (a seat, or small talk's `{0} {1}`),
+ *  and on the announcement the pool line is followed by the span's sentence, which `engagedWithTogether` appended – so the pool line is what is left once that suffix is taken off, and the ref is
+ *  `engagedWithTogetherRef` over it. (The follow-ups carry their own refs, written where they are assembled.) Class (b): pure, zero draws, nothing stored – both entrances (the blocking prompt
+ *  and the soft invite) ride it, so the two cards cannot drift apart. */
+function withRefs(world: WorldState, row: LifeBeatRecord, prompt: LifeBeatPrompt): LifeBeatPrompt {
+  const weeks = row.kind === 'engaged' ? relationshipDurationWeeks(world, loveEpisodesOf(world).find((e) => e.id === row.detail) ?? null) : null
+  const pool = weeks === null ? prompt.said : prompt.said.slice(0, prompt.said.length - engagedWithTogether('', weeks).length)
+  const stage = lifeStageAt(world, row.week)
+  return { ...prompt, headingC: { k: prompt.heading }, saidC: engagedWithTogetherRef(lifeBeatSaidRef(row.kind, row.detail, voiceOf(world), stage, row.frame, pool), weeks) }
 }
 
 /** ⭐⭐ v74 T15 – THE PROMPT FOR **ONE ROW**, and it is the whole of `buildLifeBeatPrompt`'s body
@@ -2513,7 +2542,9 @@ export function buildSoftBeatInvite(world: WorldState): SoftBeatInvite | null {
   // ⚠ THE `??` ARM IS FOR A HAND-BUILT WORLD ONLY: `liveSoftBeat` returns non-blocking rows, every
   // non-blocking cell above is a string, and a blocking row reaching this line would already be two
   // bugs deep – it falls onto tier 1's shipped card rather than onto a crash inside `toSnapshot`.
-  return { card: SOFT_BEAT_CARD[row.kind] ?? SMALL_TALK_CARD, prompt: lifeBeatPromptFor(world, row) }
+  const card = SOFT_BEAT_CARD[row.kind] ?? SMALL_TALK_CARD
+  // ⭐ L3-5 (10.10): the card constants are catalog keys, so the ref is the seat of the very string printed beside it
+  return { card, cardC: { k: card }, prompt: withRefs(world, row, lifeBeatPromptFor(world, row)) }
 }
 
 // =================================================================================================
@@ -2657,6 +2688,8 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
     // ⚠ NO AMOUNT AND NO PRICE IN THE WORDS – rule 4 at the top of this file. An `amountCents` here
     // would put a conversation in the Money breakdown.
     text: answerLine[chosen.id],
+    // ⭐ L3-5 (10.10): the ref beside the sentence – a pick from the pool above, each of whose 28 lines is a key of the frozen v92 table (the net's §7 and the L3-1 net's §1b walk them)
+    c: { k: answerLine[chosen.id] },
   })
 }
 
@@ -3022,6 +3055,9 @@ export function deliverKnownPartner(world: WorldState): void {
     // ⚠ THE VOICE IS `voiceOf` AND NOT `temperamentOf` – «who she is, for the WORDING alone», which
     // is §0.2's fence: the voices read BIRTH and T7's expressed reading never reaches a pool.
     const frameEnd: HeardRead | null = heardEnd === true ? { voice: voiceOf(world), wants: due.wants } : null
+    // ⭐ L3-5 (10.10): THE ROW'S SENTENCE, EVALUATED ONCE – the expression is `text:`'s own, moved up a few lines with its characters (the sentence and its ref are then one value, and the
+    // birth-reading count `tests/wave5-psychologist-schema.test.ts` takes of this file stays two)
+    const lateRow = endedKeptRow('told-late', drawEndsRead(world.seed, due.endedWeek, temperamentOf(world)), frameEnd)
     addEvent(world, {
       week: world.week,
       type: 'life',
@@ -3032,7 +3068,9 @@ export function deliverKnownPartner(world: WorldState): void {
       // ⚠⚠ deliverKnownPartner: BIRTH, AND IT MUST NOT MOVE TO `expressedTemperamentOf` – v76's T7, THE ARCHITECT'S RULING A.
       // ⚠ deliverKnownPartner: THE TEMPERAMENT-INDEXED POOLS BESIDE IT READ BIRTH FOR THE OTHER REASON (§0.2's fence, `voiceOf` above)
       // → docs/notes/life-beats/hub.md#deliverknownpartner--no-amount-rule-4-and-the-read-comes-off-the-endings-own-week
-      text: endedKeptRow('told-late', drawEndsRead(world.seed, due.endedWeek, temperamentOf(world)), frameEnd),
+      text: lateRow,
+      // ⭐ L3-5 (10.10): the ref beside the text – the kept row is one sentence of the frozen v92 table (`endedKeptRow` is a table read), evaluated ONCE above for both
+      c: { k: lateRow },
       // ⭐⭐⭐ v75 T5 – THE KIND, STAMPED. `WorldEvent.lifeKind` (T1's field) is what lets the feed's
       // glyph column tell one life row from another; this is the told-late ENDING row, so `'ended'`.
       // ⚠ IT IS THE BEAT KIND AND NOT THE REGISTER: told-now and told-late are two wordings of one
@@ -3054,6 +3092,8 @@ export function deliverKnownPartner(world: WorldState): void {
   // unrelated pieces of news. §1f's one-value-per-key law, satisfied by the kind being IN the key.
   const heardMet = listenHeardNow(world, 'met')
   const frameMet: HeardRead | null = heardMet === true ? { voice: voiceOf(world), wants: due.wants } : null
+  // ⭐ L3-5 (10.10): the row's sentence, evaluated once – `text:`'s own expression moved up with its characters
+  const metRow = metKeptRow(bondBandOf(world.bond ?? ECONOMY.bond.start), due.wants, frameMet)
   addEvent(world, {
     week: world.week,
     type: 'life',
@@ -3061,7 +3101,9 @@ export function deliverKnownPartner(world: WorldState): void {
     // ⚠ NO AMOUNT – a life beat is never a purchase (rule 4), and the absence of the field is what
     // keeps `accrueFinance` from ever seeing this row.
     // ⚠ THE EPISODE'S OWN `wants` (v74 T7) – the read, unmarked, in the one row the album keeps.
-    text: metKeptRow(bondBandOf(world.bond ?? ECONOMY.bond.start), due.wants, frameMet),
+    text: metRow,
+    // ⭐ L3-5 (10.10): the ref beside the kept row – `metKeptRow` is a pure table read, its 12 sentences all keys of the frozen v92 table; evaluated once above for both
+    c: { k: metRow },
     // ⭐⭐⭐ v75 T5 – THE KIND, STAMPED, on wave 3's own arrival row. ⚠⚠ THE SENTENCE ABOVE DID NOT
     // MOVE AND MUST NOT (invariant 4): this adds a MACHINE-READABLE field beside it, which is exactly
     // what T1's field comment said the two write sites would do. ⚠ AND IT IS NOT A BACK-FILL: rows

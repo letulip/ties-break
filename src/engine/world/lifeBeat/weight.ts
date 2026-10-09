@@ -11,7 +11,7 @@ import { temperamentFor } from '../../spirit'
 import { addEvent } from '../ledger'
 import { guardNotEndedForGood } from '../constants'
 import { kidAgeNow } from '../lifeBeat'
-import type { Temperament } from '../../spirit'
+import { LOSS_HER_LINE } from './pregnancyCopy'
 import type { WorldState } from '../state'
 
 // 15. THE WEIGHT – ⚠⚠ THE SWITCH, THE HIDDEN WINDOW, AND THE TWO GRIEFS (wave 11) –
@@ -110,6 +110,8 @@ export function rollPregnancyLoss(world: WorldState): void {
     // ⚠ NO AMOUNT AND NO PRICE IN THE WORDS (§3j's rule 4). ⚠ `keep: true` for the pause row's own
     // reason: `pruneEvents` drops ordinary rows at sixty weeks and this arc is longer than that.
     text: line,
+    // ⭐ L3-5 (10.10): `c` beside the text – the pool's pick is its own key (`LOSS_HER_LINE`'s four sentences are keys of the frozen v92 table)
+    c: { k: line },
   })
 }
 
@@ -130,24 +132,4 @@ function lossLineFor(world: WorldState, told: boolean): string | null {
   return told ? cell.told : cell.untold
 }
 
-/** ⚠ ⚠ DRAFT – see `lossLineFor`. `null` is the private branch and is the design's ruling, not an
- *  unwritten cell. */
-const LOSS_HER_LINE: Record<Temperament, { told: string; untold: string } | null> = {
-  sunny:
-    {
-      told: 'She rang the same evening and did not soften it. "We lost it. I did not want you to hear it from anyone else, and I would like you here."',
-      untold:
-        'She rang the same evening and said two things in one breath. "There was a child coming and there is not any more. I had not told you yet. I would like you here."',
-    },
-  fiery:
-    {
-      told: 'She called once, said it flat out, and was off the phone inside a minute. "We lost it. I am not talking about it. I will ring you when I am ready to."',
-      untold:
-        'She called once, said it flat out, and was off the phone inside a minute. "I was pregnant. I am not any more. I am not talking about it. I will ring you when I am ready to."',
-    },
-  // ⚠⚠ THE SILENCE, AND IT IS RULED RATHER THAN UNWRITTEN. `quiet` and `deep` tell nobody: the arc
-  // simply stops, and what the parent has to read is the absence. See `lossLineFor`'s block.
-  quiet: null,
-  deep: null,
-}
 

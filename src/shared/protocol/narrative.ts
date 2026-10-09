@@ -170,10 +170,17 @@ export interface LifeBeatPrompt {
   kind: LifeBeatKind
   /** the engine's heading for this beat, already in her register */
   heading: string
+  /** ⭐ L3-5 (10.10): THE HEADING AS A COPYREF, BESIDE THE ENGLISH (the `LifeMoment.lineC` shape; docs/specs/i18n-2026-10.md §8, row L3-5). The prompt is CLASS (b) – assembled by
+   *  `lifeBeatPromptFor` at snapshot time off the row's stamped facts and never stored – so every heading is the very string of a pool cell and its ref is that cell's key
+   *  (`{ k: heading }`); the dialog draws `eventText({ text, c })`. Optional: a caller with no ref prints the English, as before. */
+  headingC?: CopyRef
   /** ⭐ HER LINE, in her voice – written against the four voice bibles and obeying their two shape
    *  rules (one quoted span, and `she` in the narration outside it), which the week-note pins
    *  enforce for the whole corpus since wave 1. */
   said: string
+  /** ⭐ L3-5 (10.10): HER LINE AS A COPYREF, beside the English. A pool cell is a seat (`{ k: said }`); the two composed lines are real refs – small talk's frame joined to
+   *  its opener (`{0} {1}` over two seats) and the announcement's pool line joined to the sentence that says how long they have been together. */
+  saidC?: CopyRef
   /** his possible responses, in the order to show them. Never her choices – the decision stays
    *  hers, and these are what the parent may say about it. */
   options: LifeBeatOption[]
@@ -226,6 +233,8 @@ export interface LifeBeatFollowUp {
   optionId: string
   /** her reply, in the order to render it. One paragraph, or two for a `story`. */
   said: readonly string[]
+  /** ⭐ L3-5 (10.10): the paragraphs as CopyRefs, beside the English, one per entry of `said` and in the same order (each a seat – the corpus string IS the key). */
+  saidC?: readonly CopyRef[]
   /** the label of the one control that then records `optionId` */
   done: string
 }
@@ -249,6 +258,8 @@ export interface LifeBeatFollowUp {
 export interface SoftBeatInvite {
   /** the Home card's line – the invitation, never what she came with */
   card: string
+  /** ⭐ L3-5 (10.10): the card's line as a CopyRef, beside the English (a seat – the card constants are catalog keys). */
+  cardC?: CopyRef
   /** the conversation the card opens, on the ordinary prompt contract */
   prompt: LifeBeatPrompt
 }

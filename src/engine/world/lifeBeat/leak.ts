@@ -8,6 +8,7 @@ import { ECONOMY } from '../../economy'
 import { expressedTemperamentOf, temperamentOpenness } from '../../spirit'
 import { addEvent } from '../ledger'
 import { activeEpisode } from '../loveEpisodes'
+import { LEAK_EVENT } from './leakCopy'
 import { fameAt } from '../fame'
 import { newsStandingOf } from '../spotlight'
 import type { WorldState } from '../state'
@@ -31,18 +32,6 @@ import type { WorldState } from '../state'
 // ⚠ leak: IT WRITES THE TWO PUBLICITY STAMPS, ONE KEPT FEED ROW…
 // → docs/notes/life-beats/leak.md#leakts-9--the-leak
 
-/** ⭐ THE WORLD'S OWN VERSION, AS THE PARENT READS IT – two of them, and which one prints is the
- *  `story` stream's answer and not a reading of anything the family knows.
- *
- *  ⚠ LEAK_EVENT: NO `amountCents` AND NO PRICE IN ANY WORD…
- *  ⚠ LEAK_EVENT: THE WRONG ROW IS THE ONE PLACE A FIGURE MAY APPEAR AT ALL
- *  ⚠ LEAK_EVENT: BOTH ARE DRAFTS AND DELIBERATELY NOT POLISHED
- *  → docs/notes/life-beats/leak.md#leak_event--the-worlds-own-version-as-the-parent-reads-it
- */
-const LEAK_EVENT: Record<'true' | 'wrong', string> = {
-  true: 'It is in the papers – there is someone in her life, and they have it right.',
-  wrong: 'It is in the papers – a mystery man, and none of it is what happened.',
-}
 
 /** ⭐⭐ THE GATE – ONE FUNCTION, AND A FALSE HERE MEANS **ZERO DRAWS**, not a discarded one.
  *
@@ -131,6 +120,8 @@ export function rollLeak(world: WorldState): void {
     keep: true,
     lifeKind: 'exposure',
     text: LEAK_EVENT[episode.publicWrong ? 'wrong' : 'true'],
+    // ⭐ L3-5 (10.10): the ref beside the text – one of the two cells above, each a key of the frozen v92 table
+    c: { k: LEAK_EVENT[episode.publicWrong ? 'wrong' : 'true'] },
   })
   // ⭐⭐⭐ THE OVERTAKE – THE FOUNDING SCENE, AND IT IS ONE ASSIGNMENT. «A parent learning about a
   // boyfriend from a photograph» (the design plan §0) finally given its mechanism, and it is

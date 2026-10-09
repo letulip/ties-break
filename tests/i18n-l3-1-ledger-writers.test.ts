@@ -36,6 +36,12 @@ import { buyAsset, deliverAssets, reportMarketSeason, sellAsset } from '../src/e
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
 // ⭐ L3-4 (10.10): the diary's class-(b) keys, a list of its own (its net proves it is exactly what the class-(b) files spell)
 import { DIARY_CLASS_B_KEYS } from './helpers/l3-4-diary-keys'
+// ⭐ L3-5 (10.10): the life beats' class-(b) keys, a list of their own (their net proves it is exactly what the life files spell)
+import { LIFE_CLASS_B_KEYS } from './helpers/l3-5-life-keys'
+import { OWN_KEY_ROW as LIFE_OWN_KEY_ROW } from '../src/engine/world/lifeBeat/ownKeyCopy'
+import { LOSS_HER_LINE as LIFE_LOSS_HER_LINE, PAUSE_EVENT as LIFE_PAUSE_EVENT } from '../src/engine/world/lifeBeat/pregnancyCopy'
+import { LEAK_EVENT as LIFE_LEAK_EVENT } from '../src/engine/world/lifeBeat/leakCopy'
+import { divorcedKeptRow } from '../src/engine/world/lifeBeat/divorcedCopy'
 
 const ROOT = resolve(__dirname, '..')
 const EN = { locale: SOURCE_LOCALE }
@@ -68,6 +74,10 @@ const NEW_KEYS: readonly string[] = [
   // week-note and travel-note function cells. Assembled at SNAPSHOT time from state that already exists, never stored, so the frozen table (a table of STORED rows) has no entry for
   // them. The list lives in tests/helpers/l3-4-diary-keys.ts, generated from the scan and held to it by tests/i18n-l3-4-diary-corpora.test.ts §1.
   ...DIARY_CLASS_B_KEYS,
+  // ⭐ L3-5 (10.10): THE LIFE BEATS, CLASS (b) AS WELL – the announcement's nine "how long they have been together" sentences and the `{0} {1}` join (small talk's frame before its opener, the pool line before the span). A life-beat
+  // PROMPT is assembled at SNAPSHOT time off the row's stamped facts and never stored, so no old save can hold these and the frozen v92 table has no entry. The list lives in tests/helpers/l3-5-life-keys.ts,
+  // generated from the scan and held to it by tests/i18n-l3-5-life-beats.test.ts §1.
+  ...LIFE_CLASS_B_KEYS,
 ]
 
 /** Pieces a writer joins with `joinCopy` – never a sentence on their own, never emitted alone. §5 renders every assembled sentence against the table. */
@@ -206,7 +216,8 @@ function alts(e: ts.Expression, inline: boolean): Alt[] | null {
 
 /** a sentence that is a bare value (a pool's pick, a named constant) is ONE hole; `{ k: value }` is that same hole on the c side */
 function sentenceAlts(e: ts.Expression, inline: boolean): Alt[] | null {
-  if (ts.isIdentifier(e) || ts.isPropertyAccessExpression(e)) return [{ path: [], parts: [{ h: norm(e.getText()) }] }]
+  // ⭐ L3-5 (10.10): a LOOKUP (`ANSWER_EVENT[id]`, `LEAK_EVENT[kind]`) or a CALL (`metKeptRow(band, wants, heard)`) is a bare value as much as a name is: ONE hole, spelt by its source – and `{ k: <the same expression> }` is that same hole on the c side
+  if (ts.isIdentifier(e) || ts.isPropertyAccessExpression(e) || ts.isElementAccessExpression(e) || ts.isCallExpression(e)) return [{ path: [], parts: [{ h: norm(e.getText()) }] }]
   if (ts.isObjectLiteralExpression(e) && e.properties.length === 1) {
     const k = e.properties[0]!
     if (ts.isPropertyAssignment(k) && k.name.getText() === 'k') return [{ path: [], parts: [{ h: norm(k.initializer.getText()) }] }]
@@ -355,6 +366,15 @@ const DYNAMIC_SEATS: Record<string, number> = {
   'src/engine/diary/weekNotes.ts': 1, // weekNoteLine – a static week note (part 2)
   'src/engine/diary/travelNotes.ts': 2, // travelNoteLine – a static travel scrap; coachTripNoteLine – the coach's five lines (part 2)
   'src/engine/world/birthday.ts': 4, // the gift row's label and note, the ask, and the label nested in the gift event row
+  // ⭐ L3-5 (10.10) – THE LIFE BEATS' seats. Two kinds, told apart by what proves them. The SINKS' seats (class c: the answer row, the kept news rows, the ended-now row, the divorce row, the leak, the key,
+  // the pause, the birth, the loss) hold a pool's pick or a named constant, every one a key of the frozen table – §1b below walks the pools. The PROMPT's seats (class b: her line, the heading, the
+  // reply paragraph, the card – the string a pool cell holds IS its key) are proven by tests/i18n-l3-5-life-beats.test.ts §2..§4, which renders every reachable tuple against the English.
+  'src/engine/world/lifeBeat.ts': 9, // lifeBeatSaidRef 3 (a pool cell, and the frame and the opener of small talk's `{0} {1}`), the fork's listen reply, headingC, cardC (prompt); the answer row, the two kept news rows (sinks)
+  'src/engine/world/lifeBeat/ended.ts': 2, // the divorce row and the ended-now row (the divorce milestone is a `cp`)
+  'src/engine/world/lifeBeat/leak.ts': 1, // the press leak row
+  'src/engine/world/lifeBeat/ownKey.ts': 1, // the key row
+  'src/engine/world/lifeBeat/pregnancy.ts': 1, // the pause row (the birth milestone's ref is a `cp` key)
+  'src/engine/world/lifeBeat/weight.ts': 1, // the loss row
 }
 
 function literalsIn(node: ts.Node, out: string[] = []): string[] {
@@ -402,6 +422,15 @@ describe('§1b the dynamic seats', () => {
       walkIn(fn)
     })
     sentences.push(SPARRING_RECEIPT, COOLHEAD_RECEIPT)
+    // ⭐ L3-5 (10.10): the life beats' sinks – the hub's tables (read from source: they are module-private) and the leaf constants
+    for (const name of ['ANSWER_EVENT', 'MET_EVENT', 'MET_EVENT_HEARD', 'ENDED_NOW_EVENT', 'ENDED_LATE_EVENT', 'ENDED_EVENT_HEARD']) {
+      eachNode(file('src/engine/world/lifeBeat.ts'), (n) => {
+        if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.name.text === name && n.initializer) sentences.push(...literalsIn(n.initializer).filter((x) => x.includes(' ')))
+      })
+    }
+    // (the birth milestone's sentence is a `cp` key, not a seat – the key law above checks it against the table)
+    sentences.push(LIFE_OWN_KEY_ROW, LIFE_PAUSE_EVENT, divorcedKeptRow(), ...Object.values(LIFE_LEAK_EVENT))
+    for (const cell of Object.values(LIFE_LOSS_HER_LINE)) if (cell !== null) sentences.push(cell.told, cell.untold)
     // spirit.ts (L3-3): the three constants the feed rows are written from
     sentences.push(EXPOSURE_ROW, PUBLIC_LIFE_RECEIPT, RECOVERY_RECEIPT)
     const missing = [...new Set(sentences)].filter((x) => !TABLE.has(x) && !NEW_KEYS.includes(x))
@@ -438,6 +467,9 @@ const NOT_ISOMORPHIC: Record<string, string> = {
   // Russian; both render the same English. tests/i18n-l3-4-diary-corpora.test.ts §5 renders the row for every gift in the catalogue and compares.
   'src/engine/world/birthday.ts::given.id === DAY_TOGETHER.id ? \'Her birthday. No':
     'the label hole is a nested ref `{ k: given.label }` on the c side (the catalogue string is a key of its own) – l3-4 §5 chooses every gift of every band and compares the row with its text, and checks the key is the table\'s.',
+  // ⭐ L3-5 (10.10): the birth milestone – the text is the constant `BIRTH_EVENT` (which keeps its note in pregnancy.ts), c spells the same sentence as a `cp` key so the call site makes it a catalog key
+  'src/engine/world/lifeBeat/pregnancy.ts::BIRTH_EVENT':
+    'the text is the named constant, c is its sentence spelt as a whole-sentence `cp` key – tests/i18n-l3-5-life-beats.test.ts §7 reads the constant out of the source and holds it equal to that key (and to the table and the catalog).',
   'src/engine/world/phaseAiWeek.ts::`🏆 ${playerShortName(world, championId)} won th':
     'the text appends `championNote(...)`, a helper that returns one of four clauses; c is `championRef` over the SAME `championClause` facts – l3-3 §4 renders all four against the text, and the twin plays them.',
 }
@@ -460,7 +492,8 @@ describe('§2 text / c pairs', () => {
     //   and l3-3 §2's.
     // + 20 (L3-4, part 1): the eighteen birthday heading lines, the gift event row, and `diaryLinePair`'s static pick (`{ text: pick.text, c: { k: pick.text } }`)
     // + 4 (L3-4, part 2): the travel scrap's two fallback sentences and its static pick, and the coach's pick (`weekNoteLine` returns `{ text, c: { k: text } }` by SHORTHAND – not a pair here)
-    expect(all.length, 'pairs of text + c in src/engine').toBe(135)
+    // + 12 (L3-5): the life beats' twelve sinks – the answer row, the two kept news rows, the ended-now row, the divorce row and its milestone, the leak, the key, the pause, the birth milestone, the loss, the wedding day
+    expect(all.length, 'pairs of text + c in src/engine').toBe(147)
   })
 
   it('every pair expands to the SAME sentences – each branch, each inlined ternary, the same holes in the same order – or is announced', () => {
@@ -527,17 +560,12 @@ const TEXT_ONLY: Record<string, number> = {
   // ⭐ L3-3 (10.10) CONVERTED 26 OF THE 63: spirit 3, age 1, bookkeeping 1, create 1, fieldNews 4, milestones 5 (the four callers, and `fireMilestone`'s own inner sink – it forwards `c`
   // by shorthand, which `carries` reads since this wave), phaseAiWeek 1, phaseObligations 5, shootClash 2, tournamentClose 3. What is left below is L3-4..7's and nobody else's.
   // ⭐ L3-4 (10.10) CONVERTED 1 MORE: birthday.ts, the gift row (it was the only sink the brief gave this wave). 36 are left.
+  // ⭐ L3-5 (10.10) CONVERTED 12 MORE – ALL THE LIFE BEATS': lifeBeat.ts 3 (the answer row, the two kept news rows), ended.ts 3 (the ended-now row, the divorce row, the divorce milestone), leak.ts 1, ownKey.ts 1,
+  // pregnancy.ts 2 (the pause row, the birth milestone), weight.ts 1 (the loss row), wedding.ts 1 (the wedding-day milestone). 24 are left, and they are L3-6's and L3-7's.
   'src/engine/world/college.ts': 4, // L3-7 (RU-12F, the college engine feed) – the tuition row (money) is L3-1's and converted
   'src/engine/world/endings.ts': 8, // L3-6
   'src/engine/world/injury.ts': 3, // L3-7 (RU-11J, the medical feed) – the two money rows (physio, medical) are L3-1's and converted
   'src/engine/world/knock.ts': 4, // L3-7
-  'src/engine/world/lifeBeat.ts': 3, // L3-5
-  'src/engine/world/lifeBeat/ended.ts': 3, // L3-5
-  'src/engine/world/lifeBeat/leak.ts': 1, // L3-5
-  'src/engine/world/lifeBeat/ownKey.ts': 1, // L3-5
-  'src/engine/world/lifeBeat/pregnancy.ts': 2, // L3-5
-  'src/engine/world/lifeBeat/weight.ts': 1, // L3-5
-  'src/engine/world/lifeBeat/wedding.ts': 1, // L3-5
   'src/engine/world/phaseHerWeek.ts': 3, // L3-7 (RU-11J)
   'src/engine/world/tick.ts': 2, // L3-7 (the college epilogue, twice)
 }
@@ -547,11 +575,11 @@ describe('§3 the writers still on `text` alone', () => {
     expect(sinks().bare, 'a count moved: a wave converted a sink (lower the number) or a NEW text-only writer appeared (decide it: convert it, or list it with the wave that owns it)').toEqual(TEXT_ONLY)
   })
 
-  it('the books close: 141 sinks (the L3-0 sweep\'s count), 105 of them converted (L3-1: 78, L3-3: 26, L3-4: 1), 36 left to L3-5..7', () => {
+  it('the books close: 141 sinks (the L3-0 sweep\'s count), 117 of them converted (L3-1: 78, L3-3: 26, L3-4: 1, L3-5: 12), 24 left to L3-6..7', () => {
     const { bare, converted } = sinks()
     const left = Object.values(bare).reduce((a, b) => a + b, 0)
-    expect(left, 'sinks still on `text` alone').toBe(36)
-    expect(converted, 'sinks that write `c`').toBe(105)
+    expect(left, 'sinks still on `text` alone').toBe(24)
+    expect(converted, 'sinks that write `c`').toBe(117)
     expect(converted + left, 'every sink there is').toBe(141)
   })
 

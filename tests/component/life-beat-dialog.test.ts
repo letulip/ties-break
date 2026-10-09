@@ -827,6 +827,7 @@ describe('⚠⚠ v75 T4 – the ENDING fits a phone, and its last answer can be 
     const base = endedPrompt()
     const grown: LifeBeatPrompt = {
       ...base,
+      saidC: undefined, // ⭐ L3-5 (10.10): the override drops the ref beside it (the dialog draws `eventText({ text, c })`)
       said: `${base.said} ${LONG_SENTENCE.repeat(18).trim()}`,
       options: base.options.map((o) => ({ ...o, label: `${o.label} – ${LONG_SENTENCE.trim()}` })),
     }
@@ -1269,7 +1270,8 @@ describe('⚠⚠⚠ v85 T10 – `expecting` and `return-plan` fit a phone, askin
 
   /** The engine's own card with one cell's line in it – heading, options and confirm untouched,
    *  because none of the three varies by voice or presence on this kind. */
-  const expectingCard = (said: string): LifeBeatPrompt => ({ ...EXPECTING, said })
+  // ⭐ L3-5 (10.10): the override drops the ref beside it (`saidC: undefined`) – the dialog draws `eventText({ text, c })`, and the real card's ref would show the line it was built from
+  const expectingCard = (said: string): LifeBeatPrompt => ({ ...EXPECTING, said, saidC: undefined })
 
   /** The structural precondition, before any measurement: the control being read must be the LAST
    *  thing in the card's flow, or `measureDialog` reads its box off the wrong edge and every number
@@ -1358,7 +1360,7 @@ describe('⚠⚠⚠ v85 T10 – `expecting` and `return-plan` fit a phone, askin
       // are removed, which is exactly the shape `TourBriefingDialog` shipped in. «A test that cannot
       // fail on the too-tall version is not this test.»
       const base = card()
-      const grown: LifeBeatPrompt = { ...base, said: `${base.said} ${LONG_SENTENCE.repeat(16).trim()}` }
+      const grown: LifeBeatPrompt = { ...base, said: `${base.said} ${LONG_SENTENCE.repeat(16).trim()}`, saidC: undefined } // ⭐ L3-5 (10.10): the override drops its ref
       const { w, card: el } = mountAttached(grown)
       const proceed = await proceedOf(w, el)
       const before = measureDialog(el, proceed, PHONE)

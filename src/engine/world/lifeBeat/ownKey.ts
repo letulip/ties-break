@@ -47,6 +47,8 @@ export function deliverOwnKey(world: WorldState): void {
     keep: true,
     // ⚠ DRAFT (§3i)
     text: OWN_KEY_ROW,
+    // ⭐ L3-5 (10.10): `c` beside the text – the constant is its own key
+    c: { k: OWN_KEY_ROW },
     lifeKind: 'own-key',
   })
   // ⚠ THE DETAIL IS THE LITERAL KIND – machine-readable and empty of variation, because the row

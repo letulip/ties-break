@@ -18,8 +18,10 @@
 // the engine can hand these three seats and fails on one that is not a key, which is what keeps a call the extractor cannot read honest.
 // English renders itself (`t(x)` is `x` when no catalog speaks), so this file still prints EXACTLY the prompt's own strings and owns no
 // sentence; a label no row covers falls back to English and is counted as a miss under another locale. ⚠ THE HEADING, HER LINE AND HER
-// REPLIES ARE NOT READ THROUGH A KEY: they are the engine's prose – the RU-10 presence frames, openers, headings and replies – whose
-// translation is L3's `cp` refactor, not a lookup of a string the engine has already assembled and interpolated.
+// REPLIES ARE NOT READ THROUGH A KEY: they are the engine's prose – the RU-10 presence frames, openers, headings and replies – assembled and
+// interpolated before the wire, so a lookup of the finished string cannot translate them.
+// ⭐ L3-5 (10.10): THEY NOW RIDE THE SNAPSHOT AS COPYREFS BESIDE THE ENGLISH – `headingC`, `saidC`, `followUps[i].saidC` – and are drawn through
+// `eventText({ text, c })`, the call the feed makes. English renders the ref to the very bytes of `text`, so this file still prints EXACTLY the prompt's own strings and owns no sentence.
 //
 // ⭐⭐⭐ v74 T15 – AND IT NOW SERVES TWO ENTRANCES ON ONE CONTRACT. `snapshot.lifeBeatPrompt` is the
 // blocking one (the week is stopped and this card is why); `snapshot.softBeat.prompt` is tier 1's,
@@ -77,7 +79,7 @@ import { useDialogFocus } from '../composables/dialogFocus'
 import { onRadioGroupKey } from '../composables/radioGroupKeys'
 import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
-import { t } from '../i18n'
+import { eventText, t } from '../i18n'
 
 const game = useGameStore()
 
@@ -279,7 +281,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
       <!-- ⚠ THE ENGINE'S WORDS, VERBATIM, AND THERE ARE NO OTHERS ON THIS CARD. No kicker and no
            week label: both would be sentences of this component's own, and her voice is the pools'.
            See the script header for the whole argument. -->
-      <h2 id="life-beat-heading" class="season-summary-title">{{ prompt.heading }}</h2>
+      <h2 id="life-beat-heading" class="season-summary-title">{{ eventText({ text: prompt.heading, c: prompt.headingC }) }}</h2>
 
       <!-- ⭐⭐⭐ v87 (the weight, wave 11 - T5) - THE FUNERAL PAINTING, WIRED AT LAST.
            `fem-euro-brunnet-adult-funeral.webp` shipped with the art set on 11.09 and has been
@@ -301,7 +303,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
 
       <!-- HER LINE. Written against the four voice bibles engine-side and printed as it was
            written – this template may not touch it, shorten it or wrap it in anything. -->
-      <p id="life-beat-said" class="life-beat-said">{{ prompt.said }}</p>
+      <p id="life-beat-said" class="life-beat-said">{{ eventText({ text: prompt.said, c: prompt.saidC }) }}</p>
 
       <!-- ⭐ 10.09 – HER REPLY, only once he has chosen. The engine's words verbatim, exactly like
            the line above; rendered as further paragraphs of the same voice, because they ARE.
@@ -314,7 +316,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         :key="i"
         class="life-beat-said life-beat-continued"
       >
-        {{ line }}
+        {{ eventText({ text: line, c: replying?.saidC?.[i] }) }}
       </p>
 
       <!-- ⚠⚠ W2 (26.09) – THE STORE'S REFUSAL, ABOVE THE ANSWERS AND BELOW HER WORDS – ForkDialog's

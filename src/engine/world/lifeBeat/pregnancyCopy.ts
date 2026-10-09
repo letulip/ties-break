@@ -49,3 +49,41 @@ export const EXPECTING_DRY = 'She is expecting a child. Nobody in this house was
  *  of the three answers – what a parent can see is that she has decided, and which of the three
  *  things to say about it is his. */
 export const EXPECTING_HEADING = 'A child is coming, and she has already decided'
+
+// ⭐ L3-5 (10.10) – THE TWO CONSTANTS BELOW MOVED HERE VERBATIM, comments and all: `PAUSE_EVENT` from `lifeBeat/pregnancy.ts`, `LOSS_HER_LINE` from `lifeBeat/weight.ts`. A kind's copy is a LEAF the
+// hazard imports (A-06); these were stored feed sentences living inside hazard modules, which kept them out of the census's copy homes and so out of the English catalog. The names, the cells and the
+// lookups at the sinks are the shipped ones. (`BIRTH_EVENT` stays in `pregnancy.ts` with its note – its sentence reaches the catalog as the `cp` key beside the milestone it forwards.)
+
+/** ⭐⭐⭐ **HIS STRING, PASSED 21.09 IN SESSION** (wave 8b, C5) – the pause week's one feed row,
+ *  and no longer a draft. Invariant 4 now binds the other way: nobody re-words it unasked.
+ *
+ *  ⚠ PAUSE_EVENT: IT MUST NOT SAY THE SEASON IS OVER, and that is the whole difficulty of writing…
+ *  ⚠ PAUSE_EVENT: HUSBAND-AGNOSTIC (§0's decoupling ruling): it reads correctly for a career whose marriage ended the week before…
+ *  ⚠ PAUSE_EVENT: AND IT NAMES NO RETURN.
+ *  ⚠⚠ PAUSE_EVENT: THE FIRST DRAFT READ «entering nothing more», THE TAIL-LINT CAUGHT…
+ *  ⚠ PAUSE_EVENT: THE EXEMPTION IS PER-ROW AND LIVES BESIDE THE BAN (`TAIL_EXEMPT_LINES`, `tests/helpers/bannedTails.ts`)
+ *  → docs/notes/life-beats/pregnancy.md#pause_event--his-string-passed-2109-in-session-wave-8b-c5
+ */
+export const PAUSE_EVENT = 'She is entering nothing more before the birth. What she is already in, she will play.'
+
+
+/** ⚠ ⚠ DRAFT – see `lossLineFor`. `null` is the private branch and is the design's ruling, not an
+ *  unwritten cell. */
+export const LOSS_HER_LINE: Record<Temperament, { told: string; untold: string } | null> = {
+  sunny:
+    {
+      told: 'She rang the same evening and did not soften it. "We lost it. I did not want you to hear it from anyone else, and I would like you here."',
+      untold:
+        'She rang the same evening and said two things in one breath. "There was a child coming and there is not any more. I had not told you yet. I would like you here."',
+    },
+  fiery:
+    {
+      told: 'She called once, said it flat out, and was off the phone inside a minute. "We lost it. I am not talking about it. I will ring you when I am ready to."',
+      untold:
+        'She called once, said it flat out, and was off the phone inside a minute. "I was pregnant. I am not any more. I am not talking about it. I will ring you when I am ready to."',
+    },
+  // ⚠⚠ THE SILENCE, AND IT IS RULED RATHER THAN UNWRITTEN. `quiet` and `deep` tell nobody: the arc
+  // simply stops, and what the parent has to read is the absence. See `lossLineFor`'s block.
+  quiet: null,
+  deep: null,
+}

@@ -6,6 +6,7 @@
 // → docs/notes/life-beats/wedding.md#weddingts-header
 import { pickInt, rngFromSeed } from '../../rng'
 import { ECONOMY } from '../../economy'
+import { cp } from '../../../shared/i18n'
 import { activeEpisode, loveEpisodesOf } from '../loveEpisodes'
 import { captureMilestone, fireMilestone } from '../milestones'
 import { hasBeatFor, kidAgeNow, lifeLogOf, raiseLifeBeat } from '../lifeBeat'
@@ -114,7 +115,8 @@ export function landWedding(world: WorldState): void {
     if (episode.latchedWeek !== null) continue
     episode.latchedWeek = world.week
     // ⚠ DRAFT – the kept line is the builder's draft (invariant 4).
-    fireMilestone(world, `wedding:${episode.id}`, 'Her wedding day. The family was there, whatever had been said about it.')
+    // ⭐ L3-5 (10.10): the ref is the same sentence spelt as a `cp` key (a whole sentence, no hole) – it is a key of the frozen v92 table and makes the literal a catalog key
+    fireMilestone(world, `wedding:${episode.id}`, 'Her wedding day. The family was there, whatever had been said about it.', cp`Her wedding day. The family was there, whatever had been said about it.`)
     captureMilestone(world, { type: 'wedding', week: world.week, kind: episode.id })
     // ⚠ The ledger charge (the `fundsCents` write and its expense row) stood here and was RULED OUT
     // 18.09 («я думаю как с подарками, никто и нисколько») – the wedding follows the gifts' law:

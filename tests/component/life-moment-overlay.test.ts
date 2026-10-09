@@ -78,7 +78,8 @@ const LONG = 'The whole family came, and nobody mentioned any of the things that
 /** ⚠ FABRICATED: a line far longer than anything the engine writes, so the cap is what is under test. */
 function tooTall(): Snapshot {
   const snap = toSnapshot(weddingWorld())
-  return { ...snap, lifeMoment: { ...snap.lifeMoment!, line: LONG.repeat(30).trim() } }
+  // ⭐ L3-5 (10.10): the override drops the ref beside it (`lineC: undefined`) – the overlay draws `eventText({ text, c })`, and the real moment's ref (the birth / wedding row now carries `c`) would show the line it was built from
+  return { ...snap, lifeMoment: { ...snap.lifeMoment!, line: LONG.repeat(30).trim(), lineC: undefined } }
 }
 
 beforeEach(() => {

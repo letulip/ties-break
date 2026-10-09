@@ -406,10 +406,13 @@ describe('L2-9b parity – the life-beat dialog prints EXACTLY the engine\'s str
 
 describe('L2-9b completeness – the three dynamic seats are wired, and every string the engine can hand them IS a catalog key', () => {
   const FILE = 'src/components/LifeBeatDialog.vue'
-  it('the file asks the catalog at the three seats and at no other: the heading, her line and her replies stay bare', () => {
+  // ⭐ L3-5 (10.10) RE-AIMED: this pin said the heading, her line and her replies were bare `{{ prompt.heading }}` etc. – «engine prose, L3». L3-5 is that wave: the engine writes a CopyRef beside each of
+  // them and the dialog draws `eventText({ text, c })`, so the pin now asserts the refs are what is drawn (and that the bare spellings are gone). The three dynamic `t()` seats are untouched.
+  it('the file asks the catalog at the three seats and at no other: the heading, her line and her replies are drawn through their refs', () => {
     const source = SRC(FILE)
     for (const seat of ['{{ t(option.label) }}', '{{ t(prompt.confirm) }}', '{{ t(replying.done) }}']) expect(source, seat).toContain(seat)
-    for (const bare of ['{{ prompt.heading }}', '{{ prompt.said }}', '{{ line }}']) expect(source, bare).toContain(bare)
+    for (const drawn of ['eventText({ text: prompt.heading, c: prompt.headingC })', 'eventText({ text: prompt.said, c: prompt.saidC })', 'eventText({ text: line, c: replying?.saidC?.[i] })']) expect(source, drawn).toContain(drawn)
+    for (const bare of ['{{ prompt.heading }}', '{{ prompt.said }}', '{{ line }}']) expect(source, `${bare} is back`).not.toContain(bare)
     expect(Object.entries(CATALOG.keys).filter(([, v]) => v.home.includes(FILE)).map(([k]) => k), 'the dialog still owns no CERTAIN string').toEqual([])
     expect(source.match(/\{\{\s*t\(/g)?.length, 'exactly the three dynamic seats').toBe(3)
   })
@@ -620,7 +623,10 @@ describe('L2-9b xx sweep – the life-beat dialog: the three seats are bracketed
         const xx = await open(surface.prompt, vp, surface.phase, surface.pick)
         const padded = expandRendered(xx.card)
         const xxChars = (xx.card.textContent ?? '').length
-        expect(padded, 'expandRendered reached the engine\'s prose').toBeGreaterThanOrEqual(2)
+        // ⭐ L3-5 (10.10) RE-AIMED: a REAL prompt carries refs now, so its heading and her line come out of the xx catalog already padded (nothing is left for `expandRendered` to reach), while a hand-built prompt
+        // with no refs is still padded by it. Either way the measurement SAW the engine's prose: the two words are on the card in the pseudo form.
+        const pseudoProse = ['#life-beat-heading', '#life-beat-said'].filter((sel) => isPseudo((xx.card.querySelector(sel)?.textContent ?? '').trim())).length
+        expect(padded + pseudoProse, 'the engine\'s prose reached the measurement – padded by expandRendered, or already through the xx catalog').toBeGreaterThanOrEqual(2)
         expect(xxChars, 'xx made the card longer – the measurement saw the words').toBeGreaterThan(english)
         const fit = assertDismissReachable(xx.card, xx.dismiss, vp, `LifeBeatDialog (xx, ${surface.phase}, ${vp.width}x${vp.height})`)
         expect(fit.dismissBottom).toBeLessThanOrEqual(vp.height)
