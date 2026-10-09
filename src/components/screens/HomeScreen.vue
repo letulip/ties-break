@@ -204,7 +204,12 @@ const photoStyle = computed(() => {
 // The ONE phrase under her name (D2) – null on a deliberately quiet week. It appears exactly once
 // on this page, which is the rule the redesign is most careful about: the greeting above is a time
 // of day and never a second copy of it (engine/diary.ts greetingFor).
-const photoLine = computed(() => game.snapshot?.diary.photoLine ?? null)
+// ⭐ L3-4 (10.10): THE CAPTION IS DRAWN FROM ITS REF (the diary is class (b): assembled at snapshot time, `photoLineC` beside the English). The greeting's collision test below
+// reads the ENGLISH straight off the snapshot on purpose – it searches the caption for a time word ("morning", "evening"…), and a translated caption would not contain it.
+const photoLine = computed(() => {
+  const line = game.snapshot?.diary.photoLine ?? null
+  return line ? eventText({ text: line, c: game.snapshot?.diary.photoLineC }) : null
+})
 // v48: is this her birthday week? The SAME fact the diary's birthday lines license off
 // (`facts.birthdayAge`), so the confetti and the words can never disagree about whose week it is –
 // and it stays true for the whole week rather than only while the popup is up, because a birthday is
@@ -242,15 +247,24 @@ function greetingForHour(hour: number): { word: string; say: () => string } {
 }
 
 const greeting = computed(() => {
-  const fromEngine = game.snapshot?.diary.greeting ?? ''
+  // ⭐ L3-4: the engine's word is the FALLBACK of the collision rule; it is drawn from its ref like the caption it dodges.
+  const engineWord = game.snapshot?.diary.greeting ?? ''
+  const fromEngine = engineWord ? eventText({ text: engineWord, c: game.snapshot?.diary.greetingC }) : ''
   const byClock = greetingForHour(new Date().getHours())
   const caption = (game.snapshot?.diary.photoLine ?? '').toLowerCase()
   return caption.includes(byClock.word) ? fromEngine || byClock.say() : byClock.say()
 })
 // The WHY line beside the condition bar (D1).
-const conditionNote = computed(() => game.snapshot?.diary.conditionNote ?? '')
+// ⭐ L3-4: drawn from its ref (`conditionNoteC`), English when the snapshot carries none.
+const conditionNote = computed(() => {
+  const note = game.snapshot?.diary.conditionNote ?? ''
+  return note ? eventText({ text: note, c: game.snapshot?.diary.conditionNoteC }) : ''
+})
 // The Memory card (D10): a past milestone + the painting from the band she was in THEN.
 const memory = computed(() => game.snapshot?.diary.memory ?? null)
+// ⭐ L3-4: the card's line and its date label, each drawn from its ref. The week label ("W14 '31") has none – it is a formatter's output – and prints as the text.
+const memoryLine = computed(() => (memory.value ? eventText({ text: memory.value.line, c: memory.value.lineC }) : ''))
+const memoryWhen = computed(() => (memory.value ? eventText({ text: memory.value.whenLabel, c: memory.value.whenLabelC }) : ''))
 const memoryArt = computed(() =>
   memory.value ? portraitArtUrl(memory.value.stage, memory.value.emotion) : '',
 )
@@ -1832,8 +1846,8 @@ async function leaveCollege(): Promise<void> {
               tilt="var(--tilt-4)"
             />
             <span class="memory-tack"></span>
-            <p class="memory-line">{{ memory.line }}</p>
-            <p class="memory-when">{{ memory.whenLabel }}</p>
+            <p class="memory-line">{{ memoryLine }}</p>
+            <p class="memory-when">{{ memoryWhen }}</p>
           </template>
           <p v-else class="note-empty">{{ t('Too early for memories.') }}</p>
         </Card>

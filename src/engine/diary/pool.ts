@@ -13,7 +13,9 @@
 // ⚠ RNG: `diaryLine` picks on a PURPOSE-SCOPED sub-stream derived from the passed seed, never MAIN.
 import { rngFromSeed } from '../rng'
 import type { DiaryFacts } from '../../shared/protocol'
-import { short, plural, justHurt, quiet, ageWord, capitalise, familyHomeVoice, independentVoice, underOneRoof, awayVoice, freshlyIndependent, settledAdult } from './words'
+// ⭐ L3-4 (10.10): the pool's lines ride the snapshot as CopyRefs beside the English (docs/specs/i18n-2026-10.md §8, row L3-4).
+import { cp, type CopyRef } from '../../shared/i18n'
+import { short, plural, justHurt, quiet, ageWord, capitalise, familyHomeVoice, independentVoice, underOneRoof, awayVoice, freshlyIndependent, settledAdult, type DiaryLine } from './words'
 
 // --- the phrase pool ------------------------------------------------------------------------
 
@@ -75,6 +77,10 @@ export interface DiaryPhrase {
   surface: DiarySurface
   /** the line, a facts-aware template, or null – a DELIBERATE quiet week (photo surface only) */
   text: string | ((f: DiaryFacts) => string) | null
+  /** ⭐ L3-4 (10.10): THE CELL'S OWN KEY, for a TEXT-FUNCTION cell only – the template with its holes, as a CopyRef, spelled beside the `text` it mirrors and saying the same
+   *  characters (a counted form is a whole sentence per form, the house rule). A STATIC cell needs none: the engine's seat for it is `{ k: text }`, the string IS the key. A
+   *  function cell without one yields a line with no ref (the screen prints the English), and `tests/i18n-l3-4-diary-corpora.test.ts` refuses that state. */
+  ref?: (f: DiaryFacts) => CopyRef
   claims: DiaryClaims
   license: (f: DiaryFacts) => boolean
 }
@@ -103,12 +109,14 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
   {
     surface: 'photo',
     text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. Somehow already.`,
+    ref: (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. Somehow already.`,
     claims: { affect: 'neutral', birthday: true },
     license: (f) => f.birthdayAge !== null && familyHomeVoice(f),
   },
   {
     surface: 'photo',
     text: (f) => `${capitalise(ageWord(f.birthdayAge))}. The candles made it official.`,
+    ref: (f) => cp`${capitalise(ageWord(f.birthdayAge))}. The candles made it official.`,
     claims: { affect: 'neutral', birthday: true },
     license: (f) => f.birthdayAge !== null && familyHomeVoice(f),
   },
@@ -118,12 +126,14 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
   {
     surface: 'photo',
     text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. We found a gap in her calendar.`,
+    ref: (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. We found a gap in her calendar.`,
     claims: { affect: 'neutral', birthday: true },
     license: (f) => f.birthdayAge !== null && awayVoice(f),
   },
   {
     surface: 'photo',
     text: (f) => `${capitalise(ageWord(f.birthdayAge))}. Cake when she could make it.`,
+    ref: (f) => cp`${capitalise(ageWord(f.birthdayAge))}. Cake when she could make it.`,
     claims: { affect: 'neutral', birthday: true },
     license: (f) => f.birthdayAge !== null && awayVoice(f),
   },
@@ -640,6 +650,7 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
   {
     surface: 'condition',
     text: (f) => `Still tired from the ${short(f.resultTier)} trip.`,
+    ref: (f) => cp`Still tired from the ${short(f.resultTier)} trip.`,
     claims: { affect: 'neutral', travel: true, tournament: true },
     license: (f) => f.travelled && f.playedTournament,
   },
@@ -659,6 +670,11 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
   {
     surface: 'condition',
     text: (f) => `Out with the ${f.injured?.kind ?? 'injury'} – ${plural(f.injured?.weeksRemaining ?? 1, 'week')} to go.`,
+    // ⚠ A COUNTED FORM IS A WHOLE SENTENCE PER FORM (the house rule, L3-2/L3-3): `plural()` splits "1 week" / "3 weeks" inside the text, the ref spells the two sentences.
+    ref: (f) =>
+      (f.injured?.weeksRemaining ?? 1) === 1
+        ? cp`Out with the ${f.injured?.kind ?? 'injury'} – ${f.injured?.weeksRemaining ?? 1} week to go.`
+        : cp`Out with the ${f.injured?.kind ?? 'injury'} – ${f.injured?.weeksRemaining ?? 1} weeks to go.`,
     claims: { affect: 'negative', injured: true },
     license: (f) => f.injured !== null,
   },
@@ -809,12 +825,24 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
 
 /** At most ONE line for a surface, drawn deterministically off `seed:diary:<week>:<surface>` –
  *  stable for the whole week (no flicker, no reload lottery), zero MAIN draws. Null = silence:
- *  either nothing is licensed, or a deliberate quiet entry was drawn. */
-export function diaryLine(surface: DiarySurface, facts: DiaryFacts, seed: string): string | null {
+ *  either nothing is licensed, or a deliberate quiet entry was drawn.
+ *
+ *  ⭐ L3-4 (10.10): THE LINE AND ITS REF COME FROM ONE PICK. `diaryLinePair` is the pick – the same sub-stream, the same single draw as before, so no seed moves – and returns the
+ *  English with the cell's CopyRef beside it: a function cell's own `ref`, or, for a static cell, the SEAT `{ k: text }` (the string IS the key). `diaryLine` is the old
+ *  signature, kept for every caller that wants the English alone. */
+export function diaryLinePair(surface: DiarySurface, facts: DiaryFacts, seed: string): DiaryLine | null {
   const pool = DIARY_POOL.filter((p) => p.surface === surface && p.license(facts))
   if (pool.length === 0) return null
   const rng = rngFromSeed(`${seed}:diary:${facts.week}:${surface}`)
   const pick = pool[Math.floor(rng() * pool.length)]
   if (pick.text === null) return null
-  return typeof pick.text === 'function' ? pick.text(facts) : pick.text
+  if (typeof pick.text === 'function') {
+    const c = pick.ref?.(facts)
+    return c ? { text: pick.text(facts), c } : { text: pick.text(facts) }
+  }
+  return { text: pick.text, c: { k: pick.text } }
+}
+
+export function diaryLine(surface: DiarySurface, facts: DiaryFacts, seed: string): string | null {
+  return diaryLinePair(surface, facts, seed)?.text ?? null
 }

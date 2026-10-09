@@ -52,6 +52,8 @@ import {
   type SpiritBand,
 } from './spirit'
 import { rngFromSeed } from './rng'
+// ⭐ L3-4 (10.10): the diary's lines ride the snapshot as CopyRefs BESIDE the English (docs/specs/i18n-2026-10.md §8, row L3-4) – class (b), assembled here at snapshot time.
+import { cp, type CopyRef } from '../shared/i18n'
 import { DEFAULT_START_YEAR, seasonYear, weekLabel } from '../shared/dates'
 // W6c: the anatomy, so a line about her body can know which body it is about. A leaf module – see the
 // note at the top of body.ts for why the twelve parts do not live in world.ts any more.
@@ -70,8 +72,8 @@ export type { TravelClaims, TravelNote } from './diary/travelNotes'
 import { WEEK_NOTE_GRIND, WEEK_NOTE_LIGHT, WEEK_NOTE_CHANCE, WEEK_NOTES, BEREAVED_WEEKS, DIVORCED_WEEKS, weekNoteFor } from './diary/weekNotes'
 export { WEEK_NOTE_GRIND, WEEK_NOTE_LIGHT, WEEK_NOTE_CHANCE, WEEK_NOTES, BEREAVED_WEEKS, DIVORCED_WEEKS, weekNoteFor }
 export type { WeekClaims, WeekNote } from './diary/weekNotes'
-import { DIARY_POOL, diaryLine } from './diary/pool'
-export { DIARY_POOL, diaryLine }
+import { DIARY_POOL, diaryLine, diaryLinePair } from './diary/pool'
+export { DIARY_POOL, diaryLine, diaryLinePair }
 export type { DiarySurface, DiaryClaims, DiaryPhrase } from './diary/pool'
 // ⚠ `capitalise` JOINS `short` HERE INSTEAD OF BEING DECLARED AGAIN (F P3-09, 26.09). This file
 // carried a local `capitalize` (`s.length > 0 ? s[0].toUpperCase() … : s`) beside `diary/words.ts`'s
@@ -481,6 +483,19 @@ export function weekSceneFor(args: {
 export const GREETINGS = ['Good morning', 'Good afternoon', 'Good evening', 'Good night'] as const
 export type Greeting = (typeof GREETINGS)[number]
 
+/** ⭐ L3-4 (10.10): THE GREETING'S KEYS. The engine's word is the FALLBACK Home shows when the player's own clock would collide with the caption (HomeScreen `greeting`), so it
+ *  rides the snapshot as a ref beside the English. The four keys are the ones HomeScreen's clock table already asks for with `t()` – `Good night` carries its `greeting|` context tag
+ *  (the diary's farewell is a different Russian phrase, RU-03 §2) – so the clock's word and the engine's are ONE translation each. */
+const GREETING_REFS: Record<Greeting, CopyRef> = {
+  'Good morning': cp`Good morning`,
+  'Good afternoon': cp`Good afternoon`,
+  'Good evening': cp`Good evening`,
+  'Good night': cp`greeting|Good night`,
+}
+export function greetingRef(g: Greeting): CopyRef {
+  return GREETING_REFS[g]
+}
+
 /** The greeting for this week's diary page.
  *
  *  THE OWNER'S RULE, and it comes first: morning before the week is played, evening once the
@@ -516,6 +531,8 @@ export function greetingFor(facts: DiaryFacts, photoLine: string | null, seed: s
 export interface MemoryLine {
   type: MilestoneType
   text: (m: Milestone, startYear?: number) => string
+  /** ⭐ L3-4 (10.10): the cell's own key, spelled beside the `text` it mirrors (a two-armed form is a whole sentence per arm). Every cell has one. */
+  ref?: (m: Milestone, startYear?: number) => CopyRef
 }
 
 /** How long a memory line may be. The Memory polaroid is a `card-short` (138px) in Home's 2x2 grid,
@@ -527,31 +544,57 @@ export interface MemoryLine {
 export const MEMORY_LINE_MAX = 39
 
 export const MEMORY_LINES: readonly MemoryLine[] = [
-  { type: 'title', text: (m) => `Her first ${short(m.tier ?? null)} title.` },
-  { type: 'title', text: (m) => `The week she won her first ${short(m.tier ?? null)}.` },
-  { type: 'final', text: (m) => `Her first ${short(m.tier ?? null)} final.` },
-  { type: 'final', text: (m) => `First time through to a ${short(m.tier ?? null)} final.` },
-  { type: 'international', text: (m) => (m.tier ? `Her first international entry – ${short(m.tier)}.` : 'Her first international entry.') },
-  { type: 'international', text: (m) => (m.tier ? `The first passport week – ${short(m.tier)}.` : 'The first passport week.') },
-  // R15-5: the first cheque, in the parent's voice and inside the 39-char budget the card sets.
-  { type: 'prize', text: (m) => (m.tier ? `First prize money – a ${short(m.tier)} cheque.` : 'First prize money – a real cheque.') },
-  { type: 'prize', text: () => 'The first week the tennis paid her.' },
-  { type: 'injury', text: (m) => `${capitalise(m.kind ?? 'an injury')} – her first injury.` },
-  // ⭐ ROUND-17 #16 – A RANK PRINTED WITHOUT ITS TABLE IS NOT A FACT. These two lines read "Season
-  // 2035 closed at #79." and named no table, on a career that has THREE of them. The number is
-  // `Milestone.rank`, and `captureMilestone` writes `world.kidRank` into it - which is the
-  // INTERNATIONAL (junior) table, always and by construction (see `recomputeKidRank`). So a
-  // twenty-year-old professional read her junior placing as if it were her standing, in the same
-  // sentence a season is summed up in.
-  //
-  // ⚠ THE TABLE IS A CONSTANT HERE, NOT A LOOKUP, AND THAT IS WHY THIS NEEDS NO SCHEMA MOVE.
-  // `Milestone` is PERSISTED (`world.milestones`) and carries no track; giving it one is a
-  // three-part move (CLAUDE.md invariant 3) and is NOT done here. It does not need one to stop
-  // lying: every `season-rank` milestone ever written holds the international number, so naming
-  // that table is simply saying what the field already means. What a track WOULD buy is printing
-  // the professional rank for an adult, which is a different and larger change - reported, not made.
-  { type: 'season-rank', text: (m, startYear) => `Season ${seasonYear(m.seasonIndex ?? 0, startYear)}: #${m.rank ?? 0} ${LADDER_LABEL.itf.toLowerCase()}.` },
-  { type: 'season-rank', text: (m, startYear) => `She ended ${seasonYear(m.seasonIndex ?? 0, startYear)} #${m.rank ?? 0} ${LADDER_LABEL.itf.toLowerCase()}.` },
+  {
+    type: 'title',
+    text: (m) => `Her first ${short(m.tier ?? null)} title.`,
+    ref: (m) => cp`Her first ${short(m.tier ?? null)} title.`,
+  },
+  {
+    type: 'title',
+    text: (m) => `The week she won her first ${short(m.tier ?? null)}.`,
+    ref: (m) => cp`The week she won her first ${short(m.tier ?? null)}.`,
+  },
+  {
+    type: 'final',
+    text: (m) => `Her first ${short(m.tier ?? null)} final.`,
+    ref: (m) => cp`Her first ${short(m.tier ?? null)} final.`,
+  },
+  {
+    type: 'final',
+    text: (m) => `First time through to a ${short(m.tier ?? null)} final.`,
+    ref: (m) => cp`First time through to a ${short(m.tier ?? null)} final.`,
+  },
+  {
+    type: 'international',
+    text: (m) => (m.tier ? `Her first international entry – ${short(m.tier)}.` : 'Her first international entry.'),
+    ref: (m) => (m.tier ? cp`Her first international entry – ${short(m.tier)}.` : cp`Her first international entry.`),
+  },
+  {
+    type: 'international',
+    text: (m) => (m.tier ? `The first passport week – ${short(m.tier)}.` : 'The first passport week.'),
+    ref: (m) => (m.tier ? cp`The first passport week – ${short(m.tier)}.` : cp`The first passport week.`),
+  },
+  {
+    type: 'prize',
+    text: (m) => (m.tier ? `First prize money – a ${short(m.tier)} cheque.` : 'First prize money – a real cheque.'),
+    ref: (m) => (m.tier ? cp`First prize money – a ${short(m.tier)} cheque.` : cp`First prize money – a real cheque.`),
+  },
+  { type: 'prize', text: () => 'The first week the tennis paid her.', ref: () => cp`The first week the tennis paid her.` },
+  {
+    type: 'injury',
+    text: (m) => `${capitalise(m.kind ?? 'an injury')} – her first injury.`,
+    ref: (m) => cp`${capitalise(m.kind ?? 'an injury')} – her first injury.`,
+  },
+  {
+    type: 'season-rank',
+    text: (m, startYear) => `Season ${seasonYear(m.seasonIndex ?? 0, startYear)}: #${m.rank ?? 0} ${LADDER_LABEL.itf.toLowerCase()}.`,
+    ref: (m, startYear) => cp`Season ${seasonYear(m.seasonIndex ?? 0, startYear)}: #${m.rank ?? 0} ${LADDER_LABEL.itf.toLowerCase()}.`,
+  },
+  {
+    type: 'season-rank',
+    text: (m, startYear) => `She ended ${seasonYear(m.seasonIndex ?? 0, startYear)} #${m.rank ?? 0} ${LADDER_LABEL.itf.toLowerCase()}.`,
+    ref: (m, startYear) => cp`She ended ${seasonYear(m.seasonIndex ?? 0, startYear)} #${m.rank ?? 0} ${LADDER_LABEL.itf.toLowerCase()}.`,
+  },
 ]
 
 /** How old a MILESTONE has to be before she remembers it rather than just having done it.
@@ -589,7 +632,7 @@ export const MEMORY_ANNIVERSARY_TOLERANCE = 1
  *  card grew from 138px to 207px and stopped matching the coach card beside it in the 2x2 grid. The
  *  existing lines top out at 39 ("First time through to a Regional final."), so that is the family
  *  these have to join. Measured in the browser, then pinned in tests/diary.test.ts. */
-const DEBUT_LINES: readonly string[] = [
+export const DEBUT_LINES: readonly string[] = [
   'The week it all started.',
   'Her very first week at the club.',
   'Week one. New grips, new nerves.',
@@ -606,8 +649,14 @@ function debutMemory(week: number, seed: string, kidAgeAt: (week: number) => num
     // whose birthday has not come round yet when the career opens.
     stage: portraitStage(kidAgeAt(0)),
     emotion: 'norm',
-    line: DEBUT_LINES[Math.floor(rng() * DEBUT_LINES.length)],
+    ...debutLine(rng),
   }
+}
+
+/** ⭐ L3-4: the opening week's line and its key from the ONE draw (the sub-stream `seed:memory:debut:<week>` is untouched). The four lines are a SEAT: the string is the key. */
+function debutLine(rng: () => number): { line: string; lineC: CopyRef } {
+  const line = DEBUT_LINES[Math.floor(rng() * DEBUT_LINES.length)]
+  return { line, lineC: { k: line } }
 }
 
 /** The Memory card for this week, or null.
@@ -650,11 +699,15 @@ export function selectMemory(
   const lines = MEMORY_LINES.filter((l) => l.type === pick.type)
   if (lines.length === 0) return debut
   const lineRng = rngFromSeed(`${seed}:diary:${week}:memory`)
-  const line = lines[Math.floor(lineRng() * lines.length)].text(pick, startYear)
+  const cell = lines[Math.floor(lineRng() * lines.length)]
+  const line = cell.text(pick, startYear)
+  const lineC = cell.ref?.(pick, startYear)
   return {
     kind: anniversary ? 'anniversary' : pick === aged[aged.length - 1] ? 'recent' : 'echo',
     milestone: pick,
     whenLabel: anniversary ? 'one year ago' : weekLabel(pick.week, startYear),
+    // ⭐ L3-4: only the SENTENCE has a key; the week label ("W14 '31") is a formatter's output (`weekLabel`, RU-13D) and prints as text.
+    ...(anniversary ? { whenLabelC: cp`one year ago` } : {}),
     // ⭐ D-01: HER AGE AT THE MILESTONE'S WEEK, off the one clock. This read
     // `startAgeYears + Math.floor(pick.week / 52)` – the band clock – which paints a girl born late
     // in the year as the next stage up for most of the year the boundary falls in. The card's own
@@ -663,6 +716,7 @@ export function selectMemory(
     stage: portraitStage(kidAgeAt(pick.week)),
     emotion: MEMORY_EMOTION[pick.type],
     line,
+    ...(lineC ? { lineC } : {}),
   }
 }
 
@@ -673,7 +727,11 @@ export function buildDiarySnapshot(view: DiaryWorldView): DiarySnapshot {
   const facts = assembleDiaryFacts(view)
   // The caption is selected FIRST: the greeting is allowed to see it, so the two can never say the
   // same thing (greetingFor).
-  const photoLine = diaryLine('photo', facts, view.seed)
+  // ⭐ L3-4: the photo line and the condition note each come from ONE pick (`diaryLinePair`) – the English with its ref beside it, on the same sub-stream and the same single draw as ever.
+  const photo = diaryLinePair('photo', facts, view.seed)
+  const photoLine = photo?.text ?? null
+  const condition = diaryLinePair('condition', facts, view.seed)
+  const greeting = greetingFor(facts, photoLine, view.seed)
   // The journey's full reading, for the note. `assembleDiaryFacts` above has already taken the same
   // reading for the two fields the FACTS carry (scene and mood) – both calls are pure functions of
   // the same view, so they agree by construction, and the alternative (threading the object out of
@@ -691,10 +749,13 @@ export function buildDiarySnapshot(view: DiaryWorldView): DiarySnapshot {
     injury: view.injury,
     pendingUnfinished: view.pendingUnfinished,
   })
+  const conditionC = condition ? condition.c : CONDITION_FALLBACK_REF
   return {
     facts,
     photoLine,
-    greeting: greetingFor(facts, photoLine, view.seed),
+    ...(photo?.c ? { photoLineC: photo.c } : {}),
+    greeting,
+    greetingC: greetingRef(greeting),
     // W5: WHICH PAINTING THIS WEEK SHOWS, decided once, here, beside the facts it reads.
     //
     // ⭐⭐ D-01 (05.09 review) – AND IT IS `view.ageYears` NOW, WHICH IS THE AGE THE REST OF THE APP
@@ -721,7 +782,12 @@ export function buildDiarySnapshot(view: DiaryWorldView): DiarySnapshot {
     weekNote: weekNoteFor(facts, view.seed),
     // The licences cover every state the engine can produce (the coverage sweep in
     // tests/diary.test.ts proves it); the fallback is a sentence that is true of any week at all.
-    conditionNote: diaryLine('condition', facts, view.seed) ?? 'The week went by.',
+    conditionNote: condition?.text ?? CONDITION_FALLBACK,
+    ...(conditionC ? { conditionNoteC: conditionC } : {}),
     memory: selectMemory(view.milestones, view.week, view.seed, view.kidAgeAt, view.startYear),
   }
 }
+
+/** The condition note is never empty: what it says on a week no pool line is licensed for, and its key (⭐ L3-4). */
+const CONDITION_FALLBACK = 'The week went by.'
+const CONDITION_FALLBACK_REF: CopyRef = cp`The week went by.`

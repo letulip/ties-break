@@ -54,12 +54,16 @@ import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
 import { weekLabel } from '../shared/dates'
 import { useStartYear } from '../composables/startYear'
-import { t } from '../i18n'
+import { eventText, t, type CopyRef } from '../i18n'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
 
 const game = useGameStore()
 const prompt = computed(() => game.snapshot?.birthdayPrompt ?? null)
+
+/** ⭐ L3-4 (10.10): THE PROMPT'S WORDS ARE DRAWN FROM THEIR REFS. The heading, the ask and the four rows are class (b) – assembled by `engine/world/birthday.ts` at snapshot time and
+ *  never stored – and each carries its CopyRef beside the English (`headingC`, `askC`, `labelC`, `noteC`). The ask's ref names no option and marks none: the 11.08 rule stands. */
+const say = (text: string, c?: CopyRef): string => eventText({ text, c })
 
 // Guards a double-tap while the worker round-trips, exactly as KnockDialog does: `chooseGift` throws
 // on a birthday that is already answered, so without this a fast second press would surface an error
@@ -136,11 +140,11 @@ useDialogFocus(card)
       <p id="birthday-dialog-kicker" class="season-summary-kicker">
         {{ t('Her birthday – {0}', [weekLabel(prompt.week, startYear)]) }}
       </p>
-      <h2 id="birthday-dialog-title" class="season-summary-title">{{ prompt.heading }}</h2>
+      <h2 id="birthday-dialog-title" class="season-summary-title">{{ say(prompt.heading, prompt.headingC) }}</h2>
 
       <!-- ⭐ THE ASK, IN PROSE, AND NOTHING BELOW IT IS MARKED. One of the four rows answers this and
            three do not; the player reads. -->
-      <p id="birthday-ask" class="birthday-ask">{{ prompt.ask }}</p>
+      <p id="birthday-ask" class="birthday-ask">{{ say(prompt.ask, prompt.askC) }}</p>
 
       <!-- ⚠⚠ W2 (26.09) – THE STORE'S REFUSAL, ABOVE THE FOUR ROWS – ForkDialog's own arrangement and
            its reason. This card has no dismiss BY RULING (the header: «nothing» must be an explicit
@@ -180,8 +184,8 @@ useDialogFocus(card)
         >
           <span class="birthday-mark" aria-hidden="true"></span>
           <span class="birthday-choice-text">
-            <span class="birthday-choice-label">{{ option.label }}</span>
-            <span class="birthday-choice-note">{{ option.note }}</span>
+            <span class="birthday-choice-label">{{ say(option.label, option.labelC) }}</span>
+            <span class="birthday-choice-note">{{ say(option.note, option.noteC) }}</span>
           </span>
         </button>
       </div>

@@ -162,9 +162,13 @@ describe('L2-9a completeness – the two phrases of the template are wired keys;
     expect(source).toContain("{{ t('Proceed') }}")
   })
 
-  it('the heading, the ask and the four rows are NOT read through a key: they are the RU-09 headings and the RU-09A gift corpus – engine-born, L3', () => {
+  // ⭐ L3-4 (10.10) RE-AIMED: this pin said the heading, the ask and the four rows were bare `{{ prompt.heading }}` etc. – «engine-born, L3». L3-4 is that wave: the engine writes a
+  // CopyRef BESIDE each (`headingC`, `askC`, `labelC`, `noteC`) and the dialog draws them through `say()` (= `eventText`). They are still not read through a KEY of the template's own:
+  // the keys are the engine's (the RU-09 headings and the RU-09A gift corpus), which is why no `t()` is allowed in the engine modules below.
+  it('the heading, the ask and the four rows are drawn from the refs the engine wrote beside them – not read through a key of the template\'s own – engine-born (L3-4)', () => {
     const source = SRC('src/components/BirthdayDialog.vue')
-    for (const bare of ['{{ prompt.heading }}', '{{ prompt.ask }}', '{{ option.label }}', '{{ option.note }}']) expect(source, bare).toContain(bare)
+    for (const drawn of ['say(prompt.heading, prompt.headingC)', 'say(prompt.ask, prompt.askC)', 'say(option.label, option.labelC)', 'say(option.note, option.noteC)']) expect(source, drawn).toContain(drawn)
+    for (const bare of ['{{ prompt.heading }}', '{{ prompt.ask }}', '{{ option.label }}', '{{ option.note }}']) expect(source, `${bare} is back`).not.toContain(bare)
     // ...and the engine modules that write them still cannot call t() (invariant 1)
     for (const file of ['src/engine/world/birthday.ts', 'src/engine/world/birthdayGift.ts']) {
       expect(/from '(?:\.\.\/)+i18n'/.test(SRC(file)), `${file} learned to call t()`).toBe(false)

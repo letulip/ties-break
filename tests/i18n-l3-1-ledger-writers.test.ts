@@ -20,7 +20,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { allTemplateKeys } from '../src/engine/migrations/reverseMatch'
 import { LEGACY_JOINED_V92 } from '../src/engine/migrations/legacyTemplates.v92'
-import { cp, joinCopy, renderCopyRef, SOURCE_LOCALE, type CopyRef } from '../src/shared/i18n'
+import { cp, joinCopy, renderCopyRef, splitContext, SOURCE_LOCALE, type CopyRef } from '../src/shared/i18n'
 import { LADDER_LABEL } from '../src/shared/protocol'
 import { rankingDeltaSuffix, tournamentSummaryRef } from '../src/engine/world/tournamentClose'
 import { ACADEMY_NOTICE } from '../src/engine/world/phaseObligations'
@@ -34,6 +34,8 @@ import { SPARRING_RECEIPT } from '../src/engine/world/sparring'
 import { enterEvent, releaseEntry, RELEASE_LINE_PREFIX } from '../src/engine/world/entries'
 import { buyAsset, deliverAssets, reportMarketSeason, sellAsset } from '../src/engine/world/shop'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
+// ⭐ L3-4 (10.10): the diary's class-(b) keys, a list of its own (its net proves it is exactly what the class-(b) files spell)
+import { DIARY_CLASS_B_KEYS } from './helpers/l3-4-diary-keys'
 
 const ROOT = resolve(__dirname, '..')
 const EN = { locale: SOURCE_LOCALE }
@@ -62,6 +64,10 @@ const NEW_KEYS: readonly string[] = [
   'The {0}s are settled once, at the end of the season: {1} penalty points for each one she finished short of {2}.',
   'Nothing at all is owed for a week she could not play – injured, suspended, too young for the rung, refused by the entry list, or already committed to another tournament that week.',
   'Every line above is a price, and none of it is an instruction. Which of them she pays is still a decision, and it stays yours.',
+  // ⭐ L3-4 (10.10): THE DIARY, CLASS (b) AS WELL – the photo / condition pool's function cells, the memory cards, the greeting, the birthday prompt's heading lines and (part 2) the
+  // week-note and travel-note function cells. Assembled at SNAPSHOT time from state that already exists, never stored, so the frozen table (a table of STORED rows) has no entry for
+  // them. The list lives in tests/helpers/l3-4-diary-keys.ts, generated from the scan and held to it by tests/i18n-l3-4-diary-corpora.test.ts §1.
+  ...DIARY_CLASS_B_KEYS,
 ]
 
 /** Pieces a writer joins with `joinCopy` – never a sentence on their own, never emitted alone. §5 renders every assembled sentence against the table. */
@@ -325,7 +331,8 @@ describe('§1 the re-key law – every `cp` key in the engine is the frozen tabl
       const holes = (k.match(/\{\d+\}/g) ?? []).length
       const ref: CopyRef = holes > 0 ? { k, p: Array.from({ length: holes }, (_, i) => `⟦${i}⟧`) } : { k }
       const shown = renderCopyRef(ref, EN)
-      expect(shown, k).toBe(k.replace(/\{(\d+)\}/g, (_m, n: string) => `⟦${n}⟧`))
+      // ⭐ L3-4: a context tag (`greeting|Good night` – the same English, two Russian phrases) is the key's handle and never part of the English it renders
+      expect(shown, k).toBe(splitContext(k).text.replace(/\{(\d+)\}/g, (_m, n: string) => `⟦${n}⟧`))
     }
   })
 })
@@ -341,6 +348,11 @@ const DYNAMIC_SEATS: Record<string, number> = {
   'src/engine/world/phaseFinance.ts': 2, // the weekly training / rest flavour line, and the apparel flavour line when no brand paid
   'src/engine/world/phaseGrowth.ts': 1, // the composure receipt
   'src/engine/spirit.ts': 3, // ⭐ L3-3: the public-life receipt, the exposure row and the recovery receipt – each a NAMED CONSTANT, its own key
+  // ⭐ L3-4 (10.10) – the DIARY'S seats: class (b), the string a corpus cell holds IS its key. Their can-hold proof is tests/i18n-l3-4-diary-corpora.test.ts §2 (it imports the
+  // corpora and walks every cell), not the frozen table's – no old save holds a diary line.
+  'src/engine/diary/pool.ts': 1, // diaryLinePair – a static photo / condition cell
+  'src/engine/diary.ts': 1, // debutLine – the four opening-week memory lines
+  'src/engine/world/birthday.ts': 4, // the gift row's label and note, the ask, and the label nested in the gift event row
 }
 
 function literalsIn(node: ts.Node, out: string[] = []): string[] {
@@ -420,6 +432,10 @@ const NOT_ISOMORPHIC: Record<string, string> = {
     'the same `plural()` helper, the quota shortfall\'s noun – l3-3 §6 (singular and plural economies).',
   'src/engine/world/milestones.ts::`Season ${displayYear} wrap-up: ${rankText} · ` ':
     'the text is a `+` of two templates over helper-built pieces (`rankText`, `bestText`); c is `seasonWrapRef`, twelve WHOLE sentences – l3-3 §3 drives all twelve ingredient combinations through it and through the real writer, and compares with the text.',
+  // ⭐ L3-4 (10.10) – the gift event row: the text's hole is the gift's label (a string), c's hole is the label as a NESTED ref `{ k: given.label }` so a Russian row names the gift in
+  // Russian; both render the same English. tests/i18n-l3-4-diary-corpora.test.ts §5 renders the row for every gift in the catalogue and compares.
+  'src/engine/world/birthday.ts::given.id === DAY_TOGETHER.id ? \'Her birthday. No':
+    'the label hole is a nested ref `{ k: given.label }` on the c side (the catalogue string is a key of its own) – l3-4 §5 chooses every gift of every band and compares the row with its text, and checks the key is the table\'s.',
   'src/engine/world/phaseAiWeek.ts::`🏆 ${playerShortName(world, championId)} won th':
     'the text appends `championNote(...)`, a helper that returns one of four clauses; c is `championRef` over the SAME `championClause` facts – l3-3 §4 renders all four against the text, and the twin plays them.',
 }
@@ -440,7 +456,8 @@ describe('§2 text / c pairs', () => {
     // + 27 (L3-3): fieldNews 3, the champion lines 2 (tournamentClose, phaseAiWeek), milestones 4, the academy 5, the shoot notes 2, the first kept row, the calendar row, the birthday row,
     //   the spirit feed 3, the briefing's five cost lines 5 – the rows that carry `c` by a SPREAD (the campus digest, the kid-match and retirement rows) are not pairs, they are §4/§5 here
     //   and l3-3 §2's.
-    expect(all.length, 'pairs of text + c in src/engine').toBe(111)
+    // + 20 (L3-4): the eighteen birthday heading lines, the gift event row, and `diaryLinePair`'s static pick (`{ text: pick.text, c: { k: pick.text } }`)
+    expect(all.length, 'pairs of text + c in src/engine').toBe(131)
   })
 
   it('every pair expands to the SAME sentences – each branch, each inlined ternary, the same holes in the same order – or is announced', () => {
@@ -506,7 +523,7 @@ describe('§2 text / c pairs', () => {
 const TEXT_ONLY: Record<string, number> = {
   // ⭐ L3-3 (10.10) CONVERTED 26 OF THE 63: spirit 3, age 1, bookkeeping 1, create 1, fieldNews 4, milestones 5 (the four callers, and `fireMilestone`'s own inner sink – it forwards `c`
   // by shorthand, which `carries` reads since this wave), phaseAiWeek 1, phaseObligations 5, shootClash 2, tournamentClose 3. What is left below is L3-4..7's and nobody else's.
-  'src/engine/world/birthday.ts': 1, // L3-4 (the birthday gift corpus)
+  // ⭐ L3-4 (10.10) CONVERTED 1 MORE: birthday.ts, the gift row (it was the only sink the brief gave this wave). 36 are left.
   'src/engine/world/college.ts': 4, // L3-7 (RU-12F, the college engine feed) – the tuition row (money) is L3-1's and converted
   'src/engine/world/endings.ts': 8, // L3-6
   'src/engine/world/injury.ts': 3, // L3-7 (RU-11J, the medical feed) – the two money rows (physio, medical) are L3-1's and converted
@@ -527,11 +544,11 @@ describe('§3 the writers still on `text` alone', () => {
     expect(sinks().bare, 'a count moved: a wave converted a sink (lower the number) or a NEW text-only writer appeared (decide it: convert it, or list it with the wave that owns it)').toEqual(TEXT_ONLY)
   })
 
-  it('the books close: 141 sinks (the L3-0 sweep\'s count), 104 of them converted (L3-1: 78, L3-3: 26), 37 left to L3-4..7', () => {
+  it('the books close: 141 sinks (the L3-0 sweep\'s count), 105 of them converted (L3-1: 78, L3-3: 26, L3-4: 1), 36 left to L3-5..7', () => {
     const { bare, converted } = sinks()
     const left = Object.values(bare).reduce((a, b) => a + b, 0)
-    expect(left, 'sinks still on `text` alone').toBe(37)
-    expect(converted, 'sinks that write `c`').toBe(104)
+    expect(left, 'sinks still on `text` alone').toBe(36)
+    expect(converted, 'sinks that write `c`').toBe(105)
     expect(converted + left, 'every sink there is').toBe(141)
   })
 

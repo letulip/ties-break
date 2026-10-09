@@ -223,7 +223,12 @@ describe('L2-3 seams – the greeting rule, the ladder words and AS19 do not dep
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2033, 5, 6, hour, 0, 0))
   }
-  const withCaption = (photoLine: string): Snapshot => ({ ...base, diary: { ...base.diary, photoLine, greeting: 'ENGINE-GREETING' } })
+  // ⭐ L3-4 (10.10): the diary rides the snapshot with a ref BESIDE each English line (`greetingC`, `photoLineC`), and the screen draws the ref – so a fixture that overrides the
+  // ENGLISH must drop the ref it overrides, or the base snapshot's ref (a real greeting) would be what is drawn. The fixture still tests the same seam: the collision rule.
+  const withCaption = (photoLine: string): Snapshot => {
+    const { greetingC: _g, photoLineC: _p, ...rest } = base.diary
+    return { ...base, diary: { ...rest, photoLine, greeting: 'ENGINE-GREETING' } }
+  }
 
   it('English: the clock picks the band, and a caption that already says that word hands the greeting to the engine', () => {
     at(9)
