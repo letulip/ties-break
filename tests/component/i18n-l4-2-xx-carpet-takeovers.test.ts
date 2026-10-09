@@ -1,5 +1,5 @@
 // THE `xx` CARPET, AREA 4 – the full-screen takeovers and the shell around them (wave L4-2, spec §6): the last page (the epilogue, a scrolling
-// takeover whose two doors are the dismiss), the match viewer and its replay shell and the friendly's flow, the thirteen prologue scenes with
+// takeover whose two doors are the dismiss), the match viewer and its replay shell and the friendly's flow, the fourteen prologue scenes with
 // the Local Open and the handover, the onboarding wizard and tour, the splash, and the app shell (its tab bar and its storage-recovery screen).
 // Registry only – the sweep, the ledger and the report are `xxCarpet.ts`'s; every pose is the one the L2 net for that surface uses.
 import { vi } from 'vitest'
@@ -98,7 +98,7 @@ const record = (over: Partial<WorldMatch> = {}): WorldMatch =>
   ({ eventId: 'local-open-1', round: 1, aId: A.id, bId: B.id, winnerId: A.id, seed: 'l42-replay', score: '6-4 6-3', surface: 'hard', oppName: B.name, a: A, b: B, ...over }) as WorldMatch
 const friendly = (): WorldMatch => record({ eventId: 'practice', aId: KID_ID, bId: B.id, winnerId: KID_ID, seed: 'l42-friendly', a: { ...A, id: KID_ID } })
 
-// --- the prologue (L2-2's poses): thirteen scenes, the Local Open, the handover -----------------------------------------------------------------
+// --- the prologue (L2-2's poses): fourteen scenes, the Local Open, the handover -----------------------------------------------------------------
 interface Scene { name: string; card: PrologueCard; extra: Record<string, unknown> }
 const pickedOf = (card: PrologueCard): Record<string, unknown> => (card.options && card.tournament ? { picked: card.options[0]!.id } : {})
 function scenes(): Scene[] {
