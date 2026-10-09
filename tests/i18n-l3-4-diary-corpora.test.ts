@@ -15,16 +15,28 @@
 //   §6 played careers                 – every converted line carries a ref that renders to it; and THE PICK-STABILITY DIGEST (the strings of two 150-week careers, captured on the
 //                                       pre-wave tree 054a73a2, byte for byte – a changed sub-stream key, draw count or pool order moves it)
 //   §7 the pick keys                  – the sub-stream seed keys of the class-(b) files, as a list: this wave adds NONE
+//   §8 the week-note corpus           – the 324 authored cells, counted by structure: static / function, every one with its key
 import { describe, expect, it } from 'vitest'
 import ts from 'typescript'
-import { readdirSync, readFileSync } from 'node:fs'
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { allTemplateKeys } from '../src/engine/migrations/reverseMatch'
 import { renderCopyRef, SOURCE_LOCALE, splitContext, type CopyRef } from '../src/shared/i18n'
 import { DIARY_CLASS_B_KEYS } from './helpers/l3-4-diary-keys'
 import { fnv1a } from './helpers/hash'
-import { DEBUT_LINES, DIARY_POOL, GREETINGS, MEMORY_LINES, greetingRef, selectMemory } from '../src/engine/diary'
-import { TIERS } from '../src/engine/season/calendar'
+import { COACH_TRIP_NOTES, DEBUT_LINES, DIARY_POOL, GREETINGS, MEMORY_LINES, TRAVEL_NOTES, WEEK_NOTES, greetingRef, selectMemory } from '../src/engine/diary'
+import {
+  BEREAVED_WORDS,
+  BIRTHDAY_LINES,
+  BIRTHDAY_REFS,
+  DIVORCED_WORDS,
+  EXAM_LINES,
+  FORK_AFTERMATH_WORDS,
+  MOTHERHOOD_WORDS,
+  OFF_SEASON_LINES,
+  VOICE_LINES,
+} from '../src/engine/diary/weekNotes'
+import { TIERS, tierFromLabel } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 import type { DiaryFacts, Milestone, MilestoneType } from '../src/shared/protocol'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
@@ -83,6 +95,13 @@ describe('§1 the key law – the diary\'s cp keys are a list, and only the gift
 
   it('tests/helpers/l3-4-diary-keys.ts is EXACTLY the keys these files spell that no old save can hold – no more, no fewer', () => {
     const expected = [...found.keys()].filter((k) => !TABLE.has(k)).sort()
+    if (process.env.L34_WRITE_KEYS === '1') {
+      // the WRITE MODE (how L3-2's matrix is captured): the header stays, the list is rewritten from the scan – a deliberate act, never a side effect of a plain run
+      const path = join(ROOT, 'tests/helpers/l3-4-diary-keys.ts')
+      const head = readFileSync(path, 'utf8').split('export const DIARY_CLASS_B_KEYS')[0]!
+      writeFileSync(path, `${head}export const DIARY_CLASS_B_KEYS: readonly string[] = [\n${expected.map((k) => `  ${JSON.stringify(k)},`).join('\n')}\n]\n`)
+      return
+    }
     expect([...DIARY_CLASS_B_KEYS].sort(), 'regenerate the list, or write the key the table already has').toEqual(expected)
   })
 
@@ -115,17 +134,21 @@ function giftStrings(): string[] {
   return [...out]
 }
 const poolStatics = (): string[] => DIARY_POOL.map((p) => p.text).filter((t): t is string => typeof t === 'string')
+const weekStatics = (): string[] => WEEK_NOTES.map((n) => n.text).filter((t): t is string => typeof t === 'string')
+const travelStatics = (): string[] => [...TRAVEL_NOTES.map((n) => n.text), ...COACH_TRIP_NOTES]
 
 /** Strings a seat can hold that the CATALOG does not carry yet, by corpus – a MEASURED number, and the standing debt of the dynamic seats (L3-T: «the extractor's dynamic-seat
  *  declaration»): the census reads `text:` properties and a handful of named homes, so a corpus kept in a plain array or a `label:` field is invisible to it. The ref is a key all the
  *  same; the owner's row for it waits («the literal is live in source but no call site asks for it yet»). It can only fall – a number that rises is a seat nobody declared. */
-const OUTSIDE_CATALOG = { pool: 0, debut: 0, gifts: 159 } as const
+const OUTSIDE_CATALOG = { pool: 0, debut: 0, weekNotes: 0, travel: 0, gifts: 159 } as const
 // (`DEBUT_LINES` is EXPORTED for exactly this reason: the census reads an exported top-level const whose name ends LINES / WORDS / NOTES as a known copy home – rule (b) in
-//  tools/copy-census-walk.ts – so exporting the corpus brings its strings into the catalog with no tool change. The gift catalogue's names (`BANDS`) match no such rule: 159 stay out.)
+//  tools/copy-census-walk.ts – so exporting the corpus brings its strings into the catalog with no tool change. Part 2 exported `VOICE_LINES`, `EXAM_LINES`, `BIRTHDAY_LINES`,
+//  `OFF_SEASON_LINES`, `BEREAVED_WORDS`, `DIVORCED_WORDS`, `FORK_AFTERMATH_WORDS` and `COACH_TRIP_NOTES` for the same reason: 156 week-note strings and the coach's five were outside the
+//  catalog before. The gift catalogue's names (`BANDS`) match no such rule: 159 stay out.)
 
 describe('§2 the seats – every static string is a valid key, and the number the catalog cannot see yet is measured', () => {
   it('no corpus string carries a brace or a backslash (a seat is `{ k: text }`, and `k` is read as a message: such a character would be syntax)', () => {
-    for (const s of [...poolStatics(), ...DEBUT_LINES, ...giftStrings()]) expect(/[{}\\]/.test(s), s).toBe(false)
+    for (const s of [...poolStatics(), ...DEBUT_LINES, ...weekStatics(), ...travelStatics(), ...giftStrings()]) expect(/[{}\\]/.test(s), s).toBe(false)
   })
 
   it('the pool holds 105 cells: 95 static, 6 with a hole, 4 deliberate silences', () => {
@@ -137,7 +160,7 @@ describe('§2 the seats – every static string is a valid key, and the number t
 
   it('the strings outside the catalog, by corpus (L3-T\'s debt – it can only fall)', () => {
     const outside = (list: readonly string[]): number => new Set(list.filter((s) => CATALOG.keys[s] === undefined)).size
-    expect({ pool: outside(poolStatics()), debut: outside(DEBUT_LINES), gifts: outside(giftStrings()) }).toEqual(OUTSIDE_CATALOG)
+    expect({ pool: outside(poolStatics()), debut: outside(DEBUT_LINES), weekNotes: outside(weekStatics()), travel: outside(travelStatics()), gifts: outside(giftStrings()) }).toEqual(OUTSIDE_CATALOG)
   })
 })
 
@@ -237,6 +260,46 @@ describe('§3 the memory cards', () => {
   })
 })
 
+describe('§3 the week notes\' function cells', () => {
+  const cells = WEEK_NOTES.filter((n) => typeof n.text === 'function')
+  const shorts = [...BIRTHDAY_BANDS.flatMap((b) => b.gifts), BIRTHDAY_DAY_TOGETHER].map((g) => g.short)
+
+  it('26 cells have a hole, every one has a ref, and every ref renders to its text over a seeded sweep of the holes\' domains (age words, gift nouns, repeat ages, knock parts, injury kinds)', () => {
+    expect(cells.length).toBe(26)
+    for (const c of cells) expect(c.ref, String(c.text)).toBeTypeOf('function')
+    const rng = rngFromSeed('l3-4-week-note-sweep')
+    const pick = <T,>(xs: readonly T[]): T => xs[Math.floor(rng() * xs.length)]!
+    const ages = [null, 13, 14, 15, 16, 17, 18, 19, 20, 21, 27, 33]
+    const kinds = ['ankle soreness', 'wrist sprain', 'knee strain', 'lower back spasm', 'stress fracture', 'an unnamed thing']
+    let n = 0
+    for (let i = 0; i < 400; i++) {
+      const f = {
+        birthdayAge: pick(ages),
+        birthdayGift: pick([...shorts, null, '']),
+        birthdayRepeatAge: pick([null, 14, 15, 16, 17, 22]),
+        knockPart: pick(['ankle', 'wrist', 'lower back', 'shoulder', null]),
+        injured: pick([null, ...kinds.map((kind) => ({ kind, weeksRemaining: 3, totalWeeks: 6 }))]),
+      } as unknown as DiaryFacts
+      for (const c of cells) {
+        expect(render(c.ref!(f)), String(c.text)).toBe((c.text as (x: DiaryFacts) => string)(f))
+        n++
+      }
+    }
+    expect(n).toBe(26 * 400)
+  })
+
+  it('the eight birthday notes: BIRTHDAY_REFS is BIRTHDAY_LINES, cell for cell', () => {
+    for (const voice of Object.keys(BIRTHDAY_LINES) as Array<keyof typeof BIRTHDAY_LINES>) {
+      for (const stage of ['school', 'after-school'] as const) {
+        for (const age of [null, 14, 15, 17]) {
+          const f = { birthdayAge: age } as unknown as DiaryFacts
+          expect(render(BIRTHDAY_REFS[voice][stage](f)), `${voice}/${stage}`).toBe((BIRTHDAY_LINES[voice][stage] as (x: DiaryFacts) => string)(f))
+        }
+      }
+    }
+  })
+})
+
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // §4 – the greeting
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -314,6 +377,9 @@ describe('§5 the birthday – heading, rows, the gift event row', () => {
           expect(row.c, row.text).toBeDefined()
           expect(render(row.c!), 'the ref renders to the stored text').toBe(row.text)
           expect(TABLE.has(row.c!.k), row.c!.k).toBe(true)
+          // the L3-0 readers net's verdict for `diary/facts.ts` (`tierFromLabel(e.text)` on a tournament summary): this row is an `info` row and no tier label opens it
+          expect(row.type, row.text).toBe('info')
+          expect(tierFromLabel(row.text), row.text).toBeUndefined()
           keysSeen.add(row.c!.k)
           rows++
         }
@@ -373,6 +439,9 @@ function play(presetIdx: number, policyIdx: number, weeks: number): { recs: Rec[
     check('photoLine', d.photoLine, d.photoLineC)
     check('greeting', d.greeting, d.greetingC)
     check('conditionNote', d.conditionNote, d.conditionNoteC)
+    check('travelNote', d.travelNote, d.travelNoteC)
+    check('weekNote', d.weekNote, d.weekNoteC)
+    check('coachNote', d.coachNote, d.coachNoteC)
     if (d.memory) {
       check('memory.line', d.memory.line, d.memory.lineC)
       check('memory.whenLabel', d.memory.whenLabel, d.memory.whenLabelC, d.memory.whenLabel === 'one year ago')
@@ -402,18 +471,19 @@ describe('§6 played careers', () => {
   const PRE_WAVE_DIGEST = 0xaea42fda
   // played once, on first use, INSIDE a test – a ref that drifts from its text must fail a test by name, not take the whole file down at collection
   let played: Array<ReturnType<typeof play>> | null = null
-  const careersPlayed = (): Array<ReturnType<typeof play>> => (played ??= [play(5, 0, 150), play(0, 1, 150)])
+  // careers 5/0 and 0/1 are the DIGEST's pair (captured on the pre-wave tree); 5/1 is a third, played for the families the first two never reach – the coach travels with her only there
+  const careersPlayed = (): Array<ReturnType<typeof play>> => (played ??= [play(5, 0, 150), play(0, 1, 150), play(5, 1, 150)])
 
-  it('every converted line of 300 played weeks carries a ref that renders to it (and the sweep reached each family)', () => {
+  it('every converted line of 450 played weeks (three careers) carries a ref that renders to it (and the sweep reached each family)', () => {
     const total: Record<string, number> = {}
     for (const { checked } of careersPlayed()) for (const [k, v] of Object.entries(checked)) total[k] = (total[k] ?? 0) + v
-    for (const f of ['photoLine', 'greeting', 'conditionNote', 'memory.line', 'birthday.heading', 'birthday.ask', 'birthday.label', 'birthday.note', 'birthday.event']) {
+    for (const f of ['photoLine', 'greeting', 'conditionNote', 'travelNote', 'weekNote', 'coachNote', 'memory.line', 'birthday.heading', 'birthday.ask', 'birthday.label', 'birthday.note', 'birthday.event']) {
       expect(total[f], `${f} was exercised`).toBeGreaterThan(0)
     }
   })
 
   it('⭐ PICK-STABILITY: the diary strings of both careers hash to the pre-wave tree\'s digest – no pick key, draw count or pool order moved', () => {
-    const joined = careersPlayed().map((c) => JSON.stringify(c.recs)).join('\n')
+    const joined = careersPlayed().slice(0, 2).map((c) => JSON.stringify(c.recs)).join('\n')
     expect(fnv1a(joined), `bytes ${joined.length}`).toBe(PRE_WAVE_DIGEST)
   })
 })
@@ -453,5 +523,38 @@ describe('§7 the pick keys', () => {
       const src = sf.getFullText().split('\n').filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n')
       expect(/Math\.random\(|new Date\(|Date\.now\(/.test(src), rel).toBe(false)
     }
+  })
+})
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------
+// §8 – the week-note corpus: 324 authored cells (docs/localization/ru-diary-week-notes-corpus-2026-10.md: 148 core + 44 special + 132 explicit)
+// ---------------------------------------------------------------------------------------------------------------------------------------------
+describe('§8 the 324 cells', () => {
+  const leaves = (o: unknown): unknown[] => (typeof o === 'object' && o !== null ? Object.values(o as Record<string, unknown>).flatMap(leaves) : [o])
+
+  it('counted by structure: the voice matrix 128, exams 4, birthdays 8, off-season 8 (148), the special states 28 + 4 + 4 + 8 (44), and 132 explicit rows', () => {
+    expect(leaves(VOICE_LINES)).toHaveLength(128)
+    expect(leaves(EXAM_LINES)).toHaveLength(4)
+    expect(leaves(BIRTHDAY_LINES)).toHaveLength(8)
+    expect(leaves(OFF_SEASON_LINES)).toHaveLength(8)
+    expect(leaves(MOTHERHOOD_WORDS)).toHaveLength(28)
+    expect(leaves(BEREAVED_WORDS)).toHaveLength(4)
+    expect(leaves(DIVORCED_WORDS)).toHaveLength(4)
+    expect(leaves(FORK_AFTERMATH_WORDS)).toHaveLength(8)
+    expect(WEEK_NOTES.length - (148 + 44), 'explicit rows').toBe(132)
+    expect(WEEK_NOTES.length).toBe(324)
+  })
+
+  it('CONVERSION COVERAGE: 324 of 324 – 298 static cells (the seat `{ k: text }`) and 26 function cells (a ref of their own), none left unconverted, none forced', () => {
+    const fn = WEEK_NOTES.filter((n) => typeof n.text === 'function')
+    const st = WEEK_NOTES.filter((n) => typeof n.text === 'string')
+    expect([st.length, fn.length]).toEqual([298, 26])
+    expect(fn.every((n) => typeof n.ref === 'function')).toBe(true)
+    expect(st.every((n) => n.ref === undefined), 'a static cell carries no ref: its key is itself').toBe(true)
+    expect(new Set(st.map((n) => n.text)).size, 'the 298 static strings are distinct (a duplicate would be one key for two cells)').toBe(298)
+  })
+
+  it('the pool shapes the pick walks are unchanged: 105 photo / condition cells, 73 travel scraps, 5 coach lines, 324 week notes', () => {
+    expect([DIARY_POOL.length, TRAVEL_NOTES.length, COACH_TRIP_NOTES.length, WEEK_NOTES.length]).toEqual([105, 73, 5, 324])
   })
 })

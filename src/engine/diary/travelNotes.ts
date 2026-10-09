@@ -9,7 +9,9 @@
 //
 // ⚠ RNG: `travelNoteFor` picks on a PURPOSE-SCOPED sub-stream from the passed seed, never MAIN.
 import { rngFromSeed } from '../rng'
-import { road, air, inCar, longWay, shortHop, asleep, awake, ordinary, plainLoss, familyHomeVoice, independentVoice } from './words'
+// ⭐ L3-4 (10.10): the scrap's lines ride the snapshot as CopyRefs beside the English (docs/specs/i18n-2026-10.md §8, row L3-4).
+import { cp } from '../../shared/i18n'
+import { road, air, inCar, longWay, shortHop, asleep, awake, ordinary, plainLoss, familyHomeVoice, independentVoice, type DiaryLine } from './words'
 import type { TravelHomeFacts } from './travelHome'
 
 // ⚠ R2-18: `familyHomeVoice` / `independentVoice` WERE THE THIRD COPY of one age rule, kept
@@ -624,17 +626,23 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
  *  that is now a CLAIM the week may not carry – the Local Open sends her home too, and it is not a
  *  long way (see the `longWay` claim). The replacement asserts only that she went and came back,
  *  which is the definition of the week this function is reached on. */
-export function travelNoteFor(travel: TravelHomeFacts, seed: string): string {
+export function travelNoteLine(travel: TravelHomeFacts, seed: string): DiaryLine {
   const eligible = TRAVEL_NOTES.filter((n) => n.license(travel))
   const birthday = eligible.filter((n) => n.claims.birthday)
   const pool = birthday.length > 0 ? birthday : eligible
   if (pool.length === 0) {
     return independentVoice(travel)
-      ? 'There and back. A message when she got in, then silence.'
-      : 'There and back, and the bag is by the door again.'
+      ? { text: 'There and back. A message when she got in, then silence.', c: cp`There and back. A message when she got in, then silence.` }
+      : { text: 'There and back, and the bag is by the door again.', c: cp`There and back, and the bag is by the door again.` }
   }
   const rng = rngFromSeed(`${seed}:travelnote:${travel.week}`)
-  return pool[Math.floor(rng() * pool.length)].text
+  const pick = pool[Math.floor(rng() * pool.length)]
+  return { text: pick.text, c: { k: pick.text } }
+}
+
+/** The English alone – the old signature, for every caller that wants no ref. */
+export function travelNoteFor(travel: TravelHomeFacts, seed: string): string {
+  return travelNoteLine(travel, seed).text
 }
 
 /** ⭐ ROUND-21 #2 – THE COACH WENT TOO, in the parent's hand and on every trip he came on.
@@ -656,7 +664,7 @@ export function travelNoteFor(travel: TravelHomeFacts, seed: string): string {
  *
  * Drawn off `seed:coachtrip:<week>` – its own purpose-scoped sub-stream, stable for the whole week,
  * ZERO MAIN draws, exactly like the pool above. */
-const COACH_TRIP_NOTES: readonly string[] = [
+export const COACH_TRIP_NOTES: readonly string[] = [
   'Her coach came with us, and she looked over at the chair after every game.',
   'Her coach was there all week, and she came off court to somebody waiting.',
   'We paid for the second seat and she used it – a word at every change of ends.',
@@ -664,7 +672,13 @@ const COACH_TRIP_NOTES: readonly string[] = [
   'The coach was in the row behind us all week, and she knew it without looking.',
 ]
 
-export function coachTripNoteFor(week: number, seed: string): string {
+export function coachTripNoteLine(week: number, seed: string): DiaryLine {
   const rng = rngFromSeed(`${seed}:coachtrip:${week}`)
-  return COACH_TRIP_NOTES[Math.floor(rng() * COACH_TRIP_NOTES.length)]
+  const pick = COACH_TRIP_NOTES[Math.floor(rng() * COACH_TRIP_NOTES.length)]
+  return { text: pick, c: { k: pick } }
+}
+
+/** The English alone – the old signature. */
+export function coachTripNoteFor(week: number, seed: string): string {
+  return coachTripNoteLine(week, seed).text
 }

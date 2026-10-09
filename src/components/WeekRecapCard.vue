@@ -625,6 +625,15 @@ const flavorText = computed(() => {
 const noteText = computed(
   () => game.snapshot?.diary.travelNote ?? game.snapshot?.diary.weekNote ?? flavorText.value,
 )
+/** ⭐ L3-4 (10.10): THE SCRAP IS DRAWN FROM ITS REF. `noteText` above stays the ENGLISH chain (it decides whether the scrap exists and which hand wrote it); this follows the SAME
+ *  priority and shows the prose hand's CopyRef through `eventText` – the diary is class (b), assembled at snapshot time, `travelNoteC` / `weekNoteC` beside the English. The ledger
+ *  fragment (the third hand) is the card's own flavour text and prints as it always did. */
+const noteShown = computed(() => {
+  const d = game.snapshot?.diary
+  if (d?.travelNote != null) return eventText({ text: d.travelNote, c: d.travelNoteC })
+  if (d?.weekNote != null) return eventText({ text: d.weekNote, c: d.weekNoteC })
+  return noteText.value
+})
 /** Which hand wrote it – the two prose notes are a sentence and take the smaller type; the ledger
  *  fragment is 24 characters and keeps the scrap's own 23px. See the `--travel` rule in the style
  *  block for the measurement. */
@@ -635,6 +644,11 @@ const noteIsProse = computed(
  *  `DiarySnapshot.coachNote` – it is non-null on exactly the trips the family paid a second fare
  *  for, so it says he came every time and never when he did not. */
 const coachNote = computed(() => game.snapshot?.diary.coachNote ?? null)
+/** ⭐ L3-4: ...and the fourth hand, drawn from its ref (`coachNoteC`). */
+const coachNoteShown = computed(() => {
+  const d = game.snapshot?.diary
+  return d?.coachNote != null ? eventText({ text: d.coachNote, c: d.coachNoteC }) : null
+})
 
 
 // --- MOOD (D's third card) -----------------------------------------------------------------------
@@ -815,7 +829,7 @@ const practiceWeekLabel = computed(() => weekLabel(week.value, startYear.value))
       torn
       margin-rule
     >
-      <p class="recap-note-text">{{ noteText }}</p>
+      <p class="recap-note-text">{{ noteShown }}</p>
       <!-- ⭐ ROUND-21 #2 – AND HE WAS THERE, in the week's story. The owner's third ask names the
            three surfaces presence has to reach, and this is the week's-story one. His words in full
            are in tests/component/round21-coach-travel.test.ts - THIS IS A TEMPLATE and
@@ -824,7 +838,7 @@ const practiceWeekLabel = computed(() => weekLabel(week.value, startYear.value))
            story and must not be displaced by a fact about who came - so this is added under it, on
            exactly the weeks the engine says he travelled (`diary.coachNote`, null on every other
            week including every trip he stayed home for). -->
-      <p v-if="coachNote" class="recap-note-text recap-note-coach">{{ coachNote }}</p>
+      <p v-if="coachNote" class="recap-note-text recap-note-coach">{{ coachNoteShown }}</p>
       <svg class="recap-doodle" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
         <path d="M12 20.2s-7.4-4.6-7.4-9.5A4.1 4.1 0 0 1 12 8.4a4.1 4.1 0 0 1 7.4 2.3c0 4.9-7.4 9.5-7.4 9.5z" />
       </svg>

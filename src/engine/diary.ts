@@ -66,11 +66,11 @@ import {
   fundsPressureOf,
   diaryLifeStageFor,
 } from './diary/facts'
-import { TRAVEL_NOTES, travelNoteFor, coachTripNoteFor } from './diary/travelNotes'
-export { TRAVEL_NOTES, travelNoteFor, coachTripNoteFor }
+import { TRAVEL_NOTES, COACH_TRIP_NOTES, travelNoteFor, travelNoteLine, coachTripNoteFor, coachTripNoteLine } from './diary/travelNotes'
+export { TRAVEL_NOTES, COACH_TRIP_NOTES, travelNoteFor, travelNoteLine, coachTripNoteFor, coachTripNoteLine }
 export type { TravelClaims, TravelNote } from './diary/travelNotes'
-import { WEEK_NOTE_GRIND, WEEK_NOTE_LIGHT, WEEK_NOTE_CHANCE, WEEK_NOTES, BEREAVED_WEEKS, DIVORCED_WEEKS, weekNoteFor } from './diary/weekNotes'
-export { WEEK_NOTE_GRIND, WEEK_NOTE_LIGHT, WEEK_NOTE_CHANCE, WEEK_NOTES, BEREAVED_WEEKS, DIVORCED_WEEKS, weekNoteFor }
+import { WEEK_NOTE_GRIND, WEEK_NOTE_LIGHT, WEEK_NOTE_CHANCE, WEEK_NOTES, BEREAVED_WEEKS, DIVORCED_WEEKS, weekNoteFor, weekNoteLine } from './diary/weekNotes'
+export { WEEK_NOTE_GRIND, WEEK_NOTE_LIGHT, WEEK_NOTE_CHANCE, WEEK_NOTES, BEREAVED_WEEKS, DIVORCED_WEEKS, weekNoteFor, weekNoteLine }
 export type { WeekClaims, WeekNote } from './diary/weekNotes'
 import { DIARY_POOL, diaryLine, diaryLinePair } from './diary/pool'
 export { DIARY_POOL, diaryLine, diaryLinePair }
@@ -750,6 +750,10 @@ export function buildDiarySnapshot(view: DiaryWorldView): DiarySnapshot {
     pendingUnfinished: view.pendingUnfinished,
   })
   const conditionC = condition ? condition.c : CONDITION_FALLBACK_REF
+  // ⭐ L3-4: the scrap's three authors each come from ONE pick too (travelNoteLine / coachTripNoteLine / weekNoteLine) – the same sub-streams, the same draws.
+  const travel = travelHome ? travelNoteLine(travelHome, view.seed) : null
+  const coach = travelHome && view.coachTravelled ? coachTripNoteLine(view.week, view.seed) : null
+  const weekNote = weekNoteLine(facts, view.seed)
   return {
     facts,
     photoLine,
@@ -770,16 +774,19 @@ export function buildDiarySnapshot(view: DiaryWorldView): DiarySnapshot {
       stage: portraitStage(view.ageYears),
       vacationPackageId: view.vacationPackageId ?? null,
     }),
-    travelNote: travelHome ? travelNoteFor(travelHome, view.seed) : null,
+    travelNote: travel?.text ?? null,
+    ...(travel?.c ? { travelNoteC: travel.c } : {}),
     // ⭐ ROUND-21 #2: ...and whether the coach was on the trip. Gated on `travelHome` for the same
     // reason `travelNote` is – this is the caption of the journey painting, so it only exists on the
     // weeks that painting does – and on the engine's own `coachTravelsWithHer`, carried on the view
     // rather than re-derived, so the flow, the commentary and this scrap describe the same trip.
-    coachNote: travelHome && view.coachTravelled ? coachTripNoteFor(view.week, view.seed) : null,
+    coachNote: coach?.text ?? null,
+    ...(coach?.c ? { coachNoteC: coach.c } : {}),
     // W2: the other author of the same scrap. The two can never both speak – `weekNoteFor`'s own
     // `notTravellingWeek` licence reads `facts.travelHomeScene`, which is non-null on exactly the weeks
     // `travelHome` is – so this is one object with two writers rather than two notes.
-    weekNote: weekNoteFor(facts, view.seed),
+    weekNote: weekNote?.text ?? null,
+    ...(weekNote?.c ? { weekNoteC: weekNote.c } : {}),
     // The licences cover every state the engine can produce (the coverage sweep in
     // tests/diary.test.ts proves it); the fallback is a sentence that is true of any week at all.
     conditionNote: condition?.text ?? CONDITION_FALLBACK,

@@ -16,6 +16,7 @@ import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import HomeScreen from '../../src/components/screens/HomeScreen.vue'
 import BirthdayDialog from '../../src/components/BirthdayDialog.vue'
+import WeekRecapCard from '../../src/components/WeekRecapCard.vue'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, decideKnock, pendingBirthday, pendingKnock, tickWeek, toSnapshot } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
@@ -189,6 +190,65 @@ describe('L3-4 – the birthday dialog draws the prompt through its refs', () =>
     await nextTick()
     expect(w.get('.birthday-ask').text()).toBe('ASK*')
     expect(w.get('button.birthday-choice').attributes('aria-checked')).toBe('true')
+    w.unmount()
+  })
+})
+
+describe('L3-4 – the week recap\'s scrap draws the journey note, the week note and the coach note through their refs', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+    resetI18nForTests()
+  })
+
+  const openRecap = (over: Partial<Snapshot['diary']>) => {
+    const snap = base()
+    useGameStore().$patch({ snapshot: { ...snap, diary: { ...snap.diary, ...over } } as Snapshot })
+    return mount(WeekRecapCard, { global: { stubs: { teleport: true } }, attachTo: document.body })
+  }
+  const scrap = (w: ReturnType<typeof openRecap>): string => (w.find('.recap-note-text:not(.recap-note-coach)').element?.textContent ?? '').trim()
+  const coach = (w: ReturnType<typeof openRecap>): string => (w.find('.recap-note-coach').element?.textContent ?? '').trim()
+
+  const TRIP = { travelNote: 'A fixture trip.', travelNoteC: { k: 'fixture trip {0}', p: ['one'] }, weekNote: null, coachNote: 'A fixture coach.', coachNoteC: { k: 'fixture coach' } }
+  const WEEK = { travelNote: null, weekNote: 'A fixture week.', weekNoteC: { k: 'fixture week' }, coachNote: null }
+  const CATALOG_RU = { 'fixture trip {0}': 'TRIP* {0}', 'fixture week': 'WEEK*', 'fixture coach': 'COACH*' }
+
+  it('English: the journey note and the coach note read as the sentence their refs spell', () => {
+    const w = openRecap(TRIP)
+    expect(scrap(w)).toBe('fixture trip one')
+    expect(coach(w)).toBe('fixture coach')
+    w.unmount()
+  })
+
+  it('Russian with a catalog: the translation of each ref is drawn, never the English beside it', async () => {
+    installCatalog('ru', CATALOG_RU)
+    await setLocale('ru')
+    const w = openRecap(TRIP)
+    await nextTick()
+    expect(scrap(w)).toBe('TRIP* one')
+    expect(coach(w)).toBe('COACH*')
+    expect(w.text()).not.toContain('A fixture trip.')
+    w.unmount()
+  })
+
+  it('on a week with no journey the week note takes the scrap, drawn from ITS ref – and the journey note outranks it when both exist', async () => {
+    installCatalog('ru', CATALOG_RU)
+    await setLocale('ru')
+    const w = openRecap(WEEK)
+    await nextTick()
+    expect(scrap(w)).toBe('WEEK*')
+    w.unmount()
+    document.body.innerHTML = ''
+    const both = openRecap({ ...TRIP, weekNote: 'A fixture week.', weekNoteC: { k: 'fixture week' } })
+    await nextTick()
+    expect(scrap(both), 'travelNote ?? weekNote, as ever').toBe('TRIP* one')
+    both.unmount()
+  })
+
+  it('with no prose hand and no coach the card prints no diary sentence at all (the ledger fragment, when the week has one, is the card\'s own flavour text)', () => {
+    const w = openRecap({ travelNote: null, weekNote: null, coachNote: null })
+    expect(w.find('.recap-note-coach').exists()).toBe(false)
+    expect(w.text()).not.toContain('fixture')
     w.unmount()
   })
 })

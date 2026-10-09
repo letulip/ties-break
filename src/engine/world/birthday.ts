@@ -1849,7 +1849,7 @@ export function buildBirthdayPrompt(world: WorldState): BirthdayPrompt | null {
   // the function that chooses the four. It reaches only the strings.
   const means = familyMeans(world)
   // ⭐ L3-4 (10.10): the heading, the ask and the four rows each carry their key beside the English. The ask's ref is the key of the sentence printed and NOTHING ELSE – it names no
-  // option and marks none (the 11.08 rule: «не помечай, пусть игрок читает»), and `askedId` is still not on the wire.
+  // option and marks none (the owner's 11.08 rule: do not mark it, let the player read), and `askedId` is still not on the wire.
   const heading = birthdayHeadingLine(world.seed, age)
   const ask = birthdayWords(asked, means).ask
   return {

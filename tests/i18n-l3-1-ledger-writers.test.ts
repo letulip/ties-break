@@ -352,6 +352,8 @@ const DYNAMIC_SEATS: Record<string, number> = {
   // corpora and walks every cell), not the frozen table's – no old save holds a diary line.
   'src/engine/diary/pool.ts': 1, // diaryLinePair – a static photo / condition cell
   'src/engine/diary.ts': 1, // debutLine – the four opening-week memory lines
+  'src/engine/diary/weekNotes.ts': 1, // weekNoteLine – a static week note (part 2)
+  'src/engine/diary/travelNotes.ts': 2, // travelNoteLine – a static travel scrap; coachTripNoteLine – the coach's five lines (part 2)
   'src/engine/world/birthday.ts': 4, // the gift row's label and note, the ask, and the label nested in the gift event row
 }
 
@@ -456,8 +458,9 @@ describe('§2 text / c pairs', () => {
     // + 27 (L3-3): fieldNews 3, the champion lines 2 (tournamentClose, phaseAiWeek), milestones 4, the academy 5, the shoot notes 2, the first kept row, the calendar row, the birthday row,
     //   the spirit feed 3, the briefing's five cost lines 5 – the rows that carry `c` by a SPREAD (the campus digest, the kid-match and retirement rows) are not pairs, they are §4/§5 here
     //   and l3-3 §2's.
-    // + 20 (L3-4): the eighteen birthday heading lines, the gift event row, and `diaryLinePair`'s static pick (`{ text: pick.text, c: { k: pick.text } }`)
-    expect(all.length, 'pairs of text + c in src/engine').toBe(131)
+    // + 20 (L3-4, part 1): the eighteen birthday heading lines, the gift event row, and `diaryLinePair`'s static pick (`{ text: pick.text, c: { k: pick.text } }`)
+    // + 4 (L3-4, part 2): the travel scrap's two fallback sentences and its static pick, and the coach's pick (`weekNoteLine` returns `{ text, c: { k: text } }` by SHORTHAND – not a pair here)
+    expect(all.length, 'pairs of text + c in src/engine').toBe(135)
   })
 
   it('every pair expands to the SAME sentences – each branch, each inlined ternary, the same holes in the same order – or is announced', () => {
