@@ -1,0 +1,1621 @@
+{
+ "entry/confirmed": {
+  "blocks": [
+   "Your entry for the Lakeside Open is confirmed – she is in the draw for Dec 22–28, 2036.",
+   "She is expected on court that week.",
+   "Withdrawal is free until the end of W47 '36 – the entry fee comes back and the year's entry is returned.",
+   "After that the tournament's rules apply – the tour records late withdrawals and absences.",
+   "– Tournament desk",
+   "Filed W41 '36."
+  ],
+  "text": "Your entry for the Lakeside Open is confirmed – she is in the draw for Dec 22–28, 2036. She is expected on court that week. Withdrawal is free until the end of W47 '36 – the entry fee comes back and the year's entry is returned. After that the tournament's rules apply – the tour records late withdrawals and absences.– Tournament deskFiled W41 '36."
+ },
+ "entry/withdrew": {
+  "blocks": [
+   "Your withdrawal from the Lakeside Open (Dec 22–28, 2036) is confirmed – in time, free of charge, and nothing is recorded against her. The entry fee is on its way back.",
+   "– Tournament desk",
+   "Filed W41 '36."
+  ],
+  "text": "Your withdrawal from the Lakeside Open (Dec 22–28, 2036) is confirmed – in time, free of charge, and nothing is recorded against her. The entry fee is on its way back. – Tournament deskFiled W41 '36."
+ },
+ "entry/released-injury": {
+  "blocks": [
+   "We have taken her name off the entry list for the Lakeside Open (Dec 22–28, 2036). She is not fit to play that week, and our list closes before she is due back on court – so rather than leave her in a draw she cannot make, we have withdrawn her ourselves.",
+   "The entry fee is refunded in full, and the year's entry is returned.",
+   "This is our decision, not hers – nothing is recorded against her.",
+   "Her place goes to the next name on the list. We hope to see her back soon.",
+   "– Tournament desk",
+   "Filed W41 '36."
+  ],
+  "text": "We have taken her name off the entry list for the Lakeside Open (Dec 22–28, 2036). She is not fit to play that week, and our list closes before she is due back on court – so rather than leave her in a draw she cannot make, we have withdrawn her ourselves. The entry fee is refunded in full, and the year's entry is returned.This is our decision, not hers – nothing is recorded against her.Her place goes to the next name on the list. We hope to see her back soon.– Tournament deskFiled W41 '36."
+ },
+ "entry/released-college": {
+  "blocks": [
+   "We have taken her name off the entry list for the Lakeside Open (Dec 22–28, 2036). She has accepted a college place, so she is off the tour for the next few years – rather than hold a spot she cannot travel to, we have released her ourselves.",
+   "The entry fee is refunded in full, and the year's entry is returned.",
+   "Nothing is recorded against her – this is not a withdrawal, and there is no charge.",
+   "Her name comes back on the list the day she wants it there. Good luck at school.",
+   "– Tournament desk",
+   "Filed W41 '36."
+  ],
+  "text": "We have taken her name off the entry list for the Lakeside Open (Dec 22–28, 2036). She has accepted a college place, so she is off the tour for the next few years – rather than hold a spot she cannot travel to, we have released her ourselves. The entry fee is refunded in full, and the year's entry is returned.Nothing is recorded against her – this is not a withdrawal, and there is no charge.Her name comes back on the list the day she wants it there. Good luck at school.– Tournament deskFiled W41 '36."
+ },
+ "entry/released-other": {
+  "blocks": [
+   "We have taken her name off the entry list for the Lakeside Open (Dec 22–28, 2036). This is our decision, not hers, and the entry fee is refunded in full.",
+   "– Tournament desk",
+   "Filed W41 '36."
+  ],
+  "text": "We have taken her name off the entry list for the Lakeside Open (Dec 22–28, 2036). This is our decision, not hers, and the entry fee is refunded in full. – Tournament deskFiled W41 '36."
+ },
+ "tour/due": {
+  "blocks": [
+   "The World Tour 500 Alpha (Dec 22–28, 2036) is a required event at her current ranking, and entries close at the end of W47 '36.",
+   "She is on the required list for this one – the top 50 play the majors, the 1000s and six 500s.",
+   "Not entering costs 3 penalty points and a zero in one counted slot.",
+   "Entering and then withdrawing after the list closes costs more; not appearing costs most.",
+   "– Tour office",
+   "Filed W41 '36."
+  ],
+  "text": "The World Tour 500 Alpha (Dec 22–28, 2036) is a required event at her current ranking, and entries close at the end of W47 '36. She is on the required list for this one – the top 50 play the majors, the 1000s and six 500s.Not entering costs 3 penalty points and a zero in one counted slot.Entering and then withdrawing after the list closes costs more; not appearing costs most.– Tour officeFiled W41 '36."
+ },
+ "tour/penalty-1-label": {
+  "blocks": [
+   "1 penalty point has been recorded for the World Tour 500 Alpha.",
+   "Her total is 4 of 10 over the last 52 weeks.",
+   "Points fall out of that window on their own as the year moves.",
+   "At 10 the tour suspends entries for four weeks.",
+   "– Tour office",
+   "Filed W41 '36."
+  ],
+  "text": "1 penalty point has been recorded for the World Tour 500 Alpha. Her total is 4 of 10 over the last 52 weeks.Points fall out of that window on their own as the year moves.At 10 the tour suspends entries for four weeks.– Tour officeFiled W41 '36."
+ },
+ "tour/penalty-1-nolabel": {
+  "blocks": [
+   "1 penalty point has been recorded against this season's required 500-level events.",
+   "Her total is 4 of 10 over the last 52 weeks.",
+   "Points fall out of that window on their own as the year moves.",
+   "At 10 the tour suspends entries for four weeks.",
+   "– Tour office",
+   "Filed W41 '36."
+  ],
+  "text": "1 penalty point has been recorded against this season's required 500-level events. Her total is 4 of 10 over the last 52 weeks.Points fall out of that window on their own as the year moves.At 10 the tour suspends entries for four weeks.– Tour officeFiled W41 '36."
+ },
+ "tour/penalty-3-label": {
+  "blocks": [
+   "3 penalty points have been recorded for the World Tour 500 Alpha.",
+   "Her total is 4 of 10 over the last 52 weeks.",
+   "Points fall out of that window on their own as the year moves.",
+   "At 10 the tour suspends entries for four weeks.",
+   "– Tour office",
+   "Filed W41 '36."
+  ],
+  "text": "3 penalty points have been recorded for the World Tour 500 Alpha. Her total is 4 of 10 over the last 52 weeks.Points fall out of that window on their own as the year moves.At 10 the tour suspends entries for four weeks.– Tour officeFiled W41 '36."
+ },
+ "tour/penalty-3-nolabel": {
+  "blocks": [
+   "3 penalty points have been recorded against this season's required 500-level events.",
+   "Her total is 4 of 10 over the last 52 weeks.",
+   "Points fall out of that window on their own as the year moves.",
+   "At 10 the tour suspends entries for four weeks.",
+   "– Tour office",
+   "Filed W41 '36."
+  ],
+  "text": "3 penalty points have been recorded against this season's required 500-level events. Her total is 4 of 10 over the last 52 weeks.Points fall out of that window on their own as the year moves.At 10 the tour suspends entries for four weeks.– Tour officeFiled W41 '36."
+ },
+ "tour/season": {
+  "blocks": [
+   "Her ranking is inside the top 50, so the season ahead is a required one. These are the events the tour asks her for.",
+   "All 4 Grand Slams",
+   "All 8 World Tour 1000s",
+   "6 of the 10 World Tour 500s",
+   "Not entering one costs 3 penalty points and a zero in one of her 18 counting results.",
+   "10 points inside 52 weeks suspends entries for 4 weeks. Nothing is owed for a week she could not play.",
+   "– Tour office",
+   "Filed W41 '36."
+  ],
+  "text": "Her ranking is inside the top 50, so the season ahead is a required one. These are the events the tour asks her for. All 4 Grand SlamsAll 8 World Tour 1000s6 of the 10 World Tour 500s Not entering one costs 3 penalty points and a zero in one of her 18 counting results. 10 points inside 52 weeks suspends entries for 4 weeks. Nothing is owed for a week she could not play. – Tour officeFiled W41 '36."
+ },
+ "tour/season-one-and-unknown": {
+  "blocks": [
+   "Her ranking is inside the top 50, so the season ahead is a required one. These are the events the tour asks her for.",
+   "All 1 Grand Slam",
+   "Whatever a later rule says",
+   "Not entering one costs 3 penalty points and a zero in one of her 18 counting results.",
+   "10 points inside 52 weeks suspends entries for 4 weeks. Nothing is owed for a week she could not play.",
+   "– Tour office",
+   "Filed W41 '36."
+  ],
+  "text": "Her ranking is inside the top 50, so the season ahead is a required one. These are the events the tour asks her for. All 1 Grand SlamWhatever a later rule says Not entering one costs 3 penalty points and a zero in one of her 18 counting results. 10 points inside 52 weeks suspends entries for 4 weeks. Nothing is owed for a week she could not play. – Tour officeFiled W41 '36."
+ },
+ "tour/suspension": {
+  "blocks": [
+   "Entries are suspended through W9 '37 – 11 penalty points inside 52 weeks.",
+   "She may train and travel; she may not enter a tournament until that week has passed.",
+   "Her ranking, her points and her place on every entry list are exactly where she left them – the weeks are the whole price, and there is no fine on top.",
+   "– Tour office",
+   "Filed W41 '36."
+  ],
+  "text": "Entries are suspended through W9 '37 – 11 penalty points inside 52 weeks. She may train and travel; she may not enter a tournament until that week has passed. Her ranking, her points and her place on every entry list are exactly where she left them – the weeks are the whole price, and there is no fine on top. – Tour officeFiled W41 '36."
+ },
+ "academy/arrived-grant": {
+  "blocks": [
+   "We have been watching her play, and we would like to take her on. From here we pay 30% of what it costs to get her to tournaments – the fares and the nights away, on every trip she makes.",
+   "30% comes off each travel bill as it is charged, so there is nothing to claim back.",
+   "A kit grant of $1,500 comes with this – rackets, strings and shoes for the season.",
+   "We look at it again at the end of each season, and the share moves with her year.",
+   "– The academy",
+   "Filed W41 '36."
+  ],
+  "text": "We have been watching her play, and we would like to take her on. From here we pay 30% of what it costs to get her to tournaments – the fares and the nights away, on every trip she makes. 30% comes off each travel bill as it is charged, so there is nothing to claim back. A kit grant of $1,500 comes with this – rackets, strings and shoes for the season. We look at it again at the end of each season, and the share moves with her year.– The academyFiled W41 '36."
+ },
+ "academy/arrived-nogrant": {
+  "blocks": [
+   "We have been watching her play, and we would like to take her on. From here we pay 30% of what it costs to get her to tournaments – the fares and the nights away, on every trip she makes.",
+   "30% comes off each travel bill as it is charged, so there is nothing to claim back.",
+   "We look at it again at the end of each season, and the share moves with her year.",
+   "– The academy",
+   "Filed W41 '36."
+  ],
+  "text": "We have been watching her play, and we would like to take her on. From here we pay 30% of what it costs to get her to tournaments – the fares and the nights away, on every trip she makes. 30% comes off each travel bill as it is charged, so there is nothing to claim back.We look at it again at the end of each season, and the share moves with her year.– The academyFiled W41 '36."
+ },
+ "academy/reviewed-up-grant": {
+  "blocks": [
+   "We have read her season. From this year our share of her travel goes up to 40%, from 30%.",
+   "We have backed her since W45 '34, and this carries that on.",
+   "This year's kit grant is $1,500.",
+   "The next look is at the end of the coming season.",
+   "– The academy",
+   "Filed W41 '36."
+  ],
+  "text": "We have read her season. From this year our share of her travel goes up to 40%, from 30%. We have backed her since W45 '34, and this carries that on. This year's kit grant is $1,500. The next look is at the end of the coming season.– The academyFiled W41 '36."
+ },
+ "academy/reviewed-down": {
+  "blocks": [
+   "We have read her season. From this year our share of her travel comes down to 20%, from 30%.",
+   "We have backed her since W45 '34, and this carries that on.",
+   "The next look is at the end of the coming season.",
+   "– The academy",
+   "Filed W41 '36."
+  ],
+  "text": "We have read her season. From this year our share of her travel comes down to 20%, from 30%. We have backed her since W45 '34, and this carries that on.The next look is at the end of the coming season.– The academyFiled W41 '36."
+ },
+ "academy/ended-aged-out": {
+  "blocks": [
+   "Our programme is a junior one and she has grown out of the age we can fund, so this is where our part of it finishes. She was ours for a good stretch of it.",
+   "We backed her from W45 '34 to W41 '36.",
+   "The kit she has is hers, and from here her travel is the family's again.",
+   "If her tennis brings her back to us, our list is open every off-season.",
+   "– The academy",
+   "Filed W41 '36."
+  ],
+  "text": "Our programme is a junior one and she has grown out of the age we can fund, so this is where our part of it finishes. She was ours for a good stretch of it.We backed her from W45 '34 to W41 '36.The kit she has is hers, and from here her travel is the family's again.If her tennis brings her back to us, our list is open every off-season.– The academyFiled W41 '36."
+ },
+ "academy/ended-stopped-playing": {
+  "blocks": [
+   "What we fund is a player who is out competing, and this year there were too few tournaments behind her for us to carry it on.",
+   "We backed her from W45 '34 to W41 '36.",
+   "The kit she has is hers, and from here her travel is the family's again.",
+   "If her tennis brings her back to us, our list is open every off-season.",
+   "– The academy",
+   "Filed W41 '36."
+  ],
+  "text": "What we fund is a player who is out competing, and this year there were too few tournaments behind her for us to carry it on.We backed her from W45 '34 to W41 '36.The kit she has is hers, and from here her travel is the family's again.If her tennis brings her back to us, our list is open every off-season.– The academyFiled W41 '36."
+ },
+ "academy/ended-other": {
+  "blocks": [
+   "We have read her year and we are not able to go on backing her through the next one. It is a decision about our list rather than about her.",
+   "We backed her from W45 '34 to W41 '36.",
+   "The kit she has is hers, and from here her travel is the family's again.",
+   "If her tennis brings her back to us, our list is open every off-season.",
+   "– The academy",
+   "Filed W41 '36."
+  ],
+  "text": "We have read her year and we are not able to go on backing her through the next one. It is a decision about our list rather than about her.We backed her from W45 '34 to W41 '36.The kit she has is hers, and from here her travel is the family's again.If her tennis brings her back to us, our list is open every off-season.– The academyFiled W41 '36."
+ },
+ "staff/coach-full": {
+  "blocks": [
+   "That is the season done. I have been with her 41 of its weeks, and this is what I have to say about them before we start the next one.",
+   "35 matches, 24 of them won and 11 lost.",
+   "Her deepest run of the year finished at Runner-up.",
+   "She ends the year at Professional #31.",
+   "Working with her has got easier as the year went on, and I say that as somebody who has been wrong about it before.",
+   "– Her coach",
+   "Filed W41 '36."
+  ],
+  "text": "That is the season done. I have been with her 41 of its weeks, and this is what I have to say about them before we start the next one. 35 matches, 24 of them won and 11 lost. Her deepest run of the year finished at Runner-up. She ends the year at Professional #31.Working with her has got easier as the year went on, and I say that as somebody who has been wrong about it before.– Her coachFiled W41 '36."
+ },
+ "staff/coach-1-title-negchem": {
+  "blocks": [
+   "That is the season done. I have been with her 41 of its weeks, and this is what I have to say about them before we start the next one.",
+   "35 matches, 24 of them won and 11 lost.",
+   "Her deepest run of the year finished at Champion, and she took 1 title home.",
+   "She ends the year at Professional #31.",
+   "I will say the other part too: she and I have not found an easy way of working yet, and a year is long enough that I notice it.",
+   "– Her coach",
+   "Filed W41 '36."
+  ],
+  "text": "That is the season done. I have been with her 41 of its weeks, and this is what I have to say about them before we start the next one. 35 matches, 24 of them won and 11 lost. Her deepest run of the year finished at Champion, and she took 1 title home. She ends the year at Professional #31.I will say the other part too: she and I have not found an easy way of working yet, and a year is long enough that I notice it.– Her coachFiled W41 '36."
+ },
+ "staff/coach-titles-2": {
+  "blocks": [
+   "That is the season done. I have been with her 41 of its weeks, and this is what I have to say about them before we start the next one.",
+   "35 matches, 30 of them won and 5 lost.",
+   "Her deepest run of the year finished at Champion, and she took 2 titles home.",
+   "– Her coach",
+   "Filed W41 '36."
+  ],
+  "text": "That is the season done. I have been with her 41 of its weeks, and this is what I have to say about them before we start the next one. 35 matches, 30 of them won and 5 lost. Her deepest run of the year finished at Champion, and she took 2 titles home. – Her coachFiled W41 '36."
+ },
+ "staff/coach-deep-round": {
+  "blocks": [
+   "That is the season done. I have been with her 41 of its weeks, and this is what I have to say about them before we start the next one.",
+   "12 matches, 3 of them won and 9 lost.",
+   "Her deepest run of the year finished at Round of 32.",
+   "– Her coach",
+   "Filed W41 '36."
+  ],
+  "text": "That is the season done. I have been with her 41 of its weeks, and this is what I have to say about them before we start the next one. 12 matches, 3 of them won and 9 lost. Her deepest run of the year finished at Round of 32. – Her coachFiled W41 '36."
+ },
+ "staff/coach-no-finish": {
+  "blocks": [
+   "That is the season done. I have been with her 41 of its weeks, and this is what I have to say about them before we start the next one.",
+   "4 matches, 0 of them won and 4 lost.",
+   "No run this year finished deep enough to score, which is a sentence about the draws as much as about her.",
+   "– Her coach",
+   "Filed W41 '36."
+  ],
+  "text": "That is the season done. I have been with her 41 of its weeks, and this is what I have to say about them before we start the next one. 4 matches, 0 of them won and 4 lost. No run this year finished deep enough to score, which is a sentence about the draws as much as about her. – Her coachFiled W41 '36."
+ },
+ "staff/coach-bare": {
+  "blocks": [
+   "That is the season done. I have been with her 41 of its weeks, and this is what I have to say about them before we start the next one.",
+   "– Her coach",
+   "Filed W41 '36."
+  ],
+  "text": "That is the season done. I have been with her 41 of its weeks, and this is what I have to say about them before we start the next one. – Her coachFiled W41 '36."
+ },
+ "staff/masseur-1-1": {
+  "blocks": [
+   "A note on the year from the table. I have had her 41 weeks of this season.",
+   "She came to me hurt 1 time this year, and between us we took 1 week off the time she was going to be out.",
+   "Rest is the half of this nobody sends a bill for. She still needs it in the weeks she feels fine.",
+   "– Her masseur",
+   "Filed W41 '36."
+  ],
+  "text": "A note on the year from the table. I have had her 41 weeks of this season. She came to me hurt 1 time this year, and between us we took 1 week off the time she was going to be out. Rest is the half of this nobody sends a bill for. She still needs it in the weeks she feels fine.– Her masseurFiled W41 '36."
+ },
+ "staff/masseur-1-3": {
+  "blocks": [
+   "A note on the year from the table. I have had her 41 weeks of this season.",
+   "She came to me hurt 1 time this year, and between us we took 3 weeks off the time she was going to be out.",
+   "Rest is the half of this nobody sends a bill for. She still needs it in the weeks she feels fine.",
+   "– Her masseur",
+   "Filed W41 '36."
+  ],
+  "text": "A note on the year from the table. I have had her 41 weeks of this season. She came to me hurt 1 time this year, and between us we took 3 weeks off the time she was going to be out. Rest is the half of this nobody sends a bill for. She still needs it in the weeks she feels fine.– Her masseurFiled W41 '36."
+ },
+ "staff/masseur-2-1": {
+  "blocks": [
+   "A note on the year from the table. I have had her 41 weeks of this season.",
+   "She came to me hurt 2 times this year, and between us we took 1 week off the time she was going to be out.",
+   "Rest is the half of this nobody sends a bill for. She still needs it in the weeks she feels fine.",
+   "– Her masseur",
+   "Filed W41 '36."
+  ],
+  "text": "A note on the year from the table. I have had her 41 weeks of this season. She came to me hurt 2 times this year, and between us we took 1 week off the time she was going to be out. Rest is the half of this nobody sends a bill for. She still needs it in the weeks she feels fine.– Her masseurFiled W41 '36."
+ },
+ "staff/masseur-2-5": {
+  "blocks": [
+   "A note on the year from the table. I have had her 41 weeks of this season.",
+   "She came to me hurt 2 times this year, and between us we took 5 weeks off the time she was going to be out.",
+   "Rest is the half of this nobody sends a bill for. She still needs it in the weeks she feels fine.",
+   "– Her masseur",
+   "Filed W41 '36."
+  ],
+  "text": "A note on the year from the table. I have had her 41 weeks of this season. She came to me hurt 2 times this year, and between us we took 5 weeks off the time she was going to be out. Rest is the half of this nobody sends a bill for. She still needs it in the weeks she feels fine.– Her masseurFiled W41 '36."
+ },
+ "staff/masseur-none": {
+  "blocks": [
+   "A note on the year from the table. I have had her 41 weeks of this season.",
+   "She did not lose a week to anything I had to work back this year. That is the year I would pick, and it is not the same thing as a year with nothing in it.",
+   "Rest is the half of this nobody sends a bill for. She still needs it in the weeks she feels fine.",
+   "– Her masseur",
+   "Filed W41 '36."
+  ],
+  "text": "A note on the year from the table. I have had her 41 weeks of this season. She did not lose a week to anything I had to work back this year. That is the year I would pick, and it is not the same thing as a year with nothing in it. Rest is the half of this nobody sends a bill for. She still needs it in the weeks she feels fine.– Her masseurFiled W41 '36."
+ },
+ "staff/psychologist-coolhead": {
+  "blocks": [
+   "The year is over, so here is what I think we did with it. We have had 41 weeks of this season together.",
+   "What we worked on this year was her head in the tight games – the point after a break back, the second serve at 4-5.",
+   "She now stands a little above where her own nature would have left her under pressure. It is slow to build and it goes back down when we stop, which is the honest shape of it.",
+   "Whatever we take on next year, it wants to be one thing. It is a year, not a list.",
+   "– Her psychologist",
+   "Filed W41 '36."
+  ],
+  "text": "The year is over, so here is what I think we did with it. We have had 41 weeks of this season together. What we worked on this year was her head in the tight games – the point after a break back, the second serve at 4-5. She now stands a little above where her own nature would have left her under pressure. It is slow to build and it goes back down when we stop, which is the honest shape of it. Whatever we take on next year, it wants to be one thing. It is a year, not a list.– Her psychologistFiled W41 '36."
+ },
+ "staff/psychologist-recovery": {
+  "blocks": [
+   "The year is over, so here is what I think we did with it. We have had 41 weeks of this season together.",
+   "What we worked on this year was the walk back from the weeks that knocked her over, so that they stayed weeks and did not become a season.",
+   "Whatever we take on next year, it wants to be one thing. It is a year, not a list.",
+   "– Her psychologist",
+   "Filed W41 '36."
+  ],
+  "text": "The year is over, so here is what I think we did with it. We have had 41 weeks of this season together. What we worked on this year was the walk back from the weeks that knocked her over, so that they stayed weeks and did not become a season.Whatever we take on next year, it wants to be one thing. It is a year, not a list.– Her psychologistFiled W41 '36."
+ },
+ "staff/psychologist-listen": {
+  "blocks": [
+   "The year is over, so here is what I think we did with it. We have had 41 weeks of this season together.",
+   "What we worked on this year was as much yours as hers – how to hear what she is telling you before she has the words for it.",
+   "Whatever we take on next year, it wants to be one thing. It is a year, not a list.",
+   "– Her psychologist",
+   "Filed W41 '36."
+  ],
+  "text": "The year is over, so here is what I think we did with it. We have had 41 weeks of this season together. What we worked on this year was as much yours as hers – how to hear what she is telling you before she has the words for it.Whatever we take on next year, it wants to be one thing. It is a year, not a list.– Her psychologistFiled W41 '36."
+ },
+ "staff/psychologist-herself": {
+  "blocks": [
+   "The year is over, so here is what I think we did with it. We have had 41 weeks of this season together.",
+   "What we worked on this year was the part of her that is hers rather than her nature’s – the deliberate work underneath what she was born with.",
+   "Whatever we take on next year, it wants to be one thing. It is a year, not a list.",
+   "– Her psychologist",
+   "Filed W41 '36."
+  ],
+  "text": "The year is over, so here is what I think we did with it. We have had 41 weeks of this season together. What we worked on this year was the part of her that is hers rather than her nature’s – the deliberate work underneath what she was born with.Whatever we take on next year, it wants to be one thing. It is a year, not a list.– Her psychologistFiled W41 '36."
+ },
+ "staff/psychologist-publicLife": {
+  "blocks": [
+   "The year is over, so here is what I think we did with it. We have had 41 weeks of this season together.",
+   "What we worked on this year was being looked at – the weight of the cameras and the strangers, and how to put it down between matches.",
+   "Whatever we take on next year, it wants to be one thing. It is a year, not a list.",
+   "– Her psychologist",
+   "Filed W41 '36."
+  ],
+  "text": "The year is over, so here is what I think we did with it. We have had 41 weeks of this season together. What we worked on this year was being looked at – the weight of the cameras and the strangers, and how to put it down between matches.Whatever we take on next year, it wants to be one thing. It is a year, not a list.– Her psychologistFiled W41 '36."
+ },
+ "staff/psychologist-carried": {
+  "blocks": [
+   "The year is over, so here is what I think we did with it. We have had 41 weeks of this season together.",
+   "We did not choose a new direction this year, so we kept working on the previous one – the one chosen for 2034.",
+   "What we worked on this year was as much yours as hers – how to hear what she is telling you before she has the words for it.",
+   "Whatever we take on next year, it wants to be one thing. It is a year, not a list.",
+   "– Her psychologist",
+   "Filed W41 '36."
+  ],
+  "text": "The year is over, so here is what I think we did with it. We have had 41 weeks of this season together. We did not choose a new direction this year, so we kept working on the previous one – the one chosen for 2034.What we worked on this year was as much yours as hers – how to hear what she is telling you before she has the words for it.Whatever we take on next year, it wants to be one thing. It is a year, not a list.– Her psychologistFiled W41 '36."
+ },
+ "staff/psychologist-nofocus": {
+  "blocks": [
+   "The year is over, so here is what I think we did with it. We have had 41 weeks of this season together.",
+   "We have worked the season through without settling on one thing to carry, which happens and is worth naming rather than tidying away.",
+   "Whatever we take on next year, it wants to be one thing. It is a year, not a list.",
+   "– Her psychologist",
+   "Filed W41 '36."
+  ],
+  "text": "The year is over, so here is what I think we did with it. We have had 41 weeks of this season together. We have worked the season through without settling on one thing to carry, which happens and is worth naming rather than tidying away. Whatever we take on next year, it wants to be one thing. It is a year, not a list.– Her psychologistFiled W41 '36."
+ },
+ "staff/sparring": {
+  "blocks": [
+   "End of the year, so I will say my piece – it is shorter than the others'. I have hit with her 41 weeks of this season.",
+   "The job is the weeks with no tournament in them: match-style practice, so that the quiet stretches do not arrive in her hands the next time she plays for something.",
+   "Nobody keeps a score of that, and I am not going to invent one for a letter. She knows. I know.",
+   "– Her hitting partner",
+   "Filed W41 '36."
+  ],
+  "text": "End of the year, so I will say my piece – it is shorter than the others'. I have hit with her 41 weeks of this season. The job is the weeks with no tournament in them: match-style practice, so that the quiet stretches do not arrive in her hands the next time she plays for something. Nobody keeps a score of that, and I am not going to invent one for a letter. She knows. I know.– Her hitting partnerFiled W41 '36."
+ },
+ "ask/coach-open": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 an hour.",
+   "– Her coach",
+   "5 weeks to decide. The terms will not change.",
+   "Decline",
+   "Accept"
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 an hour.– Her coach5 weeks to decide. The terms will not change.DeclineAccept"
+ },
+ "ask/coach-signed": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 an hour.",
+   "– Her coach",
+   "Accepted – the rate is $75 an hour."
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 an hour.– Her coachAccepted – the rate is $75 an hour."
+ },
+ "ask/coach-refused": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 an hour.",
+   "– Her coach",
+   "Declined – the rate stays at $60 an hour."
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 an hour.– Her coachDeclined – the rate stays at $60 an hour."
+ },
+ "ask/coach-expired": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 an hour.",
+   "– Her coach",
+   "Lapsed – the rate stays at $60 an hour."
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 an hour.– Her coachLapsed – the rate stays at $60 an hour."
+ },
+ "ask/masseur-open": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a session.",
+   "– Her masseur",
+   "5 weeks to decide. The terms will not change.",
+   "Decline",
+   "Accept"
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a session.– Her masseur5 weeks to decide. The terms will not change.DeclineAccept"
+ },
+ "ask/masseur-signed": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a session.",
+   "– Her masseur",
+   "Accepted – the rate is $75 a session."
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a session.– Her masseurAccepted – the rate is $75 a session."
+ },
+ "ask/masseur-refused": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a session.",
+   "– Her masseur",
+   "Declined – the rate stays at $60 a session."
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a session.– Her masseurDeclined – the rate stays at $60 a session."
+ },
+ "ask/masseur-expired": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a session.",
+   "– Her masseur",
+   "Lapsed – the rate stays at $60 a session."
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a session.– Her masseurLapsed – the rate stays at $60 a session."
+ },
+ "ask/psychologist-open": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.",
+   "– Her psychologist",
+   "5 weeks to decide. The terms will not change.",
+   "Decline",
+   "Accept"
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.– Her psychologist5 weeks to decide. The terms will not change.DeclineAccept"
+ },
+ "ask/psychologist-signed": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.",
+   "– Her psychologist",
+   "Accepted – the rate is $75 a week."
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.– Her psychologistAccepted – the rate is $75 a week."
+ },
+ "ask/psychologist-refused": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.",
+   "– Her psychologist",
+   "Declined – the rate stays at $60 a week."
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.– Her psychologistDeclined – the rate stays at $60 a week."
+ },
+ "ask/psychologist-expired": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.",
+   "– Her psychologist",
+   "Lapsed – the rate stays at $60 a week."
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.– Her psychologistLapsed – the rate stays at $60 a week."
+ },
+ "ask/sparring-open": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.",
+   "– Her hitting partner",
+   "5 weeks to decide. The terms will not change.",
+   "Decline",
+   "Accept"
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.– Her hitting partner5 weeks to decide. The terms will not change.DeclineAccept"
+ },
+ "ask/sparring-signed": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.",
+   "– Her hitting partner",
+   "Accepted – the rate is $75 a week."
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.– Her hitting partnerAccepted – the rate is $75 a week."
+ },
+ "ask/sparring-refused": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.",
+   "– Her hitting partner",
+   "Declined – the rate stays at $60 a week."
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.– Her hitting partnerDeclined – the rate stays at $60 a week."
+ },
+ "ask/sparring-expired": {
+  "blocks": [
+   "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.",
+   "– Her hitting partner",
+   "Lapsed – the rate stays at $60 a week."
+  ],
+  "text": "I have now worked a full year with her, so I am asking for a raise: my rate would go from $60 to $75 a week.– Her hitting partnerLapsed – the rate stays at $60 a week."
+ },
+ "callup/null": {
+  "blocks": [
+   "She is named in the squad for Federation Cup Qualifier – she is expected on court for Jan 5–11, 2037.",
+   "5 players are named and the week holds 3 ties, so the captain picks the side for each of them – she may be named and never take the court.",
+   "16 nations play at this level, and where the country finishes is the country's result rather than hers.",
+   "There are no ranking points and no prize money here – the competition awards neither to anybody in it. Playing when we call is what representing asks of her.",
+   "– Her national federation",
+   "Filed W41 '36."
+  ],
+  "text": "She is named in the squad for Federation Cup Qualifier – she is expected on court for Jan 5–11, 2037. 5 players are named and the week holds 3 ties, so the captain picks the side for each of them – she may be named and never take the court. 16 nations play at this level, and where the country finishes is the country's result rather than hers. There are no ranking points and no prize money here – the competition awards neither to anybody in it. Playing when we call is what representing asks of her. – Her national federationFiled W41 '36."
+ },
+ "callup/0": {
+  "blocks": [
+   "We watched her at the college championship, and the selectors have read it. She is named in the squad for Federation Cup Qualifier – she is expected on court for Jan 5–11, 2037.",
+   "5 players are named and the week holds 3 ties, so the captain picks the side for each of them – she may be named and never take the court.",
+   "16 nations play at this level, and where the country finishes is the country's result rather than hers.",
+   "There are no ranking points and no prize money here – the competition awards neither to anybody in it. Playing when we call is what representing asks of her.",
+   "– Her national federation",
+   "Filed W41 '36."
+  ],
+  "text": "We watched her at the college championship, and the selectors have read it. She is named in the squad for Federation Cup Qualifier – she is expected on court for Jan 5–11, 2037. 5 players are named and the week holds 3 ties, so the captain picks the side for each of them – she may be named and never take the court. 16 nations play at this level, and where the country finishes is the country's result rather than hers. There are no ranking points and no prize money here – the competition awards neither to anybody in it. Playing when we call is what representing asks of her. – Her national federationFiled W41 '36."
+ },
+ "callup/1": {
+  "blocks": [
+   "She reached the last four of the college championship, and the selectors have read it. She is named in the squad for Federation Cup Qualifier – she is expected on court for Jan 5–11, 2037.",
+   "5 players are named and the week holds 3 ties, so the captain picks the side for each of them – she may be named and never take the court.",
+   "16 nations play at this level, and where the country finishes is the country's result rather than hers.",
+   "There are no ranking points and no prize money here – the competition awards neither to anybody in it. Playing when we call is what representing asks of her.",
+   "– Her national federation",
+   "Filed W41 '36."
+  ],
+  "text": "She reached the last four of the college championship, and the selectors have read it. She is named in the squad for Federation Cup Qualifier – she is expected on court for Jan 5–11, 2037. 5 players are named and the week holds 3 ties, so the captain picks the side for each of them – she may be named and never take the court. 16 nations play at this level, and where the country finishes is the country's result rather than hers. There are no ranking points and no prize money here – the competition awards neither to anybody in it. Playing when we call is what representing asks of her. – Her national federationFiled W41 '36."
+ },
+ "callup/2": {
+  "blocks": [
+   "She played the final of the college championship, and the selectors have read it. She is named in the squad for Federation Cup Qualifier – she is expected on court for Jan 5–11, 2037.",
+   "5 players are named and the week holds 3 ties, so the captain picks the side for each of them – she may be named and never take the court.",
+   "16 nations play at this level, and where the country finishes is the country's result rather than hers.",
+   "There are no ranking points and no prize money here – the competition awards neither to anybody in it. Playing when we call is what representing asks of her.",
+   "– Her national federation",
+   "Filed W41 '36."
+  ],
+  "text": "She played the final of the college championship, and the selectors have read it. She is named in the squad for Federation Cup Qualifier – she is expected on court for Jan 5–11, 2037. 5 players are named and the week holds 3 ties, so the captain picks the side for each of them – she may be named and never take the court. 16 nations play at this level, and where the country finishes is the country's result rather than hers. There are no ranking points and no prize money here – the competition awards neither to anybody in it. Playing when we call is what representing asks of her. – Her national federationFiled W41 '36."
+ },
+ "callup/3": {
+  "blocks": [
+   "She won the college championship, and the selectors have read it. She is named in the squad for Federation Cup Qualifier – she is expected on court for Jan 5–11, 2037.",
+   "5 players are named and the week holds 3 ties, so the captain picks the side for each of them – she may be named and never take the court.",
+   "16 nations play at this level, and where the country finishes is the country's result rather than hers.",
+   "There are no ranking points and no prize money here – the competition awards neither to anybody in it. Playing when we call is what representing asks of her.",
+   "– Her national federation",
+   "Filed W41 '36."
+  ],
+  "text": "She won the college championship, and the selectors have read it. She is named in the squad for Federation Cup Qualifier – she is expected on court for Jan 5–11, 2037. 5 players are named and the week holds 3 ties, so the captain picks the side for each of them – she may be named and never take the court. 16 nations play at this level, and where the country finishes is the country's result rather than hers. There are no ranking points and no prize money here – the competition awards neither to anybody in it. Playing when we call is what representing asks of her. – Her national federationFiled W41 '36."
+ },
+ "build/ordered-299": {
+  "blocks": [
+   "The yacht is ready.",
+   "The order was placed in W40 '36. After a week, it now belongs to the family.",
+   "Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts this week and will appear in the family accounts.",
+   "– Order desk",
+   "Filed W41 '36."
+  ],
+  "text": "The yacht is ready. The order was placed in W40 '36. After a week, it now belongs to the family. Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts this week and will appear in the family accounts. – Order deskFiled W41 '36."
+ },
+ "build/ordered-295": {
+  "blocks": [
+   "The yacht is ready.",
+   "The order was placed in W36 '36. After 5 weeks, it now belongs to the family.",
+   "Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts this week and will appear in the family accounts.",
+   "– Order desk",
+   "Filed W41 '36."
+  ],
+  "text": "The yacht is ready. The order was placed in W36 '36. After 5 weeks, it now belongs to the family. Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts this week and will appear in the family accounts. – Order deskFiled W41 '36."
+ },
+ "build/ordered-248": {
+  "blocks": [
+   "The yacht is ready.",
+   "The order was placed in W41 '35. After a year, it now belongs to the family.",
+   "Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts this week and will appear in the family accounts.",
+   "– Order desk",
+   "Filed W41 '36."
+  ],
+  "text": "The yacht is ready. The order was placed in W41 '35. After a year, it now belongs to the family. Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts this week and will appear in the family accounts. – Order deskFiled W41 '36."
+ },
+ "build/ordered-196": {
+  "blocks": [
+   "The yacht is ready.",
+   "The order was placed in W41 '34. After 2 years, it now belongs to the family.",
+   "Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts this week and will appear in the family accounts.",
+   "– Order desk",
+   "Filed W41 '36."
+  ],
+  "text": "The yacht is ready. The order was placed in W41 '34. After 2 years, it now belongs to the family. Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts this week and will appear in the family accounts. – Order deskFiled W41 '36."
+ },
+ "build/ordered-222": {
+  "blocks": [
+   "The yacht is ready.",
+   "The order was placed in W15 '35. After 78 weeks, it now belongs to the family.",
+   "Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts this week and will appear in the family accounts.",
+   "– Order desk",
+   "Filed W41 '36."
+  ],
+  "text": "The yacht is ready. The order was placed in W15 '35. After 78 weeks, it now belongs to the family. Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts this week and will appear in the family accounts. – Order deskFiled W41 '36."
+ },
+ "build/ordered-100": {
+  "blocks": [
+   "The yacht is ready.",
+   "The order was placed in W49 '32. After 200 weeks, it now belongs to the family.",
+   "Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts this week and will appear in the family accounts.",
+   "– Order desk",
+   "Filed W41 '36."
+  ],
+  "text": "The yacht is ready. The order was placed in W49 '32. After 200 weeks, it now belongs to the family. Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts this week and will appear in the family accounts. – Order deskFiled W41 '36."
+ },
+ "sale/proposal": {
+  "blocks": [
+   "A buyer offers $1,234 for The bag.",
+   "The offer stands until W46 '36. Refusing it leaves the listing up.",
+   "– A buyer",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "A buyer offers $1,234 for The bag.The offer stands until W46 '36. Refusing it leaves the listing up.– A buyer5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "sale/signed": {
+  "blocks": [
+   "A buyer offers $1,234 for The bag.",
+   "The offer stands until W46 '36. Refusing it leaves the listing up.",
+   "– A buyer",
+   "Sold at that price."
+  ],
+  "text": "A buyer offers $1,234 for The bag.The offer stands until W46 '36. Refusing it leaves the listing up.– A buyerSold at that price."
+ },
+ "sale/refused": {
+  "blocks": [
+   "A buyer offers $1,234 for The bag.",
+   "The offer stands until W46 '36. Refusing it leaves the listing up.",
+   "– A buyer",
+   "Turned down."
+  ],
+  "text": "A buyer offers $1,234 for The bag.The offer stands until W46 '36. Refusing it leaves the listing up.– A buyerTurned down."
+ },
+ "sale/lapsed": {
+  "blocks": [
+   "A buyer offers $1,234 for The bag.",
+   "The offer stands until W46 '36. Refusing it leaves the listing up.",
+   "– A buyer",
+   "Expired – they needed an answer."
+  ],
+  "text": "A buyer offers $1,234 for The bag.The offer stands until W46 '36. Refusing it leaves the listing up.– A buyerExpired – they needed an answer."
+ },
+ "sale/notice": {
+  "blocks": [
+   "Interest in The bag has gone quiet. You can wait it out, or withdraw it and try again later – but buyers remember an ad for about 12 weeks, so a quick re-list starts where this one left off.",
+   "– The market",
+   "Filed W41 '36."
+  ],
+  "text": "Interest in The bag has gone quiet. You can wait it out, or withdraw it and try again later – but buyers remember an ad for about 12 weeks, so a quick re-list starts where this one left off.– The marketFiled W41 '36."
+ },
+ "sale/proposal-nolabel": {
+  "blocks": [
+   "A buyer offers $1,234 for racquet-bag.",
+   "The offer stands until W46 '36. Refusing it leaves the listing up.",
+   "– A buyer",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "A buyer offers $1,234 for racquet-bag.The offer stands until W46 '36. Refusing it leaves the listing up.– A buyer5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/legacy": {
+  "blocks": [
+   "We make watches, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "A one-time fee of $25,000, paid the day this is signed. Money, not kit – we are not a tennis house.",
+   "Twelve months from signing, her face is with us – and in no other campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make watches, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. A one-time fee of $25,000, paid the day this is signed. Money, not kit – we are not a tennis house.Twelve months from signing, her face is with us – and in no other campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/watches": {
+  "blocks": [
+   "We make watches, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other watch campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make watches, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other watch campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/cars": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other car campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Northgate Motors",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other car campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Northgate Motors5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/drinks": {
+  "blocks": [
+   "We make drinks, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other drinks campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Cold Current",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make drinks, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other drinks campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Cold Current5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/clothing": {
+  "blocks": [
+   "We make her kit, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other clothing campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "–",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make her kit, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other clothing campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – 5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/airline": {
+  "blocks": [
+   "We fly people across the world, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other airline campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Northmere Air",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We fly people across the world, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other airline campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Northmere Air5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/fragrance": {
+  "blocks": [
+   "We make perfume, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other fragrance campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Rivelle",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make perfume, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other fragrance campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Rivelle5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/capstone": {
+  "blocks": [
+   "We make her kit, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Eight years from signing, her face is with us – the house deal of her career, and there is only ever one of these.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make her kit, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Eight years from signing, her face is with us – the house deal of her career, and there is only ever one of these. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/lifetime": {
+  "blocks": [
+   "We make watches, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 every year, for as long as she lives – the first paid the day this is signed, the rest on its anniversary, with no last one. Money for her name, nothing else.",
+   "From signing, her name is with us for life – only one of these is ever written, and it does not run out.",
+   "Nothing is owed, ever: no shoots, no tournaments, no results – the name she made is the whole of it.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make watches, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 every year, for as long as she lives – the first paid the day this is signed, the rest on its anniversary, with no last one. Money for her name, nothing else.From signing, her name is with us for life – only one of these is ever written, and it does not run out. Nothing is owed, ever: no shoots, no tournaments, no results – the name she made is the whole of it. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/term-1y": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "A one-time fee of $25,000, paid the day this is signed. Money, not kit – we are not a tennis house.",
+   "Twelve months from signing, her face is with us – and in no other car campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. A one-time fee of $25,000, paid the day this is signed. Money, not kit – we are not a tennis house.Twelve months from signing, her face is with us – and in no other car campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/term-2y": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other car campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other car campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/term-3y": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Three years from signing, her face is with us – and in no other car campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Three years from signing, her face is with us – and in no other car campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/term-4y": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Four years from signing, her face is with us – and in no other car campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Four years from signing, her face is with us – and in no other car campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/term-5y": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Five years from signing, her face is with us – and in no other car campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Five years from signing, her face is with us – and in no other car campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/term-6y": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Six years from signing, her face is with us – and in no other car campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Six years from signing, her face is with us – and in no other car campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/term-7y": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Seven years from signing, her face is with us – and in no other car campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Seven years from signing, her face is with us – and in no other car campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/term-8y": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Eight years from signing, her face is with us – and in no other car campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Eight years from signing, her face is with us – and in no other car campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/term-9y": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "9 years from signing, her face is with us – and in no other car campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.9 years from signing, her face is with us – and in no other car campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/term-26w": {
+  "blocks": [
+   "We make watches, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "A one-time fee of $25,000, paid the day this is signed. Money, not kit – we are not a tennis house.",
+   "26 weeks from signing, her face is with us – and in no other campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make watches, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. A one-time fee of $25,000, paid the day this is signed. Money, not kit – we are not a tennis house.26 weeks from signing, her face is with us – and in no other campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/shoots-0": {
+  "blocks": [
+   "We make drinks, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other drinks campaign while that runs.",
+   "Nothing is owed, ever: no shoots, no tournaments, no results – the name she made is the whole of it.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make drinks, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other drinks campaign while that runs. Nothing is owed, ever: no shoots, no tournaments, no results – the name she made is the whole of it. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/shoots-1": {
+  "blocks": [
+   "We make drinks, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other drinks campaign while that runs.",
+   "One week of her year is a shoot week – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make drinks, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other drinks campaign while that runs. One week of her year is a shoot week – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/shoots-2": {
+  "blocks": [
+   "We make drinks, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other drinks campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make drinks, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other drinks campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/shoots-3": {
+  "blocks": [
+   "We make drinks, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other drinks campaign while that runs.",
+   "Three weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make drinks, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other drinks campaign while that runs. Three weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/shoots-6": {
+  "blocks": [
+   "We make drinks, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other drinks campaign while that runs.",
+   "Six weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make drinks, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other drinks campaign while that runs. Six weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/shoots-7": {
+  "blocks": [
+   "We make drinks, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other drinks campaign while that runs.",
+   "7 weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We make drinks, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other drinks campaign while that runs. 7 weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet Hour5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "ad/signed-running-shoots": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other car campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "Signed – the fee is banked, the campaign runs to W41 '38, and her shoot weeks are W51 '36 and W19 '37."
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other car campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet HourSigned – the fee is banked, the campaign runs to W41 '38, and her shoot weeks are W51 '36 and W19 '37."
+ },
+ "ad/signed-running-oneshoot": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other car campaign while that runs.",
+   "One week of her year is a shoot week – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "Signed – the fee is banked, the campaign runs to W41 '38, and her shoot weeks are W51 '36."
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other car campaign while that runs. One week of her year is a shoot week – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet HourSigned – the fee is banked, the campaign runs to W41 '38, and her shoot weeks are W51 '36."
+ },
+ "ad/signed-running-threeshoots": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other car campaign while that runs.",
+   "Three weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "Signed – the fee is banked, the campaign runs to W41 '38, and her shoot weeks are W51 '36, W19 '37 and W39 '37."
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other car campaign while that runs. Three weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet HourSigned – the fee is banked, the campaign runs to W41 '38, and her shoot weeks are W51 '36, W19 '37 and W39 '37."
+ },
+ "ad/signed-running-noshoots": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other car campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "Signed – the fee is banked, the campaign runs to W41 '38."
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other car campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet HourSigned – the fee is banked, the campaign runs to W41 '38."
+ },
+ "ad/signed-lifetime": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 every year, for as long as she lives – the first paid the day this is signed, the rest on its anniversary, with no last one. Money for her name, nothing else.",
+   "From signing, her name is with us for life – only one of these is ever written, and it does not run out.",
+   "Nothing is owed, ever: no shoots, no tournaments, no results – the name she made is the whole of it.",
+   "– Quiet Hour",
+   "Signed – the fee is banked, and it comes again every year, for life."
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 every year, for as long as she lives – the first paid the day this is signed, the rest on its anniversary, with no last one. Money for her name, nothing else.From signing, her name is with us for life – only one of these is ever written, and it does not run out. Nothing is owed, ever: no shoots, no tournaments, no results – the name she made is the whole of it. – Quiet HourSigned – the fee is banked, and it comes again every year, for life."
+ },
+ "ad/signed-ended": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other car campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "Signed. The fee was banked, and the campaign has run its course."
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other car campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet HourSigned. The fee was banked, and the campaign has run its course."
+ },
+ "ad/signed-cut-short": {
+  "blocks": [
+   "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "$25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.",
+   "Two years from signing, her face is with us – and in no other car campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "Signed. The fees paid are hers to keep, and the campaign ended when she signed with another house."
+  ],
+  "text": "We make cars, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. $25,000 for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.Two years from signing, her face is with us – and in no other car campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet HourSigned. The fees paid are hers to keep, and the campaign ended when she signed with another house."
+ },
+ "ad/refused": {
+  "blocks": [
+   "We make watches, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "A one-time fee of $25,000, paid the day this is signed. Money, not kit – we are not a tennis house.",
+   "Twelve months from signing, her face is with us – and in no other campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "Turned down."
+  ],
+  "text": "We make watches, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. A one-time fee of $25,000, paid the day this is signed. Money, not kit – we are not a tennis house.Twelve months from signing, her face is with us – and in no other campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet HourTurned down."
+ },
+ "ad/expired": {
+  "blocks": [
+   "We make watches, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "A one-time fee of $25,000, paid the day this is signed. Money, not kit – we are not a tennis house.",
+   "Twelve months from signing, her face is with us – and in no other campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "Expired – they needed an answer."
+  ],
+  "text": "We make watches, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. A one-time fee of $25,000, paid the day this is signed. Money, not kit – we are not a tennis house.Twelve months from signing, her face is with us – and in no other campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet HourExpired – they needed an answer."
+ },
+ "ad/lapsed": {
+  "blocks": [
+   "We make watches, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.",
+   "A one-time fee of $25,000, paid the day this is signed. Money, not kit – we are not a tennis house.",
+   "Twelve months from signing, her face is with us – and in no other campaign while that runs.",
+   "Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.",
+   "Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.",
+   "– Quiet Hour",
+   "Expired – they needed an answer."
+  ],
+  "text": "We make watches, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers. A one-time fee of $25,000, paid the day this is signed. Money, not kit – we are not a tennis house.Twelve months from signing, her face is with us – and in no other campaign while that runs. Two weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip. Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings. – Quiet HourExpired – they needed an answer."
+ },
+ "kit/new": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "kit/renewal": {
+  "blocks": [
+   "img:Play Beyond",
+   "She has been in our kit all season and we have enjoyed every week of it. We would like to keep her in it – the same deal, another year.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "She has been in our kit all season and we have enjoyed every week of it. We would like to keep her in it – the same deal, another year. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "kit/apparel-bond": {
+  "blocks": [
+   "img:Play Beyond",
+   "Her face is already on our posters, and we would rather she wore our kit while it is there. Our kit paper with her has run out, so this is us renewing it – on the terms her ranking earns today.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "Her face is already on our posters, and we would rather she wore our kit while it is there. Our kit paper with her has run out, so this is us renewing it – on the terms her ranking earns today. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "kit/covers-strings": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings – up to $5,000 of kit over the season, on us. Her racquets and shoes stay hers.",
+   "We keep them fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings – up to $5,000 of kit over the season, on us. Her racquets and shoes stay hers. We keep them fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "kit/covers-frame": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her racquets – up to $5,000 of kit over the season, on us. Her strings and shoes stay hers.",
+   "We keep them fresh. She will not play a match on dead racquets.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her racquets – up to $5,000 of kit over the season, on us. Her strings and shoes stay hers. We keep them fresh. She will not play a match on dead racquets. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "kit/covers-shoes": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her shoes – up to $5,000 of kit over the season, on us. Her strings and racquets stay hers.",
+   "We keep them fresh. She will not play a match on dead shoes.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her shoes – up to $5,000 of kit over the season, on us. Her strings and racquets stay hers. We keep them fresh. She will not play a match on dead shoes. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "kit/covers-strings+shoes": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings and shoes – up to $5,000 of kit over the season, on us. Her racquets stay hers.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings and shoes – up to $5,000 of kit over the season, on us. Her racquets stay hers. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "kit/covers-frame+shoes": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her racquets and shoes – up to $5,000 of kit over the season, on us. Her strings stay hers.",
+   "We keep it all fresh. She will not play a match on dead racquets.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her racquets and shoes – up to $5,000 of kit over the season, on us. Her strings stay hers. We keep it all fresh. She will not play a match on dead racquets. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "kit/no-travel-no-domestic": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W50 '39. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W50 '39. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "kit/seasons-1": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "One season, starting with the one ahead – she is in our kit to W50 '37. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. One season, starting with the one ahead – she is in our kit to W50 '37. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "kit/seasons-2": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Two seasons, starting with the one ahead – she is in our kit to W50 '38. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Two seasons, starting with the one ahead – she is in our kit to W50 '38. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "kit/seasons-4": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Four seasons, starting with the one ahead – she is in our kit to W50 '40. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Four seasons, starting with the one ahead – she is in our kit to W50 '40. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "kit/seasons-5": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "5 seasons, starting with the one ahead – she is in our kit to W50 '41. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. 5 seasons, starting with the one ahead – she is in our kit to W50 '41. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "kit/seasons-6": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "6 seasons, starting with the one ahead – she is in our kit to W50 '42. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. 6 seasons, starting with the one ahead – she is in our kit to W50 '42. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "kit/bond-cost": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "While you wear us, she appears in no other apparel campaign – hers with Blanche & Noir would end on signature.",
+   "Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "5 weeks to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. While you wear us, she appears in no other apparel campaign – hers with Blanche & Noir would end on signature. Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond5 weeks to decide. The terms will not change.RefuseSign"
+ },
+ "kit/signed-running": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W45 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "Signed – they are kitting her out.",
+   "In their kit W42 '36 – W45 '39 · three seasons"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W45 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play BeyondSigned – they are kitting her out.In their kit W42 '36 – W45 '39 · three seasons"
+ },
+ "kit/signed-running-played": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W45 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "Signed – they are kitting her out. 5 of 8 events last season.",
+   "In their kit W42 '36 – W45 '39 · three seasons"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W45 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play BeyondSigned – they are kitting her out. 5 of 8 events last season.In their kit W42 '36 – W45 '39 · three seasons"
+ },
+ "kit/signed-ended-met": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W39 '37. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "Signed. She played 9 of the 8 events they asked for, and the deal ran its course.",
+   "In their kit W42 '36 – W39 '37 · three seasons"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W39 '37. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play BeyondSigned. She played 9 of the 8 events they asked for, and the deal ran its course.In their kit W42 '36 – W39 '37 · three seasons"
+ },
+ "kit/signed-ended-short": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W39 '37. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "Signed. She played 3 of the 8 events they asked for, so it ended. Nothing was paid back.",
+   "In their kit W42 '36 – W39 '37 · three seasons"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W39 '37. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play BeyondSigned. She played 3 of the 8 events they asked for, so it ended. Nothing was paid back.In their kit W42 '36 – W39 '37 · three seasons"
+ },
+ "kit/signed-nowindow": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "Signed."
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play BeyondSigned."
+ },
+ "kit/refused": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "Turned down."
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play BeyondTurned down."
+ },
+ "kit/expired": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "Expired – they needed an answer."
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play BeyondExpired – they needed an answer."
+ },
+ "kit/lapsed": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "Expired – they needed an answer."
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play BeyondExpired – they needed an answer."
+ },
+ "kit/last-week": {
+  "blocks": [
+   "img:Play Beyond",
+   "We have been watching your daughter play all season, and we would like to put her in our kit.",
+   "Her strings, racquets and shoes – up to $5,000 of kit over the season, on us.",
+   "We keep it all fresh. She will not play a match on dead strings.",
+   "And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.",
+   "In return she enters at least 8 tournaments a season – we are paying to be seen.",
+   "And while she is in our kit she is in nobody else's.",
+   "Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.",
+   "– Play Beyond",
+   "1 week to decide. The terms will not change.",
+   "Refuse",
+   "Sign"
+  ],
+  "text": "We have been watching your daughter play all season, and we would like to put her in our kit. Her strings, racquets and shoes – up to $5,000 of kit over the season, on us. We keep it all fresh. She will not play a match on dead strings. And we will take 20% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money. In return she enters at least 8 tournaments a season – we are paying to be seen.And while she is in our kit she is in nobody else's. Three seasons, starting with the one ahead – she is in our kit to W50 '39. We back a girl who is somebody at home, so she stays inside the national top 10 while we are with her. Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back. – Play Beyond1 week to decide. The terms will not change.RefuseSign"
+ },
+ "kit/goodbye-events": {
+  "blocks": [
+   "img:Play Beyond",
+   "We kitted her out all season and enjoyed doing it. We asked for 8 tournaments a year and she played 3, so this is where we shake hands – our end of it is done.",
+   "Her kit is hers – there is nothing to send back and nothing to pay. From next season her strings, racquets and shoes are the family's again.",
+   "– Play Beyond",
+   "Filed W41 '36."
+  ],
+  "text": "We kitted her out all season and enjoyed doing it. We asked for 8 tournaments a year and she played 3, so this is where we shake hands – our end of it is done. Her kit is hers – there is nothing to send back and nothing to pay. From next season her strings, racquets and shoes are the family's again. – Play BeyondFiled W41 '36."
+ },
+ "kit/goodbye-standing": {
+  "blocks": [
+   "img:Play Beyond",
+   "We kitted her out all season and enjoyed doing it. We back a girl who is somebody at home, and she has slid out of that band while she has been away, so this is where we shake hands.",
+   "Her kit is hers – there is nothing to send back and nothing to pay. From next season her strings, racquets and shoes are the family's again.",
+   "– Play Beyond",
+   "Filed W41 '36."
+  ],
+  "text": "We kitted her out all season and enjoyed doing it. We back a girl who is somebody at home, and she has slid out of that band while she has been away, so this is where we shake hands. Her kit is hers – there is nothing to send back and nothing to pay. From next season her strings, racquets and shoes are the family's again. – Play BeyondFiled W41 '36."
+ },
+ "kit/goodbye-stepped": {
+  "blocks": [
+   "img:Play Beyond",
+   "We hear she is going somewhere bigger, and honestly we are not surprised. Our contract stops with this season – no notice to give and nothing to settle. It was a pleasure putting her in our kit.",
+   "Her kit is hers – there is nothing to send back and nothing to pay. From next season her strings, racquets and shoes are the family's again.",
+   "– Play Beyond",
+   "Filed W41 '36."
+  ],
+  "text": "We hear she is going somewhere bigger, and honestly we are not surprised. Our contract stops with this season – no notice to give and nothing to settle. It was a pleasure putting her in our kit. Her kit is hers – there is nothing to send back and nothing to pay. From next season her strings, racquets and shoes are the family's again. – Play BeyondFiled W41 '36."
+ },
+ "kit/goodbye-term": {
+  "blocks": [
+   "img:Play Beyond",
+   "That is our term served, and she held up every part of it – 3 tournaments in our kit this season. We are stopping here for now, with thanks.",
+   "Her kit is hers – there is nothing to send back and nothing to pay. From next season her strings, racquets and shoes are the family's again.",
+   "– Play Beyond",
+   "Filed W41 '36."
+  ],
+  "text": "That is our term served, and she held up every part of it – 3 tournaments in our kit this season. We are stopping here for now, with thanks. Her kit is hers – there is nothing to send back and nothing to pay. From next season her strings, racquets and shoes are the family's again. – Play BeyondFiled W41 '36."
+ }
+}

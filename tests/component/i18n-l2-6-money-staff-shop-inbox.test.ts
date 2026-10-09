@@ -1085,8 +1085,9 @@ describe('L2-6b xx sweep – the shop, the inbox and the letter shell', () => {
   // a string is the engine's when the snapshot carries it: as part of its prose, or – for the short ones (a two-letter monogram on a naming chip) – as an exact JSON value
   const leaksOf = (root: Element, corpus: string): string[] =>
     hardcodeLeaks(root, allow).filter((l) => !((prose(l).length > 2 && corpus.includes(prose(l))) || corpus.includes(JSON.stringify(prose(l)))))
-  /** A letter's SHELL: the foot (the window line, the filed line, the doors) and the sign-off. ⚠ The paper's BODY is the letter's prose – template-authored today, a
-   *  paragraph per section, and by the brief engine-born class-c prose (RU-15's S-rows) that stays raw for L3 – so it is counted below, not swept. */
+  /** A letter's SHELL: the foot (the window line, the filed line, the doors) and the sign-off. ⚠ L3-2 (10.10) – THE BODY IS CHARGED NOW. The paper's body was the
+   *  letter's prose, template-authored and left raw by L2-6b (counted below, not swept); L3-2 found it was class (b) – assembled at render from the persisted
+   *  terms, the schema untouched – and wired it, so the sweep below charges the WHOLE paper and `shellLeaks` is kept only to name the shell in the log. */
   const shellLeaks = (root: Element, corpus: string): string[] => Array.from(root.querySelectorAll('.offer-foot, .offer-sign-off')).flatMap((el) => leaksOf(el, corpus))
 
   it('the shop home and all six shelves, the inbox list and two letters, and an open campaign: nothing the SCREEN wrote is left unbracketed', async () => {
@@ -1112,16 +1113,22 @@ describe('L2-6b xx sweep – the shop, the inbox and the letter shell', () => {
     const rowCount = inbox.findAll('.inbox-row').length
     expect(rowCount, 'the three letters are listed').toBe(3)
     let bodies = 0
+    const rawBody: string[] = []
     for (let i = 0; i < rowCount; i++) {
       await inbox.findAll('.inbox-open')[i]!.trigger('click')
       const shell = shellLeaks(inbox.element, inboxCorpus)
       results.push([`inbox/letter#${i} shell`, shell])
-      bodies += leaksOf(inbox.element, inboxCorpus).length - shell.length
+      // L3-2: the body is wired too – the paper as a whole must leave nothing unbracketed under xx (it was 12 paragraphs and lines left raw before)
+      const whole = leaksOf(inbox.element, inboxCorpus)
+      results.push([`inbox/letter#${i} body`, whole.filter((l) => !shell.includes(l))])
+      bodies += whole.length - shell.length
+      rawBody.push(...whole.filter((l) => !shell.includes(l)))
       await inbox.get('.inbox-back').trigger('click')
     }
     inbox.unmount()
-    expect(bodies, 'the three letters really have bodies the sweep did not charge').toBeGreaterThan(5)
-    console.log(`[L2-6b xx] letter bodies left raw for L3 (class c): ${bodies} paragraphs and lines across three letters`)
+    expect(rawBody, 'L3-2: no paragraph of the three letters is left raw').toEqual([])
+    expect(bodies).toBe(0)
+    console.log(`[L2-6b xx] letter bodies left raw (L3-2 wired them; L2-6b counted 12 across the same three letters): ${bodies}`)
     console.log(`[L2-6b xx] leaks: ${JSON.stringify(results.map(([a, b]) => [a, b.slice(0, 6)]))}`)
     for (const [surface, leaks] of results) expect(leaks, `${surface}: copy the SCREEN wrote that did not go through t()`).toEqual([])
   })

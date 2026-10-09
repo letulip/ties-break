@@ -50,6 +50,8 @@ import type {
 // ⭐⭐⭐ THE BUYER'S LETTER (the secondary market, S5) – the two senders' words and the lot's label are shared with the paper (`OfferLetter`), so the
 // list row and the sheet it opens cannot name the same letter two ways.
 import { SALE_SENDER, saleLabelOf } from '../composables/saleLetter'
+// ⭐⭐ L3-2 – the raise request's unit word ("an hour", "a session", "a week") is a message of its own, as on the paper (`OfferLetter`).
+import { staffAskPerPhrase } from '../composables/letterCopy'
 import { t } from '../i18n'
 // ⭐⭐ ROUND 42 #39a – `activeKitDeal` joins the same import, for the reason the four beside it are
 // here: it is the ENGINE's own predicate for «is she under contract this week» – the very function
@@ -472,7 +474,7 @@ const confirmMessage = computed(() => {
   if (pendingSign.value.kind === 'staff') {
     const ask = (pendingSign.value.terms as StaffLetterTerms).ask
     if (ask) {
-      return t('Accept the raise? The rate goes from {0} to {1} {2}. This cannot be undone.', [formatCents(ask.fromCents), formatCents(ask.toCents), staffAskPer((pendingSign.value.terms as StaffLetterTerms).seat)])
+      return t('Accept the raise? The rate goes from {0} to {1} {2}. This cannot be undone.', [formatCents(ask.fromCents), formatCents(ask.toCents), staffAskPerPhrase(staffAskPer((pendingSign.value.terms as StaffLetterTerms).seat))])
     }
   }
   // ⭐⭐⭐ S5 – A BUYER'S SIGNATURE SELLS THE LOT, so it has its own question: every number below the ad arm is kit or campaign arithmetic. The price
