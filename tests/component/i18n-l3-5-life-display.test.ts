@@ -3,7 +3,7 @@
 //
 //   · English: a string with a ref and the same string with only its text are the same bytes on the screen (the formatter's identity path) – the 0-risk half of the wave;
 //   · Russian with a catalog: the ref is looked up and the TRANSLATION is drawn, the English is not – the heading, her line (the composed one too: `{0} {1}` over a frame and an opener),
-//     each of her replies and the Home card's line;
+//     each of her replies, the Home card's line and the fridge note's picked line;
 //   · a caller with no ref prints the English, as before (every older fixture in the suite is that caller).
 //
 // ⚠ FIXTURE SENTENCES AND ASCII MARKERS ON PURPOSE (CLAUDE.md invariant 4): nothing here asserts a shipped sentence, so no wording change can move this file; the "translations" are
@@ -16,10 +16,12 @@ import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import LifeBeatDialog from '../../src/components/LifeBeatDialog.vue'
 import HomeScreen from '../../src/components/screens/HomeScreen.vue'
+import CalendarScreen from '../../src/components/screens/CalendarScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, toSnapshot } from '../../src/engine/world'
 import { DEFAULT_PROFILE, type LifeBeatPrompt, type Snapshot } from '../../src/shared/protocol'
 import { installCatalog, resetI18nForTests, setLocale } from '../../src/i18n'
+import { COLD_AWAY_NOTES, EXAM_NOTES, FRIDGE_NOTES, INDEPENDENT_NOTES, INDEPENDENT_TRIP_NOTES, STRAINED_AWAY_NOTES, TRIP_NOTES } from '../../src/composables/fridgeNote'
 import { installMemoryStorage } from './setup'
 
 installMemoryStorage()
@@ -140,5 +142,40 @@ describe('L3-5 – Home draws the soft card\'s line through its ref', () => {
     await nextTick()
     expect(w.find('.soft-beat-line').text()).toBe('CARD*')
     expect(w.text()).not.toContain('English card fixture')
+  })
+})
+
+describe('L3-5 – the calendar reads the fridge note\'s picked line through `t()`', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+    resetI18nForTests()
+  })
+  afterEach(() => {
+    document.body.innerHTML = ''
+    document.documentElement.lang = 'en'
+  })
+
+  const ALL = [...FRIDGE_NOTES, ...INDEPENDENT_NOTES, ...STRAINED_AWAY_NOTES, ...COLD_AWAY_NOTES, ...EXAM_NOTES, ...TRIP_NOTES, ...INDEPENDENT_TRIP_NOTES]
+  const mountCalendar = () => {
+    useGameStore().snapshot = base()
+    return mount(CalendarScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
+  }
+
+  it('English: the note is one of the 115 pool lines, exactly as the pool spells it', () => {
+    const w = mountCalendar()
+    const note = w.find('.cal-note-text')
+    expect(note.exists(), 'a fresh career at home always has a scrap on the fridge').toBe(true)
+    expect(ALL).toContain(note.text())
+  })
+
+  it('Russian with a catalog: the picked line is looked up as a key and the translation is drawn, the English is not', async () => {
+    installCatalog('ru', Object.fromEntries(ALL.map((line) => [line, `NOTE* ${line.length}`])))
+    await setLocale('ru')
+    const w = mountCalendar()
+    await nextTick()
+    const shown = w.find('.cal-note-text').text()
+    expect(shown).toMatch(/^NOTE\* \d+$/)
+    expect(ALL.some((line) => shown.includes(line))).toBe(false)
   })
 })

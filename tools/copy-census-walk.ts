@@ -29,7 +29,8 @@
 //       · the hub's pools – every top-level SCREAMING_CASE table in `world/lifeBeat.ts`;
 //       · `ECONOMY`'s `label` / `blurb` / `name` string fields, from a live walk of the object;
 //       · exported top-level consts whose name ends REFUSAL / LABEL / NOTE / LINE / WORDS / COPY
-//         (plural accepted: LINES, NOTES, LABELS, REFUSALS).
+//         (plural accepted: LINES, NOTES, LABELS, REFUSALS);
+//       · (L3-5, 10.10) the one composable that is only copy: `composables/fridgeNote.ts`.
 //   (c) ledger sentences: every string, template and concatenation inside a `text:` property in
 //       src/engine (the shape `addEvent(world, { text: … })` feeds the feed with).
 //   In a CERTAIN home a literal still has to be text: identifier-shaped (kebab / camel / snake /
@@ -207,6 +208,10 @@ const isCopyLeaf = (file: string): boolean =>
   /^src\/engine\/world\/lifeBeat\/[A-Za-z]+Copy\.ts$/.test(file) ||
   file === 'src/engine/world/smallTalkCorpus.ts' ||
   file === 'src/engine/world/albumCorpus.ts'
+// ⭐ L3-5 (10.10): THE ONE COMPOSABLE THAT IS NOTHING BUT COPY. `composables/fridgeNote.ts` is the fridge scrap's seven pools (115 lines) and a hash; the engine/shared rule above cannot see a composable,
+// so its strings sat in LIKELY and out of the catalog. A whole-file home, like the two generated corpora: the call site reads the picked line through `t(line)` (a dynamic seat), and the catalog now
+// holds every line as the key it asks for. Anything else in a composable stays where it was.
+const COMPOSABLE_COPY_HOMES: ReadonlySet<string> = new Set(['src/composables/fridgeNote.ts'])
 
 // ── ECONOMY: the live walk, before any source is read, so its source literals dedupe ─────────────
 const econ: { key: string; text: string }[] = []
@@ -256,7 +261,7 @@ function literal(file: string, scope: Scope, line: number, text: string, ctx: Ct
     else if (file === HUB && ctx.top !== null && /^[A-Z][A-Z0-9_]+$/.test(ctx.top)) reason = 'hub-pool'
     else if (ctx.textAnc) reason = 'ledger-text'
     else if (ctx.suffixConst) reason = 'suffix-const'
-  }
+  } else if (reason === null && scope === 'composable' && COMPOSABLE_COPY_HOMES.has(file)) reason = 'copy-leaf'
   if (reason !== null) {
     if (shape === 'text' || shape === 'oneword') {
       certain.push({ file, line, text, area: areaOf(file, scope, tpl, reason, ctx.top), reason, dev: false, holes })

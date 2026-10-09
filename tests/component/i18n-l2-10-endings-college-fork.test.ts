@@ -1152,7 +1152,8 @@ describe('L2-10b dynamic seat – LifeMomentOverlay reads the engine\'s one cont
     expect(lines, 'one label constant, one string').toHaveLength(1)
     expect(/from '(?:\.\.\/)+i18n'/.test(SRC('src/engine/world/lifeMomentCopy.ts'))).toBe(false)
     const { stats } = buildCatalog()
-    expect(stats.dynamicCalls, 'the gate\'s «dynamic t() calls unreadable»: 3 (L2-9b) + this seat').toBe(4)
+    // ⭐ L3-5 (10.10): 4 -> 5 – the fridge note's picked line is read through `t(fridgeNote)` in CalendarScreen (a dynamic seat, the engine's own literal looked up as a key, L2-9b's shape)
+    expect(stats.dynamicCalls, 'the gate\'s «dynamic t() calls unreadable»: 3 (L2-9b) + L2-10 + the fridge seat (L3-5)').toBe(5)
   })
 
   it('seams: the label follows the locale, the line does not; a label with no row falls back to the engine\'s English and is COUNTED', async () => {

@@ -19,6 +19,8 @@ export interface LifePlay {
   pairs: LifePair[]
   /** beats answered, by kind */
   answered: Record<string, number>
+  /** the feed rows each ANSWER wrote, read the moment it was written (an ordinary row is pruned sixty weeks on, so the world at the end of a career holds only the last of them) */
+  answerRows: Array<{ kind: string; text: string; c: CopyRef | undefined }>
   /** the MAIN stream's next three draws after the last week (the bench's own `rng`, the one `stepCareerWeek` draws from) – the wave draws nothing, so they match the pre-wave tree's */
   next3: number[]
 }
@@ -31,6 +33,13 @@ export function playLife(presetIdx: number, policyIdx: number, weeks: number, bo
     const strings: unknown[] = []
     const pairs: LifePair[] = []
     const answered: Record<string, number> = {}
+    const answerRows: LifePlay['answerRows'] = []
+    const answer = (kind: string, optionId: string): void => {
+      const before = world.events.length
+      answerLifeBeat(world, optionId)
+      for (const e of world.events.slice(before)) answerRows.push({ kind, text: e.text, c: e.c })
+      answered[kind] = (answered[kind] ?? 0) + 1
+    }
     let n = 0
     const promptRec = (p: NonNullable<ReturnType<typeof toSnapshot>['lifeBeatPrompt']>): Record<string, unknown> => {
       pairs.push({ f: 'heading', text: p.heading, c: p.headingC }, { f: 'said', text: p.said, c: p.saidC })
@@ -59,8 +68,7 @@ export function playLife(presetIdx: number, policyIdx: number, weeks: number, bo
         const pick = p.options[(world.week + n++) % p.options.length]!
         rec.answer = pick.id
         strings.push(rec)
-        answerLifeBeat(world, pick.id)
-        answered[p.kind] = (answered[p.kind] ?? 0) + 1
+        answer(p.kind, pick.id)
       }
       const soft = world.ending ? null : toSnapshot(world).softBeat
       if (soft) {
@@ -71,15 +79,14 @@ export function playLife(presetIdx: number, policyIdx: number, weeks: number, bo
         if (world.week % 2 === 0) {
           const pick = soft.prompt.options[(world.week + n++) % soft.prompt.options.length]!
           rec.answer = pick.id
-          answerLifeBeat(world, pick.id)
-          answered[soft.prompt.kind] = (answered[soft.prompt.kind] ?? 0) + 1
+          answer(soft.prompt.kind, pick.id)
         }
         strings.push(rec)
       }
       stepCareerWeek(world, rng, policy)
     }
     const next3 = [rng(), rng(), rng()]
-    return { world, strings, pairs, answered, next3 }
+    return { world, strings, pairs, answered, answerRows, next3 }
   } finally {
     setLifeEventBoost(false)
   }

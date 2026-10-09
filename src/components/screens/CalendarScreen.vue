@@ -497,7 +497,7 @@ const showGo = computed(() => !game.snapshot?.pending)
            a `null` note is «no contact this week», so the paper itself stays off the wall. -->
       <PaperNote v-if="grid && fridgeNote" class="cal-note" :tilt="-0.8" ruled torn tape>
         <span class="cal-note-label">{{ t('Notes') }}</span>
-        <span class="cal-note-text">{{ fridgeNote }}</span>
+        <span class="cal-note-text">{{ t(fridgeNote) }}</span>
       </PaperNote>
 
       <!-- ============================================================================

@@ -15,9 +15,11 @@
 //   §3 the headings                    – every heading any axis can produce is a catalog key (10J's heard headings and 10K's headline frame included)
 //   §4 her replies                     – every follow-up paragraph of the 51 situations x 4 voices x 3 stances and of the fork's continuation has its seat
 //   §5 the span sentence               – `engagedWithTogetherRef` renders to `engagedWithTogether` for every week from 0 to 5,200
+//   §6 the 51-situation corpus         – the counts, and that every opener / shared beat / label / reply is a catalog key (OUTSIDE_CATALOG for this family: 0)
 //   §7 the sinks' sentences            – every constant a sink's seat can hold is a key of the frozen table AND of the catalog (the L3-1 net's §1b walks the same pools as a seat law)
 //   §8 played careers                  – the pre-wave tree's digest of every string a player was shown (two boosted 300-week careers, answers rotated), every ref rendering to its text
 //   §9 the pick keys                   – the sub-stream seed keys of the life files, as a list: this wave adds none and moves none
+//   §10 the fridge notes               – UI-side, picked by a local hash: the pools are catalog keys, the pick is byte-stable, the cadence rows are pinned
 import { describe, expect, it } from 'vitest'
 import ts from 'typescript'
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -58,6 +60,18 @@ import { buildLifeBeatPrompt, buildSoftBeatInvite, createWorld, raiseLifeBeat } 
 import { LIFE_CLASS_B_KEYS } from './helpers/l3-5-life-keys'
 import { fnv1a } from './helpers/hash'
 import { playLife } from './helpers/l3-5-life-play'
+import {
+  AWAY_NOTE_CHANCE,
+  COLD_AWAY_NOTES,
+  EXAM_NOTES,
+  FRIDGE_NOTES,
+  INDEPENDENT_NOTES,
+  INDEPENDENT_TRIP_NOTES,
+  STRAINED_AWAY_NOTES,
+  TRIP_NOTES,
+  fridgeNoteFor,
+  type NoteMood,
+} from '../src/composables/fridgeNote'
 
 const ROOT = resolve(__dirname, '..')
 const EN = { locale: SOURCE_LOCALE }
@@ -408,6 +422,57 @@ describe('§5b the announcement\'s PROMPT, through the real assembly – the poo
 })
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
+// §6 – the 51-situation corpus
+// ---------------------------------------------------------------------------------------------------------------------------------------------
+/** Corpus strings the CATALOG does not carry, by family. The whole corpus file is a census copy home, so this is 0 – and it can only fall. */
+const OUTSIDE_CATALOG = { openers: 0, labels: 0, replies: 0, shared: 0 } as const
+
+describe('§6 the 51-situation corpus', () => {
+  const openers = new Set<string>()
+  const labels = new Set<string>()
+  const replies = new Set<string>()
+  const shared = new Set<string>()
+  let columns = 0
+  for (const s of SMALL_TALK_SITUATIONS)
+    for (const voice of VOICES) {
+      const col = s.voices[voice]
+      if (col === undefined) continue
+      columns++
+      openers.add(col.opener)
+      if (col.shared !== undefined) shared.add(col.shared)
+      for (const stance of ['invite', 'respond', 'space'] as const) {
+        labels.add(col.branches[stance].label)
+        replies.add(col.branches[stance].said)
+      }
+    }
+
+  it('is 51 situations in 204 voice columns: 204 openers, 612 replies, 4 shared second beats (the corpus header\'s own numbers)', () => {
+    expect(SMALL_TALK_SITUATIONS.length).toBe(51)
+    expect(columns).toBe(204)
+    expect(openers.size).toBe(204)
+    expect(replies.size).toBe(612)
+    expect(shared.size).toBe(4)
+    expect(labels.size, 'distinct stance labels').toBe(145)
+  })
+
+  it('every opener, label, reply and shared beat is a catalog key and seatable (OUTSIDE_CATALOG for the corpus: 0)', () => {
+    const outside = (set: ReadonlySet<string>): number => [...set].filter((s) => !inCatalog(s)).length
+    expect({ openers: outside(openers), labels: outside(labels), replies: outside(replies), shared: outside(shared) }).toEqual(OUTSIDE_CATALOG)
+    for (const s of [...openers, ...labels, ...replies, ...shared]) expectSeatable(s)
+  })
+
+  it('the frame pool is 18 seats (9 per presence), each a catalog key – the `{0} {1}` join never makes the (frame x opener) product a key', () => {
+    const lines = [...SMALL_TALK_FRAMES.roof, ...SMALL_TALK_FRAMES.away].map((f) => f.line)
+    expect(lines.length).toBe(18)
+    for (const l of lines) {
+      expect(inCatalog(l), l).toBe(true)
+      expectSeatable(l)
+    }
+    expect(Object.keys(CATALOG.keys).filter((k) => lines.some((l) => k.startsWith(l) && k.length > l.length + 1 && k.includes('" ')))).toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------
 // §7 – the sinks' sentences
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 /** the string literals under `const NAME = …` in a life file (a table's every cell) */
@@ -510,7 +575,23 @@ describe('§8 played careers', () => {
     expect(total).toBeGreaterThan(200)
   })
 
-  it('every feed row a life sink wrote carries `c`, and every row\'s `c` renders to its `text` (the kept news, the ending, the answers)', () => {
+  it('every row an ANSWER wrote was read the moment it was written (an ordinary row is pruned sixty weeks on): it carries `c`, which renders to its `text`, and its key is the frozen table\'s', () => {
+    let rows = 0
+    const kinds = new Set<string>()
+    for (const run of Object.values(careers())) {
+      for (const r of run.answerRows) {
+        expect(r.c, `${r.kind}: ${r.text}`).toBeDefined()
+        expect(render(r.c!)).toBe(r.text)
+        expect(TABLE.has(r.c!.k), r.c!.k).toBe(true)
+        kinds.add(r.kind)
+        rows++
+      }
+    }
+    expect(rows, 'the careers answered beats that write a feed row').toBeGreaterThan(3)
+    expect(kinds.size).toBeGreaterThan(1)
+  })
+
+  it('every feed row a life sink wrote carries `c`, and every row\'s `c` renders to its `text` (the kept news, the ending)', () => {
     let life = 0
     let withC = 0
     for (const run of Object.values(careers())) {
@@ -543,3 +624,49 @@ describe('§9 the pick keys – the sub-streams the life files draw on (this wav
 })
 /** the digest of the sorted `rngFromSeed(...)` argument texts of every life file, computed by this very scan on the PRE-WAVE tree (0b60a1b3): the new tree must give the same */
 const PICK_KEYS_DIGEST = 'feef4fb8'
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------
+// §10 – the fridge notes
+// ---------------------------------------------------------------------------------------------------------------------------------------------
+describe('§10 the fridge notes – UI-side, a local hash, never the engine\'s dice', () => {
+  const pools: Record<string, readonly string[]> = {
+    FRIDGE_NOTES,
+    INDEPENDENT_NOTES,
+    STRAINED_AWAY_NOTES,
+    COLD_AWAY_NOTES,
+    EXAM_NOTES,
+    TRIP_NOTES,
+    INDEPENDENT_TRIP_NOTES,
+  }
+  const all = Object.values(pools).flat()
+
+  it('seven pools, 115 lines, every one a catalog key and seatable – OUTSIDE_CATALOG for the fridge: 0 (the composable is a census copy home since this wave)', () => {
+    expect(Object.values(pools).map((p) => p.length)).toEqual([50, 27, 8, 6, 8, 8, 8])
+    expect(all.length).toBe(115)
+    expect(all.filter((s) => !inCatalog(s))).toEqual([])
+    for (const s of all) expectSeatable(s)
+  })
+
+  it('⭐ PICK-STABILITY: the pick over 3 seeds x 104 weeks x 3 moods x 4 stages x 5 bands hashes to the pre-wave tree\'s digest (the file this wave did not touch, pinned so a pool reorder or a changed hash key is a diff)', () => {
+    const rows: Array<string | null> = []
+    for (const seed of ['alpha', 'bench-3-0', 'a-real-seed'])
+      for (let week = 0; week < 104; week++)
+        for (const mood of ['home', 'exam', 'trip'] as NoteMood[])
+          for (const stage of ['school', 'after-school', 'college', 'independent'] as DiaryLifeStage[])
+            for (const band of [null, 'close', 'steady', 'strained', 'cold'] as const) rows.push(fridgeNoteFor(seed, week, mood, stage, band))
+    expect(fnv1a(JSON.stringify(rows)).toString(16), `${rows.length} picks`).toBe(FRIDGE_DIGEST)
+    expect(rows.filter((r) => r === null).length, 'the silent slots of the away cadence').toBeGreaterThan(0)
+  })
+
+  it('the cadence rows (AWAY_NOTE_CHANCE) are the ruled ladder', () => {
+    expect(AWAY_NOTE_CHANCE).toEqual({ close: 0.75, steady: 0.55, strained: 0.3, cold: 0.12 })
+  })
+
+  it('the screen reads the picked line through `t()` – a dynamic seat, the engine\'s own literal looked up as a key – and nothing else about the pick moved', () => {
+    const screen = readFileSync(join(ROOT, 'src/components/screens/CalendarScreen.vue'), 'utf8')
+    expect(screen).toContain('{{ t(fridgeNote) }}')
+    expect(screen).toContain('fridgeNoteFor(snap.seed, week.week')
+  })
+})
+/** the digest of the sweep above, computed by the same loop on the PRE-WAVE tree (0b60a1b3) – `composables/fridgeNote.ts` is byte-identical on both */
+const FRIDGE_DIGEST = 'd8b65413'
