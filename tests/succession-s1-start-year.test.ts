@@ -205,8 +205,9 @@ describe('S1 · B – a career born in 2048', () => {
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
 describe('S1 · C – the schema move', () => {
-  it('v92 is the head, and its migration states 2031 for every older career – the epoch was a constant until now', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(92)
+  it('v92 introduced the year, and its migration states 2031 for every older career – the epoch was a constant until now', () => {
+    // ⚠ RE-AIMED 09.10 BY v93 (the localization rig L3-0): the head moved, this claim is about what v92's step wrote – `toBe(92)` became "at least".
+    expect(SAVE_SCHEMA_VERSION).toBeGreaterThanOrEqual(92)
     for (const file of ['v0.json', 'v25.json', 'v60.json', 'v90.json', 'v91.json']) {
       const migrated = migrateSave(load(file))
       expect(migrated.startYear, file).toBe(2031)
@@ -214,12 +215,16 @@ describe('S1 · C – the schema move', () => {
     }
   })
 
-  it('the v92 golden fixture is the head shape: the year, no legacy block, and nothing for the migration to do', () => {
+  it('the v92 golden fixture is the v92 shape: the year, no legacy block, and v93\'s step the only thing left for the migration to do', () => {
     const fixture = load('v92.json') as unknown as WorldState
     expect(fixture.schemaVersion).toBe(92)
     expect(fixture.startYear).toBe(2031)
     expect('legacy' in fixture).toBe(false)
-    expect(migrateSave(load('v92.json'))).toEqual(fixture)
+    // ⚠ RE-AIMED 09.10 BY v93 (the localization rig L3-0): "nothing for the migration to do" was true of the head; the head moved, and the one step left
+    // only attaches a ref BESIDE each recognised row's text – so the fixture equals the migrated save minus the version and those refs.
+    const migrated = migrateSave(load('v92.json')) as unknown as { schemaVersion: number; events: Record<string, unknown>[] }
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    expect({ ...migrated, schemaVersion: 92, events: migrated.events.map(({ c: _c, ...row }) => row) }).toEqual(fixture)
   })
 
   it('creation refuses a year that is not a whole calendar year', () => {

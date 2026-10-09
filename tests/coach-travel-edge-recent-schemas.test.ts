@@ -1,4 +1,4 @@
-// THE FROZEN CAREERS, THE RUNGS AT THE TOP – v88 down to v83.
+// THE FROZEN CAREERS, THE RUNGS AT THE TOP – v93 down to v84 (v83's rung moved to -late-schemas on 09.10, when v93 made this the eleventh).
 //
 // ⚠⚠ WHY THIS FILE EXISTS, AND IT IS THE THIRD TIME THIS FAMILY HAS BEEN CUT FOR THE SAME REASON.
 // birpc's RPC window is a hard 60 s and it is not raisable; a file whose tests cross it fails the job
@@ -49,7 +49,6 @@
 import { describe, it, expect } from 'vitest'
 import {
   careerHashAtSchema,
-  PRE_V83,
   PRE_V84,
   PRE_V85,
   PRE_V86,
@@ -59,9 +58,19 @@ import {
   PRE_V90,
   PRE_V91,
   PRE_V92,
+  PRE_V93,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v93: rolling the schema back to 92 returns the v92 CAREER on all three – the fifth rung whose peel does nothing', () => {
+    // ⭐ v93 (the localization rig, L3-0, 09.10) adds `WorldEvent.c?` and NOTHING WRITES IT: a played career gains no key, so there is nothing to peel and the
+    // rollback to 92 is the live world with its own number on it. The three values are the three `FROZEN` constants this branch held at v92 (0fc8191b), copied
+    // verbatim before the re-stamp (the block over `PRE_V93` in tests/coachTravelEdgeFixtures.ts). The first writer that sets `c` turns these red on purpose.
+    expect(careerHashAtSchema(5, 0, 92), '25k · middle coach · grinder – the verbatim v92 value').toBe(PRE_V93.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 92), '120k · elite coach · grinder – the verbatim v92 value').toBe(PRE_V93.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 92), '8k · self-coached · player – the verbatim v92 value').toBe(PRE_V93.selfTravelling)
+  })
+
   it('⭐⭐⭐ v92: rolling the schema back to 91 – dropping `startYear` – returns the v91 CAREER on all three', () => {
     // ⭐⭐⭐ THE RUNG WHOSE PEEL REALLY REMOVES A KEY. v92 (SUCCESSION S1 – the calendar's start year) writes `startYear` on EVERY world, so unlike the
     // four rungs before it this one is not an identity in shape: `careerHashAtSchema` drops the key for every rollback below 92, and what is left
@@ -247,35 +256,6 @@ describe('the byte-identity of a career that does not travel', () => {
     expect(careerHashAtSchema(5, 0, 83), '25k · middle coach · grinder – the verbatim v83 value').toBe(PRE_V84.middleGrinder)
     expect(careerHashAtSchema(8, 0, 83), '120k · elite coach · grinder – the verbatim v83 value').toBe(PRE_V84.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 83), '8k · self-coached · player – the verbatim v83 value').toBe(PRE_V84.selfTravelling)
-  })
-
-  it('⭐⭐⭐ v83: rolling the schema back to 82 – dropping the latch and the name seats – returns the v82 CAREER on all three', () => {
-    // ⭐⭐ AN IDENTITY, v81's OWN KIND, AND THE CASE NAME SAYS SO because the wave predicted it in §0
-    // and the per-key diff proved it before a constant was touched. v83 appends `latchedWeek` and
-    // `partnerName` to every `LoveEpisode` row (the wedding, wave 7 – T1), both null at birth, and
-    // it appends NO WRITER for either on the T1 tree: the hazard is T2's, the latch write and the
-    // naming are T3's, and every one of them is gated on `ageYears >= 23`.
-    //
-    // ⚠⚠ THE CALENDAR IS THE WHOLE ARGUMENT, exactly as it was for v81's corpus: **a frozen career
-    // is 156 weeks from its own start, so the girl in it is 16.6 and never reaches 23** – no wedding
-    // hazard can fire, no `'engaged'` beat can be raised, no name can be drawn and no cost can be
-    // charged, however many waves land on top of T1. The peel drops two null fields and rolls the
-    // number, and the exact v82 serialisation comes back: `PRE_V83` holds the VERBATIM v82 `FROZEN`
-    // constants, measured rather than promised.
-    //
-    // ⚠ SO IF THIS GOES RED BESIDE A GREEN FREEZE, THE FIRST QUESTION IS NOT «WHAT BROKE» BUT «DID
-    // THE WALK GET LONGER» – the day `FREEZE_WEEKS` reaches past 23 x 52 from age 14, this rung
-    // stops being an identity and re-anchors with everything under it, and that is correct rather
-    // than a regression. A red HERE with the walk unchanged means something below 23 reached a
-    // wedding seat, which §0 calls a leak and the wave must stop for.
-    //
-    // ⚠ THE PER-KEY CONTROL is in the v83 block over `PRE_V83` in tests/coachTravelEdgeFixtures.ts –
-    // `schemaVersion` alone on four of five cells, `schemaVersion` + `loveEpisodes` on
-    // `eliteGrinder` (its one row, `p:137`, gaining the two null fields – the key append itself),
-    // `rngMain` byte-identical on all five, and the frozen MAIN capture unmoved.
-    expect(careerHashAtSchema(5, 0, 82), '25k · middle coach · grinder – the verbatim v82 value').toBe(PRE_V83.middleGrinder)
-    expect(careerHashAtSchema(8, 0, 82), '120k · elite coach · grinder – the verbatim v82 value').toBe(PRE_V83.eliteGrinder)
-    expect(careerHashAtSchema(0, 1, 82), '8k · self-coached · player – the verbatim v82 value').toBe(PRE_V83.selfTravelling)
   })
 
 })

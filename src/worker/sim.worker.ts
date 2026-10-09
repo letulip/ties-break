@@ -208,10 +208,20 @@ function recoverMainState(w: WorldState): MainRngState {
  *  defect; see `refreshDerivedRankCaches`). The refresh is deterministic and idempotent, so it is
  *  NOT a recovery: its answer never touches the `recovered` flag the player is warned with. */
 function ensureMainState(w: WorldState): boolean {
-  const rngRepaired = !verifyMainState(w)
-  if (rngRepaired) w.rngMain = recoverMainState(w)
-  refreshDerivedRankCaches(w)
-  return rngRepaired
+  // ⚠ A RAW THROW HERE IS A DAMAGED FILE, AND IT USED TO ESCAPE WITHOUT A CODE (09.10, found by the v93 golden joining the save-doors fuzz as a base).
+  // `refreshDerivedRankCaches` reads `results` and trusts every element to be a row; a foreign file with `results[767] := true` passed the spine, threw a
+  // bare TypeError here – outside `importDryRun`'s guard – and the door answered «Cannot read properties of undefined» with NO `code`, which is the one
+  // thing invariant 2 of tests/save-doors-fuzz.test.ts forbids («a refusal the store can branch on»). The same typed refusal `importDryRun` gives, the same
+  // sentence: no new copy, only the news arriving in the right type. Pre-existing and independent of v93 – the newest base simply sampled it first.
+  try {
+    const rngRepaired = !verifyMainState(w)
+    if (rngRepaired) w.rngMain = recoverMainState(w)
+    refreshDerivedRankCaches(w)
+    return rngRepaired
+  } catch (err) {
+    if (err instanceof SaveFileError) throw err
+    throw new SaveFileError('corrupted', 'This save file is damaged – its contents cannot be read')
+  }
 }
 
 /**

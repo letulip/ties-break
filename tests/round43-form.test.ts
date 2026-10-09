@@ -363,7 +363,8 @@ describe('§6 the schema move – v80', () => {
     // LADDER'S HEAD so «v80 is not the head any more» stays a checkable sentence. The form half below is untouched.
     // ⚠ AND AGAIN AT v91 (02.10, round 45 #5 – the first-touch latch `firstNo1`), NOT WEAKENED, for the same reason: the head moved, the
     // form half below did not.
-    expect(SAVE_SCHEMA_VERSION).toBe(92)
+    // ⚠ AND AGAIN AT v93 (09.10, the localization rig L3-0): the head moved, the form half below did not.
+    expect(SAVE_SCHEMA_VERSION).toBe(93)
     expect(createWorld('form-schema', DEFAULT_PROFILE).form).toBe(0)
   })
 

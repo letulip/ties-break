@@ -473,16 +473,21 @@ describe('B · the page – once per latched table, never otherwise', () => {
 
 describe('C · the migration – a latch only where the cached rank is 1 as the save is written', () => {
   it('C1 · the head is v91 and the golden fixture is the real migration\'s own output on v90.json', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(92)
+    expect(SAVE_SCHEMA_VERSION).toBe(93)
     expect((read(91) as { schemaVersion: number }).schemaVersion).toBe(91)
     // ⚠ RE-AIMED 06.10 BY v92 (SUCCESSION S1, the calendar's start year): the head moved, so migrating v90.json now arrives at v92 – the recipe is unchanged.
     // v91.json is its output MINUS the two things the later step adds (`startYear` and the version number), and v92.json is the whole of it.
     const stripped = (w: unknown): Record<string, unknown> => {
       const { startYear: _startYear, schemaVersion: _schemaVersion, ...rest } = w as Record<string, unknown>
-      return rest
+      return { ...rest, events: withoutRefs((w as { events?: unknown }).events) }
     }
-    expect(stripped(migrateSave(read(90))), 'the recipe every fixture since v25 uses – v91.json is its output minus what v92 adds').toEqual(stripped(read(91)))
-    expect(migrateSave(read(90)), 'and the head fixture is the same recipe one rung up').toEqual(read(92))
+    // ⚠ RE-AIMED 09.10 BY v93 (the localization rig L3-0, `WorldEvent.c`): the head moved again, so migrating v90.json now arrives at v93 – the recipe is unchanged.
+    // v93's step attaches a ref BESIDE each recognised row's text, so the comparison drops `c` (and the version) from both sides; v93.json is the whole of it.
+    const withoutRefs = (events: unknown): unknown =>
+      Array.isArray(events) ? events.map((e: Record<string, unknown>) => { const { c: _c, ...rest } = e; return rest }) : events
+    expect(stripped(migrateSave(read(90))), 'the recipe every fixture since v25 uses – v91.json is its output minus what v92 and v93 add').toEqual(stripped(read(91)))
+    expect(stripped(migrateSave(read(90))), 'and the v92 fixture is the same recipe one rung up, minus what v93 adds').toEqual(stripped(read(92)))
+    expect(migrateSave(read(90)), 'and the head fixture is the same recipe two rungs up').toEqual(read(93))
     expect('firstNo1' in migrateSave(read(90)), 'a save whose cached ranks are not 1 gains no key').toBe(false)
   })
 

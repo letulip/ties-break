@@ -125,7 +125,8 @@ describe('S2b 0 – the walked mother and the constants are what this file says 
     expect(STARTING_FUNDS_CENTS.middle, 'B – the ordinary start budget of the default girl; if it moved, re-predict the header').toBe(2_500_000)
     expect(DEFAULT_PROFILE.background).toBe('middle')
     expect(START_AGE_YEARS, 'a prologue hands a girl to the world at fourteen – the age the calendar arithmetic adds').toBe(14)
-    expect(SAVE_SCHEMA_VERSION, 'S2b moves no schema').toBe(92)
+    // ⚠ RE-AIMED 09.10 BY v93 (the localization rig L3-0): S2b still moves no schema – the head moved under it, by another wave's step.
+    expect(SAVE_SCHEMA_VERSION, 'S2b moves no schema (the head is v93: the localization rig, not S2b)').toBe(93)
   })
 })
 

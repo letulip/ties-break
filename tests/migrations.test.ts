@@ -671,7 +671,8 @@ describe('save migrations', () => {
     // ⚠ AND AGAIN AT v91 (02.10, round 45 #5 – the first-touch latch), NOT WEAKENED: same reason, same line. v91 was moved with its full
     // move and its step writes `firstNo1` only where a cached rank is 1 – it cannot touch the v63 -> v65 walk this case is about.
     // ⚠ AND AGAIN AT v92 (06.10, SUCCESSION S1 – the calendar's start year): one more bump, and this pin follows the live number as it always has.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 92 – past the colliding 64, through 65').toBe(92)
+    // ⚠ AND AGAIN AT v93 (09.10, the localization rig L3-0 – `WorldEvent.c`): one more bump; its step only attaches a ref beside a row's text and cannot touch the v63 -> v65 walk this case is about.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 93 – past the colliding 64, through 65').toBe(93)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

@@ -83,6 +83,11 @@ function handoverOf(seed: string): { run: PrologueRun; handover: PrologueHandove
   return { run, handover: { years: chosenYears(run), spentCents: spentCents(run), trace: traceOf(run) } }
 }
 
+// ⚠ RE-AIMED 09.10 BY v93 (the localization rig L3-0, `WorldEvent.c`): the head's step attaches a ref BESIDE each recognised ledger row's text, so «the step wrote nothing
+// else» is read on the rows WITHOUT that one optional key – every other byte of every row, and every other key, is compared exactly as before.
+const bareJson = (key: string, value: unknown): string =>
+  JSON.stringify(key === 'events' && Array.isArray(value) ? value.map(({ c: _c, ...row }: Record<string, unknown>) => row) : value)
+
 describe('v84 §A – the migration back-fills the trace, and only ever with the truth', () => {
   it('a v83 payload arrives at the head carrying `prologueTrace: null`, and nothing else of it moves', () => {
     const raw = v83()
@@ -94,7 +99,7 @@ describe('v84 §A – the migration back-fills the trace, and only ever with the
     const b = JSON.parse(before) as Record<string, unknown>
     for (const key of Object.keys(b)) {
       if (key === 'schemaVersion') continue
-      expect(JSON.stringify(out[key]), `${key} survives the step untouched`).toBe(JSON.stringify(b[key]))
+      expect(bareJson(key, out[key]), `${key} survives the step untouched`).toBe(bareJson(key, b[key]))
     }
   })
 

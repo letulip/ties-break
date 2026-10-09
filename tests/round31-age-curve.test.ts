@@ -360,7 +360,7 @@ describe('⭐⭐⭐ v68 – the pin, which is what the version move is FOR', () 
     // moved. Nothing in a rank latch touches a curve, or could. Added 02.10.
     // ⚠ AND v92.json IS THE SAME PROBE ONE MORE VERSION UP – `migrateSave(v91.json)`: `startYear` is one more key, written right after `week`, and nothing in a calendar year
     // touches a curve, or could. Added 06.10 (SUCCESSION S1).
-    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json' || file === 'v86.json' || file === 'v87.json' || file === 'v88.json' || file === 'v89.json' || file === 'v90.json' || file === 'v91.json' || file === 'v92.json') {
+    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json' || file === 'v86.json' || file === 'v87.json' || file === 'v88.json' || file === 'v89.json' || file === 'v90.json' || file === 'v91.json' || file === 'v92.json' || file === 'v93.json') {
       expect(migrated.ageCurve, `${file}: the fork's own resolution, unmoved by the ladder`).toEqual({
         ...resolveAgeCurve(migrated.seed, 'direct'),
         injuryFrom: 0,

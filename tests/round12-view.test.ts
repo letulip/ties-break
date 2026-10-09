@@ -296,7 +296,10 @@ describe('R12-12 — the tournament plaque is two lines: sentence, then score', 
     const split = slice(seasonScreen, 'function plaqueLines', '// R10-15')
     expect(split).toContain('m.bId === KID_ID ? flipScore(m.score)')
     // and the graceful floor: no stored scoreline (or a reworded sentence) = one line, as before
-    expect(split).toContain('e.text.endsWith(score)')
+    // ⚠ RE-AIMED 09.10 BY v93 (the localization rig L3-0, `WorldEvent.c`): the plaque splits the sentence THE SCREEN SHOWS – `eventText(e)`, the ref rendered under the locale
+    // when the row has one, its stored text otherwise (the same bytes under English) – so the floor reads `text.endsWith(score)` where `text` is that. The claim is unchanged.
+    expect(split).toContain('const text = eventText(e)')
+    expect(split).toContain('text.endsWith(score)')
   })
 
   it('THE FACT THE SPLIT LEANS ON: the engine sentence ends with the kid-perspective score', () => {

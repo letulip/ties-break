@@ -1144,7 +1144,9 @@ describe('L2-10b dynamic seat – LifeMomentOverlay reads the engine\'s one cont
     const source = SRC('src/components/LifeMomentOverlay.vue')
     expect(source.match(/\{\{\s*t\(/g)?.length, 'exactly one dynamic seat').toBe(1)
     expect(source).toContain('{{ t(moment.confirm) }}')
-    expect(source).toContain('{{ moment.line }}')
+    // ⚠ RE-AIMED 09.10 BY v93 (the localization rig L3-0, `WorldEvent.c`): the line is still the feed's kept text and the overlay still owns no sentence – it is now shown through
+    // `eventText`, so a row that carries a ref (`lineC`, copied by the engine) follows the locale and a row that does not stays verbatim, as the seams case below still measures.
+    expect(source).toContain('{{ eventText({ text: moment.line, c: moment.lineC }) }}')
     expect(CATALOG.keys[LIFE_MOMENT_CONFIRM]?.wrapped, 'the label is a wired key').toBe(true)
     const lines = SRC('src/engine/world/lifeMomentCopy.ts').match(/LIFE_MOMENT_CONFIRM\s*=/g) ?? []
     expect(lines, 'one label constant, one string').toHaveLength(1)
