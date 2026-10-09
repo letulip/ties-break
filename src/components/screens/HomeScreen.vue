@@ -70,7 +70,7 @@ import { TIER_SHORT } from '../../composables/weekAhead'
 // strip is its third consumer, never a second derivation. See `stripExpanded` below.
 import { feedContext, isTierOpen, useTierStates } from '../../composables/tierState'
 // L2-3 (08.10): RU-03 – Home's frame, controls, cards, season strip and news shell call `t()`; the coach pools are `localizedList`s.
-import { localizedList, t } from '../../i18n'
+import { eventText, localizedList, t } from '../../i18n'
 import MatchReplay from '../MatchReplay.vue'
 import RankHelpDialog from '../RankHelpDialog.vue'
 // v48: the podium's own paper, on the one week a year that is about her rather than about tennis.
@@ -1942,7 +1942,7 @@ async function leaveCollege(): Promise<void> {
                       <span class="watch-cue">{{ t('Watch') }}</span>
                     </button>
                   </td>
-                  <td v-else>{{ eventPrefix(e) }}{{ e.text }}</td>
+                  <td v-else>{{ eventPrefix(e) }}{{ eventText(e) }}</td>
                 </tr>
               </tbody>
             </table>

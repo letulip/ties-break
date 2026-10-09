@@ -33,7 +33,7 @@ export function lifeMomentOf(world: WorldState): LifeMoment | null {
     const key = milestoneKey(m)
     const event = world.events.find((e) => e.milestoneKey === key)
     if (event === undefined) continue
-    return { kind: type, week: m.week, face: MEMORY_EMOTION[type], line: event.text, confirm: LIFE_MOMENT_CONFIRM }
+    return { kind: type, week: m.week, face: MEMORY_EMOTION[type], line: event.text, ...(event.c ? { lineC: event.c } : {}), confirm: LIFE_MOMENT_CONFIRM }
   }
   return null
 }

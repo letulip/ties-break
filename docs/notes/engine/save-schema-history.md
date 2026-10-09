@@ -1184,3 +1184,39 @@ The version-by-version chronicle that stood above `SAVE_SCHEMA_VERSION` in `src/
 // tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked schema sentence, the e2e fixtures, and the frozen-career
 // family: `careerHashAtSchema`'s rung, `PRE_V92`, the eleven re-stamped cells and the v92 case in tests/coach-travel-edge-recent-schemas.test.ts.
 ```
+
+## v93 – the sentence as data
+
+```ts
+// ⭐⭐⭐ v93 – THE SENTENCE AS DATA (THE LOCALIZATION RIG, L3-0, 09.10; docs/specs/i18n-2026-10.md §5). **ONE OPTIONAL KEY ON EVERY `WorldEvent` ROW** – `c?: CopyRef`, the sentence as
+// `{ k, p }` (the English template with `{0}`-style holes, and the values that went into them) – and the migration that fills it for the rows an old save already holds.
+//
+// ⚠⚠ `text` STAYS ON EVERY ROW. The owner's ruling 4 (01.10): «legacy English stored in `WorldEvent.text` may be retained internally for save compatibility, but it is not an acceptable visible fallback
+// in Russian mode». Retained, not displayed: the UI shows `c` rendered under the locale when a row has one (`eventText` in src/i18n) and `text` otherwise; under English the two are the same bytes. Dropping `text`
+// from converted rows was the alternative and was refused: it turns `text` optional on a type ~40 files read and breaks the readers that COMPARE it (diary/facts `tierFromLabel`, `phaseObligations`' opening
+// test, `tabSeen`'s calendar row; `SeasonScreen`'s score tail splits the rendered text) – tests/i18n-l3-0-event-readers.test.ts names every one and fails on a new one.
+//
+// ⚠⚠ THE BACKFILL IS A RECOGNITION, NOT A RECONSTRUCTION. The sentences old code could store are a closed set; `src/engine/migrations/legacyTemplates.v92.ts` is its frozen snapshot (the closed set of 679 sentences: 392
+// stored directly – 155 whole sentences, 237 templates with holes – and 287 selections of the winter kit-letter row stored as its five parts and expanded when the table loads, which
+// is what keeps the worker bundle 85 KiB lighter than spelling them out and the install inside its ceiling; built by a static sweep of every `addEvent` and `fireMilestone` call – tools/legacy-templates-sweep.ts reproduces the file byte for byte on commit 0fc8191b).
+// `reverseMatch.ts` matches each row's `text` against it: an exact hole-free sentence first, else the template with the most literal characters, then fewer holes (hole CLASSES pin the three seams the
+// anchors cannot: a scoreline, a tier label, a finish). A match is KEPT only if the ref renders back to the stored bytes through the SAME formatter the UI runs (`renderCopyRef`, English) – a wrong table can
+// cost coverage, never a sentence. Holes capture STRINGS (the rendered values; the spec allows plain values) – a hole that is itself translatable (a week label, a finish) therefore stays English inside a
+// Russian sentence until its own wave nests a CopyRef there.
+//
+// ⚠ ONLY `world.events`. Letters, the diary and the album are separate prose classes with their own stored text; any move they need is a later wave's own step. A row nothing recognises keeps `text` alone
+// and is COUNTED – the count is stored NOWHERE (`attachCopyRefs` returns it to a caller that asks; the L3-0 measurement did). A row that already carries `c` is skipped, so the step is idempotent.
+//
+// ⚠ MEASURED (09.10): the owner's own 20-season save (r47-career.tsave, v92, read-only) – 404 rows, 397 converted (98.27%), 7 left over = THREE retired wordings, dated by `git log -S`: «One more year, she said.»
+// (reworded to «you said» on 07.10, round 48 B1; 5 rows), «A masseur is on the payroll now» (17.09, the sheet applied to the letters; 1 row) and «Your coach can travel to tournaments with her now … twice the
+// fare» (reworded after 15.08; 1 row). The 13 committed e2e careers: 4,668 rows, 99.74% (the 12 left over are the first of those). 18 engine careers x 300 weeks: 42,994 rows, 100%. The 150-week twin
+// (7 careers, the pre-wave tree 0fc8191b against this one): every event row, the world minus the version, the snapshot minus the version and the next draws byte-identical; the old arm's 2,800 rows migrate
+// 2,800 of 2,800 with 0 render mismatches.
+//
+// ⚠ ZERO DRAWS, no sub-stream: pure string work against a frozen table; the frozen MAIN capture (41550 / e6b0c709) is untouched by construction. NOTHING WRITES `c` YET – L3-1 to L3-7 convert the writers one
+// prose class at a time – so a played career serialises as its v92 self plus the version number: no peel rung, `PRE_V93` holds the v92 `FROZEN` constants and `careerHashAtSchema(·, ·, 92)` returns them.
+//
+// Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, the v92 -> v93 step in migrations.ts (+ migrations/legacyTemplates.v92.ts and reverseMatch.ts), tests/fixtures/saves/v93.json, its row in
+// tests/fixtures/saves/README.md, docs/context/saves-and-worker.md's mechanically-checked schema sentence, the e2e fixtures (re-stamped) and the frozen-career family: `PRE_V93`, the eleven re-stamped
+// live cells and the v93 case in tests/coach-travel-edge-recent-schemas.test.ts (whose v83 rung moved to -late-schemas, the standing cut).
+```

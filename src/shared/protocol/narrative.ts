@@ -13,6 +13,8 @@ import type { TierId } from '../../engine/season/types'
 import type { SpiritBand, Temperament } from '../../engine/spirit'
 import type { MemoryFace, PortraitEmotion, PortraitStage } from '../avatarEmotion'
 import type { KnockChoice } from './health'
+// v93 (L3-0), type-only: the life-moment line is a COPY of a ledger row's sentence, so it carries the row's ref when the row has one.
+import type { CopyRef } from '../i18n'
 
 // --- Diary-1 + Memory (docs/specs/family-diary.md, D1/D2/D3 + D10) -------------
 // The diary speaks in WORDS licensed by FACTS. The engine assembles the facts at snapshot time
@@ -1528,6 +1530,9 @@ export interface LifeMoment {
   face: MemoryFace
   /** the ONE line – the feed's own kept text for the day, engine-assembled and never the view's */
   line: string
+  /** ⭐ v93 (L3-0) – the same line as data, copied from the ledger row's `c` when it has one; the overlay renders it under the locale and
+   *  falls back to `line`. OPTIONAL and ABSENT when the row carries no ref – a snapshot field, never persisted, so no schema move. */
+  lineC?: CopyRef
   /** the one control's label, engine-side for the same reason */
   confirm: string
 }

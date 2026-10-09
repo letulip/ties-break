@@ -45,8 +45,14 @@ export const SOURCE_LOCALE = 'en'
  *  paragraphs), so rendering recurses. JSON-safe by construction: L3 stores these in saves. */
 export interface CopyRef {
   k: string
-  p?: unknown[]
+  p?: CopyParam[]
 }
+
+/** ⭐ v93 (L3-0): WHAT A PARAM OF A STORED REF MAY BE – what JSON can hold, or another ref. `p` was `unknown[]` until a ref became a persisted
+ *  field of `WorldEvent` (`c`): the game store's `$patch` types its state through a `DeepPartial`, which has no answer for `unknown` and turned
+ *  25 mounted tests red at the type level. The narrower type is also simply the TRUE one – `undefined`, a function or an object cannot survive
+ *  `JSON.stringify`, and a ref that a save will carry should not be able to hold them. The renderer's `scalar` still accepts anything at runtime. */
+export type CopyParam = string | number | boolean | null | CopyRef
 
 /** Named params for UI calls (`{ week, total }`), positional for CopyRefs (`[name]`). */
 export type MessageParams = Readonly<Record<string, unknown>> | readonly unknown[]
@@ -82,7 +88,7 @@ export function isCopyRef(v: unknown): v is CopyRef {
 /** The engine's call shape (spec §3.2): `` cp`Rain washed out ${name}'s practice` `` is
  *  `{ k: "Rain washed out {0}'s practice", p: [name] }`. One backtick prefix per call site, which is
  *  what makes the class-(b)/(c) migration mechanical. Draws nothing. */
-export function cp(strings: TemplateStringsArray, ...values: unknown[]): CopyRef {
+export function cp(strings: TemplateStringsArray, ...values: CopyParam[]): CopyRef {
   let k = strings[0] ?? ''
   for (let i = 0; i < values.length; i++) k += `{${i}}${strings[i + 1] ?? ''}`
   return values.length > 0 ? { k, p: values } : { k }

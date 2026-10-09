@@ -68,6 +68,15 @@ export function renderCopy(ref: CopyRef): string {
   return renderCopyRef(ref, context())
 }
 
+/** ⭐ v93 (L3-0) – THE ONE WAY A SCREEN SHOWS A LEDGER ROW'S SENTENCE: `c` rendered under the current locale when the row carries one,
+ *  its stored `text` when it does not. Under English the two are the same bytes (the formatter's identity path, and the migration refuses
+ *  to attach a `c` that does not render back to the stored text), so wiring a screen through this changes nothing a player can see today.
+ *  ⚠ A reader that COMPARES or SPLITS a row's sentence (the score tail, an opening test) asks `e.text` on purpose – that is the English
+ *  evidence, not the display; see `tests/i18n-l3-0-event-readers.test.ts`. */
+export function eventText(e: { text: string; c?: CopyRef }): string {
+  return e.c ? renderCopy(e.c) : e.text
+}
+
 /** A LIST WHOSE ITEMS ARE READ THROUGH `t()` AT THE MOMENT THEY ARE INDEXED – L2-1 wrote it for `MONTHS`, L2-2 shares it with the
  *  prologue's coach pools. The list keeps its type and its callers (`list[i]`, `v-for`, `.map`, `.indexOf`, `.length`), the words
  *  follow the locale on the next render instead of freezing the language the module was imported in, and – the reason it is an

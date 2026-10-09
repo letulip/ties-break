@@ -82,6 +82,7 @@
     "tools/knock-rate.ts",
     "tools/ladder-floor.ts",
     "tools/ladder-vs-targets.ts",
+    "tools/legacy-templates-sweep.ts",
     "tools/life-arrival.ts",
     "tools/load-and-injury.ts",
     "tools/load-bench.ts",

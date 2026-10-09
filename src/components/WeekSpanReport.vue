@@ -45,6 +45,8 @@ import { useDialogFocus } from '../composables/dialogFocus'
 import { weekLabel } from '../shared/dates'
 import { formatCentsSigned } from '../shared/money'
 import { useStartYear } from '../composables/startYear'
+// v93 (L3-0): a ledger row's sentence is `c` rendered under the locale when the row has one, its stored `text` otherwise.
+import { eventText } from '../i18n'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
 
@@ -90,7 +92,7 @@ useDialogFocus(card, () => emit('close'))
         <h3 class="week-span-week-head">{{ weekLabel(w.week, startYear) }}</h3>
         <ul class="week-span-rows">
           <li v-for="row in w.rows" :key="row.id" class="week-span-row">
-            <span class="week-span-text">{{ row.text }}</span>
+            <span class="week-span-text">{{ eventText(row) }}</span>
             <span
               v-if="row.amountCents !== undefined"
               class="week-span-amount num"

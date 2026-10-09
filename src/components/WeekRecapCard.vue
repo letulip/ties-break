@@ -57,7 +57,7 @@ import { activeLadderOfSnapshot } from '../shared/protocol'
 import type { TravelHomeMood, TravelHomeScene, WorldEvent, WorldMatch } from '../shared/protocol'
 import { useStartYear } from '../composables/startYear'
 // L2-3 (08.10): RU-03 §20–§23 – the recap's frame, labels, alts, finance rows and memos, mood words and the goal scrap call `t()`.
-import { t } from '../i18n'
+import { eventText, t } from '../i18n'
 import { ladderName } from '../composables/kidIdentity'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
@@ -593,7 +593,10 @@ const coachCutMemo = computed(() =>
 // is a SENTENCE ("Restring – multifilament"), not a total, and `financeWeeks` stores cents per
 // category. `EVENTS_ORDINARY_FLOOR` is what keeps it here – see the prune note in world.ts. Empty
 // string on a week whose rows have aged out, which is what it has always fallen back to.
-const flavorText = computed(() => weekEvents.value.find((e) => e.type === 'expense')?.text ?? '')
+const flavorText = computed(() => {
+  const first = weekEvents.value.find((e) => e.type === 'expense')
+  return first ? eventText(first) : ''
+})
 
 /** THE SCRAP UNDER THE PAINTING, and it has THREE possible writers now.
  *
@@ -724,9 +727,9 @@ const highlights = computed<string[]>(() => {
   // The line already quoted on the paper note, by identity rather than by text, so a week with two
   // identically worded spends still lists the second one.
   const quoted = events.find((e) => e.type === 'expense')
-  const beats = events.filter((e) => HIGHLIGHT_TYPES.has(e.type)).map((e) => e.text)
+  const beats = events.filter((e) => HIGHLIGHT_TYPES.has(e.type)).map((e) => eventText(e))
   if (rankMoveLine.value) beats.push(rankMoveLine.value)
-  beats.push(...events.filter((e) => e.type === 'expense' && e !== quoted).map((e) => e.text))
+  beats.push(...events.filter((e) => e.type === 'expense' && e !== quoted).map((e) => eventText(e)))
   return beats.slice(0, 3)
 })
 

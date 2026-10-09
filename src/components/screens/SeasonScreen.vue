@@ -17,7 +17,7 @@
 // reasoning IS the record, and the record now lives in two places rather than one.
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { localizedList, t } from '../../i18n'
+import { eventText, localizedList, t } from '../../i18n'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import MatchReplay from '../MatchReplay.vue'
 import MatchViewer from '../MatchViewer.vue'
@@ -1344,8 +1344,9 @@ interface PlaqueLines {
 function plaqueLines(e: WorldEvent): PlaqueLines {
   const m = e.match
   const score = m?.score ? (m.bId === KID_ID ? flipScore(m.score) : m.score) : null
-  if (!score || !e.text.endsWith(score)) return { title: e.text, score: null }
-  return { title: e.text.slice(0, e.text.length - score.length).trimEnd(), score }
+  const text = eventText(e)
+  if (!score || !text.endsWith(score)) return { title: text, score: null }
+  return { title: text.slice(0, text.length - score.length).trimEnd(), score }
 }
 
 // R10-15: the this-week list read identically for a win and a loss, so the parent had to parse
@@ -1532,7 +1533,7 @@ function closeExhibition(): void {
 
     <section v-if="thisWeekMatches.length">
       <h2>{{ t('This week\'s tournament') }}</h2>
-      <p v-if="thisWeekSummary" class="tournament-summary">{{ thisWeekSummary.text }}</p>
+      <p v-if="thisWeekSummary" class="tournament-summary">{{ eventText(thisWeekSummary) }}</p>
       <ol class="bracket-list">
         <!-- R12-12: TWO lines – the sentence on top, the scoreline on its own line beneath. -->
         <li
@@ -1562,7 +1563,7 @@ function closeExhibition(): void {
           class="bracket-row"
           :class="{ won: kidWon(thisWeekFriendly) === true, lost: kidWon(thisWeekFriendly) === false }"
         >
-          <span>{{ thisWeekFriendly.text }}</span>
+          <span>{{ eventText(thisWeekFriendly) }}</span>
           <button
             v-if="thisWeekFriendly.match"
             class="watch-play-btn sfx-watch"

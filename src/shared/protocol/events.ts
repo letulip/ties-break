@@ -15,6 +15,9 @@ import type { MatchRecord } from '../../engine/season/types'
 // back is the one shape this module set forbids (see the header).
 import type { LifeBeatKind } from './narrative'
 import type { EntryReleaseReason } from './offers'
+// ⭐ v93 (the localization rig, L3-0), TYPE-ONLY: the shape `WorldEvent.c` carries. `shared/i18n.ts` is the one module both halves may
+// import (no Vue, no Pinia, no dice), and a type-only import is erased, so this adds no runtime arrow to the protocol module set.
+import type { CopyRef } from '../i18n'
 
 // --- World events (Package M) ------------------------------------------------
 // Structured events replace the old flat `log` strings. Financial events carry a
@@ -281,6 +284,26 @@ export interface WorldEvent {
    *  only what the column draws. Writers: the exposure row (`engine/spirit.ts` 2d) and the leak
    *  rows (`world/lifeBeat.ts` §9). `lifeRowGlyphs` maps it to his camera. */
   lifeKind?: LifeBeatKind | 'exposure'
+  /** ⭐⭐⭐ v93 (the localization rig, L3-0 – docs/specs/i18n-2026-10.md §5) – THE SENTENCE AS DATA, BESIDE THE SENTENCE AS PROSE.
+   *
+   *  `text` is English with its params already poured in, composed once and shown verbatim forever – class (c) of the spec, the one that
+   *  cannot switch language by itself. `c` is the same sentence as a `CopyRef`, `{ k, p }`: the English template with `{0}`-style holes and
+   *  the values that went into them. The UI shows `c` rendered under the current locale and falls back to `text` when a row has none
+   *  (`eventText` in `src/i18n`); under English the two are the same bytes, which `renderCopyRef`'s identity path guarantees and the
+   *  migration CHECKS on every row it converts (a match that does not render back to the stored text is discarded).
+   *
+   *  ⚠⚠ `text` STAYS, AND THAT IS A DECISION. The owner's ruling 4 (01.10): «legacy English stored in `WorldEvent.text` may be retained
+   *  internally for save compatibility, but it is not an acceptable visible fallback in Russian mode» – retained, not displayed. Dropping it
+   *  from converted rows would have turned `text` optional on a type read by ~40 files, and several readers COMPARE it (diary/facts'
+   *  `tierFromLabel`, `phaseObligations`' opening test, `tabSeen`'s calendar row, `SeasonScreen`'s score tail); keeping it makes this
+   *  wave a pure addition. Whether a later wave stops writing it is that wave's call, made with the reader list in front of it
+   *  (`tests/i18n-l3-0-event-readers.test.ts` names every one).
+   *
+   *  ⚠ OPTIONAL, AND THE MIGRATION IS WHAT FILLS IT (v92 -> v93): every historical row whose sentence the frozen template table recognises
+   *  gains `c`; a row nothing recognises keeps `text` alone and is counted, never hidden. NO WRITER SETS IT YET – L3-1 to L3-7 convert
+   *  the writers one prose class at a time, each emitting `c` beside `text`, so until then every NEW row is a remainder row by construction.
+   *  Params are plain values (strings, after the migration; whatever the writer passed, after L3-1) and may themselves be `CopyRef`s. */
+  c?: CopyRef
 }
 
 /** The season event a `WorldEvent` is ABOUT: enough to name it on a screen without re-reading the

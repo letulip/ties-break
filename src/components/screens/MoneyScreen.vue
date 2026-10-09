@@ -49,7 +49,7 @@
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { prefersReducedMotion } from '../../composables/reducedMotion'
-import { localizedList, t } from '../../i18n'
+import { eventText, localizedList, t } from '../../i18n'
 // ⭐ ROUND 42 #11 – `staffResultShareBps` joins the same import, and for the reason round 29 #13
 // gave on the coaches page: the percentage a screen prints must be the one `finalizeTournament`
 // pays through, never a typed copy of it. See `coachShareNote` below.
@@ -1311,7 +1311,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
 
         <div class="money-artefacts" aria-hidden="true">
           <PaperNote v-if="receipt" class="money-receipt" tilt="2deg" ruled torn>
-            <span class="money-receipt-line">{{ receipt.text }}</span>
+            <span class="money-receipt-line">{{ eventText(receipt) }}</span>
             <span class="money-receipt-line">{{ weekLabel(receipt.week, startYear) }}</span>
             <span class="money-receipt-line money-receipt-sum">
               {{ formatCents(receipt.amountCents ?? 0) }}
@@ -1688,7 +1688,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
               v-for="row in group.rows"
               :key="row.event.id"
               class="money-row"
-              :label="row.event.text"
+              :label="eventText(row.event)"
               :meta="formatCents(row.balanceAfter)"
               :value="formatCentsSigned(row.event.amountCents ?? 0)"
               :tone="(row.event.amountCents ?? 0) < 0 ? 'negative' : 'positive'"
