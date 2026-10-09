@@ -358,14 +358,21 @@ describe('L2-8 completeness – every string of the viewer files is a wired key,
     expect(absent, 'a key the file names that it does not call').toEqual([])
   })
 
-  it('the engine-born prose is NOT wired here: the commentary and the preview are L3, the viewer only renders their rows', () => {
+  // ⭐ L3-7 (10.10) RE-AIM, NOT RELAXED. The arm used to say «the commentary and the preview are L3, the viewer only renders their rows» and pinned that they do not reach the UI layer. L3-7 is that
+  // wave: the two builders still call no `t()` and import nothing from the UI i18n layer – the engine-born prose rides as CopyRefs BESIDE the strings (`Beat.leadC` / `textC`, `PreviewLine.c`, made with `cp`
+  // from `shared/i18n`, the module both halves may import) – and the viewer draws them with `eventText`. The English rows stay plain text beside the refs (`text: b.text`, `text: line.text`), which is what
+  // the key cut, the budget and every older pin read. The proof that the rows follow the locale is `tests/component/i18n-l3-7-viz-display.test.ts`; the key law is `tests/i18n-l3-7-viz.test.ts`.
+  it('the engine-born prose calls no t(): the commentary and the preview emit refs beside their strings, and the viewer draws them', () => {
     for (const file of ['src/viz/commentary.ts', 'src/viz/preview.ts']) {
       expect(/from '(?:\.\.\/)+i18n'/.test(SRC(file)), `${file} learned to call t()`).toBe(false)
+      expect(SRC(file), `${file} emits refs`).toMatch(/import \{ cp, type CopyRef \} from '\.\.\/shared\/i18n'/)
     }
-    // …and the rows reach the log as plain text, never through a key (a row's text is a string the builder already composed)
     const viewer = SRC('src/components/MatchViewer.vue')
     expect(viewer).toMatch(/text: b\.text/)
     expect(viewer).toMatch(/text: line\.text/)
+    expect(viewer, 'the beat rows carry their refs').toMatch(/leadC: b\.leadC, text: b\.text, textC: b\.textC/)
+    expect(viewer, 'the preview rows carry their refs').toMatch(/text: line\.text, textC: line\.c/)
+    expect(viewer, 'the log draws through eventText').toMatch(/eventText\(\{ text: row\.text, c: row\.textC \}\)/)
   })
 })
 

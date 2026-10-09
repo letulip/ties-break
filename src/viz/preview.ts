@@ -53,6 +53,11 @@ import { tierFromEventId } from '../engine/diary/facts'
 import { stageLabel } from '../engine/world/labels'
 import type { TierId } from '../engine/season/types'
 import type { MatchPlayer, Side, Surface, Tour } from '../engine/match/types'
+// ⭐ L3-7 (10.10) – EVERY LINE THIS FILE SAYS IS A `Line`: the English it always returned AND the `CopyRef` that translates it, made from ONE `cp` template (see `./lines`). The file still
+// calls no `t()` and imports nothing from the UI layer; the words that are the ENGINE's own (a round's label, a tier's label, a name) pass as params, and a sentence with a counted or an
+// optional part is a whole sentence per form. `tests/i18n-l3-7-twin.test.ts` holds the pre-wave tree's digest of every line of the grid.
+import { cp, type CopyRef } from '../shared/i18n'
+import { line, type Line } from './lines'
 
 /** The four storeys of the ladder, low to high. */
 export type Storey = 1 | 2 | 3 | 4
@@ -177,9 +182,11 @@ export interface PreviewLine {
   /** stable across rebuilds, so a list render does not churn */
   key: string
   text: string
+  /** ⭐ L3-7: the ref of `text`, beside the English – the viewer draws it under the locale. It renders to `text` under the source locale (proven for every line of the grid). */
+  c?: CopyRef
 }
 
-const SURFACE_WORD: Record<Surface, string> = { hard: 'Hard court', clay: 'Clay', grass: 'Grass' }
+const SURFACE_WORD: Record<Surface, Line> = { hard: line(cp`Hard court`), clay: line(cp`Clay`), grass: line(cp`Grass`) }
 
 /** How the ball will behave, per surface - the compatibility rule from
  *  docs/research/commentary-lexicon.md §5.4, where `bite` is clay, `skid` is grass and `true bounce`
@@ -188,10 +195,10 @@ const SURFACE_WORD: Record<Surface, string> = { hard: 'Hard court', clay: 'Clay'
  *  ⚠ NONE OF THEM NAMES ITS SURFACE. The occasion line one row up has already said which court this
  *  is, and a block that says "Grass today: low and skidding through" is a generator repeating its
  *  own slot back at the reader. */
-const SURFACE_NOTE: Record<Surface, string> = {
-  hard: 'A true bounce all day, and no surprises off it.',
-  clay: 'Slow and high, and the ball will bite.',
-  grass: 'It will stay low and skid through, so the points will be short.',
+const SURFACE_NOTE: Record<Surface, Line> = {
+  hard: line(cp`A true bounce all day, and no surprises off it.`),
+  clay: line(cp`Slow and high, and the ball will bite.`),
+  grass: line(cp`It will stay low and skid through, so the points will be short.`),
 }
 
 /**
@@ -213,12 +220,12 @@ const SURFACE_NOTE: Record<Surface, string> = {
  * ⚠ AND IT IS RNG-FREE, like every other line in this file. It is a lookup on a number the day
  * already has.
  */
-function conditionsNote(c: number): string {
-  if (c <= 14) return 'Cold enough that the ball will not fly, and cold hands on the racket all afternoon.'
-  if (c <= 18) return 'Cool, and it will take a while for either of them to feel the ball.'
-  if (c <= 24) return 'A comfortable day for it, and no excuses in the air.'
-  if (c <= 27) return 'Warm work out there, and the towel comes out between points.'
-  return 'Hot, and everybody is sweating before the end of the first game.'
+function conditionsNote(c: number): Line {
+  if (c <= 14) return line(cp`Cold enough that the ball will not fly, and cold hands on the racket all afternoon.`)
+  if (c <= 18) return line(cp`Cool, and it will take a while for either of them to feel the ball.`)
+  if (c <= 24) return line(cp`A comfortable day for it, and no excuses in the air.`)
+  if (c <= 27) return line(cp`Warm work out there, and the towel comes out between points.`)
+  return line(cp`Hot, and everybody is sweating before the end of the first game.`)
 }
 
 /** The number said the way a person says it, never as a decimal. Rounded at the template boundary,
@@ -250,19 +257,19 @@ export function remainingIn(roundLabel: string): number | null {
  *  into a fixed "is into ___" frame produced "Win it and Olivia is into the title", which is the
  *  classic template tell: one frame stretched over a case it does not fit. The last round is a
  *  different sentence, so it gets one. */
-function stakeClause(roundLabel: string, who: string): string | null {
+function stakeLine(roundLabel: string, who: string, points: number | null): Line | null {
   const remaining = remainingIn(roundLabel)
   if (remaining === null || remaining < 2) return null
-  if (remaining === 2) return `Win it and ${who} has the title`
-  const stage =
-    remaining === 4
-      ? 'the final'
-      : remaining === 8
-        ? 'the semifinals'
-        : remaining === 16
-          ? 'the quarterfinals'
-          : `the round of ${remaining / 2}`
-  return `Win it and ${who} is into ${stage}`
+  // ⭐ L3-7: the clause and the sentence are one thing now – five stakes, each with and without «– and the round pays N points» (from storey 3 the same sentence carries the number),
+  // so ten whole sentences and no fragment: a Russian clause cannot be slotted into an English frame (RU-08 §12.1).
+  const pays = points !== null && points !== 0
+  if (remaining === 2) return pays ? line(cp`Win it and ${who} has the title – and the round pays ${points} points.`) : line(cp`Win it and ${who} has the title.`)
+  if (remaining === 4) return pays ? line(cp`Win it and ${who} is into the final – and the round pays ${points} points.`) : line(cp`Win it and ${who} is into the final.`)
+  if (remaining === 8) return pays ? line(cp`Win it and ${who} is into the semifinals – and the round pays ${points} points.`) : line(cp`Win it and ${who} is into the semifinals.`)
+  if (remaining === 16) return pays ? line(cp`Win it and ${who} is into the quarterfinals – and the round pays ${points} points.`) : line(cp`Win it and ${who} is into the quarterfinals.`)
+  return pays
+    ? line(cp`Win it and ${who} is into the round of ${remaining / 2} – and the round pays ${points} points.`)
+    : line(cp`Win it and ${who} is into the round of ${remaining / 2}.`)
 }
 
 /**
@@ -301,7 +308,7 @@ function firstName(name: string): string {
 interface Entry {
   key: string
   from: Storey
-  say: (ctx: Ctx) => string | null
+  say: (ctx: Ctx) => Line | null
 }
 
 interface Ctx {
@@ -321,14 +328,20 @@ const ENTRIES: readonly Entry[] = [
     key: 'occasion',
     from: 1,
     say: ({ event, input }) => {
-      const where = event ? `${event.roundLabel} at the ${TIERS[event.tier].label}.` : 'A hit-out, nothing on it.'
+      const surface = SURFACE_WORD[input.surface].c
       // ⚠ THE TEMPERATURE STAYS AT EVERY STOREY, and the first draft dropped it above the junior
       // rungs on the argument that the weather plate above the court already carries it. That breaks
       // the ladder: monotone means a storey never has LESS than the one below it, and "the top of the
       // ladder stops telling you what the day is like" is exactly the kind of quiet subtraction the
       // rule exists to forbid. The block is read as one piece and stands on its own.
-      if (input.temperatureC === null) return `${where} ${SURFACE_WORD[input.surface]}.`
-      return `${where} ${SURFACE_WORD[input.surface]}, ${Math.round(input.temperatureC)} degrees.`
+      // ⭐ L3-7: the occasion line is four sentences (a tournament or a hit-out, with and without the day's temperature); the round's and the tier's labels are the engine's own words, params.
+      if (input.temperatureC === null) {
+        return event ? line(cp`${event.roundLabel} at the ${TIERS[event.tier].label}. ${surface}.`) : line(cp`A hit-out, nothing on it. ${surface}.`)
+      }
+      const degrees = Math.round(input.temperatureC)
+      return event
+        ? line(cp`${event.roundLabel} at the ${TIERS[event.tier].label}. ${surface}, ${degrees} degrees.`)
+        : line(cp`A hit-out, nothing on it. ${surface}, ${degrees} degrees.`)
     },
   },
   {
@@ -352,12 +365,13 @@ const ENTRIES: readonly Entry[] = [
     from: 1,
     say: ({ storey, oppName, opp, input }) => {
       const age = years(opp)
-      const bits: string[] = []
-      if (age !== null) bits.push(`${age}`)
       // The rank arrives at storey 2 - below that there is no table anybody is looking at.
-      if (storey >= 2 && input.oppRank !== null) bits.push(`ranked #${input.oppRank}`)
-      const tail = bits.length > 0 ? `, ${bits.join(', ')}` : ''
-      return `Across the net: ${oppName}${tail}.`
+      const rank = storey >= 2 && input.oppRank !== null ? input.oppRank : null
+      // ⭐ L3-7: the optional age and the optional rank make four sentences (a part that exists only sometimes is a sentence per form).
+      if (age !== null && rank !== null) return line(cp`Across the net: ${oppName}, ${age}, ranked #${rank}.`)
+      if (age !== null) return line(cp`Across the net: ${oppName}, ${age}.`)
+      if (rank !== null) return line(cp`Across the net: ${oppName}, ranked #${rank}.`)
+      return line(cp`Across the net: ${oppName}.`)
     },
   },
   {
@@ -367,20 +381,21 @@ const ENTRIES: readonly Entry[] = [
       if (storey === 1) {
         // No chair, no data, self-scored - and on clay the mark on the court is the whole argument.
         return input.surface === 'clay'
-          ? 'Nobody in the chair. They call their own lines, and the mark on the court settles it.'
-          : 'Nobody in the chair. They call their own lines, and a bad call is part of the day.'
+          ? line(cp`Nobody in the chair. They call their own lines, and the mark on the court settles it.`)
+          : line(cp`Nobody in the chair. They call their own lines, and a bad call is part of the day.`)
       }
       if (storey === 2) {
         // The junior ladder puts a chair in the seat only at the sharp end, and which end depends on
         // the rung: the lower Junior Tour levels get one for the final, J300 from the semifinals.
         const late = event ? isLateRound(event) : false
-        const fromWhere = event?.tier === 'j300' ? 'the semifinals' : 'the final'
-        return late
-          ? 'A chair umpire in the seat for this one, and a live score going out.'
-          : `No chair umpire until ${fromWhere}. Today they call their own lines.`
+        // ⭐ L3-7: «until the semifinals» / «until the final» are two whole sentences, not one with a slot.
+        if (late) return line(cp`A chair umpire in the seat for this one, and a live score going out.`)
+        return event?.tier === 'j300'
+          ? line(cp`No chair umpire until the semifinals. Today they call their own lines.`)
+          : line(cp`No chair umpire until the final. Today they call their own lines.`)
       }
-      if (storey === 3) return 'Chair umpire, and the match stats go on the record afterwards.'
-      return 'Chair, review, and every point of it published as it happens.'
+      if (storey === 3) return line(cp`Chair umpire, and the match stats go on the record afterwards.`)
+      return line(cp`Chair, review, and every point of it published as it happens.`)
     },
   },
   // ---- storey 2: what the round is for ------------------------------------------------------
@@ -389,19 +404,16 @@ const ENTRIES: readonly Entry[] = [
     from: 2,
     say: ({ storey, event, her }) => {
       if (!event) return null
-      const clause = stakeClause(event.roundLabel, firstName(her.name))
-      if (clause === null) return null
-      if (storey === 2) return `${clause}.`
-      const points = roundPoints(event.tier, event.roundLabel)
       // From storey 3 the same sentence carries the number, which is the whole of "the numbers start".
-      return points === null || points === 0 ? `${clause}.` : `${clause} – and the round pays ${points} points.`
+      const points = storey === 2 ? null : roundPoints(event.tier, event.roundLabel)
+      return stakeLine(event.roundLabel, firstName(her.name), points)
     },
   },
   // ---- storey 3: the numbers start ----------------------------------------------------------
   {
     key: 'chance',
     from: 3,
-    say: ({ chance, her }) => `${firstName(her.name)} goes in with a ${pct(chance)} chance of winning it.`,
+    say: ({ chance, her }) => line(cp`${firstName(her.name)} goes in with a ${pct(chance)} chance of winning it.`),
   },
   // ---- storey 4: the professional register --------------------------------------------------
   {
@@ -411,15 +423,15 @@ const ENTRIES: readonly Entry[] = [
       const mine = input.heroRank
       const theirs = input.oppRank
       const who = firstName(her.name)
-      if (mine === null && theirs === null) return `Neither ${who} nor ${oppName} has a ranking to defend here.`
-      if (mine === null) return `${who} is unranked at this level; ${oppName} is #${theirs}.`
-      if (theirs === null) return `${who} is #${mine}; ${oppName} arrives with no ranking at all.`
+      if (mine === null && theirs === null) return line(cp`Neither ${who} nor ${oppName} has a ranking to defend here.`)
+      if (mine === null) return line(cp`${who} is unranked at this level; ${oppName} is #${theirs}.`)
+      if (theirs === null) return line(cp`${who} is #${mine}; ${oppName} arrives with no ranking at all.`)
       const gap = Math.abs(mine - theirs)
-      if (gap === 0) return `${who} and ${oppName} are level on the table at #${mine}.`
+      if (gap === 0) return line(cp`${who} and ${oppName} are level on the table at #${mine}.`)
       const ahead = theirs < mine ? oppName : who
       return gap === 1
-        ? `#${mine} against #${theirs}: one place between them, and it is ${ahead}'s.`
-        : `#${mine} against #${theirs}, and ${ahead} is ${gap} places ahead.`
+        ? line(cp`#${mine} against #${theirs}: one place between them, and it is ${ahead}'s.`)
+        : line(cp`#${mine} against #${theirs}, and ${ahead} is ${gap} places ahead.`)
     },
   },
   {
@@ -462,8 +474,8 @@ export function buildPreview(input: PreviewInput): PreviewLine[] {
   const out: PreviewLine[] = []
   for (const entry of ENTRIES) {
     if (entry.from > storey) continue
-    const text = entry.say(ctx)
-    if (text) out.push({ key: entry.key, text })
+    const said = entry.say(ctx)
+    if (said && said.text) out.push({ key: entry.key, text: said.text, c: said.c })
   }
   return out
 }

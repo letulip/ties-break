@@ -1,0 +1,269 @@
+{
+ "viz": {
+  "commentary": {
+   "digests": {
+    "m0": "6dbfa2dc5552",
+    "m0+packets": "f29e7fa37dfd",
+    "m1": "6d06cb2cf8c4",
+    "m1+packets": "98f94c688064",
+    "m10": "4e958d5a28c0",
+    "m10+packets": "862ecb054029",
+    "m11": "85a3450de437",
+    "m11+packets": "347babf9feb2",
+    "m12": "b768c660de27",
+    "m13": "9f4f85236b60",
+    "m14": "83a8b1eed435",
+    "m15": "5f30fa3bf1b4",
+    "m16": "2c499e1f5f53",
+    "m17": "344ccee8d1e5",
+    "m18": "7acc36722499",
+    "m19": "46b74928218f",
+    "m2": "0825d755f321",
+    "m2+packets": "f6d17fc1c67e",
+    "m20": "3f367b33fffe",
+    "m21": "a6de6aa2d3cb",
+    "m22": "58d2996fabd4",
+    "m23": "77aeff2def49",
+    "m24": "f836720b5dfa",
+    "m25": "8ca7b7099be9",
+    "m26": "09828006809e",
+    "m27": "272f87c74154",
+    "m28": "b0b5b0c17c8e",
+    "m29": "0f16fa3aba58",
+    "m3": "218b8ae9f960",
+    "m3+packets": "f597406d30b8",
+    "m30": "39cd3adfcfec",
+    "m31": "5dc2e6258e5a",
+    "m32": "10be3d7078d5",
+    "m33": "de3e2fc2ccb0",
+    "m34": "1134e71ab217",
+    "m35": "42ad82f3f98e",
+    "m36": "e5bdd8702018",
+    "m37": "71dbb557b4b7",
+    "m38": "3a8e219bb6ea",
+    "m39": "14896ee2372d",
+    "m4": "cf070839974b",
+    "m4+packets": "da6bb1721d0d",
+    "m40": "88b55b2757e9",
+    "m41": "71c26e0d4d27",
+    "m42": "a8eba449808f",
+    "m43": "d2e1573a4bdc",
+    "m44": "5b3bab3e5a9c",
+    "m45": "7f5e55f6005b",
+    "m46": "2792226ad047",
+    "m47": "996d05074004",
+    "m48": "227e1022a1b0",
+    "m49": "74c3177f9449",
+    "m5": "94b849048594",
+    "m5+cross": "fe1206577756",
+    "m5+packets": "455f0487f231",
+    "m50": "72ec78a4b65f",
+    "m51": "95b5491a3157",
+    "m52": "cb136d236c5c",
+    "m53": "51a04a31641b",
+    "m54": "d7aec5a7da28",
+    "m55": "4b4b817b9903",
+    "m56": "cf396bb77090",
+    "m57": "44a933fbf081",
+    "m58": "9ab664d78c37",
+    "m59": "1a30d66c3a9f",
+    "m6": "b746961ddcff",
+    "m6+packets": "fe297f229aa8",
+    "m60": "b7a917a9f245",
+    "m61": "eb72e27563cb",
+    "m62": "a5a39645faf4",
+    "m63": "dc68cfaf51de",
+    "m64": "34916d9f5cce",
+    "m65": "46436a5553df",
+    "m66": "1d23b933f9e5",
+    "m67": "c9553040eac8",
+    "m68": "f5ccd75ed9b3",
+    "m69": "9eacf22b94be",
+    "m7": "0c987035a331",
+    "m7+packets": "ab5b6eecfadd",
+    "m70": "c602bfdac247",
+    "m71": "0ee8de638840",
+    "m72": "814c38053ef7",
+    "m73": "490a3bcb0fc3",
+    "m74": "629b637310ee",
+    "m75": "fbe775024792",
+    "m76": "3a717e174ced",
+    "m77": "33f6742c36fa",
+    "m78": "d22dcd864e93",
+    "m79": "31386e69937d",
+    "m8": "c9c73e42514a",
+    "m8+packets": "484fa7b0fd24",
+    "m80": "b3879daaa112",
+    "m81": "5e431ae94309",
+    "m82": "99fe41a0ca3e",
+    "m83": "d5fb3724f9f3",
+    "m9": "5368f5b64fd1",
+    "m9+packets": "278163b6b6a4",
+    "r0": "83ae649c9cf1",
+    "r1": "7225e20f9204",
+    "r2": "e7e2aaaf87c5",
+    "r3": "4fd90cfd4f0d"
+   },
+   "builds": 9057,
+   "beats": 150663
+  },
+  "preview": {
+   "digests": {
+    "bare": "00c958999822",
+    "flip": "8d3ce5e59700",
+    "friendly": "7bcbac130724",
+    "j30": "04e749bc2681",
+    "j300": "006bc8262bbe",
+    "j60": "4c0d1df65a07",
+    "local": "8f09b95c1161",
+    "national": "a29bfdbc95c0",
+    "regional": "880ac90de2b6",
+    "slam": "7f6f4a53ba77",
+    "unaged": "83438bcea5c5",
+    "w100": "1b3e20580bbb",
+    "w15": "b988b0583b33",
+    "w35": "5d897097877b",
+    "w50": "f88b5fff7d70",
+    "w75": "a97958d764a9",
+    "wta1000": "c95a0a2891cc",
+    "wta125": "68a4bb39321f",
+    "wta250": "06d8827dd864",
+    "wta500": "00085aae9f7a"
+   },
+   "builds": 10210,
+   "lines": 60192
+  },
+  "knock": {
+   "digest": "e3e3f0a87911",
+   "prompts": 1200
+  }
+ },
+ "careers": {
+  "5/0": {
+   "rows": 3003,
+   "rowsDigest": "ac21b77fcf4e",
+   "rows150": 1454,
+   "rowsDigest150": "8f0342331a89",
+   "watched": {
+    "digest": "1cdaf969501c",
+    "matches": 316,
+    "beats": 4869
+   },
+   "next3": [
+    0.18923983839340508,
+    0.10872006509453058,
+    0.37577401218004525
+   ],
+   "world": "575addaa6268",
+   "snapshot": "e19672423bf3"
+  },
+  "8/0": {
+   "rows": 2573,
+   "rowsDigest": "7c89a6e0a720",
+   "rows150": 1460,
+   "rowsDigest150": "bf1774078346",
+   "watched": {
+    "digest": "109b1bd79a6e",
+    "matches": 213,
+    "beats": 3342
+   },
+   "next3": [
+    0.5853763336781412,
+    0.30679384991526604,
+    0.533905585296452
+   ],
+   "world": "8ef0001e8742",
+   "snapshot": "fb84e77d6633"
+  },
+  "0/1": {
+   "rows": 2418,
+   "rowsDigest": "be4cc8043ae6",
+   "rows150": 1166,
+   "rowsDigest150": "964705ca3166",
+   "watched": {
+    "digest": "8915f559148e",
+    "matches": 389,
+    "beats": 6090
+   },
+   "next3": [
+    0.5724380605388433,
+    0.42566752806305885,
+    0.06560832215473056
+   ],
+   "world": "507e561d5c71",
+   "snapshot": "82ab23d3dbd2"
+  },
+  "6/1": {
+   "rows": 2616,
+   "rowsDigest": "6f2a2250a775",
+   "rows150": 1225,
+   "rowsDigest150": "b91427e2a98f",
+   "watched": {
+    "digest": "ccb04dcfe6f5",
+    "matches": 341,
+    "beats": 5225
+   },
+   "next3": [
+    0.18923983839340508,
+    0.10872006509453058,
+    0.37577401218004525
+   ],
+   "world": "610a26f8598e",
+   "snapshot": "92aff3b2b684"
+  },
+  "5/1": {
+   "rows": 2749,
+   "rowsDigest": "ab41db22c52b",
+   "rows150": 1305,
+   "rowsDigest150": "6e66ab330504",
+   "watched": {
+    "digest": "91499731f355",
+    "matches": 364,
+    "beats": 5611
+   },
+   "next3": [
+    0.18923983839340508,
+    0.10872006509453058,
+    0.37577401218004525
+   ],
+   "world": "e6f09842ed79",
+   "snapshot": "8e83a847114e"
+  }
+ },
+ "college": {
+  "college/l37-college-a/full": {
+   "rows": 1856,
+   "rowsDigest": "5fd56e6c372c",
+   "watched": {
+    "digest": "ff928dbfdf97",
+    "matches": 5,
+    "beats": 71
+   },
+   "next3": [
+    0.4882973087951541,
+    0.14759210450574756,
+    0.6604983219876885
+   ],
+   "weeks": 364,
+   "world": "d54e479f5466",
+   "snapshot": "434c08d7836f"
+  },
+  "college/l37-college-b/early": {
+   "rows": 1330,
+   "rowsDigest": "2e8bc2984bf1",
+   "watched": {
+    "digest": "899d5cb84a46",
+    "matches": 6,
+    "beats": 116
+   },
+   "next3": [
+    0.11890045925974846,
+    0.7617741406429559,
+    0.3359662333969027
+   ],
+   "weeks": 260,
+   "world": "1d00d2853043",
+   "snapshot": "4a1059593283"
+  }
+ }
+}

@@ -223,17 +223,17 @@ describe('wave 10 T5 E – what the booth may say', () => {
     const known = boothLineageLines({ side: 0, proTitles: 0, collegeTitles: 0, slams: 0 })
     const titled = boothLineageLines({ side: 0, proTitles: 6, collegeTitles: 0, slams: 1 })
     expect(known).not.toBe(titled)
-    for (const line of known.map((f) => f('Nadia'))) {
+    for (const line of known.map((f) => f('Nadia').text)) {
       expect(line, `a titleless mother's line claims a cabinet: ${line}`).not.toMatch(/won|title|troph/i)
     }
-    for (const line of titled.map((f) => f('Nadia'))) {
+    for (const line of titled.map((f) => f('Nadia').text)) {
       expect(line, `a titled mother's line says nothing about the cabinet: ${line}`).toMatch(/won|troph/i)
     }
   })
 
   it('⚠⚠ not one line names the mother – the packet carries no name and none is invented', () => {
     for (const proTitles of [0, 6]) {
-      for (const line of boothLineageLines({ side: 0, proTitles, collegeTitles: 0, slams: 0 }).map((f) => f('Nadia'))) {
+      for (const line of boothLineageLines({ side: 0, proTitles, collegeTitles: 0, slams: 0 }).map((f) => f('Nadia').text)) {
         expect(line, line).not.toMatch(/Alice|Martin/)
         // ...and no number either: the booth is not reading a stat sheet.
         expect(line, line).not.toMatch(/\d/)

@@ -21,7 +21,8 @@ import { buildClockTrack, clockSecondsAt, formatMatchClock, type ClockTrack } fr
 import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { initSfx, playSfx, primeSfx } from '../audio/sfx'
 import { formatShortName } from '../shared/format'
-import { localizedList, t } from '../i18n'
+import { eventText, localizedList, t } from '../i18n'
+import type { CopyRef } from '../shared/i18n'
 import { pointServeSpeeds, type StruckServe } from '../engine/match/serveSpeed'
 import { matchSpeedDefault, matchViewDefault, type MatchSpeed } from '../composables/matchDefaults'
 // R2-11 – THE TWO OWNERS THIS FILE NO LONGER IS. `usePlaybackClock` is the ONE clock: the rAF loop,
@@ -984,7 +985,7 @@ const previewRows = computed<LogRow[]>(() =>
     oppRank: heroSide.value === 0 ? props.rankB : props.rankA,
     event: props.previewEvent,
     temperatureC: props.temperatureC,
-  }).map((line) => ({ key: `p-${line.key}`, kind: 'intro', rail: '', lead: null, text: line.text, score: '' })),
+  }).map((line) => ({ key: `p-${line.key}`, kind: 'intro', rail: '', lead: null, text: line.text, textC: line.c, score: '' })),
 )
 
 /** A row of the log: a commentary beat, or something the parent shouted. ONE flat shape rather than
@@ -996,7 +997,11 @@ interface LogRow {
   /** the left-rail label ("S2"), or '' for a row that belongs to no set - see `previewRows` */
   rail: string
   lead: string | null
+  /** ⭐ L3-7: the ref beside the English `lead` – the row draws `eventText`, so the bold head follows the locale */
+  leadC?: CopyRef
   text: string
+  /** ⭐ L3-7: the ref beside the English `text` (a commentary beat's, or a preview line's) */
+  textC?: CopyRef
   score: string
 }
 
@@ -1018,7 +1023,7 @@ const visibleRows = computed<LogRow[]>(() => {
   const merged: { pointIndex: number; order: number; row: LogRow }[] = visibleBeats.value.map((b) => ({
     pointIndex: b.pointIndex,
     order: 0,
-    row: { key: `b${b.pointIndex}`, kind: 'beat', rail: t('S{0}', [b.set]), lead: b.lead, text: b.text, score: b.score },
+    row: { key: `b${b.pointIndex}`, kind: 'beat', rail: t('S{0}', [b.set]), lead: b.lead, leadC: b.leadC, text: b.text, textC: b.textC, score: b.score },
   }))
   for (const s of shouts.value) {
     merged.push({
@@ -1400,8 +1405,8 @@ watch(finished, (isFinished) => {
             <span class="mv-beat-text">
               <q v-if="row.kind === 'shout'">{{ row.text }}</q>
               <template v-else>
-                <b v-if="row.lead" class="mv-beat-lead">{{ row.lead }}</b>
-                {{ row.text }}
+                <b v-if="row.lead" class="mv-beat-lead">{{ eventText({ text: row.lead ?? '', c: row.leadC }) }}</b>
+                {{ eventText({ text: row.text, c: row.textC }) }}
               </template>
             </span>
             <span v-if="row.score" class="mv-beat-score num">{{ row.score }}</span>
