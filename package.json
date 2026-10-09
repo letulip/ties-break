@@ -67,6 +67,7 @@
     "test:all": "vitest run --no-file-parallelism --reporter=dot",
     "test:quiet": "node scripts/units.mjs",
     "test:component": "vitest run --project component",
+    "test:carpet": "vitest run --project component i18n-l4-2-xx-carpet",
     "test:e2e": "node scripts/e2e.mjs",
     "test:e2e:report": "node scripts/e2e.mjs --report",
     "test:e2e:ui": "node scripts/e2e.mjs --ui",
