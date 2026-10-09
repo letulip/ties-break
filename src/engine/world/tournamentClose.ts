@@ -29,7 +29,7 @@ import { ECONOMY, kidPrizeShareBps, kidPrizeShareCents, staffPrizeShareCents, st
 import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, RANKABLE_MIN, windowedBestSum } from '../season/ranking'
 import { isFieldProId } from '../season/fieldPros'
 import { addEvent, accrueCoachCut, accrueKidShare } from './ledger'
-import { kidMatchEvent, kidMatchesOf, rivalRetirementNews } from './matchNews'
+import { kidMatchEvent, kidMatchesOf, rivalRetirementNews, rivalRetirementRef } from './matchNews'
 import { retirementInjury } from './injury'
 import { masseurSessionCents, masseurTourRelief, masseurTourWeekCents } from './masseur'
 import { eventById } from './bookings'
@@ -640,6 +640,7 @@ function finalizeTournament(world: WorldState): void {
       week: world.week,
       type: 'info',
       text: `🏆 ${formatShortName(champName)} won the ${tier.label} (${event.surface}).`,
+      c: cp`🏆 ${formatShortName(champName)} won the ${tier.label} (${event.surface}).`,
     })
   }
   if (kidFinish === 0) fireMilestone(world, 'first-title', `🏆 First career title: ${tier.label}!`, cp`🏆 First career title: ${tier.label}!`)
@@ -710,9 +711,11 @@ function emitKidMatch(
   players: Record<string, MatchPlayer>,
 ): void {
   const ev = kidMatchEvent(world, event, m, players)
-  addEvent(world, { week: world.week, type: 'match', text: ev.text, match: ev.match })
+  // ⭐ v93 (L3-3): both rows carry their CopyRef BESIDE the English (the match row's, with the score its LAST hole; the retirement row's, one of six whole sentences).
+  addEvent(world, { week: world.week, type: 'match', text: ev.text, ...(ev.c ? { c: ev.c } : {}), match: ev.match })
   const hurt = rivalRetirementNews(world, event, m, players)
-  if (hurt) addEvent(world, { week: world.week, type: 'info', text: hurt })
+  const hurtC = rivalRetirementRef(world, event, m, players)
+  if (hurt) addEvent(world, { week: world.week, type: 'info', text: hurt, ...(hurtC ? { c: hurtC } : {}) })
 }
 
 /** Reveal ONE more kid match: emit its News `match` event, bump `revealedRounds`, and finalize the

@@ -85,6 +85,10 @@ function turnOverField(world: WorldState, seasonIndex: number): void {
     week: world.week,
     type: 'info',
     text: notable ? `${base} ${notable.name} (#${notable.rank}) is among those who stopped.` : base,
+    // ⭐ v93 (L3-3): the same sentence as a CopyRef, in the frozen table's two spellings (with the named departure, without).
+    c: notable
+      ? cp`A new intake: ${left.length} players have left the tour and ${joined.length} thirteen-year-olds have taken their places. ${notable.name} (#${notable.rank}) is among those who stopped.`
+      : cp`A new intake: ${left.length} players have left the tour and ${joined.length} thirteen-year-olds have taken their places.`,
   })
 }
 
@@ -143,6 +147,15 @@ export function reviewAcademy(world: WorldState): void {
         week: world.week,
         type: 'info',
         text: `${ACADEMY_NOTICE.ended} – ${reason}.`,
+        // ⭐ v93 (L3-3): THREE whole sentences, each BEGINNING with `ACADEMY_NOTICE.ended` – ⚠ the opening `academySpokeThisWeek` tests with `startsWith` on `text`.
+        // `text` is still written (so that reader is unmoved); the net asserts each of the three keys starts with the constant, which is what lets a later wave swap
+        // the reader to `c.k` as a one-comparison change, the way L1c did for the exposure row.
+        c:
+          ageYears > ECONOMY.academy.ageBand[1]
+            ? cp`The academy has ended her scholarship – she has aged out of their junior programme.`
+            : playedLastYear < ECONOMY.academy.minEventsPerYear
+              ? cp`The academy has ended her scholarship – she barely competed this year.`
+              : cp`The academy has ended her scholarship – her year did not make their case.`,
       })
     }
     world.academy = null
@@ -151,7 +164,12 @@ export function reviewAcademy(world: WorldState): void {
 
   const pct = travelCoverPct(level)
   if (!prev) {
-    fireMilestone(world, `academy-in-${seasonIndex}`, `${ACADEMY_NOTICE.arrived} – a scholarship covering ${pct}% of her travel.`)
+    fireMilestone(
+      world,
+      `academy-in-${seasonIndex}`,
+      `${ACADEMY_NOTICE.arrived} – a scholarship covering ${pct}% of her travel.`,
+      cp`An academy has taken her on – a scholarship covering ${pct}% of her travel.`,
+    )
   } else {
     const wasPct = travelCoverPct(prev.level)
     if (pct !== wasPct) {
@@ -159,6 +177,10 @@ export function reviewAcademy(world: WorldState): void {
         week: world.week,
         type: 'info',
         text: `${ACADEMY_NOTICE.reviewed} her scholarship ${pct > wasPct ? 'rises' : 'falls'} to ${pct}% of her travel.`,
+        c:
+          pct > wasPct
+            ? cp`Academy review: her scholarship rises to ${pct}% of her travel.`
+            : cp`Academy review: her scholarship falls to ${pct}% of her travel.`,
       })
     }
   }
@@ -194,6 +216,7 @@ export function reviewAcademy(world: WorldState): void {
       week: world.week,
       type: 'info',
       text: `No academy kit grant this year – ${brand} already kits her out.`,
+      c: cp`No academy kit grant this year – ${brand} already kits her out.`,
     })
   } else if (grant > 0) {
     world.fundsCents += grant

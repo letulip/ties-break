@@ -27,7 +27,7 @@ import {
 } from '../../shared/protocol'
 import { addEvent, financeWindow, isHoldingCategory, realisedLossOf, seasonIndexOf, seasonMoneyOf, seasonStartWeek } from './ledger'
 import { careerMoney } from './reckoning'
-import type { CopyRef } from '../../shared/i18n'
+import { cp, type CopyRef } from '../../shared/i18n'
 // ⚠ `enterprisePaidInWeekCents` was imported here for ruling 6's week arm and is not any more –
 // ruling A of 18.09 superseded it (see `captureBreakEven`). The import goes with the call: an unused
 // one would be a live edge on the import graph for a rule that is no longer implemented.
@@ -37,11 +37,67 @@ import { activeLadderOf, entryCouldNotMove, kidPoints, rankIn } from './ladder'
 import type { WorldState } from '../world'
 
 // --- milestones (never pruned) -----------------------------------------------
-// ⭐ v93 (L3-1): the optional `c` is the sentence as a CopyRef, written BESIDE `text` (spec i18n-2026-10 §5). Only the milestones L3-1 converts pass it
-// (the first prize cheque and the three tournament firsts, all written in `tournamentClose.ts`); every other caller is a later wave's and writes `text` alone.
+// ⭐ v93 (L3-1): the optional `c` is the sentence as a CopyRef, written BESIDE `text` (spec i18n-2026-10 §5). L3-1 converted the first prize cheque and the three tournament
+// firsts (all written in `tournamentClose.ts`); ⭐ L3-3 passes it from every other caller in this file (the last bell, the coach's travel notice, the season wrap-up) and from
+// `phaseObligations.ts`'s academy welcome – the callers that are left on `text` alone are other waves' (the endings, the life beats).
 export function fireMilestone(world: WorldState, key: string, text: string, c?: CopyRef): void {
   if (world.events.some((e) => e.milestoneKey === key)) return
   addEvent(world, { week: world.week, type: 'milestone', text, ...(c ? { c } : {}), keep: true, milestoneKey: key })
+}
+
+/** ⭐ v93 (L3-3) – WHAT DECIDES WHICH OF THE WRAP-UP'S TWELVE SENTENCES IT IS: the rank (unranked / ranked with no arrow / up / down) × the best result (a finish, played but nothing
+ *  scored, nothing played). The writer's own variables, handed over as they are – `rankTrack`, her place in that table (`rank`, null = unranked), the ITF start rank, the label
+ *  of the finish (null = no scoring result) and whether she played at all. */
+export interface SeasonWrapIngredients {
+  year: number
+  rankTrack: LadderTrack
+  rank: number | null
+  startRank: number | null
+  best: string | null
+  played: boolean
+  points: number
+  wins: number
+  losses: number
+  funds: string
+}
+
+/** ⭐ v93 (L3-3) – THE SEASON WRAP-UP AS A COPYREF, written BESIDE `maybeFireSeasonWrapUp`'s sentence (which stays untouched). TWELVE WHOLE SENTENCES, spelled out one by one and
+ *  not assembled from fragments: each is a key of the frozen v92 table, and `tests/i18n-l3-1-ledger-writers.test.ts` §1 refuses any spelling the table does not hold, so a
+ *  typo in a twelfth of this ladder fails there and not in a Russian feed. The editorial note (RU-11A §2) wants this row as one locale-specific formatter – that is the
+ *  landing wave's to design over these keys; the label of the table (`National`…) and of the finish are params until a formatter for them exists.
+ *  The move arrow is ITF-only (see the note at the writer): `rankTrack !== 'itf' || startRank === null || startRank === rank` is the no-arrow case, spelled as the text spells it. */
+export function seasonWrapRef(i: SeasonWrapIngredients): CopyRef {
+  const label = LADDER_LABEL[i.rankTrack]
+  const { year, rank, startRank, points, wins, losses, funds } = i
+  if (rank === null) {
+    const where = label.toLowerCase()
+    return i.best !== null
+      ? cp`Season ${year} wrap-up: Unranked – ${where} · ${points} pts this season · ${i.best} · ${wins}-${losses} (W-L) · funds ${funds}`
+      : i.played
+        ? cp`Season ${year} wrap-up: Unranked – ${where} · ${points} pts this season · no result that scored · ${wins}-${losses} (W-L) · funds ${funds}`
+        : cp`Season ${year} wrap-up: Unranked – ${where} · ${points} pts this season · no tournaments played · ${wins}-${losses} (W-L) · funds ${funds}`
+  }
+  if (i.rankTrack !== 'itf' || startRank === null || startRank === rank) {
+    return i.best !== null
+      ? cp`Season ${year} wrap-up: ${label} rank #${rank} · ${points} pts this season · ${i.best} · ${wins}-${losses} (W-L) · funds ${funds}`
+      : i.played
+        ? cp`Season ${year} wrap-up: ${label} rank #${rank} · ${points} pts this season · no result that scored · ${wins}-${losses} (W-L) · funds ${funds}`
+        : cp`Season ${year} wrap-up: ${label} rank #${rank} · ${points} pts this season · no tournaments played · ${wins}-${losses} (W-L) · funds ${funds}`
+  }
+  if (startRank > rank) {
+    const up = startRank - rank
+    return i.best !== null
+      ? cp`Season ${year} wrap-up: ${label} rank #${rank} (↑${up} vs season start) · ${points} pts this season · ${i.best} · ${wins}-${losses} (W-L) · funds ${funds}`
+      : i.played
+        ? cp`Season ${year} wrap-up: ${label} rank #${rank} (↑${up} vs season start) · ${points} pts this season · no result that scored · ${wins}-${losses} (W-L) · funds ${funds}`
+        : cp`Season ${year} wrap-up: ${label} rank #${rank} (↑${up} vs season start) · ${points} pts this season · no tournaments played · ${wins}-${losses} (W-L) · funds ${funds}`
+  }
+  const down = rank - startRank
+  return i.best !== null
+    ? cp`Season ${year} wrap-up: ${label} rank #${rank} (↓${down} vs season start) · ${points} pts this season · ${i.best} · ${wins}-${losses} (W-L) · funds ${funds}`
+    : i.played
+      ? cp`Season ${year} wrap-up: ${label} rank #${rank} (↓${down} vs season start) · ${points} pts this season · no result that scored · ${wins}-${losses} (W-L) · funds ${funds}`
+      : cp`Season ${year} wrap-up: ${label} rank #${rank} (↓${down} vs season start) · ${points} pts this season · no tournaments played · ${wins}-${losses} (W-L) · funds ${funds}`
 }
 
 /** Diary-1 D10: remember a moment in the durable ledger. Idempotent per `milestoneKey` (a first
@@ -72,7 +128,7 @@ export function captureMilestone(world: WorldState, m: Milestone): void {
  *  capture (41550 / e6b0c709) cannot see it. */
 export function markSchoolEnd(world: WorldState): void {
   if (world.week !== schoolEndWeek(world.profile.birthMonth, world.startYear)) return
-  fireMilestone(world, 'school', 'Last bell. From Monday the mornings are hers.')
+  fireMilestone(world, 'school', 'Last bell. From Monday the mornings are hers.', cp`Last bell. From Monday the mornings are hers.`)
   captureMilestone(world, { type: 'school', week: world.week })
 }
 
@@ -111,6 +167,7 @@ export function markCoachTravelOpen(world: WorldState): void {
     COACH_TRAVEL_OPEN_KEY,
     // No pronoun names the coach (R15-7): a woman sits on every roster by construction.
     'Your coach can travel to tournaments with her now – the switch is in the coach room, and a trip with the coach costs one additional fare.',
+    cp`Your coach can travel to tournaments with her now – the switch is in the coach room, and a trip with the coach costs one additional fare.`,
   )
 }
 
@@ -593,6 +650,19 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
     `season-wrap-${seasonIndex}`,
     `Season ${displayYear} wrap-up: ${rankText} · ` +
       `${seasonPoints} pts this season · ${bestText} · ${wins}-${losses} (W-L) · funds ${fundsText}`,
+    // ⭐ v93 (L3-3): the same sentence as one of the table's twelve keys, from the variables the text above is made of.
+    seasonWrapRef({
+      year: displayYear,
+      rankTrack,
+      rank: rankInTrack,
+      startRank,
+      best: bestFinish !== null ? finishLabel(bestFinish) : null,
+      played: wins + losses > 0,
+      points: seasonPoints,
+      wins,
+      losses,
+      funds: fundsText,
+    }),
   )
   // W4-SCHOOL: the same beat, minus the thing she no longer has. The off-season is still the three
   // weeks the family gets back; what fills them at fourteen and at twenty-two is not the same list.
@@ -602,6 +672,9 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
     text: schoolIsOver(world.week, world.profile.birthMonth, world.startYear)
       ? 'Off-season: rest, family time, and the block where next year gets built.'
       : 'Off-season: rest, school, family time.',
+    c: schoolIsOver(world.week, world.profile.birthMonth, world.startYear)
+      ? cp`Off-season: rest, family time, and the block where next year gets built.`
+      : cp`Off-season: rest, school, family time.`,
   })
 
   world.lastSeasonSummary = {

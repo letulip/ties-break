@@ -4,6 +4,8 @@
 // ⚠ DEPENDENCY DIRECTION. Small derivations over a finished TournamentResult and the events ledger.
 // `WorldState` is a TYPE-ONLY import; nothing here draws on any RNG stream.
 import { formatShortName } from '../../shared/format'
+// ⭐ v93 (L3-3): the kid-match row and the rival's retirement row travel as a CopyRef BESIDE their English sentence (spec i18n-2026-10 §5).
+import { cp, type CopyRef } from '../../shared/i18n'
 import { ANGER_STREAK_MAX, ANGER_STREAK_MIN, resultShowsOnHerFace } from '../../shared/avatarEmotion'
 import { pickInt, rngFromSeed } from '../rng'
 import { TIERS, TIER_LADDER } from '../season/calendar'
@@ -35,7 +37,7 @@ export function kidMatchEvent(
   event: SeasonEvent,
   m: MatchRecord,
   players: Record<string, MatchPlayer>,
-): { text: string; match: WorldMatch } {
+): { text: string; c?: CopyRef; match: WorldMatch } {
   const tier = TIERS[event.tier]
   const oppId = m.aId === KID_ID ? m.bId : m.aId
   const oppName = (players[oppId] ?? fallbackPlayer(oppId)).name
@@ -69,8 +71,24 @@ export function kidMatchEvent(
     : kidWon
       ? 'beat'
       : 'lost to'
+  // ⭐ v93 (L3-3) – THE SAME SENTENCE AS A COPYREF, BESIDE THE TEXT. Four keys, each a MANUAL entry of the frozen v92 table (the sweep could not reach this
+  // row: it is composed here and handed in as `ev.text`), and ⚠ THE SCORE IS THE LAST HOLE OF EVERY ONE – `{3}` ends the key. That is the contract
+  // above stated for the ref: SeasonScreen's `plaqueLines` splits the rendered sentence at the score (`eventText(e).endsWith(score)`), so a translation
+  // that keeps the score last keeps the two-line plaque, and one that does not degrades to the one-line sentence, losing nothing. The net asserts the
+  // order for the four keys. ⚠ NO SCORE, NO REF: a row with no scoreline would print without the trailing space (`.trim()` above), which no table template
+  // matches either – it stays text-only, exactly as the migration would leave it (the engine never writes one: every played match has a score).
+  const c: CopyRef | undefined = !kidScore
+    ? undefined
+    : m.retiredId
+      ? m.retiredId === KID_ID
+        ? cp`${stage}: ${kidShort} retired against ${formatShortName(oppName)} ${kidScore}`
+        : cp`${stage}: ${kidShort} beat a retiring ${formatShortName(oppName)} ${kidScore}`
+      : kidWon
+        ? cp`${stage}: ${kidShort} beat ${formatShortName(oppName)} ${kidScore}`
+        : cp`${stage}: ${kidShort} lost to ${formatShortName(oppName)} ${kidScore}`
   return {
     text: `${stage}: ${kidShort} ${verb} ${formatShortName(oppName)} ${kidScore ?? ''}`.trim(),
+    ...(c ? { c } : {}),
     match: { ...m, eventId: event.id, surface: event.surface, oppName, a, b },
   }
 }
@@ -162,6 +180,34 @@ export function rivalRetirementNews(
   const when =
     set === null ? '' : ` – she went off ${set.completed ? 'after' : 'in'} the ${SET_ORDINAL[set.index]} set`
   return `🩹 ${name} retired hurt ${where}${when}.`
+}
+
+/** ⭐ v93 (L3-3) – THE RETIREMENT ROW AS A COPYREF, written beside `rivalRetirementNews`'s sentence (which stays untouched: tests read it as a string and return null
+ *  on exactly the same inputs). The sentence is one of SIX – where she was (a rung the world reports on, or HER week) × when she stopped (no scoreline to read, after a
+ *  set, inside one) – and each is a whole key of the frozen v92 table. The text's one empty-string branch (`when` is '' when the scoreline cannot say which set) is the
+ *  no-set sentence here, so a Russian value never has to cope with a dangling fragment. */
+export function rivalRetirementRef(
+  world: WorldState,
+  event: SeasonEvent,
+  m: MatchRecord,
+  players: Record<string, MatchPlayer>,
+): CopyRef | null {
+  if (m.retiredId === undefined || m.retiredId === KID_ID) return null
+  if (m.aId !== KID_ID && m.bId !== KID_ID) return null
+  const name = formatShortName((players[m.retiredId] ?? fallbackPlayer(m.retiredId)).name)
+  const set = retirementSet(m.score)
+  if (tierMakesWorldNews(event.tier)) {
+    const label = TIERS[event.tier].label
+    if (set === null) return cp`🩹 ${name} retired hurt at the ${label}.`
+    return set.completed
+      ? cp`🩹 ${name} retired hurt at the ${label} – she went off after the ${SET_ORDINAL[set.index]} set.`
+      : cp`🩹 ${name} retired hurt at the ${label} – she went off in the ${SET_ORDINAL[set.index]} set.`
+  }
+  const kid = formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
+  if (set === null) return cp`🩹 ${name} retired hurt against ${kid}.`
+  return set.completed
+    ? cp`🩹 ${name} retired hurt against ${kid} – she went off after the ${SET_ORDINAL[set.index]} set.`
+    : cp`🩹 ${name} retired hurt against ${kid} – she went off in the ${SET_ORDINAL[set.index]} set.`
 }
 
 export function computeLossStreak(world: WorldState): LossStreak | null {

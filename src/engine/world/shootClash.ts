@@ -248,6 +248,7 @@ export function answerShootClash(world: WorldState, choice: ShootClashChoice): v
       week: world.week,
       type: 'info',
       text: `${terms.brand} shoot moved to ${weekLabel(to, world.startYear)} – the ${TIERS[event.tier].label} week stands.`,
+      c: cp`${terms.brand} shoot moved to ${weekLabel(to, world.startYear)} – the ${TIERS[event.tier].label} week stands.`,
     })
     return
   }
@@ -282,5 +283,6 @@ export function answerShootClash(world: WorldState, choice: ShootClashChoice): v
     week: world.week,
     type: 'info',
     text: `${terms.brand} shoot and the ${TIERS[event.tier].label} in one week – a heavy week ahead.`,
+    c: cp`${terms.brand} shoot and the ${TIERS[event.tier].label} in one week – a heavy week ahead.`,
   })
 }

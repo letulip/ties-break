@@ -53,6 +53,8 @@ import { TOUR_BRIEFED_PREFIX } from '../composables/tourBriefing'
 import Eyebrow from './ui/Eyebrow.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import { useStartYear } from '../composables/startYear'
+// ⭐ v93 (L3-3): the engine's sentences travel as `{ text, c }` pairs; `eventText` shows the ref under the locale and the English `text` where there is none (the same bytes under English).
+import { eventText } from '../i18n'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
 
@@ -132,7 +134,7 @@ useDialogFocus(card)
 
       <!-- The one sentence that names the rule and the standing it starts at. The engine's words:
            the rank threshold in it is ECONOMY.mandatory.maxRank and may not be typed here. -->
-      <p class="tour-briefing-lead">{{ briefing.lead }}</p>
+      <p class="tour-briefing-lead">{{ eventText({ text: briefing.lead, c: briefing.leadC }) }}</p>
 
       <!-- ⚠ TWO PLAIN SECTIONS ON THE DIALOG'S OWN PANEL, NOT NESTED `Card`s – which is what the
            season wrap-up uses for its tiles, and the departure is deliberate on two counts. A
@@ -145,8 +147,8 @@ useDialogFocus(card)
         <Eyebrow>What the tour asks for</Eyebrow>
         <ul class="tour-briefing-asks">
           <li v-for="row in briefing.requirements" :key="row.tier" class="tour-briefing-ask">
-            <span class="tour-briefing-ask-what">{{ row.ask }}</span>
-            <span class="tour-briefing-ask-detail">{{ row.detail }}</span>
+            <span class="tour-briefing-ask-what">{{ eventText({ text: row.ask, c: row.askC }) }}</span>
+            <span class="tour-briefing-ask-detail">{{ eventText({ text: row.detail, c: row.detailC }) }}</span>
           </li>
         </ul>
       </section>
@@ -157,11 +159,11 @@ useDialogFocus(card)
       <section class="tour-briefing-block">
         <Eyebrow>What declining costs</Eyebrow>
         <ul class="tour-briefing-costs">
-          <li v-for="cost in briefing.costs" :key="cost">{{ cost }}</li>
+          <li v-for="(cost, i) in briefing.costs" :key="cost">{{ eventText({ text: cost, c: briefing.costsC?.[i] }) }}</li>
         </ul>
       </section>
 
-      <p class="tour-briefing-closing">{{ briefing.closing }}</p>
+      <p class="tour-briefing-closing">{{ eventText({ text: briefing.closing, c: briefing.closingC }) }}</p>
 
       <div class="tour-briefing-actions">
         <PrimaryPill @click="acknowledge">Continue</PrimaryPill>

@@ -421,6 +421,9 @@ function v91Digest(world: unknown): string {
   const c = JSON.parse(JSON.stringify(world)) as Record<string, unknown>
   delete c.startYear
   c.schemaVersion = 91
+  // ⭐ v93 / L3-3 (10.10): the digests above predate `WorldEvent.c`. A created world's first kept row carries its sentence as a CopyRef beside the text since L3-3
+  // (`world/create.ts`), so the plain world is the v91 world minus TWO keys – `startYear` and the ref on the row (the same normalisation as tests/succession-s1-start-year.test.ts).
+  for (const e of (c.events ?? []) as Array<Record<string, unknown>>) delete e.c
   return createHash('sha1').update(JSON.stringify(c)).digest('hex').slice(0, 16)
 }
 
@@ -479,7 +482,9 @@ describe('S2b 6 – no draws: the stream and the world are a plain creation\'s, 
         )
       }
       expect(legacy.events.slice(1), 'the feed past its first sentence').toEqual(plain.events.slice(1))
-      expect({ ...legacy.events[0], text: '' }).toEqual({ ...plain.events[0], text: '' })
+      // ⭐ v93 / L3-3: the opening row's REF carries the budget as a param too (`c.p[2]`), so it differs exactly where the text does – compare the rest of the row
+      expect({ ...legacy.events[0], text: '', c: undefined }).toEqual({ ...plain.events[0], text: '', c: undefined })
+      expect(legacy.events[0]!.c?.k, 'the opening row is the same sentence').toBe(plain.events[0]!.c?.k)
       expect(legacy.fundsCents - plain.fundsCents, '3.0 x B is B plus two B more').toBe(2 * B)
     }
   })

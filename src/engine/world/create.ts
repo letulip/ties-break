@@ -66,6 +66,7 @@ import { ancestorSeedOf } from './endings'
 import { recomputeKidRank } from './ladder'
 import { ensureSeason } from './bookkeeping'
 import { SAVE_SCHEMA_VERSION } from './state'
+import { cp } from '../../shared/i18n'
 // ⚠ TYPE-ONLY, AND THAT IS THE WHOLE OF WHY THIS IS NOT A CYCLE (CLAUDE.md's P4 rules): the barrel
 // imports the values back and re-exports them under their historical names, and this import is erased
 // at compile time, so no runtime edge points from the package back at `world.ts`.
@@ -768,6 +769,7 @@ export function createWorld(
     //   `prologueFundsCents` rounds to whole CENTS – so 32 of 75 sampled openings read «$29,583.33».
     //   `formatCents` is the rule he stated: whole dollars on screen, cents untouched in the world.
     text: `${profile.kidName}'s career started (seed "${seed}"). Family budget: ${formatCents(fundsCents)}.`,
+    c: cp`${profile.kidName}'s career started (seed "${seed}"). Family budget: ${formatCents(fundsCents)}.`,
   })
   ensureSeason(world)
   recomputeKidRank(world)

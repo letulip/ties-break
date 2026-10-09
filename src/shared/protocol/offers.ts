@@ -10,6 +10,7 @@ import type { LadderTrack, TierId } from '../../engine/season/types'
 import type { PsyFocus } from '../../engine/world/state'
 import type { AssetSaleQuote } from '../../engine/world/resale'
 import type { CoachTier, PlayStyle } from './profile'
+import type { CopyRef } from '../i18n'
 
 // --- THE INBOX (schema v32) --------------------------------------------------------------------
 // docs/specs/offers-and-the-inbox.md §2. One durable list on the world: the letters somebody has
@@ -156,6 +157,10 @@ export interface TourBriefingRow {
   ask: string
   /** how it is counted – per event, or once at the season's end */
   detail: string
+  /** ⭐ v93 (L3-3): `ask` / `detail` as CopyRefs, BESIDE the English (the `LifeMoment.lineC` shape). The briefing is derived at snapshot time and never stored, so
+   *  these are the whole of its localization surface: the dialog renders them under the locale (`eventText`), and under English they are `ask` / `detail` byte for byte. */
+  askC?: CopyRef
+  detailC?: CopyRef
 }
 
 /** ⭐ THE BRIEFING – round-18 #8, the owner: «перед началом сезона больших призов и чемпионатов
@@ -192,6 +197,10 @@ export interface TourBriefing {
   /** ⚠ THE CLOSING LINE IS THE RULING. «Мы ни за что не наказываем»: the tour has rules and the game
    *  has none, so the last thing the briefing says is that none of this is advice. */
   closing: string
+  /** ⭐ v93 (L3-3): `lead`, `costs[i]` and `closing` as CopyRefs, BESIDE the English – index for index with `costs` (see `TourBriefingRow.askC`). */
+  leadC?: CopyRef
+  costsC?: CopyRef[]
+  closingC?: CopyRef
 }
 
 /** Where an offer is in its life. `open` is the only state a decision is possible in; the others

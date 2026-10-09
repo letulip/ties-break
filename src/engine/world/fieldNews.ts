@@ -36,6 +36,9 @@
 // `announceCampusInterlude` at the foot of this file for the 45% that says so, the two rejected
 // alternatives, and the third call.
 import { formatShortName } from '../../shared/format'
+// ⭐ v93 (L3-3): every row below writes `c` BESIDE `text` – the same sentence as a CopyRef, in the spelling of the frozen v92 table, so a row written now and the
+// same row migrated from an old save land on ONE key (spec i18n-2026-10 §5; the net is tests/i18n-l3-1-ledger-writers.test.ts).
+import { cp, type CopyRef } from '../../shared/i18n'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import { FIELD, careerAt } from '../season/fieldPros'
 import { addEvent, seasonIndexOf } from './ledger'
@@ -110,6 +113,10 @@ export function announceFieldFarewells(world: WorldState): void {
       text:
         `👋 ${formatShortName(pro.name)} (#${r}) has played a last match on tour – retiring at ${pro.ageYears}` +
         ` after ${seasons} ${seasons === 1 ? 'season' : 'seasons'}.`,
+      c:
+        seasons === 1
+          ? cp`👋 ${formatShortName(pro.name)} (#${r}) has played a last match on tour – retiring at ${pro.ageYears} after ${seasons} season.`
+          : cp`👋 ${formatShortName(pro.name)} (#${r}) has played a last match on tour – retiring at ${pro.ageYears} after ${seasons} seasons.`,
     })
   }
 
@@ -123,6 +130,11 @@ export function announceFieldFarewells(world: WorldState): void {
     text:
       `The tour turns over: ${leaving.length} professionals retire at the end of this season` +
       `${churn > 0 ? `, ${churn} of them from the top ${FIELD_NEWS.churnDepth}` : ''}.`,
+    // the clause that is sometimes the empty string is TWO whole sentences here, never a fragment (the frozen table holds both)
+    c:
+      churn > 0
+        ? cp`The tour turns over: ${leaving.length} professionals retire at the end of this season, ${churn} of them from the top ${FIELD_NEWS.churnDepth}.`
+        : cp`The tour turns over: ${leaving.length} professionals retire at the end of this season.`,
   })
 }
 
@@ -149,6 +161,10 @@ export function announceFieldIntake(world: WorldState): void {
     text:
       `${debutants.length} players have joined the professional tour this season` +
       `${bestRank === undefined ? '.' : ` – the highest-placed of them is ${formatShortName(best.name)} at #${bestRank}.`}`,
+    c:
+      bestRank === undefined
+        ? cp`${debutants.length} players have joined the professional tour this season.`
+        : cp`${debutants.length} players have joined the professional tour this season – the highest-placed of them is ${formatShortName(best.name)} at #${bestRank}.`,
   })
 }
 
@@ -222,6 +238,19 @@ export function campusDigestLine(newcomers: number, leader: { name: string; ageY
   return `🌍 The tour has not waited: ${top}, and ${formatShortName(leader.name)} is #1 at ${leader.ageYears}.`
 }
 
+/** ⭐ v93 (L3-3) – THE DIGEST AS A COPYREF, written BESIDE `campusDigestLine`'s sentence (which stays untouched: tests read it as a string). The line's `top` clause is one of
+ *  two and the leader clause is there or not, so the sentence is one of FOUR – and each is a WHOLE key of the frozen v92 table (spelled `{0}`, `{1}` in reading order), never a
+ *  `top` fragment glued to a tail. Null on exactly the call `campusDigestLine` answers null to. */
+export function campusDigestRef(newcomers: number, leader: { name: string; ageYears: number } | null): CopyRef | null {
+  const depth = FIELD_NEWS.churnDepth
+  if (leader === null) {
+    return newcomers > 0 ? cp`🌍 The tour has not waited: ${newcomers} of today's top ${depth} have come up since the scholarship began.` : null
+  }
+  return newcomers > 0
+    ? cp`🌍 The tour has not waited: ${newcomers} of today's top ${depth} have come up since the scholarship began, and ${formatShortName(leader.name)} is #1 at ${leader.ageYears}.`
+    : cp`🌍 The tour has not waited: nobody new is in today's top ${depth} yet, and ${formatShortName(leader.name)} is #1 at ${leader.ageYears}.`
+}
+
 /** ⭐⭐ ...AND THE ROW. Called once per press of «Another year» / «Play the final year», from
  *  `resumeFromCollege` after its loop has stopped – on a year banked, on a birthday pause, on a
  *  championship pause and on the graduating press alike, because every one of those hands the same
@@ -249,10 +278,9 @@ export function announceCampusInterlude(world: WorldState): void {
     if (careerAt(world.seed, chairIndexOf(pro.id), season).debutSeason > enrolledSeason) newcomers++
   }
   const leaderPro = table.length > 0 ? byId.get(table[0].playerId) : undefined
-  const text = campusDigestLine(
-    newcomers,
-    leaderPro ? { name: leaderPro.name, ageYears: leaderPro.ageYears } : null,
-  )
+  const leader = leaderPro ? { name: leaderPro.name, ageYears: leaderPro.ageYears } : null
+  const text = campusDigestLine(newcomers, leader)
   if (text === null) return
-  addEvent(world, { week: world.week, type: 'info', text })
+  const c = campusDigestRef(newcomers, leader)
+  addEvent(world, { week: world.week, type: 'info', text, ...(c ? { c } : {}) })
 }

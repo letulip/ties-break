@@ -23,6 +23,8 @@ import { LEGACY_JOINED_V92 } from '../src/engine/migrations/legacyTemplates.v92'
 import { cp, joinCopy, renderCopyRef, SOURCE_LOCALE, type CopyRef } from '../src/shared/i18n'
 import { LADDER_LABEL } from '../src/shared/protocol'
 import { rankingDeltaSuffix, tournamentSummaryRef } from '../src/engine/world/tournamentClose'
+import { ACADEMY_NOTICE } from '../src/engine/world/phaseObligations'
+import { EXPOSURE_ROW, PUBLIC_LIFE_RECEIPT, RECOVERY_RECEIPT } from '../src/engine/spirit'
 import { chargeMandatoryPenalty } from '../src/engine/world/mandatory'
 import { bankSponsorCheque } from '../src/engine/world/sponsors'
 import { createWorld } from '../src/engine/world'
@@ -37,8 +39,30 @@ const ROOT = resolve(__dirname, '..')
 const EN = { locale: SOURCE_LOCALE }
 const TABLE = new Set(allTemplateKeys())
 
-/** Post-v93 sentences (no old save can hold them), listed so a new one is a decision. L3-1 writes none. */
-const NEW_KEYS: readonly string[] = []
+/** Post-v93 sentences (no old save can hold them), listed so a new one is a decision. L3-1 wrote none.
+ *
+ *  ⭐ L3-3 (10.10) LISTS FOURTEEN, ALL OF ONE KIND: THE TOUR BRIEFING'S (`briefingRequirements` / `briefingCosts` / `buildTourBriefing` in world/mandatory.ts). The briefing is
+ *  CLASS (b) – assembled from `ECONOMY.mandatory` and the calendar at SNAPSHOT time, never stored in an event or an offer – so no old save can hold one of these sentences and the
+ *  frozen v92 table, which is a table of STORED rows, has no entry for them. They ride the snapshot as `TourBriefing.leadC` / `costsC` / `closingC` and `TourBriefingRow.askC` /
+ *  `detailC` (beside the English, the `LifeMoment.lineC` shape); `tests/i18n-l3-3-news-feeds.test.ts` proves every one renders to its English string under mutated economies. The three
+ *  requirement keys are the SAME spellings `composables/letterCopy.ts` gives the season notice's stored phrases (`All {0} {1}` / `All {0} {1}s` / `{0} of the {1} {2}s`), so the popup
+ *  and the letter are one translation. */
+const NEW_KEYS: readonly string[] = [
+  'All {0} {1}',
+  'All {0} {1}s',
+  '{0} of the {1} {2}s',
+  'Required one at a time – each is its own entry, and its own decision.',
+  'Her pick of them, counted once when the season closes.',
+  "She is ranked {0} in the world. Inside the top {1} the tour's commitment rules apply, and from here on part of her calendar is written by them rather than by us.",
+  'A required event she does not enter takes one of her {0} counting results and puts a zero in it. That is the real price, and it is not a fine: it is a result she can no longer replace with a better one.',
+  'The tour also books {0} penalty point for not entering, {1} for withdrawing after the list has closed and {2} for not appearing on the day.',
+  'The tour also books {0} penalty points for not entering, {1} for withdrawing after the list has closed and {2} for not appearing on the day.',
+  '{0} penalty points inside {1} weeks suspends her entries for {2} weeks. Points leave that window on their own as the year moves – nothing is carried forward.',
+  'The {0}s are settled once, at the end of the season: {1} penalty point for each one she finished short of {2}.',
+  'The {0}s are settled once, at the end of the season: {1} penalty points for each one she finished short of {2}.',
+  'Nothing at all is owed for a week she could not play – injured, suspended, too young for the rung, refused by the entry list, or already committed to another tournament that week.',
+  'Every line above is a price, and none of it is an instruction. Which of them she pays is still a decision, and it stays yours.',
+]
 
 /** Pieces a writer joins with `joinCopy` – never a sentence on their own, never emitted alone. §5 renders every assembled sentence against the table. */
 const FRAGMENTS: readonly string[] = [
@@ -74,6 +98,10 @@ const holeSrc = (e: ts.Expression): string => norm(e.getText()).replace(/^String
 const KNOWN_CONSTANTS: Record<string, string> = {
   'LADDER_LABEL.domestic': LADDER_LABEL.domestic,
   'LADDER_LABEL.itf': LADDER_LABEL.itf,
+  // ⭐ L3-3 (10.10): the academy notices open with named constants the engine's reader tests with `startsWith`; the sweep inlined them, so the model does too
+  'ACADEMY_NOTICE.arrived': ACADEMY_NOTICE.arrived,
+  'ACADEMY_NOTICE.reviewed': ACADEMY_NOTICE.reviewed,
+  'ACADEMY_NOTICE.ended': ACADEMY_NOTICE.ended,
 }
 
 function eachNode(sf: ts.SourceFile, visit: (n: ts.Node) => void): void {
@@ -162,6 +190,11 @@ function alts(e: ts.Expression, inline: boolean): Alt[] | null {
     return acc
   }
   if (isCp(e)) return alts(e.template, false)
+  // ⭐ L3-3 (10.10): a bare name on the TEXT side (`notable ? \`${base} …\` : base`) is the sentence its `const` holds – the same resolution a template hole gets above
+  if (inline && ts.isIdentifier(e)) {
+    const named = constValue(e)
+    return named && inlinable(named) ? alts(named, true) : null
+  }
   return null
 }
 
@@ -215,7 +248,12 @@ function pairs(): Pair[] {
 
 /** an object literal carries `name` as a property, or through a spread whose source spells `name:` (bankSponsorCheque adds `c` only when its caller passed one) */
 function carries(o: ts.ObjectLiteralExpression, name: string): boolean {
-  return o.properties.some((p) => (ts.isPropertyAssignment(p) && p.name.getText() === name) || (ts.isSpreadAssignment(p) && new RegExp(`\\b${name}:`).test(p.expression.getText())))
+  // ⭐ L3-3 (10.10): a spread that forwards the field by SHORTHAND (`...(c ? { c } : {})`, how `fireMilestone` hands its optional ref on) carries it as much as `{ c: x }` does
+  return o.properties.some(
+    (p) =>
+      (ts.isPropertyAssignment(p) && p.name.getText() === name) ||
+      (ts.isSpreadAssignment(p) && new RegExp(`(?:\\b${name}:|[{,]\\s*${name}\\s*[,}])`).test(p.expression.getText())),
+  )
 }
 
 /** the engine's sinks: `addEvent(world, { … })` and `fireMilestone(world, key, text, c?)` calls. `bare` = the ones that still write `text` alone, per file; `converted` = the ones that
@@ -268,6 +306,13 @@ describe('§1 the re-key law – every `cp` key in the engine is the frozen tabl
     expect(foreign, 'a writer\'s key that no old save can hold and no list names – re-key it to the table\'s spelling, or list it in NEW_KEYS with the reason').toEqual([])
   })
 
+  it('⭐ L3-3: every NEW_KEYS entry has a call site, and is not secretly a sentence of the table (a listed key that the table holds belongs nowhere near this list)', () => {
+    for (const k of NEW_KEYS) {
+      expect(found.has(k), `NEW_KEYS entry ${JSON.stringify(k)} has no cp call site – delete it from the list`).toBe(true)
+      expect(TABLE.has(k), `NEW_KEYS entry ${JSON.stringify(k)} IS in the table – the writer may use it as it is`).toBe(false)
+    }
+  })
+
   it('every FRAGMENT is used, and is not secretly a whole sentence of the table', () => {
     for (const f of FRAGMENTS) {
       expect(found.has(f), `fragment ${JSON.stringify(f)} has no call site – delete it from the list`).toBe(true)
@@ -295,6 +340,7 @@ const DYNAMIC_SEATS: Record<string, number> = {
   'src/engine/world/form.ts': 2, // the coach's eye (coachFormNote's two lines) and the sparring receipt
   'src/engine/world/phaseFinance.ts': 2, // the weekly training / rest flavour line, and the apparel flavour line when no brand paid
   'src/engine/world/phaseGrowth.ts': 1, // the composure receipt
+  'src/engine/spirit.ts': 3, // ⭐ L3-3: the public-life receipt, the exposure row and the recovery receipt – each a NAMED CONSTANT, its own key
 }
 
 function literalsIn(node: ts.Node, out: string[] = []): string[] {
@@ -342,6 +388,8 @@ describe('§1b the dynamic seats', () => {
       walkIn(fn)
     })
     sentences.push(SPARRING_RECEIPT, COOLHEAD_RECEIPT)
+    // spirit.ts (L3-3): the three constants the feed rows are written from
+    sentences.push(EXPOSURE_ROW, PUBLIC_LIFE_RECEIPT, RECOVERY_RECEIPT)
     const missing = [...new Set(sentences)].filter((x) => !TABLE.has(x) && !NEW_KEYS.includes(x))
     expect(missing, 'a sentence a dynamic seat can hold that no old save can hold – a reworded pool line is a NEW sentence: list it in NEW_KEYS with the reason').toEqual([])
   })
@@ -365,6 +413,15 @@ const NOT_ISOMORPHIC: Record<string, string> = {
     "the winter kit-letter row is a `join` of whichever parts fired; c is `joinCopy` over the same parts – §5 joins every selection of the table's family and compares the keys.",
   'src/engine/world/tournamentClose.ts::`${tier.label} (${event.surface}, ${weekLabel(ev':
     '`+` concatenation, a helper-built ranking clause and an injury clause; c is `tournamentSummaryRef` – §5 renders all ten combinations against `rankingDeltaSuffix`.',
+  // ⭐ L3-3 (10.10) – four pairs whose TEXT is built by a helper call or a `plural()` the syntax cannot expand; each has the check that stands in, in tests/i18n-l3-3-news-feeds.test.ts
+  'src/engine/world/mandatory.ts::`The tour also books ${m.skipPoints} penalty ${p':
+    'the text counts its noun with the `plural(n, one, many)` helper, c spells the two forms as two whole sentences (the house rule) – l3-3 §6 renders the briefing under singular and plural economies and compares every string.',
+  'src/engine/world/mandatory.ts::`The ${quotaLabel}s are settled once, at the end':
+    'the same `plural()` helper, the quota shortfall\'s noun – l3-3 §6 (singular and plural economies).',
+  'src/engine/world/milestones.ts::`Season ${displayYear} wrap-up: ${rankText} · ` ':
+    'the text is a `+` of two templates over helper-built pieces (`rankText`, `bestText`); c is `seasonWrapRef`, twelve WHOLE sentences – l3-3 §3 drives all twelve ingredient combinations through it and through the real writer, and compares with the text.',
+  'src/engine/world/phaseAiWeek.ts::`🏆 ${playerShortName(world, championId)} won th':
+    'the text appends `championNote(...)`, a helper that returns one of four clauses; c is `championRef` over the SAME `championClause` facts – l3-3 §4 renders all four against the text, and the twin plays them.',
 }
 
 /** Pairs where `c` is a PROPER SUBSET of what `text` can say: the text's syntax admits combinations the program cannot reach (the frozen table, built by the same
@@ -380,7 +437,10 @@ describe('§2 text / c pairs', () => {
 
   it('finds the wave\'s pairs (the scan is not blind)', () => {
     // 84 = the 78 converted sinks, minus the cheque sink (its `c` rides a spread, not a property), plus `facilityFlavor`'s own pair, plus the 6 rows handed to `bankSponsorCheque`
-    expect(all.length, 'pairs of text + c in src/engine').toBe(84)
+    // + 27 (L3-3): fieldNews 3, the champion lines 2 (tournamentClose, phaseAiWeek), milestones 4, the academy 5, the shoot notes 2, the first kept row, the calendar row, the birthday row,
+    //   the spirit feed 3, the briefing's five cost lines 5 – the rows that carry `c` by a SPREAD (the campus digest, the kid-match and retirement rows) are not pairs, they are §4/§5 here
+    //   and l3-3 §2's.
+    expect(all.length, 'pairs of text + c in src/engine').toBe(111)
   })
 
   it('every pair expands to the SAME sentences – each branch, each inlined ternary, the same holes in the same order – or is announced', () => {
@@ -444,14 +504,11 @@ describe('§2 text / c pairs', () => {
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 /** file -> sinks that write `text` and no `c`, with the wave that owns them. Counted by the scan above (addEvent object literals, fireMilestone calls). */
 const TEXT_ONLY: Record<string, number> = {
-  'src/engine/spirit.ts': 3, // L3-5 (RU-11M, the spirit feed)
-  'src/engine/world/age.ts': 1, // L3-3 (RU-11K, the birthday age row)
+  // ⭐ L3-3 (10.10) CONVERTED 26 OF THE 63: spirit 3, age 1, bookkeeping 1, create 1, fieldNews 4, milestones 5 (the four callers, and `fireMilestone`'s own inner sink – it forwards `c`
+  // by shorthand, which `carries` reads since this wave), phaseAiWeek 1, phaseObligations 5, shootClash 2, tournamentClose 3. What is left below is L3-4..7's and nobody else's.
   'src/engine/world/birthday.ts': 1, // L3-4 (the birthday gift corpus)
-  'src/engine/world/bookkeeping.ts': 1, // L3-3 (RU-11K, 'New events on the calendar')
   'src/engine/world/college.ts': 4, // L3-7 (RU-12F, the college engine feed) – the tuition row (money) is L3-1's and converted
-  'src/engine/world/create.ts': 1, // L3-3 (RU-11K, the first kept row)
   'src/engine/world/endings.ts': 8, // L3-6
-  'src/engine/world/fieldNews.ts': 4, // L3-3 (RU-11B)
   'src/engine/world/injury.ts': 3, // L3-7 (RU-11J, the medical feed) – the two money rows (physio, medical) are L3-1's and converted
   'src/engine/world/knock.ts': 4, // L3-7
   'src/engine/world/lifeBeat.ts': 3, // L3-5
@@ -461,13 +518,8 @@ const TEXT_ONLY: Record<string, number> = {
   'src/engine/world/lifeBeat/pregnancy.ts': 2, // L3-5
   'src/engine/world/lifeBeat/weight.ts': 1, // L3-5
   'src/engine/world/lifeBeat/wedding.ts': 1, // L3-5
-  'src/engine/world/milestones.ts': 5, // L3-3 (RU-11A, the milestone feed) – `fireMilestone` takes `c` since L3-1 and the four callers in tournamentClose.ts pass it
-  'src/engine/world/phaseAiWeek.ts': 1, // L3-3 (RU-11B, the champion news)
   'src/engine/world/phaseHerWeek.ts': 3, // L3-7 (RU-11J)
-  'src/engine/world/phaseObligations.ts': 5, // L3-3 (RU-11F, the academy notices) – the kit-grant row (money) is L3-1's and converted
-  'src/engine/world/shootClash.ts': 2, // L3-3 (RU-11F) – the cancelled-shoot row (money) is L3-1's and converted
   'src/engine/world/tick.ts': 2, // L3-7 (the college epilogue, twice)
-  'src/engine/world/tournamentClose.ts': 3, // L3-3 (RU-11B champion news, RU-11C the kid-match row, the retired-hurt news)
 }
 
 describe('§3 the writers still on `text` alone', () => {
@@ -475,11 +527,11 @@ describe('§3 the writers still on `text` alone', () => {
     expect(sinks().bare, 'a count moved: a wave converted a sink (lower the number) or a NEW text-only writer appeared (decide it: convert it, or list it with the wave that owns it)').toEqual(TEXT_ONLY)
   })
 
-  it('the books close: 141 sinks (the L3-0 sweep\'s count), 78 of them converted by L3-1, 63 left to the later waves', () => {
+  it('the books close: 141 sinks (the L3-0 sweep\'s count), 104 of them converted (L3-1: 78, L3-3: 26), 37 left to L3-4..7', () => {
     const { bare, converted } = sinks()
     const left = Object.values(bare).reduce((a, b) => a + b, 0)
-    expect(left, 'sinks still on `text` alone').toBe(63)
-    expect(converted, 'sinks that write `c`').toBe(78)
+    expect(left, 'sinks still on `text` alone').toBe(37)
+    expect(converted, 'sinks that write `c`').toBe(104)
     expect(converted + left, 'every sink there is').toBe(141)
   })
 
