@@ -62,10 +62,12 @@ import {
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
-  it('⭐⭐⭐ v93: rolling the schema back to 92 returns the v92 CAREER on all three – the fifth rung whose peel does nothing', () => {
-    // ⭐ v93 (the localization rig, L3-0, 09.10) adds `WorldEvent.c?` and NOTHING WRITES IT: a played career gains no key, so there is nothing to peel and the
-    // rollback to 92 is the live world with its own number on it. The three values are the three `FROZEN` constants this branch held at v92 (0fc8191b), copied
-    // verbatim before the re-stamp (the block over `PRE_V93` in tests/coachTravelEdgeFixtures.ts). The first writer that sets `c` turns these red on purpose.
+  it('⭐⭐⭐ v93: rolling the schema back to 92 – dropping `c` from every ledger row – returns the v92 CAREER on all three', () => {
+    // ⭐ v93 (the localization rig, L3-0, 09.10) added `WorldEvent.c?` and NOTHING WROTE IT, so until L3-1 this rung's peel was an identity – the fifth in a row.
+    // ⭐⭐ L3-1 (10.10) IS THE WRITER THE NOTE HERE PROMISED: every ledger / receipt row of a played career now carries `c` beside its `text`, so the rung's peel
+    // really drops something (`c` from every row of `events`) and the live `FROZEN` cells moved for that key alone – the per-key run is over `FROZEN`. What this
+    // case proves is the other end of that claim: take `c` back off and the career is the v92 one, character for character. The three values are the three
+    // `FROZEN` constants this branch held at v92 (0fc8191b), copied verbatim before the re-stamp (the block over `PRE_V93` in tests/coachTravelEdgeFixtures.ts).
     expect(careerHashAtSchema(5, 0, 92), '25k · middle coach · grinder – the verbatim v92 value').toBe(PRE_V93.middleGrinder)
     expect(careerHashAtSchema(8, 0, 92), '120k · elite coach · grinder – the verbatim v92 value').toBe(PRE_V93.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 92), '8k · self-coached · player – the verbatim v92 value').toBe(PRE_V93.selfTravelling)

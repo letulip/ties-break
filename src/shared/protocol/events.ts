@@ -299,10 +299,14 @@ export interface WorldEvent {
    *  wave a pure addition. Whether a later wave stops writing it is that wave's call, made with the reader list in front of it
    *  (`tests/i18n-l3-0-event-readers.test.ts` names every one).
    *
-   *  ⚠ OPTIONAL, AND THE MIGRATION IS WHAT FILLS IT (v92 -> v93): every historical row whose sentence the frozen template table recognises
-   *  gains `c`; a row nothing recognises keeps `text` alone and is counted, never hidden. NO WRITER SETS IT YET – L3-1 to L3-7 convert
-   *  the writers one prose class at a time, each emitting `c` beside `text`, so until then every NEW row is a remainder row by construction.
-   *  Params are plain values (strings, after the migration; whatever the writer passed, after L3-1) and may themselves be `CopyRef`s. */
+   *  ⚠ OPTIONAL, AND THE MIGRATION IS WHAT FILLS IT FOR OLD ROWS (v92 -> v93): every historical row whose sentence the frozen template table
+   *  recognises gains `c`; a row nothing recognises keeps `text` alone and is counted, never hidden. THE WRITERS CONVERT ONE PROSE CLASS AT A TIME,
+   *  each emitting `c` beside `text` – ⭐ L3-1 (10.10) did the ledger / receipt class: every row that moves money (`amountCents`) and the staff, booking,
+   *  entry and tournament-settlement feed rows carry it (78 sinks; `tests/i18n-l3-1-ledger-writers.test.ts` counts the ones still on `text` alone and
+   *  names the wave that owns each). ⚠⚠ A WRITER'S KEY IS THE FROZEN v92 TABLE'S, byte for byte (that file's header says why: an old row and a new row of the
+   *  same sentence must land on ONE key); the same test refuses any `cp` key in the engine that is not.
+   *  Params are plain values (strings, after the migration; whatever the writer passed, after L3-1 – a number prints as `String(n)`, exactly as the
+   *  template literal beside it does) and may themselves be `CopyRef`s. */
   c?: CopyRef
 }
 

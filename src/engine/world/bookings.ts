@@ -10,6 +10,7 @@ import type { SeasonEvent } from '../season/types'
 import { addEvent } from './ledger'
 import type { PracticeBooking, VacationBooking } from '../../shared/protocol'
 import type { WorldState } from '../world'
+import { cp } from '../../shared/i18n'
 
 /** The vacation booked for `week`, if any. */
 export function vacationForWeek(world: WorldState, week: number): VacationBooking | undefined {
@@ -41,6 +42,7 @@ export function refundPractice(world: WorldState, booking: PracticeBooking, reas
     type: 'income',
     category: 'practice',
     text: `Court rental refunded – ${weekLabel(booking.week, world.startYear)}`,
+    c: cp`Court rental refunded – ${weekLabel(booking.week, world.startYear)}`,
     amountCents: booking.paidCents,
   })
   addEvent(world, {
@@ -52,5 +54,11 @@ export function refundPractice(world: WorldState, booking: PracticeBooking, reas
         : reason === 'Medical'
           ? `Practice match called off – ${weekLabel(booking.week, world.startYear)} (not cleared to play)`
           : `Cancelled the practice match – ${weekLabel(booking.week, world.startYear)}`,
+    c:
+      reason === 'Injured'
+        ? cp`Practice match called off – ${weekLabel(booking.week, world.startYear)} (she is hurt)`
+        : reason === 'Medical'
+          ? cp`Practice match called off – ${weekLabel(booking.week, world.startYear)} (not cleared to play)`
+          : cp`Cancelled the practice match – ${weekLabel(booking.week, world.startYear)}`,
   })
 }

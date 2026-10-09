@@ -45,6 +45,7 @@ import { activeLadderOf } from './ladder'
 import { inCollege } from './college'
 import { vacationForWeek } from './bookings'
 import type { WorldState } from '../world'
+import { cp } from '../../shared/i18n'
 
 /** THE GATE: he joins a professional operation – the masseur's and the psychologist's own boundary,
  *  quoted rather than re-argued («эти специалисты могут открываться в про карьере»). Her first
@@ -106,6 +107,9 @@ export function hireSparring(world: WorldState, hire: boolean): void {
     text: hire
       ? 'A hitting partner joins the team – regular match-style practice on weeks without a match.'
       : 'The hitting partner leaves the team – regular match-style practice between events ends.',
+    c: hire
+      ? cp`A hitting partner joins the team – regular match-style practice on weeks without a match.`
+      : cp`The hitting partner leaves the team – regular match-style practice between events ends.`,
   })
 }
 
@@ -146,6 +150,7 @@ export function setSparringRung(world: WorldState, rung: number): void {
       // the arrangement and «when did this arrangement start» still answers with the original hire.
       // The model holds ONE continuous arrangement whose level moves, and the sentence says that.
       text: `The hitting-partner arrangement changes with the next bill – ${chosen.label.toLowerCase()}.`,
+      c: cp`The hitting-partner arrangement changes with the next bill – ${chosen.label.toLowerCase()}.`,
     })
   }
 }
@@ -170,6 +175,9 @@ export function setSparringTravels(world: WorldState, on: boolean): void {
       text: on
         ? 'The hitting partner will travel from now on – one additional fare per trip, and a regular practice opponent on tour.'
         : 'The hitting partner will stay at the home club – no additional fare, and no regular practice opponent on tour.',
+      c: on
+        ? cp`The hitting partner will travel from now on – one additional fare per trip, and a regular practice opponent on tour.`
+        : cp`The hitting partner will stay at the home club – no additional fare, and no regular practice opponent on tour.`,
     })
   }
 }
@@ -288,6 +296,7 @@ export function resolveSparring(world: WorldState, away: boolean): void {
     // binding for the recurring cost: WEEKLY SALARY, everywhere, never «weekly fee» and never
     // «payroll». The two confirmations on the card were re-worded onto it.
     text: 'Hitting partner – weekly salary',
+    c: cp`Hitting partner – weekly salary`,
     amountCents: -cost,
   })
 }

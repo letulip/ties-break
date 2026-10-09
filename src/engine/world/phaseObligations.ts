@@ -42,6 +42,7 @@ import {
   settleTourSeasonNotice,
 } from './mandatory'
 import { payAdAnniversaries, payRetainer, reviewAdOffer, reviewSponsors, rolloverKitAllowance } from './sponsors'
+import { cp } from '../../shared/i18n'
 
 // --- the junior conveyor -----------------------------------------------------
 // The field turns over once a year: who is still here, and who has just arrived underneath her.
@@ -208,6 +209,9 @@ export function reviewAcademy(world: WorldState): void {
       text: deal
         ? `Academy kit grant – ${listOf(uncovered)}; ${brand} covers her ${listOf([...covers])}.`
         : 'Academy kit grant – rackets, strings and shoes for the season',
+      c: deal
+        ? cp`Academy kit grant – ${listOf(uncovered)}; ${brand} covers her ${listOf([...covers])}.`
+        : cp`Academy kit grant – rackets, strings and shoes for the season`,
       amountCents: grant,
     })
   }

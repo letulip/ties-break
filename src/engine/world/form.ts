@@ -157,12 +157,13 @@ export function accrueFormWeek(world: WorldState, away: boolean): readonly numbe
   world.form = accrueForm(before, week)
   // ⭐ THE COACH'S EYE, decided against the two values this pass already holds and nothing else.
   const eye = coachFormNote(world, before, world.form)
-  if (eye) addEvent(world, { week: world.week, type: 'info', text: eye })
+  // ⭐ v93 (L3-1): both lines are whole English sentences held as constants elsewhere, and the frozen table holds each as its own key – the key IS the sentence
+  if (eye) addEvent(world, { week: world.week, type: 'info', text: eye, c: { k: eye } })
   // ⭐ THE SEAT'S RECEIPT, decided here because this is the pass that already holds both facts. See
   // `SPARRING_RECEIPT` and `sparringComebackGap` for the counterfactual it rests on.
   const gap = sparringComebackGap(world)
   if (gap !== null && gap > ECONOMY.form.rustAfterWeeks && sparringWorksThisWeek(world, away)) {
-    addEvent(world, { week: world.week, type: 'info', text: SPARRING_RECEIPT })
+    addEvent(world, { week: world.week, type: 'info', text: SPARRING_RECEIPT, c: { k: SPARRING_RECEIPT } })
   }
   // ⭐⭐⭐ v82, ROUND 42 #51 – AND THE WEEK'S RESIDUALS ARE HANDED BACK rather than banked here.
   //

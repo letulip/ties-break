@@ -40,6 +40,7 @@ import { kidAgeAt } from './age'
 import type { WorldState } from '../world'
 import { guardNotEnded, guardNotEndedForGood } from './endings'
 import { coachRaiseStands, settleCoachRaise } from './coachDeal'
+import { cp, joinCopy, type CopyRef } from '../../shared/i18n'
 
 // --- the sponsors decide, in the off-season -----------------------------------
 // Who is willing to put this girl in their kit next year, and on what terms. Three rungs since
@@ -596,6 +597,8 @@ export function reviewSponsors(world: WorldState): void {
   //    and see `seasonSpokenFor` for the trap it is written around.
   if (!isSponsorWindowCloseWeek(world.week)) return
   const parts: string[] = []
+  // ⭐ v93 (L3-1): the same parts as refs, pushed in pairs with `parts`; the row's `c` is their join (the frozen table's joined family, up to 287 sentences)
+  const refs: CopyRef[] = []
   const ended = dealEndingWithSeason(world.offers, world.week)
   const endedTerms = ended ? (ended.terms as KitOfferTerms) : null
   // Raised BEFORE the row is composed, so the one line a season can report it - and so `post` below
@@ -627,6 +630,13 @@ export function reviewSponsors(world: WorldState): void {
           ? `${endedTerms.brand} kitted her out all season – ${worth} of kit – but they back a girl inside the ${LADDER_LABEL.domestic} top ${endedTerms.keepDomesticRank} and she is #${nationalRank}, so they are done.`
           : `${endedTerms.brand} kitted her out all season – ${worth} of kit, ${playedThen} events played.`,
     )
+    refs.push(
+      why === 'events'
+        ? cp`${endedTerms.brand} kitted her out all season – ${worth} of kit – but they asked for ${String(endedTerms.minEventsPerSeason)} events and she played ${playedThen}, so they are done.`
+        : why === 'standing'
+          ? cp`${endedTerms.brand} kitted her out all season – ${worth} of kit – but they back a girl inside the National top ${String(endedTerms.keepDomesticRank)} and she is #${nationalRank}, so they are done.`
+          : cp`${endedTerms.brand} kitted her out all season – ${worth} of kit, ${playedThen} events played.`,
+    )
   }
   // THE WINTER'S POST, as one clause however many brands wrote. `signed` is checked first because it
   // is the news: a letter already answered should not be described as waiting in the inbox.
@@ -656,6 +666,7 @@ export function reviewSponsors(world: WorldState): void {
   if (signedNow) {
     const terms = signedNow.terms as KitOfferTerms
     parts.push(`She is in ${terms.brand}'s kit for next season.`)
+    refs.push(cp`She is in ${terms.brand}'s kit for next season.`)
   } else if (post.length > 0) {
     const gate = post.every((o) => (o.terms as KitOfferTerms).tier === 'local')
       ? `${LADDER_LABEL.domestic} #${nationalRank}`
@@ -667,6 +678,17 @@ export function reviewSponsors(world: WorldState): void {
         ? `A letter from ${brands} – they want to put her in their kit (${gate}). It is in the inbox.`
         : `Letters from ${brands} – they all want to put her in their kit (${gate}). They are in the inbox.`,
     )
+    // the ladder word is part of each key (the table inlines it), and one letter means one brand, several letters several – so four whole sentences, not eight
+    const local = post.every((o) => (o.terms as KitOfferTerms).tier === 'local')
+    refs.push(
+      post.length === 1
+        ? local
+          ? cp`A letter from ${names[0]!} – they want to put her in their kit (National #${nationalRank}). It is in the inbox.`
+          : cp`A letter from ${names[0]!} – they want to put her in their kit (International #${world.kidRank}). It is in the inbox.`
+        : local
+          ? cp`Letters from ${names.slice(0, -1).join(', ')} and ${names[names.length - 1]!} – they all want to put her in their kit (National #${nationalRank}). They are in the inbox.`
+          : cp`Letters from ${names.slice(0, -1).join(', ')} and ${names[names.length - 1]!} – they all want to put her in their kit (International #${world.kidRank}). They are in the inbox.`,
+    )
   }
   // ⭐⭐⭐ ROUND 39 #17, WAVE G2 – THE BOND'S NOTICE IN ITS OWN VOICE: a house that has her on its
   //   posters asking for her back in its kit is not one of the winter's suitors, and the row would
@@ -677,6 +699,7 @@ export function reviewSponsors(world: WorldState): void {
   if (bondNotice) {
     const t = bondNotice.terms as KitOfferTerms
     parts.push(`${t.brand} already have her on their posters and would like her back in their kit – their renewal is in the inbox.`)
+    refs.push(cp`${t.brand} already have her on their posters and would like her back in their kit – their renewal is in the inbox.`)
   }
   // ⚠ AND THE INCUMBENT GETS ITS OWN SENTENCE, in its own voice. It is the last clause because it is
   //   the last letter: by the time the parent reads this line every rung that would have her has
@@ -686,9 +709,10 @@ export function reviewSponsors(world: WorldState): void {
   if (renewal) {
     const t = renewal.terms as KitOfferTerms
     parts.push(`${t.brand} would like another season on the same terms – their letter is in the inbox, and it goes when the season opens.`)
+    refs.push(cp`${t.brand} would like another season on the same terms – their letter is in the inbox, and it goes when the season opens.`)
   }
   if (parts.length === 0) return
-  addEvent(world, { week: world.week, type: 'info', text: parts.join(' ') })
+  addEvent(world, { week: world.week, type: 'info', text: parts.join(' '), c: joinCopy(' ', refs) })
 }
 
 // =================================================================================================
@@ -1219,6 +1243,7 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
     bankSponsorCheque(world, t.cashCents, {
       category: 'sponsor',
       text: `${t.brand} endorsement – the campaign fee, on signing`,
+      c: cp`${t.brand} endorsement – the campaign fee, on signing`,
     })
   }
   // ⭐⭐⭐ ROUND 45 #3b – THE COACH'S SIGNATURE MOVES HIS ONE STORED FEE. The three derived seats' fee is read
@@ -1564,6 +1589,9 @@ function chargeStaffFare(world: WorldState, event: SeasonEvent, fare: number, la
     type: 'expense',
     category: 'travel',
     text: `${label} travel to ${TIERS[event.tier].label} – one additional fare${payer}`,
+    c: deal
+      ? cp`${label} travel to ${TIERS[event.tier].label} – one additional fare (${(deal.terms as KitOfferTerms).brand} covers ${Math.round(share * 100)}%)`
+      : cp`${label} travel to ${TIERS[event.tier].label} – one additional fare`,
     amountCents: -fare,
   })
   return fare
@@ -1653,6 +1681,14 @@ export function chargeTravel(world: WorldState, event: SeasonEvent): void {
     // The sponsor valve's wording, for the same reason: the line is still emitted at its reduced
     // amount so the Money breakdown shows the relationship instead of the cost quietly shrinking.
     text: covered > 0 ? `Travel to ${TIERS[event.tier].label} – ${payer}` : `Travel to ${TIERS[event.tier].label}`,
+    // the payer clause is inlined in each key (the frozen table's four spellings): academy + brand, brand alone, academy alone, nobody
+    c: covered > 0
+      ? deal
+        ? world.academy
+          ? cp`Travel to ${TIERS[event.tier].label} – academy ${Math.round(travelCoverShare(world.academy) * 100)}% + ${(deal.terms as KitOfferTerms).brand} ${Math.round(brandShare * 100)}%`
+          : cp`Travel to ${TIERS[event.tier].label} – ${(deal.terms as KitOfferTerms).brand} covers ${Math.round(brandShare * 100)}%`
+        : cp`Travel to ${TIERS[event.tier].label} – academy covers ${Math.round(travelCoverShare(world.academy) * 100)}%`
+      : cp`Travel to ${TIERS[event.tier].label}`,
     amountCents: -net,
   })
 }
@@ -1769,7 +1805,7 @@ export function chargeTravel(world: WorldState, event: SeasonEvent): void {
 export function bankSponsorCheque(
   world: WorldState,
   grossCents: number,
-  row: { category: WorldEventCategory; text: string },
+  row: { category: WorldEventCategory; text: string; c?: CopyRef },
 ): { herCents: number; familyCents: number } {
   if (grossCents <= 0) return { herCents: 0, familyCents: 0 }
   const bps = managerCommissionBps()
@@ -1786,6 +1822,10 @@ export function bankSponsorCheque(
     // the cheque minus a deduction; it is now the deduction, so a subtraction reading would be a lie.
     // Silent only on a rate of zero, where there is no fee to name – the prize row's own conditional.
     text: familyCents > 0 ? `${row.text}, the manager's ${bps / 100}% of ${formatCents(grossCents)}` : row.text,
+    // ⭐ v93 (L3-1): the caller's sentence carries its ref when it has one; the manager's clause is joined on, the frozen table's `<sentence>, the manager's {n}% of {n+1}`
+    ...(row.c
+      ? { c: familyCents > 0 ? joinCopy('', [row.c, cp`, the manager's ${bps / 100}% of ${formatCents(grossCents)}`]) : row.c }
+      : {}),
     amountCents: familyCents,
   })
   if (herCents > 0) {
@@ -1794,6 +1834,7 @@ export function bankSponsorCheque(
       week: world.week,
       type: 'info',
       text: `${world.profile.kidName}'s share of the sponsor money – ${formatCents(herCents)} into her own account`,
+      c: cp`${world.profile.kidName}'s share of the sponsor money – ${formatCents(herCents)} into her own account`,
     })
     // The same cents onto the durable ledger so the week recap's memo can say it too (round-26 #5b).
     // `accrueKidShare` SUMS within a week, which is exactly what a title week paying a prize, an
@@ -1836,7 +1877,11 @@ export function payRetainer(world: WorldState): void {
   const terms = deal.terms as KitOfferTerms
   const cents = terms.retainerCents ?? 0
   if (cents <= 0) return
-  bankSponsorCheque(world, cents, { category: 'income', text: `${terms.brand} retainer – quarterly` })
+  bankSponsorCheque(world, cents, {
+    category: 'income',
+    text: `${terms.brand} retainer – quarterly`,
+    c: cp`${terms.brand} retainer – quarterly`,
+  })
 }
 
 /** ⭐⭐ PAY THE PORTFOLIO'S ANNIVERSARIES (round 29 part four P6) – the year-fee of every running
@@ -1866,6 +1911,7 @@ export function payAdAnniversaries(world: WorldState): void {
       bankSponsorCheque(world, t.cashCents, {
         category: 'sponsor',
         text: `${t.brand} endorsement – year ${yearIndex}, for life`,
+        c: cp`${t.brand} endorsement – year ${yearIndex}, for life`,
       })
       continue
     }
@@ -1879,6 +1925,7 @@ export function payAdAnniversaries(world: WorldState): void {
     bankSponsorCheque(world, t.cashCents, {
       category: 'sponsor',
       text: `${t.brand} endorsement – year ${yearIndex} of ${years}`,
+      c: cp`${t.brand} endorsement – year ${yearIndex} of ${years}`,
     })
   }
 }

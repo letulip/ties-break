@@ -15,7 +15,7 @@
 // exactly that reason. This file makes the wrong merge FAIL.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { after, at, before, codeOf, lastAt, lineAt, region, regionToLast, regions, scriptCodeOf, stripComments, tTransparent } from './helpers/source'
+import { after, at, before, codeOf, lastAt, lineAt, region, regionToLast, regions, scriptCodeOf, stripComments, tTransparent, withoutCpTwins } from './helpers/source'
 import { fnv1a, fnv1aHex } from './helpers/hash'
 
 describe('codeOf and scriptCodeOf are two helpers on purpose', () => {
@@ -365,5 +365,32 @@ describe('tTransparent – a pin reads the same whether or not the site is wrapp
     expect(pin(tTransparent, unwrapped)).toBe(true)
     expect(pin(identity, unwrapped)).toBe(true)
     expect(pin(identity, wrapped), 'with the reader mutated to identity the wrapped site is invisible to the pin').toBe(false)
+  })
+})
+
+// ⭐ L3-1 (10.10) – `withoutCpTwins`: A LEDGER ROW'S `c: cp\`…\`` IS THE SAME SENTENCE WRITTEN FOR A SECOND READER, NOT A SECOND QUOTATION OF IT
+describe('withoutCpTwins – a pin that counts quotations reads the row once', () => {
+  it('removes the tagged template and nothing else: the `text:` literal beside it is untouched', () => {
+    const src = "addEvent(world, { text: `Sold: ${label} – exactly what it cost`, c: cp`Sold: ${label} – exactly what it cost`, amountCents })"
+    expect(withoutCpTwins(src)).toBe("addEvent(world, { text: `Sold: ${label} – exactly what it cost`, c: , amountCents })")
+  })
+
+  it('walks a hole with nested braces, quotes and a nested template to the closing backtick', () => {
+    const src = "c: cp`a ${fn({ k: '}' })} b ${x ? `y ${z}` : \"}\"} c`, text: 'kept'"
+    expect(withoutCpTwins(src)).toBe("c: , text: 'kept'")
+  })
+
+  it('leaves a name that merely ends in cp alone, and a `cp` that is not a tag', () => {
+    expect(withoutCpTwins('abccp`x` and cp(1)')).toBe('abccp`x` and cp(1)')
+  })
+
+  it('an unterminated template is left as it is rather than eating the file', () => {
+    expect(withoutCpTwins('c: cp`never closed')).toBe('c: cp`never closed')
+  })
+
+  it('a wording change in the text literal is still visible through it (it can never hide one)', () => {
+    const was = withoutCpTwins("text: `Sold: ${a}`, c: cp`Sold: ${a}`")
+    const now = withoutCpTwins("text: `Sold!: ${a}`, c: cp`Sold: ${a}`")
+    expect(now).not.toBe(was)
   })
 })

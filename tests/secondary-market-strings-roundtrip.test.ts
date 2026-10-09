@@ -44,6 +44,7 @@
 // the word changed in `OfferLetter.vue` with an HTML comment quoting the old one above it. Each one fails the row test and the «exactly once» test together.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { withoutCpTwins } from './helpers/source'
 
 interface Row {
   id: string
@@ -85,7 +86,8 @@ const sourceCache = new Map<string, string>()
 function sourceOf(path: string): string {
   let src = sourceCache.get(path)
   if (src === undefined) {
-    src = codeOnly(readFileSync(path, 'utf8'), path)
+    // ⭐ v93 / L3-1: a ledger row's `c: cp\`…\`` is the same sentence written for a second reader, not a second quotation of the row (helpers/source.ts `withoutCpTwins`)
+    src = withoutCpTwins(codeOnly(readFileSync(path, 'utf8'), path))
     sourceCache.set(path, src)
   }
   return src

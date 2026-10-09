@@ -114,6 +114,7 @@ import {
   weeklyAssetUpkeepCents,
   type ShopItem,
 } from './assets'
+import { cp } from '../../shared/i18n'
 export {
   ASSET_NAME_MAX_CHARS,
   assetDelivered,
@@ -269,6 +270,7 @@ export function deliverAssets(world: WorldState): void {
       week: world.week,
       type: 'entry',
       text: `Delivered: ${label}`,
+      c: cp`Delivered: ${label}`,
     })
     // ⚠ THE FEED ROW ABOVE STAYS, AND THE LETTER IS NOT A SECOND COPY OF IT. `pruneEvents` throws
     // `entry` rows away first, which is why a four-year wait could end and leave nothing findable a
@@ -341,6 +343,15 @@ export function reportMarketSeason(world: WorldState): void {
       text: crashed
         ? `${MARKET_SEASON_OPENING} – a crash year: ${item.label} ${said} over the season.`
         : `${MARKET_SEASON_OPENING} – ${item.label} ${said} over the season.`,
+      // the opening line and the said-clause are inlined in each key (the frozen table's spellings); a crash year is always a fall
+      c:
+        pct === 0
+          ? cp`A season of the market – ${item.label} is level over the season.`
+          : pct > 0
+            ? cp`A season of the market – ${item.label} is up ${pct}% over the season.`
+            : crashed
+              ? cp`A season of the market – a crash year: ${item.label} is down ${-pct}% over the season.`
+              : cp`A season of the market – ${item.label} is down ${-pct}% over the season.`,
     })
   }
 }
@@ -602,6 +613,7 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
     // story: the week the family opened a holding is not the week it added to one, and neither of
     // them is the week it ORDERED a thing that will not exist for three years (§3f).
     text: held ? `Added to: ${item.label}` : item.buildWeeks ? `Ordered: ${item.label}` : `Bought: ${item.label}`,
+    c: held ? cp`Added to: ${item.label}` : item.buildWeeks ? cp`Ordered: ${item.label}` : cp`Bought: ${item.label}`,
     amountCents: -paidCents,
   })
   // ⚠ AND THE ORDER SAYS WHEN, ON ITS OWN LINE. A purchase whose thing does not arrive for three
@@ -612,6 +624,7 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
       week: world.week,
       type: 'entry',
       text: `${item.label} is on order – due ${weekLabel(world.week + item.buildWeeks, world.startYear)}`,
+      c: cp`${item.label} is on order – due ${weekLabel(world.week + item.buildWeeks, world.startYear)}`,
     })
   }
 }
@@ -767,6 +780,13 @@ export function sellAsset(world: WorldState, itemId: string, amountCents?: numbe
     // against what it fetched – and the unrealised rest stays on the row upstairs. (The closing verb,
     // `Sold: …`, is `settleAssetSale`'s; the tail is the one `saleTail` spells for both.)
     text: `Sold ${formatCents(proceedsCents)} of: ${label} – ${saleTail(deltaCents)}`,
+    // the three-way tail is inlined in each key (the frozen table's spellings)
+    c:
+      deltaCents < 0
+        ? cp`Sold ${formatCents(proceedsCents)} of: ${label} – ${formatCents(-deltaCents)} less than it cost`
+        : deltaCents > 0
+          ? cp`Sold ${formatCents(proceedsCents)} of: ${label} – ${formatCents(deltaCents)} more than it cost`
+          : cp`Sold ${formatCents(proceedsCents)} of: ${label} – exactly what it cost`,
     amountCents: proceedsCents,
   })
   // ⭐⭐⭐ ROUND 46, MORNING ITEM 4 – AND WHAT THIS SALE REALISED IS CARRIED TO THE LEDGER'S MEMO: the very `deltaCents` the sentence above names, so the year-end
@@ -824,6 +844,12 @@ export function settleAssetSale(world: WorldState, itemId: string, priceCents: n
     // ⚠ THE CLOSING VERB, `Sold:` – see `sellAsset` for why a part sale says `Sold X of:` instead. The tail is the difference between what
     // the sale fetched and what the rows cost the family, to the cent.
     text: `Sold: ${label} – ${saleTail(priceCents - costSoldCents)}`,
+    c:
+      priceCents - costSoldCents < 0
+        ? cp`Sold: ${label} – ${formatCents(costSoldCents - priceCents)} less than it cost`
+        : priceCents - costSoldCents > 0
+          ? cp`Sold: ${label} – ${formatCents(priceCents - costSoldCents)} more than it cost`
+          : cp`Sold: ${label} – exactly what it cost`,
     amountCents: priceCents,
   })
   // ⭐⭐⭐ ROUND 46, MORNING ITEM 4 – THE SAME TAIL, CARRIED TO THE LEDGER'S MEMO (see `sellAsset`'s part path): what the rows fetched against what they cost.
@@ -898,6 +924,7 @@ export function listAsset(world: WorldState, itemId: string): void {
     type: 'info',
     category: 'shop',
     text: `Put on the market: ${label}`,
+    c: cp`Put on the market: ${label}`,
   })
 }
 
@@ -941,6 +968,7 @@ export function unlistAsset(world: WorldState, itemId: string): void {
     type: 'info',
     category: 'shop',
     text: `Taken off the market: ${label}`,
+    c: cp`Taken off the market: ${label}`,
   })
 }
 

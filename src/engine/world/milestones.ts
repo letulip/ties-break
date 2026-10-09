@@ -27,6 +27,7 @@ import {
 } from '../../shared/protocol'
 import { addEvent, financeWindow, isHoldingCategory, realisedLossOf, seasonIndexOf, seasonMoneyOf, seasonStartWeek } from './ledger'
 import { careerMoney } from './reckoning'
+import type { CopyRef } from '../../shared/i18n'
 // ⚠ `enterprisePaidInWeekCents` was imported here for ruling 6's week arm and is not any more –
 // ruling A of 18.09 superseded it (see `captureBreakEven`). The import goes with the call: an unused
 // one would be a live edge on the import graph for a rule that is no longer implemented.
@@ -36,9 +37,11 @@ import { activeLadderOf, entryCouldNotMove, kidPoints, rankIn } from './ladder'
 import type { WorldState } from '../world'
 
 // --- milestones (never pruned) -----------------------------------------------
-export function fireMilestone(world: WorldState, key: string, text: string): void {
+// ⭐ v93 (L3-1): the optional `c` is the sentence as a CopyRef, written BESIDE `text` (spec i18n-2026-10 §5). Only the milestones L3-1 converts pass it
+// (the first prize cheque and the three tournament firsts, all written in `tournamentClose.ts`); every other caller is a later wave's and writes `text` alone.
+export function fireMilestone(world: WorldState, key: string, text: string, c?: CopyRef): void {
   if (world.events.some((e) => e.milestoneKey === key)) return
-  addEvent(world, { week: world.week, type: 'milestone', text, keep: true, milestoneKey: key })
+  addEvent(world, { week: world.week, type: 'milestone', text, ...(c ? { c } : {}), keep: true, milestoneKey: key })
 }
 
 /** Diary-1 D10: remember a moment in the durable ledger. Idempotent per `milestoneKey` (a first

@@ -57,6 +57,7 @@ import { housekeep, recomputeRankAndMilestones } from './bookkeeping'
 // imports these four names back and re-exports them under their historical names, and this import is
 // erased at compile time, so no runtime edge points from the package back at `world.ts`.
 import type { WorldState } from '../world'
+import { cp, joinCopy, type CopyRef } from '../../shared/i18n'
 
 /** The clause appended to a tournament summary that explains the EFFECTIVE ranking change
  *  (round-5 item 1a). `delta` is the change in the kid's windowed best-N sum caused by the
@@ -79,6 +80,41 @@ export function rankingDeltaSuffix(points: number, delta: number, bestN: number,
   if (delta <= 0) return ` (does not improve best ${bestN})`
   if (delta < points) return ` (ranking total +${delta})`
   return ''
+}
+
+/** ⭐ v93 (L3-1) – `rankingDeltaSuffix` AS A COPYREF: the same four branches in the same order, each its own sentence (English plural forks and clauses are
+ *  separate literals, spec §3.3), `null` where the suffix is ''. It is a SECOND SPELLING of that function on purpose – the string version is a barrel
+ *  name the tests and the ladder's copy pins read, and moving its body would move a frozen surface – so `tests/i18n-l3-1-ledger-writers.test.ts` renders every
+ *  branch of both and refuses a pair that differs. */
+function rankingDeltaRef(points: number, delta: number, bestN: number, notRanked: boolean): CopyRef | null {
+  if (points <= 0) return null
+  if (notRanked) return cp` (+${points} banked – a ranking needs ${RANKABLE_MIN.tournaments} events with points, or ${RANKABLE_MIN.points})`
+  if (delta <= 0) return cp` (does not improve best ${bestN})`
+  if (delta < points) return cp` (ranking total +${delta})`
+  return null
+}
+
+/** ⭐ v93 (L3-1) – THE TOURNAMENT SUMMARY ROW AS A COPYREF (`finalizeTournament`'s `type: 'tournament'` line). Up to three parts – the result sentence, the
+ *  ranking clause, the injury clause – joined into ONE ref whose key is the frozen table's whole-sentence spelling (`{0} ({1}, {2}): {3} – {4} (+{5} pts)` and
+ *  its eight clause combinations), so the tier / surface / week / name / finish / points holes keep their shapes and a translator gets one message per
+ *  sentence. Exported for the net that renders every combination against `text`. Draws nothing. */
+export function tournamentSummaryRef(a: {
+  tier: string
+  surface: string
+  week: string
+  kid: string
+  finish: string
+  points: number
+  delta: number
+  bestN: number
+  notRanked: boolean
+  retired: boolean
+}): CopyRef {
+  const parts: CopyRef[] = [cp`${a.tier} (${a.surface}, ${a.week}): ${a.kid} – ${a.finish} (+${a.points} pts)`]
+  const clause = rankingDeltaRef(a.points, a.delta, a.bestN, a.notRanked)
+  if (clause) parts.push(clause)
+  if (a.retired) parts.push(cp` – she retired hurt`)
+  return joinCopy('', parts)
 }
 
 // Commit the kid's run: award points, emit the summary + milestones, recompute rank + housekeep.
@@ -257,6 +293,10 @@ function finalizeTournament(world: WorldState): void {
         herShare > 0
           ? `${tier.label} prize money – ${finishLabel(kidFinish)}, less her ${kidPrizeShareBps(ageNow, pausedShare) / 100}% share (${formatCents(herShare)})`
           : `${tier.label} prize money – ${finishLabel(kidFinish)}`,
+      c:
+        herShare > 0
+          ? cp`${tier.label} prize money – ${finishLabel(kidFinish)}, less her ${kidPrizeShareBps(ageNow, pausedShare) / 100}% share (${formatCents(herShare)})`
+          : cp`${tier.label} prize money – ${finishLabel(kidFinish)}`,
       amountCents: familyShare,
     })
     // ...and the transfer itself gets a row of its own, so the money can be followed out of one
@@ -268,6 +308,7 @@ function finalizeTournament(world: WorldState): void {
         week: world.week,
         type: 'info',
         text: `${world.profile.kidName}'s share of the prize money – ${formatCents(herShare)} into her own account`,
+        c: cp`${world.profile.kidName}'s share of the prize money – ${formatCents(herShare)} into her own account`,
       })
       // ⭐⭐ ...AND THE SAME CENTS ARE PARKED ON THE DURABLE LEDGER, so the week recap can say it too.
       //
@@ -346,6 +387,7 @@ function finalizeTournament(world: WorldState): void {
         category: 'coaching',
         // No pronoun names the coach (R15-7 – women are on every roster by construction).
         text: `Coach's share of the prize money – ${staffResultShareBps('coach', kidFinish) / 100}% of the ${tier.label} cheque`,
+        c: cp`Coach's share of the prize money – ${staffResultShareBps('coach', kidFinish) / 100}% of the ${tier.label} cheque`,
         amountCents: -coachShare,
       })
       // ⭐⭐ ROUND 29 PART TWO #13 – AND THE SAME CENTS ARE PARKED ON THE DURABLE LEDGER, so the
@@ -375,6 +417,7 @@ function finalizeTournament(world: WorldState): void {
         type: 'expense',
         category: 'staff',
         text: `Masseur's share of the prize money – ${staffResultShareBps('masseur', kidFinish) / 100}% of the ${tier.label} cheque`,
+        c: cp`Masseur's share of the prize money – ${staffResultShareBps('masseur', kidFinish) / 100}% of the ${tier.label} cheque`,
         amountCents: -masseurShare,
       })
     }
@@ -394,6 +437,7 @@ function finalizeTournament(world: WorldState): void {
       // never negative, so the sign arm the helper adds cannot fire. Pinned both ways in
       // tests/engine-money-strings.test.ts.
       `💰 First prize money – ${formatCents(prize)} at the ${tier.label}!`,
+      cp`💰 First prize money – ${formatCents(prize)} at the ${tier.label}!`,
     )
   }
 
@@ -425,13 +469,18 @@ function finalizeTournament(world: WorldState): void {
   // winning week fall as sponsorship grows.
   const appearance = appearanceFeeFor(world, event.tier)
   if (appearance > 0) {
-    bankSponsorCheque(world, appearance, { category: 'income', text: `Appearance fee – ${tier.label}` })
+    bankSponsorCheque(world, appearance, {
+      category: 'income',
+      text: `Appearance fee – ${tier.label}`,
+      c: cp`Appearance fee – ${tier.label}`,
+    })
   }
   const bonus = resultBonusFor(world, event.tier, kidFinish)
   if (bonus > 0) {
     bankSponsorCheque(world, bonus, {
       category: 'income',
       text: `Sponsor bonus – ${finishLabel(kidFinish)} at the ${tier.label}`,
+      c: cp`Sponsor bonus – ${finishLabel(kidFinish)} at the ${tier.label}`,
     })
   }
 
@@ -467,6 +516,7 @@ function finalizeTournament(world: WorldState): void {
       week: world.week,
       type: 'info',
       text: 'Deep week, fresh legs – the table work on tour kept the run from eating her.',
+      c: cp`Deep week, fresh legs – the table work on tour kept the run from eating her.`,
     })
   }
   // ⭐ ...AND THE WEEK HE BOARDED IS BILLED PER MATCH (owner 22.08: «на неделе выезда по-матчевая
@@ -485,6 +535,11 @@ function finalizeTournament(world: WorldState): void {
         type: 'expense',
         category: 'staff',
         text: `Masseur on tour – ${runMatches.length} ${runMatches.length === 1 ? 'match' : 'matches'} worked, billed per match`,
+        // one key per branch (English plural forks are separate literals – spec §3.3), the frozen table's two spellings
+        c:
+          runMatches.length === 1
+            ? cp`Masseur on tour – ${runMatches.length} match worked, billed per match`
+            : cp`Masseur on tour – ${runMatches.length} matches worked, billed per match`,
         amountCents: -tourBill,
       })
     }
@@ -541,6 +596,18 @@ function finalizeTournament(world: WorldState): void {
       // reads "Semifinalist (+30 pts) – she retired hurt" on one line and learns the rule (the round
       // she reached is hers, in full) without ever being told it.
       `${finishLabel(kidFinish)} (+${points} pts)${rankingDeltaSuffix(points, after - before, BEST_N_BY_TRACK[track], after === 0)}${retiredMatch ? ' – she retired hurt' : ''}`,
+    c: tournamentSummaryRef({
+      tier: tier.label,
+      surface: event.surface,
+      week: weekLabel(event.week, world.startYear),
+      kid: world.profile.kidName,
+      finish: finishLabel(kidFinish),
+      points,
+      delta: after - before,
+      bestN: BEST_N_BY_TRACK[track],
+      notRanked: after === 0,
+      retired: !!retiredMatch,
+    }),
     finishIdx: kidFinish,
   })
   // ...AND THE BODY GETS ITS BILL. Opened here, at the commit point, for the same reason the cheque
@@ -575,7 +642,7 @@ function finalizeTournament(world: WorldState): void {
       text: `🏆 ${formatShortName(champName)} won the ${tier.label} (${event.surface}).`,
     })
   }
-  if (kidFinish === 0) fireMilestone(world, 'first-title', `🏆 First career title: ${tier.label}!`)
+  if (kidFinish === 0) fireMilestone(world, 'first-title', `🏆 First career title: ${tier.label}!`, cp`🏆 First career title: ${tier.label}!`)
   // ⭐⭐⭐ ROUND 41 #18 PART TWO (12.09) – AND THE FIRST GRAND SLAM MAIN DRAW, WHICHEVER ROUND IT ENDS
   // IN. The owner: «да, делаем fame за основу Шлема… У нее был вайлдкард на Шлем, когда она была
   // #155.» Until this line the biggest week of a climbing career left no durable trace anywhere: the
@@ -598,7 +665,12 @@ function finalizeTournament(world: WorldState): void {
   // `SLAM_DEBUT_KEY`, so the second Slam and the two-hundredth write nothing and the date stays the
   // first one. ZERO RNG – one array scan and one push.
   if (event.tier === 'slam') {
-    fireMilestone(world, SLAM_DEBUT_KEY, '🏆 First Grand Slam main draw – from this week the world knows her name.')
+    fireMilestone(
+      world,
+      SLAM_DEBUT_KEY,
+      '🏆 First Grand Slam main draw – from this week the world knows her name.',
+      cp`🏆 First Grand Slam main draw – from this week the world knows her name.`,
+    )
   }
   // D10: the durable ledger remembers the FIRST title and the FIRST final per tier, at the moment
   // they land. A title week captures both – reaching the final is part of winning it.
@@ -608,7 +680,7 @@ function finalizeTournament(world: WorldState): void {
     event.tier === 'national' &&
     p.result.matches.some((m) => (m.aId === KID_ID || m.bId === KID_ID) && m.winnerId === KID_ID)
   ) {
-    fireMilestone(world, 'first-national', '🏆 First win at National level!')
+    fireMilestone(world, 'first-national', '🏆 First win at National level!', cp`🏆 First win at National level!`)
   }
   recomputeRankAndMilestones(world)
   housekeep(world)

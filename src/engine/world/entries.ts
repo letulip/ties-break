@@ -30,6 +30,7 @@ import type { WorldState } from '../world'
 // have been the first value-import cycle in `src/engine/world/*`. The guard's body moved to the leaf;
 // `endings.ts` still re-exports it, so nothing else had to move. Same function, same error text.
 import { guardNotEnded } from './constants'
+import { cp, type CopyRef } from '../../shared/i18n'
 
 
 /** Enter the kid in a scheduled event: validates deadline / funds / duplicates / ranking
@@ -120,12 +121,14 @@ export function enterEvent(world: WorldState, eventId: string): void {
     type: 'expense',
     category: 'entry',
     text: `Entry fee: ${TIERS[event.tier].label} (${weekLabel(event.week, world.startYear)})`,
+    c: cp`Entry fee: ${TIERS[event.tier].label} (${weekLabel(event.week, world.startYear)})`,
     amountCents: -fee,
   })
   addEvent(world, {
     week: world.week,
     type: 'entry',
     text: `Entered ${TIERS[event.tier].label} – ${weekLabel(event.week, world.startYear)} (${event.surface})`,
+    c: cp`Entered ${TIERS[event.tier].label} – ${weekLabel(event.week, world.startYear)} (${event.surface})`,
   })
 }
 
@@ -288,6 +291,7 @@ export function releaseEntry(world: WorldState, eventId: string, releasedBy: Ent
     type: 'income',
     category: 'income',
     text: `Entry refunded: ${TIERS[event.tier].label}`,
+    c: cp`Entry refunded: ${TIERS[event.tier].label}`,
     amountCents: fee,
     entryRef,
   })
@@ -300,12 +304,16 @@ export function releaseEntry(world: WorldState, eventId: string, releasedBy: Ent
   // is the only mechanism that reliably makes an author write the copy.
   const label = TIERS[event.tier].label
   let line: string
+  // ⭐ v93 (L3-1): each case writes its ref beside its line; the prefix constants and the suffix are inlined in the keys, as the frozen table spells them
+  let lineC: CopyRef
   switch (releasedBy) {
     case 'parent':
       line = `${RELEASE_LINE_PREFIX.parent}${label} – ${weekLabel(event.week, world.startYear)}`
+      lineC = cp`Withdrew from ${label} – ${weekLabel(event.week, world.startYear)}`
       break
     case 'injury':
       line = `${RELEASE_LINE_PREFIX.injury}${label} – ${weekLabel(event.week, world.startYear)}${INJURY_RELEASE_SUFFIX}`
+      lineC = cp`Taken out of ${label} – ${weekLabel(event.week, world.startYear)}, she is not fit for that week.`
       break
     case 'college':
       // ⚠ NOT "Withdrew", FOR THE REASON THE WHOLE SWITCH EXISTS: he answered a question about her
@@ -313,9 +321,10 @@ export function releaseEntry(world: WorldState, eventId: string, releasedBy: Ent
       // 500 would be the 05.08 bug in college colours. And no apology and no price in the sentence –
       // the fee is back, and the release is the game's own housekeeping.
       line = `${RELEASE_LINE_PREFIX.college}${label} – ${weekLabel(event.week, world.startYear)}, she is taking the scholarship.`
+      lineC = cp`Released from ${label} – ${weekLabel(event.week, world.startYear)}, she is taking the scholarship.`
       break
   }
-  addEvent(world, { week: world.week, type: 'entry', text: line, entryRef })
+  addEvent(world, { week: world.week, type: 'entry', text: line, c: lineC, entryRef })
 }
 
 /** R10-13: CANCEL an entry, at any point before its week starts. THE ESCAPE HATCH.
@@ -361,6 +370,7 @@ export function cancelEntry(world: WorldState, eventId: string): void {
     week: world.week,
     type: 'info',
     text: `Cancelled ${TIERS[event.tier].label} – ${weekLabel(event.week, world.startYear)}, entry fee forfeited.`,
+    c: cp`Cancelled ${TIERS[event.tier].label} – ${weekLabel(event.week, world.startYear)}, entry fee forfeited.`,
   })
   // ⚠ THE LATE WITHDRAWAL, AND THIS IS THE ONE PLACE IT CAN BE CHARGED (W3-ACT2 §6). Past the
   // deadline the entry list has CLOSED and the draw is published with her name in it, so the tour

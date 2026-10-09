@@ -55,6 +55,10 @@ function digest(world: unknown): string {
   const c = JSON.parse(JSON.stringify(world)) as Record<string, unknown>
   delete c.startYear
   c.schemaVersion = 91
+  // ⭐ v93 / L3-1 (10.10): the digests below were taken from the PRISTINE tree, before `WorldEvent.c` existed; the ledger writers set it now, so the walked world is the
+  // v91 world minus TWO keys – `startYear` and the ref on every row (`tests/coachTravelEdgeFixtures.ts` `careerHashAtSchema` peels the same key, and the per-key run over
+  // `FROZEN` shows `events` the only key that moved).
+  for (const e of (c.events ?? []) as Array<Record<string, unknown>>) delete e.c
   return createHash('sha1').update(JSON.stringify(c)).digest('hex').slice(0, 16)
 }
 

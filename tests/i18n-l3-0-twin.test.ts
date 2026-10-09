@@ -10,6 +10,10 @@
 //   · a second migration is a no-op.
 // It asserts a floor on coverage, NOT a figure: a wording change in a later wave moves the rate and must not redden this file (the v92 golden in
 // i18n-l3-0-legacy-match.test.ts carries the frozen, exact claim).
+//
+// ⭐ RE-AIMED 10.10 (L3-1): «no writer sets `c`» was true for exactly one wave. The ledger / receipt writers set it now, so a played career arrives here
+// ALREADY carrying refs on those rows – and the claim that matters becomes the other half: the migration leaves a row that has a ref exactly as the writer
+// made it (idempotent, never overwritten) and fills only the rows that have none.
 import { describe, expect, it } from 'vitest'
 import { migrateSave } from '../src/engine/migrations'
 import { renderCopyRef, SOURCE_LOCALE, type CopyRef } from '../src/shared/i18n'
@@ -29,7 +33,7 @@ describe('the 150-week twin – a played career migrated as a v92 save', () => {
     it(label, () => {
       const played = playedCareer(preset, policy)
       expect(played.events.length, 'the career wrote a ledger').toBeGreaterThan(100)
-      expect(played.events.every((e) => e.c === undefined), 'no writer sets `c` in L3-0 – every NEW row is a remainder row by construction').toBe(true)
+      expect(played.events.some((e) => e.c !== undefined), 'L3-1: the ledger / receipt writers set `c` on their rows').toBe(true)
 
       const asV92 = structuredClone(played)
       asV92.schemaVersion = 92
@@ -40,6 +44,7 @@ describe('the 150-week twin – a played career migrated as a v92 save', () => {
       let converted = 0
       migrated.events.forEach((e, i) => {
         expect(e.text, `row ${i}: text untouched`).toBe(played.events[i]?.text)
+        if (played.events[i]?.c) expect(e.c, `row ${i}: a ref the writer made is left exactly as it is`).toEqual(played.events[i]?.c)
         if (e.c) {
           converted++
           expect(renderCopyRef(e.c, { locale: SOURCE_LOCALE }), `row ${i}: the player reads the same bytes`).toBe(e.text)

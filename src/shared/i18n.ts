@@ -94,6 +94,25 @@ export function cp(strings: TemplateStringsArray, ...values: CopyParam[]): CopyR
   return values.length > 0 ? { k, p: values } : { k }
 }
 
+/** ⭐ v93 (L3-1) – ONE SENTENCE ASSEMBLED FROM WHOLE PARTS, for the places where the ledger composes a row from pieces chosen at run time and the
+ *  combinations are too many to spell out (the winter kit-letter row is the join of up to five parts – 287 sentences in the frozen v92 table) or a
+ *  suffix rides on another writer's sentence (the manager's cut on a sponsor cheque, the clause a tournament summary appends). The result is ONE
+ *  ref: `k` is the parts' keys joined by `sep` with the holes of each later part renumbered past the holes before it (`{0}` of the second part
+ *  becomes `{n}`), `p` the params in the same order – exactly the spelling the frozen table gives the same sentence, so a row written now and the
+ *  same row migrated from an old save land on ONE key. Draws nothing. The parts are the engine's own refs: plain `{n}` holes, no ICU, no escaped
+ *  braces (`cp` writes nothing else). */
+export function joinCopy(sep: string, parts: readonly CopyRef[]): CopyRef {
+  let k = ''
+  const p: CopyParam[] = []
+  parts.forEach((part, i) => {
+    const shift = p.length
+    const key = shift === 0 ? part.k : part.k.replace(/\{(\d+)\}/g, (_hole, n: string) => `{${Number(n) + shift}}`)
+    k += i === 0 ? key : sep + key
+    if (part.p) p.push(...part.p)
+  })
+  return p.length > 0 ? { k, p } : { k }
+}
+
 /** `nav|Stats` → `{ ctx: 'nav', text: 'Stats' }`. A tag is a short lowercase word before the first
  *  `|`; anything else (`Win | Lose`, `Draw|Seed`) is plain text. */
 const CONTEXT_TAG = /^([a-z][a-z0-9_-]{0,23})\|/

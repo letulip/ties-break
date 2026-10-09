@@ -46,6 +46,7 @@ import { KID_ID } from './constants'
 import type { PenaltyReason, PenaltyRow, TourBriefing, TourBriefingRow } from '../../shared/protocol'
 import type { SeasonEvent, TierId } from '../season/types'
 import type { WorldState } from '../world'
+import { cp } from '../../shared/i18n'
 
 /** Is this rung one the tour obliges a top-50 player to turn up at, event by event? The Slams and
  *  the 1000s (ECONOMY.mandatory.perEventTiers). The 500s are a QUOTA and are handled separately —
@@ -430,6 +431,15 @@ export function chargeMandatoryPenalty(
       `Tour penalty: ${points} ${points === 1 ? 'point' : 'points'}` +
       `${label ? ` – ${label}` : ' – season commitment'}. ` +
       `${running} of ${ECONOMY.mandatory.suspensionAt} in the last 52 weeks.`,
+    // one key per branch: the point/points fork × the label / 'season commitment' fork (the frozen table's four spellings)
+    c:
+      points === 1
+        ? label
+          ? cp`Tour penalty: ${points} point – ${label}. ${running} of ${ECONOMY.mandatory.suspensionAt} in the last 52 weeks.`
+          : cp`Tour penalty: ${points} point – season commitment. ${running} of ${ECONOMY.mandatory.suspensionAt} in the last 52 weeks.`
+        : label
+          ? cp`Tour penalty: ${points} points – ${label}. ${running} of ${ECONOMY.mandatory.suspensionAt} in the last 52 weeks.`
+          : cp`Tour penalty: ${points} points – season commitment. ${running} of ${ECONOMY.mandatory.suspensionAt} in the last 52 weeks.`,
   })
   if (charged.suspended && world.suspendedUntilWeek !== null) {
     raiseSuspensionLetter(
@@ -443,6 +453,7 @@ export function chargeMandatoryPenalty(
       week,
       type: 'info',
       text: `Tour suspension – ${ECONOMY.mandatory.suspensionWeeks} weeks, through week ${world.suspendedUntilWeek}.`,
+      c: cp`Tour suspension – ${ECONOMY.mandatory.suspensionWeeks} weeks, through week ${world.suspendedUntilWeek}.`,
     })
   }
   return points

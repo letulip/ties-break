@@ -46,6 +46,7 @@ import { vacationForWeek } from './bookings'
 // `seasonIndexOf`, which is the definition of «this season» every money surface is cut on.
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import type { WorldState } from '../world'
+import { cp } from '../../shared/i18n'
 
 /** THE GATE: he joins a professional operation (the plan's own ruling – «эти специалисты могут
  *  открываться в про карьере»). The boundary is the game's own one-way door: her first counting
@@ -91,6 +92,9 @@ export function hireMasseur(world: WorldState, hire: boolean): void {
     text: hire
       ? 'A masseur joins the team – table work at home, every week.'
       : 'The masseur is let go – her body is back on the physio rota alone.',
+    c: hire
+      ? cp`A masseur joins the team – table work at home, every week.`
+      : cp`The masseur is let go – her body is back on the physio rota alone.`,
   })
 }
 
@@ -336,6 +340,7 @@ export function setMasseurSessions(world: WorldState, sessions: number): void {
       // The label, not a number: the price change is on the next weekly bill, which is the row
       // that may carry figures. Gender-free by construction (R15-7's standing order).
       text: `The masseur's week is re-cut – ${rung.label.toLowerCase()} on the table from the next bill.`,
+      c: cp`The masseur's week is re-cut – ${rung.label.toLowerCase()} on the table from the next bill.`,
     })
   }
 }
@@ -357,6 +362,9 @@ export function setMasseurTravels(world: WorldState, on: boolean): void {
       text: on
         ? 'The masseur travels to tournaments now – one additional fare per trip, and table work between rounds.'
         : 'The masseur stays home on tournament weeks – the table waits for her return.',
+      c: on
+        ? cp`The masseur travels to tournaments now – one additional fare per trip, and table work between rounds.`
+        : cp`The masseur stays home on tournament weeks – the table waits for her return.`,
     })
   }
 }
@@ -534,6 +542,7 @@ export function resolveMasseur(world: WorldState): void {
     type: 'expense',
     category: 'staff',
     text: 'Masseur – sessions this week',
+    c: cp`Masseur – sessions this week`,
     amountCents: -cost,
   })
 }
@@ -568,6 +577,7 @@ export function resolveMasseurReturn(world: WorldState, playedThisWeek: boolean)
     type: 'info',
     // No digits, no pronoun for the masseur (R15-7), short dash – the receipt idiom of the house.
     text: 'Back from the tour – an extra session on the table works the trip out of her legs.',
+    c: cp`Back from the tour – an extra session on the table works the trip out of her legs.`,
   })
 }
 

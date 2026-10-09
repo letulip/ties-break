@@ -95,6 +95,7 @@ import { startingSkills, withHeadStart } from './player'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidLadderRank, kidPoints, tierOpenFor } from './ladder'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
+import { cp } from '../../shared/i18n'
 
 // --- THE COACH MARKET (v23) --------------------------------------------------------------------
 
@@ -169,6 +170,7 @@ export function hireCoach(world: WorldState, coachId: string | null): void {
       keep: true,
       milestoneKey: `${COACH_CHANGE_KEY}${world.week}`,
       text: 'You are coaching her yourself again. The weekly bill is court time only.',
+      c: cp`You are coaching her yourself again. The weekly bill is court time only.`,
     })
     // ⭐ v82 – AND THE CONTRACT GOES WITH HIM. `settleCoachDeal` clears it when there is nobody on
     // the payroll, so a re-hire strikes a new deal at today's market rather than silently inheriting
@@ -204,6 +206,7 @@ export function hireCoach(world: WorldState, coachId: string | null): void {
     // over the ledger instead of a persisted field and a migration.
     milestoneKey: `${COACH_CHANGE_KEY}${world.week}`,
     text: `${coach.name} is her coach now – ${COACH_TIER_LABEL[coach.tier]} tier.`,
+    c: cp`${coach.name} is her coach now – ${COACH_TIER_LABEL[coach.tier]} tier.`,
   })
   // ⭐⭐ v82 – AND THE FIGURE IS WRITTEN DOWN (round 42 #51). It is the market's own quote at this
   // moment, which is the number the card the player just pressed was showing – so the HIRE PRICE is
@@ -572,6 +575,9 @@ export function setCoachOnEventWeeks(world: WorldState, on: boolean): void {
     text: on
       ? 'Your coach travels to tournaments with her now – one additional fare per trip.'
       : 'Your coach no longer travels to tournaments – the work happens at home.',
+    c: on
+      ? cp`Your coach travels to tournaments with her now – one additional fare per trip.`
+      : cp`Your coach no longer travels to tournaments – the work happens at home.`,
   })
 }
 
@@ -602,6 +608,9 @@ export function setCoachOnJuniorEvents(world: WorldState, on: boolean): void {
     text: on
       ? 'Your coach travels to junior and domestic tournaments too – one additional fare on trips that pay no prize money.'
       : 'Your coach stays home for junior and domestic tournaments – the additional fare is for the events that pay.',
+    c: on
+      ? cp`Your coach travels to junior and domestic tournaments too – one additional fare on trips that pay no prize money.`
+      : cp`Your coach stays home for junior and domestic tournaments – the additional fare is for the events that pay.`,
   })
 }
 

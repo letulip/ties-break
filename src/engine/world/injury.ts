@@ -33,6 +33,7 @@ import { masseurRehabWeeksAhead, masseurRungOf, masseurWorksThisWeek } from './m
 import { releaseEntry } from './entries'
 import { retireKnock } from './knockHistory'
 import type { WorldState } from '../world'
+import { cp } from '../../shared/i18n'
 
 // --- Season-Life: injuries + physio (slice C) ---------------------------------
 // ALL of this slice's randomness lives on the PRIVATE per-week sub-streams
@@ -584,6 +585,7 @@ export function onsetInjury(
       type: 'expense',
       category: 'physio',
       text: 'Medical – scans and treatment',
+      c: cp`Medical – scans and treatment`,
       amountCents: -onsetCost,
     })
   }
@@ -774,6 +776,7 @@ export function resolvePhysio(world: WorldState): void {
     type: 'expense',
     category: 'physio',
     text: 'Physio / recovery session',
+    c: cp`Physio / recovery session`,
     amountCents: -cost,
   })
 }

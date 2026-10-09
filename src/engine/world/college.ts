@@ -59,6 +59,7 @@ import { birthdayTurning, kidAgeYears } from './age'
 // coachMarket). `kidLadderRank` is a composition of ladder functions and now lives with them.
 import { kidLadderRank } from './ladder'
 import type { WorldState } from '../world'
+import { cp } from '../../shared/i18n'
 
 /** ⭐⭐ WHAT A COLLEGE PROGRAMME IS SHOWN WHEN IT LOOKS HER UP – the world side of P4's decoupled-leaf
  *  pattern, and here the decoupling is the fairness property rather than a tidiness one.
@@ -154,6 +155,7 @@ export function resolveCollegeBill(world: WorldState): void {
     type: 'expense',
     category: 'tuition',
     text: "The family's share of the college year",
+    c: cp`The family's share of the college year`,
     amountCents: -weekly,
   })
 }

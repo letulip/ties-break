@@ -359,7 +359,7 @@ export function growAndLive(world: WorldState, rng: Rng, away = false): void {
   //   category, no figure in the string – so it writes no money row and folds into no ledger.
   //   ZERO DRAWS: a floor comparison over numbers this phase already holds.
   if (coolheadCrossedAPoint(world.skills.composure, coolhead)) {
-    addEvent(world, { week: world.week, type: 'info', text: COOLHEAD_RECEIPT })
+    addEvent(world, { week: world.week, type: 'info', text: COOLHEAD_RECEIPT, c: { k: COOLHEAD_RECEIPT } })
   }
 
   // 3c. W4 – AND SHE CAME OFF COURT SORE. Deliberately LAST of the things that happen to her body,

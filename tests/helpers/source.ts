@@ -518,6 +518,70 @@ export function tTransparent(source: string): string {
     .replace(BOUND_ATTR_SEAT, (_m, space: string, name: string, inner: string) => `${space}${name}="${unescapeQuotes(inner)}"`)
 }
 
+/** Where a template literal that STARTS at `open` (the backtick) ends – the index just past its closing backtick, or -1. Handles escapes, `${…}` holes with nested braces,
+ *  quoted strings and nested templates inside a hole. */
+function templateEnd(src: string, open: number): number {
+  let i = open + 1
+  while (i < src.length) {
+    const ch = src[i]
+    if (ch === '\\') {
+      i += 2
+      continue
+    }
+    if (ch === '`') return i + 1
+    if (ch === '$' && src[i + 1] === '{') {
+      let depth = 1
+      i += 2
+      while (i < src.length && depth > 0) {
+        const c = src[i]
+        if (c === '`') {
+          const e = templateEnd(src, i)
+          if (e < 0) return -1
+          i = e
+          continue
+        }
+        if (c === "'" || c === '"') {
+          i++
+          while (i < src.length && src[i] !== c) i += src[i] === '\\' ? 2 : 1
+          i++
+          continue
+        }
+        if (c === '{') depth++
+        else if (c === '}') depth--
+        i++
+      }
+      continue
+    }
+    i++
+  }
+  return -1
+}
+
+/**
+ * ⭐ v93 / L3-1 (10.10) – THE SOURCE WITHOUT ITS CP TWINS. A ledger writer says its sentence twice since the localization rig: `text: \`Sold: ${label} – …\`` and, beside
+ * it, `c: cp\`Sold: ${label} – …\`` – the same words as the CopyRef the UI renders under a locale (docs/specs/i18n-2026-10.md §5). A pin that counts how many times a row's
+ * text is quoted in its home (the secondary market's S5 «exactly ONE quoted literal») is counting the ROW, and the twin is not a second quotation of it – it is the same
+ * sentence written for a second reader. This removes every `cp\`…\`` tagged template (nothing else) so such a pin reads the file as it did before the twin existed.
+ *
+ * ⚠ IT CAN NEVER HIDE A WORDING CHANGE: the `text:` literal is untouched by it, and the twin's wording is pinned from the other side – tests/i18n-l3-1-ledger-writers.test.ts
+ * refuses any `cp` key that is not the frozen v92 table's, and refuses a pair whose `text` and `c` say different things.
+ */
+export function withoutCpTwins(source: string): string {
+  let out = ''
+  for (let i = 0; i < source.length; ) {
+    if (source.startsWith('cp`', i) && !NAME_CHAR.test(source[i - 1] ?? ' ')) {
+      const end = templateEnd(source, i + 2)
+      if (end > 0) {
+        i = end
+        continue
+      }
+    }
+    out += source[i]
+    i++
+  }
+  return out
+}
+
 function abbreviate(marker: string): string {
   const oneLine = marker.replace(/\n/g, '\\n')
   return oneLine.length > 60 ? `${oneLine.slice(0, 57)}...` : oneLine
