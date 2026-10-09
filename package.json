@@ -87,7 +87,8 @@
     "i18n:extract": "vite-node tools/i18n-cli.ts extract",
     "i18n:import": "vite-node tools/i18n-cli.ts import",
     "i18n:check": "vite-node tools/i18n-cli.ts check",
-    "fonts:probe": "vite-node tools/font-cmap-probe.ts"
+    "fonts:probe": "vite-node tools/font-cmap-probe.ts",
+    "lqa:ru": "vite-node tools/lqa-ru.ts"
   },
   "engines": {
     "node": ">=22"

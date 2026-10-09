@@ -8,6 +8,10 @@ dist/
 # VITE_TB_SW, so `src/pwa.ts` registers the service worker and e2e/offline.spec.ts has one to test.
 # playwright.config.ts builds and serves it on its own port; nothing else ever looks at it.
 dist-sw/
+# The LQA runner's builds (playwright.lqa.config.ts) and its output (route files + lqa-ru-report.md/.json) - an on-demand instrument, never committed.
+dist-lqa/
+dist-lqa-sw/
+lqa-out/
 dev-dist/
 *.local
 .DS_Store

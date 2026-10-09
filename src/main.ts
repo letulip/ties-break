@@ -25,3 +25,8 @@ createApp(AppRoot).use(createPinia()).mount('#app')
 // loaded, so a popup never renders ahead of its art. Must come after the pinia install – the
 // watcher reads the game store. See src/art/preload.ts for the caching story.
 startArtPreloader()
+
+// L4-3 – THE LQA RUNNER'S WINDOW HOOK, IN THE LQA BUILD ONLY. `VITE_TB_LQA` is a build-time switch (the sibling of VITE_TB_SW):
+// `vite build` rewrites the read into a literal, the branch is dead in a player's bundle and the dynamic import below is never
+// emitted. The hook it installs is READ-ONLY – the miss counter of src/i18n, nothing else (src/i18n/lqa.ts).
+if (import.meta.env.VITE_TB_LQA === 'on') void import('./i18n/lqa').then((m) => m.installLqaHook())

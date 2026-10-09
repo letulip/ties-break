@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-286 TRACKED TypeScript files: **68 live**, **218 archival**
+289 TRACKED TypeScript files: **71 live**, **218 archival**
 (of which **113 frozen** out of `check:tools` and **105 still swept**).
 
 ## Why the split exists
@@ -76,6 +76,9 @@ gate's verdict is a function of the commit, never of whatever else a checkout ha
 | `ladder-floor.ts` | `npm run bench:floor` |
 | `life-arrival.ts` | `npm run bench:life-arrival` |
 | `load-bench.ts` | `npm run bench:load` |
+| `lqa-ru-batches.ts` | imported by the test suite |
+| `lqa-ru-report.ts` | imported by the test suite |
+| `lqa-ru.ts` | `npm run lqa:ru` |
 | `masseur-raise-bench.ts` | `npm run bench:masseurraise` |
 | `money-decomposition.ts` | `npm run bench:money` |
 | `outgrown-entry-probe.ts` | `npm run bench:outgrown` |

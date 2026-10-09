@@ -30,7 +30,8 @@ export { installCatalog, loadCatalog, registerCatalogLoader, catalogStatus, CATA
 export type { Catalog } from './catalog'
 export type { CopyRef, MessageParams } from '../shared/i18n'
 
-const MISSED_KEYS_CAP = 500
+/** The distinct-key ceiling of one counting interval. Exported for the LQA hook (src/i18n/lqa.ts), which reports a read that hit it as `capped` – a number that ran into its ceiling must say so. */
+export const MISSED_KEYS_CAP = 500
 let misses = 0
 const missed = new Set<string>()
 

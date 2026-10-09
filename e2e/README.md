@@ -269,6 +269,17 @@ green and says nothing.
 belongs in `tests/component/`. And add its row to `docs/specs/e2e-coverage.md` §2 – `coverage-map.spec.ts`
 fails if you do not.
 
+- **The LQA runner lives beside the suite, not in it.** `e2e/lqa/` holds the Russian acceptance routes
+  (`npm run lqa:ru`, its own `playwright.lqa.config.ts`, files suffixed `.lqa.ts` so this config's
+  default `testMatch` never sees them). It rides this harness – the production build, `careerAt`,
+  the typed locators – but drives it under `tb-locale=ru` and READS THE MISS COUNTER after every screen
+  through `window.__tbLqa`, a read-only hook that exists only in a build made with `VITE_TB_LQA=on`
+  (the sibling of `VITE_TB_SW=off`; a player's bundle contains neither the hook nor the import that
+  loads it). Its product is a report (`lqa-out/lqa-ru-report.md/.json`), not a verdict, so it is not in
+  `test:e2e` and not in `npm run check`. Its walk addresses controls by the app's own structural hooks
+  or by a matcher that follows `ru.json` – the opposite of this suite's name-first rule, on purpose: the
+  names are what it measures. Spec: `docs/specs/i18n-2026-10.md` §8 (L4-3).
+
 ## Not here yet
 
 - **The coach market.** Unblocked – D3 is closed – and **deliberately deferred**, which is not the

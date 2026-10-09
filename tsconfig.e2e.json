@@ -49,7 +49,9 @@
   "include": [
     "e2e/**/*.ts",
     "playwright.config.ts",
+    "playwright.lqa.config.ts",
     "tools/e2e-fixtures-read.ts",
+    "tools/lqa-ru-report.ts",
     "src/shared/dates.ts",
     "src/shared/money.ts"
   ]
