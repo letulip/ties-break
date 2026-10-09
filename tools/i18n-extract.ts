@@ -26,8 +26,16 @@
 // (`{ label: 'Home' }` – the census EXCLUDES it by its own recall rule) is not a key until a call site wraps
 // it in `t('Home')`, and `t(variable)` is invisible – `dynamicCalls` counts those so they are a number,
 // not a surprise.
+//
+// ⭐ L3-T (10.10) – BUT A DYNAMIC CALL CAN BE DECLARED. `tools/i18n-seats.ts` names, for each `t(expr)` the walker lists as unreadable and for each ref the engine writes beside a
+// corpus string (`c: { k }`), the KEY SET that reaches it – from the real constants, never retyped. A declared seat does two things here: its strings ENTER the catalog (the gift
+// catalogue's 159 were invisible to every census rule) and they are marked `wrapped` with the seat's id, so `--mark-landed` can flip an APPROVED row on a seat-only string.
+// The declaration is held against the tree: a seat whose site the walker cannot find, or whose writer no longer says what it said, is STALE and marks nothing (the gate goes red).
 import { readFileSync, writeFileSync } from 'node:fs'
-import { HOLE, callKeys, callStats, certain, holeify } from './copy-census-walk'
+import { HOLE, areaOf, callKeys, callStats, certain, dynamicSites, holeify, scopeOf } from './copy-census-walk'
+import type { DynamicSite } from './copy-census-walk'
+import { DECLARED_SEATS, unseatable } from './i18n-seats'
+import type { Seat } from './i18n-seats'
 
 export const CATALOG_PATH = 'src/i18n/catalog.en.json'
 export const CATALOG_FORMAT = 1
@@ -39,8 +47,10 @@ export interface CatalogEntry {
   area: string[]
   /** Per hole position: the source expressions seen there, sorted. Absent for a string with no holes. */
   ph?: string[][]
-  /** True once at least one `t()` / `cp` call site asks for the key – the copy is wired, not merely found. */
+  /** True once at least one `t()` / `cp` call site asks for the key – or a DECLARED SEAT does (L3-T) – the copy is wired, not merely found. */
   wrapped?: true
+  /** The declared seats (`tools/i18n-seats.ts`) that can hand the key to the code, sorted. Absent for a key that is asked for by a call site alone. */
+  seat?: string[]
 }
 
 export interface Catalog {
@@ -62,6 +72,19 @@ export interface ExtractStats {
   wrapped: number
   /** Keys that live in more than one file. */
   multiHome: number
+  /** Declared seats (L3-T) and the distinct keys they reach. */
+  seats: number
+  seatKeys: number
+  /** Of the dynamic `t()` calls above: how many some seat declares, and how many nobody does (the net pins the second at zero). */
+  dynamicDeclared: number
+  dynamicUndeclared: number
+}
+
+/** A declaration the tree no longer backs, or a key set that cannot be a key set. A seat with a problem marks nothing. */
+export interface SeatProblem {
+  rule: 'seat-stale' | 'seat-unseatable' | 'seat-empty'
+  seat: string
+  detail: string
 }
 
 const cmp = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0)
@@ -85,19 +108,59 @@ interface Acc {
   area: Set<string>
   ph: Set<string>[]
   wrapped: boolean
+  seat: Set<string>
 }
 
-export function buildCatalog(): { catalog: Catalog; stats: ExtractStats } {
+const textOf = (path: string): string | null => {
+  try {
+    return readFileSync(path, 'utf8')
+  } catch {
+    return null
+  }
+}
+
+/** Holds ONE seat against the tree: its site really is a dynamic call the walker found / its writer still says what it said, and its key set is non-empty and seatable. */
+export function checkSeat(seat: Seat, sites: readonly DynamicSite[], read: (path: string) => string | null = textOf): { problems: SeatProblem[]; groups: ReturnType<Seat['groups']> } {
+  const problems: SeatProblem[] = []
+  const bad = (rule: SeatProblem['rule'], detail: string): void => void problems.push({ rule, seat: seat.id, detail })
+  if (seat.via === 'call') {
+    if ((seat.sites ?? []).length === 0) bad('seat-stale', 'a call seat names no site')
+    for (const st of seat.sites ?? []) {
+      if (!sites.some((d) => d.file === st.file && d.arg === st.arg)) bad('seat-stale', `the walker finds no dynamic t(${st.arg}) in ${st.file} – the call moved, was renamed or became a literal; re-declare the seat or drop it`)
+    }
+  } else {
+    if ((seat.writers ?? []).length === 0) bad('seat-stale', 'a ref seat names no writer')
+    for (const w of seat.writers ?? []) {
+      const text = read(w.file)
+      if (text === null || !text.includes(w.needle)) bad('seat-stale', `${w.file} does not contain «${w.needle}» – the engine no longer writes this ref (or writes it differently); re-declare the seat or drop it`)
+    }
+  }
+  const groups = seat.groups()
+  if (groups.every((g) => g.keys.length === 0)) bad('seat-empty', 'the seat\'s key set is empty')
+  let shown = 0
+  for (const g of groups) {
+    for (const key of g.keys) {
+      const why = unseatable(key)
+      if (why !== null && shown++ < 3) bad('seat-unseatable', `«${key.slice(0, 60)}» (${g.home}) ${why}`)
+    }
+  }
+  return { problems, groups }
+}
+
+export function buildCatalog(opts: { seats?: readonly Seat[]; sites?: readonly DynamicSite[]; read?: (path: string) => string | null } = {}): { catalog: Catalog; stats: ExtractStats; seatProblems: SeatProblem[]; undeclared: DynamicSite[] } {
+  const seats = opts.seats ?? DECLARED_SEATS
+  const sites = opts.sites ?? dynamicSites
   const acc = new Map<string, Acc>()
-  const add = (key: string, file: string, area: string, holes: readonly string[] | undefined, arity: number, wrapped: boolean): void => {
+  const add = (key: string, file: string, area: string | null, holes: readonly string[] | undefined, arity: number, wrapped: boolean, seatId?: string): void => {
     let a = acc.get(key)
     if (!a) {
-      a = { home: new Set(), area: new Set(), ph: [], wrapped: false }
+      a = { home: new Set(), area: new Set(), ph: [], wrapped: false, seat: new Set() }
       acc.set(key, a)
     }
     a.home.add(file)
-    a.area.add(area)
+    if (area !== null) a.area.add(area)
     if (wrapped) a.wrapped = true
+    if (seatId !== undefined) a.seat.add(seatId)
     // A hint only when the walker's hole list lines up with the key's holes – a mismatch is a hint the
     // reader should not trust, so it is dropped rather than guessed at.
     if (holes && holes.length === arity) {
@@ -115,7 +178,25 @@ export function buildCatalog(): { catalog: Catalog; stats: ExtractStats } {
     const arity = c.via === 'cp' ? c.holes.length : 0
     add(c.key, c.file, c.area, c.via === 'cp' ? c.holes : undefined, arity, true)
   }
+  // ⭐ L3-T: the declared seats. A seat the tree does not back marks NOTHING (it is reported, and the gate is red); one it backs enters its strings under the file that holds them.
+  const seatProblems: SeatProblem[] = []
+  const declaredSites = new Set<string>()
+  for (const seat of seats) {
+    for (const st of seat.sites ?? []) declaredSites.add(`${st.file}\u0000${st.arg}`)
+    const { problems, groups } = checkSeat(seat, sites, opts.read)
+    if (problems.length > 0) {
+      seatProblems.push(...problems)
+      continue
+    }
+    for (const g of groups) {
+      const area = areaOf(g.home, scopeOf(g.home) ?? 'engine', false, 'declared-seat', null)
+      // a key the census already met keeps the area(s) it was read under – a seat adds a HOME and a wire, never a second opinion about what the string is
+      for (const key of g.keys) add(key, g.home, acc.has(key) ? null : area, undefined, 0, true, seat.id)
+    }
+  }
+  const undeclared = sites.filter((d) => !declaredSites.has(`${d.file}\u0000${d.arg}`))
   const keys: Record<string, CatalogEntry> = {}
+  let seatKeys = 0
   let wrapped = 0
   let multiHome = 0
   for (const key of [...acc.keys()].sort(cmp)) {
@@ -127,13 +208,30 @@ export function buildCatalog(): { catalog: Catalog; stats: ExtractStats } {
       entry.wrapped = true
       wrapped++
     }
+    if (a.seat.size > 0) {
+      entry.seat = [...a.seat].sort(cmp)
+      seatKeys++
+    }
     if (entry.home.length > 1) multiHome++
     keys[key] = entry
   }
   const count = Object.keys(keys).length
   return {
     catalog: { format: CATALOG_FORMAT, count, keys },
-    stats: { certainStrings: certain.length, callSites: callKeys.length, dynamicCalls: callStats.dynamic, keys: count, wrapped, multiHome },
+    stats: {
+      certainStrings: certain.length,
+      callSites: callKeys.length,
+      dynamicCalls: callStats.dynamic,
+      keys: count,
+      wrapped,
+      multiHome,
+      seats: seats.length,
+      seatKeys,
+      dynamicDeclared: sites.length - undeclared.length,
+      dynamicUndeclared: undeclared.length,
+    },
+    seatProblems,
+    undeclared,
   }
 }
 

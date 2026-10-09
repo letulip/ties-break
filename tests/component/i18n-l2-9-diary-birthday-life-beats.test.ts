@@ -265,6 +265,7 @@ describe('L2-9a xx sweep – the birthday dialog: nothing the shell wrote is unb
       await selectFirst(en)
       const enCard = document.querySelector('.birthday-dialog') as HTMLElement
       const enFit = assertDismissReachable(enCard, enCard.querySelector('.birthday-proceed')!, vp, `BirthdayDialog (English, ${vp.width}x${vp.height})`)
+      const englishChars = (enCard.textContent ?? '').length // L3-T: the TRUE English card, measured before xx is installed
       en.unmount()
       await installPseudoLocale()
       const w = mountBirthday(snap, vp)
@@ -273,14 +274,19 @@ describe('L2-9a xx sweep – the birthday dialog: nothing the shell wrote is unb
       const proceed = card.querySelector('.birthday-proceed') as HTMLElement
       expect(proceed, 'the selected state is up – nothing below is vacuous').toBeTruthy()
       expect(card.lastElementChild, 'the Proceed is the card\'s last element while rendered').toBe(proceed)
-      const english = (card.textContent ?? '').length
       const padded = expandRendered(card)
       const xxChars = (card.textContent ?? '').length
-      expect(padded, 'expandRendered reached the engine\'s words').toBeGreaterThan(4)
-      expect(xxChars, 'xx made the card longer – the measurement saw the words').toBeGreaterThan(english)
+      // ⚠ RE-AIMED, L3-T (10.10): this used to demand that `expandRendered` REACH the engine's gift words (> 4), because the gift catalogue (`BANDS`, 159 strings) was outside the
+      // catalog – under `xx` its labels, notes and asks missed and stayed plain English, so the instrument padded them in the DOM. L3-T declared the seat (`tools/i18n-seats.ts`), the
+      // strings ARE catalog keys, and the dialog draws them through `t()` – so the `xx` catalog pads them itself and there is nothing raw left to reach. Zero is the better
+      // measurement (every word on the card now comes through the catalog), and it is pinned as zero: a rise is a string that left the catalog again. The assertion below still
+      // demands the card grew, so the instrument has not gone blind.
+      expect(padded, 'every engine word on the card comes through the xx catalog now – nothing raw is left for expandRendered to reach').toBe(0)
+      // L3-T: measured against the English card itself (it used to be measured against the xx card BEFORE `expandRendered` padded its raw words; with none left that is the same card)
+      expect(xxChars, 'xx made the card longer – the measurement saw the words').toBeGreaterThan(englishChars)
       const fit = assertDismissReachable(card, proceed, vp, `BirthdayDialog (xx, ${vp.width}x${vp.height})`)
       console.log(
-        `[L2-9a xx] birthday dialog ${vp.width}x${vp.height}: the worst of ${SEEDS.length} careers (${chars} engine chars); card text ${english} -> ${xxChars} chars; ` +
+        `[L2-9a xx] birthday dialog ${vp.width}x${vp.height}: the worst of ${SEEDS.length} careers (${chars} engine chars); card text ${englishChars} -> ${xxChars} chars; ` +
           `content wants ${enFit.contentFloor.toFixed(0)} -> ${fit.contentFloor.toFixed(0)}px of a ${fit.available.height.toFixed(0)}px room (cap ${Number.isFinite(fit.cap) ? fit.cap.toFixed(0) : 'none'}, ` +
           `${fit.contentFloor > fit.available.height ? 'scrolls inside the cap' : 'fits whole'}); the Proceed at ${enFit.dismissTop.toFixed(0)}..${enFit.dismissBottom.toFixed(0)} -> ${fit.dismissTop.toFixed(0)}..${fit.dismissBottom.toFixed(0)} of ${vp.height}`,
       )

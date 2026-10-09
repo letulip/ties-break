@@ -310,6 +310,12 @@ describe('tTransparent – a pin reads the same whether or not the site is wrapp
     ['template text', "<button>{{ t('Back') }}</button>", '<button>Back</button>'],
     ['a bound attribute', `<button :aria-label="t('Random first name')" />`, '<button aria-label="Random first name" />'],
     ['a bound prop with an apostrophe', String.raw`<IconButton :label="t('Don\'t')" />`, `<IconButton label="Don't" />`],
+    // ⭐ L3-T (10.10): a context tag is the call site's business, not part of the words a pin asserts
+    ['a tagged key (the nav label)', "{ id: 'stats', get label() { return t('nav|Stats') } }", "{ id: 'stats', label: 'Stats' }"],
+    ['a tagged key in a template', "<dt>{{ t('total|Banked') }}</dt>", '<dt>Banked</dt>'],
+    ['a tagged key with params (a stage with a hole)', "return t('stage|R{0}', [remaining])", "return 'R{0}'"],
+    ['a tagged key in a bound attribute', `<button :aria-label="t('bell|Unread news')" />`, '<button aria-label="Unread news" />'],
+    ['a tagged key in a double-quoted call and in a backtick one', `a = t("op|Save") + t(\`op|Load\`)`, 'a = "Save" + `Load`'],
   ]
 
   it.each(TWINS)('%s: wrapped and unwrapped read identically', (_seat, wrapped, bare) => {
@@ -326,6 +332,22 @@ describe('tTransparent – a pin reads the same whether or not the site is wrapp
     expect(tTransparent("pool: localizedList(\n    () => t('First strikeX'),\n  )")).not.toContain("'First strike',")
     expect(tTransparent("const n = computed(() => 'x')")).toBe("const n = computed(() => 'x')")
     expect(tTransparent("xs.map(() => 'y')\n  ys.map(\n    () => 'z')")).toBe("xs.map(() => 'y')\n  ys.map(\n    () => 'z')")
+  })
+
+  it('⭐ L3-T: only the tag SHAPE folds – text with a pipe in it is plain text, and a changed word behind a tag never reads the same', () => {
+    // the shape `splitContext` reads: a short lowercase word, then `|` – anything else is the words
+    for (const plain of ["t('Win | Lose')", "t('Draw|Seed')", "t('A|B')", "t('1st|2nd')", "t('Stats|')", `t('${'x'.repeat(25)}|Y')`]) {
+      expect(tTransparent(plain), plain).toBe(plain.slice(2, -1)) // the call unwrapped, the words untouched
+    }
+    expect(tTransparent("t('Win | Lose')")).toBe("'Win | Lose'")
+    expect(tTransparent("t('Draw|Seed')")).toBe("'Draw|Seed'")
+    expect(tTransparent("t('nav|')")).toBe("''")
+    // the tag folds, the words do not: a reworded label behind a tag still fails the pin written against the old one
+    expect(tTransparent("label: t('nav|StatsX')")).not.toBe(tTransparent("label: 'Stats'"))
+    expect(tTransparent("label: t('nav|StatsX')")).toBe("label: 'StatsX'")
+    // a tag folds ONLY at the head of a call's literal – a pipe inside a bare literal is never touched
+    expect(tTransparent("const bare = 'nav|Stats'")).toBe("const bare = 'nav|Stats'")
+    expect(tTransparent("emit('nav|Stats')")).toBe("emit('nav|Stats')")
   })
 
   it('leaves alone what it cannot read as one plain literal – a pin over those says so itself', () => {
@@ -365,6 +387,15 @@ describe('tTransparent – a pin reads the same whether or not the site is wrapp
     expect(pin(tTransparent, unwrapped)).toBe(true)
     expect(pin(identity, unwrapped)).toBe(true)
     expect(pin(identity, wrapped), 'with the reader mutated to identity the wrapped site is invisible to the pin').toBe(false)
+  })
+
+  it('⭐⭐ MUTATION (L3-T): the tag fold is load-bearing – a reader that strips the call but not the tag reads `nav|Stats`, and the real nav pin goes red', () => {
+    // the reader as it stood before L3-T: the call is unwrapped, the tag stays in the literal
+    const untaggedReader = (s: string): string => tTransparent(s).replace(/'Stats'/g, "'nav|Stats'")
+    const src = "{ id: 'stats', icon: 'stats', get label() { return t('nav|Stats') } }"
+    const pin = (read: (s: string) => string): boolean => read(src).includes("label: 'Stats'")
+    expect(pin(tTransparent)).toBe(true)
+    expect(pin(untaggedReader), 'without the fold the nav label reads «nav|Stats» and the pin written against the English cannot see it').toBe(false)
   })
 })
 

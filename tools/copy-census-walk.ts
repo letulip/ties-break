@@ -182,6 +182,15 @@ interface CallKey {
 const callKeys: CallKey[] = []
 /** `t(variable)` and `t(`…${x}…`)`: keys the extractor cannot read – counted, never hidden. */
 const callStats = { dynamic: 0 }
+/** ⭐ L3-T (10.10): WHERE each of those calls is. The count above stays the gate's number; the SITES are what the declared-seat registry (`tools/i18n-seats.ts`) is
+ *  held against – a seat is declared for a site that really exists, or the declaration is stale. `arg` is the first argument's source with its whitespace
+ *  collapsed (`option.label`, `moment.confirm`), exactly what a declaration names. */
+interface DynamicSite {
+  file: string
+  line: number
+  arg: string
+}
+const dynamicSites: DynamicSite[] = []
 const bump = (k: string, words = 0): void => {
   excluded[k] = (excluded[k] ?? 0) + 1
   if (words > 0) excludedWords[k] = (excludedWords[k] ?? 0) + words
@@ -286,6 +295,18 @@ function flattenPlus(n: ts.Expression): ts.Expression[] {
     return [...flattenPlus(n.left), ...flattenPlus(n.right)]
   return [n]
 }
+/** The text of a plain literal, or of a `+` chain of plain literals (parentheses around a chain allowed) – null for anything else. A single literal is a chain of one. */
+function foldedLiteral(n: ts.Expression): string | null {
+  if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) return n.text
+  const ops = flattenPlus(n)
+  if (ops.length < 2) return null
+  let out = ''
+  for (const o of ops) {
+    if (!(ts.isStringLiteral(o) || ts.isNoSubstitutionTemplateLiteral(o))) return null
+    out += o.text
+  }
+  return out
+}
 function propName(n: ts.PropertyName): string | null {
   return ts.isIdentifier(n) || ts.isStringLiteral(n) || ts.isNumericLiteral(n) ? n.text : null
 }
@@ -349,8 +370,15 @@ function scanTs(file: string, source: string, scope: Scope, lineBase: number): v
     }
     if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 't') {
       const first = node.arguments[0]
-      if (first && (ts.isStringLiteral(first) || ts.isNoSubstitutionTemplateLiteral(first))) callKeys.push({ area: areaOf(file, scope, false, 'i18n-call', ctx.top), file, line: lineOf(node), key: first.text, holes: [], via: 't' })
-      else if (first && !ts.isNumericLiteral(first)) callStats.dynamic++
+      // ⭐ L3-T (10.10) – THE `+`-FOLD: a long key split over lines with `+` (`t('A long lede, ' + 'kept whole')`, the shape prettier gives a sentence past the line width) is ONE
+      // literal, exactly as the census already reads the same expression as one string (see the binary-expression arm above). Only an expression made of plain literals
+      // folds: a `+` with anything else in it (`'A ' + name`) is a key nobody can read and stays dynamic, counted and listed.
+      const folded = first ? foldedLiteral(first) : null
+      if (first && folded !== null) callKeys.push({ area: areaOf(file, scope, false, 'i18n-call', ctx.top), file, line: lineOf(node), key: folded, holes: [], via: 't' })
+      else if (first && !ts.isNumericLiteral(first)) {
+        callStats.dynamic++
+        dynamicSites.push({ file, line: lineOf(node), arg: first.getText(sf).replace(/\s+/g, ' ') })
+      }
     }
     if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
       const callee = (ts.isNewExpression(node) ? 'new ' : '') + calleeText(node.expression)
@@ -413,27 +441,80 @@ function pushVue(file: string, line: number, text: string, reason: string, holes
 // string – the double read minted a twin key with its braces escaped («Step \{step\} of \{count\}») and
 // the twin blocked the editorial join. `exprLiteralsOutsideT` removes one occurrence per recorded key;
 // a literal appearing BOTH as a key and separately in the same expression keeps its second occurrence.
-function exprLiteralsOutsideT(expr: string): string[] {
-  const keys: string[] = []
-  for (const m of expr.matchAll(EXPR_T)) keys.push((m[1] ?? m[2] ?? m[3] ?? '').replace(/\\(['"`\\])/g, '$1'))
-  const out = exprLiterals(expr)
-  for (const k of keys) {
-    const i = out.indexOf(k)
-    if (i >= 0) out.splice(i, 1)
+// ⭐ L3-T (10.10) – THE `+`-FOLD, TEMPLATE HALF: `t('A long lede, ' + 'kept whole')` is ONE key, as in a script. The first argument is read as a chain of plain literals joined
+// by `+`; it is a key only when the chain ends at the argument's own `,` or `)` – `t('A ' + name)` used to record the key «A » (a fragment nobody asked for) and now stays what it
+// is, a dynamic call, counted and listed. Every literal of a chain is removed from the plain-literal scan, one occurrence each, like the single literal always was.
+const EXPR_T_ANY = /(?<![\w$.])t\(\s*(?!\d)/g
+const PLAIN_LITERAL = /'((?:\\.|[^'\\\n])*)'|"((?:\\.|[^"\\\n])*)"|`((?:\\.|[^`\\])*)`/y
+interface TArg {
+  /** The plain literals the first argument starts with, unescaped, in order (a `+` chain has several). */
+  parts: string[]
+  /** The key, when the whole first argument is a plain literal or a `+` chain of them with no `${` in it; else null (a dynamic call). */
+  key: string | null
+  /** The first argument's source, whitespace collapsed – what a declared seat names. */
+  arg: string
+}
+function readTArgs(expr: string): TArg[] {
+  const out: TArg[] = []
+  for (const m of expr.matchAll(EXPR_T_ANY)) {
+    const from = (m.index ?? 0) + m[0].length
+    let i = from
+    const parts: string[] = []
+    let closed = false
+    for (;;) {
+      PLAIN_LITERAL.lastIndex = i
+      const lit = PLAIN_LITERAL.exec(expr)
+      if (!lit) break
+      parts.push((lit[1] ?? lit[2] ?? lit[3] ?? '').replace(/\\(['"`\\])/g, '$1'))
+      i = PLAIN_LITERAL.lastIndex
+      while (/\s/.test(expr[i] ?? '')) i++
+      if (expr[i] === '+') {
+        i++
+        while (/\s/.test(expr[i] ?? '')) i++
+        continue
+      }
+      closed = expr[i] === ',' || expr[i] === ')'
+      break
+    }
+    out.push({ parts, key: closed && !parts.some((p) => p.includes('${')) ? parts.join('') : null, arg: argSource(expr, from) })
   }
   return out
 }
-const EXPR_T = /(?<![\w$.])t\(\s*(?:'((?:\\.|[^'\\\n])*)'|"((?:\\.|[^"\\\n])*)"|`((?:\\.|[^`\\])*)`)/g
-const EXPR_T_ANY = /(?<![\w$.])t\(\s*(?!\d)/g
-function recordExprCalls(file: string, line: number, expr: string): void {
-  let literalCalls = 0
-  for (const m of expr.matchAll(EXPR_T)) {
-    const key = (m[1] ?? m[2] ?? m[3] ?? '').replace(/\\(['"`\\])/g, '$1')
-    if (key.includes('${')) continue // a template with a hole is a dynamic key, counted below
-    callKeys.push({ area: areaOf(file, 'vue', true, 'i18n-call', null), file, line, key, holes: [], via: 't' })
-    literalCalls++
+/** The source of the call's first argument: from `from` to the first `,` or `)` at depth 0, brackets and quotes read whole. Whitespace collapsed. */
+function argSource(expr: string, from: number): string {
+  let depth = 0
+  for (let i = from; i < expr.length; i++) {
+    const ch = expr[i] ?? ''
+    if (ch === "'" || ch === '"' || ch === '`') {
+      for (i++; i < expr.length && expr[i] !== ch; i++) if (expr[i] === '\\') i++
+      continue
+    }
+    if (ch === '(' || ch === '[' || ch === '{') depth++
+    else if (ch === ')' || ch === ']' || ch === '}') {
+      if (depth === 0) return expr.slice(from, i).replace(/\s+/g, ' ').trim()
+      depth--
+    } else if (ch === ',' && depth === 0) return expr.slice(from, i).replace(/\s+/g, ' ').trim()
   }
-  callStats.dynamic += [...expr.matchAll(EXPR_T_ANY)].length - literalCalls
+  return expr.slice(from).replace(/\s+/g, ' ').trim()
+}
+function exprLiteralsOutsideT(expr: string): string[] {
+  const out = exprLiterals(expr)
+  for (const a of readTArgs(expr)) {
+    for (const k of a.parts) {
+      const i = out.indexOf(k)
+      if (i >= 0) out.splice(i, 1)
+    }
+  }
+  return out
+}
+function recordExprCalls(file: string, line: number, expr: string): void {
+  for (const a of readTArgs(expr)) {
+    if (a.key !== null) callKeys.push({ area: areaOf(file, 'vue', true, 'i18n-call', null), file, line, key: a.key, holes: [], via: 't' })
+    else {
+      callStats.dynamic++
+      dynamicSites.push({ file, line, arg: a.arg })
+    }
+  }
 }
 
 function walkTemplate(file: string, node: VNode): void {
@@ -539,10 +620,12 @@ for (const file of tracked) {
 export {
   AREAS,
   HOLE,
+  areaOf,
   bareOf,
   callKeys,
   callStats,
   certain,
+  dynamicSites,
   econ,
   excluded,
   excludedWords,
@@ -560,10 +643,11 @@ export {
   scannedVue,
   scanTs,
   scanVue,
+  scopeOf,
   seen,
   srcOutside,
   tracked,
   vueErrors,
   wordsOf,
 }
-export type { Area, CallKey, Item }
+export type { Area, CallKey, DynamicSite, Item, Scope }

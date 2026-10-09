@@ -23,7 +23,7 @@ import { afterAll, describe, expect, it } from 'vitest'
 import { globSync } from 'tinyglobby'
 import { analyzeMessage, splitContext } from '../src/shared/i18n'
 import { normKey } from '../tools/copy-text'
-import { callKeys, callStats, certain, likely, scanTs, scanVue } from '../tools/copy-census-walk'
+import { callKeys, callStats, certain, dynamicSites, likely, scanTs, scanVue } from '../tools/copy-census-walk'
 import { catalogImportsInSrc, lintCatalogKeys, lintRu, requiredPluralCategories, runGate } from '../tools/i18n-check'
 import { buildCatalog, CATALOG_PATH, diffCatalogs, keyFromCensusText, parseCatalog, readCatalogText, serializeCatalog } from '../tools/i18n-extract'
 import type { Catalog } from '../tools/i18n-extract'
@@ -408,7 +408,8 @@ describe('the committed catalog', () => {
     expect(keys.length).toBeGreaterThan(3000)
     expect(keys).toEqual([...keys].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)))
     for (const k of keys.slice(0, 400)) {
-      expect(Object.keys(catalog.keys[k]!).every((f) => ['home', 'area', 'ph', 'wrapped'].includes(f))).toBe(true)
+      // `seat` (L3-T, 10.10): the declared seats that can hand the key to the code – additive, so the format stays 1
+      expect(Object.keys(catalog.keys[k]!).every((f) => ['home', 'area', 'ph', 'wrapped', 'seat'].includes(f))).toBe(true)
       for (const h of catalog.keys[k]!.home) expect(h, 'a home is a file, never a line').toMatch(/^src\/[^:]+$/)
     }
     expect(serializeCatalog(buildCatalog().catalog), 'run npm run i18n:extract').toBe(text)
@@ -473,12 +474,13 @@ describe('⚠ the catalog is NEVER shipped', () => {
 // =================================================================================================
 
 describe('the walker reads t() and cp`` call sites as keys, and the holes\' source text', () => {
-  const mark = { certain: certain.length, likely: likely.length, calls: callKeys.length, dynamic: callStats.dynamic }
+  const mark = { certain: certain.length, likely: likely.length, calls: callKeys.length, dynamic: callStats.dynamic, sites: dynamicSites.length }
   const restore = (): void => {
     certain.length = mark.certain
     likely.length = mark.likely
     callKeys.length = mark.calls
     callStats.dynamic = mark.dynamic
+    dynamicSites.length = mark.sites // L3-T: the sites the declared seats are held against
   }
 
   it('TypeScript: cp`` builds the key {0}, {1}; t(\'…\') is the literal; t(variable) is counted as dynamic', () => {

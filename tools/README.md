@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-283 TRACKED TypeScript files: **65 live**, **218 archival**
+285 TRACKED TypeScript files: **67 live**, **218 archival**
 (of which **113 frozen** out of `check:tools` and **105 still swept**).
 
 ## Why the split exists
@@ -66,8 +66,10 @@ gate's verdict is a function of the commit, never of whatever else a checkout ha
 | `i18n-check.ts` | imported by the test suite |
 | `i18n-cli.ts` | `npm run i18n:extract` |
 | `i18n-extract.ts` | imported by the test suite |
+| `i18n-formats.ts` | imported by the test suite |
 | `i18n-import.ts` | imported by the test suite |
 | `i18n-pseudoloc.ts` | imported by the test suite |
+| `i18n-seats.ts` | imported by the test suite |
 | `injury-landscape.ts` | the whole-career injury census behind docs/specs/the-injury-landscape-2026-08.md; re-run whenever injury rates are touched |
 | `knock-rate.ts` | `npm run bench:knock` |
 | `ladder-floor.ts` | `npm run bench:floor` |

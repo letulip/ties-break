@@ -137,14 +137,14 @@ const poolStatics = (): string[] => DIARY_POOL.map((p) => p.text).filter((t): t 
 const weekStatics = (): string[] => WEEK_NOTES.map((n) => n.text).filter((t): t is string => typeof t === 'string')
 const travelStatics = (): string[] => [...TRAVEL_NOTES.map((n) => n.text), ...COACH_TRIP_NOTES]
 
-/** Strings a seat can hold that the CATALOG does not carry yet, by corpus – a MEASURED number, and the standing debt of the dynamic seats (L3-T: «the extractor's dynamic-seat
- *  declaration»): the census reads `text:` properties and a handful of named homes, so a corpus kept in a plain array or a `label:` field is invisible to it. The ref is a key all the
- *  same; the owner's row for it waits («the literal is live in source but no call site asks for it yet»). It can only fall – a number that rises is a seat nobody declared. */
-const OUTSIDE_CATALOG = { pool: 0, debut: 0, weekNotes: 0, travel: 0, gifts: 159 } as const
+/** Strings a seat can hold that the CATALOG does not carry, by corpus – a MEASURED number. The census reads `text:` properties and a handful of named homes, so a corpus kept in a plain
+ *  array or a `label:` field is invisible to it: the gift catalogue (`BANDS`, 159 strings) was the last such corpus, and it stood at 159 until L3-T (10.10) – `tools/i18n-seats.ts`
+ *  declares it, and its strings entered the catalog. It can only fall, and it is at the floor: a number that rises is a seat nobody declared. */
+const OUTSIDE_CATALOG = { pool: 0, debut: 0, weekNotes: 0, travel: 0, gifts: 0 } as const
 // (`DEBUT_LINES` is EXPORTED for exactly this reason: the census reads an exported top-level const whose name ends LINES / WORDS / NOTES as a known copy home – rule (b) in
 //  tools/copy-census-walk.ts – so exporting the corpus brings its strings into the catalog with no tool change. Part 2 exported `VOICE_LINES`, `EXAM_LINES`, `BIRTHDAY_LINES`,
 //  `OFF_SEASON_LINES`, `BEREAVED_WORDS`, `DIVORCED_WORDS`, `FORK_AFTERMATH_WORDS` and `COACH_TRIP_NOTES` for the same reason: 156 week-note strings and the coach's five were outside the
-//  catalog before. The gift catalogue's names (`BANDS`) match no such rule: 159 stay out.)
+//  catalog before. The gift catalogue's names (`BANDS`) match no such rule: they were the 159 that stayed out until L3-T declared the seat.)
 
 describe('§2 the seats – every static string is a valid key, and the number the catalog cannot see yet is measured', () => {
   it('no corpus string carries a brace or a backslash (a seat is `{ k: text }`, and `k` is read as a message: such a character would be syntax)', () => {
@@ -158,7 +158,7 @@ describe('§2 the seats – every static string is a valid key, and the number t
     expect(DIARY_POOL.filter((p) => p.text === null).length).toBe(4)
   })
 
-  it('the strings outside the catalog, by corpus (L3-T\'s debt – it can only fall)', () => {
+  it('the strings outside the catalog, by corpus (L3-T paid the gifts: every number is 0, and one that rises is an undeclared seat)', () => {
     const outside = (list: readonly string[]): number => new Set(list.filter((s) => CATALOG.keys[s] === undefined)).size
     expect({ pool: outside(poolStatics()), debut: outside(DEBUT_LINES), weekNotes: outside(weekStatics()), travel: outside(travelStatics()), gifts: outside(giftStrings()) }).toEqual(OUTSIDE_CATALOG)
   })

@@ -67,6 +67,7 @@ import { WEEKS_PER_YEAR } from '../../src/engine/season/calendar'
 import type { AdOfferTerms, KitOfferTerms, Offer, Snapshot } from '../../src/shared/protocol'
 import { fnv1aHex } from '../helpers/hash'
 import { installMemoryStorage } from './setup'
+import { regionsText } from './identity-capture'
 
 // ⚠ `resolve(process.cwd(), …)` rather than `new URL(…, import.meta.url)`: the component project runs
 // under happy-dom, whose global `URL` is the DOM one, and `readFileSync` rejects what it produces.
@@ -84,6 +85,10 @@ const WRITING = process.env.TB_WRITE_INBOX_IDENTITY === '1'
 // (`{{ t('…') }}`) loses the single space at each edge that Vue's condenser kept around the same words as bare text – 4 leaves moved, every one of them a space at the
 // edge of a text node, none a word: with all whitespace removed the old record and the new one are IDENTICAL (checked when it was rewritten, both ways). Rendered, the
 // difference is nil – inline whitespace at the edge of a block collapses – and the controls, the order, the counts and the tree hash did not move.
+// ⚠ RE-RECORDED A LAST TIME, L3-T (10.10): L3-2 moved six more leaves by the same single space, and the cure is in the CAPTURE, not in another hand re-record. The `text` leaf is now
+// read by `./identity-capture.ts` – text nodes trimmed and joined by one space – so a paragraph becoming an interpolation (or the reverse) no longer moves it. This rewrite changed ONLY
+// whitespace (every `text` leaf of the old record and of the new one are identical with all whitespace removed, checked per leaf; the counts, the order, the controls and the tree
+// hash are byte-identical); `identity-capture.test.ts` holds the capture's own arms, mutation included.
 
 async function career(name: string): Promise<WorldState> {
   return decodeExportFile(new Uint8Array(readFileSync(resolve(CAREERS, `${name}.tsave`))))
@@ -166,7 +171,8 @@ function walk(el: Element, depth: number, out: string[]): void {
 const REGIONS = ['.inbox-body', '.dialog-card'] as const
 
 function sheetText(wrapper: VueWrapper): string {
-  return REGIONS.map((sel) => wrapper.findAll(sel).map((n) => n.text()).join(' ⟂ '))
+  // L3-T (10.10): the shared capture – text NODES, each trimmed, joined by one space (see ./identity-capture.ts for why a node's edge space is not part of the record)
+  return REGIONS.map((sel) => regionsText(wrapper, sel))
     .join(' ⟂ ')
     .replace(/\s+/g, ' ')
     .trim()

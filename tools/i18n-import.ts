@@ -35,6 +35,10 @@
 // the product mark) compiles as an identity entry when the key is live, and is `exempt-latin` – never drift,
 // never «untranslated» – when no key asks for it (a generated name is never passed through `t()`).
 //
+// ⭐ L3-T (10.10) – FORMATTER ROWS. A row whose English is what a formatter PRINTS (the APPROVED short year, «W14 '31») has no key to join. The importer recognises it by the
+// formatter's own output (`tools/i18n-formats.ts` – no marker, no hint cell, no edit to his tables), turns his Russian example into a PATTERN over named parts, and compiles it into
+// `src/i18n/formats.ru.json`, the formatter-locale table. The row is `format`, not `unmatched`. Nothing consults the table yet, so `--mark-landed` leaves it APPROVED and says why.
+//
 // ⚠ `--mark-landed` IS HIS COMMAND (§9.1). It flips a row only when its key has a `t()`/`cp` call site
 // (`wrapped` in the catalog – the copy is wired, not merely found) AND ru.json carries the row's value.
 // Nothing here runs it against the real tables.
@@ -43,6 +47,8 @@ import { join } from 'node:path'
 import { splitContext } from '../src/shared/i18n'
 import { normKey } from './copy-text'
 import type { Catalog } from './i18n-extract'
+import { formatIndex, patternFromExample, serializeFormats } from './i18n-formats'
+import type { FormatDef } from './i18n-formats'
 
 export const TABLES_DIR = 'docs/localization'
 export const RU_PATH = 'src/i18n/ru.json'
@@ -257,7 +263,11 @@ export interface Live {
   catalog: Catalog
   /** Every literal the census walker saw anywhere in scope, `normKey`-normalised: «live in source, no key yet». */
   seen: ReadonlySet<string>
+  /** L3-T: the formatter examples (`normKey(example)` -> def) a row's English may be. Defaults to the real registry; a test passes its own. */
+  formats?: ReadonlyMap<string, FormatDef>
 }
+
+const DEFAULT_FORMATS: ReadonlyMap<string, FormatDef> = formatIndex()
 
 /** A catalog key as the comparison text: tag stripped, escapes undone, every placeholder one marker. */
 export function joinKeyOfKey(key: string): string {
@@ -287,6 +297,7 @@ export type Disposition =
   | 'ambiguous-cell'
   | 'ambiguous-status'
   | 'conflict'
+  | 'format'
   | 'exempt-latin'
   | 'pending'
   | 'pending-dead'
@@ -300,6 +311,8 @@ export interface Outcome {
   why?: string
   /** The homes of the key the row joined (or of its candidates) when that key lives on more than one file. */
   multiSurface?: string[]
+  /** L3-T: the id of the formatter the row is an example of (`dates.weekLabel`) – set on `format` rows and on the DRAFT rows that name one. `value` is then the pattern. */
+  format?: string
 }
 
 export interface Prov {
@@ -314,6 +327,9 @@ export interface Compiled {
   entries: Map<string, string>
   prov: Map<string, Prov>
   outcomes: Outcome[]
+  /** L3-T: the formatter-locale table – format id -> pattern (`formats.ru.json`). */
+  formats: Map<string, string>
+  formatProv: Map<string, Prov>
 }
 
 const HOLE_TOKEN = /\{\{[^}]*\}\}|\$\{[^}]*\}|\{[A-Za-z_][\w.]*\}|\{\d+\}|\*[A-Za-z]{1,12}\*/g
@@ -366,6 +382,11 @@ export function compile(rows: readonly Row[], live: Live): Compiled {
   const outcomes: Outcome[] = []
   const claimed = new Map<string, number>() // key -> index of its compiled outcome, for conflicts
   const conflicted = new Set<string>()
+  const formats = new Map<string, string>()
+  const formatProv = new Map<string, Prov>()
+  const fclaimed = new Map<string, number>()
+  const fconflicted = new Set<string>()
+  const formatDefs = live.formats ?? DEFAULT_FORMATS
 
   for (const row of rows) {
     const eligible = row.status === 'APPROVED' || row.status === 'LANDED' || row.ruledLatin
@@ -405,6 +426,45 @@ export function compile(rows: readonly Row[], live: Live): Compiled {
     }
     const homes = key !== undefined ? live.catalog.keys[key]?.home : undefined
     const multiSurface = homes && homes.length > 1 ? homes : undefined
+
+    // ⭐ L3-T: no key asks for this English, but a formatter PRINTS it – the row is the formatter's, not drift. A key always wins (the join above is unchanged for every row that has one).
+    const fmt = candidates.length === 0 ? formatDefs.get(jk) : undefined
+    if (fmt !== undefined) {
+      if (!eligible) {
+        out('pending', { format: fmt.id })
+        continue
+      }
+      if (row.russian === null) {
+        out('ambiguous-cell', { format: fmt.id, why: 'the Russian cell is not one clean literal' })
+        continue
+      }
+      const made = patternFromExample(fmt, row.russian)
+      if ('error' in made) {
+        out('ambiguous-cell', { format: fmt.id, why: made.error })
+        continue
+      }
+      const had = formats.get(fmt.id)
+      if (had !== undefined && had !== made.pattern) {
+        fconflicted.add(fmt.id)
+        const first = fclaimed.get(fmt.id)
+        const o = first !== undefined ? outcomes[first] : undefined
+        if (o) {
+          o.disposition = 'conflict'
+          o.why = `another approved row gives «${made.pattern}»`
+        }
+        out('conflict', { format: fmt.id, value: made.pattern, why: `another approved row gives «${had}»` })
+        continue
+      }
+      if (fconflicted.has(fmt.id)) {
+        out('conflict', { format: fmt.id, value: made.pattern, why: 'this formatter already has conflicting approved rows' })
+        continue
+      }
+      formats.set(fmt.id, made.pattern)
+      formatProv.set(fmt.id, { doc: row.doc, line: row.line, status: row.status, identity: made.pattern === row.english })
+      fclaimed.set(fmt.id, outcomes.length)
+      out('format', { format: fmt.id, value: made.pattern, why: `a pattern over {${Object.keys(fmt.parts).join('}, {')}} for ${fmt.formatter.name} – no display shell consults formats.ru.json yet` })
+      continue
+    }
 
     if (!eligible) {
       out(candidates.length > 0 ? 'pending' : 'pending-dead', { key, multiSurface })
@@ -458,7 +518,11 @@ export function compile(rows: readonly Row[], live: Live): Compiled {
     entries.delete(key)
     prov.delete(key)
   }
-  return { entries, prov, outcomes }
+  for (const id of fconflicted) {
+    formats.delete(id)
+    formatProv.delete(id)
+  }
+  return { entries, prov, outcomes, formats, formatProv }
 }
 
 export function serializeRu(entries: ReadonlyMap<string, string>): string {
@@ -466,6 +530,8 @@ export function serializeRu(entries: ReadonlyMap<string, string>): string {
   if (keys.length === 0) return '{}\n'
   return `{\n${keys.map((k) => `  ${JSON.stringify(k)}: ${JSON.stringify(entries.get(k))}`).join(',\n')}\n}\n`
 }
+
+export { serializeFormats }
 
 export function readRu(path = RU_PATH): Record<string, string> | null {
   try {
@@ -500,6 +566,11 @@ export function planLanded(
   const skipped: string[] = []
   const texts = new Map<string, string[]>()
   for (const o of compiled.outcomes) {
+    if (o.disposition === 'format' && o.row.status === 'APPROVED' && !(onlyDocs && !onlyDocs.includes(o.row.doc))) {
+      // L3-T: a pattern is wired the day a display shell next to the formatter reads formats.ru.json – none does yet, so the row stays APPROVED and says why.
+      skipped.push(`${o.row.doc}:${o.row.line} «${o.format}» – a formatter-locale pattern: no display shell consults formats.ru.json yet`)
+      continue
+    }
     if (o.disposition !== 'compiled' || o.row.status !== 'APPROVED' || o.key === undefined) continue
     if (onlyDocs && !onlyDocs.includes(o.row.doc)) continue // one command per batch (§9.1)
     const where = `${o.row.doc}:${o.row.line}`
@@ -571,6 +642,7 @@ export function coverageByBatch(compiled: Compiled): Map<string, BatchCounts> {
     if (o.multiSurface) c.multi++
     switch (o.disposition) {
       case 'compiled':
+      case 'format':
         c.compiled++
         break
       case 'waiting':
@@ -613,12 +685,12 @@ export function renderReport(compiled: Compiled, parse: ParseStats, live: Live, 
   )
   const eligible = compiled.outcomes.filter((o) => o.row.status === 'APPROVED' || o.row.status === 'LANDED' || o.row.ruledLatin || o.disposition === 'ambiguous-status')
   out.push(
-    `APPROVED / LANDED / ruled rows: ${eligible.length} – compiled ${count('compiled')}, waiting ${count('waiting')}, foreign-surface ${count('foreign-surface')}, unmatched ${count('unmatched')}, exempt-latin ${count('exempt-latin')}, ambiguous ${count('ambiguous-key') + count('ambiguous-cell') + count('ambiguous-status')}, conflict ${count('conflict')}`,
+    `APPROVED / LANDED / ruled rows: ${eligible.length} – compiled ${count('compiled')}, format ${count('format')}, waiting ${count('waiting')}, foreign-surface ${count('foreign-surface')}, unmatched ${count('unmatched')}, exempt-latin ${count('exempt-latin')}, ambiguous ${count('ambiguous-key') + count('ambiguous-cell') + count('ambiguous-status')}, conflict ${count('conflict')}`,
   )
   for (const o of eligible) {
     const r = o.row
     const ru = o.value ?? r.russian ?? ''
-    out.push(`  ${r.doc.replace(/^ru-|-20\d\d-\d\d\.md$/g, '')}:${r.line}  ${r.status.padEnd(8)} ${o.disposition.padEnd(16)} «${clip(r.english ?? '?', 40)}» -> «${clip(ru, 40)}»${o.key !== undefined && o.key !== r.english ? `  [key ${o.key}]` : ''}${o.why ? `  (${o.why})` : ''}`)
+    out.push(`  ${r.doc.replace(/^ru-|-20\d\d-\d\d\.md$/g, '')}:${r.line}  ${r.status.padEnd(8)} ${o.disposition.padEnd(16)} «${clip(r.english ?? '?', 40)}» -> «${clip(ru, 40)}»${o.key !== undefined && o.key !== r.english ? `  [key ${o.key}]` : ''}${o.format !== undefined ? `  [format ${o.format}]` : ''}${o.why ? `  (${o.why})` : ''}`)
   }
   out.push(`APPROVED / LANDED tokens inside tables the parser does not read as replacement tables (glossary, no English column, malformed row): ${parse.skippedStatus.length}`)
   for (const s of parse.skippedStatus) out.push(`  ${s}`)
@@ -639,5 +711,6 @@ export function renderReport(compiled: Compiled, parse: ParseStats, live: Live, 
   }
   const keys = Object.keys(live.catalog.keys).length
   out.push(`ru.json: ${compiled.entries.size} of ${keys} catalog keys (${((compiled.entries.size / Math.max(1, keys)) * 100).toFixed(2)}%)`)
+  out.push(`formats.ru.json: ${compiled.formats.size} formatter pattern(s) of ${(live.formats ?? DEFAULT_FORMATS).size} registered`)
   return out
 }

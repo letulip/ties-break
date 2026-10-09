@@ -132,9 +132,10 @@ function globToRegExp(pattern: string): RegExp {
 describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Home in the centre', () => {
   it('TABS carries exactly the five entries, in order, and no Kid entry', () => {
     const tabs = region(app, 'const TABS', '/** The one writer')
-    // L2-1 (08.10): RE-AIMED – each label is a getter over `t()` (the Stats one carries the nav context tag, stripped here: the tab
-    // still READS `Stats` in English). The five labels asserted are the five that shipped.
-    const labels = [...tabs.matchAll(/get label\(\) \{ return t\('(?:nav\|)?([^']+)'\) \}/g)].map((m) => m[1])
+    // L2-1 (08.10): RE-AIMED – each label is a getter over `t()` (the Stats one carries the nav context tag: the tab still READS `Stats` in English).
+    // L3-T (10.10): THE HAND-ROLLED TAG STRIP IS GONE – `tTransparent` folds `nav|` now, so the five labels are read as the getters read before the wrap
+    // (`label: 'Stats'`), through the same reader every other wrapped pin uses. The five labels asserted are the five that shipped; a reworded one still fails.
+    const labels = [...tTransparent(tabs).matchAll(/label: '([^']+)'/g)].map((m) => m[1])
     expect(labels).toEqual(['Season', 'Calendar', 'Home', 'Stats', 'Trophies'])
     const ids = [...tabs.matchAll(/id: '([^']+)'/g)].map((m) => m[1])
     expect(ids).toEqual(['play', 'calendar', 'home', 'stats', 'trophies'])

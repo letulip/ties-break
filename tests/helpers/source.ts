@@ -382,7 +382,11 @@ export function lineAt(src: string, marker: string): string {
 //   · `t('LIT')`, `t("LIT")`, `` t(`LIT`) `` and `t('LIT', params…)` become the bare literal;
 //   · the three seats a wrapped string sits in become what the unwrapped one looked like –
 //     `get label() { return LIT }` → `label: LIT`, `label: () => LIT` → `label: LIT`, and, in a
-//     template, `{{ LIT }}` → the bare text and `:aria-label="LIT"` → `aria-label="…"`.
+//     template, `{{ LIT }}` → the bare text and `:aria-label="LIT"` → `aria-label="…"`;
+//   · ⭐ L3-T (10.10): a CONTEXT TAG at the head of the key is not part of the words – `t('nav|Stats')`
+//     reads `'Stats'`, as the tab still reads `Stats` in English (the tag lives at the call site so the
+//     translator can give the nav label its own Russian, spec §3.1). Only the tag shape `splitContext`
+//     reads (`[a-z][a-z0-9_-]{0,23}|`) folds: `t('Win | Lose')` and `t('Draw|Seed')` are plain text.
 //
 // ⚠⚠ WHAT IT MUST NEVER DO: HIDE A WORDING CHANGE. A pin whose asserted STRING changed must still
 // fail, and it does – `t('Coach yourselfX')` reads `'Coach yourselfX'`, which is not
@@ -405,6 +409,14 @@ export function lineAt(src: string, marker: string): string {
 
 /** Characters that make a `t` part of a longer name (`emit(`, `obj.t(`, `$t(`). */
 const NAME_CHAR = /[A-Za-z0-9_$.]/
+
+/** A context tag at the head of a key – the shape `splitContext` (src/shared/i18n.ts) reads: a short lowercase word, then `|`. */
+const CTX_TAG = /^[a-z][a-z0-9_-]{0,23}\|/
+/** `'nav|Stats'` -> `'Stats'`: the literal of a `t()` call without its context tag (L3-T). The quote stays; so does every word. */
+function untagged(literal: string): string {
+  const tag = CTX_TAG.exec(literal.slice(1))
+  return tag ? literal[0] + literal.slice(1 + tag[0].length) : literal
+}
 
 /** End (exclusive) of the PLAIN string literal that opens at `from`, or -1: single, double, or a backtick
  *  literal with no `${`. A literal that never closes (or a single/double one that runs onto a new line) is -1. */
@@ -503,7 +515,7 @@ export function tTransparent(source: string): string {
   for (let i = 0; i < source.length; ) {
     const hit = source[i] === 't' && !NAME_CHAR.test(source[i - 1] ?? ' ') ? tCallAt(source, i) : null
     if (hit) {
-      bare += hit.literal
+      bare += untagged(hit.literal)
       i = hit.end
     } else {
       bare += source[i]
