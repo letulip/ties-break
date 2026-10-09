@@ -62,6 +62,7 @@ import { careerSnapshot } from '../helpers/career'
 import { buildCatalog } from '../../tools/i18n-extract'
 import { listDocs, readRows, splitRow } from '../../tools/i18n-import'
 import { installCatalog, missCount, missedKeys, resetI18nForTests, resetMisses, setLocale } from '../../src/i18n'
+import { privacyUrl } from '../../src/composables/privacyRoute'
 import { installMemoryStorage } from './setup'
 import { NARROW_PHONE, PHONE, assertDismissReachable, availableWidth, demandedWidth, setViewport, type Viewport } from './fits'
 import { DEFAULT_ALLOW, expandRendered, hardcodeLeaks, installPseudoLocale } from './pseudoloc'
@@ -788,6 +789,15 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
 // ===================================================================================================================
 
 describe('L2-11 Russian smoke – ru.json read by key, no Cyrillic typed here', () => {
+  it('⭐ L4-3 (RU-13C) – the privacy row is locale-aware: under ru the link still names the English document, because the Russian slot is empty until his policy rows land', async () => {
+    installCatalog('ru', RU)
+    await setLocale('ru')
+    const f = await mountMore('about')
+    expect(f.w.findAll('a').map((a) => a.attributes('href'))).toEqual([privacyUrl('en'), 'https://github.com/letulip/ties-break/issues'])
+    expect(privacyUrl('ru')).toBe(privacyUrl('en'))
+    f.w.unmount()
+  })
+
   it('⭐ no RU-13A / RU-13B / RU-15 row is approved yet: the product mark (an identity row) is the only approved word wired on More, and every other word renders English and is counted', async () => {
     installCatalog('ru', RU)
     await setLocale('ru')

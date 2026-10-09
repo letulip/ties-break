@@ -63,6 +63,7 @@ import { flagEmoji } from '../../composables/countries'
 import { appBuildLine } from '../../composables/buildInfo'
 import { useStartYear } from '../../composables/startYear'
 import { locale, setLocale, t } from '../../i18n'
+import { privacyUrl } from '../../composables/privacyRoute'
 import { errorText } from '../../composables/errorText'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
@@ -1087,7 +1088,7 @@ const TAB_OPTIONS = computed(() => [
           </td>
         </tr>
         <!-- P7: the app's first external links. PRIVACY.md at the repo root is the single source
-             of truth (and the policy URL portals ask for); this row only surfaces it. The Issues
+             of truth (and the policy URL portals ask for); this row only surfaces it - through `privacyUrl(locale)` since L4-3 (composables/privacyRoute.ts: the Russian document slot is empty, so every locale still opens PRIVACY.md). The Issues
              link rides along per review 08:26 - the bug form there asks for the seed and schema
              shown two rows up. `color: inherit` because nothing in the app styles a bare <a> yet:
              browser-default blue on the dark theme would be the loudest thing on the screen. -->
@@ -1097,7 +1098,7 @@ const TAB_OPTIONS = computed(() => [
             {{ t('Everything stays on this device – no accounts, no analytics.') }}
             <span class="hint" style="display: block; margin: 2px 0 0">
               <a
-                href="https://github.com/letulip/ties-break/blob/main/PRIVACY.md"
+                :href="privacyUrl(locale)"
                 target="_blank"
                 rel="noopener"
                 style="color: inherit"
