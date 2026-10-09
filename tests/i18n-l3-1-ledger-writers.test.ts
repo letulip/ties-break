@@ -381,6 +381,9 @@ const DYNAMIC_SEATS: Record<string, number> = {
   'src/engine/world/lifeBeat/ownKey.ts': 1, // the key row
   'src/engine/world/lifeBeat/pregnancy.ts': 1, // the pause row (the birth milestone's ref is a `cp` key)
   'src/engine/world/lifeBeat/weight.ts': 1, // the loss row
+  // ⭐ L3-6 (10.10) – THE ALBUM'S SEAT: `selfKey`, one literal `{ k: text }` for a corpus cell (a caption, a note, a line, an arc cell). Class (b): the string a cell holds IS its key, and `albumCorpus.ts` is a census copy leaf,
+  // so every one of the 456 + 16 cells is already a catalog key. Their can-hold proof is tests/i18n-l3-6-endings-album.test.ts §11 (it walks the corpus), not the frozen table's - no old save holds a corpus line as a key.
+  'src/engine/world/albumBook.ts': 1,
 }
 
 function literalsIn(node: ts.Node, out: string[] = []): string[] {

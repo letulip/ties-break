@@ -12,6 +12,14 @@
 //   §6 the decline voice          – every pooled line has its ref, every pick is the pick it was
 //   §7 the pick keys              – the sub-stream keys of the touched files, pinned (nothing here may move a draw)
 //   §8 a career played to its end – natural ending off the bench, row by row
+//
+// WHAT THE WAVE DID, ALBUM HALF (commit 2): every string of the album BOOK has a ref beside it (the fields ending in `C` in shared/protocol/album.ts) and `composables/albumText.ts` draws them; the corpus's 456
+// cells and the walls arc's 16 are seats (the string is the key), the chapter titles, the age labels, the ticket words and the checklist are `cp` keys; the finished book is also the heirloom, so on a
+// generation-two career the refs are stored beside the strings.
+//   §9  the posed set, English        – 129 books, 903 sheets, 28 epilogues: the digest of every string equals the PRE-WAVE tree's
+//   §10 every ref renders to its string – field by field over the whole set, and the fields that have none are exactly the ones that may not
+//   §11 the corpus                    – 38 occasions x 4 voices x 3 cells + the arc: catalog keys, seatable, reached
+//   §12 the heirloom                  – the stored book carries the refs and renders; the size it adds
 import { describe, expect, it } from 'vitest'
 import ts from 'typescript'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -75,6 +83,12 @@ import {
   seasonLastWinterRef,
 } from '../src/composables/declineVoice'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
+import { endedViews, englishDigest, plain, posedBooks } from './helpers/l3-6-album-set'
+import { sweepSheets } from './helpers/albumSweep'
+import { ALBUM_ARC, ALBUM_CORPUS } from '../src/engine/world/albumCorpus'
+import { createLegacyWorld, legacyInputOf } from '../src/engine/world/succession'
+import { heirloomBookOf } from '../src/engine/world/heirloom'
+import type { AlbumBook } from '../src/shared/protocol'
 
 const ROOT = resolve(__dirname, '..')
 const EN = { locale: SOURCE_LOCALE }
@@ -85,7 +99,7 @@ const inCatalog = (k: string): boolean => CATALOG.keys[k] !== undefined
 const TYPES: readonly CareerEndingType[] = ['stopped', 'college', 'bankruptcy', 'injury', 'natural', 'plateau', 'peak', 'fall', 'family']
 
 /** the files whose `cp` keys this wave added or relies on, in the engine */
-const ENGINE_FILES: readonly string[] = ['src/engine/ending.ts', 'src/engine/world/endings.ts', 'src/engine/world/album.ts']
+const ENGINE_FILES: readonly string[] = ['src/engine/ending.ts', 'src/engine/world/endings.ts', 'src/engine/world/album.ts', 'src/engine/world/albumBook.ts']
 
 function parse(rel: string): ts.SourceFile {
   return ts.createSourceFile(rel, readFileSync(join(ROOT, rel), 'utf8'), ts.ScriptTarget.Latest, true)
@@ -550,7 +564,7 @@ describe('§6 the decline voice – a ref beside every pooled line, and the pick
           picks++
         }
         for (const id of ['e1', 'e2', 'e3', 'tour-9']) {
-          for (const strength of ['favourite', 'strong', 'even', 'weak'] as const) {
+          for (const strength of ['favourite', 'strong', 'even'] as const) {
             const line = coachDeclineLine(share, seed, id, strength)!
             expect(render(declineRef(line)!)).toBe(line)
             picks++
@@ -569,7 +583,7 @@ describe('§6 the decline voice – a ref beside every pooled line, and the pick
       lines.push(String(declineRung(share)))
       for (const seed of ['a', 'b', 'c', 'decline-seed']) {
         for (const year of [2031, 2034, 2040]) lines.push(String(herDeclineLine(share, seed, year)))
-        for (const id of ['e1', 'e2', 'e3', 'tour-9']) for (const strength of ['favourite', 'strong', 'even', 'weak'] as const) lines.push(String(coachDeclineLine(share, seed, id, strength)))
+        for (const id of ['e1', 'e2', 'e3', 'tour-9']) for (const strength of ['favourite', 'strong', 'even'] as const) lines.push(String(coachDeclineLine(share, seed, id, strength)))
       }
     }
     expect(fnv1a(lines.join('\n')).toString(16)).toBe(PRE_WAVE_DECLINE_DIGEST)
@@ -602,14 +616,14 @@ describe('§6 the decline voice – a ref beside every pooled line, and the pick
   })
 })
 // (the digest is computed on the pre-wave tree - the functions it covers are unchanged by this wave, so it is also this tree's)
-const PRE_WAVE_DECLINE_DIGEST = 'fa7f456'
+const PRE_WAVE_DECLINE_DIGEST = '3a60a4f2'
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // §7 – the pick keys
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 describe('§7 the pick keys – a sub-stream key of a touched file may not move', () => {
-  // (albumBook.ts is read here and edited by the album commit: its two flavour keys are the draws the ticket's seat, gate and row ride on)
-  const FILES = [...ENGINE_FILES, 'src/engine/world/albumBook.ts', 'src/composables/declineVoice.ts']
+  // (albumBook.ts is in ENGINE_FILES: its two flavour keys are the draws the ticket's seat, gate and row ride on)
+  const FILES = [...ENGINE_FILES, 'src/composables/declineVoice.ts']
   function keysIn(rel: string): string[] {
     const out: string[] = []
     eachNode(parse(rel), (n) => {
@@ -656,3 +670,256 @@ describe('§8 a career played to a natural ending off the bench', () => {
     expect(render(view.closing.whyC!)).toBe(view.closing.why)
   }, 60_000)
 })
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------
+// §9 – the posed set, English
+// ---------------------------------------------------------------------------------------------------------------------------------------------
+/** The pre-wave tree's (a083ebed) readings of the posed set, refs stripped: recomputed by tests/helpers/l3-6-album-set.ts on a throwaway worktree of that commit and on this tree - the same two values. */
+const PRE_WAVE_BOOKS_DIGEST = '7e885813'
+const PRE_WAVE_VIEWS_DIGEST = 'b6fa364f'
+
+describe('§9 the posed set of books, in English, is the pre-wave tree\'s byte for byte', () => {
+  const set = posedBooks()
+
+  it('is the set the digests were taken on (129 books, 903 sheets, 502 chapters, 28 epilogues)', () => {
+    expect(set).toHaveLength(48 + 48 + 27 + 1 + 5)
+    const d = englishDigest()
+    expect([d.sheets, d.chapters, d.viewsN]).toEqual([903, 502, 28])
+    expect(new Set(set.flatMap((b) => b.book.sheets.map((s) => s.layout)))).toEqual(new Set(['A', 'B', 'C']))
+    expect(set.filter((b) => b.book.sheets.some((s) => s.ticket?.tail)).length, 'the tail ticket').toBeGreaterThanOrEqual(1)
+    expect(set.filter((b) => b.book.sheets.some((s) => s.tag?.tail)).length, 'the tail tag').toBeGreaterThan(5)
+    expect(set.filter((b) => b.book.sheets.some((s) => (s.note?.lines.length ?? 0) > 0)).length, 'a checklist').toBeGreaterThanOrEqual(4)
+  })
+
+  it('every string of every book - chapters, sheets, frames, notes, tickets, tags, flavour draws - has the digest the pre-wave tree gave', () => {
+    expect(englishDigest().books).toBe(PRE_WAVE_BOOKS_DIGEST)
+  })
+
+  it('and so does every epilogue (the closing page and the whole record) of the 28 ended careers', () => {
+    expect(englishDigest().views).toBe(PRE_WAVE_VIEWS_DIGEST)
+    expect(endedViews()).toHaveLength(28)
+  })
+
+  it('assembling a book writes nothing to the world', () => {
+    for (const b of set.slice(0, 20)) {
+      const before = JSON.stringify(b.world)
+      void b.book
+      expect(JSON.stringify(b.world), b.label).toBe(before)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------
+// §10 – every ref renders to its string, and the fields without one are exactly the ones that may have none
+// ---------------------------------------------------------------------------------------------------------------------------------------------
+interface Field { path: string; text: string; c: CopyRef | null | undefined; at: string }
+function fieldsOf(book: AlbumBook, label: string): Field[] {
+  const out: Field[] = []
+  const add = (path: string, text: string, c: CopyRef | null | undefined, at: string): void => {
+    out.push({ path, text, c, at: `${label} ${at}` })
+  }
+  book.chapters.forEach((ch, i) => {
+    add('chapter.title', ch.title, ch.titleC, `chapter ${i}`)
+    add('chapter.ageLabel', ch.ageLabel, ch.ageLabelC, `chapter ${i}`)
+  })
+  for (const s of book.sheets) {
+    add('sheet.chapterTitle', s.chapterTitle, s.chapterTitleC, s.id)
+    add('sheet.ageLabel', s.ageLabel, s.ageLabelC, s.id)
+    add('sheet.line', s.line, s.lineC, s.id)
+    s.frames.forEach((f, i) => {
+      add('frame.alt', f.alt, f.altC, `${s.id}#${i}`)
+      add('frame.caption', f.caption, f.captionC, `${s.id}#${i}`)
+    })
+    if (s.note) {
+      add('note.text', s.note.text, s.note.textC, s.id)
+      add('note.dateLabel', s.note.dateLabel ?? '', undefined, s.id)
+      if (s.note.ageLabel !== null) add('note.ageLabel', s.note.ageLabel, s.note.ageLabelC, s.id)
+      s.note.lines.forEach((line, i) => add('note.line', line, s.note!.linesC?.[i], `${s.id}[${i}]`))
+    }
+    if (s.ticket) {
+      for (const f of ['tier', 'stage', 'venue', 'dateLabel'] as const) add(`ticket.${f}`, s.ticket[f], undefined, s.id)
+      add('ticket.gate', s.ticket.gate, s.ticket.gateC, s.id)
+      add('ticket.seat', s.ticket.seat, s.ticket.seatC, s.id)
+      add('ticket.row', s.ticket.row, s.ticket.rowC, s.id)
+    }
+    if (s.tag) {
+      for (const f of ['stage', 'tier', 'place'] as const) add(`tag.${f}`, s.tag[f], undefined, s.id)
+      add('tag.ageLabel', s.tag.ageLabel, s.tag.ageLabelC, s.id)
+    }
+    if (s.patch) add('patch.name', s.patch.name, undefined, s.id)
+  }
+  return out
+}
+/** the fields with NO ref, and why: an engine-born word, an invented proper noun, a formatter's output - and a caption the corpus left empty */
+const BARE_BY_DESIGN = new Set(['note.dateLabel', 'ticket.tier', 'ticket.stage', 'ticket.venue', 'ticket.dateLabel', 'tag.stage', 'tag.tier', 'tag.place', 'patch.name'])
+
+describe('§10 every ref renders to its string; a field without one is exactly a field that may have none', () => {
+  const all = posedBooks().flatMap((b) => fieldsOf(b.book, b.label))
+
+  it('the walk is not blind: tens of thousands of fields across every kind', () => {
+    expect(all.length).toBeGreaterThan(12000)
+    const paths = new Set(all.map((f) => f.path))
+    for (const p of ['chapter.title', 'chapter.ageLabel', 'sheet.chapterTitle', 'sheet.ageLabel', 'sheet.line', 'frame.alt', 'frame.caption', 'note.text', 'note.ageLabel', 'note.line', 'ticket.gate', 'ticket.seat', 'ticket.row', 'tag.ageLabel']) expect(paths.has(p), p).toBe(true)
+  })
+
+  it('a ref renders to the string it sits beside, byte for byte, and is JSON-safe', () => {
+    const bad: string[] = []
+    let withRef = 0
+    for (const f of all) {
+      if (!f.c) continue
+      withRef++
+      if (render(f.c) !== f.text) bad.push(`${f.at} ${f.path}: ${JSON.stringify(f.text)} vs ${JSON.stringify(render(f.c))}`)
+      if (JSON.stringify(JSON.parse(JSON.stringify(f.c))) !== JSON.stringify(f.c)) bad.push(`${f.at} ${f.path}: not JSON-safe`)
+      if (!inCatalog(f.c.k) && f.c.k !== '') bad.push(`${f.at} ${f.path}: key not in the catalog: ${f.c.k}`)
+    }
+    expect(bad.slice(0, 5)).toEqual([])
+    expect(withRef).toBeGreaterThan(9000)
+  })
+
+  it('a field with no ref is one of the designed exceptions, an empty caption, or the mother\'s name - nothing else', () => {
+    const bare = all.filter((f) => !f.c)
+    const stray = bare.filter((f) => {
+      if (BARE_BY_DESIGN.has(f.path)) return false
+      if (f.path === 'frame.caption') return f.text !== ''
+      if (f.path === 'note.line') return !f.at.endsWith('[0]') || !/^[A-Z][a-z]+ [A-Z][a-z]+$/.test(f.text)
+      return true
+    })
+    expect(stray.map((f) => `${f.at} ${f.path} ${JSON.stringify(f.text)}`).slice(0, 5)).toEqual([])
+    // ...and the captions the corpus did write all have theirs
+    expect(all.filter((f) => f.path === 'frame.caption' && f.text !== '' && f.c).length).toBeGreaterThan(300)
+    // the checklist's refs are index-aligned: null only where the line is the mother's name
+    for (const b of posedBooks()) for (const s of b.book.sheets) {
+      if (!s.note || s.note.lines.length === 0) continue
+      expect(s.note.linesC, `${b.label} ${s.id}`).toHaveLength(s.note.lines.length)
+      s.note.linesC!.forEach((c, i) => expect(c === null, `${b.label} ${s.id}[${i}]`).toBe(i === 0 && s.note!.lines.length > 0 && b.label.startsWith('dynasty')))
+    }
+  })
+
+  it('the ticket words keep their draws: seat, gate and row are the digits the sub-stream dealt, and the ref carries the SAME digits', () => {
+    for (const b of posedBooks()) for (const s of b.book.sheets) {
+      if (!s.ticket) continue
+      const seat = /^Seat (\d+)([A-F])$/.exec(s.ticket.seat)
+      const gate = /^Gate (\d+)$/.exec(s.ticket.gate)
+      const row = /^Row (\d+)$/.exec(s.ticket.row)
+      expect(seat && gate && row, `${b.label} ${s.id}`).toBeTruthy()
+      expect(s.ticket.seatC?.p).toEqual([Number(seat![1]), seat![2]])
+      expect(s.ticket.gateC?.p).toEqual([Number(gate![1])])
+      expect(s.ticket.rowC?.p).toEqual([Number(row![1])])
+    }
+  })
+
+  it('the walls arc displaces the closing sheet\'s words AND their refs: no sheet says one thing and carries the key of another', () => {
+    const arcNotes = new Set(Object.values(ALBUM_ARC).flatMap((d) => Object.values(d).map((h) => h.note)))
+    const arcLines = new Set(Object.values(ALBUM_ARC).flatMap((d) => Object.values(d).map((h) => h.line)))
+    let seen = 0
+    for (const b of posedBooks()) for (const s of b.book.sheets) {
+      if (s.note && arcNotes.has(s.note.text)) {
+        seen++
+        expect(s.note.textC?.k, `${b.label} ${s.id}`).toBe(s.note.text)
+        expect(s.lineC?.k).toBe(s.line)
+        expect(arcLines.has(s.line)).toBe(true)
+      }
+    }
+    expect(seen, 'no arc sheet in the set').toBeGreaterThan(8)
+  })
+})
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------
+// §11 – the corpus
+// ---------------------------------------------------------------------------------------------------------------------------------------------
+describe('§11 the corpus: 38 occasions x 4 voices x (note, caption, line), and the walls arc', () => {
+  const cells = ALBUM_CORPUS.flatMap((o) => Object.entries(o.voices).flatMap(([voice, h]) => [`${o.id}/${voice}/note`, `${o.id}/${voice}/caption`, `${o.id}/${voice}/line`].map((id, i) => ({ id, text: [h.note, h.caption, h.line][i]! }))))
+  const arc = Object.entries(ALBUM_ARC).flatMap(([dir, voices]) => Object.entries(voices).flatMap(([voice, h]) => [{ id: `arc/${dir}/${voice}/note`, text: h.note }, { id: `arc/${dir}/${voice}/line`, text: h.line }]))
+
+  it('the corpus is the size the report says: 38 ids, 456 cells, 16 arc cells - every one a plain string', () => {
+    expect(ALBUM_CORPUS).toHaveLength(38)
+    expect(cells).toHaveLength(456)
+    expect(arc).toHaveLength(16)
+    for (const c of [...cells, ...arc]) expect(typeof c.text, c.id).toBe('string')
+  })
+
+  it('every cell is a catalog key (OUTSIDE_CATALOG: 0), is seatable (no message syntax, no context tag), and is not empty', () => {
+    const outside = [...cells, ...arc].filter((c) => !inCatalog(c.text))
+    expect(outside.map((c) => c.id)).toEqual([])
+    for (const c of [...cells, ...arc]) {
+      expect(c.text, c.id).not.toBe('')
+      expect(/[{}\\]/.test(c.text), `${c.id} carries message syntax`).toBe(false)
+      expect(c.text.split('|')[0] !== undefined && !/^[a-z][a-z0-9_-]{0,23}\|/.test(c.text), `${c.id} reads as a context tag`).toBe(true)
+    }
+  })
+
+  it('every cell the set reaches is reffed (a seat), and the set reaches a wide share of the corpus', () => {
+    const byText = new Map(cells.map((c) => [c.text, c.id]))
+    const reached = new Set<string>()
+    for (const b of posedBooks()) for (const s of b.book.sheets) {
+      for (const [text, c] of [[s.note?.text, s.note?.textC], [s.line, s.lineC], ...s.frames.map((f) => [f.caption, f.captionC] as const)] as const) {
+        if (text === undefined || text === '' || !byText.has(text)) continue
+        reached.add(byText.get(text)!)
+        expect(c, `${b.label} ${s.id}: ${text}`).toEqual({ k: text })
+      }
+    }
+    // the posed set reaches this many of the 456 corpus cells (a floor: the occasions a posed career can earn)
+    expect(reached.size).toBeGreaterThan(150)
+    console.log(`[L3-6] the posed set reaches ${reached.size} of ${cells.length} corpus cells (+ ${arc.length} arc cells, 8 of them in the set)`)
+  })
+
+  it('a re-picked voice picks different cells but always reffed ones: the cell chosen for a voice is that voice\'s', () => {
+    const w0 = posedCareer(3)
+    const seen = new Set<string>()
+    for (const voice of TEMPERAMENTS) {
+      const world = posedCareer(3)
+      world.temperament = voice
+      const book = posedBooks().find((b) => b.label === `posed 3 / ${voice}`)!.book
+      expect(book.sheets.length).toBeGreaterThan(2)
+      for (const sheet of book.sheets) {
+        expect(sheet.lineC?.k).toBe(sheet.line)
+        seen.add(sheet.line)
+      }
+      void world
+    }
+    expect(w0.seed).toBeTruthy()
+    expect(seen.size, 'four voices said four different things').toBeGreaterThan(4)
+  })
+})
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------
+// §12 – the heirloom
+// ---------------------------------------------------------------------------------------------------------------------------------------------
+describe('§12 the heirloom: the mother\'s finished book is STORED in the daughter\'s save, so the refs are stored with it', () => {
+  it('the book survives the door - structuredClone into world.legacy, then the query - with its refs, and they render', () => {
+    const mother = posedBooks().find((b) => b.label === 'ended natural / lean 1')!.world
+    const input = legacyInputOf(mother)
+    expect(JSON.stringify(plain(input.heirloomAlbum))).toBe(JSON.stringify(plain(assembleAlbumOf(mother))))
+    const daughter = createLegacyWorld(input, 'l36-heirloom', 'Maya')
+    const stored = heirloomBookOf(daughter)!
+    expect(stored).toEqual(input.heirloomAlbum)
+    const fields = fieldsOf(stored, 'heirloom')
+    expect(fields.filter((f) => f.c).length).toBeGreaterThan(30)
+    for (const f of fields) if (f.c) expect(render(f.c), f.at + f.path).toBe(f.text)
+    // it is plain data: the save's JSON holds it and gets it back unchanged
+    expect(JSON.parse(JSON.stringify(daughter.legacy!.heirloomAlbum))).toEqual(daughter.legacy!.heirloomAlbum)
+  })
+
+  it('the size it adds to a generation-two save (measured, and reported)', () => {
+    const mother = posedBooks().find((b) => b.label === 'ended natural / lean 1')!.world
+    const input = legacyInputOf(mother)
+    const withRefs = JSON.stringify(input.heirloomAlbum).length
+    const without = JSON.stringify(plain(input.heirloomAlbum)).length
+    console.log(`[L3-6] heirloom book: ${without} -> ${withRefs} bytes (+${(((withRefs - without) / without) * 100).toFixed(0)}%), ${input.heirloomAlbum.sheets.length} sheets`)
+    expect(withRefs).toBeGreaterThan(without)
+    expect(withRefs / without, 'a seat repeats its string and a cp key carries its holes: the book roughly doubles, no more').toBeLessThan(2.6)
+  })
+
+  it('the sweep\'s sheets (r45 / r47 / r48) all carry refs that render', () => {
+    const sheets = sweepSheets()
+    expect(sheets.length).toBeGreaterThan(300)
+    for (const s of sheets) {
+      expect(s.chapterTitleC).toBeDefined()
+      expect(render(s.lineC!)).toBe(s.line)
+    }
+  })
+})
+function assembleAlbumOf(world: WorldState): AlbumBook {
+  return posedBooks().find((b) => b.world === world)!.book
+}

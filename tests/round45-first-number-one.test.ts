@@ -444,7 +444,14 @@ describe('B · the page – once per latched table, never otherwise', () => {
     expect(titleOnly.layout, 'the premise: the adult chapter opens on layout C, the one that carries the tag').toBe('C')
     expect(titleOnly.tag, 'and the title\'s sheet has its tag').not.toBeNull()
     type Sheet = AlbumBook['sheets'][number]
-    const wordless = (s: Sheet) => ({ ...s, note: s.note ? { ...s.note, text: '' } : s.note, line: '', frames: s.frames.map((f) => ({ ...f, caption: '' })) })
+    // ⭐ RE-AIMED 10.10 BY L3-6: the words now travel with their refs (`textC` / `lineC` / `captionC` are the keys of the very strings blanked here), so "everything but the words" blanks them too.
+    const wordless = (s: Sheet) => ({
+      ...s,
+      note: s.note ? { ...s.note, text: '', textC: undefined } : s.note,
+      line: '',
+      lineC: undefined,
+      frames: s.frames.map((f) => ({ ...f, caption: '', captionC: undefined })),
+    })
     expect(wordless(combined), 'everything but the words is the title\'s sheet\'s: layout, tag, date, age, art').toEqual(wordless(titleOnly))
     expect(combined.note?.text, 'and the words are the combined occasion\'s').toBe(ALBUM_CORPUS.find((o) => o.id === COMBINED)!.voices[voiceOf(build(true))].note)
     expect(combined.note?.text).not.toBe(titleOnly.note?.text)

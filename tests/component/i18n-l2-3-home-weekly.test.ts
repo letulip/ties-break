@@ -184,8 +184,11 @@ describe('L2-3 completeness – every string of the batch files is a wired key, 
     'src/composables/weekDays.ts',
     'src/composables/nextGoal.ts',
   ]
-  /** ⚠ THE ONE LEFTOVER, BY NAME: `Her wedding` is the delta table's row (ru-current-main-delta X03, RU-15), not RU-03's. */
-  const LEFTOVER = ['Her wedding']
+  /** ⚠ THE ONE LEFTOVER, BY NAME: `Her wedding` is the delta table's row (ru-current-main-delta X03, RU-15), not RU-03's.
+   *  ⭐ RE-AIMED 10.10 BY L3-6: the KEY is wired now - the album's record row «Her wedding» is a `cp` template in `world/album.ts` (the scroll's label ref), and the catalog counts a key wired
+   *  wherever any call site asks for it. The CalendarScreen literal that made it a leftover here is untouched (this wave edits no screen's chrome), so what this pin used to name is now a fact of
+   *  the catalog and no longer a fact about this batch's files; the screen's own bare use is the delta table's row to wire. */
+  const LEFTOVER: string[] = []
 
   it('no CERTAIN string homed in these files is left unwrapped, bar the named leftover', () => {
     const open = Object.entries(CATALOG.keys)

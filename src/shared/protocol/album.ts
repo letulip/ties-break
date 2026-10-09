@@ -22,6 +22,13 @@
 //
 // Part of the `shared/protocol` module set – see src/shared/protocol.ts, which re-exports every
 // name below under the historical public path. Nothing here imports that barrel back.
+//
+// ⭐ L3-6 (10.10) – A REF BESIDE EVERY STRING THE ENGINE SPEAKS (docs/specs/i18n-2026-10.md §3.2): the fields ending in `C` below are the CopyRef of the string next to them, the `LifeMoment.lineC`
+// shape, and a screen draws `eventText({ text, c })`. All of them are OPTIONAL: a book without them (a fixture, an heirloom stored by older code) draws its English as it always did. ⚠ The finished book
+// is ALSO the heirloom – it is copied into a daughter's save at the door – so on a generation-two career these refs are stored, beside the strings, in `world.legacy.heirloomAlbum`.
+// What has NO ref, on purpose: the tier and the stage on a pass or a tag (engine-born words), the venue and the patch (invented proper nouns, Latin by spec §9.5), the date lines (a formatter's
+// output) and the mother's name on the heirloom's checklist.
+import type { CopyRef } from '../i18n'
 
 /** The three arrangements of the same square sheet (spec §3, mockups AW and AZ). `A` and `C` open
  *  a chapter; `B` is the ordinary sheet with the boarding pass. */
@@ -46,6 +53,9 @@ export interface AlbumFrame {
   alt: string
   /** Corpus `caption`. May be empty – not every frame is written under. */
   caption: string
+  /** ⭐ L3-6 – the refs beside `alt` and `caption` (none beside an empty caption). */
+  altC?: CopyRef
+  captionC?: CopyRef
 }
 
 /** The pasted note: the corpus's `note` (to her, second person), over the frame's own week. The
@@ -58,6 +68,10 @@ export interface AlbumNote {
   /** The checklist form: short ruled lines instead of a paragraph (mockup AZ-B, AZ-C). Empty when
    *  the note is prose – which is every corpus note today. */
   lines: readonly string[]
+  /** ⭐ L3-6 – the refs beside `text`, `ageLabel` and the checklist; `linesC` is index-aligned with `lines`, `null` where a line is a proper name. */
+  textC?: CopyRef
+  ageLabelC?: CopyRef
+  linesC?: readonly (CopyRef | null)[]
 }
 
 /** ⭐ WHICH STEP OF THE DESIGN SYSTEM'S TIER RAMP THIS RANK SITS ON – spec §4's «Цвет билета и бирки
@@ -97,6 +111,10 @@ export interface AlbumTicket {
    *  hangs for a Grand Slam the career really reached (`albumBook.ts`, `hangTail`); every other ticket leaves it out and wears its `step`'s ink. A NAME and not a
    *  colour, the same rule as `step`: the engine says WHICH paint, `AlbumTicketPass.vue` owns the green. Optional and wire-only – nothing persisted. */
   paint?: 'slam'
+  /** ⭐ L3-6 – the refs beside `gate`, `seat` and `row` (`Gate {0}`, `Seat {0}{1}`, `Row {0}`; the seat's letter stays Latin, an invented coordinate). */
+  gateC?: CopyRef
+  seatC?: CopyRef
+  rowC?: CopyRef
   /** ⭐ ROUND 48 #1c – HUNG BY THE BOOK'S TAIL (`albumBook.ts`, `hangTail`) rather than earned by the sheet's own tournament. Such a pass is drawn only where the resolver
    *  finds the gap clear of the note and the loose line (`placeSheet` – a sheet with no room goes without it); a pass of the sheet's own is always drawn. Optional, wire-only. */
   tail?: true
@@ -110,6 +128,8 @@ export interface AlbumTag {
   step: AlbumTierStep
   place: string
   ageLabel: string
+  /** ⭐ L3-6 – the ref beside `ageLabel` (`Age {0}`). */
+  ageLabelC?: CopyRef
   /** ⭐ ROUND 48 #1b – HUNG BY THE BOOK'S TAIL (`albumBook.ts`, `hangTail`) rather than earned by the sheet's own tournament. Such a tag is drawn only where the resolver
    *  finds the column clear – at its own size, or a rung smaller (`placeSheet`'s `tagScale`) – and a sheet with no room goes without it; a tag of the sheet's own is
    *  always drawn. Optional, wire-only. */
@@ -153,6 +173,10 @@ export interface AlbumSheetModel {
   note: AlbumNote | null
   /** Corpus `line` – the parent thinking aloud, loose in the margin. */
   line: string
+  /** ⭐ L3-6 – the refs beside `chapterTitle`, `ageLabel` and `line`. */
+  chapterTitleC?: CopyRef
+  ageLabelC?: CopyRef
+  lineC?: CopyRef
   ticket: AlbumTicket | null
   tag: AlbumTag | null
   /** The club patch – its fictional name, pulled from the seed (spec §8b), and the rank step it is sewn in
@@ -172,6 +196,9 @@ export interface AlbumChapter {
   ageLabel: string
   sheetCount: number
   firstSheet: number
+  /** ⭐ L3-6 – the refs beside `title` and `ageLabel`. */
+  titleC?: CopyRef
+  ageLabelC?: CopyRef
 }
 
 /** The whole album, assembled on demand. ⚠ `sheets.length` is what the career EARNED – the pager

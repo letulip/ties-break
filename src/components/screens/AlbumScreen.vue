@@ -80,6 +80,8 @@ import { useGameStore } from '../../stores/game'
 import { SHEET_GAP_PX, SHEET_STEP_PX } from '../../shared/protocol'
 import type { AlbumBook } from '../../shared/protocol'
 import { t } from '../../i18n'
+// ⭐ L3-6 (10.10): the book's strings are mapped through their refs HERE, once, before any layout, rail or placement sees a sheet - so everything below reads (and measures) what is drawn.
+import { shownChapter, shownSheet } from '../../composables/albumText'
 
 // ⭐ THE SHAPE IS THE ENGINE'S NOW (19.09, the seam wave). `AlbumBook` was built here against a
 // declared stand-in (`components/album/albumWire.ts`) while the engine half was in flight on the
@@ -113,8 +115,8 @@ const scrolled = ref(0)
  *  for an affordance: a gradient that should not be there is a smudge, a missing one is a dead end. */
 const atFilmEnd = ref(false)
 
-const sheets = computed(() => shown.value?.sheets ?? [])
-const chapters = computed(() => shown.value?.chapters ?? [])
+const sheets = computed(() => (shown.value?.sheets ?? []).map(shownSheet))
+const chapters = computed(() => (shown.value?.chapters ?? []).map(shownChapter))
 
 /** The film's pitch – one page plus the gutter between two of them – as the STYLESHEET laid it out.
  *

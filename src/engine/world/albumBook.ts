@@ -71,6 +71,8 @@ import { ENDINGS } from '../ending'
 import { KID_ID } from './constants'
 import { temperamentFor, type Temperament } from '../spirit'
 import { pickInt, rngFromSeed } from '../rng'
+// ⭐ L3-6 (10.10): the book's strings also leave this file as CopyRefs, beside the English (see `AlbumSheetModel.lineC` and the fields beside every string of the wire).
+import { cp, type CopyRef } from '../../shared/i18n'
 import { kidAgeAt } from './age'
 import { isCappedProTier, isCappedTier } from './entryCaps'
 import { finishLabel } from './labels'
@@ -320,6 +322,48 @@ const MOMENT_ALT: Record<MomentFace, string> = {
 }
 
 // =================================================================================================
+// ⭐ L3-6 (10.10) – THE BOOK'S PROSE AS COPYREFS, BESIDE THE ENGLISH (docs/specs/i18n-2026-10.md §8, row L3-6)
+// =================================================================================================
+//
+// The book is a VIEW (class b): assembled on demand from the world, thrown away – except that the finished book is also the HEIRLOOM, copied into the daughter's save at the door (`world.legacy.heirloomAlbum`),
+// so the refs below are stored there too, on a generation-two career, beside the strings they translate. Not one character of the English moved: a ref sits next to its string and a screen draws
+// `eventText({ text, c })`. Nothing here draws – the ONLY draws in this file are `flavourFor`'s and `flavourStartOf`'s, on their own sub-streams, in the order they always had.
+//
+// ⚠ THE CORPUS CELL IS A SEAT: a note, a caption and a line are static strings in a census copy leaf (`albumCorpus.ts`), so the string IS its key (`selfKey`) and every cell is already a catalog key.
+// ⚠ A STRING WITH A HOLE IS A `cp` TEMPLATE spelt beside its twin (the age labels, the ticket words, the checklist), and a counted form would be a sentence per form (there is none here: an age is a number).
+// ⚠ WHAT HAS NO REF, ON PURPOSE: the tier label and the stage on a pass or a tag (engine-born words, RU-04's formatters), the venue and the club patch (invented proper nouns, Latin by spec §9.5),
+// the date line (a formatter's output, RU-13D) and the mother's name on the heirloom's checklist. They draw as the engine wrote them.
+
+/** The corpus cell's key is the cell. */
+const selfKey = (text: string): CopyRef => ({ k: text })
+
+/** `ALBUM_CHAPTER_TITLES` as refs, the same five lines. A record keyed on the band: a sixth chapter cannot ship without its ref. */
+const CHAPTER_TITLE_REF: Record<AlbumBand, CopyRef> = {
+  prologue: cp`The beginning`,
+  young: cp`Growing up`,
+  teen: cp`The breakthrough`,
+  adult: cp`The tour`,
+  lateCareer: cp`The final chapter`,
+}
+
+/** `ALT_DRAFT` as refs, the same eight lines; a picked alt maps back to its ref by its own text (the lines are unique, and none has a hole). */
+const ALT_REFS: readonly CopyRef[] = [
+  cp`Her, that week`,
+  cp`The journey home`,
+  cp`Her first days on a court`,
+  cp`Her wedding day`,
+  cp`The week the baby came home`,
+  cp`Graduation day`,
+  cp`Her farewell match`,
+  cp`The day after the last match`,
+]
+const ALT_REF_BY_TEXT: ReadonlyMap<string, CopyRef> = new Map(ALT_REFS.map((ref) => [ref.k, ref]))
+
+/** `ageLabelOf`'s `Age 12` and the chapter's `Age 12 – 15` as refs. */
+const ageRef = (age: number): CopyRef => cp`Age ${age}`
+const ageRangeRef = (from: number, to: number): CopyRef => cp`Age ${from} – ${to}`
+
+// =================================================================================================
 // §3 CANDIDATES – the corpus's 33 occasions, resolved against ledgers the save never prunes
 // =================================================================================================
 //
@@ -350,6 +394,8 @@ interface AlbumCandidate {
    *  (`collegeLeagueLines` on the `graduated` closer, the college scene's ruling C). Both obey the
    *  same law: a line rests on a fact the record really holds, and an absent fact prints nothing. */
   lines?: readonly string[]
+  /** ⭐ L3-6 – the refs of `lines`, index for index (`null` where a line is a proper name and has none). Absent exactly when `lines` is. */
+  linesC?: readonly (CopyRef | null)[]
 }
 
 const TOP_RANK = 10
@@ -404,7 +450,7 @@ function candidate(
   id: string,
   week: number,
   priority: number,
-  extra: Partial<Pick<AlbumCandidate, 'tier' | 'finish' | 'closer' | 'lines'>> = {},
+  extra: Partial<Pick<AlbumCandidate, 'tier' | 'finish' | 'closer' | 'lines' | 'linesC'>> = {},
 ): AlbumCandidate {
   return { week, ageYears: kidAgeAt(world, week), occasion: occasionOf(id), priority, ...extra }
 }
@@ -862,6 +908,22 @@ function collegeLeagueLines(years: readonly CollegeYear[]): readonly string[] {
     .filter((line): line is string => line !== null)
 }
 
+/** ⭐ L3-6 (10.10) – `collegeLeagueLines`' sentences as refs, one per year that has a run, in the same order: the same filter (`year.league` truthy), the same two arms, so the arrays are index-aligned by
+ *  construction (the net holds it on posed graduates). The league's name and the round's name are engine-born words and ride as params; `Won it` and `Went out in the …` are two sentences. */
+function collegeLeagueRefs(years: readonly CollegeYear[]): readonly CopyRef[] {
+  const out: CopyRef[] = []
+  for (const year of years) {
+    const run = year.league
+    if (!run) continue
+    out.push(
+      wonTheLeague(run)
+        ? cp`Year ${year.index}, ${COLLEGE_LEAGUE.label}: Won it`
+        : cp`Year ${year.index}, ${COLLEGE_LEAGUE.label}: Went out in the ${leagueExitLabel(run)}`,
+    )
+  }
+  return out
+}
+
 /** THE CLOSERS – ruled 19.09, re-ruled 20.09, and checked by his own eyes on the paintings:
  *  `graduated` where a college happened (the FULL course – `finishedTheCourse` is the shared
  *  predicate, so a leaver gets no graduation frame on any surface); `farewell` where a last match
@@ -878,7 +940,7 @@ function closerCandidates(world: WorldState): AlbumCandidate[] {
     // ⭐ THE COLLEGE SCENE (ruling C) – the degree's page carries the championship record as its
     // checklist. `lines` is empty on a course whose every year held a null run, which is the same
     // book the graduate always had.
-    out.push(candidate(world, 'graduated', college.doneWeek, 1000, { closer: true, lines: collegeLeagueLines(college.years) }))
+    out.push(candidate(world, 'graduated', college.doneWeek, 1000, { closer: true, lines: collegeLeagueLines(college.years), linesC: collegeLeagueRefs(college.years) }))
   }
   const ending = closingEndingOf(world)
   if (!ending) return out
@@ -947,17 +1009,21 @@ function dynastyCandidates(world: WorldState): AlbumCandidate[] {
   const record = world.dynasty
   if (record === null) return []
   const career = record.motherCareer
-  const lines = [
-    `${record.motherName.first} ${record.motherName.last}`,
-    career.bestRank === null ? null : `Best ranking: #${career.bestRank}`,
-    career.titles > 0 ? `Titles: ${career.titles}` : null,
-    career.slams > 0 ? `Slams: ${career.slams}` : null,
-    `Generation ${record.generation}`,
-  ].filter((line): line is string => line !== null)
+  // ⭐ L3-6: each line is read as a (line, ref) pair, the name having no ref (a proper noun), and the two arrays are cut from the same list so they cannot drift out of step. (`line` / `ref`, not
+  // `text` / `c`: those are the names of a ledger row's pair, which tests/i18n-l3-1-ledger-writers.test.ts §2 holds to the table.)
+  const rows: { line: string; ref: CopyRef | null }[] = [
+    { line: `${record.motherName.first} ${record.motherName.last}`, ref: null },
+    ...(career.bestRank === null ? [] : [{ line: `Best ranking: #${career.bestRank}`, ref: cp`Best ranking: #${career.bestRank}` }]),
+    ...(career.titles > 0 ? [{ line: `Titles: ${career.titles}`, ref: cp`Titles: ${career.titles}` }] : []),
+    ...(career.slams > 0 ? [{ line: `Slams: ${career.slams}`, ref: cp`Slams: ${career.slams}` }] : []),
+    { line: `Generation ${record.generation}`, ref: cp`Generation ${record.generation}` },
+  ]
+  const lines = rows.map((row) => row.line)
+  const linesC = rows.map((row) => row.ref)
   // ⚠ THE AGE IS **BEFORE** THE FIRST COURT DAY and the priority is above it, so the book opens on
   // where she came from and then on where she started. Both are deliberate and both are visible here
   // rather than in a sort nobody can find.
-  return [{ week: null, ageYears: FIRST_COURT_AGE - 1, occasion: occasionOf('the-line'), priority: 82, lines }]
+  return [{ week: null, ageYears: FIRST_COURT_AGE - 1, occasion: occasionOf('the-line'), priority: 82, lines, linesC }]
 }
 
 // =================================================================================================
@@ -1290,7 +1356,10 @@ function distinctFramesOf(world: WorldState, own: readonly AlbumCandidate[], voi
   const { picks } = pickDistinct(options.map((row) => row.map((o) => o.art)))
   return own.map((c, i) => {
     const { art, alt } = options[i][picks[i]]
-    return { art, alt, caption: c.occasion.voices[voice].caption }
+    const caption = c.occasion.voices[voice].caption
+    const altC = ALT_REF_BY_TEXT.get(alt)
+    // ⭐ L3-6: the refs ride beside the strings; a caption that is empty (not every frame is written under) has no ref, and an alt the table does not know would draw as it was.
+    return { art, alt, caption, ...(altC ? { altC } : {}), ...(caption !== '' ? { captionC: selfKey(caption) } : {}) }
   })
 }
 
@@ -1303,14 +1372,20 @@ function distinctFramesOf(world: WorldState, own: readonly AlbumCandidate[], voi
  *  seat, which is «из сида, чтобы не мигал» satisfied at zero cost. */
 function flavourFor(seed: string, sheetId: string) {
   const rng = rngFromSeed(`${seed}:album:flavour:${sheetId}`)
-  const seat = `${TICKET_WORDS.seat} ${pickInt(rng, 1, 32)}${'ABCDEF'[pickInt(rng, 0, 5)]}`
-  const gate = `${TICKET_WORDS.gate} ${pickInt(rng, 1, 9)}`
-  const row = `${TICKET_WORDS.row} ${pickInt(rng, 1, 32)}`
+  // ⭐ L3-6 (10.10): THE SAME DRAWS IN THE SAME ORDER, now bound to names so the refs beside the strings can use the numbers (seat number, then its letter, then the gate, then the row, then the venue,
+  // twelve bars, the doodle - the order the template literals evaluated them in). The sub-stream key above is the one it always was.
+  const seatNo = pickInt(rng, 1, 32)
+  const seatLetter = 'ABCDEF'[pickInt(rng, 0, 5)]
+  const seat = `${TICKET_WORDS.seat} ${seatNo}${seatLetter}`
+  const gateNo = pickInt(rng, 1, 9)
+  const gate = `${TICKET_WORDS.gate} ${gateNo}`
+  const rowNo = pickInt(rng, 1, 32)
+  const row = `${TICKET_WORDS.row} ${rowNo}`
   const venue = VENUE_POOL[pickInt(rng, 0, VENUE_POOL.length - 1)]
   const bars: number[] = []
   for (let i = 0; i < 12; i++) bars.push(pickInt(rng, 1, 4))
   const doodle = pickInt(rng, 0, 5)
-  return { seat, gate, row, venue, bars, doodle }
+  return { seat, gate, row, venue, bars, doodle, seatC: cp`Seat ${seatNo}${seatLetter}`, gateC: cp`Gate ${gateNo}`, rowC: cp`Row ${rowNo}` }
 }
 
 /** The ramp's four steps in order, lowest first – the one list `chapterStepOf` ranks by. */
@@ -1489,6 +1564,9 @@ function ticketOf(c: TournamentFact, flavour: ReturnType<typeof flavourFor>, sta
     seat: flavour.seat,
     row: flavour.row,
     bars: flavour.bars,
+    gateC: flavour.gateC,
+    seatC: flavour.seatC,
+    rowC: flavour.rowC,
   }
 }
 
@@ -1499,6 +1577,7 @@ function tagOf(c: TournamentFact, flavour: ReturnType<typeof flavourFor>): Album
     step: ALBUM_TIER_STEP[c.tier!],
     place: flavour.venue,
     ageLabel: ageLabelOf(c.ageYears),
+    ageLabelC: ageRef(c.ageYears),
   }
 }
 
@@ -1509,8 +1588,10 @@ function tagOf(c: TournamentFact, flavour: ReturnType<typeof flavourFor>): Album
 function noteOf(c: AlbumCandidate, hand: AlbumHand, own: readonly AlbumCandidate[] = [c], startYear: number = DEFAULT_START_YEAR): AlbumNote {
   return {
     text: hand.note,
+    textC: selfKey(hand.note),
     dateLabel: c.week === null ? null : weekSpan(c.week, startYear),
     ageLabel: ageLabelOf(c.ageYears),
+    ageLabelC: ageRef(c.ageYears),
     // ⭐ v86 – `[]` on every candidate that carries no checklist, which is almost all of them: the
     // ruled form exists in the shape and had no writer until the dynasty needed to print numbers a
     // corpus string is forbidden to carry. The graduate's championship record joined it on the same
@@ -1534,6 +1615,11 @@ function noteOf(c: AlbumCandidate, hand: AlbumHand, own: readonly AlbumCandidate
     // ⚠ AND ONLY THE LINES MOVED. `dateLabel` and `ageLabel` stay the LEAD's, because they date the
     // sheet, and `text` stays the SPEAKER's, because A32's closing words win their sheet by ruling.
     lines: own.find((x) => (x.lines?.length ?? 0) > 0)?.lines ?? [],
+    // ⭐ L3-6: the refs of THE SAME candidate's checklist (the sheet's first one that has lines) - present exactly when it is.
+    ...((): { linesC?: readonly (CopyRef | null)[] } => {
+      const withLines = own.find((x) => (x.lines?.length ?? 0) > 0)
+      return withLines?.linesC ? { linesC: withLines.linesC } : {}
+    })(),
   }
 }
 
@@ -1557,6 +1643,7 @@ function sheetsOf(
   const ageTo = Math.max(...ages)
   const chapterAgeLabel =
     ageFrom === ageTo ? ageLabelOf(ageFrom) : `${TICKET_WORDS.age} ${ageFrom} – ${ageTo}`
+  const chapterAgeRef = ageFrom === ageTo ? ageRef(ageFrom) : ageRangeRef(ageFrom, ageTo)
   const patch = albumPatchFor(world.seed, chapterIndex, albumChapterStep(candidates))
   const sheets: AlbumSheetModel[] = []
   let at = 0
@@ -1590,10 +1677,13 @@ function sheetsOf(
       layout,
       chapterIndex,
       chapterTitle: title,
+      chapterTitleC: CHAPTER_TITLE_REF[band],
       ageLabel: chapterAgeLabel,
+      ageLabelC: chapterAgeRef,
       frames: distinctFramesOf(world, own, voice),
       note: noteOf(lead, hand, own, world.startYear),
       line: hand.line,
+      lineC: selfKey(hand.line),
       ticket,
       tag,
       patch: sheetPatch,
@@ -1756,7 +1846,9 @@ export function assembleAlbum(world: WorldState): AlbumBook {
     chapterRows.push({
       index: i + 1,
       title: ALBUM_CHAPTER_TITLES[chapter.band],
+      titleC: CHAPTER_TITLE_REF[chapter.band],
       ageLabel: own[0].ageLabel,
+      ...(own[0].ageLabelC ? { ageLabelC: own[0].ageLabelC } : {}),
       sheetCount: own.length,
       firstSheet: sheets.length,
     })
@@ -1812,8 +1904,12 @@ export function assembleAlbum(world: WorldState): AlbumBook {
     const arc = ALBUM_ARC[direction][voice]
     sheets[sheets.length - 1] = {
       ...closing,
-      note: closing.note ? { ...closing.note, text: arc.note } : { text: arc.note, dateLabel: null, ageLabel: null, lines: [] },
+      // ⭐ L3-6: the arc displaces the closing sheet's words, so it displaces their refs with them - the sheet must never say one thing and carry the key of another.
+      note: closing.note
+        ? { ...closing.note, text: arc.note, textC: selfKey(arc.note) }
+        : { text: arc.note, textC: selfKey(arc.note), dateLabel: null, ageLabel: null, lines: [] },
       line: arc.line,
+      lineC: selfKey(arc.line),
     }
   }
 
