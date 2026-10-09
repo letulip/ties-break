@@ -107,33 +107,8 @@ function assignmentsOf(sym: ts.Symbol, within: ts.Node): ts.Expression[] {
   return out
 }
 
-function leaves(node: ts.Expression, ctx: Ctx, d: number): Alt[] {
-  if (d > 8) return []
-  const c2 = { ...ctx, depth: ctx.depth + 1, top: false }
-  if (ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isSatisfiesExpression(node) || ts.isNonNullExpression(node)) return leaves(node.expression, ctx, d + 1)
-  if (ts.isObjectLiteralExpression(node)) {
-    const out: Alt[] = []
-    for (const p of node.properties) if (ts.isPropertyAssignment(p)) out.push(...leaves(p.initializer, ctx, d + 1))
-    return out
-  }
-  if (ts.isArrayLiteralExpression(node)) {
-    const out: Alt[] = []
-    for (const e of node.elements) out.push(...leaves(e, ctx, d + 1))
-    return out
-  }
-  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) || ts.isTemplateExpression(node)) {
-    const r = ev(node, c2)
-    return r
-  }
-  if (ts.isIdentifier(node)) {
-    const sym = aliased(checker.getSymbolAtLocation(node))
-    const decl = sym?.valueDeclaration
-    if (decl && ts.isVariableDeclaration(decl) && decl.initializer) return leaves(decl.initializer, ctx, d + 1)
-    return []
-  }
-  if (ts.isElementAccessExpression(node) || ts.isPropertyAccessExpression(node)) return leaves(node.expression, ctx, d + 1)
-  return []
-}
+// (a self-recursive `leaves` helper stood here; the sweep evolved past it and check:tools
+// rightly flagged the dead declaration – removed 09.10, the architect)
 
 function memberInit(p: ts.ObjectLiteralElementLike): ts.Expression | undefined {
   if (ts.isPropertyAssignment(p)) return p.initializer
