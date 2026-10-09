@@ -37,11 +37,16 @@ import {
   endingForRetirement,
   forkDue,
   lastWordLine,
+  lastWordRef,
   leavingDoorDue,
   leavingLine,
+  leavingLineRef,
   retirementDue,
   debtWeeks,
+  endingRowRef,
 } from '../ending'
+// ⭐ L3-6 (10.10): the endings' feed rows write `c` beside `text` (the refs themselves are the leaf's: `lastWordRef`, `leavingLineRef`, `endingRowRef`).
+import { cp } from '../../shared/i18n'
 import type { AcademyEpilogue, AdOfferTerms, CareerEnding, CollegeTier, DebtView, DynastyHandover, EndingView, FamilyBackground, ForkAnswer, TierTrophies } from '../../shared/protocol'
 // ⭐ ROUND 29 PART TWO #10 – the epilogue's academy line reads the LEAVES, never `world/shop.ts`
 // (shop imports THIS file, so the leaf split in `world/assets.ts`' header is what makes this legal):
@@ -397,6 +402,8 @@ export function latchEnding(world: WorldState, ending: CareerEnding): void {
     type: 'milestone',
     keep: true,
     text: `${ENDING_TITLE[ending.type]} – ${ending.detail}.`,
+    // ⭐ L3-6: the title is IN the key (nine keys of the frozen v92 table, `She left at the top – {0}.`), the detail nests as the ref `endingDetailRef` reads back from the stored string.
+    c: endingRowRef(ending),
   })
 }
 
@@ -506,6 +513,7 @@ export function resolveEndings(world: WorldState): void {
       // ⚠ ROUND 24 #5 – she is EIGHTEEN here and the junior rungs are still open for one more
       // season; the old «She is nineteen. The junior ladder is behind her» would assert both wrong.
       text: 'School is over. The junior ladder closes at nineteen, and the next one has to be paid for.',
+      c: cp`School is over. The junior ladder closes at nineteen, and the next one has to be paid for.`,
     })
     return
   }
@@ -553,6 +561,12 @@ export function resolveEndings(world: WorldState): void {
           : offer.reason === 'plateau'
             ? 'She said it out loud in the car – if she cannot reach the top, she would rather go.'
             : 'Another off-season, and the same question: is there another year in this?',
+        // ⭐ L3-6: the final offer's row is `She is {0}. {1}` in the frozen table; {1} nests as her last word's ref, so a Russian row carries her sentence translated.
+        c: offer.final
+          ? cp`She is ${view.ageYears}. ${lastWordRef(world.oneMoreYearCount)}`
+          : offer.reason === 'plateau'
+            ? cp`She said it out loud in the car – if she cannot reach the top, she would rather go.`
+            : cp`Another off-season, and the same question: is there another year in this?`,
       })
     }
   }
@@ -696,7 +710,14 @@ export function resolveReturnDecision(world: WorldState): void {
     world.pregnancy = null
     // ⚠ NO `captureMilestone` – the album's milestone channel is what the family KEEPS, and T4's birth
     // is this arc's entry there. A decision to try is news about a season (T3's own distinction).
-    addEvent(world, { week: world.week, type: 'milestone', keep: true, text: RETURN_EVENT })
+    addEvent(world, {
+      week: world.week,
+      type: 'milestone',
+      keep: true,
+      text: RETURN_EVENT,
+      // ⭐ L3-6: the constant stays where it is (its note quotes the owner in his own language); the key is its sentence spelt as a `cp` template, held equal to it by tests/i18n-l3-6-endings-album.test.ts.
+      c: cp`She has decided to go back. From this week she can enter tournaments again.`,
+    })
     // ⭐⭐⭐ v85 T6 – **AND THE ONE QUESTION THIS ARC PUTS TO THE PARENT**: the blocking `'return-plan'`
     // beat, raised on the week the calendar re-opens and answered before a single entry can be
     // booked. §4a is UNTOUCHED and this is the reading rather than an exception to it: «SHE decides,
@@ -821,6 +842,8 @@ export function resolveLeaving(world: WorldState): void {
     // ⚠ THE DOOR **AND** THE VOICE. Four lines across two doors would have put the collapse's
     // sentence in a champion's mouth the moment `DOOR_BY_TEMPERAMENT` was deleted (17.09).
     text: leavingLine(door, view.temperament),
+    // ⭐ L3-6: the same eight sentences as refs – each a key of the frozen table.
+    c: leavingLineRef(door, view.temperament),
   })
   // ⚠ THE AGE IS THE ONE THE VIEW ALREADY READ, not a second call to `kidAgeYears` – the peak door's
   // floor and the record's stamp are the same number by construction.
@@ -1164,6 +1187,7 @@ export function answerFork(world: WorldState, answer: ForkAnswer, tier?: College
       type: 'milestone',
       keep: true,
       text: `A college place is reserved. She leaves when the academic year starts – ${weekLabel(departsWeek, world.startYear)} – and plays until then.`,
+      c: cp`A college place is reserved. She leaves when the academic year starts – ${weekLabel(departsWeek, world.startYear)} – and plays until then.`,
     })
     return
   }
@@ -1181,6 +1205,7 @@ export function answerFork(world: WorldState, answer: ForkAnswer, tier?: College
       type: 'milestone',
       keep: true,
       text: 'She is turning professional. Every entry from here has a cheque behind it, and a bill in front of it.',
+      c: cp`She is turning professional. Every entry from here has a cheque behind it, and a bill in front of it.`,
     })
 }
 
@@ -1238,6 +1263,7 @@ export function answerRetirement(world: WorldState, retire: boolean): void {
       type: 'milestone',
       keep: true,
       text: 'One more year, you said. Same as last time.',
+      c: cp`One more year, you said. Same as last time.`,
     })
     return
   }

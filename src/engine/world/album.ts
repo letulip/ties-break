@@ -31,7 +31,9 @@ import {
   type SeasonTrackRow,
 } from '../../shared/protocol'
 import type { LadderTrack } from '../season/types'
-import { ENDING_TITLE } from '../ending'
+import { ENDING_TITLE, endingDetailRef, endingTitleRef } from '../ending'
+// ⭐ L3-6 (10.10): the closing page and the scroll carry CopyRefs beside their English (see `AlbumPage.whyC` / `ScrollSeason.rows`).
+import { cp, type CopyRef } from '../../shared/i18n'
 import { kidAgeAt } from './age'
 import { seasonIndexOf } from './ledger'
 import { careerMoney } from './reckoning'
@@ -119,6 +121,7 @@ function page(
   week: number | null,
   emotion: AvatarEmotion,
   empty = false,
+  refs?: { why?: CopyRef; caption?: CopyRef; fact?: CopyRef },
 ): AlbumPage {
   const at = week ?? world.week
   return {
@@ -131,6 +134,10 @@ function page(
     stage: portraitStage(ageAt(world, at)),
     emotion,
     empty,
+    // ⭐ L3-6: a page without refs has exactly the shape it always had – the keys are ABSENT, not undefined.
+    ...(refs?.why ? { whyC: refs.why } : {}),
+    ...(refs?.caption ? { captionC: refs.caption } : {}),
+    ...(refs?.fact ? { factC: refs.fact } : {}),
   }
 }
 
@@ -425,7 +432,10 @@ export function slotTheTurn(world: WorldState): AlbumPage {
 export function slotLastWeek(world: WorldState): AlbumPage {
   const ending = world.ending
   if (!ending) {
-    return page(world, 7, 'The story has not stopped yet', 'Still going', null, null, 'norm', true)
+    return page(world, 7, 'The story has not stopped yet', 'Still going', null, null, 'norm', true, {
+      why: cp`The story has not stopped yet`,
+      caption: cp`Still going`,
+    })
   }
   return page(
     world,
@@ -435,6 +445,13 @@ export function slotLastWeek(world: WorldState): AlbumPage {
     `${seasonLabel(ending.week)}, aged ${ending.ageYears} – ${ending.detail}`,
     ending.week,
     EMOTION_BY_ENDING[ending.type],
+    false,
+    // ⭐ L3-6: the title is the page's `why`; the fact nests the stored detail as the ref `endingDetailRef` reads back from it (the week label is a formatter's output and rides as a string param, RU-13D's).
+    {
+      why: endingTitleRef(ending.type),
+      caption: ending.type === 'college' ? cp`See you in four years` : cp`The last week`,
+      fact: cp`${seasonLabel(ending.week)}, aged ${ending.ageYears} – ${endingDetailRef(ending)}`,
+    },
   )
 }
 
@@ -475,6 +492,21 @@ const SCROLL_LABEL: Record<Milestone['type'], string> = {
   // the whole of what the world holds. ⚠ AND IT IS NOT «Her divorce», which was the first draft and
   // reads as a possession she acquired; this names the thing that happened.
   divorce: 'The marriage ended',
+}
+
+/** ⭐ L3-6 (10.10) – THE SAME ELEVEN LABELS AS REFS. A record keyed on the milestone type, so a twelfth type cannot ship with a label and no ref (the compiler asks). Each is a catalog key by its `cp` site. */
+const SCROLL_LABEL_REF: Record<Milestone['type'], CopyRef> = {
+  title: cp`Title`,
+  final: cp`Final`,
+  prize: cp`First prize money`,
+  international: cp`First trip abroad`,
+  injury: cp`First injury`,
+  'season-rank': cp`Season close`,
+  'break-even': cp`The money turned`,
+  school: cp`School behind her`,
+  wedding: cp`Her wedding`,
+  birth: cp`Her daughter`,
+  divorce: cp`The marriage ended`,
 }
 
 /** ⭐⭐⭐ ROUND 48 #7a – THE TABLE A BANKED SEASON WAS ABOUT, which is `dominantTrackOfSeason`'s
@@ -537,13 +569,19 @@ function closeTrackOf(byTrack: Record<LadderTrack, SeasonTrackRow>): LadderTrack
  *  engine/migrations.ts back-filled nothing, on purpose). The milestone's own rank is also that old
  *  row's bare `endRank` – both are `world.kidRank` at the one wrap. */
 function seasonCloseDetail(world: WorldState, m: Milestone): string | null {
+  const rank = seasonCloseRankOf(world, m)
+  return rank === null ? null : `#${rank}`
+}
+
+/** ⭐ L3-6 (10.10): THE NUMBER BEHIND `seasonCloseDetail`, read once for the sentence and for its ref – the rule above is unchanged, only the `#` is no longer glued on inside the reader. */
+function seasonCloseRankOf(world: WorldState, m: Milestone): number | null {
   const row =
     m.seasonIndex === undefined ? undefined : world.seasonHistory.find((h) => h.seasonIndex === m.seasonIndex)
   const byTrack = row?.byTrack
-  if (byTrack === undefined) return m.rank === undefined ? null : `#${m.rank}`
+  if (byTrack === undefined) return m.rank === undefined ? null : m.rank
   const track = closeTrackOf(byTrack)
   const endRank = track === null ? undefined : byTrack[track]?.endRank
-  return endRank === undefined ? null : `#${endRank}`
+  return endRank === undefined ? null : endRank
 }
 
 function scrollDetail(m: Milestone, world: WorldState): string | null {
@@ -589,6 +627,24 @@ function scrollDetail(m: Milestone, world: WorldState): string | null {
   }
 }
 
+/** ⭐ L3-6 (10.10) – THE DETAIL CELL AS A REF, or undefined when the cell has none to carry. Four arms speak a ref: the season close's place (`#{0}`), the two break-even phrases and the school line. The rest print
+ *  an ENGINE-BORN word – a tier's label (`Title`, `Final`, `First prize money`, `First trip abroad` rows) and the injury `kind` – which no localisation path reaches yet (the shared tier / body-part
+ *  formatters are RU-04's and RU-05's); the row keeps its English `detail` and the screen prints it as it always did. */
+function scrollDetailRef(m: Milestone, world: WorldState): CopyRef | undefined {
+  switch (m.type) {
+    case 'season-rank': {
+      const rank = seasonCloseRankOf(world, m)
+      return rank === null ? undefined : cp`#${rank}`
+    }
+    case 'break-even':
+      return m.kind === 'week' ? cp`one week of it` : cp`the whole of it`
+    case 'school':
+      return cp`the last school year is over`
+    default:
+      return undefined
+  }
+}
+
 /** THE FULL SCROLL – every milestone in order, paged by season (§9.3). §5.5's option (a), kept as
  *  the floor rather than as the surface: reachable from the album's last page for the player who
  *  wants the record rather than the story. */
@@ -611,16 +667,17 @@ export function buildScroll(world: WorldState): ScrollSeason[] {
   //
   // ⚠ ALL THE OTHER MILESTONE TYPES ARE UNTOUCHED, label and detail. And this stays a PURE READ: no
   // stream is drawn, nothing on `world` is written, and the same world yields the same scroll.
-  const rows: { week: number; label: string; detail: string | null }[] = []
+  const rows: ScrollSeason['rows'] = []
   for (const m of world.milestones) {
     if (m.type === 'title' || m.type === 'final') continue
-    rows.push({ week: m.week, label: SCROLL_LABEL[m.type], detail: scrollDetail(m, world) })
+    const detailC = scrollDetailRef(m, world)
+    rows.push({ week: m.week, label: SCROLL_LABEL[m.type], detail: scrollDetail(m, world), labelC: SCROLL_LABEL_REF[m.type], ...(detailC ? { detailC } : {}) })
   }
   for (const tier of TIER_LADDER) {
     const cabinet = world.trophiesByTier?.[tier]
     if (!cabinet) continue
-    for (const week of cabinet.titles) rows.push({ week, label: SCROLL_LABEL.title, detail: TIERS[tier].label })
-    for (const week of cabinet.finals) rows.push({ week, label: SCROLL_LABEL.final, detail: TIERS[tier].label })
+    for (const week of cabinet.titles) rows.push({ week, label: SCROLL_LABEL.title, detail: TIERS[tier].label, labelC: SCROLL_LABEL_REF.title })
+    for (const week of cabinet.finals) rows.push({ week, label: SCROLL_LABEL.final, detail: TIERS[tier].label, labelC: SCROLL_LABEL_REF.final })
   }
   // A STABLE sort, so a tie keeps the order the rows were pushed in: the milestones in their capture
   // order, then the cabinet's – which is the order a week really happened in (a first cheque is

@@ -255,9 +255,19 @@ describe('L2-10a completeness – the chrome is wired, the engine\'s page and re
     expect(source).toContain('<b class="ending-fig">{{ view.oneMoreYearCount }}</b>')
   })
 
-  it('the engine\'s page, the record\'s rows and the ending\'s own sentences are NOT read through a key – they are L3', () => {
+  // ⭐ RE-AIMED 10.10 BY L3-6 (the endings and the album): this pin said «they are L3» and held the page's five engine strings BARE in the template. They are drawn through `eventText({ text, c })` now –
+  // the engine's page carries a ref beside each string (`AlbumPage.whyC` / `captionC` / `factC`, the scroll's `labelC` / `detailC`), and the English falls out unchanged when a ref is absent. The
+  // engine files still do not call `t()` – the refs are the engine's way to speak, the catalog is the screen's – and that half of the pin stands. The mounted proof is
+  // tests/component/i18n-l3-6-ending-display.test.ts.
+  it('the engine\'s page, the record\'s rows and the ending\'s own sentences are read through the refs the engine sends beside them (L3-6) – and the engine still never calls `t()`', () => {
     const source = SRC(FILE)
-    for (const bare of ['{{ closing.why }}', '{{ closing.fact }}', ':caption="closing.caption"', '{{ r.label }}', '{{ r.detail }}']) expect(source, bare).toContain(bare)
+    for (const drawn of [
+      '{{ eventText({ text: closing.why, c: closing.whyC }) }}',
+      '{{ eventText({ text: closing.fact, c: closing.factC }) }}',
+      ':caption="eventText({ text: closing.caption, c: closing.captionC })"',
+      '{{ eventText({ text: r.label, c: r.labelC }) }}',
+      '{{ eventText({ text: r.detail, c: r.detailC }) }}',
+    ]) expect(source, drawn).toContain(drawn)
     for (const file of ['src/engine/ending.ts', 'src/engine/world/endings.ts']) {
       expect(/from '(?:\.\.\/)+i18n'/.test(SRC(file)), `${file} learned to call t()`).toBe(false)
     }
@@ -649,7 +659,9 @@ describe('L2-10a xx sweep – the retirement card: the shell is bracketed, and t
       const last = card.querySelector('.retire-answers')!.lastElementChild as HTMLElement
       const padded = expandRendered(card, ALLOW)
       const xxChars = (card.textContent ?? '').length
-      expect(padded, 'expandRendered reached the composable\'s words').toBeGreaterThanOrEqual(1)
+      // ⭐ RE-AIMED 10.10 BY L3-6: this said «expandRendered reached the composable's words» (>= 1) because the lede, the rung and her warning were RAW then and needed padding by hand. They ride refs now – keys of the
+      // catalog like any other – so the xx catalog brackets and pads them itself and there is nothing raw left to reach. The claim is stronger for it: no word on the card comes through no key.
+      expect(padded, 'a word on the card came through no key').toBe(0)
       expect(xxChars, 'xx made the card longer').toBeGreaterThan(english)
       const fit = assertDismissReachable(card, last, vp, `RetirementDialog (xx, ${vp.width}x${vp.height})`)
       console.log(

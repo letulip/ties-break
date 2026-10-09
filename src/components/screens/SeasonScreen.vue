@@ -60,7 +60,7 @@ import { WILD_CARD } from '../../engine/season/tournament'
 import { vacationArtUrl, weekArtUrl, weekHomeArtUrl } from '../../art/weeks'
 import { portraitStage } from '../../shared/avatarEmotion'
 import { rngFromSeed } from '../../engine/rng'
-import { coachDeclineLine } from '../../composables/declineVoice'
+import { coachDeclineLine, declineRef } from '../../composables/declineVoice'
 import type { FieldStrength } from '../../engine/season/preview'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
 // R11-5a: the ONE tier-state rule, shared with the Home season ladder. R15-9 adds the sliding
@@ -476,7 +476,8 @@ function coachSays(e: UpcomingEvent): string {
   // beside the draw: «At this age you choose your weeks» is advice about WHICH tournament to enter,
   // and the entry decision is made two weeks before there is an opponent to have a ring against.
   const declineSay = coachDeclineLine(game.snapshot?.physicalShare, game.snapshot?.seed ?? '', e.id, strength)
-  if (declineSay) parts.push(declineSay)
+  // ⭐ L3-6 (10.10): the pick is `coachDeclineLine`'s (the event's own `coachage` sub-stream, unmoved); the sentence is drawn from its ref when the locale has one.
+  if (declineSay) parts.push(eventText({ text: declineSay, c: declineRef(declineSay) }))
 
   // "suits her game" -> "The court suits her game." Capitalised into a sentence, because the coach
   // speaks in sentences and the engine's fragment does not.

@@ -155,12 +155,12 @@ import { activeLadderOfSnapshot } from '../shared/protocol'
 // ⚠ THE SAME ONE SPELLING OF HIS NAME the coach note on Home signs itself with – «M. Ricci», not the
 // roster's full string. Two surfaces naming the same person must name him identically.
 import { formatShortName } from '../shared/format'
-import { lastWordLine, plateauLede } from '../engine/ending'
-import { declineRung, herLastWinterLine, pastHerPeak } from '../composables/declineVoice'
+import { lastWordLine, lastWordRef, plateauLede, plateauLedeRef } from '../engine/ending'
+import { declineRef, declineRung, herLastWinterLine, herLastWinterRef, pastHerPeak } from '../composables/declineVoice'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { bandFacePoint } from '../art/faceRects'
-import { t } from '../i18n'
+import { t, eventText } from '../i18n'
 
 const game = useGameStore()
 const offer = computed(() => game.snapshot?.retirementOffer ?? null)
@@ -170,20 +170,28 @@ const tableName = computed(() => activeLadderOfSnapshot(game.snapshot).label.toL
 // ⭐⭐ HER LAST WORD. The kicker one line up already carries her age, which is why the card renders
 // the line ALONE while the feed prints `She is 41.` in front of it - the same sentence, and neither
 // surface repeats the other's furniture.
-const lastWord = computed(() => lastWordLine(game.snapshot?.oneMoreYearCount ?? 0))
+// ⭐ L3-6 (10.10): THE ENGINE'S SENTENCE STILL COMES FROM THE ENGINE, now with its ref beside it – `eventText` draws the ref under the locale and the English as it was when there is none.
+const lastWord = computed(() => {
+  const n = game.snapshot?.oneMoreYearCount ?? 0
+  return eventText({ text: lastWordLine(n), c: lastWordRef(n) })
+})
 
 // ⭐⭐⭐ ROUND 39 #14a – AND THE PLATEAU LEDE IS FOUR SENTENCES NOW, PICKED BY THE SAME FIELD. See
 // `plateauLede` in src/engine/ending.ts for the owner's ask, the measurement that shapes the copy
 // and the rule about numbers. Imported as a symbol and not retyped here, exactly as her last word
 // above is: band 0 is his shipped sentence and must stay byte-identical, and a copy of it living in
 // this template is how that quietly stops being true.
-const plateauLine = computed(() =>
-  plateauLede(game.snapshot?.oneMoreYearCount ?? 0, tableName.value),
-)
+const plateauLine = computed(() => {
+  const n = game.snapshot?.oneMoreYearCount ?? 0
+  return eventText({ text: plateauLede(n, tableName.value), c: plateauLedeRef(n, tableName.value) })
+})
 
 // ⭐⭐ WHICH YEAR IT IS, off the share alone – null at her peak and on any snapshot that carries no
 // share, which is what keeps this paragraph off the card until there is something true to put in it.
-const rung = computed(() => declineRung(game.snapshot?.physicalShare))
+const rung = computed(() => {
+  const line = declineRung(game.snapshot?.physicalShare)
+  return line === null ? null : eventText({ text: line, c: declineRef(line) })
+})
 
 // ⭐⭐⭐ ROUND 38 #6d – HER PERFORMANCE, IN HER VOICE. See the header for the ask and for every rule
 // these three lines obey. The seasons she actually banked a professional result in, oldest first.
@@ -242,7 +250,11 @@ const coachSeasonWord = computed<string | null>(() => {
  *  on the last winter itself – where `lastWordLine` above is the only voice that should speak – so
  *  the silence is the engine's, not this template's. A `v-if` on the age or the share would be a
  *  second gate that could disagree with the first. */
-const lastWinterWord = computed(() => herLastWinterLine(game.snapshot?.lastWinterIn))
+const lastWinterWord = computed(() => {
+  const winters = game.snapshot?.lastWinterIn
+  const line = herLastWinterLine(winters)
+  return line === null ? null : eventText({ text: line, c: herLastWinterRef(winters) ?? undefined })
+})
 
 const stage = computed(() => portraitStage(age.value))
 const artUrl = computed(() => portraitUrl(stage.value, 'serious'))

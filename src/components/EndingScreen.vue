@@ -23,7 +23,7 @@ import { useDialogFocus } from '../composables/dialogFocus'
 import { portraitUrl } from '../art/preload'
 import { weekLabel, seasonYear } from '../shared/dates'
 import { formatCentsCompact } from '../shared/money'
-import { t } from '../i18n'
+import { t, eventText } from '../i18n'
 import type { AlbumBook, DynastyHandover } from '../shared/protocol'
 
 /* ⚠ SIX IMPORTS LEFT THIS FILE WITH THE COLLEGE BLOCK (round 24 #2b): `COLLEGE_TIER_NAME`,
@@ -343,8 +343,8 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
           <ul class="scroll-rows">
             <li v-for="r in s.rows" :key="`${r.week}-${r.label}`">
               <span class="scroll-week">{{ weekLabel(r.week, startYear) }}</span>
-              <span class="scroll-label">{{ r.label }}</span>
-              <span v-if="r.detail" class="scroll-detail">{{ r.detail }}</span>
+              <span class="scroll-label">{{ eventText({ text: r.label, c: r.labelC }) }}</span>
+              <span v-if="r.detail" class="scroll-detail">{{ eventText({ text: r.detail, c: r.detailC }) }}</span>
             </li>
           </ul>
         </section>
@@ -375,16 +375,16 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
           :alt="t('Aged {0}', [closing.stage])"
           tilt="var(--tilt-1)"
           :photo-height="228"
-          :caption="closing.caption"
+          :caption="eventText({ text: closing.caption, c: closing.captionC })"
           tape
         />
 
         <!-- POINT 4: WHY this week is in the album. Always visible, empty page or not - the owner's
              visible selection rule, and what keeps section 6's promise. -->
-        <p class="album-why">{{ closing.why }}</p>
+        <p class="album-why">{{ eventText({ text: closing.why, c: closing.whyC }) }}</p>
 
         <!-- POINT 3: one hard fact off the milestone itself, never a computed summary. -->
-        <p v-if="closing.fact" class="album-fact">{{ closing.fact }}</p>
+        <p v-if="closing.fact" class="album-fact">{{ eventText({ text: closing.fact, c: closing.factC }) }}</p>
         <p v-if="closing.week !== null" class="album-when">{{ weekLabel(closing.week, startYear) }}</p>
       </div>
 

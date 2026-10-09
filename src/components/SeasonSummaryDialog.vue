@@ -40,7 +40,9 @@
 import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
-import { herDeclineLine, seasonLastWinterLine } from '../composables/declineVoice'
+import { declineRef, herDeclineLine, seasonLastWinterLine, seasonLastWinterRef } from '../composables/declineVoice'
+// ⭐ L3-6 (10.10): her line and the winter warning are drawn from their refs when the locale has them – the PICKS (which sentence, which count) are the composable's and did not move.
+import { eventText } from '../i18n'
 import { formatCentsCompact, formatCentsSignedCompact } from '../shared/money'
 import { LADDER_LABEL } from '../shared/protocol'
 import Card from './ui/Card.vue'
@@ -167,7 +169,8 @@ const herLine = computed(() => {
   const snap = game.snapshot
   const year = summary.value?.seasonYear
   if (!snap || year === undefined) return null
-  return herDeclineLine(snap.physicalShare, snap.seed, year)
+  const line = herDeclineLine(snap.physicalShare, snap.seed, year)
+  return line === null ? null : eventText({ text: line, c: declineRef(line) })
 })
 
 // ⭐⭐⭐ ROUND 40 #14b – HOW MANY WINTERS BEFORE THE LAST ONE, in the card's own reporting voice. The
@@ -185,7 +188,11 @@ const herLine = computed(() => {
 //
 // ⚠ AND IT DRAWS NOTHING, unlike the line above it: the count is a projection over persisted state,
 // so this card says the same thing every time it is opened.
-const lastWinterNote = computed(() => seasonLastWinterLine(game.snapshot?.lastWinterIn))
+const lastWinterNote = computed(() => {
+  const winters = game.snapshot?.lastWinterIn
+  const line = seasonLastWinterLine(winters)
+  return line === null ? null : eventText({ text: line, c: seasonLastWinterRef(winters) ?? undefined })
+})
 </script>
 
 <template>

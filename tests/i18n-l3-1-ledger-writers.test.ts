@@ -38,6 +38,8 @@ import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-ben
 import { DIARY_CLASS_B_KEYS } from './helpers/l3-4-diary-keys'
 // ⭐ L3-5 (10.10): the life beats' class-(b) keys, a list of their own (their net proves it is exactly what the life files spell)
 import { LIFE_CLASS_B_KEYS } from './helpers/l3-5-life-keys'
+// ⭐ L3-6 (10.10): the endings' and the album's class-(b) keys, a list of their own (their net proves it is exactly what the touched files spell)
+import { ENDING_CLASS_B_KEYS } from './helpers/l3-6-ending-keys'
 import { OWN_KEY_ROW as LIFE_OWN_KEY_ROW } from '../src/engine/world/lifeBeat/ownKeyCopy'
 import { LOSS_HER_LINE as LIFE_LOSS_HER_LINE, PAUSE_EVENT as LIFE_PAUSE_EVENT } from '../src/engine/world/lifeBeat/pregnancyCopy'
 import { LEAK_EVENT as LIFE_LEAK_EVENT } from '../src/engine/world/lifeBeat/leakCopy'
@@ -78,6 +80,10 @@ const NEW_KEYS: readonly string[] = [
   // PROMPT is assembled at SNAPSHOT time off the row's stamped facts and never stored, so no old save can hold these and the frozen v92 table has no entry. The list lives in tests/helpers/l3-5-life-keys.ts,
   // generated from the scan and held to it by tests/i18n-l3-5-life-beats.test.ts §1.
   ...LIFE_CLASS_B_KEYS,
+  // ⭐ L3-6 (10.10): THE ENDINGS AND THE ALBUM, CLASS (b) AS WELL – her last word (three sentences) and the plateau lede (four), the nine titles, the thirteen sentences behind the twelve detail fragments, the closing
+  // page's strings and the scroll's labels and details. The page and the record are assembled at SNAPSHOT time off `world.ending` and never stored; the fragments are stored once, NESTED in the params of the latch row
+  // (whose own key is the table's), so no old save holds one as a key. The list lives in tests/helpers/l3-6-ending-keys.ts, generated from the scan and held to it by tests/i18n-l3-6-endings-album.test.ts §1.
+  ...ENDING_CLASS_B_KEYS,
 ]
 
 /** Pieces a writer joins with `joinCopy` – never a sentence on their own, never emitted alone. §5 renders every assembled sentence against the table. */
@@ -470,6 +476,15 @@ const NOT_ISOMORPHIC: Record<string, string> = {
   // ⭐ L3-5 (10.10): the birth milestone – the text is the constant `BIRTH_EVENT` (which keeps its note in pregnancy.ts), c spells the same sentence as a `cp` key so the call site makes it a catalog key
   'src/engine/world/lifeBeat/pregnancy.ts::BIRTH_EVENT':
     'the text is the named constant, c is its sentence spelt as a whole-sentence `cp` key – tests/i18n-l3-5-life-beats.test.ts §7 reads the constant out of the source and holds it equal to that key (and to the table and the catalog).',
+  // ⭐ L3-6 (10.10) – four of the endings' eight sinks whose text is a helper's return or a named constant; each has the check that stands in, in tests/i18n-l3-6-endings-album.test.ts §4
+  'src/engine/world/endings.ts::`${ENDING_TITLE[ending.type]} – ${ending.detail}':
+    'the title is IN the table\'s key (nine keys), so c is `endingRowRef`, a switch of nine `cp` templates with the detail nested as a ref – l3-6 §3 renders the row for every output of every producer and checks the key against the table.',
+  'src/engine/world/endings.ts::offer.final // ⚠ HER AGE, NOT A CONSTANT (the lo':
+    'the final offer\'s row nests her last word as a REF (`lastWordRef`) where the text has the string (`lastWordLine`) – l3-6 §2 renders every count, §8 plays a career through the offers.',
+  'src/engine/world/endings.ts::leavingLine(door, view.temperament)':
+    'the text is the voice table\'s return, c is `leavingLineRef` (the same eight sentences as `cp` templates) – l3-6 §2 renders all eight, §4 drives both doors x four voices through the real step.',
+  'src/engine/world/endings.ts::RETURN_EVENT':
+    'the text is the named constant (its note quotes the owner, so it does not move), c spells the same sentence as a `cp` key – l3-6 §1 reads the constant out of the source and holds it equal to that key.',
   'src/engine/world/phaseAiWeek.ts::`🏆 ${playerShortName(world, championId)} won th':
     'the text appends `championNote(...)`, a helper that returns one of four clauses; c is `championRef` over the SAME `championClause` facts – l3-3 §4 renders all four against the text, and the twin plays them.',
 }
@@ -493,7 +508,8 @@ describe('§2 text / c pairs', () => {
     // + 20 (L3-4, part 1): the eighteen birthday heading lines, the gift event row, and `diaryLinePair`'s static pick (`{ text: pick.text, c: { k: pick.text } }`)
     // + 4 (L3-4, part 2): the travel scrap's two fallback sentences and its static pick, and the coach's pick (`weekNoteLine` returns `{ text, c: { k: text } }` by SHORTHAND – not a pair here)
     // + 12 (L3-5): the life beats' twelve sinks – the answer row, the two kept news rows, the ended-now row, the divorce row and its milestone, the leak, the key, the pause, the birth milestone, the loss, the wedding day
-    expect(all.length, 'pairs of text + c in src/engine').toBe(147)
+    // + 8 (L3-6): the endings' eight sinks – the latch row, the school row, the offer row, the return row, the leaving voice, the college place, turning professional, «one more year»
+    expect(all.length, 'pairs of text + c in src/engine').toBe(155)
   })
 
   it('every pair expands to the SAME sentences – each branch, each inlined ternary, the same holes in the same order – or is announced', () => {
@@ -562,8 +578,8 @@ const TEXT_ONLY: Record<string, number> = {
   // ⭐ L3-4 (10.10) CONVERTED 1 MORE: birthday.ts, the gift row (it was the only sink the brief gave this wave). 36 are left.
   // ⭐ L3-5 (10.10) CONVERTED 12 MORE – ALL THE LIFE BEATS': lifeBeat.ts 3 (the answer row, the two kept news rows), ended.ts 3 (the ended-now row, the divorce row, the divorce milestone), leak.ts 1, ownKey.ts 1,
   // pregnancy.ts 2 (the pause row, the birth milestone), weight.ts 1 (the loss row), wedding.ts 1 (the wedding-day milestone). 24 are left, and they are L3-6's and L3-7's.
+  // ⭐ L3-6 (10.10) CONVERTED 8 MORE – ALL THE ENDINGS': endings.ts 8 (the latch row, the school row, the offer row, the return row, the leaving voice, the college place, turning professional, «one more year»). 16 are left, all L3-7's.
   'src/engine/world/college.ts': 4, // L3-7 (RU-12F, the college engine feed) – the tuition row (money) is L3-1's and converted
-  'src/engine/world/endings.ts': 8, // L3-6
   'src/engine/world/injury.ts': 3, // L3-7 (RU-11J, the medical feed) – the two money rows (physio, medical) are L3-1's and converted
   'src/engine/world/knock.ts': 4, // L3-7
   'src/engine/world/phaseHerWeek.ts': 3, // L3-7 (RU-11J)
@@ -575,11 +591,11 @@ describe('§3 the writers still on `text` alone', () => {
     expect(sinks().bare, 'a count moved: a wave converted a sink (lower the number) or a NEW text-only writer appeared (decide it: convert it, or list it with the wave that owns it)').toEqual(TEXT_ONLY)
   })
 
-  it('the books close: 141 sinks (the L3-0 sweep\'s count), 117 of them converted (L3-1: 78, L3-3: 26, L3-4: 1, L3-5: 12), 24 left to L3-6..7', () => {
+  it('the books close: 141 sinks (the L3-0 sweep\'s count), 125 of them converted (L3-1: 78, L3-3: 26, L3-4: 1, L3-5: 12, L3-6: 8), 16 left to L3-7', () => {
     const { bare, converted } = sinks()
     const left = Object.values(bare).reduce((a, b) => a + b, 0)
-    expect(left, 'sinks still on `text` alone').toBe(24)
-    expect(converted, 'sinks that write `c`').toBe(117)
+    expect(left, 'sinks still on `text` alone').toBe(16)
+    expect(converted, 'sinks that write `c`').toBe(125)
     expect(converted + left, 'every sink there is').toBe(141)
   })
 

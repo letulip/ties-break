@@ -37,6 +37,10 @@ import type { CareerEnding, CareerEndingType, ForkAnswer, RetirementOffer } from
 // for ONE purpose and it is the only one it may ever be used for here – the WORDS she leaves in
 // (`leavingLine`). It reaches no gate; see that function's own note and `peakLeavingDue`'s.
 import type { Temperament } from './spirit'
+// ⭐ L3-6 (10.10): the endings' prose also leaves this leaf as CopyRefs, beside the English (the block at the foot of the file). `shared/i18n` is the zone both halves may import:
+// a template tag and a type, no dice, no clock, no locale.
+import { cp } from '../shared/i18n'
+import type { CopyParam, CopyRef } from '../shared/i18n'
 
 /** THE KNOBS. Every number here is either measured (`tools/endings-bench.ts`) or anchored in the
  *  contract; none of them is a difficulty setting. */
@@ -1197,4 +1201,196 @@ export const ENDING_TITLE: Record<CareerEndingType, string> = {
   // entitled to make. ⚠ IT ALSO HAS TO SURVIVE `latchEnding`'s FEED ROW, which concatenates this with
   // the detail: «She did not go back – 51 weeks without a new entry.»
   family: 'She did not go back',
+}
+
+// =============================================================================================================================================
+// ⭐ L3-6 (10.10) – THE ENDINGS' PROSE AS COPYREFS, BESIDE THE ENGLISH ABOVE (docs/specs/i18n-2026-10.md §8, row L3-6).
+//
+// Nothing above this line moved: not a character of `lastWordLine`, `plateauLede`, `leavingLine`, `ENDING_TITLE`, `ENDING_BLURB` or a detail template (invariant 4 – the endings are the game's most expensive
+// lines). Every function below returns the SAME sentence as its twin above as a `CopyRef`, so a screen can show it under the current locale (`eventText({ text, c })`) while every reader that compares or
+// pins the English keeps reading the English. `tests/i18n-l3-6-endings-album.test.ts` renders each ref against its twin for every branch and every count.
+//
+// ⚠ A COUNTED FORM IS A WHOLE SENTENCE PER FORM (the house rule): «time» / «times» are two keys, not one key with a word in a hole, and a Russian value is free to carry its own plural.
+// ⚠ NOTHING HERE DRAWS. These are pure functions of values the caller already holds.
+// =============================================================================================================================================
+
+/** Her last word as a ref – `lastWordLine`'s three shapes (no count, one, several), each a sentence of its own. The opening is part of every key: the owner's table maps the
+ *  whole statement per branch, not the opening apart from its tail. */
+export function lastWordRef(oneMoreYearCount: number): CopyRef {
+  if (oneMoreYearCount <= 0) {
+    return cp`Nobody asked her this time. She said it herself, and she said it steadily. This season was the last one.`
+  }
+  if (oneMoreYearCount === 1) {
+    return cp`Nobody asked her this time. She said it herself, and she said it steadily. You have said one more year ${oneMoreYearCount} time, and this season was the last one.`
+  }
+  return cp`Nobody asked her this time. She said it herself, and she said it steadily. You have said one more year ${oneMoreYearCount} times, and this season was the last one.`
+}
+
+/** The plateau card's lede as a ref – `plateauLede`'s four bands in `plateauLede`'s own order of tests (1, 2, 3 and over, and everything else as the shipped sentence). The table name is a param:
+ *  it is the ladder's own word, and no ladder-label localisation path exists yet. */
+export function plateauLedeRef(oneMoreYearCount: number, tableName: string): CopyRef {
+  if (oneMoreYearCount === 1) {
+    return cp`She brought it up before the airport this time. You have said one more year once already, and she has stopped pretending the next season is different. She would still play a year for you – she said that too.`
+  }
+  if (oneMoreYearCount === 2) {
+    return cp`She did not argue and she did not ask. She put the season on the table – where it started, where it ended – and waited. If you want another year, she will give you one more.`
+  }
+  if (oneMoreYearCount >= 3) {
+    return cp`This time she said it looking out of the window. You have said one more year ${oneMoreYearCount} times, and the ${tableName} table has not moved. She will not fight you on one more – but you both know what she wants.`
+  }
+  return cp`Three seasons on the ${tableName} table and it has not moved. If she cannot reach the top, she would rather go now – that is how she put it. She will keep playing if you want her to.`
+}
+
+/** The eight leaving voices as refs – `leavingLine`'s door x voice table, sentence for sentence. Each is a key of the frozen v92 table as it stands (the feed row they ride is `text: leavingLine(…)`). */
+export function leavingLineRef(door: 'peak' | 'fall', temperament: Temperament): CopyRef {
+  if (door === 'peak') {
+    switch (temperament) {
+      case 'fiery':
+        return cp`She said she was stopping at the top, and that was the whole conversation.`
+      case 'quiet':
+        return cp`She said she was stopping here, while it was still good, and she did not make a thing of it.`
+      case 'deep':
+        return cp`She said she had known for a while, and that she waited until the season was over so it would be finished and not just decided.`
+      case 'sunny':
+        return cp`She said she was going to go and have the rest of her life, and she sounded like someone with plans.`
+    }
+  }
+  switch (temperament) {
+    case 'fiery':
+      return cp`She said she was not going to be watched losing it back, and she said it once.`
+    case 'quiet':
+      return cp`She said she was stopping, and she said it as if it were something you already knew.`
+    case 'deep':
+      return cp`She said she had been turning it over all season, and that the season had only told her what she already thought.`
+    case 'sunny':
+      return cp`She said she was glad she had done it, and that she did not want to spend the next year getting it back.`
+  }
+}
+
+/** The epilogue's headline as a ref – `ENDING_TITLE`'s nine lines. A switch and not a record on purpose: `CareerEndingType`'s note counts the TOTAL records keyed on the union (a pin reads that
+ *  number), and the compiler's reminder that a tenth ending needs its copy is kept here by the exhaustive `never` below instead. */
+export function endingTitleRef(type: CareerEndingType): CopyRef {
+  switch (type) {
+    case 'stopped':
+      return cp`She stopped after school`
+    case 'college':
+      return cp`She went to college`
+    case 'bankruptcy':
+      return cp`The money ran out`
+    case 'injury':
+      return cp`The body stopped first`
+    case 'natural':
+      return cp`She played until she was done`
+    case 'plateau':
+      return cp`She had gone as far as she was going`
+    case 'peak':
+      return cp`She left at the top`
+    case 'fall':
+      return cp`She stopped after the fall`
+    case 'family':
+      return cp`She did not go back`
+    default:
+      return assertNever(type)
+  }
+}
+
+function assertNever(x: never): never {
+  throw new Error(`no title for ending ${String(x)}`)
+}
+
+/** A whole number written exactly as `String(n)` writes it, or null – the one reading that cannot change a byte on the way back out. */
+function wholeNumber(s: string | undefined): number | null {
+  return s !== undefined && /^\d+$/.test(s) && String(Number(s)) === s ? Number(s) : null
+}
+
+/** ⭐ THE STORED DETAIL, READ BACK AS WHAT IT IS – A SENTENCE WITH NUMBERS IN IT. `CareerEnding.detail` is persisted English (the twelve fragments the producers above write) and the numbers are
+ *  the only record of the facts, so the ref is rebuilt from the string by the closed set of shapes the producers write – the arrangement `composables/letterCopy.ts` makes for a letter's stored
+ *  phrases (L3-2). It needs no schema move and no new field on `CareerEnding`, and an ending latched by OLDER code reads the same way as one latched today. A wording this function does not know
+ *  (an older sentence, a hand-built probe) comes back as the stored STRING, which is what a row migrated from a pre-v93 save carries as its hole too: English stays English, nothing is lost, and
+ *  `tests/i18n-l3-6-endings-album.test.ts` proves that every producer's output is recognised. */
+export function endingDetailRef(ending: Pick<CareerEnding, 'type' | 'detail'>): CopyParam {
+  const d = ending.detail
+  switch (ending.type) {
+    case 'stopped':
+      if (d === 'she stopped when school ended, and nobody had to call it a failure') return cp`she stopped when school ended, and nobody had to call it a failure`
+      break
+    case 'college': {
+      const years = wholeNumber(/^(\d+) years of student tennis – no ranking points, and the family pays its share of each year$/.exec(d)?.[1])
+      if (years !== null) return cp`${years} years of student tennis – no ranking points, and the family pays its share of each year`
+      break
+    }
+    case 'bankruptcy': {
+      const weeks = wholeNumber(/^(\d+) weeks below zero – there was no next entry fee$/.exec(d)?.[1])
+      if (weeks !== null) return cp`${weeks} weeks below zero – there was no next entry fee`
+      break
+    }
+    case 'injury': {
+      const weeks = wholeNumber(/^(\d+) weeks already lost, and then this one$/.exec(d)?.[1])
+      if (weeks !== null) return cp`${weeks} weeks already lost, and then this one`
+      break
+    }
+    case 'natural': {
+      const age = wholeNumber(/^(\d+), and nobody had to ask her$/.exec(d)?.[1])
+      if (age !== null) return cp`${age}, and nobody had to ask her`
+      const one = wholeNumber(/^(\d+) more year after the first time she was asked$/.exec(d)?.[1])
+      if (one !== null) return cp`${one} more year after the first time she was asked`
+      const many = wholeNumber(/^(\d+) more years after the first time she was asked$/.exec(d)?.[1])
+      if (many !== null) return cp`${many} more years after the first time she was asked`
+      if (d === 'the first time she was asked, she said yes') return cp`the first time she was asked, she said yes`
+      break
+    }
+    case 'plateau': {
+      const seasons = wholeNumber(/^(\d+) seasons and the table would not move$/.exec(d)?.[1])
+      if (seasons !== null) return cp`${seasons} seasons and the table would not move`
+      break
+    }
+    case 'peak': {
+      const rank = wholeNumber(/^she was #(\d+) the week she said it$/.exec(d)?.[1])
+      if (rank !== null) return cp`she was #${rank} the week she said it`
+      if (d === 'a title at the top of the sport, and she went the same season') return cp`a title at the top of the sport, and she went the same season`
+      break
+    }
+    case 'fall': {
+      const m = /^#(\d+) to #(\d+) in one season$/.exec(d)
+      const from = wholeNumber(m?.[1])
+      const to = wholeNumber(m?.[2])
+      if (from !== null && to !== null) return cp`#${from} to #${to} in one season`
+      break
+    }
+    case 'family': {
+      const weeks = wholeNumber(/^(\d+) weeks without a new entry$/.exec(d)?.[1])
+      if (weeks !== null) return cp`${weeks} weeks without a new entry`
+      break
+    }
+  }
+  return d
+}
+
+/** ⭐ THE FEED ROW THE LATCH WRITES, as a ref: `${ENDING_TITLE[type]} – ${detail}.` is nine keys of the frozen v92 table (`She left at the top – {0}.` …, the title in the key, the detail a hole),
+ *  so a row written today and a row migrated out of an old save land on ONE key – the re-key law – and the detail nests as the ref `endingDetailRef` reads back. One case per ending, each a
+ *  `cp` template, so the key law's static scan reads all nine against the table. */
+export function endingRowRef(ending: Pick<CareerEnding, 'type' | 'detail'>): CopyRef {
+  const d = endingDetailRef(ending)
+  switch (ending.type) {
+    case 'stopped':
+      return cp`She stopped after school – ${d}.`
+    case 'college':
+      return cp`She went to college – ${d}.`
+    case 'bankruptcy':
+      return cp`The money ran out – ${d}.`
+    case 'injury':
+      return cp`The body stopped first – ${d}.`
+    case 'natural':
+      return cp`She played until she was done – ${d}.`
+    case 'plateau':
+      return cp`She had gone as far as she was going – ${d}.`
+    case 'peak':
+      return cp`She left at the top – ${d}.`
+    case 'fall':
+      return cp`She stopped after the fall – ${d}.`
+    case 'family':
+      return cp`She did not go back – ${d}.`
+    default:
+      return assertNever(ending.type)
+  }
 }
