@@ -342,8 +342,8 @@ describe('§1b the dynamic seats', () => {
       walkIn(fn)
     })
     sentences.push(SPARRING_RECEIPT, COOLHEAD_RECEIPT)
-    const missing = [...new Set(sentences)].filter((x) => !TABLE.has(x))
-    expect(missing, 'a sentence a dynamic seat can hold that no old save can hold').toEqual([])
+    const missing = [...new Set(sentences)].filter((x) => !TABLE.has(x) && !NEW_KEYS.includes(x))
+    expect(missing, 'a sentence a dynamic seat can hold that no old save can hold – a reworded pool line is a NEW sentence: list it in NEW_KEYS with the reason').toEqual([])
   })
 })
 
