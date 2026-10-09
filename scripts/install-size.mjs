@@ -45,8 +45,15 @@ const DIST = join(ROOT, 'dist')
 
 /** The owner's ruling of 29.08, in KiB. A CEILING, NOT AN EQUALITY, and that is the whole design:
  *  an exact pin goes red every time he repaints a court, which trains everybody to re-aim it
- *  without reading, and a pin nobody reads guards nothing. */
-const CEILING_KIB = 16 * 1024
+ *  without reading, and a pin nobody reads guards nothing.
+ *
+ *  ⭐ RAISED 16→18 MiB ON 09.10 BY THE RULING'S OWN ESCAPE CLAUSE. His standing word (29.08, and
+ *  restated in docs/specs/ru-typography-2026-09.md §T4): «это наше ограничение, мы его будем
+ *  неизбежно поднимать» – the ceiling moves when a real need meets it, «and a language is one».
+ *  The need met it: L3-0's frozen legacy-template table costs ~37 KiB and left 21 KiB for seven
+ *  more L3 waves plus the RU catalog and the P3 Cyrillic subsets (20–60 KB per face). Two MiB
+ *  covers the language with the same honest headroom the old ceiling gave the game. */
+const CEILING_KIB = 18 * 1024
 
 /**
  * Every distinct cache key the built worker will write, read out of its own manifest.
