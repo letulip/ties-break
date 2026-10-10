@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 168 dated entries, newest 2026-10-10. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 169 dated entries, newest 2026-10-10. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 7 | [FOURTH BATCH: THE SUPPORTS' REFUSALS BANK LIKE THE COACH'S, AT THEIR OWN SCALE](#02102026--fourth-batch-the-supports-refusals-bank-like-the-coachs-at-their-own-scale) | 2026-10-02 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 17 | [THE TARIFF IS HIS LEVER: J 1-2-3, W BY STAGE, THE SHOOT PAYS PER DAY](#02102026--the-tariff-is-his-lever-j-1-2-3-w-by-stage-the-shoot-pays-per-day) | 2026-10-02 |
-| general | 36 | [THE MORNING BATCH: THIRTEEN YELLOW WORDS WHOLESALE, FOUR RED RULINGS](#10102026--the-morning-batch-thirteen-yellow-words-wholesale-four-red-rulings) | 2026-10-10 |
+| general | 37 | [THE CONTAINER ARM JOINS THE PR GATE](#10102026--the-container-arm-joins-the-pr-gate) | 2026-10-10 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -6087,3 +6087,13 @@ documented. **34** – the nine ENDING_BLURB sentences get a home on the ending 
 нам это как-то в наш финальный экран можно гармонично встроить») – placement proposal with a
 screenshot, his live look before it stands. **14** – direction ruled: when the Russian prologue
 rows land, try spacing first («можно какими-то отступами исправить без вреда»).
+
+## 10.10.2026 – THE CONTAINER ARM JOINS THE PR GATE
+
+«Добавь пожалуйста в скилл Пулл реквеста проверку с контейнером перед отправкой и галочку для
+этого в тело запроса чтобы со следующих реквестов добавляли» – ruled after the day-long hunt
+ended with proof: the PR runner (ubuntu/x64, node 22) is a second deterministic family for the
+coach-curve transcendentals, and three CI reds taught it. The pull-request skill gains step 2c
+(the podman `linux/amd64` run of the platform-pinned nets, verdict from a sentinel file, the
+twin's linux fixture refreshed beside the darwin one on every ruled wording change) and the PR
+template gains its earned checkbox. CI re-run by the owner on cfe14017: green.

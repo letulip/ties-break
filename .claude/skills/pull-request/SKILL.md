@@ -62,6 +62,34 @@ a box it has not proven with a command in this session.
    ⚠ Read the exit code from the FILE. This suite finishes fast enough that a wrapper's "exit code 0"
    arrives before the run does – that notification lied four times in one session.
 
+2c. **⚠ THE CONTAINER ARM – the CI's platform family, checked BEFORE the runner sees it** (owner,
+   10.10: «добавь в скилл Пулл реквеста проверку с контейнером перед отправкой и галочку для этого
+   в тело запроса»). The lesson it encodes, measured that day: the PR runner (ubuntu/x64, node 22)
+   is a SECOND deterministic family for the coach-curve transcendentals – a last ulp is a cent, a
+   cent is a different quote, and the runner produced seven snapshot digests no arm64 Mac could,
+   three red CI runs in a row, until a podman capture matched all seven exactly and the twin grew a
+   per-family fixture. The platform-pinned nets (today: `tests/i18n-l3-7-twin.test.ts`, which picks
+   its fixture by `platform-arch` and REFUSES an unlisted family by name) therefore run in the CI's
+   own family locally, before every hand-off:
+
+       podman machine start
+       podman run --rm --platform linux/amd64 -v "$PWD":/src:ro -v /tmp:/out docker.io/library/node:22 \
+         bash -lc 'mkdir -p /w && cd /w && cp /src/package.json /src/package-lock.json . && \
+           cp -r /src/src /src/tests /src/tools /src/scripts . && \
+           cp /src/vite.config.ts /src/index.html /src/tsconfig*.json . && cp -r /src/public . ; \
+           npm ci --no-audit --no-fund --loglevel=error > /out/pr-container.log 2>&1 && \
+           npx vitest run tests/i18n-l3-7-twin.test.ts --project unit --reporter=dot >> /out/pr-container.log 2>&1; \
+           echo "CONTAINER_EXIT=$?" >> /out/pr-container.log'
+       podman machine stop
+
+   Read `CONTAINER_EXIT` from the FILE, mtime fresher than the start. ~10–15 min under qemu (npm ci
+   dominates) – the price of the runner never teaching the same lesson twice. ⚠ The copy into /w is
+   DELIBERATE: the host's node_modules are arm64 binaries, and mounting the repo read-only keeps the
+   container from ever writing into it. ⚠ A ruled wording change that refreshed the darwin twin
+   fixture must refresh `old-arm.linux-x64.json` in the SAME session (the capture command lives in
+   the twin's own header) – this arm is what catches a stale one before CI does. A new
+   platform-pinned net joins this command's vitest list by name, never silently.
+
 3. **The diff, read before described.** `git log --oneline main..HEAD` and
    `git diff --stat main...HEAD`. The What-section is written from what actually changed, not from
    memory: two sentences, the owner's numbering where the wave answered his items.
@@ -82,6 +110,9 @@ a box it has not proven with a command in this session.
      the truth: untouched → tick; moved → the 4 parts named in What, then tick.
    - *Sim* – step 2 ran it unconditionally; `TESTSIM_EXIT=0` from the file → tick, numbers into
      What when a corridor moved.
+   - *Platform-family container* – step 2c ran it; `CONTAINER_EXIT=0` from the file → tick. If a
+     wording ruling moved the darwin fixture this session, the tick also asserts the linux fixture
+     was refreshed beside it.
    A box whose command did not run in this session stays `[ ]`, with one line in What saying why –
    the checklist CI job will hold the merge, which is exactly its job.
 
