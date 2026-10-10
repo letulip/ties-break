@@ -15,3 +15,4 @@
 - [ ] Frozen MAIN capture verdict stated: unmoved (41550 / `e6b0c709`) – or the re-pin explained in **What**
 - [ ] Save schema untouched – or the full 4-part move named (version bump, append-only migration, golden fixture, `npm run e2e:fixtures`)
 - [ ] `npm run test:sim` green locally, exit code from a file – numbers in **What** when a corridor moved
+- [ ] Platform-family nets green in the CI's own container (podman `linux/amd64`, node 22 – the twin at least), exit code from a file
