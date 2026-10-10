@@ -165,6 +165,12 @@ const closing = computed(() => view.value?.closing ?? null)
 // record does not know (a hand-built snapshot) draws no line instead of throwing.
 const blurb = computed(() => {
   const type = view.value?.ending.type
+  // ⚠ THE OWNER, 10.10 («при 0 надо починить»): the natural blurb claims «for years she said one
+  // more», and a career whose first off-season answer ended it has no such years – at
+  // `oneMoreYearCount === 0` the sentence is false, so the line is not drawn rather than reworded
+  // by an agent. The count>0 voice question (who SAID it – settled: the parents) is his wording
+  // call, tracked in his pile; the words themselves stay his.
+  if (type === 'natural' && (view.value?.oneMoreYearCount ?? 0) === 0) return ''
   return type !== undefined && type in ENDING_BLURB ? t(ENDING_BLURB[type]) : ''
 })
 

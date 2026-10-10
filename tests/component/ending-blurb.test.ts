@@ -78,6 +78,12 @@ function pageOf(type: CareerEndingType, over: Partial<AlbumPage> = {}): AlbumPag
   }
 }
 
+// ⚠ 10.10 («при 0 надо починить»): a sweeping pose gives `natural` a refrain count – at count 0
+// its sentence is false and the page draws NO line, which the dedicated count-0 case pins.
+function posed(type: CareerEndingType): EndingView {
+  return viewOf(type, type === 'natural' ? { oneMoreYearCount: 3 } : {})
+}
+
 function viewOf(type: CareerEndingType, over: Partial<EndingView> = {}): EndingView {
   return {
     ending: { type, week: 900, ageYears: 31, detail: 'she stopped', resumesWeek: null },
@@ -124,7 +130,10 @@ describe('⭐ 10.10 §1 – every ending draws its own paragraph, the engine\'s 
 
   for (const type of TYPES) {
     it(`${type}: exactly one paragraph, and it is ENDING_BLURB.${type} – nothing composed, trimmed or marked up`, () => {
-      const w = mountEnding(viewOf(type))
+      // ⚠ 10.10 (owner: «при 0 надо починить») – `natural` mounts with a refrain count, because at
+      // count 0 its sentence («for years she said one more») is false and the page draws NO line;
+      // the dedicated case below pins that skip.
+      const w = mountEnding(posed(type))
       const lines = w.findAll('.album-blurb')
       // ⚠⚠ ARM A (the `<p>` deleted) goes red here on all nine: «expected [] to have a length of 1».
       expect(lines, 'one paragraph').toHaveLength(1)
@@ -135,6 +144,15 @@ describe('⭐ 10.10 §1 – every ending draws its own paragraph, the engine\'s 
       w.unmount()
     })
   }
+
+  it('⚠ 10.10 «при 0 надо починить»: a natural career that never heard «one more year» draws NO paragraph – the sentence would be false', () => {
+    const silent = mountEnding(viewOf('natural', { oneMoreYearCount: 0 }))
+    expect(silent.findAll('.album-blurb'), 'count 0: no line rather than a false one').toHaveLength(0)
+    silent.unmount()
+    const spoken = mountEnding(viewOf('natural', { oneMoreYearCount: 1 }))
+    expect(spoken.findAll('.album-blurb'), 'count 1: the line is back').toHaveLength(1)
+    spoken.unmount()
+  })
 
   it('⚠ HIS ROUND-48 #4 VOICE RULING («nothing credits her with saying one more year») holds for EIGHT of the nine paragraphs – the ninth, `natural`, is the named open exception', () => {
     // The engine's `natural` sentence – «… for years she said one more.» – predates the ruling and was left «for the owner's eye» (docs/rounds/round-48.md, item 4). It is his wording, so it is
@@ -147,7 +165,7 @@ describe('⭐ 10.10 §1 – every ending draws its own paragraph, the engine\'s 
     const drawn = TYPES.map((type) => {
       setActivePinia(createPinia())
       document.body.innerHTML = ''
-      const w = mountEnding(viewOf(type))
+      const w = mountEnding(posed(type))
       const text = w.get('.album-blurb').text()
       w.unmount()
       return text
@@ -168,7 +186,7 @@ describe('⭐ 10.10 §2 – under the title, over the fact, over the figures: th
     for (const type of TYPES) {
       setActivePinia(createPinia())
       document.body.innerHTML = ''
-      const w = mountEnding(viewOf(type))
+      const w = mountEnding(posed(type))
       // ⚠⚠ ARM C (the paragraph moved under `.album-fact`) goes red here: the order reads photo, title, fact, paragraph, date.
       expect(namesOf(w), type).toEqual(ORDER)
       w.unmount()
@@ -258,7 +276,7 @@ describe('⭐ 10.10 §4 – drawn through t(): the nine are catalog keys under a
     for (const type of TYPES) {
       setActivePinia(createPinia())
       document.body.innerHTML = ''
-      const w = mountEnding(viewOf(type))
+      const w = mountEnding(posed(type))
       // ⚠⚠ ARM B (the raw constant instead of `t(...)` of it) goes red here: the paragraph stays English under the probe locale.
       expect(w.get('.album-blurb').text(), type).toBe(`PROBE<${type}>`)
       expect(w.get('.album-why').text(), 'the title is the engine\'s page, not this seat\'s').toBe(ENDING_TITLE[type])
@@ -291,7 +309,7 @@ describe('⭐ 10.10 §4 – drawn through t(): the nine are catalog keys under a
       document.body.innerHTML = ''
       const expected = pseudoCatalog()[ENDING_BLURB[type]]
       expect(expected, `${type}: the sentence is a key of the pseudo catalog`).toBeDefined()
-      const w = mountEnding(viewOf(type))
+      const w = mountEnding(posed(type))
       expect(w.get('.album-blurb').text(), type).toBe(expected)
       expect(w.get('.album-blurb').text(), `${type}: not the English`).not.toBe(ENDING_BLURB[type])
       w.unmount()
@@ -312,7 +330,7 @@ describe('⭐ 10.10 §5 – the phone law: the paragraph pushes nothing off a 37
   for (const vp of [PHONE, NARROW_PHONE]) {
     for (const type of TYPES) {
       it(`${vp.width}x${vp.height} · ${type}: still the scrolling takeover, every control reachable, the paragraph inside the column – and the instrument sees it`, () => {
-        const w = mountEnding(viewOf(type), vp)
+        const w = mountEnding(posed(type), vp)
         const card = w.get('.ending-album').element
         const blurb = w.get('.album-blurb').element
         const controls = ['.ending-door-album', '.ending-door-start', '.ending-line', '.ending-dev'].map((selector) => w.get(selector).element)
@@ -365,7 +383,7 @@ describe('⭐ 10.10 §5 – the phone law: the paragraph pushes nothing off a 37
       for (const type of TYPES) {
         setActivePinia(createPinia())
         document.body.innerHTML = ''
-        const w = mountEnding(viewOf(type), vp)
+        const w = mountEnding(posed(type), vp)
         const card = w.get('.ending-album').element
         expect(flat(w.get('.album-blurb').text()).length, `${type}: xx made the paragraph longer`).toBeGreaterThan(ENDING_BLURB[type].length)
         expect(demandedWidth(w.get('.album-blurb').element, availableWidth(w.get('.album-blurb').element, vp))).toBeLessThanOrEqual(availableWidth(w.get('.album-blurb').element, vp))
