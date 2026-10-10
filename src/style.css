@@ -70,13 +70,16 @@
        selector, not :lang(ru): the two are the same on the root element, and the attribute form is the one the component
        project's happy-dom can evaluate – it does not implement :lang(), measured 10.10: matches(':lang(ru)') is false for
        lang="ru" – so the mounted smoke in tests/component/l4-1-ru-fonts.test.ts is a measurement and not a stand-in.)
-   ⚠ THE FILES DO NOT EXIST YET – graceful absence. public/fonts/manrope-cyr.woff2 and caveat-cyr.woff2 are generated from the
-   OFL sources by the commands in the spec's T3 section. Until they land a Russian session asks for them, gets a 404, and the
-   browser falls through the stack to the system face it uses today: nothing regresses, and `npm run fonts:probe` prints both
-   as ABSENT. When they land, public/fonts/README.md must name them (tests/legal-assets.test.ts), the OFL texts already travel
-   with both families, and the install ceiling is re-measured (scripts/install-size.mjs).
-   U+0301 (Google's cyrillic subset keeps it for stress marks) is deliberately NOT claimed: Latin text can reach it, and this
-   range is Cyrillic and nothing else. Add it the day a Russian string needs a stress mark. */
+   ✔ THE FILES LANDED (10.10) – the owner's ruling: the faces the app already ships, no new family, no stress mark.
+   public/fonts/manrope-cyr.woff2 and caveat-cyr.woff2 were cut from the OFL sources by the commands in the spec's T3 section
+   (13.3 KiB and 45.8 KiB), and `npm run fonts:probe` reads both as FULL: 66 of 66 Russian letters, the IO letters included.
+   Before they landed a Russian session asked for them, got a 404 and fell through the stack to the system face; the build printed
+   one "didn't resolve" line per file and tests/helpers/fontLedger.ts listed them – both are gone, and the ledger is empty.
+   public/fonts/README.md names the files (tests/legal-assets.test.ts), the OFL texts travel with both families, and
+   scripts/install-size.mjs re-measured the install (+59 KiB).
+   U+0301 (Google's cyrillic subset keeps it for stress marks) is deliberately NOT claimed, and the owner ruled 10.10 that Russian
+   copy needs no stress mark: Latin text can reach it, and this range is Cyrillic and nothing else. The files were cut without it, so
+   adding it later widens BOTH this range and the --unicodes list of the spec's T3 commands, and the files are cut again. */
 @font-face {
   font-family: 'Manrope';
   font-style: normal;

@@ -141,6 +141,16 @@ describe('L4-1 · the Cyrillic faces', () => {
     expect(sha('manrope-var.woff2')).toBe('e310b55a7fd9677f5e3555e6c6c4d064fa1f1d24393f0ddbe217cea12a8c432f')
     expect(sha('caveat-600.woff2')).toBe('1c591acdadd5ea398bad6aa21b36498dde59035ad366d1dbb05bbc0e537e7bc9')
   })
+
+  it('T3 landed (10.10): the two Cyrillic subsets are the bytes that were cut and probed – the full Russian alphabet, no stress mark', () => {
+    // The ledger above only says the files EXIST; what ties them to a verdict is their hash. `npm run fonts:probe -- --require-cyrillic
+    // public/fonts/manrope-cyr.woff2 public/fonts/caveat-cyr.woff2` read both as FULL at exactly these bytes: 66 of 66 Russian letters,
+    // both IO letters, the numero sign, and NOT U+0301 (the owner ruled no stress mark). A regenerated file moves this pin on purpose:
+    // re-run the probe, re-record the verdict in the spec's T3 landing note, then re-pin.
+    const sha = (file: string): string => createHash('sha256').update(readFileSync(join(ROOT, 'public/fonts', file))).digest('hex')
+    expect(sha('manrope-cyr.woff2')).toBe('7bbcbdcd3c933c941c90a759c869a9b4e8744b4a671f13aedc51b6ea7f86e819')
+    expect(sha('caveat-cyr.woff2')).toBe('d5de69c2591928679eceb8fb9315fecebbed4ba4ec1f7e74dad9357a6045756d')
+  })
 })
 
 describe('L4-1 · the heading seam', () => {

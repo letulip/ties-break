@@ -2,7 +2,7 @@
 type: spec
 status: current
 area: delivery
-last-reviewed: 2026-10-09
+last-reviewed: 2026-10-10
 ---
 
 # RU typography – the fonts before the words (P3 · gated on the RU decision, not on alpha)
@@ -106,7 +106,7 @@ pinned verbatim in `tests/i18n-l4-1-fonts.test.ts`. Added, in this order, right 
    and does nothing under English). Five mutation arms watched red (selector retargeted, body face dropped from the chain, a
    Cyrillic range removed, a Latin face edited, the seam block moved above the main token block) and the sheet restored byte-identical.
 
-**THE SHIPPED STATE IS GRACEFUL ABSENCE.** `manrope-cyr.woff2` and `caveat-cyr.woff2` are declared and are **not on disk**: this
+**THE SHIPPED STATE WAS GRACEFUL ABSENCE (superseded the same day, 10.10 – the files landed, see «T3 – LANDED» below).** `manrope-cyr.woff2` and `caveat-cyr.woff2` are declared and are **not on disk**: this
 machine has neither fontTools nor `pyftsubset` (`which pyftsubset`, `import fontTools` – both absent), and the brief allowed fetching
 the OFL sources only if the tooling was already here. Until the files land, a Russian session asks for them, gets a 404 and the
 browser falls through to the system face it uses today – nothing regresses. The absence is visible three ways: the build prints one
@@ -114,7 +114,7 @@ browser falls through to the system face it uses today – nothing regresses. Th
 `url()` unchanged, so under a `BASE_PATH` deploy the absent URL carries no base prefix – it 404s either way, and the next build
 after the files land rewrites it properly.)
 
-**THE MORNING COMMANDS (exact; run from the repository root; NOT RUN here – the brief allowed fetching the sources only where the
+**THE MORNING COMMANDS (exact; run from the repository root; ⭐ RUN 10.10 – the as-run record is under «T3 – LANDED» below; at the L4-1 commit they were NOT RUN here – the brief allowed fetching the sources only where the
 tooling was already installed, and it was not. A 404 from `curl` means the source file was renamed upstream: look in
 `https://github.com/google/fonts/tree/main/ofl/manrope`):**
 ```bash
@@ -143,6 +143,59 @@ whole split rests on was measured once in Chromium, with a scratch page of two `
 no range, the later with the Cyrillic range): see the line below.
 **The overlap measurement (10.10, Chromium 152.0.7977.130 – the desktop app's own pane; `l4-1-overlap-probe.html`, a scratch page that is not in the repository):** two `local()` faces under one family name – the first with no range, standing for the Latin file, the later with exactly this wave's Cyrillic `unicode-range` – against a control family holding the first face alone. At 100px the Latin word measured 301.03 px in the two-face family, in the first face alone and in the control: the later rule never touched Latin. The Cyrillic word measured 310.45 px in the two-face family, equal to the later face alone and different from the control's 361.23 px: the later rule won on the overlap. One mixed line measured 671.68 px, the sum of its two parts – one string, two faces. 8 of 8 checks. **Not measured: WebKit and Gecko.** The rule is the CSS Fonts one (the later rule wins on an overlap) and the standing trick for setting digits or one script in another face, but the app is a PWA and its likely phone is Safari, so the morning's real-browser look should include iOS.
 
+### ⭐ T3 – LANDED (10.10, the same day): the two files are on disk
+His ruling in chat, 10.10: «докачать для существующих добро, ударение не нужно, новых шрифтов не нужно» – the two faces the app already
+ships (Manrope and Caveat), no stress mark, no new family (Onest is dead). Sora has no Cyrillic upstream (T1) and gets none: a Russian
+heading sets its Cyrillic in Manrope through the `--font-heading-cyr` seam, which is what the seam's default always said.
+
+**As run.** The venv and both downloads lived in a scratch directory outside the repository. `python -I -m fontTools.subset` and
+`python -I -m fontTools.varLib.instancer` are the entry points that `pyftsubset` and `fonttools varLib.instancer` name (`-I` because the
+interpreter was reading downloaded files). The outputs were cut into a scratch directory first and copied into `public/fonts/` only after
+a baseline build, so that build measured the tree without them. Every flag is the morning commands' above:
+```bash
+python3 -m venv $VENV && $VENV/bin/python -m pip install fonttools brotli      # fonttools 4.66.1, brotli 1.2.0
+curl -sSLf -o Manrope.ttf 'https://github.com/google/fonts/raw/main/ofl/manrope/Manrope%5Bwght%5D.ttf'   # 164,700 B · Version 4.505 · sha256 3ae11c49…
+curl -sSLf -o Caveat.ttf  'https://github.com/google/fonts/raw/main/ofl/caveat/Caveat%5Bwght%5D.ttf'    # 403,648 B · Version 2.000 · sha256 0bdb6b66…
+$PY -I -m fontTools.subset Manrope.ttf --unicodes='U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116' \
+  --layout-features='*' --flavor=woff2 --output-file=manrope-cyr.woff2
+$PY -I -m fontTools.varLib.instancer Caveat.ttf wght=600 -o Caveat-600.ttf
+$PY -I -m fontTools.subset Caveat-600.ttf --unicodes='U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116' \
+  --layout-features='*' --flavor=woff2 --output-file=caveat-cyr.woff2
+```
+(`$PY` is the venv's python. The `--unicodes` list is the CSS `unicode-range` verbatim, and **U+0301 is in neither file**: upstream Caveat
+carries it (upstream Manrope does not), and the cut dropped it with everything else outside the list. To add a stress mark later, widen
+the range AND this list and cut again.)
+
+| file | bytes | glyphs | code points | axes | Russian letters | U+0301 | sha256 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `manrope-cyr.woff2` | 13,604 | 160 | 99 | wght 200..800, variable | 66 of 66, both IO | absent | `7bbcbdcd…` |
+| `caveat-cyr.woff2` | 46,868 | 319 | 101 | static, wght 600 | 66 of 66, both IO | absent | `d5de69c2…` |
+
+- **The probe.** `npm run fonts:probe -- --require-cyrillic public/fonts/manrope-cyr.woff2 public/fonts/caveat-cyr.woff2` exits 0, both
+  FULL. The plain `npm run fonts:probe` reads five files: Cyrillic FULL 2 / NONE 3 (the three Latin files, bytes untouched) and
+  «declared but absent on disk: none». The build prints no «didn't resolve at build time» line (it printed two before).
+- **Metrics.** Each new file's `unitsPerEm`, `hhea` and `OS/2` vertical metrics equal the Latin face it pairs with (Manrope 2000 ·
+  2132/-600/0 · win 2132/600; Caveat 1000 · 960/-300/0 · win 974/315), read with fontTools off the shipped and the new files, so a line
+  that mixes the two files of one family keeps its height.
+- **Two small facts, both harmless.** Upstream Manrope `main` is Version 4.505 and the Latin file we ship (gstatic) is 4.504 – same
+  metrics, same axis range; the Latin file was not touched, so English stays byte-identical. And upstream Manrope has no U+04B0-04B1
+  (Kazakh letters), so its range claims two code points its file does not carry; the browser moves to the next family for them.
+- **A real engine, not happy-dom** (Chromium from the repo's Playwright, `@playwright/test` ^1.62.1, cached build 1234; the built `dist/` stylesheet and fonts served to a probe page; the
+  script is a scratch file, not in the repository; the Russian sample is a six-letter word, both IO letters and the numero sign, built
+  from code points). Under `lang="en"` with Latin text and under `lang="ru"` with Latin text the browser requested the three Latin files
+  and **no `-cyr` file** – the `unicode-range` gate holds under Russian too. Under `lang="ru"` with Cyrillic text it fetched
+  `manrope-cyr.woff2` and `caveat-cyr.woff2` (200) and reported both Cyrillic-range faces `loaded`. With the two files blocked the
+  rendered widths of the body, heading and hand lines all changed (132.2 → 130.17, 190.13 → 188.61 and 125.81 → 152.81 px), so the
+  glyphs on screen come from the new files. The heading token resolved to `Sora, Manrope, Manrope, system-ui…`: a Russian heading's
+  Cyrillic is Manrope's.
+- **The checklist, ticked.** (1) done – both entries are off `GRACEFUL_ABSENT_FONTS` (the ledger is empty; the unit net's ledger test went
+  red on the landing, as designed, and is green again). One more pin moved and was re-aimed in the open: `round29p2-offline-install`'s font
+  count 3 → 5, with a dated note (its real claim, every font file is in the install, did not move). A new unit pin ties the two files to
+  this verdict by sha256, so a regenerated file moves it on purpose. The mounted net (`l4-1-ru-fonts`) pins nothing about absence – it
+  reads the sheet's declarations, not the disk – and needed no move. (2) done – two rows and a note in `public/fonts/README.md`. (3) the
+  install ceiling is re-measured (below); the full `npm run check` belongs to the gate session. (4) Chromium done as above;
+  **not measured: WebKit and Gecko – iOS Safari is the owner's look**, as the overlap measurement already said.
+
 ## T4 · The bytes, measured
 Cyrillic subsets cost roughly 20–60 KB per face woff2. Measured against the install ceiling by
 `scripts/install-size.mjs` before shipping; his standing ruling applies – «это наше ограничение,
@@ -161,3 +214,16 @@ is one.
 The wiring costs 0.6 kB of CSS and no precache entry (an absent file is not in the manifest). The two subsets, when they land, are
 the only real cost: the projection is **+117 KiB at the worst case, 6 % of the headroom**, and the ceiling does not move for them.
 The real figures replace the projection in the morning's `npm run check`.
+
+### ⭐ T4 – MEASURED AGAIN WITH THE FILES ON DISK (10.10)
+`node scripts/install-size.mjs` after `vite build`, one tree, the two files absent and then present (HEAD `c05076ee`). The baseline was
+re-measured rather than recalled: other commits had added 8 KiB since the table above.
+
+| | install | precache entries | headroom under 18,432 KiB | CSS bundle |
+| --- | --- | --- | --- | --- |
+| files absent | 16,424 KiB | 364 | 2,008 KiB | 218.65 kB (38.67 gz) |
+| files on disk | 16,483 KiB | 366 | 1,949 KiB | 218.65 kB (38.67 gz) – the same hashed file |
+
+**+59 KiB** (13,604 + 46,868 = 60,472 B), two precache entries and not one CSS byte: half of the +117 KiB the worst-case projection
+allowed, 2.9 % of the headroom, and the ceiling does not move. Both files are in `dist/sw.js`'s precache manifest, so the Russian type
+works offline.
