@@ -60,6 +60,41 @@ const TABLE = new Set(allTemplateKeys())
  *  requirement keys are the SAME spellings `composables/letterCopy.ts` gives the season notice's stored phrases (`All {0} {1}` / `All {0} {1}s` / `{0} of the {1} {2}s`), so the popup
  *  and the letter are one translation. */
 const NEW_KEYS: readonly string[] = [
+  // ⚠ 10.10 (L3-7b, the SaveFileError typing): the 31 refusal sentences are TRANSPORT-ONLY –
+  // they ride the worker reply beside the code and are never stored into a save, so no old
+  // save can hold them and no v92 spelling exists to re-key to. Byte-identity of the shown
+  // English is pinned by tests/i18n-l3-7-save-file-errors.test.ts §1 (571 refusals, char for char).
+  'Not a Tennis Sim save file',
+  'Save checksum mismatch: data is corrupted',
+  'Save schema {0} is newer than supported {1}',
+  'This file is too large to be a save ({0} MB – the limit is {1} MB)',
+  'This save file could not be upgraded – {0}',
+  'This save file expands far beyond any real career – refusing to unpack it',
+  'This save file is cut short – it is smaller than its own header',
+  'This save file is damaged – it declares an impossible save version',
+  'This save file is damaged – its contents cannot be read',
+  'This save file is damaged – its header and its data disagree about the save version',
+  'This save file is malformed – "{0}" {1}',
+  'This save file is malformed – it does not contain a career',
+  'This save file is malformed – {0}',
+  'This save is from a newer version of the game (schema v{0}, this build reads up to v{1}) – update the app, then import it',
+  'is longer than {0} characters',
+  'is out of range',
+  'it contains a non-finite number',
+  'it contains an implausibly long field name',
+  'it contains an implausibly long text field',
+  'it contains more data points than any career can hold',
+  'its data nests deeper than any save the game writes',
+  'must be a list',
+  'must be a non-empty text',
+  'must be a whole number between {0} and {1}',
+  'must be the trophies ledger',
+  'must carry a valid RNG position',
+  'must carry the career totals',
+  'must carry the on-ramp latches',
+  'must carry the player profile',
+  'must carry the weekly plan',
+  'one of its lists is implausibly long',
   'All {0} {1}',
   'All {0} {1}s',
   '{0} of the {1} {2}s',

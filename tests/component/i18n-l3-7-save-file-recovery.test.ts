@@ -23,21 +23,10 @@ import { gz } from '../helpers/sfe-corpus'
 import type { CareerMeta, ToUI } from '../../src/shared/protocol'
 import { installMemoryStorage } from './setup'
 
-// the same two shims tests/component/round36-boot-refusal.test.ts carries, for the same reasons (HomeScreen reads localStorage at setup; the transport is scripted, no worker is spawned)
-const backing = new Map<string, string>()
-Object.defineProperty(globalThis, 'localStorage', {
-  configurable: true,
-  value: {
-    getItem: (k: string) => (backing.has(k) ? backing.get(k)! : null),
-    setItem: (k: string, v: string) => void backing.set(k, String(v)),
-    removeItem: (k: string) => void backing.delete(k),
-    clear: () => backing.clear(),
-    key: (i: number) => [...backing.keys()][i] ?? null,
-    get length() {
-      return backing.size
-    },
-  },
-})
+// ⚠ 10.10 – the storage shim is installMemoryStorage() alone (called in beforeEach below): the
+// T5.14 shrink-only ratchet refuses a NEW file that spells the block itself, and this file briefly
+// carried both – the hand-rolled copy was dead weight over the shared one.
+const store = installMemoryStorage()
 vi.mock('../../src/worker/client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../src/worker/client')>()
   return { ...actual, request: vi.fn() }
@@ -75,11 +64,10 @@ async function bootWith(loadCareerReply: () => ToUI): Promise<{ wrapper: VueWrap
 const errors = (w: VueWrapper): string[] => w.findAll('.recovery-screen .error').map((p) => p.text().replace(/\s+/g, ' ').trim())
 
 beforeEach(() => {
-  installMemoryStorage()
   resetI18nForTests(null)
   setActivePinia(createPinia())
   mockRequest.mockReset()
-  backing.clear()
+  store.backing.clear()
   document.body.innerHTML = ''
 })
 afterEach(() => {

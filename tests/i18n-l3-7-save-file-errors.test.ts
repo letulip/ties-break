@@ -91,7 +91,7 @@ describe.runIf(!!target)('CAPTURE – the outcome of every variant, on whatever 
     mkdirSync(dirname(target!), { recursive: true })
     writeFileSync(target!, JSON.stringify(fixture, null, 1) + '\n')
     expect(Object.keys(refused).length).toBeGreaterThan(100)
-  }, 120_000)
+  }, 60_000)
 })
 
 describe.skipIf(!!target)('the save-file refusals', () => {
@@ -103,7 +103,7 @@ describe.skipIf(!!target)('the save-file refusals', () => {
     fixture = JSON.parse(readFileSync(FIXTURE, 'utf8')) as Fixture
     variants = await buildVariants()
     for (const v of variants) outcomes.set(v.id, await runVariant(v))
-  }, 120_000)
+  }, 60_000)
 
   describe('§1 byte-identical – the English, the code and the class of every refusal are the pre-wave tree\'s', () => {
     it('the corpus is the corpus the capture ran (no variant dropped, none added without a re-capture)', () => {
@@ -240,7 +240,7 @@ describe.skipIf(!!target)('the save-file refusals', () => {
         checked++
       }
       expect(checked).toBeGreaterThan(10)
-    }, 120_000)
+    }, 60_000)
 
     it('a file the codec accepts and the worker cannot read comes back as the same «contents cannot be read» sentence, typed (the worker\'s own two nets)', async () => {
       const unreadable = fixture.refused['file:gzip-of-not-json']!
