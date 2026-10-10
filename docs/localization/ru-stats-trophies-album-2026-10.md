@@ -495,7 +495,6 @@ The parent-written `note`, `caption` and loose `line` corpus is drafted separate
 | RU07-RH02 | `Her best 18 results from the last 52 weeks. She appears on it after 3 scoring tournaments, or 10 points.` | |
 | RU07-RH03 | `Her best 6 Junior Tour results from the last 52 weeks.` | |
 | RU07-RH04 | `Her best 6 results from the last 52 weeks.` | |
-| RU07-RH05 | `How ranking points work` | |
 | RU07-RH06 | `National points are what open her next tier. The Junior Tour reads her international rank.` | |
 | RU07-RH07 | `Nothing here until she plays a Junior Tour event – national results do not count towards this ranking.` | |
 | RU07-RH08 | `Nothing here until she plays a W-series event – junior points do not cross over.` | |

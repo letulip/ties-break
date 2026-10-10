@@ -81,7 +81,6 @@ one preference. Phone LQA must cover pill width and the long Russian hint.
 | heading | `About` | `О приложении` |
 | table accessible name | `About this app` | `Сведения о приложении` |
 | product row | `App` | `Приложение` |
-⚙ 10.10 (hint pass): the product value is the PAIR of identity keys `Ties Break` + `Ace Parent` (§9.5, both APPROVED in RU-02); the old composite row could not be one literal and is retired to this note.
 | versioned save row | `Save schema` | `Версия сохранения` |
 | seed row | `Seed` | `Код карьеры` |
 | seed button title | `Copy seed` | `Скопировать код карьеры` |
@@ -91,6 +90,8 @@ one preference. Phone LQA must cover pill width and the long Russian hint.
 | issues link | `GitHub Issues` | `Сообщить о проблеме на GitHub` |
 | build footer, `buildInfo.ts` | `Build {sha} · {YYYY-MM-DD} · save schema v{schema}` | `Сборка {sha} · {date} · формат сохранения v{schema}` |
 | build fallback, `buildInfo.ts` | `unknown` | `неизвестно` |
+
+⚙ 10.10 (hint pass): the product value is the PAIR of identity keys `Ties Break` + `Ace Parent` (§9.5, both APPROVED in RU-02); the old composite row could not be one literal and is retired to this note.
 
 The seed value and schema version are technical identifiers, not English prose. Keep seed
 copyable. The privacy link currently points to an English `PRIVACY.md` on GitHub; a Russian

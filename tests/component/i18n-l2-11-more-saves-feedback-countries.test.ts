@@ -754,13 +754,18 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
     expect(CATALOG.keys.Skip?.home).toEqual(['src/components/TournamentFlow.vue'])
     expect(CATALOG.keys['view|Skip']?.home).toEqual(['src/composables/matchDefaults.ts'])
     // `Full` and `Key` agree with RU-08's compact words, so they SHARE the viewer's keys
-    const viewer = cellsOf('ru-match-viewer-commentary-2026-10.md', 'Every point` / `Full')
-    expect(pills[0]).toBe(viewer[2])
-    const viewerKey = cellsOf('ru-match-viewer-commentary-2026-10.md', 'Key points only` / `Key')
-    expect(pills[1]).toBe(viewerKey[2])
-    // …and the three FULL titles on the settings pills are RU-08's own words (the settings row's cell says so: «(RU-08)»)
+    // ⚠ 10.10 RE-AIMED: the viewer's composite rows («Every point` / `Full» with a compact column)
+    // were split into one row per real key by the hint pass, so the compact word reads from its own
+    // row's Russian cell now – the same value, a different shelf.
+    const viewer = cellsOf('ru-match-viewer-commentary-2026-10.md', 'Full` – compact toggle')
+    expect(pills[0]).toBe(viewer[1])
+    const viewerKey = cellsOf('ru-match-viewer-commentary-2026-10.md', 'Key` – compact toggle')
+    expect(pills[1]).toBe(viewerKey[1])
+    // …and the three FULL titles on the settings pills are RU-08's own words (the settings row's cell says so: «(RU-08)») – read from the split FULL-word rows since 10.10
     const titles = parts(cellsOf('ru-play-about-settings-2026-10.md', 'pill titles')[2]!.replace(' (RU-08)', ''))
-    expect(titles.slice(0, 2)).toEqual([viewer[1], viewerKey[1]])
+    const viewerFull = cellsOf('ru-match-viewer-commentary-2026-10.md', 'Every point` – full word')
+    const viewerKeyFull = cellsOf('ru-match-viewer-commentary-2026-10.md', 'Key points only` – full word')
+    expect(titles.slice(0, 2)).toEqual([viewerFull[1], viewerKeyFull[1]])
     expect(titles[2]).toBe(rowsFor('Skip to the result')[0]!.russian)
     // the speed words are the same compact forms in both tables
     const speeds = parts(cellsOf('ru-play-about-settings-2026-10.md', 'speed pills')[2]!)

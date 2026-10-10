@@ -636,23 +636,18 @@ records RU-07 and worker-event history RU-11.
 | RU04-SW01 | `Academy covered` | |
 | RU04-SW02 | `Best result` | |
 | RU04-SW03 | `Earned this season` | |
-| RU04-SW04 | `Family's portfolio` | |
 | RU04-SW05 | `Final {0} rank` | |
-| RU04-SW06 | `Funds this season` | |
-| RU04-SW07 | `Holdings and upkeep` | |
 | RU04-SW08 | `Lost to injury` | |
 | RU04-SW09 | `Matches` | |
 | RU04-SW10 | `Money` | |
 | RU04-SW11 | `No result counted on that table this season. Her other standings are on the Stats tab.` | |
 | RU04-SW12 | `Off-season now: rest, family time, and the block where next year gets built.` | |
 | RU04-SW13 | `Off-season now: rest, school, family time.` | |
-| RU04-SW14 | `Portfolio growth` | |
 | RU04-SW15 | `Ranking` | |
 | RU04-SW16 | `Record` | |
 | RU04-SW17 | `Season points` | |
 | RU04-SW18 | `Season {0} · wrap-up` | |
 | RU04-SW19 | `She has not played a Junior Tour event yet. Her national standing is on the Stats tab.` | |
-| RU04-SW20 | `Sold at a loss` | |
 | RU04-SW21 | `Spent this season` | |
 | RU04-SW22 | `That's a season.` | |
 | RU04-SW23 | `Tournaments entered` | |

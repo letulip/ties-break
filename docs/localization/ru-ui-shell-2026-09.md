@@ -159,7 +159,6 @@ English one is exactly who the prompt is for). The two language names are the la
 | id | English | Russian |
 | --- | --- | --- |
 | RU01-RD01 | `In the account` | |
-| RU01-RD02 | `My entries` | |
 | RU01-RD03 | `{0} /wk` | |
 | RU01-RD04 | `{0} committed` | |
 | RU01-RD05 | `{0} weekly cap` | |
