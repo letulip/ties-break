@@ -1608,7 +1608,7 @@ function reopenTour(): void {
     <p class="hint">
       {{ t("The browser refused to open this game's storage – this can happen in private browsing, when disk is full, or after a browser update.") }}
     </p>
-    <p v-if="game.initError" class="error">{{ game.initError }}</p>
+    <p v-if="game.initError" class="error">{{ errorText(game.initErrorCode, game.initError, game.initErrorC) }}</p>
     <div class="recovery-actions">
       <button class="primary" :disabled="game.busy" @click="game.retryInit()">{{ t('Retry') }}</button>
       <button :disabled="game.busy" @click="recoveryFileInput?.click()">{{ t('Import a save file') }}</button>
@@ -1616,7 +1616,7 @@ function reopenTour(): void {
     </div>
     <input ref="recoveryFileInput" type="file" accept=".tsave" hidden @change="onRecoveryImportPicked" />
     <p v-if="game.saveOp?.op === 'import' && game.saveOp.status === 'error'" class="error">
-      {{ errorText(game.saveOp.code, game.saveOp.message ?? '') }}
+      {{ errorText(game.saveOp.code, game.saveOp.message ?? '', game.saveOp.c) }}
     </p>
     <p class="hint">
       {{ t('Nothing has been deleted – if storage comes back, your careers will still be here.') }}

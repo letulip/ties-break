@@ -161,7 +161,10 @@ describe('§4 through the real worker the reply carries the code beside the sent
   })
 })
 
-describe('§5 the fallback – an unknown code, no code, and a code with variable detail print the raw message', () => {
+// ⭐ L3-7 CLOSE-OUT (10.10) – THIS ARM STILL HOLDS, AND ITS SUBJECT IS NARROWER NOW. The seven save-file KINDS used to be «codes with variable detail» whose messages always printed raw; their sentences now ride beside
+// the kind as a ref (`ErrorReply.c`) and are drawn through the catalog – tests/i18n-l3-7-save-file-errors.test.ts proves that. What is asserted here is the other half, unchanged: a BARE kind – a code with no ref
+// beside it (the one raw lower-layer message of saveCodec.ts `asCorrupted`, or a reply from a build before the ref existed) – names no sentence, so the message is printed as the engine wrote it.
+describe('§5 the fallback – an unknown code, no code, and a code with no sentence of its own (INVALID_COMMAND, a bare save-file kind) print the raw message', () => {
   it('raw it stays', () => {
     resetI18nForTests(null)
     expect(errorText(undefined, 'Some sentence')).toBe('Some sentence')

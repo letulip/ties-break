@@ -53,9 +53,9 @@ const props = defineProps<{
 
 const game = useGameStore()
 
-// ⭐ L3-7 (10.10): the sentence is the store's `error` read THROUGH ITS CODE (`errorText`): a known code is the `t()` of that very sentence, an unknown or absent one is the raw `error` as before. The `except`
+// ⭐ L3-7 (10.10; and, for a refused save file, its sentence `errorC` beside the code – the L3-7 close-out): the sentence is the store's `error` read THROUGH ITS CODE (`errorText`): a known code is the `t()` of that very sentence, an unknown or absent one is the raw `error` as before. The `except`
 // comparison stays on the raw sentence – it asks whether this is the one the Saves strip already printed, which is a fact about the sentence and not about the language.
-const shown = computed(() => (game.error && game.error !== props.except ? errorText(game.errorCode, game.error) : ''))
+const shown = computed(() => (game.error && game.error !== props.except ? errorText(game.errorCode, game.error, game.errorC) : ''))
 
 // T7.0: the Reload label is the STORE's (SAVE_CONFLICT_RELOAD_LABEL) – this file renders what the store owns, no wording of its own.
 // ⚠⚠ THE BUTTON IS INSIDE THE `<p>` AND THE `<p>` STAYS THE ONLY ROOT, ON PURPOSE: Vue hands a parent's scoped-style attribute to a

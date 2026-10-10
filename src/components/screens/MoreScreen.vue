@@ -745,7 +745,7 @@ const TAB_OPTIONS = computed(() => [
       {{ t('{0} – done', [OP_LABEL[game.saveOp.op]]) }}
     </p>
     <p v-else-if="game.saveOp?.status === 'error'" class="error save-op-row">
-      {{ t('{0} failed – {1}', [OP_LABEL[game.saveOp.op], errorText(game.saveOp.code, game.saveOp.message ?? '')]) }}
+      {{ t('{0} failed – {1}', [OP_LABEL[game.saveOp.op], errorText(game.saveOp.code, game.saveOp.message ?? '', game.saveOp.c)]) }}
       <button
         v-if="retrySaveAction"
         class="link"

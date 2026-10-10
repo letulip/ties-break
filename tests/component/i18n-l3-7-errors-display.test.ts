@@ -10,6 +10,9 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import StoreError from '../../src/components/ui/StoreError.vue'
 import { CommandRejected, useGameStore } from '../../src/stores/game'
+import { guardCompressedSize, guardDeclaredShape, MAX_COMPRESSED_BYTES, SaveFileError } from '../../src/engine/saveGuard'
+import { SAVE_SCHEMA_VERSION } from '../../src/engine/world'
+import { isCopyRef, renderCopyRef, SOURCE_LOCALE, type CopyRef } from '../../src/shared/i18n'
 import { installCatalog, resetI18nForTests, setLocale } from '../../src/i18n'
 import { installMemoryStorage } from './setup'
 
@@ -24,10 +27,10 @@ const RU: Record<string, string> = {
   'The simulation crashed. Try again, or reopen the app to continue.': 'CRASHED*',
 }
 
-async function refuse(code: ConstructorParameters<typeof CommandRejected>[1], message: string) {
+async function refuse(code: ConstructorParameters<typeof CommandRejected>[1], message: string, c?: CopyRef) {
   const game = useGameStore()
   await game.run(async () => {
-    throw new CommandRejected(message, code)
+    throw new CommandRejected(message, code, undefined, c)
   })
   return game
 }
@@ -137,5 +140,102 @@ describe('L3-7 – the store keeps the code beside the sentence, and StoreError 
       throw new Error('The disk said no (E-1)')
     })
     expect(game.saveOp).toEqual({ op: 'export', status: 'error', message: 'The disk said no (E-1)' })
+  })
+})
+
+// ===================================================================================================================
+// THE L3-7 CLOSE-OUT (10.10): a refused SAVE FILE rides with its sentence – the kind in `code`, the sentence as a ref in `c`
+// ===================================================================================================================
+// The refusals are the ENGINE'S OWN (the real guards throw them – no sentence is typed here, invariant 4); the "translations" are numbered ASCII probes.
+// ⚠ PROVEN TO BE ABLE TO FAIL (10.10): `StoreError`'s `errorText(game.errorCode, game.error, game.errorC)` put back to the two-argument call -> the Russian arms go red; the store's `this.errorC = err.c` line removed -> the
+// same; a stale ref (the first sentence's, left in `errorC` when the next refusal has none) is the raw message because `errorText` checks the ref against the message.
+function refusal(run: () => void): SaveFileError {
+  try {
+    run()
+  } catch (e) {
+    if (e instanceof SaveFileError) return e
+  }
+  throw new Error('the guard accepted what this arm needs it to refuse')
+}
+const SPINE_BAD = (): SaveFileError => refusal(() => guardDeclaredShape({ schemaVersion: SAVE_SCHEMA_VERSION, seed: 'x', week: -1 }, SAVE_SCHEMA_VERSION))
+const TOO_BIG_BYTES = MAX_COMPRESSED_BYTES * 2 + 1_234_567
+const TOO_BIG = (): SaveFileError => refusal(() => guardCompressedSize(TOO_BIG_BYTES))
+
+describe('L3-7 close-out – the store keeps the sentence beside the kind, and StoreError draws it', () => {
+  it('the store holds `errorC` beside `errorCode`; English prints the engine\'s own message; a refusal with no ref clears it, so a ref never outlives its sentence', async () => {
+    const big = TOO_BIG()
+    expect(isCopyRef(big.c)).toBe(true)
+    const game = await refuse(big.code, big.message, big.c)
+    expect(game.errorCode).toBe('oversized')
+    expect(game.errorC).toEqual(big.c)
+    const w = mount(StoreError)
+    expect(shown(w)).toBe(big.message)
+    w.unmount()
+    // the next refusal has no ref (a plain engine sentence): `run` resets the ref with the sentence
+    await refuse('offer-gone', 'That offer has already gone.')
+    expect(game.errorC).toBeNull()
+    expect(game.errorCode).toBe('offer-gone')
+  })
+
+  it('Russian (a probe catalog): the frame, the holes and the nested clause – each key of the engine\'s own ref – print translated; the engine\'s English is gone from the card', async () => {
+    const bad = SPINE_BAD()
+    const frame = bad.c as CopyRef
+    const clause = (frame.p ?? []).find(isCopyRef) as CopyRef
+    const big = TOO_BIG()
+    installCatalog('ru', { ...RU, [frame.k]: 'MALFORMED<{0}|{1}>', [clause.k]: 'BETWEEN<{0}|{1}>', [(big.c as CopyRef).k]: 'BIG<{0}|{1}>' })
+    await setLocale('ru')
+    await refuse(bad.code, bad.message, bad.c)
+    let w = mount(StoreError)
+    expect(shown(w)).toBe('MALFORMED<week|BETWEEN<0|52000>>')
+    expect(w.text()).not.toContain(bad.message)
+    w.unmount()
+    // a refusal whose holes are a string and a number – re-derived here from the bytes, not read back off the ref
+    await refuse(big.code, big.message, big.c)
+    w = mount(StoreError)
+    expect(shown(w)).toBe(`BIG<${(TOO_BIG_BYTES / (1024 * 1024)).toFixed(1)}|${MAX_COMPRESSED_BYTES / (1024 * 1024)}>`)
+    w.unmount()
+  })
+
+  it('a clause the catalog does not know falls back to its own English INSIDE the translated frame; a frame it does not know is the engine\'s whole message', async () => {
+    const bad = SPINE_BAD()
+    const frame = bad.c as CopyRef
+    const clause = (frame.p ?? []).find(isCopyRef) as CopyRef
+    installCatalog('ru', { [frame.k]: 'MALFORMED<{0}|{1}>' })
+    await setLocale('ru')
+    await refuse(bad.code, bad.message, bad.c)
+    let w = mount(StoreError)
+    expect(shown(w)).toBe(`MALFORMED<week|${renderCopyRef(clause, { locale: SOURCE_LOCALE })}>`)
+    w.unmount()
+    installCatalog('ru', {})
+    w = mount(StoreError)
+    expect(shown(w)).toBe(bad.message)
+    w.unmount()
+  })
+
+  it('⚠ a stale ref is ignored: the ref of the PREVIOUS refusal, left in the store beside a new message, never stands over it', async () => {
+    const bad = SPINE_BAD()
+    const frame = bad.c as CopyRef
+    installCatalog('ru', { [frame.k]: 'MALFORMED<{0}|{1}>' })
+    await setLocale('ru')
+    const game = await refuse(bad.code, bad.message, bad.c)
+    // a fixture (or a future writer) that replaces the sentence by assignment and forgets the ref
+    game.error = 'A different sentence entirely'
+    const w = mount(StoreError)
+    expect(shown(w)).toBe('A different sentence entirely')
+    w.unmount()
+  })
+
+  it('a save operation that fails carries the ref onto its status row (and only when there is one)', async () => {
+    const bad = SPINE_BAD()
+    const game = useGameStore()
+    await game.runOp('import', async () => {
+      throw new CommandRejected(bad.message, bad.code, undefined, bad.c)
+    })
+    expect(game.saveOp).toEqual({ op: 'import', status: 'error', message: bad.message, code: bad.code, c: bad.c })
+    await game.runOp('import', async () => {
+      throw new CommandRejected('That offer has already gone.', 'offer-gone')
+    })
+    expect(game.saveOp).toEqual({ op: 'import', status: 'error', message: 'That offer has already gone.', code: 'offer-gone' })
+    expect('c' in (game.saveOp ?? {}), 'no empty `c` key rides a refusal that has none').toBe(false)
   })
 })

@@ -58,6 +58,8 @@ import {
   feedbackAddressLine,
 } from '../../src/feedback'
 import { request } from '../../src/worker/client'
+import { guardDeclaredShape, guardDeclaredVersion, SaveFileError } from '../../src/engine/saveGuard'
+import { isCopyRef, type CopyRef } from '../../src/shared/i18n'
 import { careerSnapshot } from '../helpers/career'
 import { buildCatalog } from '../../tools/i18n-extract'
 import { listDocs, readRows, splitRow } from '../../tools/i18n-import'
@@ -519,7 +521,8 @@ describe('L2-11 completeness – the chrome is wired; the date formatter and the
     // the error text is a HOLE of the frame, not a key of its own – ⭐ L3-7 (10.10) RE-AIM, NOT RELAXED: it used to be the store's raw English («RU-13A asks for typed error codes: a classifier, not this wave»);
     // this is that wave, so the hole is now read THROUGH THE SENTENCE'S CODE (`errorText`): a code the build knows is the `t()` of that very sentence, any other is the raw message as before
     // (tests/i18n-l3-7-errors.test.ts holds each key equal to the engine's / the store's own spelling; tests/component/i18n-l3-7-errors-display.test.ts mounts it)
-    expect(more).toContain("t('{0} failed – {1}', [OP_LABEL[game.saveOp.op], errorText(game.saveOp.code, game.saveOp.message ?? '')])")
+    // ⭐ L3-7 CLOSE-OUT (10.10) RE-AIM, NOT RELAXED: the same call, plus the refused save file's SENTENCE (`saveOp.c`, a ref – the kind in `code` cannot name which of its several sentences, or its holes)
+    expect(more).toContain("t('{0} failed – {1}', [OP_LABEL[game.saveOp.op], errorText(game.saveOp.code, game.saveOp.message ?? '', game.saveOp.c)])")
     // ⭐ L4-2b (10.10) RE-AIM, NOT RELAXED. The shared dialog's own defaults were «left raw on purpose» (L2-6: its `Cancel` is a conflict between tables, his call) and this pin asserted the
     // file held no `t(` at all. The carpet then found the one caller that relies on them (the inbox's sign question), so they are wired – as COMPUTED defaults over the BARE keys `Cancel`
     // and `Confirm` (what every other wired caller of the bare word says; no context tag was needed), not as prop defaults (Vue resolves a prop default once per instance, so it could
@@ -625,6 +628,58 @@ describe('L2-11 seams – a flip re-labels a mounted More and a blocking confirm
       await nextTick()
       expect(flat(w.get('.save-op-row').text()), op).toBe(`FAILED<${marker}|x>`)
     }
+    w.unmount()
+  })
+
+  it('⭐ L3-7 close-out – Saves: a refused save file\'s failure row is its SENTENCE through the ref (frame, holes and the nested clause), in either language; a bare kind and a stale ref stay the raw message', async () => {
+    // the refusals are the ENGINE'S OWN, thrown by the real guards – no sentence is typed here (invariant 4), and no ASCII marker is a translation: they are numbered probes
+    const refusal = (run: () => void): SaveFileError => {
+      try {
+        run()
+      } catch (e) {
+        if (e instanceof SaveFileError) return e
+      }
+      throw new Error('the guard accepted what this arm needs it to refuse')
+    }
+    const frame = refusal(() => guardDeclaredShape({ schemaVersion: SAVE_SCHEMA_VERSION, seed: 'x', week: -1 }, SAVE_SCHEMA_VERSION))
+    const newer = refusal(() => guardDeclaredVersion(SAVE_SCHEMA_VERSION + 1))
+    const frameRef = frame.c as CopyRef
+    const clauseRef = (frameRef.p ?? []).find(isCopyRef) as CopyRef
+    const newerRef = newer.c as CopyRef
+    expect(frame.code).toBe('invalid-shape')
+    expect(newer.code).toBe('future-schema')
+
+    const f = await mountMore('saves')
+    const { w } = f
+    const row = (): string => flat(w.get('.save-op-row').text())
+    // English: the very message, in the strip's own frame – the ref changes where the sentence is BORN, not what the player reads
+    f.store.saveOp = { op: 'import', status: 'error', message: frame.message, code: frame.code, c: frameRef }
+    await nextTick()
+    expect(row()).toContain(`Import failed – ${frame.message}`)
+
+    installCatalog('ru', {
+      '{0} failed – {1}': 'FAILED<{0}|{1}>',
+      'op|Import': 'OP-IMPORT',
+      [frameRef.k]: 'MALFORMED<{0}|{1}>',
+      [clauseRef.k]: 'BETWEEN<{0}|{1}>',
+      [newerRef.k]: 'NEWER<{0}|{1}>',
+    })
+    await setLocale('ru')
+    await nextTick()
+    // Russian (a probe catalog): the frame is the translated frame, its first hole is the field's name as it was, its second is the NESTED clause with ITS holes filled
+    expect(row()).toContain(`FAILED<OP-IMPORT|MALFORMED<week|BETWEEN<0|52000>>>`)
+    expect(w.get('.save-op-row').text()).not.toContain(frame.message)
+    // a refusal whose holes are numbers
+    f.store.saveOp = { op: 'import', status: 'error', message: newer.message, code: newer.code, c: newerRef }
+    await nextTick()
+    expect(row()).toContain(`FAILED<OP-IMPORT|NEWER<${SAVE_SCHEMA_VERSION + 1}|${SAVE_SCHEMA_VERSION}>>`)
+    // a bare kind (no ref rides with it) and a stale ref (a ref that is not this message's) print the message as the engine wrote it
+    f.store.saveOp = { op: 'import', status: 'error', message: frame.message, code: frame.code }
+    await nextTick()
+    expect(row()).toContain(`FAILED<OP-IMPORT|${frame.message}>`)
+    f.store.saveOp = { op: 'import', status: 'error', message: 'A different sentence entirely', code: frame.code, c: frameRef }
+    await nextTick()
+    expect(row()).toContain('FAILED<OP-IMPORT|A different sentence entirely>')
     w.unmount()
   })
 

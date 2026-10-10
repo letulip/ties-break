@@ -8,6 +8,8 @@
 // name below under the historical public path. Nothing here imports that barrel back.
 
 import type { SaveFileErrorCode } from '../../engine/saveGuard'
+// ⭐ L3-7 close-out (10.10) – the carrier of a sentence WITH holes, type-only and from the framework-free core both halves already share (`shared/i18n.ts` imports nothing).
+import type { CopyRef } from '../i18n'
 // v76 T3: the year-focus union, imported TYPE-ONLY from the engine leaf that declares it beside the
 // field it types – `./narrative`'s `Temperament` precedent, and the same one-way arrow.
 import type { PsyFocus } from '../../engine/world/state'
@@ -100,6 +102,11 @@ export interface SavePeek {
  *  `SaveFileError` into a bare sentence, so a UI wanting to tell `future-schema` ("update the app,
  *  then import it") from `corrupted` had nothing to branch on but English – the exact failure mode
  *  the code was added to prevent, with the header claiming it was prevented.
+ *
+ *  ⭐⭐ AND SINCE THE L3-7 CLOSE-OUT (10.10) THE SENTENCE CROSSES TOO, BESIDE THE KIND. A kind does not name a sentence – `corrupted` is five of them, `invalid-shape` a frame over a closed set of clauses and
+ *  the spine's field names, `future-schema` and `oversized` carry numbers – so a UI holding only the kind could print the raw English or nothing, and the seven kinds were the named leftover of L3-7 (owner,
+ *  10.10, docs/decisions.md item 33: the seven player-facing refusals typify NOW). `ErrorReply.c` is the sentence as a `CopyRef`: `code` stays the kind, `error` stays the English, and `c` is what the UI
+ *  renders through the catalog (`composables/errorText.ts`). It is TRANSPORT – built per throw, never persisted, no schema moved.
  *
  *  ⚠ `import type`, WHICH IS THE ONLY EDGE THIS DIRECTION IS ALLOWED. `shared/protocol/*` already
  *  reaches into `engine/*` for types this way (`competition.ts`, `events.ts`, `ladder.ts` and four
@@ -411,6 +418,9 @@ export type ToUI =
       code?: WorkerErrorCode
       /** on STALE_REVISION / SAVE_CONFLICT: the revision the conflict was measured against */
       revision?: number
+      /** ⭐ L3-7 close-out: the SENTENCE of a refused save file, as copy (key = the English template, params = its holes) – beside `code` (the kind) and `error` (the English). Absent on every other
+       *  refusal and on the one raw lower-layer message; a UI that does not know it prints `error`. */
+      c?: CopyRef
     }
 
 // =================================================================================================

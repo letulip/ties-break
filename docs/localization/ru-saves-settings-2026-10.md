@@ -77,6 +77,90 @@ typed error codes (or a classifier for known old errors); an English exception i
 of a Russian row is not a completed translation. `Retry` must repeat exactly the operation
 that failed, as the current implementation intends.
 
+## Save-file refusals – the seven kinds, typed (10.10)
+
+Owner 10.10 («если что-то критичное и можно сразу исправить – лучше так, чтобы хвостов не
+висело»): the player-facing refusals of a save file ride the wire with their sentence, so the Saves
+strip, the error card and the recovery screen can show them in Russian. **Seven kinds, 31
+sentences** – a kind (`corrupted`, `invalid-shape` …) is several sentences, and some have holes. Every row
+below is `DRAFT` with the **Russian column left empty on purpose: the words are his**. The English is
+today's, character for character; nothing was reworded.
+
+A hole in `{braces}` is filled by the engine; the names are for reading, the key holds them by
+position. Where a sentence ends in a clause (`– {clause}` / `"{field}" {clause}`) the clause is a
+whole phrase with a row of its own, so the Russian frame and the Russian clause are written as a pair
+and no English fragment stays inside a Russian sentence. `{field}` is the name of a save field
+(`seasonHistory`, `rngMain` …) and stays as it is in every language; `{detail}` in the "could not be
+upgraded" sentence is a lower layer's own diagnostic and stays as written.
+
+Not a save, cut short, too large, unpacks too far (one sentence each):
+
+| English | Russian draft |
+| --- | --- |
+| `Not a Tennis Sim save file` | |
+| `This save file is cut short – it is smaller than its own header` | |
+| `This file is too large to be a save ({megabytes} MB – the limit is {limit} MB)` | |
+| `This save file expands far beyond any real career – refusing to unpack it` | |
+
+From a newer build (the file door, and the player's own database at boot):
+
+| English | Russian draft |
+| --- | --- |
+| `This save is from a newer version of the game (schema v{declaredVersion}, this build reads up to v{supportedVersion}) – update the app, then import it` | |
+| `Save schema {declaredVersion} is newer than supported {supportedVersion}` | |
+
+Damaged (`corrupted`):
+
+| English | Russian draft |
+| --- | --- |
+| `Save checksum mismatch: data is corrupted` | |
+| `This save file is damaged – its contents cannot be read` | |
+| `This save file is damaged – it declares an impossible save version` | |
+| `This save file is damaged – its header and its data disagree about the save version` | |
+| `This save file could not be upgraded – {detail}` | |
+
+Malformed (`invalid-shape`) – the three frames:
+
+| English | Russian draft |
+| --- | --- |
+| `This save file is malformed – it does not contain a career` | |
+| `This save file is malformed – {clause}` | |
+| `This save file is malformed – "{field}" {clause}` | |
+
+…and the clauses that finish the first of the two (a file that is too big or too deep):
+
+| English | Russian draft |
+| --- | --- |
+| `it contains more data points than any career can hold` | |
+| `its data nests deeper than any save the game writes` | |
+| `it contains a non-finite number` | |
+| `it contains an implausibly long text field` | |
+| `one of its lists is implausibly long` | |
+| `it contains an implausibly long field name` | |
+
+…and the clauses that finish the second (`"{field}" …` – a field that is missing or the wrong kind;
+these read after the word for a field, so they agree with it):
+
+| English | Russian draft |
+| --- | --- |
+| `must be a non-empty text` | |
+| `is longer than {max} characters` | |
+| `must be a whole number between {min} and {max}` | |
+| `is out of range` | |
+| `must be a list` | |
+| `must carry the player profile` | |
+| `must carry the weekly plan` | |
+| `must carry the career totals` | |
+| `must be the trophies ledger` | |
+| `must carry the on-ramp latches` | |
+| `must carry a valid RNG position` | |
+
+One refusal stays English by construction, and is named here so it is not a surprise: a record out of
+the player's own database that will not open (a torn file, JSON that does not parse) is reported with
+the lower layer's own message and falls back to the previous autosave before a player reads it – there
+is no fixed sentence of ours to translate. The engine's other plain refusals (about a hundred guard
+sentences) are a separate leftover, unchanged.
+
 ## Confirmations – semantic branches
 
 | Action | English | Russian draft |

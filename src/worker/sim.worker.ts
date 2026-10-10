@@ -64,7 +64,7 @@ import { heirloomBookOf } from '../engine/world/heirloom'
 import { mainStateConsistent, resumeMain, type MainRngState, type Rng } from '../engine/rng'
 import { planFromWeek, planShapeError, planWeek } from '../engine/plan'
 import { encodeExportFile, decodeExportFile } from '../engine/saveCodec'
-import { SaveFileError } from '../engine/saveGuard'
+import { SaveFileError, unreadableSaveFile } from '../engine/saveGuard'
 import {
   commitAutosave,
   adoptAutosave,
@@ -220,7 +220,7 @@ function ensureMainState(w: WorldState): boolean {
     return rngRepaired
   } catch (err) {
     if (err instanceof SaveFileError) throw err
-    throw new SaveFileError('corrupted', 'This save file is damaged – its contents cannot be read')
+    throw unreadableSaveFile()
   }
 }
 
@@ -258,7 +258,7 @@ function importDryRun(candidate: WorldState): Snapshot {
     return snapshot
   } catch (err) {
     if (err instanceof SaveFileError) throw err
-    throw new SaveFileError('corrupted', 'This save file is damaged – its contents cannot be read')
+    throw unreadableSaveFile()
   }
 }
 
@@ -1014,8 +1014,12 @@ function errorMsg(id: number, err: unknown): ErrorReply {
   // ⚠ NO `revision`: a refused file never measured itself against one. The field is for the two
   // concurrency kinds above and stays absent here, which is what the arm in
   // tests/worker-reply-correlation.test.ts asserts alongside the code.
+  // ⭐ L3-7 CLOSE-OUT (10.10) – AND SO DOES THE SENTENCE. The kind says WHICH of the seven this is; it cannot say which of the several sentences of that kind, or what its holes hold (a schema version, a
+  // size, the name of the field that failed the spine). `err.c` is the sentence as a `CopyRef`, the same carrier the engine uses for every sentence with holes: it rides BESIDE `error` (the English, as ever –
+  // an older store, a log and every test read that) and `code` (the kind, unchanged), and `composables/errorText.ts` renders it through the catalog. Absent for the one refusal that is a lower layer's raw
+  // message (saveCodec.ts `asCorrupted`). Still NO `revision`.
   if (err instanceof SaveFileError) {
-    return { id, ok: false, error: err.message, code: err.code }
+    return { id, ok: false, error: err.message, code: err.code, ...(err.c ? { c: err.c } : {}) }
   }
   return { id, ok: false, error: err instanceof Error ? err.message : String(err) }
 }
