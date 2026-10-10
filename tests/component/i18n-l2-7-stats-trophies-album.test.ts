@@ -828,7 +828,8 @@ describe('L2-7b Russian smoke – the cabinet and the album chrome from the REAL
     for (const key of wiredHere) expect(everything, `${key} is approved and wired, so his Russian must render`).toContain(RU[key]!)
     expect(everything).toContain('Trophy cabinet')
     expect(missCount(), 'unapproved rows must be counted as misses').toBeGreaterThan(10)
-    for (const key of ['Trophy cabinet', 'Champion', 'Chapters', 'album|Back to Home', 'Sheet {0} of {1}']) expect(missedKeys(), key).toContain(key)
+    // ⚠ 10.10 – `album|Back to Home` left this miss list: the chat-ok approved its row, so it renders Russian above instead of counting as a miss.
+    for (const key of ['Trophy cabinet', 'Champion', 'Chapters', 'Sheet {0} of {1}']) expect(missedKeys(), key).toContain(key)
     console.log(`[L2-7b smoke] ru.json: ${Object.keys(RU).length} keys; approved AND wired on these screens: ${wiredHere.length}; distinct misses on two mounted surfaces: ${missedKeys().length}`)
     mounted.forEach((m) => m.unmount())
   })

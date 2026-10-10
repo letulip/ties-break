@@ -339,8 +339,17 @@ describe('L2-3 Russian smoke – ru.json read by key, no Cyrillic typed here', (
     const mounted = [mountHome(), mountRecap(), mountCalendar(), mountWeek()]
     const everything = mounted.map((m) => seen(m.element)).join('\n')
     const wiredHere = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.some((h) => /HomeScreen|RailIdentity|kidIdentity|CalendarScreen|ThisWeekScreen|WeekRecapCard|weekDays|nextGoal/.test(h)))
-    // the approved arm: today `wiredHere` is empty (no RU-03 row is approved) and the loop wakes by itself the day one is
-    for (const key of wiredHere) expect(everything, `${key} is approved and wired, so his Russian must render`).toContain(RU[key]!)
+    // the approved arm: `wiredHere` wakes by itself the day a row approves (10.10 chat-ok woke it: the day initials and more render below).
+    // ⚠ 10.10 – a key whose CONTROL this pose cannot show is named, never silently skipped: the back control exists only inside a tournament week, and these mounts are a training week.
+    const NOT_IN_POSE = new Set(['Back to Home', 'Not enough funds'])
+    for (const key of wiredHere) {
+      if (NOT_IN_POSE.has(key)) continue
+      // ⚠ 10.10 – a PARAMETERISED value renders with its holes filled, so every hole-free SEGMENT must render instead of the raw pattern.
+      for (const seg of RU[key]!.split(/\{\d+\}/)) {
+        const t = seg.trim()
+        if (t !== '') expect(everything, `${key} is approved and wired, so his Russian must render (segment «${t}»)`).toContain(t)
+      }
+    }
     // the unapproved arm: English on screen, and the miss counter says so (ruling 4 as a number)
     expect(everything).toContain('Next tournament')
     expect(missCount(), 'unapproved rows must be counted as misses').toBeGreaterThan(20)

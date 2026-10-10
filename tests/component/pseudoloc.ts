@@ -38,6 +38,10 @@ export const DEFAULT_ALLOW: readonly RegExp[] = [
   /^(?:Ties Break|Ace Parent)$/,
   /^(?:ITF|WTA|ATP)(?: [A-Z]?\d+k?)?$/,
   /^[WMT]\d+$/,
+  // ⚠ 10.10 – the Russian AUTONYM (owner: «English / Русский»): a language names itself on the
+  // first-run prompt, raw by DESIGN – a `t()` here would be wrong, the prompt shows before any
+  // choice exists. The one lawful Cyrillic literal on an English screen.
+  /^Русский$/,
 ]
 
 const COPY_ATTRS = ['title', 'aria-label', 'placeholder', 'alt']

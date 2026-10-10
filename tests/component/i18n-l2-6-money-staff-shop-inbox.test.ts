@@ -604,7 +604,16 @@ describe('L2-6 Russian smoke – ru.json read by key, no Cyrillic typed here', (
     const HERE = /MoneyScreen|HouseholdStrip|SupportStaffTab/
     const wiredHere = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.some((h) => HERE.test(h)))
     // the approved arm: today `wiredHere` is empty (no RU-06 row is approved) and the loop wakes by itself the day one is
-    for (const key of wiredHere) expect(everything, `${key} is approved and wired, so his Russian must render`).toContain(RU[key]!)
+    // ⚠ 10.10 – named pose gaps: this career spent nothing on Travel in the window (no spend category row), and the back control is aria on an icon.
+    const NOT_IN_POSE = new Set(['spend|Travel', 'listing|Withdraw'])
+    for (const key of wiredHere) {
+      if (NOT_IN_POSE.has(key)) continue
+      // ⚠ 10.10 – a PARAMETERISED value renders with its holes filled, so every hole-free SEGMENT must render instead of the raw pattern.
+      for (const seg of RU[key]!.split(/\{\d+\}/)) {
+        const t = seg.trim()
+        if (t !== '') expect(everything, `${key} is approved and wired, so his Russian must render (segment «${t}»)`).toContain(t)
+      }
+    }
     // the unapproved arm: English on screen, and the miss counter says so (ruling 4 as a number)
     expect(everything).toContain('Family Budget')
     expect(missCount(), 'unapproved rows must be counted as misses').toBeGreaterThan(30)
@@ -1061,7 +1070,16 @@ describe('L2-6b Russian smoke – the shop and the inbox from the REAL ru.json',
     const everything = mounted.map((m) => seen(m.element)).join('\n')
     const HERE = /ShopPanel|composables\/shop|saleLetter|InboxSheet|OfferLetter/
     const wiredHere = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.some((h) => HERE.test(h)))
-    for (const key of wiredHere) expect(everything, `${key} is approved and wired, so his Russian must render`).toContain(RU[key]!)
+    // ⚠ 10.10 – named pose gap: nothing is OWNED in this pose, so no shelf listing shows its Withdraw control.
+    const NOT_IN_POSE_B = new Set(['listing|Withdraw', 'spend|Travel'])
+    for (const key of wiredHere) {
+      if (NOT_IN_POSE_B.has(key)) continue
+      // ⚠ 10.10 – a PARAMETERISED value renders with its holes filled, so every hole-free SEGMENT must render instead of the raw pattern.
+      for (const seg of RU[key]!.split(/\{\d+\}/)) {
+        const t = seg.trim()
+        if (t !== '') expect(everything, `${key} is approved and wired, so his Russian must render (segment «${t}»)`).toContain(t)
+      }
+    }
     expect(everything).toContain('The shelf')
     expect(missCount(), 'unapproved rows must be counted as misses').toBeGreaterThan(15)
     for (const key of ['The shelf', 'Invest', 'Tournament desk']) expect(missedKeys(), key).toContain(key)

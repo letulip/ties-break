@@ -248,7 +248,8 @@ describe('L2-4 completeness – every string of the batch files is a wired key, 
         'She is worn out – maybe a family week?', 'She could use a week off – maybe a family week?', 'See the options', 'Not now', 'This week\'s tournament', 'My entries', 'Travel budget', 'academy covers {0}%',
         'closes {week}', 'Closed {week}', 'Entered', 'wild card', 'defending {0} pts', 'Outgrown – she is past this level', 'Your read:', 'Coach says:', 'Withdraw', 'Cancel entry',
         'Entries closed {0}', 'Enter', 'Not enough funds', 'Exhausted – race anyway? Rest would be wiser.', '+ Plan week', 'Exams this week', 'Off-season', 'Exams', 'Shooting week', 'Training week',
-        '+{0} condition', 'Skipping {0}.', 'instead of {0}', 'Practice match', 'Practice match + coach', 'Play it and watch', 'Cancel', 'School owns this week.', 'Friendly match', 'Top seed', 'Play match', 'friendly|Seed', 'optional',
+        // ⚠ 10.10 – the booking-cancel buttons took the `undo|` tag (chat-ok: «Отмена» closes a dialog, «Отменить» undoes a booking), so the key this file asks for moved with them.
+        '+{0} condition', 'Skipping {0}.', 'instead of {0}', 'Practice match', 'Practice match + coach', 'Play it and watch', 'undo|Cancel', 'School owns this week.', 'Friendly match', 'Top seed', 'Play match', 'friendly|Seed', 'optional',
         'Close the friendly', 'Injured – rest up', 'Not cleared to play', 'Tour age rule – {used} of {limit}', 'Year limit – {used} of {limit}', 'Year limit reached', 'Family vacation – {package}', 'Not available this week',
         '{caution} Enter {event} ({week}, {surface}) anyway? {fee}', '{caution} Enter {event} ({week}, {surface})? {fee}', 'Enter {event} ({week}, {surface})? {fee}', 'Push through', 'Enter anyway',
         'Withdraw from {event} ({week})? Entry fee {fee} will be refunded.', 'No entry fee – the trip is still yours to pay for.', 'Entry fee {fee}.', 'Cancel the entry',
@@ -426,7 +427,16 @@ describe('L2-4 Russian smoke – ru.json read by key, no Cyrillic typed here', (
     const HERE = /SeasonScreen|TierGuide|NextTournamentPanel|TournamentFlow|BracketTabs|eventCard|eventName|tierState/
     const wiredHere = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.some((h) => HERE.test(h)))
     // the approved arm: today `wiredHere` is empty (no RU-04 row is approved) and the loop wakes by itself the day one is
-    for (const key of wiredHere) expect(everything, `${key} is approved and wired, so his Russian must render`).toContain(RU[key]!)
+    // ⚠ 10.10 – named pose gaps, never silent skips: the rally metadata line lives on the finished-match card, and these mounts stop at the planner and the live flow.
+    const NOT_IN_POSE = new Set(['Avg rally {0} shots · ~{1}', 'Not enough funds', 'undo|Cancel', 'Watch again', 'Watch it', 'Withdraw'])
+    for (const key of wiredHere) {
+      if (NOT_IN_POSE.has(key)) continue
+      // ⚠ 10.10 – a PARAMETERISED value renders with its holes filled, so every hole-free SEGMENT must render instead of the raw pattern.
+      for (const seg of RU[key]!.split(/\{\d+\}/)) {
+        const t = seg.trim()
+        if (t !== '') expect(everything, `${key} is approved and wired, so his Russian must render (segment «${t}»)`).toContain(t)
+      }
+    }
     // the unapproved arm: English on screen, and the miss counter says so (ruling 4 as a number)
     expect(everything).toContain('Season Planner')
     expect(missCount(), 'unapproved rows must be counted as misses').toBeGreaterThan(40)

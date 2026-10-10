@@ -773,10 +773,18 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
       expect(rows.length, english).toBeGreaterThanOrEqual(1)
       expect(new Set(rows.map((r) => r.russian)).size, english).toBe(1)
     }
+    // ⚠ 10.10 RE-AIMED, NOT RELAXED: «reported, not frozen by a tag» was the L2-6 stance because the
+    // call was HIS – and the chat-ok made it: «Отмена» closes a dialog, «Отменить» undoes a booking.
+    // The bare rows agree on one Russian now, and the undoing side lives on `undo|Cancel`
+    // (SeasonScreen's two booking buttons). The split's POINT – two different words – is asserted
+    // without typing either.
     const cancel = rowsFor('Cancel')
-    expect(cancel.length).toBeGreaterThanOrEqual(4)
-    expect(new Set(cancel.map((r) => r.russian)).size, 'two Russians across the tables: reported, not frozen by a tag').toBe(2)
-    // …More's own `Cancel` is the bare key; the one tag this word already has belongs to the planner's sheet, homed elsewhere
+    expect(cancel.length).toBeGreaterThanOrEqual(3)
+    expect(new Set(cancel.map((r) => r.russian)).size, 'one Russian on the bare key since the 10.10 ok').toBe(1)
+    expect(RU['undo|Cancel'], 'the undoing side is its own approved key').toBeDefined()
+    expect(RU['undo|Cancel']).not.toBe(RU['Cancel'])
+    expect(CATALOG.keys['undo|Cancel']?.home).toContain('src/components/screens/SeasonScreen.vue')
+    // …More's own `Cancel` is the bare key; the planner sheet's tag is homed elsewhere
     expect(CATALOG.keys.Cancel?.home).toContain('src/components/screens/MoreScreen.vue')
     expect(CATALOG.keys['plan|Cancel']?.home).not.toContain('src/components/screens/MoreScreen.vue')
     // the dialog's own sentences have one row each and no second reader
@@ -803,7 +811,9 @@ describe('L2-11 Russian smoke – ru.json read by key, no Cyrillic typed here', 
     await setLocale('ru')
     resetMisses()
     const wired = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.includes('src/components/screens/MoreScreen.vue')).sort()
-    expect(wired, 'exactly the two identity rows of the product mark are approved AND wired on More').toEqual(['Ace Parent', 'Ties Break'])
+    // ⚠ 10.10 RE-AIMED, NOT RELAXED: the chat-ok batch approved four more words that live on More –
+    // the dialog defaults («Отмена»/«Подтвердить») and the language pair (the autonym convention).
+    expect(wired, 'exactly the approved rows wired on More – the two identity rows plus the 10.10 batch').toEqual(['Ace Parent', 'Cancel', 'Confirm', 'English', 'Russian', 'Ties Break', '{0} KB'])
     const f = await mountMore('about')
     expect(words(f.w.findAll('table tr')[0]!.element)).toBe(`App ${RU['Ties Break']} ${RU['Ace Parent']}`) // identity: the brand is itself in both languages
     expect(texts(f.w, 'h2')).toEqual(['About']) // no approved row → English, counted

@@ -113,7 +113,7 @@ describe('the first-run prompt – asked once, before the app, never again', () 
 
   it('choosing Russian writes the same preference and lets the app through (an empty catalog still gets there)', async () => {
     const l = await launch()
-    await pick(l, 'Russian').trigger('click')
+    await pick(l, 'Русский').trigger('click')
     await l.flush()
     expect(prompt(l).exists()).toBe(false)
     expect(app(l).exists()).toBe(true)
@@ -163,7 +163,7 @@ describe('the first-run prompt – asked once, before the app, never again', () 
     // Fake time starts AFTER the modules are loaded: Test Utils captured its real scheduler at import.
     vi.useFakeTimers()
     l.i18n.registerCatalogLoader('ru', () => new Promise(() => {}))
-    await pick(l, 'Russian').trigger('click')
+    await pick(l, 'Русский').trigger('click')
     await l.flush()
     expect(prompt(l).exists(), 'a pending language does not dismiss the prompt').toBe(true)
     await pick(l, 'English').trigger('click')
