@@ -635,4 +635,41 @@ function goToSection(id: string): void {
   background: var(--accent-fill);
   font-weight: 700;
 }
+
+/* ⭐ R-L4 (10.10) – NO SIDEWAYS SCROLL AT 320 PX. The owner, over the LQA runner's route 7: «гориз. скролл
+   точно надо чинить, не должно быть». MEASURED in Chromium at 320x568, in English, on the `pro` career:
+   this screen pushed the page 23 px to the right. Two objects carry it and neither is a wide table – the
+   section leaves a row 254 px at that width, and
+     – the ranking-table switcher asks 297 (National / International / Professional at the shared
+       `.tab-pill`'s 16 px a side);
+     – the three header tiles ask 310 (318 on a career with a longer points figure), every label being
+       a one-line caption.
+   Swept over 11 careers x 320 … 375 px: overflow up to 350 (+1 px), none at 359, 360 or 375. So the
+   breakpoint is 359 – the one `.money-artefacts` already steps aside at – and 360 and up is the layout it
+   was.
+
+   ⚠ THE SWITCHER KEEPS ITS ROW AND TIGHTENS SIDEWAYS: 8 px a side puts the three pills at 249 of 254 px.
+   ONLY `padding-left/right` moves, never the vertical 6 px, so no pill gets shorter. `wrap` is the
+   guarantee under the look – a longer word, a bigger font or a fourth table costs a second line, never a
+   page that scrolls sideways – the same two halves `.tab-row.money-subtabs` is built from.
+
+   ⚠ THE TILE CAPTION IS NOT TOUCHED. `.stats-tile-label { white-space: nowrap }` carries its «DO NOT "FIX"
+   IT» note in src/style.css, and a caption that wraps is the ragged header R10-2 removed. The ROW gives
+   instead: the first two tiles keep their line and the third drops to a second one, full width (the
+   widest tile measured, "Professional rank", is 113 px of the 254, so a tile always fits a line of its
+   own). Nothing in this block is a word on the screen. */
+@media (max-width: 359px) {
+  .stats-ladder-row {
+    flex-wrap: wrap;
+  }
+
+  .stats-ladder-row :deep(.tab-pill) {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .stats-header-row {
+    flex-wrap: wrap;
+  }
+}
 </style>

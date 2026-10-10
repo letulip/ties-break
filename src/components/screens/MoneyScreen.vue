@@ -2043,6 +2043,38 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
   margin-bottom: 14px;
 }
 
+/* ⭐ R-L4 (10.10) – NO SIDEWAYS SCROLL AT 320 PX. The owner, over the LQA runner's route 7: «гориз. скролл
+   точно надо чинить, не должно быть». MEASURED in Chromium at 320x568, in English, on the `pro` career:
+   the budget pushed the page 12 px to the right (+9 … +12 across the four chapters; the active pill is the
+   bold one). It is this ONE row: Spending / Bills / History / Shop ask 316 px at the chapter pill's 18 px
+   a side and the page leaves the row 288, so the 28 px that do not fit run 12 px past the 16 px gutter.
+   The period switcher below it fits with room to spare (two pills, 193 px of the 278 inside its plate)
+   and was never in question.
+
+   ⚠ SIDES ONLY, AND ONLY UNDER 360 PX (`.money-artefacts` steps aside at the same breakpoint; overflow was
+   measured up to 350 px and none at 359 or up). 12 px a side puts the four pills at 268 of 288 px. The
+   vertical 10 px that makes this a real touch target (owner, 05.08) is not touched, and "Bills", the
+   narrowest pill, keeps 50 px of width. `wrap` is the guarantee under the look: a longer word costs a
+   second line, never a page that scrolls sideways.
+
+   ⚠ THE COMPOUND IS THE POINT, AND IT WAS MEASURED. `.money-tabs :deep(.tab-pill)` is (0,3,0) and TIES
+   with the sheet's `.tab-row.as-chapter .tab-pill`; a tie is settled by source order, and in the
+   production bundle the sheet comes LAST. Built that way and read in Chromium at 320 the pills kept their
+   18 px, the four no longer fitted and the row wrapped to a second line. happy-dom settles the same tie
+   the other way round (the T6.4 note below says as much of `.money-subtabs`), which is why the mounted net
+   re-applies the sheet AFTER the screens before it reads a pill. `.money-tabs.as-chapter` is (0,4,0) and
+   wins in either order. */
+@media (max-width: 359px) {
+  .money-tabs {
+    flex-wrap: wrap;
+  }
+
+  .money-tabs.as-chapter :deep(.tab-pill) {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
 
 /* --- 3. THE PERIOD ---------------------------------------------------------------------------- */
 
