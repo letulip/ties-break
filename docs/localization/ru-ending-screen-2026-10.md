@@ -24,7 +24,7 @@ compiles nowhere.
 | dialog accessible name | `Epilogue` | `Эпилог карьеры` |
 | record heading and link | `The whole record` | `Вся история` |
 | record return | `Back to the album` | `Вернуться к альбому` |
-| record season age | `she was {ageYears}` | `ей было {ageYears} {год/года/лет}` |
+| record season age | `she was {ageYears}` | `ей было {ageYears, plural, one {{ageYears} год} few {{ageYears} года} many {{ageYears} лет} other {{ageYears} лет}}` |
 | empty record | `Nothing was ever written down. That happens.` | `Здесь не осталось записей. Бывает и так.` |
 | final page heading | `The last page` | `Последняя страница` |
 | portrait alt | `Aged {stage}` | `Портрет: возрастной этап «{stageLocalized}»` |
@@ -38,7 +38,7 @@ compiles nowhere.
 | seasons | `Seasons` | `Сезонов` |
 | best rank | `Best rank` | `Высшее место в рейтинге` |
 | titles | `Titles` | `Титулов` |
-| one-more-year refrain | `You said one more year {count} time/times.` | `«Ещё один год», – говорили мы. Так было {count} {раз/раза/раз}.` |
+| one-more-year refrain | `You said one more year {count} time/times.` | `«Ещё один год», – говорили мы. Так было {count, plural, one {{count} раз} few {{count} раза} many {{count} раз} other {{count} раз}}.` |
 | resume college fallback | `Another year –` | `Ещё один год –` |
 | new unrelated childhood | `Raise another` | `Новая история` · `APPROVED` 07.10 (his own wording, spec §9.9a) |
 | dynasty, daughter lived during tour | `Raise her daughter` | `Вырастить её дочь` |

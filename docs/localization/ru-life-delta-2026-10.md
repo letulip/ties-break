@@ -69,8 +69,8 @@ last-reviewed: 2026-10-06
 | R05 | `Together for` / `{span}` | `Вместе` / `{span}` |
 | R06 | `They have been together for {span}.` | `Они вместе уже {span}.` |
 | R07 | `less than a month` | `меньше месяца` |
-| R08 | `1 month` / `{n} months` | `1 месяц` / `{n} {месяц/месяца/месяцев}` |
-| R09 | `1 year` / `{n} years` | `1 год` / `{n} {год/года/лет}` |
+| R08 | `1 month` / `{n} months` | `1 месяц` / `{n, plural, one {{n} месяц} few {{n} месяца} many {{n} месяцев} other {{n} месяцев}}` |
+| R09 | `1 year` / `{n} years` | `1 год` / `{n, plural, one {{n} год} few {{n} года} many {{n} лет} other {{n} лет}}` |
 | R10 | `{years} and {months}` | `{years} и {months}` |
 | R11 | `<1m`, `{n}m`, `{n}y`, `{y}y {m}m` | `до 1 мес.`, `{n}м`, `{n}г`, `{y}г {m}м` |
 

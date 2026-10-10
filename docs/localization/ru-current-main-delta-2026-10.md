@@ -65,8 +65,8 @@ last-reviewed: 2026-10-06
 | S04 | `Declined – the rate stays at {from} {unit}.` | `В повышении отказано – ставка остаётся {from} {unit}.` |
 | S05 | `Lapsed – the rate stays at {from} {unit}.` | `Срок ответа истёк – ставка остаётся {from} {unit}.` |
 | S06 | `Accept the raise? The rate goes from {from} to {to} {unit}. This cannot be undone.` | `Принять повышение? Ставка изменится с {from} до {to} {unit}. Отменить это решение нельзя.` |
-| S07 | `{n} week(s) to decide. The terms will not change.` | `На ответ {n} {неделя/недели/недель}. Условия не изменятся.` |
-| S08 | `{filed} · {n} week(s) to decide` | `{filed} · на ответ {n} {неделя/недели/недель}` |
+| S07 | `{n} week(s) to decide. The terms will not change.` | `На ответ {n, plural, one {{n} неделя} few {{n} недели} many {{n} недель} other {{n} недель}}. Условия не изменятся.` |
+| S08 | `{filed} · {n} week(s) to decide` | `{filed} · на ответ {n, plural, one {{n} неделя} few {{n} недели} many {{n} недель} other {{n} недель}}` |
 | S09 | `an hour` / `a session` / `a week` | `в час` / `за сеанс` / `в неделю` |
 | S10 | `We did not choose a new direction this year, so we kept working on the previous one – the one chosen for {year}.` | `В этом году мы не выбирали новую цель и продолжили работать над прежней – той, что выбрали в {year} году.` |
 

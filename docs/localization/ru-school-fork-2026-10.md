@@ -16,7 +16,7 @@ lines are `DRAFT`; the shared university names are RU-05/RU-12D.
 
 | Source | English | Russian draft |
 | --- | --- | --- |
-| age kicker | `She is {age}` (`ForkDialog.vue`) | `Ей {age} {год/года/лет}` |
+| age kicker | `She is {age}` (`ForkDialog.vue`) | `Ей {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}` |
 | title | `School is over.` | `Школа позади.` |
 | timing lead | `The junior rungs close on age at nineteen – the season ahead is the last of them. A college place is reserved today and taken up when the academic year starts ({departsLabel}); the other two roads begin now. Nobody has to keep going.` | `В девятнадцать юниорский тур для неё закроется – впереди последний сезон. Место в университете можно закрепить сейчас: учёба начнётся {departsLabel}, а до неё она продолжит играть. Два других пути начинаются сразу. Продолжать теннис она не обязана.` |
 | departure fallback | `next September` | `в следующем сентябре` |
@@ -72,7 +72,7 @@ real-world university outcomes. An LQA pass must check the long Russian odds sen
 | Source branch | English | Russian draft |
 | --- | --- | --- |
 | selected/fallback, fully funded | `{place}. Nothing to pay, and no ranking points.` | `{place}. Семья не платит за программу; рейтинговых очков не будет.` |
-| selected/fallback, family pays | `{place}. {total} over {years} years, and no ranking points.` | `{place}. Доля семьи за {years} {год/года/лет} – {total}; рейтинговых очков не будет.` |
+| selected/fallback, family pays | `{place}. {total} over {years} years, and no ranking points.` | `{place}. Доля семьи за {years, plural, one {{years} год} few {{years} года} many {{years} лет} other {{years} лет}} – {total}; рейтинговых очков не будет.` |
 | migrated offer missing | `Four years of student tennis on a college scholarship, from the next academic year. No ranking points.` | `С нового учебного года – четыре года студенческого тенниса со стипендией. Рейтинговых очков не будет.` |
 
 `{total}` is `familyPerYearCents × ENDINGS.collegeYears`, not the list-price tuition. The

@@ -27,7 +27,7 @@ ranking windows and penalty thresholds are unchanged.
 | appearance fee | `Appearance fee – {tier}` | `Выплата за участие – турнир «{tier}»` |
 | result bonus | `Sponsor bonus – {finish} at the {tier}` | `Бонус спонсора – {результат} на турнире «{tier}»` |
 | deep run relief | `Deep week, fresh legs – the table work on tour kept the run from eating her.` | `Долгая турнирная неделя, но ноги ещё держат: массаж между матчами помог выдержать нагрузку.` |
-| masseur tour bill | `Masseur on tour – {N} {match/matches} worked, billed per match` | `Массажист в поездке – {N} {матч/матча/матчей}, оплата за каждый` |
+| masseur tour bill | `Masseur on tour – {N} {match/matches} worked, billed per match` | `Массажист в поездке – {N, plural, one {{N} матч} few {{N} матча} many {{N} матчей} other {{N} матчей}}, оплата за каждый` |
 
 `{результат}` must use the localized `finishLabel` family, not its stored English display
 string. The family's prize row shows the **net** amount and explicitly names the already
@@ -46,7 +46,7 @@ displaced an older result` distinct.
 | --- | --- | --- |
 | summary shell | `{tier} ({surface}, {week}): {kidName} – {finish} (+{points} pts){rankSuffix}{retiredSuffix}` | `Турнир «{tier}» ({покрытие}, {неделя}): {kidName} – {результат} (+{points} очков){суффикс рейтинга}{суффикс травмы}` |
 | `points <= 0` | empty ranking suffix | пустой суффикс |
-| points banked, not yet rankable | `(+{points} banked – a ranking needs {events} events with points, or {minimum})` | `(очки зачтены, но для места в рейтинге нужны {events} {турнир/турнира/турниров} с очками или {minimum} очков)` |
+| points banked, not yet rankable | `(+{points} banked – a ranking needs {events} events with points, or {minimum})` | `(очки зачтены, но для места в рейтинге нужны {events, plural, one {{events} турнир} few {{events} турнира} many {{events} турниров} other {{events} турниров}} с очками или {minimum} очков)` |
 | points, no best-N improvement | `(does not improve best {N})` | `(не улучшает сумму {N} лучших результатов)` |
 | partial best-N improvement | `(ranking total +{delta})` | `(к рейтинговой сумме +{delta} очков)` |
 | full improvement | empty ranking suffix | пустой суффикс |
@@ -65,9 +65,9 @@ public-recognition beat, not a claim that she won the event.
 
 | source / case | English | Russian draft |
 | --- | --- | --- |
-| penalty, named event | `Tour penalty: {points} {point/points} – {tier}. {running} of {threshold} in the last 52 weeks.` | `Штраф тура: {points} {очко/очка/очков} – турнир «{tier}». За последние 52 недели накоплено {running} из {threshold} штрафных очков.` |
-| penalty, season commitment | `Tour penalty: {points} {point/points} – season commitment. {running} of {threshold} in the last 52 weeks.` | `Штраф тура: {points} {очко/очка/очков} – обязательство на сезон. За последние 52 недели накоплено {running} из {threshold} штрафных очков.` |
-| suspension | `Tour suspension – {weeks} weeks, through week {untilWeek}.` | `Отстранение от тура на {weeks} {неделю/недели/недель}, до конца недели {untilWeek}.` |
+| penalty, named event | `Tour penalty: {points} {point/points} – {tier}. {running} of {threshold} in the last 52 weeks.` | `Штраф тура: {points, plural, one {{points} очко} few {{points} очка} many {{points} очков} other {{points} очков}} – турнир «{tier}». За последние 52 недели накоплено {running} из {threshold} штрафных очков.` |
+| penalty, season commitment | `Tour penalty: {points} {point/points} – season commitment. {running} of {threshold} in the last 52 weeks.` | `Штраф тура: {points, plural, one {{points} очко} few {{points} очка} many {{points} очков} other {{points} очков}} – обязательство на сезон. За последние 52 недели накоплено {running} из {threshold} штрафных очков.` |
+| suspension | `Tour suspension – {weeks} weeks, through week {untilWeek}.` | `Отстранение от тура на {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недель}}, до конца недели {untilWeek}.` |
 
 `{untilWeek}` is currently an internal absolute week index in the English source. Translating
 the word `week` does not make that number understandable to the player. The implementation

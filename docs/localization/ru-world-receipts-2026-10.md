@@ -15,7 +15,7 @@ Russian lines remain `DRAFT`; this is not a runtime change.
 | --- | --- | --- |
 | `create.ts`, first kept row | `{kidName}'s career started (seed "{seed}"). Family budget: {funds}.` | `{kidName}: карьера началась. Стартовый бюджет семьи – {funds}. Код карьеры: {seed}.` |
 | `bookkeeping.ts`, season calendar expands | `New events on the calendar` | `В календаре появились новые турниры` |
-| `age.ts`, birthday age row | `She is {ageWords} this week.` | `На этой неделе ей исполнилось {age} {год/года/лет}.` |
+| `age.ts`, birthday age row | `She is {ageWords} this week.` | `На этой неделе ей исполнилось {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}.` |
 | `tick.ts`, no-show travel unwind | `Travel refunded: {tier}` | `Возврат дорожных расходов: турнир «{tier}»` |
 | `tick.ts`, no-show entry | `Skipped {tier} – entry fee forfeited.` | `Турнир «{tier}» пропущен – заявочный взнос не возвращается.` |
 | `kit.ts`, paid kit purchase | `Bought: {gradeLabel}` | `Куплено: {gradeLabel}` |

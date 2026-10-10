@@ -23,7 +23,7 @@ destructive confirmations. All Russian copy is `DRAFT`; user-entered names remai
 | `Careers` | `Карьеры` |
 | `No careers yet.` | `Пока нет ни одной карьеры.` |
 | `Active` | `Текущая` |
-| `{week} · age {age} · last played {date}` | `{week} · возраст: {age} {год/года/лет} · последняя игра: {date}` |
+| `{week} · age {age} · last played {date}` | `{week} · возраст: {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}} · последняя игра: {date}` |
 | `Load` / `Load career – {kidName}` | `Загрузить` / `Загрузить карьеру – {kidName}` |
 | `Delete` / `Delete career – {kidName}` | `Удалить` / `Удалить карьеру – {kidName}` |
 
@@ -50,9 +50,9 @@ age anew. The accessible name begins with the visible verb for speech-input matc
 | `storage: persistent` | `Хранилище: защищено от автоочистки` |
 | `storage: best-effort` | `Хранилище: браузер может очистить` |
 | `just now` | `только что` |
-| `{minutes} min ago` | `{minutes} {минуту/минуты/минут} назад` |
-| `{hours}h ago` | `{hours} {час/часа/часов} назад` |
-| `{days}d ago` | `{days} {день/дня/дней} назад` |
+| `{minutes} min ago` | `{minutes, plural, one {{minutes} минуту} few {{minutes} минуты} many {{minutes} минут} other {{minutes} минут}} назад` |
+| `{hours}h ago` | `{hours, plural, one {{hours} час} few {{hours} часа} many {{hours} часов} other {{hours} часов}} назад` |
+| `{days}d ago` | `{days, plural, one {{days} день} few {{days} дня} many {{days} дней} other {{days} дней}} назад` |
 
 `fmtDate` currently hard-codes `en-GB`. Use locale-aware day/month/time formatting and a
 Russian month form. Named save titles are user data; preserve them exactly. `Size` shows a
