@@ -8,6 +8,22 @@ import { dirname, resolve } from 'node:path'
 import {
   commentaryDigests, previewDigests, knockDigest, famousDigest, playBench, playCollege, watchedDigest, rowsDigest, worldMinusRefs, snapshotMinusRefs, worldFieldDigests, snapshotFieldDigests, sha,
 } from './helpers/l3-7-play'
+import { coachMarket } from '../src/engine/world/coachMarket'
+import { toSnapshot } from '../src/engine/world'
+
+// ⚠ L37_DUMP (10.10) – the FIELD dump, the diagnostic twin of L37_CAPTURE: writes the three fields
+// the owner's reproducible red names (coachMarket, upcoming, coachDeal) as OBJECTS, per career, so
+// two machines' runs can be diffed cell by cell instead of hash against hash. Works in both modes;
+// a red compare still writes it. One environment produces digests no other can reproduce – this is
+// the instrument that names the cell.
+const DUMP = process.env.L37_DUMP
+const dumped: Record<string, unknown> = {}
+function dumpFields(label: string, world: Parameters<typeof toSnapshot>[0]): void {
+  if (!DUMP) return
+  const w = world as unknown as Record<string, unknown>
+  const snap = toSnapshot(world) as unknown as Record<string, unknown>
+  dumped[label] = { coachDeal: w.coachDeal ?? null, coachMarket: coachMarket(world), upcoming: snap.upcoming }
+}
 
 const FIXTURE = resolve(__dirname, 'fixtures/l3-7/old-arm.json')
 const CAREERS: Array<[number, number]> = [[5, 0], [8, 0], [0, 1], [6, 1], [5, 1]]
@@ -43,6 +59,7 @@ function capture(): Capture {
       world: sha(worldMinusRefs(p.world)), snapshot: sha(snapshotMinusRefs(p.world)),
       worldFields: worldFieldDigests(p.world), snapshotFields: snapshotFieldDigests(p.world),
     }
+    dumpFields(p.label, p.world)
   }
   const college: Capture['college'] = {}
   for (const [seed, early] of [['l37-college-a', false], ['l37-college-b', true]] as const) {
@@ -52,6 +69,11 @@ function capture(): Capture {
       world: sha(worldMinusRefs(p.world)), snapshot: sha(snapshotMinusRefs(p.world)),
       worldFields: worldFieldDigests(p.world), snapshotFields: snapshotFieldDigests(p.world),
     }
+    dumpFields(p.label, p.world)
+  }
+  if (DUMP) {
+    mkdirSync(dirname(DUMP), { recursive: true })
+    writeFileSync(DUMP, JSON.stringify({ node: process.version, env: { TZ: process.env.TZ ?? null, LANG: process.env.LANG ?? null, NODE_OPTIONS: process.env.NODE_OPTIONS ?? null }, fields: dumped }, null, 1) + '\n')
   }
   return { viz: { commentary: commentaryDigests(), preview: previewDigests(), knock: knockDigest(), famous: famousDigest() }, careers, college }
 }
