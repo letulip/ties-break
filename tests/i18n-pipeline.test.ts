@@ -176,6 +176,27 @@ describe('compile – English joins, the location breaks ties, and only APPROVED
     expect(noHint.outcomes[0]?.why).toContain('needs a context tag')
   })
 
+  it('⭐ 10.10 – a row NAMES a tagged key outright (`undo\\|Cancel`): the exact key joins, an unknown tagged name is drift, the text pool is never consulted', () => {
+    // The first chat-ok batch wrote `undo|Cancel` and the join read it as a literal nobody asks for:
+    // the index strips the tag, the row side did not, and a hint cannot split two keys in one file.
+    const tagged = catalogOf({ Cancel: { home: ['src/components/ConfirmDialog.vue'] }, 'undo|Cancel': { home: ['src/components/screens/SeasonScreen.vue'] } })
+    const lv: Live = { catalog: tagged, seen: new Set() }
+    const named = compile(rowsOf(TABLE('| R | | `undo\\|Cancel` | `Отменить` | `APPROVED` |')), lv)
+    expect([...named.entries]).toEqual([['undo|Cancel', 'Отменить']])
+    const unknown = compile(rowsOf(TABLE('| R | | `undo\\|Nothing` | `нет такого` | `APPROVED` |')), lv)
+    expect(unknown.entries.size).toBe(0)
+    expect(unknown.outcomes[0]).toMatchObject({ disposition: 'unmatched' })
+  })
+
+  it('⭐ 10.10 – a hint may ride an annotation: a three-column table cannot grow a hint cell without tripping the malformed-row rule', () => {
+    const tagged = catalogOf({ 'nav|Stats': { home: ['src/App.vue'] }, 'heading|Stats': { home: ['src/components/screens/StatsScreen.vue'] } })
+    const lv: Live = { catalog: tagged, seen: new Set() }
+    const annotated = compile(rowsOf(['| English | Russian |', '| --- | --- |', '| `Stats` (`src/App.vue`) | `Рейтинг` · `APPROVED` |'].join('\n')), lv)
+    expect([...annotated.entries]).toEqual([['nav|Stats', 'Рейтинг']])
+    const widened = rowsOf(['| English | Russian |', '| --- | --- |', '| `Stats` | `Рейтинг` · `APPROVED` | `src/App.vue` |'].join('\n'))
+    expect(widened, 'the extra cell is the malformed-row rule, and it skips the row whole').toEqual([])
+  })
+
   it('⚠ DRIFT IS VISIBLE: a dead APPROVED row is `unmatched`; one whose literal is live in source is `waiting`', () => {
     const rows = rowsOf(TABLE('| R1 | | `This sentence is nowhere` | `Нигде` | `APPROVED` |', '| R2 | | `Dynasty` | `Династия` | `APPROVED` |'))
     const out = compile(rows, live(['Dynasty']))

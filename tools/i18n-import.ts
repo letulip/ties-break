@@ -208,6 +208,20 @@ function rowFrom(doc: string, line: number, cells: string[], shape: Shape, pair:
       break
     }
   }
+  if (hint === null) {
+    // ⭐ 10.10 – A HINT MAY RIDE AN ANNOTATION. A three-column table cannot grow a hint CELL
+    // without tripping the malformed-row rule (cells vs header), and the first chat-ok batch did
+    // exactly that: ten approved rows silently skipped. The first backticked `*.vue`/`*.ts[:line]`
+    // span in a cell's rest is the row's surface pointer – the same convention the dedicated hint
+    // cells already use, read from where a hand-written table has room for it.
+    for (const s of [en.rest, ru.rest, ...others]) {
+      const m = /`((?:[\w.-]+\/)*[\w.-]+\.(?:vue|ts))(?::\d+(?:[-–]\d+)?)?`/.exec(s)
+      if (m) {
+        hint = m[1] ?? null
+        break
+      }
+    }
+  }
   const tokens = new Set<string>()
   const scan = (s: string): void => {
     for (const m of s.matchAll(/`(DRAFT|QUESTION|APPROVED|LANDED)`/g)) tokens.add(m[1] ?? '')
@@ -403,7 +417,13 @@ export function compile(rows: readonly Row[], live: Live): Compiled {
       continue
     }
     const jk = normKey(row.english)
-    const candidates = index.get(jk) ?? []
+    // ⭐ 10.10 – A ROW MAY NAME A TAGGED KEY OUTRIGHT (`undo\|Cancel`, `screen\|Back to Home`, `day1\|M`).
+    // The ctx twins the waves created are unreachable by text alone: the index strips the tag, and a
+    // hint cannot split two keys that live in one file. A tagged English cell therefore joins the
+    // EXACT key or reports – never the text-joined pool. Found the hard way: the first chat-ok batch
+    // wrote `undo|Cancel` and the join read it as a literal nobody asks for (`unmatched`).
+    const rowTag = splitContext(row.english).ctx
+    const candidates = rowTag !== null ? (live.catalog.keys[row.english] !== undefined ? [row.english] : []) : (index.get(jk) ?? [])
     let key: string | undefined
     let disposition: Disposition | null = null
     let why: string | undefined
