@@ -212,7 +212,7 @@ home and a life out of suitcases; none invents keys, a roommate or a city.
 
 | source | Russian draft |
 | --- | --- |
-| diary seam `the day together` | `день вместе` |
+| `the day together` – diary seam (ключа в каталоге пока нет – ряд ждёт) | `день вместе` |
 | `Her birthday. No parcel – just the day, kept clear for each other.` | `Её день рождения. Без свёртка – просто день, который мы оставили друг для друга.` |
 | `Her birthday. {giftLabel}, opened before the cake.` | `Её день рождения. {giftLabelSentence}, открыли ещё до торта.` |
 

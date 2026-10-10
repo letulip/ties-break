@@ -53,3 +53,22 @@ contract or academy actually covered part of the fare.
 should leak into the receipt. The one-additional-fare text is not a second copy of the base
 travel charge. Percentages come from the exact contract share and academy rule already used
 by the engine; they are not reverse-calculated from rounded cents.
+
+### ⚙ 10.10 добавка (№40, усмотрение архитектора): коллизия съёмки и турнира (ShootClashDialog) – русская колонка твоя (DRAFT); общие ключи (Close, Continue, #{rank}, Unranked) живут в своих таблицах
+
+| id | English | Russian |
+| --- | --- | --- |
+| SPL-SC01 | `Cancel the shoot` | |
+| SPL-SC02 | `Do both` | |
+| SPL-SC03 | `Lights, flights and a draw in one week – {0} condition off the week.` | |
+| SPL-SC04 | `Move the shoot to {0}` | |
+| SPL-SC05 | `Pull out of the {0}` | |
+| SPL-SC06 | `She plays as planned and the campaign waits – nothing is paid for it.` | |
+| SPL-SC07 | `She plays as planned, and {0} take back {1} of the campaign fee.` | |
+| SPL-SC08 | `She shoots, and the {0} entry comes back, and a late withdrawal counts against her.` | |
+| SPL-SC09 | `She shoots, and the {0} entry comes back.` | |
+| SPL-SC10 | `She shoots, and the {0} entry is forfeited, and a late withdrawal counts against her.` | |
+| SPL-SC11 | `She shoots, and the {0} entry is forfeited.` | |
+| SPL-SC12 | `Something has to give. All four answers are hers to make.` | |
+| SPL-SC13 | `Two things at once – {0}` | |
+| SPL-SC14 | `{0} want her that week, and so does the {1}.` | |

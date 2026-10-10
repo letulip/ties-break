@@ -103,7 +103,7 @@ The last sentence preserves the real reset rule and must not become the vaguer `
 | English | Russian |
 | --- | --- |
 | `Last 12 weeks` | `Последние 12 недель` |
-| short `12 weeks` | `12 недель` |
+| `12 weeks` – short | `12 недель` |
 | `This season` | `Этот сезон` |
 | `Budget period` | `Период бюджета` |
 | `Total income` | `Доходы` |
@@ -111,7 +111,7 @@ The last sentence preserves the real reset rule and must not become the vaguer `
 | `Balance` | `Итого` |
 | `No spending in this window yet.` | `За этот период расходов пока нет.` |
 | `Income` | `Доходы` |
-| donut `spent` | `потрачено` |
+| `spent` – donut | `потрачено` |
 | `View all transactions` | `Все операции` |
 
 `Итого` is the net change for the selected period; `Остаток` is reserved for the live account
@@ -178,7 +178,7 @@ order.
 
 | English | Russian |
 | --- | --- |
-| heading `Budget` | `Регулярные расходы` |
+| `Budget` – heading | `Регулярные расходы` |
 | `Physio recovery` | `Физиотерапия` |
 | weekly retainer note | `Абонемент снижает риск травмы, ускоряет восстановление и понемногу поддерживает форму. Оплата списывается только за недели без травмы.` |
 | hurt now | `Она травмирована, поэтому на этой неделе оплачивается восстановление: {band} – независимо от абонемента выше.` |
@@ -448,7 +448,7 @@ without a second wording. The three seats keep distinct jobs:
 | `Locked` | `Закрыто` |
 | `Hire` | `Нанять` |
 | `Let go` | `Уволить` |
-| confirm `Set it` | `Выбрать` |
+| `Set it` – confirm | `Выбрать` |
 
 `Массажист` follows the established product term even though the work described includes broader
 recovery. Do not alternate it with `массажистка` based on portrait art: the engine stores a seat,
@@ -485,7 +485,7 @@ Schedule control:
 
 | English | Russian |
 | --- | --- |
-| group aria `Masseur sessions per week` | `Сеансы массажа в неделю` |
+| `Masseur sessions per week` – group aria | `Сеансы массажа в неделю` |
 | `Twice a week` | `Дважды в неделю` |
 | `Every other day` | `Через день` |
 | `Daily` | `Каждый день` |
@@ -542,7 +542,7 @@ single English lead and appending conditional prose would again encourage invali
 
 | English | Russian |
 | --- | --- |
-| group aria `Psychologist – who takes the weekly call` | `Психолог – кто проводит еженедельную сессию` |
+| `Psychologist – who takes the weekly call` – group aria | `Психолог – кто проводит еженедельную сессию` |
 | `Counsellor` | `Консультант` |
 | `Sport psychologist` | `Спортивный психолог` |
 | `Tour-grade specialist` | `Специалист уровня тура` |

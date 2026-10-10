@@ -112,7 +112,8 @@ caller must not invent a synonym merely because it lives in another file.
 | RU01-C08 | `Done` | `Готово` | finish a flow whose work is complete |
 | RU01-C09 | `Retry` | `Повторить` | retry failed operation |
 | RU01-C10 | `Update` | `Обновить` | PWA update |
-| RU01-C11 | `Watch` / `Watch it` | `Смотреть` | open match playback |
+| RU01-C11 | `Watch` | `Смотреть` | open match playback – the college card (10.10 hint pass: the composite split; `Watch it` is its own key) |
+| RU01-C11a | `Watch it` | `Смотреть матч` | the practice flow – aligned to the APPROVED RU-08 value |
 | RU01-C12 | `Watch again` | `Посмотреть ещё раз` | replay from start |
 | RU01-C13 | `To result` | `К результату` | leave playback for box score |
 | RU01-C14 | `Skip to result` | `Сразу к результату` | skip unviewed play |
@@ -152,3 +153,13 @@ English one is exactly who the prompt is for). The two language names are the la
 | RU01-L03 | `src/components/LocalePrompt.vue:46`, `src/components/screens/MoreScreen.vue:747` | `English` | `English` | the language's own NAME, a button on the prompt and a pill on the switcher; 10.10 чат-ок: «English / Русский» – автоним не переводится, identity-ряд | `APPROVED` |
 | RU01-L04 | `src/components/screens/MoreScreen.vue:753` | `Russian` | `Русский` | 10.10 чат-ок: автоним; кнопка промпта с 10.10 – скриптовая константа «Русский» (не переводится по построению), этот ряд кормит пилюлю переключателя | `APPROVED` |
 | RU01-L05 | `src/components/screens/MoreScreen.vue:740` | `Language` | | switcher heading on the Saves tab (an `h2`, like `Saves` and `Danger zone`) and the accessible name of the two-pill group (`MoreScreen.vue:741`) | `DRAFT` |
+
+### ⚙ 10.10 добавка (№40, усмотрение архитектора): рейл-дашборд (RailDashboard) – русская колонка твоя (DRAFT); общие ключи (Close, Continue, #{rank}, Unranked) живут в своих таблицах
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU01-RD01 | `In the account` | |
+| RU01-RD02 | `My entries` | |
+| RU01-RD03 | `{0} /wk` | |
+| RU01-RD04 | `{0} committed` | |
+| RU01-RD05 | `{0} weekly cap` | |

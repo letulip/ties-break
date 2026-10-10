@@ -209,7 +209,7 @@ at the chosen corpus id; it never makes a fresh random draw.
 | `First {tier} final` | `Первый финал {tier}` |
 | `First prize money` | `Первые призовые` |
 | `First trip abroad` | `Первая поездка за границу` |
-| section heading `Important moments` | `Важные моменты` |
+| `Important moments` – section heading | `Важные моменты` |
 
 Tier codes such as `J30` and `W15` stay unchanged. The current 10 px, no-wrap timeline needs explicit
 Cyrillic LQA; if `Первая поездка за границу` cannot fit, wrap the node label to two lines rather than
@@ -457,7 +457,7 @@ prepositional forms; lowercasing a localized display label is not grammar.
 | RU05-C04 | `Her week` | `Её неделя` |
 | RU05-C05 | `Coaches` | `Тренеры` |
 | RU05-C06 | `Support staff` | `Специалисты` |
-| RU05-C07 | group aria `What this screen is about` | `Раздел рынка тренеров` |
+| RU05-C07 | `What this screen is about` – group aria | `Раздел рынка тренеров` |
 | RU05-C08 | `Style` | `Стиль` |
 | RU05-C09 | `Sort` | `Сортировка` |
 | RU05-C10 | `Best fit` | `Сначала подходящие` |

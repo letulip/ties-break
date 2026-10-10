@@ -39,7 +39,7 @@ age anew. The accessible name begins with the visible verb for speech-input matc
 | `Autosave` | `Автосохранение` |
 | `none yet` | `пока нет` |
 | `Restore previous` | `Восстановить предыдущее` |
-| table name `Named saves` | `Именные сохранения` |
+| `Named saves` – table name | `Именные сохранения` |
 | columns `Name` / `Saved` / `Week` / `Size` | `Название` / `Сохранено` / `Неделя` / `Размер` |
 | `Load save {name}` | `Загрузить сохранение «{name}»` |
 | `Delete save {name}` | `Удалить сохранение «{name}»` |

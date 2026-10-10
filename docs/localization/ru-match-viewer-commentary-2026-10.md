@@ -27,8 +27,10 @@ corpora follow as separate reviewable sections.
 
 | source | full Russian label | compact Russian label |
 | --- | --- | --- |
-| `Every point` / `Full` | `Все розыгрыши` | `Все` |
-| `Key points only` / `Key` | `Только ключевые розыгрыши` | `Ключевые` |
+| `Every point` – full word | `Все розыгрыши` | |
+| `Full` – compact toggle | `Все` | |
+| `Key points only` – full word | `Только ключевые розыгрыши` | |
+| `Key` – compact toggle | `Ключевые` | |
 
 Segmented-group accessible name: **`Режим просмотра матча`**.
 
@@ -77,11 +79,11 @@ not imply a tactical instruction or a guaranteed effect on the already-resolved 
 
 | source | Russian |
 | --- | --- |
-| live badge `Live` | `Идёт` |
+| `Live` – live badge | `Идёт` |
 | elapsed-clock aria | `Время матча: {clock}` |
 | `km/h` – speed unit | `км/ч` · `APPROVED` 10.10 – чат-ок: цифры едины, слова единиц переводимы |
-| tiebreak marker `TB` | `ТБ` |
-| player suffix `· serving` | `· подаёт` |
+| `TB` – tiebreak marker | `ТБ` |
+| `· serving` – player suffix | `· подаёт` |
 
 Rank display uses `№{rank}`, not `#{rank}`. Player names use the locale-aware short-name formatter;
 Russian must not split an already formatted full name on spaces inside the viewer.
@@ -150,14 +152,14 @@ duration string.
 | source | Russian |
 | --- | --- |
 | `Practice match` | `Тренировочный матч` |
-| header `To result` | `К результату` |
+| `To result` – header | `К результату` |
 | `Friendly at the club` | `Тренировочный матч в клубе` |
-| compact `vs` | `против` |
+| `vs` – compact | `против` |
 | `sparring partner` | `спарринг-партнёр` |
 | `No ranking points` | `Без рейтинговых очков` |
 | `Skip to result` | `Сразу к результату` |
 | `Watch it` | `Смотреть матч` · `APPROVED` 10.10 |
-| viewer proceed `To the result` | `К результату` |
+| `To the result` – viewer proceed | `К результату` |
 | `Win` | `Победа` |
 | `Loss` | `Поражение` |
 | `{kid} vs {opp} · practice – no ranking points` | `{kid} против {opp} · тренировочный матч · без рейтинговых очков` |
@@ -171,9 +173,9 @@ and must not pass through the name-shortening formatter.
 
 | source | Russian |
 | --- | --- |
-| default title `Match replay` | `Повтор матча` |
-| close accessible name `Close replay` | `Закрыть повтор` |
-| close tooltip `Close` | `Закрыть` |
+| `Match replay` – default title | `Повтор матча` |
+| `Close replay` – close accessible name | `Закрыть повтор` |
+| `Close` – close tooltip | `Закрыть` |
 
 A caller-provided competition title, such as the college league, is localized by that competition's
 catalogue before it reaches the shell. The subtitle joins localized display names with `против`;
@@ -499,7 +501,7 @@ round label inside commentary.
 | --- | --- |
 | `takes it in three` | `{winner} побеждает в трёх сетах.` |
 | `takes it in straight sets` | `{winner} побеждает в двух сетах.` |
-| lead `Match.` | `Матч.` |
+| `Match.` – lead | `Матч.` |
 
 Append the licensed stake sentence, then a point-ending sentence from §16 and the room line from
 §20. The same clause budget may remove colour, but never the victory or stake.

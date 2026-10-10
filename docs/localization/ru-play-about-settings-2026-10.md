@@ -81,7 +81,7 @@ one preference. Phone LQA must cover pill width and the long Russian hint.
 | heading | `About` | `О приложении` |
 | table accessible name | `About this app` | `Сведения о приложении` |
 | product row | `App` | `Приложение` |
-| product value | `Ties Break` + `Ace Parent` | `Ties Break: Ace Parent` (approved product mark) |
+⚙ 10.10 (hint pass): the product value is the PAIR of identity keys `Ties Break` + `Ace Parent` (§9.5, both APPROVED in RU-02); the old composite row could not be one literal and is retired to this note.
 | versioned save row | `Save schema` | `Версия сохранения` |
 | seed row | `Seed` | `Код карьеры` |
 | seed button title | `Copy seed` | `Скопировать код карьеры` |
