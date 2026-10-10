@@ -60,6 +60,12 @@ const TABLE = new Set(allTemplateKeys())
  *  requirement keys are the SAME spellings `composables/letterCopy.ts` gives the season notice's stored phrases (`All {0} {1}` / `All {0} {1}s` / `{0} of the {1} {2}s`), so the popup
  *  and the letter are one translation. */
 const NEW_KEYS: readonly string[] = [
+  // ⚠ 10.10 (the strong-repeat trim, owner «берём все четыре»): the four door receipts lost the
+  // clause their blurb now tells – new spellings for new careers; old saves keep the old arms.
+  '{0} weeks below zero',
+  'she stopped when school ended',
+  '{0} seasons, no step higher',
+  'a title in her last season',
   // ⚠ 10.10 (L3-7b, the SaveFileError typing): the 31 refusal sentences are TRANSPORT-ONLY –
   // they ride the worker reply beside the code and are never stored into a save, so no old
   // save can hold them and no v92 spelling exists to re-key to. Byte-identity of the shown

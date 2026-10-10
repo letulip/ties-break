@@ -675,9 +675,12 @@ describe('§8 a career played to a natural ending off the bench', () => {
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // §9 – the posed set, English
 // ---------------------------------------------------------------------------------------------------------------------------------------------
-/** The pre-wave tree's (a083ebed) readings of the posed set, refs stripped: recomputed by tests/helpers/l3-6-album-set.ts on a throwaway worktree of that commit and on this tree - the same two values. */
+/** The pre-wave tree's (a083ebed) readings of the posed set, refs stripped: recomputed by tests/helpers/l3-6-album-set.ts on a throwaway worktree of that commit and on this tree - the same two values.
+ *  ⚠ 10.10 – VIEWS moved by the owner's own ruling (the strong-repeat trim: four door receipts lost
+ *  the clause their blurb tells; «берём все четыре» in chat, decisions.md). The diff behind the new
+ *  value is ONLY those four strings – the books digest did not move, which is the cross-check. */
 const PRE_WAVE_BOOKS_DIGEST = '7e885813'
-const PRE_WAVE_VIEWS_DIGEST = 'b6fa364f'
+const PRE_WAVE_VIEWS_DIGEST = '3d0366fb'
 
 describe('§9 the posed set of books, in English, is the pre-wave tree\'s byte for byte', () => {
   const set = posedBooks()

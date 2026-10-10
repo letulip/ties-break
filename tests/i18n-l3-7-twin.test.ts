@@ -2,6 +2,9 @@
 //
 // Capture mode (`L37_CAPTURE=<path>`) writes the digests of everything a player reads, on WHATEVER tree it runs on – the stored fixture was captured on the pre-wave tree (4adc0d58), before a line of the
 // wave existed. Compare mode (default) reads that fixture and requires this tree to reproduce it.
+// ⚠ 10.10 (the strong-repeat trim): the owner's own ruling moved four door receipts, so «the
+// pre-wave tree's English» now means «plus his ruled wording changes» – the fixture refreshes at
+// each such ruling (re-captured, the diff reviewed to be ONLY the ruled strings) with a dated note.
 import { describe, expect, it } from 'vitest'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
@@ -76,6 +79,21 @@ function capture(): Capture {
     writeFileSync(DUMP, JSON.stringify({ node: process.version, env: { TZ: process.env.TZ ?? null, LANG: process.env.LANG ?? null, NODE_OPTIONS: process.env.NODE_OPTIONS ?? null }, fields: dumped }, null, 1) + '\n')
   }
   return { viz: { commentary: commentaryDigests(), preview: previewDigests(), knock: knockDigest(), famous: famousDigest() }, careers, college }
+}
+
+// ⚠ L37_TWICE (10.10) – the in-registry statefulness probe: the owner's bulk reds carry digests no
+// solo run on EITHER machine reproduces, and the one mechanism left is a second collection in a
+// warm module registry (vitest re-collects a file when a stalled worker's report is lost). This
+// knob runs capture() twice in ONE registry and names every digest the second pass moved – green
+// means the engine is registry-pure and the bulk red is the runner's, red names the stateful module.
+if (process.env.L37_TWICE) {
+  describe('L3-7 twice – a second capture in the same registry changes nothing', () => {
+    it('every digest of pass two equals pass one', () => {
+      const first = capture()
+      const second = capture()
+      expect(second).toEqual(first)
+    }, 120_000)
+  })
 }
 
 const target = process.env.L37_CAPTURE

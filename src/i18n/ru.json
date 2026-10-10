@@ -32,6 +32,7 @@
   "Winners": "Удары навылет",
   "Withdraw": "Сняться",
   "Working class": "Скромный бюджет",
+  "a title in her last season": "Титул – в её последний сезон.",
   "album|Back to Home": "Вернуться на экран «Дом»",
   "counting|Tier": "Уровень",
   "day1|M": "Пн",
@@ -46,9 +47,12 @@
   "nav|Stats": "Рейтинг",
   "plan|Not enough funds": "Недостаточно средств",
   "screen|Back to Home": "Вернуться на экран «Дом»",
+  "she stopped when school ended": "После школы она остановилась.",
   "spend|Travel": "Поездки",
   "undo|Cancel": "Отменить",
   "{0} KB": "{0} КБ",
   "{0} km/h": "{0} км/ч",
-  "{0} vs {1}": "{0} – {1}"
+  "{0} seasons, no step higher": "{0, plural, one {{0} сезон} few {{0} сезона} many {{0} сезонов} other {{0} сезонов}} без шага вверх",
+  "{0} vs {1}": "{0} – {1}",
+  "{0} weeks below zero": "{0, plural, one {{0} неделя} few {{0} недели} many {{0} недель} other {{0} недель}} ниже нуля"
 }

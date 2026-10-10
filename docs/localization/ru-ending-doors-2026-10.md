@@ -40,16 +40,16 @@ English fragment after an em dash.
 
 | Door / branch | English detail | Russian draft as a complete feed row |
 | --- | --- | --- |
-| bankruptcy | `{weeks} weeks below zero – there was no next entry fee` | `Деньги закончились: баланс оставался ниже нуля {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недель}}, и на следующий заявочный взнос уже не хватило.` |
+| bankruptcy | `{weeks} weeks below zero` | `{weeks, plural, one {{weeks} неделя} few {{weeks} недели} many {{weeks} недель} other {{weeks} недель}} ниже нуля` · `APPROVED` 10.10 – чат-ок «берём все четыре»: квитанция несёт число, историю говорит блёрб; старая полная форма живёт в старых сейвах |
 | career-ending injury | `{lost} weeks already lost, and then this one` | `Первым не выдержал организм: за карьеру травмы уже отняли {lost, plural, one {{lost} неделю} few {{lost} недели} many {{lost} недель} other {{lost} недель}}, а потом случилась эта.` |
 | college | `{years} years of student tennis – no ranking points, and the family pays its share of each year` | `Она поступила в университет: впереди {years, plural, one {{years} год} few {{years} года} many {{years} лет} other {{years} лет}} студенческого тенниса без рейтинговых очков; часть расходов за каждый год оплачивает семья.` |
-| stopped at school end | `she stopped when school ended, and nobody had to call it a failure` | `После школы она остановилась. Называть это неудачей не нужно.` |
-| plateau | `{seasons} seasons and the table would not move` | `Она решила закончить: за {seasons, plural, one {{seasons} сезон} few {{seasons} сезона} many {{seasons} сезонов} other {{seasons} сезонов}} её положение в рейтинге не сдвинулось.` |
+| stopped at school end | `she stopped when school ended` | `После школы она остановилась.` · `APPROVED` 10.10 – утешительная клауза ушла (и нарушала «не утешать») |
+| plateau | `{seasons} seasons, no step higher` | `{seasons, plural, one {{seasons} сезон} few {{seasons} сезона} many {{seasons} сезонов} other {{seasons} сезонов}} без шага вверх` · `APPROVED` 10.10 – метафора стола осталась блёрбу |
 | natural, final word | `{age}, and nobody had to ask her` | `Она закончила в {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}. Спрашивать её уже не пришлось.` |
 | natural, one-more-year history | `{count} more year/years after the first time she was asked` | `После первого разговора она сыграла ещё {count, plural, one {{count} год} few {{count} года} many {{count} лет} other {{count} лет}}. Потом закончила.` |
 | natural, accepted first offer | `the first time she was asked, she said yes` | `Она решила закончить после первого же разговора об этом.` |
 | peak, rank clause | `she was #{rank} the week she said it` | `Она ушла на вершине: в неделю своего решения занимала место №{rank}.` |
-| peak, title clause | `a title at the top of the sport, and she went the same season` | `Она ушла на вершине: взяла титул самого высокого уровня и закончила в том же сезоне.` |
+| peak, title clause | `a title in her last season` | `Титул – в её последний сезон.` · `APPROVED` 10.10 – «вершина» остаётся заголовку |
 | fall | `#{before} to #{after} in one season` | `После спада она остановилась: за сезон опустилась с места №{before} на №{after}.` |
 | family | `{weeksAway} weeks without a new entry` | `Она не вернулась в тур: {weeksAway, plural, one {{weeksAway} неделю} few {{weeksAway} недели} many {{weeksAway} недель} other {{weeksAway} недель}} без новой заявки.` |
 

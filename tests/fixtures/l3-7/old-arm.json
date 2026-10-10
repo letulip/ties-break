@@ -434,7 +434,7 @@
   },
   "8/0": {
    "rows": 2573,
-   "rowsDigest": "7c89a6e0a720",
+   "rowsDigest": "0b5fb8eb8e69",
    "rows150": 1460,
    "rowsDigest150": "bf1774078346",
    "watched": {
@@ -447,8 +447,8 @@
     0.30679384991526604,
     0.533905585296452
    ],
-   "world": "8ef0001e8742",
-   "snapshot": "fb84e77d6633",
+   "world": "82de6c9ceba5",
+   "snapshot": "0ce88fbb47a1",
    "worldFields": {
     "schemaVersion": "08a35293e09f",
     "careerId": "ee58d00eaa2f",
@@ -464,7 +464,7 @@
     "results": "46729e700c9a",
     "season": "b3502e71790f",
     "entries": "97d170e1550e",
-    "events": "f3a56db86abf",
+    "events": "e0e09f3af376",
     "nextEventId": "54d1aa744108",
     "kidRank": "4cd66dfabbd9",
     "prevKidRank": "4cd66dfabbd9",
@@ -504,7 +504,7 @@
     "penalties": "97d170e1550e",
     "suspendedUntilWeek": "2be88ca4242c",
     "kit": "a571e362cf06",
-    "ending": "89f613694999",
+    "ending": "df83d64f4462",
     "debtSinceWeek": "2be88ca4242c",
     "careerTotals": "29b1b02ece79",
     "fork": "2be88ca4242c",
@@ -663,7 +663,7 @@
     "lastSeasonSummary": "d316604f8474",
     "seasonWrapPrompt": "2be88ca4242c",
     "seasonHistory": "527ee26e356c",
-    "ending": "d4bccea58c71",
+    "ending": "01e11eb740fe",
     "debt": "2be88ca4242c",
     "fork": "2be88ca4242c",
     "retirementOffer": "2be88ca4242c",

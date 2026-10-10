@@ -411,7 +411,8 @@ export function detectEnding(view: AutoEndingView, graceWeeks: number = ENDINGS.
       type: 'bankruptcy',
       week: view.week,
       ageYears: view.ageYears,
-      detail: `${weeks} weeks below zero – there was no next entry fee`,
+      // ⚠ 10.10 (owner: the strong repeats) – the receipt keeps the NUMBER; the second clause is the blurb's story now.
+      detail: `${weeks} weeks below zero`,
       resumesWeek: null,
     }
   }
@@ -507,7 +508,8 @@ export function endingForForkAnswer(
     ageYears,
     // ⚠ "at nineteen" UNTIL ROUND 24 #5 – the fork is asked when school ends now (age 18.0–18.9),
     // so the line anchors to the moment that raises it rather than to an age it no longer fires at.
-    detail: 'she stopped when school ended, and nobody had to call it a failure',
+    // ⚠ 10.10 – the consolation clause left for the blurb (and it broke the record's own «may not console» rule).
+    detail: 'she stopped when school ended',
     resumesWeek: null,
   }
 }
@@ -768,7 +770,8 @@ export function endingForRetirement(
       type,
       week,
       ageYears,
-      detail: `${ENDINGS.plateauSeasons} seasons and the table would not move`,
+      // ⚠ 10.10 – the table metaphor is the blurb's; the receipt counts.
+      detail: `${ENDINGS.plateauSeasons} seasons, no step higher`,
       resumesWeek: null,
     }
   }
@@ -1061,7 +1064,8 @@ export function endingForLeaving(
   if (door === 'peak') {
     const detail = peakRankClauseOpened(view)
       ? `she was #${view.endRank} the week she said it`
-      : 'a title at the top of the sport, and she went the same season'
+      // ⚠ 10.10 – «top» stays with the title and the blurb; the receipt is dry.
+      : 'a title in her last season'
     return { type: 'peak', week, ageYears, detail, resumesWeek: null }
   }
   // ⚠ BOTH PLACES ARE NON-NULL HERE BY `fallLeavingDue`'s OWN GUARD, and the `??` is the defensive
@@ -1313,6 +1317,8 @@ export function endingDetailRef(ending: Pick<CareerEnding, 'type' | 'detail'>): 
   switch (ending.type) {
     case 'stopped':
       if (d === 'she stopped when school ended, and nobody had to call it a failure') return cp`she stopped when school ended, and nobody had to call it a failure`
+      // ⚠ 10.10 – the trimmed receipt (owner's strong-repeat call); the arm above keeps old saves rendering.
+      if (d === 'she stopped when school ended') return cp`she stopped when school ended`
       break
     case 'college': {
       const years = wholeNumber(/^(\d+) years of student tennis – no ranking points, and the family pays its share of each year$/.exec(d)?.[1])
@@ -1322,6 +1328,8 @@ export function endingDetailRef(ending: Pick<CareerEnding, 'type' | 'detail'>): 
     case 'bankruptcy': {
       const weeks = wholeNumber(/^(\d+) weeks below zero – there was no next entry fee$/.exec(d)?.[1])
       if (weeks !== null) return cp`${weeks} weeks below zero – there was no next entry fee`
+      const weeksTrim = wholeNumber(/^(\d+) weeks below zero$/.exec(d)?.[1])
+      if (weeksTrim !== null) return cp`${weeksTrim} weeks below zero`
       break
     }
     case 'injury': {
@@ -1342,12 +1350,15 @@ export function endingDetailRef(ending: Pick<CareerEnding, 'type' | 'detail'>): 
     case 'plateau': {
       const seasons = wholeNumber(/^(\d+) seasons and the table would not move$/.exec(d)?.[1])
       if (seasons !== null) return cp`${seasons} seasons and the table would not move`
+      const seasonsTrim = wholeNumber(/^(\d+) seasons, no step higher$/.exec(d)?.[1])
+      if (seasonsTrim !== null) return cp`${seasonsTrim} seasons, no step higher`
       break
     }
     case 'peak': {
       const rank = wholeNumber(/^she was #(\d+) the week she said it$/.exec(d)?.[1])
       if (rank !== null) return cp`she was #${rank} the week she said it`
       if (d === 'a title at the top of the sport, and she went the same season') return cp`a title at the top of the sport, and she went the same season`
+      if (d === 'a title in her last season') return cp`a title in her last season`
       break
     }
     case 'fall': {
