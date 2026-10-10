@@ -5,6 +5,21 @@
 // ⚠ 10.10 (the strong-repeat trim): the owner's own ruling moved four door receipts, so «the
 // pre-wave tree's English» now means «plus his ruled wording changes» – the fixture refreshes at
 // each such ruling (re-captured, the diff reviewed to be ONLY the ruled strings) with a dated note.
+//
+// ⚠⚠ TWO PLATFORM FAMILIES, BOTH TRUE (10.10, the day-long hunt). The PR runner (ubuntu/x64,
+// node 22) produces snapshot digests no darwin/arm64 machine can – measured to the last cell: a
+// podman `--platform linux/amd64 node:22` capture reproduced ALL SEVEN of the CI run's digests
+// exactly, while solo and bulk runs on two arm64 Macs reproduce the darwin fixture. The carriers
+// (coachMarket / coachDeal / upcoming) are where the coach-price curves' transcendentals live, and
+// a last-ulp difference between V8 builds is a cent, which is a different quote. The PRODUCT law
+// is per-device determinism (a save resumes, never replays – v35); cross-platform byte-equality of
+// float curves was never its claim, so the NET now compares each platform family to ITS OWN frozen
+// capture, full strength on both:
+//   darwin/arm64:  tests/fixtures/l3-7/old-arm.json            (L37_CAPTURE on this Mac)
+//   linux/x64:     tests/fixtures/l3-7/old-arm.linux-x64.json  (podman run --rm --platform
+//     linux/amd64 -v "$PWD":/src:ro -v <out>:/out node:22 … L37_CAPTURE=/out/… – node 22 is the
+//     CI pin; refresh BOTH on every ruled wording change, diff-reviewed the same way.)
+// An unlisted family refuses by name rather than comparing apples to a frozen orange.
 import { describe, expect, it } from 'vitest'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
@@ -32,7 +47,14 @@ function dumpFields(label: string, world: Parameters<typeof toSnapshot>[0]): voi
   dumped[label] = { coachDeal: w.coachDeal ?? null, coachMarket: coachMarket(world), upcoming: snap.upcoming }
 }
 
-const FIXTURE = resolve(__dirname, 'fixtures/l3-7/old-arm.json')
+const FAMILY = `${process.platform}-${process.arch}`
+const FIXTURE_BY_FAMILY: Record<string, string> = {
+  'darwin-arm64': 'fixtures/l3-7/old-arm.json',
+  'linux-x64': 'fixtures/l3-7/old-arm.linux-x64.json',
+}
+const FIXTURE_REL = FIXTURE_BY_FAMILY[FAMILY]
+if (FIXTURE_REL === undefined) throw new Error(`the twin has no frozen capture for the platform family «${FAMILY}» – capture one (commands in this file's header) and list it in FIXTURE_BY_FAMILY`)
+const FIXTURE = resolve(__dirname, FIXTURE_REL)
 const CAREERS: Array<[number, number]> = [[5, 0], [8, 0], [0, 1], [6, 1], [5, 1]]
 
 // `worldFields`/`snapshotFields` (10.10): the same serialisation digested per top-level key, so a
