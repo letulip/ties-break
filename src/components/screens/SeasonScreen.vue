@@ -2058,7 +2058,8 @@ function closeExhibition(): void {
               <!-- ⚠⚠ LEFT LIVE INSIDE THE COLLEGE FREEZE, ON PURPOSE (round 24, E2). `cancelVacation`
                    takes `guardNotEndedForGood` – a booked family week is the family's own calendar,
                    and a trip booked before she left is really paid for inside the freeze. -->
-              <!-- `undo|` (owner 10.10): this Cancel UNDOES a booked week – «Отменить», not the dialog's «Отмена». -->
+              <!-- `undo|` (owner 10.10): this Cancel UNDOES a booked week, so it carries the undoing
+                   word, split from the dialog-closing one that lives on the bare key. -->
               <button :disabled="game.busy" @click="askCancelVacation(row.week, row.vacation)">{{ t('undo|Cancel') }}</button>
             </span>
           </div>
