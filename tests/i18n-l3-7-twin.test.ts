@@ -92,7 +92,7 @@ if (process.env.L37_TWICE) {
       const first = capture()
       const second = capture()
       expect(second).toEqual(first)
-    }, 120_000)
+    }, 60_000)  /* birpc ceiling – the probe runs only under its env knob, never in bulk, but the budget ratchet sweeps statically */
   })
 }
 

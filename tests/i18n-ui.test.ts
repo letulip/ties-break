@@ -30,7 +30,7 @@ import {
   useI18n,
 } from '../src/i18n'
 import type { Locale } from '../src/i18n'
-import { cp } from '../src/shared/i18n'
+import { analyzeMessage, cp, formatMessage } from '../src/shared/i18n'
 import { computed } from 'vue'
 
 // This runner has no `localStorage` (Node's experimental global is an own property holding
@@ -132,7 +132,21 @@ describe('the shipped Russian catalog (the importer\'s ru.json) is a real catalo
     const shipped = JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string, string>
     const keys = Object.keys(shipped)
     expect(keys.length, 'an empty ru.json would make this case vacuous').toBeGreaterThan(0)
-    for (const k of keys) expect(t(k)).toBe(shipped[k])
+    // ⚠ 10.10 RE-AIMED, NOT RELAXED: the first PARAMETRISED rows landed (the door receipts' ICU
+    // plurals), and a bare t(k) on one throws «plural argument is not a number» inside the renderer
+    // and falls back to English – the sweep was comparing a fallback to a value. A row with
+    // arguments renders with sample numbers and must equal the formatter's own reading of the
+    // shipped value; a plain row keeps the old identity law. The owner's bulk caught it.
+    for (const k of keys) {
+      const shape = analyzeMessage(shipped[k]!)
+      if (shape.args.length === 0) {
+        expect(t(k), k).toBe(shipped[k])
+      } else {
+        const params = Object.fromEntries(shape.args.map((name) => [name, 7]))
+        expect(t(k, params), k).toBe(formatMessage(shipped[k]!, params, { locale: 'ru' }))
+        expect(t(k, params), `${k}: a parametrised row must not fall back to its English key`).not.toBe(k)
+      }
+    }
     expect(missCount(), 'a key that IS in the catalog is not a miss').toBe(0)
     expect(t('A sentence that is in no catalog at all')).toBe('A sentence that is in no catalog at all')
     expect(missCount()).toBe(1)
