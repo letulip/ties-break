@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "count": 5530,
+  "count": 5531,
   "keys": {
     " (+{0} banked – a ranking needs {1} events with points, or {2})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["points"],["RANKABLE_MIN.tournaments"],["RANKABLE_MIN.points"]],"wrapped":true},
     " (does not improve best {0})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["bestN"]],"wrapped":true},
@@ -1351,7 +1351,7 @@
     "Camping road-trip": {"home":["src/engine/economy.ts"],"area":["economy"]},
     "Can't stop smiling.": {"home":["src/engine/diary/pool.ts"],"area":["diary"],"wrapped":true,"seat":["diary.pool"]},
     "Canada": {"home":["src/composables/countries.ts"],"area":["scripts"],"wrapped":true},
-    "Cancel": {"home":["src/components/ConfirmDialog.vue","src/components/screens/MoreScreen.vue","src/components/screens/SeasonScreen.vue"],"area":["screens","scripts"],"wrapped":true},
+    "Cancel": {"home":["src/components/ConfirmDialog.vue","src/components/screens/MoreScreen.vue"],"area":["screens","scripts"],"wrapped":true},
     "Cancel any time before the week starts and nothing is owed either way.": {"home":["src/components/PlanWeekSheet.vue"],"area":["screens"],"wrapped":true},
     "Cancel any time before the week starts and the money comes back in full.": {"home":["src/components/PlanWeekSheet.vue"],"area":["screens"],"wrapped":true},
     "Cancel entry": {"home":["src/components/screens/SeasonScreen.vue"],"area":["screens"],"wrapped":true},
@@ -2716,7 +2716,7 @@
     "Runner-up": {"home":["src/components/TournamentFlow.vue","src/components/screens/TrophiesScreen.vue"],"area":["screens","scripts"],"wrapped":true},
     "Runner-up. She pushed the final all the way.": {"home":["src/engine/diary/pool.ts"],"area":["diary"],"wrapped":true,"seat":["diary.pool"]},
     "Russia": {"home":["src/composables/countries.ts"],"area":["scripts"],"wrapped":true},
-    "Russian": {"home":["src/components/LocalePrompt.vue","src/components/screens/MoreScreen.vue"],"area":["screens"],"wrapped":true},
+    "Russian": {"home":["src/components/screens/MoreScreen.vue"],"area":["screens"],"wrapped":true},
     "SAT": {"home":["src/composables/weekDays.ts"],"area":["scripts"],"wrapped":true},
     "SUN": {"home":["src/composables/weekDays.ts"],"area":["scripts"],"wrapped":true},
     "Safe travels. Message when the hotel door closes.": {"home":["src/composables/fridgeNote.ts"],"area":["scripts"],"wrapped":true,"seat":["fridge.note"]},
@@ -5132,6 +5132,7 @@
     "times.": {"home":["src/components/EndingScreen.vue"],"area":["screens"],"wrapped":true},
     "total|Banked": {"home":["src/components/CollegeDoneDialog.vue"],"area":["screens"],"wrapped":true},
     "two local tournaments": {"home":["src/prologue/handover.ts"],"area":["engine"],"wrapped":true},
+    "undo|Cancel": {"home":["src/components/screens/SeasonScreen.vue"],"area":["screens"],"wrapped":true},
     "unknown": {"home":["src/composables/buildInfo.ts"],"area":["scripts"],"wrapped":true},
     "unranked": {"home":["src/components/ForkDialog.vue"],"area":["scripts"],"wrapped":true},
     "view|Skip": {"home":["src/composables/matchDefaults.ts"],"area":["scripts"],"wrapped":true},

@@ -103,10 +103,10 @@ caller must not invent a synonym merely because it lives in another file.
 | id | English | Preferred Russian | use |
 | --- | --- | --- | --- |
 | RU01-C01 | `Back` | `Назад` | navigation history |
-| RU01-C02 | `Back to Home` | `Домой` | explicit return to the Home screen |
+| RU01-C02 | `Back to Home` (`ThisWeekScreen.vue`) | `Домой` · `APPROVED` 10.10 | explicit return to the Home screen – видимая короткая кнопка (чат-ок: aria-формы остаются длинными) |
 | RU01-C03 | `Close` | `Закрыть` | close sheet/dialog/replay |
 | RU01-C04 | `Dismiss` | `Закрыть` | notice dismissal; same visible verb is intentional |
-| RU01-C05 | `Cancel` | `Отменить` | cancel an action or booking |
+| RU01-C05 | `undo\|Cancel` | `Отменить` · `APPROVED` 10.10 | cancel an action or booking – с 10.10 это ключ `undo\|Cancel` (кнопки отмены брони на Сезоне); диалоговое «Отмена» живёт на голом `Cancel` |
 | RU01-C06 | `Confirm` | `Подтвердить` | confirm a consequential action |
 | RU01-C07 | `Continue` | `Продолжить` | move past a report/dialog |
 | RU01-C08 | `Done` | `Готово` | finish a flow whose work is complete |
@@ -149,6 +149,6 @@ English one is exactly who the prompt is for). The two language names are the la
 | --- | --- | --- | --- | --- | --- |
 | RU01-L01 | `src/components/LocalePrompt.vue:43` | `Choose your language` | | first-run prompt title, an `h2` on a 320 px dialog card; the card is the first thing a new device sees | `DRAFT` |
 | RU01-L02 | `src/components/LocalePrompt.vue:44` | `You can change this later in Settings.` | | one short sentence under the title; `Settings` is the existing label of the gear on Home and the Kid screen (its `aria-label`/`title`), which opens the More screen | `DRAFT` |
-| RU01-L03 | `src/components/LocalePrompt.vue:46`, `src/components/screens/MoreScreen.vue:747` | `English` | | the language's own NAME, a button on the prompt and a pill on the switcher; the usual convention is that a language is written in itself, so `English` may stay `English` in Russian mode – his call; two buttons share one 320 px card, so keep it short | `DRAFT` |
-| RU01-L04 | `src/components/LocalePrompt.vue:47`, `src/components/screens/MoreScreen.vue:753` | `Russian` | | the same, for Russian: a prompt button and a switcher pill; the same convention would give the language's own name here – his call | `DRAFT` |
+| RU01-L03 | `src/components/LocalePrompt.vue:46`, `src/components/screens/MoreScreen.vue:747` | `English` | `English` | the language's own NAME, a button on the prompt and a pill on the switcher; 10.10 чат-ок: «English / Русский» – автоним не переводится, identity-ряд | `APPROVED` |
+| RU01-L04 | `src/components/screens/MoreScreen.vue:753` | `Russian` | `Русский` | 10.10 чат-ок: автоним; кнопка промпта с 10.10 – скриптовая константа «Русский» (не переводится по построению), этот ряд кормит пилюлю переключателя | `APPROVED` |
 | RU01-L05 | `src/components/screens/MoreScreen.vue:740` | `Language` | | switcher heading on the Saves tab (an `h2`, like `Saves` and `Danger zone`) and the accessible name of the two-pill group (`MoreScreen.vue:741`) | `DRAFT` |

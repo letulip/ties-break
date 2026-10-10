@@ -121,9 +121,9 @@ joy away cell.
 
 | option id | English source | Russian draft |
 | --- | --- | --- |
-| `more` | `Ask her to say more` | `Попросить рассказать ещё` |
-| `view` | `Tell her what we think` | `Сказать, что мы думаем` |
-| `easy` | `Tell her it can keep` | `Сказать, что это может подождать` |
+| `more` | `Ask her to say more` | `Попросить рассказать подробнее` · `APPROVED` 10.10 |
+| `view` | `Tell her what we think` | `Сказать, что мы думаем` · `APPROVED` 10.10 |
+| `easy` | `Tell her it can keep` | `Сказать, что можно не спешить` · `APPROVED` 10.10 |
 
 These three options remain literal zero-bond choices. Russian must not turn one into a recommended
 or emotionally safer answer. New situations use their authored stance labels instead of these
@@ -162,7 +162,7 @@ the first runtime row and must remain first in the localized catalogue.
 
 | stance | English source | Russian draft |
 | --- | --- | --- |
-| invite | `Ask what made it good` | `Спросить, что именно получилось` |
+| invite | `Ask what made it good` | `Спросить, что было по-другому` · `APPROVED` 10.10 |
 | respond | `Tell her we're glad` | `Сказать, что мы рады` |
 | space | `Let her enjoy it` | `Дать ей порадоваться` |
 
@@ -207,7 +207,7 @@ a line decision was wrong, but it may not invent a chair umpire, line judge or e
 | --- | --- | --- |
 | invite | `Let her keep going` | `Дать ей продолжить` |
 | respond | `Tell her what worries us` | `Сказать, что нас тревожит` |
-| space | `Say she needn't solve it tonight` | `Сказать, что сегодня это можно не решать` |
+| space | `Say she needn't solve it tonight` | `Сказать, что сегодня можно не решать` · `APPROVED` 10.10 |
 
 ### 7.3 Replies
 
@@ -388,7 +388,7 @@ the 19 ordinary strings.
 | --- | --- | --- |
 | invite | `Ask what he did` | `Спросить, что он сделал` |
 | respond | `Laugh with her` | `Посмеяться вместе с ней` |
-| space | `Let her finish` | `Дать ей закончить` |
+| space | `Let her finish` | `Дать ей договорить` · `APPROVED` 10.10 |
 
 ### 11.4 Replies
 
@@ -431,7 +431,7 @@ not assert a flat where the college stage may mean a dorm.
 | --- | --- | --- |
 | invite | `Let her keep going` | `Дать ей продолжить` |
 | respond | `Ask whether she's been eating properly` | `Спросить, нормально ли она ест` |
-| space | `Say she needn't solve it tonight` | `Сказать, что сегодня можно ничего не решать` |
+| space | `Say she needn't solve it tonight` | `Сказать, что сегодня можно не решать` · `APPROVED` 10.10 |
 
 ### 12.3 Replies
 
@@ -472,7 +472,7 @@ win against that opponent. The Russian number and first-win claim are therefore 
 
 | stance | English source | Russian draft |
 | --- | --- | --- |
-| invite | `Ask what made it good` | `Спросить, что в этом было самым приятным` |
+| invite | `Ask what made it good` | `Спросить, что было по-другому` · `APPROVED` 10.10 |
 | respond | `Tell her we're glad` | `Сказать, что мы рады` |
 | space | `Let her enjoy it` | `Дать ей порадоваться` |
 

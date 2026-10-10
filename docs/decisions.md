@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 166 dated entries, newest 2026-10-10. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 167 dated entries, newest 2026-10-10. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 7 | [FOURTH BATCH: THE SUPPORTS' REFUSALS BANK LIKE THE COACH'S, AT THEIR OWN SCALE](#02102026--fourth-batch-the-supports-refusals-bank-like-the-coachs-at-their-own-scale) | 2026-10-02 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 17 | [THE TARIFF IS HIS LEVER: J 1-2-3, W BY STAGE, THE SHOOT PAYS PER DAY](#02102026--the-tariff-is-his-lever-j-1-2-3-w-by-stage-the-shoot-pays-per-day) | 2026-10-02 |
-| general | 35 | [L4 JOINS THE SINGLE MERGE: THE NIGHT ORDER](#10102026--l4-joins-the-single-merge-the-night-order) | 2026-10-10 |
+| general | 36 | [THE MORNING BATCH: THIRTEEN YELLOW WORDS WHOLESALE, FOUR RED RULINGS](#10102026--the-morning-batch-thirteen-yellow-words-wholesale-four-red-rulings) | 2026-10-10 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -6043,3 +6043,23 @@ the RU-13C technical half (lang tag, manifest, the policy route with its EN fall
 rows approve). The honest frame stands in §8: the closure gates – 100% of his chosen batch set
 and the zero miss counter – WAIT on his читка by design; the night builds every machine that
 measures them. Questions pile for the morning, his word resumes the levers.
+
+## 10.10.2026 – THE MORNING BATCH: THIRTEEN YELLOW WORDS WHOLESALE, FOUR RED RULINGS
+
+«по желтым давай на все "ок", а я потом вживую посмотрю и тестерам скажу» – the reviewer-prefilled
+words are APPROVED as a batch, provisional on his live look: «Недостаточно средств»; «Отмена»
+(dialog close) / «Отменить» (undoing a booked action – the `undo|Cancel` split); «Удары навылет»
+(box score, over RU-04's «Виннеры»); «Уровень» / «Поездки» (TierGuide headers, over RU-07's
+«Турнир») / «Сняться» (the live Withdraw is the tournament one; the shop form waits for its own
+call site); «Домой» on every visible Back-to-Home (the long aria form waits on the unruled DOM
+question №15); «English / Русский» (the autonym is a script constant – it may never translate);
+«Пн Вт Ср Чт Пт Сб Вс»; «Посмотреть ещё раз» (+ the RU-04-side pairs); «км/ч», «КБ»; the seven
+reply labels in the reviewer's forms; «Потеря беременности и смерть близкого».
+
+And the red rulings of the same message: **38** LB-note lays the checklist UNDER the prose;
+**45** the store phrase is the reviewer's – «Теннисная карьера глазами семьи: матчи, взросление
+и цена мечты.» – «пока так»; **41** «гориз. скролл точно надо чинить, не должно быть» – the two
+320 px horizontal overflows (Stats +23 px, Family budget +12 px) are defects, fixed in this
+branch; **24** «впиши сам, жду на читку» – the architect writes the hint cells into the tables,
+his read follows. **40** re-confirmed №5/§9.5: tournament names are never translated – the
+«World Tour 15» tag question was only about layout next to Russian text, folded into his live QA.

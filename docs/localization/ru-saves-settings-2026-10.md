@@ -103,8 +103,10 @@ here; the confirmation remains in the UI, translation does not weaken the warnin
 | `Danger zone` | `Опасные действия` |
 | `New career` | `Новая карьера` |
 | `Your current career stays saved – you can switch back anytime in Careers.` | `Текущая карьера останется сохранённой. К ней можно вернуться через раздел «Карьеры».` |
-| `Confirm` / `Cancel` | `Подтвердить` / `Отменить` |
+| `Confirm` | `Подтвердить` · `APPROVED` 10.10 – композитная ячейка разведена на два ряда по чат-ок |
+| `Cancel` (`ConfirmDialog.vue`) | `Отмена` · `APPROVED` 10.10 – диалоговый дефолт; «Отменить» ушло ключу `undo\|Cancel` |
 | `▶▶ 52 (dev)` | `▶▶ 52 недели (разработка)` |
+| `{n} KB` | `{n} КБ` · `APPROVED` 10.10 – чат-ок: слова единиц переводимы, цифры едины |
 
 The 52-week button is shipped in every build by owner ruling; therefore its visible text is
 within the localization scope even though it says `dev`. It must not skip authoritative stops

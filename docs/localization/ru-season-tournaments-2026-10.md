@@ -84,11 +84,11 @@ shared localized week formatter; `W3–W10` must not survive inside an otherwise
 | RU04-G01 | `Close tier guide` | `Закрыть гид по туру` |
 | RU04-G02 | `Close` | `Закрыть` |
 | RU04-G03 | `Tour guide` | `Гид по туру` |
-| RU04-G04 | `Tier` | `Уровень` |
+| RU04-G04 | `Tier` (`TierGuide.vue`) | `Уровень` · `APPROVED` 10.10 |
 | RU04-G05 | `Opens at` | `Открывается при` |
 | RU04-G06 | `Draw` | `Сетка` |
 | RU04-G07 | `Entry fee` | `Взнос` |
-| RU04-G08 | `Travel` | `Поездка` |
+| RU04-G08 | `Travel` (`TierGuide.vue`) | `Поездка` · `APPROVED` 10.10 – заголовок колонки гайда: цена одной поездки этого уровня; категория расходов «Поездки» – ряд `spend\|Travel` в RU-06 |
 | RU04-G09 | `Points (W / F / SF / …)` | `Очки (П / Ф / ПФ / …)` |
 | RU04-G10 | zero entry fee | `none` | `нет` |
 
@@ -259,12 +259,12 @@ inside the Russian pool; it must not draw again or consume the main RNG stream.
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU04-E01 | `Withdraw` | `Сняться` |
+| RU04-E01 | `Withdraw` (`SeasonScreen.vue`) | `Сняться` · `APPROVED` 10.10 – турнирная форма; магазинная «Снять с продажи» – ряд `listing\|Withdraw` в RU-06 |
 | RU04-E02 | `Cancel entry` | `Отменить заявку` |
 | RU04-E03 | `Entries closed {week}` | `Заявки закрыты · {week}` |
 | RU04-E04 | `Enter` | `Подать заявку` |
 | RU04-E05 | accessible `Enter the {event}, {weekRange}` (`src/composables/eventName.ts:40`) | `Подать заявку на турнир «{event}» ({weekRange})` |
-| RU04-E06 | `Not enough funds` | `Недостаточно средств` |
+| RU04-E06 | `Not enough funds` (`SeasonScreen.vue`) | `Недостаточно средств` · `APPROVED` 10.10 |
 | RU04-E07 | `Exhausted – race anyway? Rest would be wiser.` | `Вымоталась – всё равно играть? Отдых был бы разумнее.` |
 | RU04-E08 | `+ Plan week` | `+ Спланировать неделю` |
 | RU04-E09 | `Exams this week` | `На этой неделе экзамены` |
@@ -331,7 +331,7 @@ plus a space.
 | RU04-W08 | `Practice match + coach` | `Тренировочный матч + тренер` |
 | RU04-W09 | `instead of {event}` | `вместо турнира «{event}»` |
 | RU04-W10 | `Play it and watch` | `Сыграть и посмотреть` |
-| RU04-W11 | `Cancel` | `Отменить` |
+| RU04-W11 | `undo\|Cancel` | `Отменить` · `APPROVED` 10.10 – ключ получил `undo\|`-тег (чат-ок: «Отмена» закрывает диалог, «Отменить» отменяет бронь; это кнопки отмены брони на Сезоне) |
 | RU04-W12 | `School owns this week.` | `Эта неделя принадлежит школе.` |
 | RU04-W13 | open-but-unscheduled note | `Ей также доступны: {tiers}. В ближайшие {weeks} их нет в календаре. Это не блокировка – просто такие турниры проходят реже.` |
 | RU04-W14 | stacked-week note | `На одной неделе теперь может быть несколько турниров. Сыграть можно только один – выбирать вам.` |
@@ -526,15 +526,15 @@ write a second set.
 | --- | --- | --- |
 | RU04-T37 | `Win` | `Победа` |
 | RU04-T38 | `Loss` | `Поражение` |
-| RU04-T39 | result pair | `{kid} vs {opponent}` | `{kid} – {opponent}` |
+| RU04-T39 | `{kid} vs {opponent}` – result pair | `{kid} – {opponent}` · `APPROVED` 10.10 |
 | RU04-T40 | `Aces` | `Эйсы` |
 | RU04-T41 | `Double faults` | `Двойные ошибки` |
-| RU04-T42 | `Winners` | `Виннеры` |
+| RU04-T42 | `Winners` | `Удары навылет` · `APPROVED` 10.10 – чат-ок: таблица должна читаться без знания жаргона; «Виннеры» – историческая форма этой ячейки |
 | RU04-T43 | `Unforced errors` | `Невынужденные ошибки` |
 | RU04-T44 | `Max serve` | `Макс. скорость подачи` |
-| RU04-T45 | `km/h` | `км/ч` |
-| RU04-T46 | metadata | `Avg rally {n} shots · ~{duration}` | `В среднем {shots} за розыгрыш · около {duration}` |
-| RU04-T47 | `Watch again` | `Посмотреть ещё раз` |
+| RU04-T45 | `km/h` | `км/ч` · `APPROVED` 10.10 |
+| RU04-T46 | `Avg rally {n} shots · ~{duration}` – metadata | `В среднем {n} за розыгрыш · около {duration}` · `APPROVED` 10.10 – дыра переименована {shots}→{n} под английскую ячейку (позиционный маппинг) |
+| RU04-T47 | `Watch again` | `Посмотреть ещё раз` · `APPROVED` 10.10 |
 | RU04-T48 | `Next` | `Дальше` |
 | RU04-T49 | viewer proceed | `To the result` | `К результату` |
 

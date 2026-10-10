@@ -50,7 +50,7 @@ Segmented-group accessible name: **`Скорость воспроизведен�
 | source | Russian |
 | --- | --- |
 | `Skip to the result` | `Сразу к результату` |
-| `Watch again ↻` | `Смотреть снова ↻` |
+| `Watch again ↻` | `Посмотреть ещё раз ↻` · `APPROVED` 10.10 |
 | shout picker aria | `Выберите реплику` |
 | `Shout 📣` | `Крикнуть 📣` |
 
@@ -79,7 +79,7 @@ not imply a tactical instruction or a guaranteed effect on the already-resolved 
 | --- | --- |
 | live badge `Live` | `Идёт` |
 | elapsed-clock aria | `Время матча: {clock}` |
-| speed unit `km/h` | `км/ч` |
+| `km/h` – speed unit | `км/ч` · `APPROVED` 10.10 – чат-ок: цифры едины, слова единиц переводимы |
 | tiebreak marker `TB` | `ТБ` |
 | player suffix `· serving` | `· подаёт` |
 
@@ -134,10 +134,10 @@ retirement stays in commentary and does not open this family alert.
 | --- | --- |
 | `Aces` | `Эйсы` |
 | `Double faults` | `Двойные ошибки` |
-| `Winners` | `Удары навылет` |
+| `Winners` | `Удары навылет` · `APPROVED` 10.10 |
 | `Unforced errors` | `Невынужденные ошибки` |
 | `Max serve` | `Макс. скорость подачи` |
-| `{speed} km/h` | `{speed} км/ч` |
+| `{speed} km/h` | `{speed} км/ч` · `APPROVED` 10.10 |
 | `Avg rally {rally} shots · ~{duration}` | `В среднем {rally} удара за розыгрыш · около {duration}` |
 
 `{rally}` uses a Russian decimal comma and counted form: `1,0 удара`, `2,4 удара`, `5,0 удара`.
@@ -156,12 +156,12 @@ duration string.
 | `sparring partner` | `спарринг-партнёр` |
 | `No ranking points` | `Без рейтинговых очков` |
 | `Skip to result` | `Сразу к результату` |
-| `Watch it` | `Смотреть матч` |
+| `Watch it` | `Смотреть матч` · `APPROVED` 10.10 |
 | viewer proceed `To the result` | `К результату` |
 | `Win` | `Победа` |
 | `Loss` | `Поражение` |
 | `{kid} vs {opp} · practice – no ranking points` | `{kid} против {opp} · тренировочный матч · без рейтинговых очков` |
-| `Watch again` | `Смотреть снова` |
+| `Watch again` | `Посмотреть ещё раз` · `APPROVED` 10.10 – чат-ок выровнял на форму RU-04 T47; «Смотреть снова» – историческая |
 | `Done` | `Готово` |
 
 The rankless opponent remains rankless. `Спарринг-партнёр` is a role, not a generated person name,

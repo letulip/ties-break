@@ -2058,7 +2058,8 @@ function closeExhibition(): void {
               <!-- ⚠⚠ LEFT LIVE INSIDE THE COLLEGE FREEZE, ON PURPOSE (round 24, E2). `cancelVacation`
                    takes `guardNotEndedForGood` – a booked family week is the family's own calendar,
                    and a trip booked before she left is really paid for inside the freeze. -->
-              <button :disabled="game.busy" @click="askCancelVacation(row.week, row.vacation)">{{ t('Cancel') }}</button>
+              <!-- `undo|` (owner 10.10): this Cancel UNDOES a booked week – «Отменить», not the dialog's «Отмена». -->
+              <button :disabled="game.busy" @click="askCancelVacation(row.week, row.vacation)">{{ t('undo|Cancel') }}</button>
             </span>
           </div>
           <div v-else-if="row.kind === 'practice' && row.practice" class="calendar-row-muted planned">
@@ -2098,7 +2099,8 @@ function closeExhibition(): void {
               <!-- ⚠⚠ AND THE CANCEL BESIDE IT IS DELIBERATELY LEFT LIVE (round 24, E2).
                    `cancelPractice` takes `guardNotEndedForGood`, so the engine ALLOWS it through the
                    whole freeze – disabling it would be the same lie pointed the other way. -->
-              <button :disabled="game.busy" @click="askCancelPractice(row)">{{ t('Cancel') }}</button>
+              <!-- `undo|` as above: undoing a booked practice match. -->
+              <button :disabled="game.busy" @click="askCancelPractice(row)">{{ t('undo|Cancel') }}</button>
             </span>
           </div>
 

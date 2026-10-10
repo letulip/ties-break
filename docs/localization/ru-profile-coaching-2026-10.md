@@ -24,7 +24,7 @@ scholarship, not a Russian secondary vocational college. Its Russian product ter
 
 | id | source meaning | English | Russian |
 | --- | --- | --- | --- |
-| RU05-P01 | back aria | `Back to Home` | `Вернуться на экран «Дом»` |
+| RU05-P01 | back aria | `screen\|Back to Home` | `Вернуться на экран «Дом»` · `APPROVED` 10.10 – ключ назван тегом: три ключа делят этот английский |
 | RU05-P02 | settings aria/title | `Settings` | `Настройки` |
 | RU05-P03 | age and birthday | `{n} years old · B-Day {date}` | `{age} · День рождения: {date}` |
 | RU05-P04 | `Personality` | `Personality` | `Характер` |
@@ -747,12 +747,12 @@ The table shows the compact semantic target; implementation must select the paid
 | RU05-W15 | `Total` | `Итого` |
 | RU05-W16 | injured refusal tail | `A friendly is still a match, so the week books nothing until she is back – leave it to rest.` | `Тренировочный матч всё равно остаётся матчем, поэтому до её возвращения забронировать его нельзя. Оставьте эту неделю для отдыха.` |
 | RU05-W17 | medical refusal tail | `A friendly is still a match, so it is out too at condition {condition} – try the Vacation tab, or leave the week to training.` | `Тренировочный матч тоже требует допуска, а при форме {condition}/100 его нет. Выберите отпуск или оставьте неделю для обычных тренировок.` |
-| RU05-W18 | `Cancel` | `Отмена` |
+| RU05-W18 | `Cancel` (`ConfirmDialog.vue`) | `Отмена` · `APPROVED` 10.10 – диалоговое «Отмена»; хинт в аннотации разводит с `undo\|Cancel` Сезона |
 | RU05-W19 | `Injured` | `Травма` |
 | RU05-W20 | `Not cleared to play` | `Нет допуска` |
 | RU05-W21 | `Book anyway` | `Всё равно забронировать` |
 | RU05-W22 | `Book the match` | `Забронировать матч` |
-| RU05-W23 | `Not enough funds` | `Недостаточно денег` |
+| RU05-W23 | `plan\|Not enough funds` | `Недостаточно средств` · `APPROVED` 10.10 – чат-ок выровнял на одну форму (RU-03/RU-04); «денег» – историческая; это ключ листа плана недели (`plan\|`-тег ночной волны) |
 
 Shared refusal heads:
 

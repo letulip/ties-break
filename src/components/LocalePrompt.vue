@@ -27,6 +27,13 @@ import { useDialogFocus } from '../composables/dialogFocus'
 
 const card = useTemplateRef<HTMLElement>('card')
 useDialogFocus(card)
+
+// ⚠ THE AUTONYM NEVER TRANSLATES (owner 10.10, «English / Русский» – the convention his №4 ruling
+// implied): each language names ITSELF, so a player who cannot read the current locale still finds
+// hers. A `t()` here would be wrong by design – the prompt shows before any choice exists – and the
+// word lives in script because the template guard bans Cyrillic in templates, lawfully bypassed by
+// a named constant (the night note's plan).
+const RUSSIAN_AUTONYM = 'Русский'
 </script>
 
 <template>
@@ -44,7 +51,7 @@ useDialogFocus(card)
       <p class="dialog-message">{{ t('You can change this later in Settings.') }}</p>
       <div class="dialog-actions">
         <button class="primary" @click="setLocale('en')">{{ t('English') }}</button>
-        <button class="primary" @click="setLocale('ru')">{{ t('Russian') }}</button>
+        <button class="primary" @click="setLocale('ru')">{{ RUSSIAN_AUTONYM }}</button>
       </div>
     </div>
   </div>

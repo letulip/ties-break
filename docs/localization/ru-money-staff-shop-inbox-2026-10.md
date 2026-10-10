@@ -78,7 +78,9 @@ inputs.
 
 | id | source meaning | English | Russian |
 | --- | --- | --- | --- |
-| RU06-M01 | back aria | `Back to Home` | `Вернуться на экран «Дом»` |
+| RU06-M01 | back aria | `screen\|Back to Home` | `Вернуться на экран «Дом»` · `APPROVED` 10.10 – ключ назван тегом |
+| RU06-M01a | spend category | `spend\|Travel` | `Поездки` · `APPROVED` 10.10 – чат-ок: категория расходов; гайдовая колонка «Поездка» живёт на голом `Travel` |
+| RU06-M01b | shop listing | `listing\|Withdraw` | `Снять с продажи` · `APPROVED` 10.10 – чат-ок: магазинная форма; турнирное «Сняться» – на голом `Withdraw` |
 | RU06-M02 | screen heading | `Family Budget` | `Семейный бюджет` |
 | RU06-M03 | account subtitle | `{money} in the account · {week}` | `На счёте {money} · {week}` |
 | RU06-M04 | chapter group aria | `Which part of the budget` | `Раздел семейного бюджета` |
@@ -394,7 +396,7 @@ persist or translate a second prose version of the mechanic.
 | `Buy it` | `Купить` |
 | `Order it` | `Заказать` |
 | `Sell it` | `Продать` |
-| `Cancel` | `Отмена` |
+| `Cancel` (`ConfirmDialog.vue`) | `Отмена` · `APPROVED` 10.10 – диалоговое; хинт в аннотации разводит с `undo\|Cancel` |
 
 The question and button must use the same action: construction with a waiting period is
 `заказать`, an immediate acquisition is `купить`, disposal is `продать`.

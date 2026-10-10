@@ -105,7 +105,7 @@ none is needed; see the ruling note in [RU-13D](ru-formatters-countries-2026-10.
 | X03 | `CalendarScreen.vue` | `Her wedding` | `Её свадьба` |
 | X04 | `world/lifeMomentCopy.ts` | `Continue` | `Продолжить` |
 | X05 | `world/age.ts` | `A college place is reserved. She leaves when the academic year starts – {week} – and plays until then.` | `Место в университете за ней. Она уедет к началу учебного года – {week}; до тех пор продолжит играть.` |
-| X06 | `composables/identityCopy.ts` | `Pregnancy loss and bereavement` | `Потеря беременности и смерть близкого` |
+| X06 | `composables/identityCopy.ts` | `Pregnancy loss and bereavement` | `Потеря беременности и смерть близкого` · `APPROVED` 10.10 |
 | X07 | `composables/identityCopy.ts` | `Her mother's career leaves her a head start.` | `Благодаря карьере матери у неё есть поддержка на старте.` |
 | X08 | `screens/AlbumScreen.vue` | `Her mother’s album` | `Альбом её мамы` |
 

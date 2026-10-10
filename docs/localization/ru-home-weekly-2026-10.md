@@ -426,7 +426,7 @@ here because the Calendar renders a complete copy of that card.
 | RU03-M10 | exhaustion fallback | `Exhausted – racing risks injury.` | `Вымоталась – плотный график повышает риск травмы.` |
 | RU03-M11 | entered state | `She is in. Withdrawing lives on the Season tab.` | `Она заявлена. Сняться можно на экране «Сезон».` |
 | RU03-M12 | `Enter` | `Подать заявку` |
-| RU03-M13 | `Not enough funds` | `Недостаточно средств` |
+| RU03-M13 | `Not enough funds` (`CalendarScreen.vue`) | `Недостаточно средств` · `APPROVED` 10.10 |
 
 M09 does not use `против`: the opponent is the value after a round label, so a colon is shorter and
 more natural. Match rows still use an accessible `{name} против {name}` sentence.
@@ -457,7 +457,14 @@ The shared date heading uses RU03-F01–F03. The tournament card itself remains 
 
 | id | source | English | Russian |
 | --- | --- | --- | --- |
-| RU03-W01 | tournament-only back control | `Back to Home` | `Домой` |
+| RU03-W01 | tournament-only back control | `Back to Home` (`ThisWeekScreen.vue`) | `Домой` · `APPROVED` 10.10 |
+| RU03-D01 | recap day initial, Monday | `day1\|M` | `Пн` · `APPROVED` 10.10 – семь рядов добавлены по чат-ок «Пн Вт Ср Чт Пт Сб Вс» (ключи `day1\|M`…`day7\|S` живут с L4-2b) |
+| RU03-D02 | recap day initial, Tuesday | `day2\|T` | `Вт` · `APPROVED` 10.10 |
+| RU03-D03 | recap day initial, Wednesday | `day3\|W` | `Ср` · `APPROVED` 10.10 |
+| RU03-D04 | recap day initial, Thursday | `day4\|T` | `Чт` · `APPROVED` 10.10 |
+| RU03-D05 | recap day initial, Friday | `day5\|F` | `Пт` · `APPROVED` 10.10 |
+| RU03-D06 | recap day initial, Saturday | `day6\|S` | `Сб` · `APPROVED` 10.10 |
+| RU03-D07 | recap day initial, Sunday | `day7\|S` | `Вс` · `APPROVED` 10.10 |
 | RU03-W02 | recap close name and tooltip | `Close the week's story` | `Закрыть итоги недели` |
 | RU03-W03 | section heading | `This week` | `Эта неделя` |
 | RU03-W04 | empty status | `No event – training week` | `Без турнира – неделя тренировок` |

@@ -92,7 +92,7 @@ is deliberately no extra line; silence must not manufacture intimacy.
 
 | surface | English source | Russian draft |
 | --- | --- | --- |
-| `LISTEN_DONE_LABEL` | `Let her finish` | `Дать ей договорить` |
+| `LISTEN_DONE_LABEL` | `Let her finish` | `Дать ей договорить` · `APPROVED` 10.10 |
 | `CONFIRM_LABEL` | `Proceed` | `Продолжить` |
 | `FLAT_LINE.college` | `She was asked what she wants for next year, in the end. "College."` | `В конце концов её спросили, чего она хочет на следующий год. «Университет».` |
 | `FLAT_LINE.tour` | `She was asked what she wants for next year, in the end. "Keep playing."` | `В конце концов её спросили, чего она хочет на следующий год. «Продолжать играть».` |
