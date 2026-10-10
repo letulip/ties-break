@@ -364,3 +364,25 @@ export function worldMinusRefs(world: WorldState): string {
 export function snapshotMinusRefs(world: WorldState): string {
   return JSON.stringify(toSnapshot(world), (k, v) => (k === 'c' || /[a-z]C$/.test(k) ? undefined : v))
 }
+
+// Per-top-level-key digests of the same minus-refs serialisation. Added 10.10 after a morning red
+// that showed only the aggregate hash: an unreproducible mismatch (a gate run against a mid-edit
+// shared checkout) cost an hour of hunting that a field NAME would have ended in a minute. The
+// stripper and the top-level filter must stay byte-equivalent to the aggregate functions above –
+// a key the aggregate drops may not appear here, or the two nets disagree about what moved.
+function fieldDigests(obj: Record<string, unknown>): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const key of Object.keys(obj)) {
+    if (key === 'c' || /[a-z]C$/.test(key)) continue
+    const v = obj[key]
+    if (v === undefined) continue
+    out[key] = sha(JSON.stringify(v, (k, vv) => (k === 'c' || /[a-z]C$/.test(k) ? undefined : vv)))
+  }
+  return out
+}
+export function worldFieldDigests(world: WorldState): Record<string, string> {
+  return fieldDigests(world as unknown as Record<string, unknown>)
+}
+export function snapshotFieldDigests(world: WorldState): Record<string, string> {
+  return fieldDigests(toSnapshot(world) as unknown as Record<string, unknown>)
+}

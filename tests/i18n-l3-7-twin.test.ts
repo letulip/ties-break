@@ -6,16 +6,21 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import {
-  commentaryDigests, previewDigests, knockDigest, famousDigest, playBench, playCollege, watchedDigest, rowsDigest, worldMinusRefs, snapshotMinusRefs, sha,
+  commentaryDigests, previewDigests, knockDigest, famousDigest, playBench, playCollege, watchedDigest, rowsDigest, worldMinusRefs, snapshotMinusRefs, worldFieldDigests, snapshotFieldDigests, sha,
 } from './helpers/l3-7-play'
 
 const FIXTURE = resolve(__dirname, 'fixtures/l3-7/old-arm.json')
 const CAREERS: Array<[number, number]> = [[5, 0], [8, 0], [0, 1], [6, 1], [5, 1]]
 
+// `worldFields`/`snapshotFields` (10.10): the same serialisation digested per top-level key, so a
+// mismatch names the field that moved instead of handing over one opaque hash. The fixture was
+// re-captured at the SAME pre-wave commit (4adc0d58) with the extended shape; every aggregate
+// digest was byte-compared against the previous fixture before the swap, so the net's claim did
+// not move – only its failure mode did.
 interface Capture {
   viz: { commentary: ReturnType<typeof commentaryDigests>; preview: ReturnType<typeof previewDigests>; knock: ReturnType<typeof knockDigest>; famous: ReturnType<typeof famousDigest> }
-  careers: Record<string, { rows: number; rowsDigest: string; rows150: number; rowsDigest150: string; watched: ReturnType<typeof watchedDigest>; next3: number[]; world: string; snapshot: string }>
-  college: Record<string, { rows: number; rowsDigest: string; watched: ReturnType<typeof watchedDigest>; next3: number[]; world: string; snapshot: string; weeks: number }>
+  careers: Record<string, { rows: number; rowsDigest: string; rows150: number; rowsDigest150: string; watched: ReturnType<typeof watchedDigest>; next3: number[]; world: string; snapshot: string; worldFields: Record<string, string>; snapshotFields: Record<string, string> }>
+  college: Record<string, { rows: number; rowsDigest: string; watched: ReturnType<typeof watchedDigest>; next3: number[]; world: string; snapshot: string; weeks: number; worldFields: Record<string, string>; snapshotFields: Record<string, string> }>
 }
 
 function capture(): Capture {
@@ -36,6 +41,7 @@ function capture(): Capture {
     careers[p.label] = {
       rows: p.rows.length, rowsDigest: rowsDigest(p.rows), rows150, rowsDigest150: digest150, watched: watchedDigest(p), next3: p.next3,
       world: sha(worldMinusRefs(p.world)), snapshot: sha(snapshotMinusRefs(p.world)),
+      worldFields: worldFieldDigests(p.world), snapshotFields: snapshotFieldDigests(p.world),
     }
   }
   const college: Capture['college'] = {}
@@ -44,6 +50,7 @@ function capture(): Capture {
     college[p.label] = {
       rows: p.rows.length, rowsDigest: rowsDigest(p.rows), watched: watchedDigest(p), next3: p.next3, weeks: p.weeks,
       world: sha(worldMinusRefs(p.world)), snapshot: sha(snapshotMinusRefs(p.world)),
+      worldFields: worldFieldDigests(p.world), snapshotFields: snapshotFieldDigests(p.world),
     }
   }
   return { viz: { commentary: commentaryDigests(), preview: previewDigests(), knock: knockDigest(), famous: famousDigest() }, careers, college }
