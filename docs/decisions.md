@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 167 dated entries, newest 2026-10-10. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 168 dated entries, newest 2026-10-10. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -45,7 +45,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
 | simulation-and-balance | 8 | [THE FEEDBACK CHANNEL BUILT, AND THE SHARE TYPE MEASURED RATHER THAN GUESSED](#30092026--the-feedback-channel-built-and-the-share-type-measured-rather-than-guessed) | 2026-09-30 |
-| ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
+| ui-and-copy | 6 | [THE SECOND MORNING BATCH: FONTS GO, COPY RULINGS, TWO EMBEDS](#10102026--the-second-morning-batch-fonts-go-copy-rulings-two-embeds) | 2026-10-10 |
 | world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
 
 <!-- END GENERATED: current-decision index -->
@@ -6063,3 +6063,27 @@ And the red rulings of the same message: **38** LB-note lays the checklist UNDER
 branch; **24** «впиши сам, жду на читку» – the architect writes the hint cells into the tables,
 his read follows. **40** re-confirmed №5/§9.5: tournament names are never translated – the
 «World Tour 15» tag question was only about layout next to Russian text, folded into his live QA.
+
+## 10.10.2026 – THE SECOND MORNING BATCH: FONTS GO, COPY RULINGS, TWO EMBEDS
+
+«докачать для существующих добро, ударение не нужно, новых шрифтов не нужно» – **39**: the Cyrillic
+subsets are authorised for the families the app ALREADY ships (no Onest, no new faces), the range
+drops U+0301. **40** «на твое усмотрение» – the five carpet surfaces' rows go as DRAFT scaffolds
+into their area tables. **6** «ок» – the tour-guide tail takes the architect's English mirror of
+his own §4 replacement. **7** – write it grammatically: «The court is not her surface.» (wrapping
+is prose's business). **9** «ок» – the seven word-form title-price messages stay; the translator
+writes seven rows; the generic `{n} wins` cell is historic. **16** «у тебя хорошо получается,
+сделай пожалуйста для остальных» – the architect DRAFTS the ICU plural rows for every counted
+phrase, preserving his lexical choices from the pre-declined cells; his читка approves. **17**
+«пусть останется просто "тренер" и его "говорил/не говорил" лингвистически» – grammatical
+agreement with the noun, no impersonal rewrite, the seven prologue rows approve as written.
+**18** «лечим» – the warm away rows that leaked the cold register take the family-voice fixes
+(«Мы его не открывали», «Проверили ещё до твоего вопроса»), cells fixed, pool stays DRAFT for his
+read. **26** cleared up: tier PROPER names were never to be translated and are not – the re-read
+is about the PROSE counts in RU-07 §11 («nine tiers / eighteen places» vs the live 16/32); the
+architect fixes the counts. **33** «если что-то критичное и можно сразу исправить – лучше так» –
+the seven player-facing SaveFileError refusals typify NOW; the ~100 dev-path plain Errors stay
+documented. **34** – the nine ENDING_BLURB sentences get a home on the ending screen («может быть
+нам это как-то в наш финальный экран можно гармонично встроить») – placement proposal with a
+screenshot, his live look before it stands. **14** – direction ruled: when the Russian prologue
+rows land, try spacing first («можно какими-то отступами исправить без вреда»).

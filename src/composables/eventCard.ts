@@ -199,11 +199,14 @@ export function surfaceHint(style: PlayStyleOf, surface: Surface): string | null
   return affinity === 'suits' ? t('{0} – suits her game', [surfaceWord(surface)]) : t('{0} – not her surface', [surfaceWord(surface)])
 }
 
-/** The coach's court sentence, rendered from the affinity: «The court suits her game.» / «The court not her surface.»; null on neutral. */
+/** The coach's court sentence, rendered from the affinity: «The court suits her game.» / «The court
+ *  is not her surface.»; null on neutral. ⚠ 10.10 (owner №7, «лучше грамотно написать»): the mismatch
+ *  arm used to read «The court not her surface.» – the sentence was glued from the CHIP's dash-form
+ *  tail («{0} – not her surface»), which has no verb by chip grammar, and the glue never added one. */
 export function courtSentence(style: PlayStyleOf, surface: Surface): string | null {
   const affinity = surfaceStyleAffinity(style, surface)
   if (affinity === 'neutral') return null
-  return affinity === 'suits' ? t('The court suits her game.') : t('The court not her surface.')
+  return affinity === 'suits' ? t('The court suits her game.') : t('The court is not her surface.')
 }
 
 /** `#12` / `Unranked` – `rankLabel`'s two shapes (shared/format.ts, engine-importable, so it cannot call `t()`) read through the catalog, as the

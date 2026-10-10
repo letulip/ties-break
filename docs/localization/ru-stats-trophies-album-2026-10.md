@@ -218,9 +218,12 @@ Funds explanation:
 
 ## 11. Trophy cabinet shell
 
-The screen is a record, not a congratulatory popup. It keeps all eighteen places visible from the
-start: winner and runner-up for each of the nine tournament tiers. Russian therefore stays brief
-enough to repeat eighteen times without making the cabinet sound like a results table.
+The screen is a record, not a congratulatory popup. It keeps all thirty-two places visible from the
+start: winner and runner-up for each of the sixteen tournament rungs. Russian therefore stays brief
+enough to repeat thirty-two times without making the cabinet sound like a results table.
+(⚙ 10.10: the counts above said «eighteen / nine» from an older, smaller ladder – corrected against
+the live code at the owner's re-read ask; tier PROPER names stay untranslated per §9.5, the compact
+shelf labels below already parameterise every W rung and need no change.)
 
 | source meaning | Russian |
 | --- | --- |

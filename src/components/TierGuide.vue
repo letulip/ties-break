@@ -134,7 +134,10 @@ const rows = computed<TierRow[]>(() =>
            on national points and the top two open on a place in the international table, and the two
            never convert into one another. -->
       <p class="hint">
-        {{ t('The bands overlap on purpose – there is always more than one place to go. The first four rungs open on national points; the top two take the best of the international ranking instead, and the two tables never meet. The Junior Tour is international travel from age 13, and it pays no prize money: points only, until the pro tour.') }}
+        <!-- 10.10 (owner item 6 ok): the closing paragraph described "the first four rungs" and "the
+             top two" of an older, smaller ladder (16 rungs live). It states the live invariant now,
+             with no counts to go stale - the English mirror of his own RU-04 section-4 replacement. -->
+        {{ t('The bands overlap on purpose – there is always more than one place to go. National, international and professional rankings are separate tables: their points never add up. The Junior Tour starts at thirteen and pays no prize money; the money starts on the pro tour.') }}
       </p>
     </div>
   </div>

@@ -117,6 +117,13 @@ than copying the obsolete count:
 > тур начинается с тринадцати лет и не приносит призовых; деньги появляются в профессиональном
 > туре.`
 
+⚙ RULED 10.10 (чат-ок №6): the stale English was corrected in TierGuide.vue to the mirror of the
+replacement above; the pair lives as the row below.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU04-G12 | `The bands overlap on purpose – there is always more than one place to go. National, international and professional rankings are separate tables: their points never add up. The Junior Tour starts at thirteen and pays no prize money; the money starts on the pro tour.` | `Диапазоны намеренно перекрываются – почти всегда есть выбор, куда ехать. Национальный, международный и профессиональный рейтинги – разные таблицы: их очки не складываются. Юниорский тур начинается с тринадцати лет и не приносит призовых; деньги появляются в профессиональном туре.` · `APPROVED` 10.10 |
+
 ## 5. Shared draw and probability wording
 
 These messages are shared by Season, Calendar and the dedicated preview. One catalogue key per row
@@ -466,9 +473,16 @@ would erase why the two competitions differ.
 | id | English | Russian |
 | --- | --- | --- |
 | RU04-T18 | `Coach prediction` | `Оценка тренера` |
-| RU04-T19 | fit | `The court suits her game.` | `Это покрытие подходит под её игру.` |
-| RU04-T20 | mismatch | `The court is not her surface.` | `Это не её покрытие.` |
-| RU04-T21 | title price | `{n} wins for the title.` | `До титула – {wins}.` |
+| RU04-T19 | `The court suits her game.` – fit | `Это покрытие подходит под её игру.` |
+| RU04-T20 | `The court is not her surface.` – mismatch | `Это не её покрытие.` · `APPROVED` 10.10 – чат-ок №7: «лучше грамотно написать» – код берёт форму таблицы (с «is»), правка английского едет следующим пушем |
+| RU04-T21 | title price | `{n} wins for the title.` | `До титула – {wins}.` – SUPERSEDED 10.10 (чат-ок №9: семь словесных форм остаются, генерик умер; ряды ниже – на твой русский) |
+| RU04-T21a | title price, 1 | `One win for the title.` | |
+| RU04-T21b | title price, 2 | `Two wins for the title.` | |
+| RU04-T21c | title price, 3 | `Three wins for the title.` | |
+| RU04-T21d | title price, 4 | `Four wins for the title.` | |
+| RU04-T21e | title price, 5 | `Five wins for the title.` | |
+| RU04-T21f | title price, 6 | `Six wins for the title.` | |
+| RU04-T21g | title price, fallback | `{0} wins for the title.` | |
 | RU04-T22 | travelled | `At the tournament with her this week – one additional fare on this trip.` | `На этой неделе тренер с ней на турнире – ещё один билет в расходах поездки.` |
 | RU04-T23 | `Her condition` | `Её форма` |
 | RU04-T24 | condition aria | `Her condition going into this tournament: {n} percent` | `Форма перед турниром: {n} процентов` |

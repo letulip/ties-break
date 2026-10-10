@@ -259,7 +259,7 @@ describe('L2-4 completeness – every string of the batch files is a wired key, 
       ['src/composables/tierState.ts', ['age {min}-{max}', 'age {age}', 'the top {cut} internationally', 'the top {pct}% internationally', '{points} {unit} in one season', 'open from the start', 'Reach {required} {unit}',
         '{current} / {required} {unit}', 'Opens at {age}', 'Opens in the top {cut}', 'Not on the list yet', 'Under-{n}', 'Open – on the calendar', 'Open – none in {weeks} weeks']],
       ['src/composables/eventCard.ts', ['Her chance to win the first match: {pct} percent, against {opponent}', 'First round vs {opponent}', 'A typical first round at this level',
-        'Her chance to win a first match at this level: {pct} percent. The draw has not been made yet.', 'The court suits her game.', 'The court not her surface.', 'Hard', 'Clay', 'Grass']],
+        'Her chance to win a first match at this level: {pct} percent. The draw has not been made yet.', 'The court suits her game.', 'The court is not her surface.', 'Hard', 'Clay', 'Grass']],
       ['src/composables/eventName.ts', ['Enter the {event}, {weekRange}']],
       ['src/components/NextTournamentPanel.vue', ['Entry fee', 'Travel budget', 'Conditions', 'The read', 'Most of this field is ranked above her.', 'A field of about her own level.', 'She is among the strongest entered.',
         'A typical figure for this level – it sharpens when the draw is made.', 'Surface', 'Prize money', 'Winner', 'Spectators', 'First round', '{0}-player draw', 'VS', '{0} pts',
@@ -299,7 +299,11 @@ describe('L2-4 seams – the court sentence, the hedged filter and the bracket\'
       for (const surface of SURFACES) {
         const engine = surfaceStyleHint(style, surface)
         expect(surfaceHint(style, surface), `${style}/${surface}`).toBe(engine)
-        const was = engine === null ? null : `The court ${after(engine, '– ').slice('– '.length)}.`
+        // ⚠ 10.10 RE-AIMED (owner №7): the sentence is no longer a RAW slice – the mismatch arm
+        // gains the «is» the chip's dash grammar never carried. The parity claim survives: both
+        // read the same affinity verdict, and the tail words are still the engine's own.
+        const tail = engine === null ? null : after(engine, '– ').slice('– '.length)
+        const was = tail === null ? null : tail.startsWith('not') ? `The court is ${tail}.` : `The court ${tail}.`
         expect(courtSentence(style, surface), `${style}/${surface}`).toBe(was)
         seenAffinity.add(surfaceStyleAffinity(style, surface))
       }
@@ -428,7 +432,7 @@ describe('L2-4 Russian smoke – ru.json read by key, no Cyrillic typed here', (
     const wiredHere = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.some((h) => HERE.test(h)))
     // the approved arm: today `wiredHere` is empty (no RU-04 row is approved) and the loop wakes by itself the day one is
     // ⚠ 10.10 – named pose gaps, never silent skips: the rally metadata line lives on the finished-match card, and these mounts stop at the planner and the live flow.
-    const NOT_IN_POSE = new Set(['Avg rally {0} shots · ~{1}', 'Not enough funds', 'undo|Cancel', 'Watch again', 'Watch it', 'Withdraw'])
+    const NOT_IN_POSE = new Set(['Avg rally {0} shots · ~{1}', 'Not enough funds', 'undo|Cancel', 'Watch again', 'Watch it', 'Withdraw', 'The court is not her surface.'])
     for (const key of wiredHere) {
       if (NOT_IN_POSE.has(key)) continue
       // ⚠ 10.10 – a PARAMETERISED value renders with its holes filled, so every hole-free SEGMENT must render instead of the raw pattern.
