@@ -140,6 +140,8 @@ const SEAT_KEYS: Record<string, number> = {
   'ledger.tournamentRow': 8, //     4 clause shapes x retired on/off, read off the REAL joiner – the first braced ref-seat keys
   'spirit.exposure': 1, //          EXPOSURE_ROW, written by identity (`text: EXPOSURE_ROW`)
   'finance.flavors': 26, //         14 coaching-week pool lines (both axes) + 12 gear tier flavors
+  // ⭐ 10.10 (owner item 34) – the epilogue's paragraph, the sixth dynamic `t()` call:
+  'ending.blurb': 9, //             ENDING_BLURB, one per `CareerEndingType` – a Record's values no census rule reads, drawn by `t(ENDING_BLURB[type])` on the last page
 }
 
 describe('§2 the declared seats – every dynamic key set the code asks for is named, from the real constants, and held against the tree', () => {
@@ -159,10 +161,12 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
   it('⭐ every seat is backed by the tree and seatable – and NO dynamic `t()` call in src is undeclared (the gate prints the number; this pins it at zero)', () => {
     expect(built.seatProblems).toEqual([])
     expect(built.undeclared).toEqual([])
-    expect(built.stats.dynamicCalls).toBe(5)
-    expect(built.stats.dynamicDeclared).toBe(5)
+    // ⭐ RE-AIMED 10.10 (owner item 34): 5 -> 6 – `t(ENDING_BLURB[type])` in EndingScreen, the sixth call, declared as the seat `ending.blurb` (below).
+    expect(built.stats.dynamicCalls).toBe(6)
+    expect(built.stats.dynamicDeclared).toBe(6)
     expect(built.stats.dynamicUndeclared).toBe(0)
     expect(dynamicSites.map((d) => `${d.file} ${d.arg}`).sort()).toEqual([
+      'src/components/EndingScreen.vue ENDING_BLURB[type]',
       'src/components/LifeBeatDialog.vue option.label',
       'src/components/LifeBeatDialog.vue prompt.confirm',
       'src/components/LifeBeatDialog.vue replying.done',
@@ -195,8 +199,9 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
       expect(committed.keys[g]?.seat, g).toEqual(['birthday.gifts'])
     }
     const bare = buildCatalog({ seats: [] })
-    // 159 gift keys + 34 of the 10.10 families (the 35th, one coaching line, the census already met) – every seat-only key the census cannot see
-    expect(bare.catalog.count, 'the catalog the census alone sees').toBe(built.catalog.count - 193)
+    // 159 gift keys + 34 of the 10.10 families (the 35th, one coaching line, the census already met) + the nine epilogue paragraphs (10.10, item 34 – a Record's values, no census rule reads them)
+    // – every seat-only key the census cannot see. ⭐ RE-AIMED 10.10: 193 -> 202.
+    expect(bare.catalog.count, 'the catalog the census alone sees').toBe(built.catalog.count - 202)
     expect([...gifts].filter((g) => bare.catalog.keys[g] !== undefined)).toEqual([])
   })
 
@@ -217,7 +222,8 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
       if (!e.wrapped && now.wrapped) flipped++
       expect({ ...now, wrapped: undefined, seat: undefined, home: undefined }, k).toEqual({ ...e, wrapped: undefined, seat: undefined, home: undefined })
     }
-    expect(built.stats.wrapped - bare.stats.wrapped).toBe(flipped + 193) // 159 gifts + 34 of the 10.10 families, as above
+    // 159 gifts + 34 of the 10.10 families + the nine epilogue paragraphs (10.10, item 34), as above – ⭐ RE-AIMED 10.10: 193 -> 202
+    expect(built.stats.wrapped - bare.stats.wrapped).toBe(flipped + 202)
   })
 
   // ── the mutations: a fabricated seat, driven through the SAME code ──────────────────────────────────────────────────────────
@@ -291,8 +297,10 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     expect(stale.problems.filter((p) => p.rule === 'seat-stale').map((p) => p.where)).toEqual(['fake.seat'])
     const green = runGate()
     expect(green.problems).toEqual([])
-    expect(green.lines.join('\n')).toMatch(/5 dynamic t\(\) calls: 5 declared, 0 unreadable/)
-    expect(green.lines.join('\n')).toMatch(/seats {5}16 declared \(tools\/i18n-seats\.ts\) reach 2275 catalog keys/)
+    // ⭐ RE-AIMED 10.10 (owner item 34): 5 -> 6 – the epilogue's `t(ENDING_BLURB[type])`, declared as `ending.blurb`
+    expect(green.lines.join('\n')).toMatch(/6 dynamic t\(\) calls: 6 declared, 0 unreadable/)
+    // ⭐ RE-AIMED 10.10: 16 seats / 2,275 keys -> 17 / 2,284 (+ `ending.blurb`, nine keys)
+    expect(green.lines.join('\n')).toMatch(/seats {5}17 declared \(tools\/i18n-seats\.ts\) reach 2284 catalog keys/)
   })
 })
 

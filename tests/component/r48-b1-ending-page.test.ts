@@ -30,7 +30,7 @@ import { useGameStore } from '../../src/stores/game'
 import { moneyOf } from '../helpers/careerMoney'
 import { dynastyOf } from '../helpers/dynastyHandover'
 import { formatCentsCompact } from '../../src/shared/money'
-import { LAST_WORD_OPENING, lastWordLine, plateauLede } from '../../src/engine/ending'
+import { ENDING_BLURB, LAST_WORD_OPENING, lastWordLine, plateauLede } from '../../src/engine/ending'
 import { NARROW_PHONE, PHONE, assertDismissReachable, assertInlineRowFits, demandedWidth, setViewport } from './fits'
 import type {
   AlbumPage,
@@ -275,9 +275,30 @@ describe('⭐⭐⭐ round 48 #4 – the page line is the parent\'s: «You said o
     w.unmount()
   })
 
-  it('⚠⚠ nothing on the last page credits her with saying it', () => {
+  it('⚠⚠ nothing on the last page credits her with saying it – the one named exception is the natural ending\'s own paragraph (10.10, open, his)', () => {
     const w = mountEnding(endingView({ oneMoreYearCount: 5 }))
-    expect(w.text()).not.toMatch(/\bshe (has |had )?said one more/i)
+    // ⭐ RE-AIMED 10.10 (owner item 34: the nine `ENDING_BLURB` paragraphs now stand on the last page). THE CLAIM IS HIS ROUND-48 #4 RULING AND IT IS UNCHANGED for every string this screen authors
+    // and every other line the engine prints on it. What changed is that the page now also prints `ENDING_BLURB.natural`, whose second clause reads «for years she said one more» – a sentence
+    // written before the ruling and left «for the owner's eye» in docs/rounds/round-48.md (item 4's closing note: «rendered by NOTHING today» – it is rendered now). It is the engine's wording and
+    // not this net's to change (invariant 4), so the claim is held over the page MINUS that one paragraph, and the exception is pinned BY NAME in the next case, where it goes red the day his wording moves.
+    expect(w.text().split(ENDING_BLURB.natural).length - 1, 'the paragraph is on the page exactly once – so the set-aside below removes it and nothing else').toBe(1)
+    const rest = w.text().replace(ENDING_BLURB.natural, '')
+    // ⚠ THE `\b` IS DROPPED HERE (10.10) BECAUSE IT HAD QUIETLY MADE THIS ARM BLIND TO THE VERY REGRESSION IT EXISTS FOR. `w.text()` is `textContent`, which runs the figure above the line into the sentence
+    // («Seasons1She said one more year 5 times.»), and `\bshe` needs a word boundary BEFORE the S – a digit gives none. Measured 10.10: with the template's note put back to «She said one more year» the
+    // old spelling stayed GREEN on the page as it was before the paragraph existed (the «reads You said» case alone caught it); without the `\b` the same mutation reddens this case. «she said one more»
+    // cannot occur inside another word, so nothing is over-matched.
+    expect(rest, 'the page with the natural paragraph set aside').not.toMatch(/she (has |had )?said one more/i)
+    w.unmount()
+  })
+
+  it('⚠ OPEN, HIS (10.10), pinned where it was found: the natural paragraph is the one place on the page that still says «she said one more» – and no other paragraph does', () => {
+    // The exception above may not outlive the sentence: THIS CASE GOES RED THE DAY HIS WORDING MOVES (or a second paragraph starts crediting her), and the cleanup is then two edits – delete this
+    // case and the `.replace` in the one above, so the whole page is held to his ruling again. His options are in the 10.10 report; none was taken here.
+    const credits = /\bshe (has |had )?said one more/i
+    expect(Object.entries(ENDING_BLURB).filter(([, line]) => credits.test(line)).map(([type]) => type)).toEqual(['natural'])
+    const w = mountEnding(endingView({ oneMoreYearCount: 5 }))
+    expect(w.get('.album-blurb').text(), 'and it is on the page of a natural ending, beside the parent\'s own line').toBe(ENDING_BLURB.natural)
+    expect(w.findAll('.ending-note').some((n) => n.text().includes('You said one more year')), 'the parent\'s line is there too').toBe(true)
     w.unmount()
   })
 })

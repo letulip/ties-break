@@ -36,6 +36,7 @@ import {
   lifeBeatFollowUps,
   raiseLifeBeat,
 } from '../src/engine/world'
+import { ENDING_BLURB } from '../src/engine/ending'
 import { ALBUM_ARC, ALBUM_CORPUS } from '../src/engine/world/albumCorpus'
 import { LIFE_MOMENT_CONFIRM } from '../src/engine/world/lifeMomentCopy'
 import { EXPOSURE_ROW } from '../src/engine/spirit'
@@ -181,6 +182,16 @@ export const DECLARED_SEATS: readonly Seat[] = [
     via: 'call',
     sites: [{ file: 'src/components/screens/CalendarScreen.vue', arg: 'fridgeNote' }],
     groups: () => [{ home: 'src/composables/fridgeNote.ts', keys: [...FRIDGE_NOTES, ...INDEPENDENT_NOTES, ...STRAINED_AWAY_NOTES, ...COLD_AWAY_NOTES, ...EXAM_NOTES, ...TRIP_NOTES, ...INDEPENDENT_TRIP_NOTES] }],
+  },
+  // ── the sixth dynamic call (10.10, owner item 34) ─────────────────────────────────────────────────────────────────────────
+  // THE EPILOGUE'S PARAGRAPH: `ENDING_BLURB` is a Record of nine sentences, values no census rule reads (a Record literal is not a copy-dom), so they were not catalog keys until a
+  // screen asked for one. `EndingScreen.vue` does – `t(ENDING_BLURB[type])` – and the nine are walked from the real constant, not retyped. Total over `CareerEndingType`, so a tenth ending
+  // joins this seat by existing (the four total records already make the compiler ask for its line).
+  {
+    id: 'ending.blurb',
+    via: 'call',
+    sites: [{ file: 'src/components/EndingScreen.vue', arg: 'ENDING_BLURB[type]' }],
+    groups: () => [{ home: 'src/engine/ending.ts', keys: Object.values(ENDING_BLURB) }],
   },
 
   // ── the refs the engine writes beside a corpus string (L3-4, L3-5, L3-6) ───────────────────────────────────────────────────

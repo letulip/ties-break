@@ -24,6 +24,7 @@ import { portraitUrl } from '../art/preload'
 import { weekLabel, seasonYear } from '../shared/dates'
 import { formatCentsCompact } from '../shared/money'
 import { t, eventText } from '../i18n'
+import { ENDING_BLURB } from '../engine/ending'
 import type { AlbumBook, DynastyHandover } from '../shared/protocol'
 
 /* ⚠ SIX IMPORTS LEFT THIS FILE WITH THE COLLEGE BLOCK (round 24 #2b): `COLLEGE_TIER_NAME`,
@@ -133,6 +134,39 @@ const scrollOpen = ref(false)
  *  (pages 1–6 left the wire on his word – translated, «take them off, yes»), so there is no list to take the
  *  last of, and the «no pages» case above can no longer be built: `closing` is null here only while `view` is. */
 const closing = computed(() => view.value?.closing ?? null)
+
+// --- ⭐ 10.10 – THE NINE EPILOGUE SENTENCES FIND THEIR SCREEN: ONE PROSE LINE UNDER THE ENDING'S TITLE ---------
+//
+// THE OWNER, 10.10 (translated – a `.vue` file carries no Cyrillic): the nine `ENDING_BLURB` sentences have never
+// been drawn by anything – could they not be built into the final screen, harmoniously, since that is the situation?
+// (docs/decisions.md, 10.10, item 34. He gates the placement and the wording with his own live look, so both are a
+// proposal until he has seen them on a phone.)
+//
+// ⚠⚠ THE WORDS ARE HIS AND ARE NOT TOUCHED (invariant 4): `ENDING_BLURB[type]` goes through `t()` and is printed
+// as the engine wrote it, one paragraph per ending, never composed, trimmed or rephrased here. Three of the nine carry
+// a draft note in `engine/ending.ts` (`peak` and `fall`: round 45's «both of these are drafts»; `family`: wave 8 T5's,
+// its second sentence passed 21.09); they render exactly as they stand and their draft status stays the spec's note.
+// NO OTHER STRING ON THIS SCREEN MOVED.
+// ⚠ A SEAT, NOT A LITERAL: the sentences are a Record's values, which no census rule reads, so the call below is a
+// DECLARED CALL SEAT (`tools/i18n-seats.ts`, id `ending.blurb`) – nine catalog keys with nine DRAFT rows in
+// docs/localization/ru-ending-screen-2026-10.md, whose Russian column is his to fill. Until he does, a Russian
+// session draws the English sentence, exactly as every other unapproved row does.
+//
+// WHERE IT SITS AND WHY THERE: INSIDE `.album-page`, between the title (`album-why`) and the fact line (`album-fact`).
+// The title is the headline of the ending and the blurb is its standfirst, so the prose follows the headline and
+// the record's terse line (season, age, the detail) follows the prose as its receipt; the date stays last. The
+// hierarchy then steps down one rung at a time – title (Sora 17, `--ink`), blurb (14, `--ink-2`), fact (14,
+// `--ink-soft`), date (12, `--ink-dim`) – and the figures, the album door and the two doors below the page keep their
+// order, their styles and their gaps (the paragraph only pushes them down by its own height): the line is the one new
+// child of the page and the footer is not touched. The measure is the title's own (34ch) and the size is the page's
+// secondary size, the same 14px the notes use.
+// ⚠ IT DRAWS ON EVERY ENDING – `ENDING_BLURB` is total over `CareerEndingType` (four total records key on that
+// union), so there is no branch on the type here and a tenth ending needs no change in this file; a type the
+// record does not know (a hand-built snapshot) draws no line instead of throwing.
+const blurb = computed(() => {
+  const type = view.value?.ending.type
+  return type !== undefined && type in ENDING_BLURB ? t(ENDING_BLURB[type]) : ''
+})
 
 // --- ⭐⭐⭐ ROUND 46 #18 – THE ALBUM IS THE REAL ONE NOW, AND THE SEVEN-POLAROID REEL IS GONE ---------
 //
@@ -382,6 +416,11 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         <!-- POINT 4: WHY this week is in the album. Always visible, empty page or not - the owner's
              visible selection rule, and what keeps section 6's promise. -->
         <p class="album-why">{{ eventText({ text: closing.why, c: closing.whyC }) }}</p>
+
+        <!-- ⭐ 10.10 – THE ENDING'S OWN PARAGRAPH, the standfirst under its title (the script block above carries the
+             ask, the placement and the seat). One `<p>`, drawn on every ending, absent only for a type the record does
+             not know. The words are the engine's: this element owns no sentence. -->
+        <p v-if="blurb" class="album-blurb">{{ blurb }}</p>
 
         <!-- POINT 3: one hard fact off the milestone itself, never a computed summary. -->
         <p v-if="closing.fact" class="album-fact">{{ eventText({ text: closing.fact, c: closing.factC }) }}</p>
@@ -705,6 +744,25 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
   font-size: 17px;
   line-height: 1.35;
   color: var(--ink);
+}
+
+/* ⭐ 10.10 – THE ENDING'S PARAGRAPH, one rung under the title and one above the fact. The page's secondary size
+   (14px, the notes' own) at the title's measure (34ch) in `--ink-2`, so the prose reads before the record's terse line
+   (`--ink-soft`) and the date (`--ink-dim`): ink, ink-2, ink-soft, ink-dim is the whole step-down of this page. It
+   inherits the page's centring and its 14px rhythm; nothing around it is re-spaced, and it sets no width a long
+   sentence could push past the column (the measure is a cap, the text wraps inside it).
+   ⚠ `text-wrap: pretty` (the house idiom for prose, as in the inbox and the wizard) IS HERE FOR A MEASURED REASON: in
+   Chromium 151 at 375 and at 320 the plain wrap left a ONE-WORD last line under two of the nine paragraphs
+   («remember.» under the college one, «not.» under the natural one) – on a centred block the widow reads as a typo.
+   With it on, the shortest last line of the nine is two words at both widths. A browser that does not know the
+   property wraps exactly as before. */
+.album-blurb {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  text-wrap: pretty;
 }
 
 .album-fact {

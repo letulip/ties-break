@@ -123,3 +123,11 @@ epilogue wires it in, that change needs a separate nine-paragraph editorial pass
 Russian catalogue; English must not become the fallback. The source's comment saying the
 blurb is “live” conflicts with the usage search and with
 `tests/component/wave8-family-ending.test.ts`'s explicit unrendered finding.
+
+**Update 10.10 – this is no longer true.** On the owner's ask (item 34) the epilogue now draws all nine,
+one paragraph under the ending's title on the last page (`EndingScreen.vue`, read through the declared
+seat `ending.blurb`). Their nine rows, with the Russian column empty because the words are his, are in
+[RU-12A](ru-ending-screen-2026-10.md) under «The ending's own paragraph». The condition above is
+therefore not met yet: until a Russian cell is approved, a Russian session shows the English sentence
+on that line, like any other unapproved row. Whether to hold the line back in Russian until then is his
+call before a Russian release.
