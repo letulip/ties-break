@@ -38,6 +38,10 @@ import {
 } from '../src/engine/world'
 import { ALBUM_ARC, ALBUM_CORPUS } from '../src/engine/world/albumCorpus'
 import { LIFE_MOMENT_CONFIRM } from '../src/engine/world/lifeMomentCopy'
+import { EXPOSURE_ROW } from '../src/engine/spirit'
+import { tournamentSummaryRef } from '../src/engine/world/tournamentClose'
+import { trainFlavors, restFlavors } from '../src/engine/world/phaseFinance'
+import { gear } from '../src/engine/economy/gear'
 import { COACH_TRIP_NOTES, DEBUT_LINES, DIARY_POOL, TRAVEL_NOTES, WEEK_NOTES } from '../src/engine/diary'
 import {
   COLD_AWAY_NOTES,
@@ -123,6 +127,36 @@ function giftStrings(): string[] {
 
 const str = (v: unknown): string[] => (typeof v === 'string' ? [v] : [])
 
+/** The eight whole-sentence spellings of the tournament summary row, read off the REAL joiner
+ *  (10.10, the LQA runner's four not-in-catalog keys): `tournamentSummaryRef` renumbers the clause
+ *  holes when it joins, so the stored key is none of the authored cp templates – it is the joined
+ *  sentence, the same spelling the frozen v92 table reverse-matches. The param VALUES never reach
+ *  the key, so dummies are fine; what matters is driving every branch pair. */
+function tournamentRowKeys(): string[] {
+  const base = { tier: 'T', surface: 'S', week: 'W', kid: 'K', finish: 'F' }
+  const shapes = [
+    { points: 10, delta: 10, bestN: 6, notRanked: false }, // full points – no clause
+    { points: 10, delta: 0, bestN: 6, notRanked: true }, // banked – not yet ranked
+    { points: 10, delta: 0, bestN: 6, notRanked: false }, // does not improve best N
+    { points: 10, delta: 5, bestN: 6, notRanked: false }, // partial – ranking total
+  ]
+  const out = new Set<string>()
+  for (const shape of shapes) for (const retired of [false, true]) out.add(tournamentSummaryRef({ ...base, ...shape, retired }).k)
+  return [...out]
+}
+
+/** Every coaching-week and gear flavor a finance row can store as its own key (`c: { k: flavor }`):
+ *  the pools are look-ups the walker cannot evaluate, so the seat runs the real functions over both
+ *  axes and reads the real gear table. */
+function financeFlavorKeys(): { coaching: string[]; gear: string[] } {
+  const coaching = new Set<string>()
+  for (const bg of ['working', 'middle', 'wealthy'] as const) {
+    for (const line of trainFlavors(bg)) coaching.add(line)
+    for (const schoolOver of [false, true]) for (const line of restFlavors(bg, schoolOver)) coaching.add(line)
+  }
+  return { coaching: [...coaching], gear: uniq(Object.values(gear).flatMap((line) => Object.values(line.flavor))) }
+}
+
 export const DECLARED_SEATS: readonly Seat[] = [
   // ── the five dynamic `t()` calls (L2-9b, L2-10b, L3-5) ──────────────────────────────────────────────────────────────────────
   {
@@ -196,12 +230,48 @@ export const DECLARED_SEATS: readonly Seat[] = [
       },
     ],
   },
+
+  // ── the LQA runner's four not-in-catalog keys and their whole families (10.10) ─────────────────────────────────────────────
+  // THE JOINED TOURNAMENT ROW: `joinCopy` renumbers holes, so the runtime key is a sentence no static walk can see – a REF seat
+  // key MAY carry holes (the ref's own `p` fills them; `unseatable` splits by seat kind, below).
+  {
+    id: 'ledger.tournamentRow',
+    via: 'ref',
+    writers: [{ file: 'src/engine/world/tournamentClose.ts', needle: "return joinCopy('', parts)" }],
+    groups: () => [{ home: 'src/engine/world/tournamentClose.ts', keys: tournamentRowKeys() }],
+  },
+  // THE EXPOSURE ROW: written by identity (`text: EXPOSURE_ROW`), an identifier the walker cannot read – and the identity law
+  // (state.ts: the feed matches `e.text === EXPOSURE_ROW`) is exactly why the string must never fork from its key.
+  {
+    id: 'spirit.exposure',
+    via: 'ref',
+    writers: [{ file: 'src/engine/spirit.ts', needle: 'c: { k: EXPOSURE_ROW }' }],
+    groups: () => [{ home: 'src/engine/spirit.ts', keys: [EXPOSURE_ROW] }],
+  },
+  // THE FINANCE FLAVORS: a coaching week's pool pick and a gear line's tier flavor, both stored as `c: { k: flavor }`.
+  {
+    id: 'finance.flavors',
+    via: 'ref',
+    writers: [
+      { file: 'src/engine/world/phaseFinance.ts', needle: 'c: { k: flavor },' },
+      { file: 'src/engine/world/phaseFinance.ts', needle: 'return covered > 0 && payer ? cp`${flavor} – on ${payer}` : { k: flavor }' },
+    ],
+    groups: () => [
+      { home: 'src/engine/world/phaseFinance.ts', keys: financeFlavorKeys().coaching },
+      { home: 'src/engine/economy/gear.ts', keys: financeFlavorKeys().gear },
+    ],
+  },
 ]
 
-/** Why a string cannot be a seat key, or null. The same two laws every L3 net asserts per family: no message syntax, no context tag. */
-export function unseatable(key: string): string | null {
+/** Why a string cannot be a seat key, or null. The laws split by seat kind since 10.10: a CALL seat's
+ *  string reaches `t(expr)` bare, so a hole in it would be parsed with no params to fill it – but a
+ *  REF seat's key is a message by construction (the ref carries `p`), and the joined tournament row
+ *  is exactly a braced key no static walk can see. Backslashes and context-tag shapes stay banned for
+ *  both: they change what the LOOKUP sees, whatever fills the holes. */
+export function unseatable(key: string, via: 'call' | 'ref' = 'call'): string | null {
   if (key === '') return 'is empty'
-  if (/[{}\\]/.test(key)) return 'carries message syntax ({, } or \\) – read as a key it would be parsed, not looked up'
+  if (/[\\]/.test(key)) return 'carries a backslash – read as a key it would be unescaped, not looked up'
+  if (via === 'call' && /[{}]/.test(key)) return 'carries message syntax ({ or }) – a call seat hands it to t() bare, parsed with no params'
   if (/^[a-z][a-z0-9_-]{0,23}\|/.test(key)) return 'starts like a context tag (`word|`) – the tag would be split off the key'
   return null
 }

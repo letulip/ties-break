@@ -136,6 +136,10 @@ const SEAT_KEYS: Record<string, number> = {
   'smallTalk.corpus': 820, //       204 openers + 612 replies + 4 shared second beats (L3-5 §6)
   'smallTalk.frames': 18, //        9 per presence
   'album.corpus': 472, //           456 cells + 16 arc cells (L3-6 §11)
+  // ⚠ 10.10 – the LQA runner's four not-in-catalog keys and their whole families (L4-GATE row):
+  'ledger.tournamentRow': 8, //     4 clause shapes x retired on/off, read off the REAL joiner – the first braced ref-seat keys
+  'spirit.exposure': 1, //          EXPOSURE_ROW, written by identity (`text: EXPOSURE_ROW`)
+  'finance.flavors': 26, //         14 coaching-week pool lines (both axes) + 12 gear tier flavors
 }
 
 describe('§2 the declared seats – every dynamic key set the code asks for is named, from the real constants, and held against the tree', () => {
@@ -191,7 +195,8 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
       expect(committed.keys[g]?.seat, g).toEqual(['birthday.gifts'])
     }
     const bare = buildCatalog({ seats: [] })
-    expect(bare.catalog.count, 'the catalog the census alone sees').toBe(built.catalog.count - 159)
+    // 159 gift keys + 34 of the 10.10 families (the 35th, one coaching line, the census already met) – every seat-only key the census cannot see
+    expect(bare.catalog.count, 'the catalog the census alone sees').toBe(built.catalog.count - 193)
     expect([...gifts].filter((g) => bare.catalog.keys[g] !== undefined)).toEqual([])
   })
 
@@ -212,7 +217,7 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
       if (!e.wrapped && now.wrapped) flipped++
       expect({ ...now, wrapped: undefined, seat: undefined, home: undefined }, k).toEqual({ ...e, wrapped: undefined, seat: undefined, home: undefined })
     }
-    expect(built.stats.wrapped - bare.stats.wrapped).toBe(flipped + 159)
+    expect(built.stats.wrapped - bare.stats.wrapped).toBe(flipped + 193) // 159 gifts + 34 of the 10.10 families, as above
   })
 
   // ── the mutations: a fabricated seat, driven through the SAME code ──────────────────────────────────────────────────────────
@@ -256,6 +261,13 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     }
     expect(checkSeat(fake({ groups: () => [{ home: 'x.ts', keys: [] }] }), [site]).problems.map((p) => p.rule)).toEqual(['seat-empty'])
     for (const plain of ['Win | Lose', 'Draw|Seed', 'A plain sentence.', '1st|2nd']) expect(unseatable(plain), plain).toBeNull()
+    // ⚠ 10.10 – the law SPLIT by seat kind, deliberately: a REF seat's key is a message by
+    // construction (the ref carries `p`), and the joined tournament row is a braced key no static
+    // walk can see. Braces stay fatal for a CALL seat; backslash, tag shape and empty for both.
+    expect(unseatable('Has {a} hole', 'ref'), 'a braced REF key is lawful').toBeNull()
+    const refSeat = fake({ via: 'ref', sites: undefined, writers: [{ file: 'src/engine/world/fake.ts', needle: 'k: row' }], groups: () => [{ home: 'src/engine/world/fake.ts', keys: ['{0} – {1} (+{2} pts)'] }] })
+    expect(checkSeat(refSeat, [site], () => 'k: row').problems).toEqual([])
+    for (const bad of ['Back\\slash', 'nav|Stats', '']) expect(unseatable(bad, 'ref'), JSON.stringify(bad)).not.toBeNull()
   })
 
   it('MUTATION 4: a dynamic call NO seat declares is counted, listed with its file and line, and is what the gate prints', () => {
@@ -280,7 +292,7 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     const green = runGate()
     expect(green.problems).toEqual([])
     expect(green.lines.join('\n')).toMatch(/5 dynamic t\(\) calls: 5 declared, 0 unreadable/)
-    expect(green.lines.join('\n')).toMatch(/seats {5}13 declared \(tools\/i18n-seats\.ts\) reach 2240 catalog keys/)
+    expect(green.lines.join('\n')).toMatch(/seats {5}16 declared \(tools\/i18n-seats\.ts\) reach 2275 catalog keys/)
   })
 })
 

@@ -129,11 +129,15 @@ const AFTER_SCHOOL = (e: string): string =>
 const POST_SCHOOL_REST_EVENTS = REST_EVENTS.map(AFTER_SCHOOL)
 const POST_SCHOOL_WEALTHY_REST_EVENTS = WEALTHY_REST_EVENTS.map(AFTER_SCHOOL)
 
-function trainFlavors(background: FamilyBackground): string[] {
+// Exported for tools/i18n-seats.ts (10.10): the writer below stores a pick as `c: { k: flavor }`,
+// so every pool line is a translation key – and the census walker cannot evaluate a look-up, so the
+// seat enumerates these pools by calling the real functions over both axes. Engine callers are
+// unchanged; nothing here enters the world barrel.
+export function trainFlavors(background: FamilyBackground): string[] {
   return background === 'working' ? WORKING_TRAIN_EVENTS : TRAIN_EVENTS
 }
 
-function restFlavors(background: FamilyBackground, schoolOver: boolean): string[] {
+export function restFlavors(background: FamilyBackground, schoolOver: boolean): string[] {
   if (background === 'wealthy') return schoolOver ? POST_SCHOOL_WEALTHY_REST_EVENTS : WEALTHY_REST_EVENTS
   return schoolOver ? POST_SCHOOL_REST_EVENTS : REST_EVENTS
 }

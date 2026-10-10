@@ -140,7 +140,7 @@ export function checkSeat(seat: Seat, sites: readonly DynamicSite[], read: (path
   let shown = 0
   for (const g of groups) {
     for (const key of g.keys) {
-      const why = unseatable(key)
+      const why = unseatable(key, seat.via)
       if (why !== null && shown++ < 3) bad('seat-unseatable', `«${key.slice(0, 60)}» (${g.home}) ${why}`)
     }
   }
