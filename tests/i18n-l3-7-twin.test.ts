@@ -8,6 +8,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
+import { tmpdir } from 'node:os'
 import {
   commentaryDigests, previewDigests, knockDigest, famousDigest, playBench, playCollege, watchedDigest, rowsDigest, worldMinusRefs, snapshotMinusRefs, worldFieldDigests, snapshotFieldDigests, sha,
 } from './helpers/l3-7-play'
@@ -19,6 +20,9 @@ import { toSnapshot } from '../src/engine/world'
 // two machines' runs can be diffed cell by cell instead of hash against hash. Works in both modes;
 // a red compare still writes it. One environment produces digests no other can reproduce – this is
 // the instrument that names the cell.
+/** The first pass's raw serialisations, retained so a mismatch writes the DIVERGED bytes – a re-play after the fact could land on the other family. */
+const rawArm: Record<string, { world: string; snapshot: string }> = {}
+
 const DUMP = process.env.L37_DUMP
 const dumped: Record<string, unknown> = {}
 function dumpFields(label: string, world: Parameters<typeof toSnapshot>[0]): void {
@@ -63,6 +67,7 @@ function capture(): Capture {
       worldFields: worldFieldDigests(p.world), snapshotFields: snapshotFieldDigests(p.world),
     }
     dumpFields(p.label, p.world)
+    rawArm[p.label] = { world: worldMinusRefs(p.world), snapshot: snapshotMinusRefs(p.world) }
   }
   const college: Capture['college'] = {}
   for (const [seed, early] of [['l37-college-a', false], ['l37-college-b', true]] as const) {
@@ -73,6 +78,7 @@ function capture(): Capture {
       worldFields: worldFieldDigests(p.world), snapshotFields: snapshotFieldDigests(p.world),
     }
     dumpFields(p.label, p.world)
+    rawArm[p.label] = { world: worldMinusRefs(p.world), snapshot: snapshotMinusRefs(p.world) }
   }
   if (DUMP) {
     mkdirSync(dirname(DUMP), { recursive: true })
@@ -110,6 +116,27 @@ if (target) {
   describe('L3-7 the twin – this tree reproduces the pre-wave tree\'s English', () => {
     const old = JSON.parse(readFileSync(FIXTURE, 'utf8')) as Capture
     const now = capture()
+    // ⚠ 10.10 – EVIDENCE SELF-CAPTURES ON RED. The owner's bulk reds (three now, always beside
+    // birpc stalls, always the same alternate digests) never coincided with an armed dump knob, so
+    // the cell stayed unnamed. On ANY digest mismatch the net now writes the diverging careers'
+    // full minus-refs serialisations to a timestamped file in the system tmpdir and names it in
+    // the failure output – no knob, no overwrite, the red carries its own forensics.
+    const divergent = [...Object.keys(now.careers), ...Object.keys(now.college)].filter((k) => {
+      const a = (now.careers[k] ?? now.college[k])!
+      const b = (old.careers[k] ?? old.college[k])
+      return b === undefined || a.snapshot !== b.snapshot || a.world !== b.world || a.rowsDigest !== b.rowsDigest
+    })
+    if (divergent.length > 0) {
+      const evid = `${tmpdir()}/twin-red-${Date.now()}.json`
+      const bodies: Record<string, unknown> = {}
+      for (const label of divergent) {
+        const raw = rawArm[label]
+        if (raw) bodies[label] = { world: JSON.parse(raw.world), snapshot: JSON.parse(raw.snapshot) }
+      }
+      writeFileSync(evid, JSON.stringify({ node: process.version, divergent, bodies }, null, 1))
+      // eslint-disable-next-line no-console
+      console.error(`[twin] digests diverged for ${divergent.join(', ')} – full bodies written to ${evid}`)
+    }
     it('commentary: every digest of the grid is the pre-wave tree\'s', () => {
       expect(now.viz.commentary.builds, 'a non-empty denominator on both arms').toBe(old.viz.commentary.builds)
       expect(now.viz.commentary.beats).toBe(old.viz.commentary.beats)
