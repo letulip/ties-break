@@ -40,6 +40,12 @@
 // ⚠ THE PROCEED'S WORD IS NOT A NEW STRING. `Proceed` is the prologue's shipped confirm vocabulary
 // (round 41 #9, `WALK_COPY.proceed`), the same word KnockDialog's own Proceed carries and the same
 // one `lifeBeat.ts` hands the life beat. Invariant 4: reused verbatim, not coined.
+//
+// ⚙ L2-9 (08.10) – THIS TEMPLATE'S OWN TWO PHRASES GO THROUGH `t()`: the kicker (`Her birthday – {0}`, the hole is
+// `weekLabel`, RU-13D's formatter) and the Proceed (`Proceed`, ONE bare key – the knock, the prologue's handover and the life beat
+// share it, and the tables agree). English is byte-identical. The heading, the ask and the four rows stay the SNAPSHOT'S words:
+// `engine/world/birthday.ts` and `birthdayGift.ts` assemble them, they are the RU-09A gift corpus and RU-09's heading bands –
+// engine-born diary prose, L3's `cp` refactor – and a held string would not follow the locale anyway.
 import { computed, ref, useTemplateRef, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
@@ -48,11 +54,16 @@ import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
 import { weekLabel } from '../shared/dates'
 import { useStartYear } from '../composables/startYear'
+import { eventText, t, type CopyRef } from '../i18n'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
 
 const game = useGameStore()
 const prompt = computed(() => game.snapshot?.birthdayPrompt ?? null)
+
+/** ⭐ L3-4 (10.10): THE PROMPT'S WORDS ARE DRAWN FROM THEIR REFS. The heading, the ask and the four rows are class (b) – assembled by `engine/world/birthday.ts` at snapshot time and
+ *  never stored – and each carries its CopyRef beside the English (`headingC`, `askC`, `labelC`, `noteC`). The ask's ref names no option and marks none: the 11.08 rule stands. */
+const say = (text: string, c?: CopyRef): string => eventText({ text, c })
 
 // Guards a double-tap while the worker round-trips, exactly as KnockDialog does: `chooseGift` throws
 // on a birthday that is already answered, so without this a fast second press would surface an error
@@ -127,13 +138,13 @@ useDialogFocus(card)
       tabindex="-1"
     >
       <p id="birthday-dialog-kicker" class="season-summary-kicker">
-        Her birthday – {{ weekLabel(prompt.week, startYear) }}
+        {{ t('Her birthday – {0}', [weekLabel(prompt.week, startYear)]) }}
       </p>
-      <h2 id="birthday-dialog-title" class="season-summary-title">{{ prompt.heading }}</h2>
+      <h2 id="birthday-dialog-title" class="season-summary-title">{{ say(prompt.heading, prompt.headingC) }}</h2>
 
       <!-- ⭐ THE ASK, IN PROSE, AND NOTHING BELOW IT IS MARKED. One of the four rows answers this and
            three do not; the player reads. -->
-      <p id="birthday-ask" class="birthday-ask">{{ prompt.ask }}</p>
+      <p id="birthday-ask" class="birthday-ask">{{ say(prompt.ask, prompt.askC) }}</p>
 
       <!-- ⚠⚠ W2 (26.09) – THE STORE'S REFUSAL, ABOVE THE FOUR ROWS – ForkDialog's own arrangement and
            its reason. This card has no dismiss BY RULING (the header: «nothing» must be an explicit
@@ -173,8 +184,8 @@ useDialogFocus(card)
         >
           <span class="birthday-mark" aria-hidden="true"></span>
           <span class="birthday-choice-text">
-            <span class="birthday-choice-label">{{ option.label }}</span>
-            <span class="birthday-choice-note">{{ option.note }}</span>
+            <span class="birthday-choice-label">{{ say(option.label, option.labelC) }}</span>
+            <span class="birthday-choice-note">{{ say(option.note, option.noteC) }}</span>
           </span>
         </button>
       </div>
@@ -191,7 +202,7 @@ useDialogFocus(card)
         :disabled="sending"
         @click="confirm()"
       >
-        Proceed
+        {{ t('Proceed') }}
       </button>
     </div>
   </div>

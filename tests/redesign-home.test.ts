@@ -12,6 +12,7 @@
 //     slice (the caption appears once, the cards that are doors are doors, the venue slot never
 //     renders an empty frame), not the styling.
 import { describe, it, expect } from 'vitest'
+import { GRACEFUL_ABSENT_FONTS } from './helpers/fontLedger'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { weekDateLine, weekLabel, weekRange, weekSpan } from '../src/shared/dates'
@@ -24,13 +25,15 @@ import { TIER_LADDER } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 import type { Surface } from '../src/engine/match/types'
 import type { DiaryFacts, FamilyBackground, FinanceWeek } from '../src/shared/protocol'
-import { after, at, region, regionToLast } from './helpers/source'
+import { after, at, region, regionToLast, tTransparent } from './helpers/source'
 import { componentLogic } from './worldSource'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 const ROOT = fileURLToPath(new URL('../', import.meta.url))
 
-const home = read('../src/components/screens/HomeScreen.vue')
+// L2-3 (08.10): HOME'S COPY IS `t('…')` NOW (RU-03) – every claim below is about WORDS and SHAPE (the pool's twenty lines, the eyebrows), and the
+// words did not change. `tTransparent` reads the wrapped source the way these pins were written: a changed word still fails.
+const home = tTransparent(read('../src/components/screens/HomeScreen.vue'))
 const app = read('../src/App.vue')
 const css = read('../src/style.css')
 
@@ -881,7 +884,11 @@ describe('the style foundation later slices reuse', () => {
     // Every self-hosted face has a file on disk, and there is no third family.
     const faces = [...css.matchAll(/url\('([^']+\.woff2)'\)/g)].map((m) => m[1])
     expect(faces.length).toBeGreaterThan(0)
-    for (const f of faces) {
+    // ⚠ RE-AIMED by L4-1 (10.10): the two Cyrillic subset faces are DECLARED and not yet on disk – the graceful-absence state the P3
+    // spec ships until its generation commands run (docs/specs/ru-typography-2026-09.md §T3). The exceptions are ONE list
+    // (tests/helpers/fontLedger.ts) and tests/i18n-l4-1-fonts.test.ts makes it shrink the day a file lands, so this guard still fails
+    // for every other face and for an exception that outlives its absence.
+    for (const f of faces.filter((x) => !GRACEFUL_ABSENT_FONTS.includes(x))) {
       expect(existsSync(`${ROOT}public${f.replace(/^\/?/, '/')}`), `missing font file ${f}`).toBe(true)
     }
     // ...and it is used where handwriting belongs, never on a control or a number.

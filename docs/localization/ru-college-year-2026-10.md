@@ -32,14 +32,14 @@ fictional, so `Кубок наций` names this game's competition, not a real-
 
 | Source case | English | Russian draft |
 | --- | --- | --- |
-| all years spent, defensive | `All {total} years spent` | `Все {total} {год/года/лет} программы позади` |
-| current year in progress | `Year {next} of {total} under way – {spent} spent` | `Идёт {next}-й год из {total}; завершено {done} {год/года/лет}` |
-| next year waiting | `Year {next} of {total} is next – {spent} spent` | `Впереди {next}-й год из {total}; завершено {done} {год/года/лет}` |
+| all years spent, defensive | `All {total} years spent` | `Все {total, plural, one {{total} год} few {{total} года} many {{total} лет} other {{total} лет}} программы позади` |
+| current year in progress | `Year {next} of {total} under way – {spent} spent` | `Идёт {next}-й год из {total}; завершено {done, plural, one {{done} год} few {{done} года} many {{done} лет} other {{done} лет}}` |
+| next year waiting | `Year {next} of {total} is next – {spent} spent` | `Впереди {next}-й год из {total}; завершено {done, plural, one {{done} год} few {{done} года} many {{done} лет} other {{done} лет}}` |
 | no completed years phrase | `none spent` | `пока ни одного` |
 | report heading | `Year {index}, as it happened` | `{index}-й год – как он прошёл` |
 | first-year lead | `{place}. A scholarship, and the family pays whatever the award does not. She can leave at the end of any year.` | `{place}. У неё стипендия; всё, что она не покрывает, оплачивает семья. После любого учебного года она может уйти.` |
 | final year ahead | `One year of the scholarship left. After it she is out either way.` | `Остался один год стипендии. После него программа в любом случае закончится.` |
-| ordinary years ahead | `{done} year/years spent, {left} left on the scholarship.` | `Позади {done} {год/года/лет}; стипендии осталось на {left} {год/года/лет}.` |
+| ordinary years ahead | `{done} year/years spent, {left} left on the scholarship.` | `Позади {done, plural, one {{done} год} few {{done} года} many {{done} лет} other {{done} лет}}; стипендии осталось на {left, plural, one {{left} год} few {{left} года} many {{left} лет} other {{left} лет}}.` |
 | annual family bill | `{money} for the year, charged weekly` | `Доля семьи за год – {money}; списывается еженедельно` |
 | next year fully covered | `Student tennis again, and the award covers the whole year.` | `Впереди ещё год студенческого тенниса; стипендия покрывает его полностью.` |
 | next year costs family | `Student tennis again – {annualBill}.` | `Впереди ещё год студенческого тенниса. {annualBill}.` |
@@ -72,8 +72,8 @@ below should not repeat it. Rank `null` must not become №1 or №0.
 
 | Source branch | English | Russian draft |
 | --- | --- | --- |
-| won championship | `She won it – {played} matches, {won} wins.` | `Она выиграла Студенческую лигу: {played} {матч/матча/матчей}, {won} {победа/победы/побед}.` |
-| left championship | `She went out in the {stage} – {played} matches, {won} wins.` | `Выбыла на стадии «{stage}»: {played} {матч/матча/матчей}, {won} {победа/победы/побед}.` |
+| won championship | `She won it – {played} matches, {won} wins.` | `Она выиграла Студенческую лигу: {played, plural, one {{played} матч} few {{played} матча} many {{played} матчей} other {{played} матчей}}, {won, plural, one {{won} победа} few {{won} победы} many {{won} побед} other {{won} побед}}.` |
+| left championship | `She went out in the {stage} – {played} matches, {won} wins.` | `Выбыла на стадии «{stage}»: {played, plural, one {{played} матч} few {{played} матча} many {{played} матчей} other {{played} матчей}}, {won, plural, one {{won} победа} few {{won} победы} many {{won} побед} other {{won} побед}}.` |
 | stakes | `the Nations Cup selectors read this result when they pick the squad.` | `При отборе на Кубок наций этот результат учитывают.` |
 | no call-up | `Nobody wrote to her this year.` | `В этом году вызова в сборную не было.` |
 | named but did not play | `named in the squad, never on court` | `вошла в состав, но на корт не вышла` |
@@ -110,7 +110,7 @@ accessible label rather than an unexplained abbreviation.
 | annual league event | `A draw of {size}, every year – her matches can be watched` | `Каждый год – сетка на {size} участниц. Её матчи можно посмотреть.` |
 | conditional national team event | `If the selectors call her off the championship, the rubbers can be watched` | `Если после чемпионата её вызовут в сборную, матчи можно будет посмотреть.` |
 | ordinary squad trip label | `Squad trip` | `Поездка команды` |
-| known number of duals | `{n} dual matches for the programme` | `{n} {матч/матча/матчей} между командами университетов` |
+| known number of duals | `{n} dual matches for the programme` | `{n, plural, one {{n} матч} few {{n} матча} many {{n} матчей} other {{n} матчей}} между командами университетов` |
 | legacy unknown number | `Dual matches for the programme` | `Матчи между командами университетов` |
 
 The league is guaranteed each university year; the national-team call is conditional. For old
@@ -132,7 +132,7 @@ stray tap on the scrim.
 | total years | `Years` | `Лет в программе` |
 | total balance delta | `Banked` | `Изменение баланса семьи` |
 | no national call | `Her country never called.` | `В сборную её так и не вызвали.` |
-| called in some years | `Her country called in {n} of them, and paid her nothing, which is what it pays everybody.` | `Её вызывали в сборную в {n} {году/годах}. Призовых там не платят никому.` |
+| called in some years | `Her country called in {n} of them, and paid her nothing, which is what it pays everybody.` | `Её вызывали в сборную в {n, plural, one {{n} году} few {{n} годах} many {{n} годах} other {{n} годах}}. Призовых там не платят никому.` |
 | next path | `Qualifying is the way forward again. Her week is on the home screen.` | `Дальше снова квалификация. Её неделя – на экране «Дом».` |
 | continue | `Continue` | `Продолжить` |
 

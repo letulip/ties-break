@@ -368,6 +368,232 @@ export function lineAt(src: string, marker: string): string {
   return end < 0 ? src.slice(from) : src.slice(from, end)
 }
 
+// =================================================================================================
+// ⭐ L2-2 (08.10) – THE `t()`-TRANSPARENT READER, AND IT EXISTS TO END A CHURN (L2-1 finding 7).
+// =================================================================================================
+//
+// THE CHURN. Every landing wave wraps player-facing strings in `t('…')`, and a source-SHAPE pin
+// (`expect(src).toContain("label: 'Coach yourself'")`, `/aria-label="Dismiss"/`) is written against
+// the wording AS WRAPPED OR NOT. L2-1 re-aimed seventeen of them by hand, one dated note each, and
+// the next wave would have re-aimed its own seventeen – every one of them for a reason that is not
+// a premise dying: the STRING is the same, only the way it is spelled in source moved.
+//
+// WHAT THIS DOES. It reads source the way the pin was written, whether or not the site is wrapped:
+//   · `t('LIT')`, `t("LIT")`, `` t(`LIT`) `` and `t('LIT', params…)` become the bare literal;
+//   · the three seats a wrapped string sits in become what the unwrapped one looked like –
+//     `get label() { return LIT }` → `label: LIT`, `label: () => LIT` → `label: LIT`, and, in a
+//     template, `{{ LIT }}` → the bare text and `:aria-label="LIT"` → `aria-label="…"`;
+//   · ⭐ L3-T (10.10): a CONTEXT TAG at the head of the key is not part of the words – `t('nav|Stats')`
+//     reads `'Stats'`, as the tab still reads `Stats` in English (the tag lives at the call site so the
+//     translator can give the nav label its own Russian, spec §3.1). Only the tag shape `splitContext`
+//     reads (`[a-z][a-z0-9_-]{0,23}|`) folds: `t('Win | Lose')` and `t('Draw|Seed')` are plain text.
+//
+// ⚠⚠ WHAT IT MUST NEVER DO: HIDE A WORDING CHANGE. A pin whose asserted STRING changed must still
+// fail, and it does – `t('Coach yourselfX')` reads `'Coach yourselfX'`, which is not
+// `'Coach yourself'`. The reader forgives the SPELLING of the call, never the words. (CLAUDE.md
+// invariant 4's corollary – a wording change is the one diff no test catches – is why this stays a
+// literal-for-literal rewrite and not a fuzzy match.)
+//
+// ⚠ WHAT IT LEAVES ALONE, ON PURPOSE – a call it cannot read as a plain literal is not a literal:
+// `t(variable)`, `t('a' + 'b')`, `` t(`a${b}`) ``, `format('x')`, `emit('x')`, `obj.t('x')`, `$t('x')`.
+// A pin over one of those has to say so itself; guessing would be the silent widening this file's
+// whole header is about.
+//
+// PURE STRING TRANSFORM, THROWS ON NOTHING: an unterminated literal, an unbalanced call or an empty
+// string comes back as it went in. `tests/helpers.test.ts` pins that, and the mutation that proves
+// the reader is load-bearing (a reader that did nothing turns the wrapped-fixture arm red).
+//
+// ⚠ APPLY IT TO THE PINS A WAVE WOULD OTHERWISE RE-AIM, not as a reflex: `tTransparent(src)` in the
+// reader of a pin that asserts a string's spelling; a pin whose premise is "this site calls `t()`"
+// (the wiring itself) reads the raw source. L2-1's seventeen are done and are not retrofitted.
+
+/** Characters that make a `t` part of a longer name (`emit(`, `obj.t(`, `$t(`). */
+const NAME_CHAR = /[A-Za-z0-9_$.]/
+
+/** A context tag at the head of a key – the shape `splitContext` (src/shared/i18n.ts) reads: a short lowercase word, then `|`. */
+const CTX_TAG = /^[a-z][a-z0-9_-]{0,23}\|/
+/** `'nav|Stats'` -> `'Stats'`: the literal of a `t()` call without its context tag (L3-T). The quote stays; so does every word. */
+function untagged(literal: string): string {
+  const tag = CTX_TAG.exec(literal.slice(1))
+  return tag ? literal[0] + literal.slice(1 + tag[0].length) : literal
+}
+
+/** End (exclusive) of the PLAIN string literal that opens at `from`, or -1: single, double, or a backtick
+ *  literal with no `${`. A literal that never closes (or a single/double one that runs onto a new line) is -1. */
+function plainLiteralEnd(src: string, from: number): number {
+  const quote = src[from]
+  if (quote !== "'" && quote !== '"' && quote !== '`') return -1
+  for (let i = from + 1; i < src.length; i++) {
+    const ch = src[i]
+    if (ch === '\\') {
+      i++
+      continue
+    }
+    if (quote === '`' && ch === '$' && src[i + 1] === '{') return -1
+    if (ch === quote) return i + 1
+    if (ch === '\n' && quote !== '`') return -1
+  }
+  return -1
+}
+
+/** End (exclusive) of ANY string literal opening at `from` – a backtick literal may hold `${…}` – or -1. */
+function anyLiteralEnd(src: string, from: number): number {
+  const quote = src[from]
+  for (let i = from + 1; i < src.length; i++) {
+    const ch = src[i]
+    if (ch === '\\') {
+      i++
+      continue
+    }
+    if (quote === '`' && ch === '$' && src[i + 1] === '{') {
+      const close = closerAt(src, i + 2, '}')
+      if (close < 0) return -1
+      i = close
+      continue
+    }
+    if (ch === quote) return i + 1
+  }
+  return -1
+}
+
+/** The first `closer` at nesting depth 0 at or after `from`, reading string literals whole; -1 if none. */
+function closerAt(src: string, from: number, closer: ')' | '}'): number {
+  let depth = 0
+  for (let i = from; i < src.length; i++) {
+    const ch = src[i]
+    if (ch === "'" || ch === '"' || ch === '`') {
+      const end = anyLiteralEnd(src, i)
+      if (end < 0) return -1
+      i = end - 1
+      continue
+    }
+    if (ch === '(' || ch === '[' || ch === '{') depth++
+    else if (ch === ')' || ch === ']' || ch === '}') {
+      if (depth === 0) return ch === closer ? i : -1
+      depth--
+    }
+  }
+  return -1
+}
+
+/** `t(LIT)` / `t(LIT, …)` starting at `i` (which holds the `t`): the literal text and where the call ends, or null. */
+function tCallAt(src: string, i: number): { literal: string; end: number } | null {
+  const skip = (j: number): number => {
+    while (/\s/.test(src[j] ?? 'x')) j++
+    return j
+  }
+  let j = skip(i + 1)
+  if (src[j] !== '(') return null
+  j = skip(j + 1)
+  const litEnd = plainLiteralEnd(src, j)
+  if (litEnd < 0) return null
+  const k = skip(litEnd)
+  if (src[k] === ')') return { literal: src.slice(j, litEnd), end: k + 1 }
+  if (src[k] !== ',') return null
+  const close = closerAt(src, k + 1, ')')
+  return close < 0 ? null : { literal: src.slice(j, litEnd), end: close + 1 }
+}
+
+const LIT = String.raw`'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|` + '`(?:[^`\\\\$]|\\\\.|\\$(?!\\{))*`'
+const PROP = String.raw`[A-Za-z_$][\w$]*|'[^'\n]*'|"[^"\n]*"`
+const GETTER_SEAT = new RegExp(String.raw`\bget\s+(${PROP})\s*\(\s*\)\s*\{\s*return\s+(${LIT})\s*;?\s*\}`, 'g')
+const THUNK_SEAT = new RegExp(String.raw`(${PROP})(\s*:\s*)\(\s*\)\s*=>\s*(${LIT})`, 'g')
+const MUSTACHE_SEAT = new RegExp(String.raw`\{\{\s*('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*")\s*\}\}`, 'g')
+// L2-3 (08.10): a LIST OF READERS, one per line – `localizedList(\n    () => t('A'),\n    () => t('B'),\n  )` (the coach pools' shape). Once the
+// `t()` calls are stripped a line that is ONLY `() => 'A',` is a list item that was `'A',` before the wrap; the seat is anchored to a whole
+// line so a lambda in running code (`computed(() => 'x')`, `xs.map(() => 'y')`) is never rewritten.
+const LIST_THUNK_SEAT = new RegExp(String.raw`^([ \t]+)\(\)\s*=>\s*(${LIT})(,?)[ \t]*$`, 'gm')
+const BOUND_ATTR_SEAT = new RegExp(String.raw`(\s):([A-Za-z][\w:.-]*)="'((?:[^'"\\\n]|\\.)*)'"`, 'g')
+const unescapeQuotes = (inner: string): string => inner.replace(/\\(['"\\])/g, '$1')
+
+/**
+ * The source as the pin was written, wrapped in `t()` or not – see the block above for what it rewrites,
+ * what it refuses to touch and why it can never hide a wording change. Pure; throws on nothing.
+ */
+export function tTransparent(source: string): string {
+  let bare = ''
+  for (let i = 0; i < source.length; ) {
+    const hit = source[i] === 't' && !NAME_CHAR.test(source[i - 1] ?? ' ') ? tCallAt(source, i) : null
+    if (hit) {
+      bare += untagged(hit.literal)
+      i = hit.end
+    } else {
+      bare += source[i]
+      i++
+    }
+  }
+  return bare
+    .replace(GETTER_SEAT, '$1: $2')
+    .replace(THUNK_SEAT, '$1$2$3')
+    .replace(LIST_THUNK_SEAT, '$1$2$3')
+    .replace(MUSTACHE_SEAT, (_m, lit: string) => unescapeQuotes(lit.slice(1, -1)))
+    .replace(BOUND_ATTR_SEAT, (_m, space: string, name: string, inner: string) => `${space}${name}="${unescapeQuotes(inner)}"`)
+}
+
+/** Where a template literal that STARTS at `open` (the backtick) ends – the index just past its closing backtick, or -1. Handles escapes, `${…}` holes with nested braces,
+ *  quoted strings and nested templates inside a hole. */
+function templateEnd(src: string, open: number): number {
+  let i = open + 1
+  while (i < src.length) {
+    const ch = src[i]
+    if (ch === '\\') {
+      i += 2
+      continue
+    }
+    if (ch === '`') return i + 1
+    if (ch === '$' && src[i + 1] === '{') {
+      let depth = 1
+      i += 2
+      while (i < src.length && depth > 0) {
+        const c = src[i]
+        if (c === '`') {
+          const e = templateEnd(src, i)
+          if (e < 0) return -1
+          i = e
+          continue
+        }
+        if (c === "'" || c === '"') {
+          i++
+          while (i < src.length && src[i] !== c) i += src[i] === '\\' ? 2 : 1
+          i++
+          continue
+        }
+        if (c === '{') depth++
+        else if (c === '}') depth--
+        i++
+      }
+      continue
+    }
+    i++
+  }
+  return -1
+}
+
+/**
+ * ⭐ v93 / L3-1 (10.10) – THE SOURCE WITHOUT ITS CP TWINS. A ledger writer says its sentence twice since the localization rig: `text: \`Sold: ${label} – …\`` and, beside
+ * it, `c: cp\`Sold: ${label} – …\`` – the same words as the CopyRef the UI renders under a locale (docs/specs/i18n-2026-10.md §5). A pin that counts how many times a row's
+ * text is quoted in its home (the secondary market's S5 «exactly ONE quoted literal») is counting the ROW, and the twin is not a second quotation of it – it is the same
+ * sentence written for a second reader. This removes every `cp\`…\`` tagged template (nothing else) so such a pin reads the file as it did before the twin existed.
+ *
+ * ⚠ IT CAN NEVER HIDE A WORDING CHANGE: the `text:` literal is untouched by it, and the twin's wording is pinned from the other side – tests/i18n-l3-1-ledger-writers.test.ts
+ * refuses any `cp` key that is not the frozen v92 table's, and refuses a pair whose `text` and `c` say different things.
+ */
+export function withoutCpTwins(source: string): string {
+  let out = ''
+  for (let i = 0; i < source.length; ) {
+    if (source.startsWith('cp`', i) && !NAME_CHAR.test(source[i - 1] ?? ' ')) {
+      const end = templateEnd(source, i + 2)
+      if (end > 0) {
+        i = end
+        continue
+      }
+    }
+    out += source[i]
+    i++
+  }
+  return out
+}
+
 function abbreviate(marker: string): string {
   const oneLine = marker.replace(/\n/g, '\\n')
   return oneLine.length > 60 ? `${oneLine.slice(0, 57)}...` : oneLine

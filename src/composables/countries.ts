@@ -21,6 +21,7 @@
 // regional-indicator pair – is presentation exactly as this header always said, and the engine is
 // still unaware of it. The import runs UI -> shared and never the other way (invariant 1).
 import { PLAYABLE_COUNTRIES, type PlayableCountry } from '../shared/countries'
+import { t } from '../i18n'
 
 /** The playable countries in words. The keys are exactly the codes onboarding offers – a name here
  *  with no code to pick it is unreachable, and a code with no name falls back to the bare two
@@ -31,11 +32,35 @@ import { PLAYABLE_COUNTRIES, type PlayableCountry } from '../shared/countries'
  *  name here with no code is a type error naming the surplus key – the two failures this doc comment
  *  has always described, made mechanical. `tests/r37-playable-countries.test.ts` asserts the same
  *  pair at runtime, because a type check is not what the owner runs while adding a country. */
+// ⭐ L2-11 (RU-13D) – THE 24 NAMES ARE GETTERS OVER `t()` (a module constant would freeze the language it was imported in): `COUNTRY_NAMES[code]` is read where it is
+// drawn, so a flip re-labels the picker, the summary line and the profile. The CODE, the flag and the order are untouched, and a code with no name still falls back to the
+// bare two letters at every call site (`?? code`). The names are the NOMINATIVE of a label – the `from {country}` construction of RU-13D's note is a case-layer question this
+// table does not answer, and no sentence of the product is built from these words. ⚠ Not for the engine: its own place names (the fork's places, the tournaments) are its words.
 const NAMES: Record<PlayableCountry, string> = {
-  US: 'United States', GB: 'United Kingdom', FR: 'France', ES: 'Spain', IT: 'Italy', DE: 'Germany',
-  RU: 'Russia', RS: 'Serbia', CH: 'Switzerland', CZ: 'Czechia', PL: 'Poland', UA: 'Ukraine',
-  KZ: 'Kazakhstan', BY: 'Belarus', AU: 'Australia', JP: 'Japan', CN: 'China', KR: 'South Korea',
-  IN: 'India', BR: 'Brazil', AR: 'Argentina', CA: 'Canada', NL: 'Netherlands', SE: 'Sweden',
+  get US() { return t('United States') },
+  get GB() { return t('United Kingdom') },
+  get FR() { return t('France') },
+  get ES() { return t('Spain') },
+  get IT() { return t('Italy') },
+  get DE() { return t('Germany') },
+  get RU() { return t('Russia') },
+  get RS() { return t('Serbia') },
+  get CH() { return t('Switzerland') },
+  get CZ() { return t('Czechia') },
+  get PL() { return t('Poland') },
+  get UA() { return t('Ukraine') },
+  get KZ() { return t('Kazakhstan') },
+  get BY() { return t('Belarus') },
+  get AU() { return t('Australia') },
+  get JP() { return t('Japan') },
+  get CN() { return t('China') },
+  get KR() { return t('South Korea') },
+  get IN() { return t('India') },
+  get BR() { return t('Brazil') },
+  get AR() { return t('Argentina') },
+  get CA() { return t('Canada') },
+  get NL() { return t('Netherlands') },
+  get SE() { return t('Sweden') },
 }
 
 /** ⚠ THE SAME OBJECT, WIDENED FOR THE CALL SITES. Every screen looks a name up by a `string` off the

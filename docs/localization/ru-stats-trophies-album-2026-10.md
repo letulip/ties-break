@@ -157,7 +157,7 @@ Accessible name: **`Зачётные результаты · {fullTrack}`**.
 | English | Russian |
 | --- | --- |
 | `Week` | `Неделя` |
-| `Tier` | `Турнир` |
+| `Tier` | `Турнир` – SUPERSEDED 10.10: чат-ок отдал ключ `Tier` форме RU-04 G04 «Уровень»; эта ячейка историческая |
 | `Pts` | `Очки` |
 | `Total` | `Всего` |
 | generic empty state | `Зачётных результатов пока нет: они появятся после турнира с рейтинговыми очками.` |
@@ -218,9 +218,12 @@ Funds explanation:
 
 ## 11. Trophy cabinet shell
 
-The screen is a record, not a congratulatory popup. It keeps all eighteen places visible from the
-start: winner and runner-up for each of the nine tournament tiers. Russian therefore stays brief
-enough to repeat eighteen times without making the cabinet sound like a results table.
+The screen is a record, not a congratulatory popup. It keeps all thirty-two places visible from the
+start: winner and runner-up for each of the sixteen tournament rungs. Russian therefore stays brief
+enough to repeat thirty-two times without making the cabinet sound like a results table.
+(⚙ 10.10: the counts above said «eighteen / nine» from an older, smaller ladder – corrected against
+the live code at the owner's re-read ask; tier PROPER names stay untranslated per §9.5, the compact
+shelf labels below already parameterise every W rung and need no change.)
 
 | source meaning | Russian |
 | --- | --- |
@@ -334,15 +337,16 @@ The age line uses the shared counted-age formatter: `13 лет`, `21 год`, `2
 
 | source | Russian |
 | --- | --- |
-| `Back to Home` | `Вернуться в раздел «Дом»` |
+| `album\|Back to Home` | `Вернуться на экран «Дом»` · `APPROVED` 10.10 – чат-ок выровнял три aria-формы на одну; «в раздел» – историческая; ключ назван тегом (альбомный back-контрол) |
+| `counting\|Tier` | `Уровень` · `APPROVED` 10.10 – чат-ок: колонка таблицы зачётных результатов (форма ревьюера) |
 | `Chapter {n} of {total}` | `Глава {n} из {total}` |
-| `– Chapter {n}` on a sheet | `– Глава {n}` |
+| `– Chapter {n}` – on a sheet | `– Глава {n}` |
 | `Left half` | `Левая страница` |
 | `Right half` | `Правая страница` |
 | `Next half` | `Следующая страница` |
 | `Previous sheet` | `Предыдущая страница` |
 | `Next sheet` | `Следующая страница` |
-| pager dot `Sheet {n}` | `Страница {n}` |
+| `Sheet {n}` – pager dot | `Страница {n}` |
 | `Sheet {n} of {total}` | `Страница {n} из {total}` |
 | `Chapters` | `Главы` |
 | `Close` | `Закрыть` |
@@ -482,3 +486,19 @@ result without praising or grading it and emits no row when the save contains no
 
 The parent-written `note`, `caption` and loose `line` corpus is drafted separately in
 [`ru-album-corpus-2026-10.md`](ru-album-corpus-2026-10.md).
+
+### ⚙ 10.10 добавка (№40, усмотрение архитектора): справка о рейтинге (RankHelpDialog) – русская колонка твоя (DRAFT); общие ключи (Close, Continue, #{rank}, Unranked) живут в своих таблицах
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU07-RH01 | `A new result only raises the total if it beats the weakest counted one.` | |
+| RU07-RH02 | `Her best 18 results from the last 52 weeks. She appears on it after 3 scoring tournaments, or 10 points.` | |
+| RU07-RH03 | `Her best 6 Junior Tour results from the last 52 weeks.` | |
+| RU07-RH04 | `Her best 6 results from the last 52 weeks.` | |
+| RU07-RH06 | `National points are what open her next tier. The Junior Tour reads her international rank.` | |
+| RU07-RH07 | `Nothing here until she plays a Junior Tour event – national results do not count towards this ranking.` | |
+| RU07-RH08 | `Nothing here until she plays a W-series event – junior points do not cross over.` | |
+| RU07-RH09 | `Nothing here until she plays her first Local Open.` | |
+| RU07-RH10 | `On every table, results older than 52 weeks drop out – points must be defended.` | |
+| RU07-RH11 | `She has three rankings and they are counted separately – a result pays into one table only, and the totals never add up together.` | |
+| RU07-RH12 | `{0} – {1} · {2} pts` | |

@@ -407,7 +407,9 @@ describe('the scholarship is visible where the money is', () => {
   it('names the academy under the Season card travel figure', () => {
     const src = read('../src/components/screens/SeasonScreen.vue')
     expect(src).toContain('academyCoverPct')
-    expect(src).toContain('academy covers {{ academyCoverPct }}%')
+    // ⚠ RE-AIMED 08.10 (L2-4, a genuine premise move): the hole is part of the message now – `t('academy covers {0}%', [academyCoverPct])` –
+    // so the words and the figure both still sit on the card; what moved is that the number is a placeholder of one catalog key.
+    expect(src).toContain("t('academy covers {0}%', [academyCoverPct])")
     // The figure it explains is the engine's net price, not the calendar's sticker.
     // ⚠ RE-AIMED 01.08 (chore/w1-quick-wins): formatDollars → the shared formatCents; the protected
     // fact — the figure is the engine's NET price — is unchanged.

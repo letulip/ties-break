@@ -49,6 +49,7 @@ import { settleStaffLetters } from './staffLetters'
 import { settleMandatoryQuota } from './mandatory'
 import { resolveEndings } from './endings'
 import { housekeep, recomputeRankAndMilestones } from './bookkeeping'
+import { cp, type CopyRef } from '../../shared/i18n'
 
 // The canonical AI-only bracket for one event. Runs on its OWN EVENT-SCOPED stream
 // `seed:aitour:<event.id>` – the exact mirror of the kid's `seed:kidtour:<event.id>` – covering
@@ -421,20 +422,43 @@ function recordTourChampion(world: WorldState, event: SeasonEvent, result: Tourn
  *  NO PRONOUN NAMES A PROFESSIONAL, the rule the farewell lines keep one module over.
  *
  *  ⚠ THE SENTENCE STILL CONTAINS « won the », which `tests/events.test.ts` matches on by regex. */
-function championNote(world: WorldState, championId: string): string {
+export function championNote(world: WorldState, championId: string): string {
+  const clause = championClause(world, championId)
+  if (clause === null) return ''
+  if (clause.kind === 'debut') return `, at ${clause.age} – a first season on tour`
+  if (clause.kind === 'last') return `, at ${clause.age} – in a last season on tour`
+  return `, at ${clause.age}`
+}
+
+/** ⭐ v93 (L3-3) – THE FACTS OF THE CLAUSE (exported for tests/i18n-l3-3-news-feeds.test.ts, which renders all four branches; none is in the `world.ts` barrel), read ONCE for the sentence and for its CopyRef. `championNote` used to read them inline; the ref beside the text needs the same
+ *  three answers (her age, a debut season, a last one), and a second copy of a question about a succession is exactly the drift this module's header warns about. The three
+ *  templates stay in `championNote`, character for character; this function only answers WHICH one. Null = nothing to add (no age to state). */
+export interface ChampionClause {
+  age: number
+  kind: 'plain' | 'debut' | 'last'
+}
+export function championClause(world: WorldState, championId: string): ChampionClause | null {
   // The kid is named by her own summary line, never by this one, and a cohort girl's age is on her
   // row; only a field pro has a chair whose succession can be asked about.
   const age = isFieldProId(championId)
     ? fieldProsOf(world).find((p) => p.id === championId)?.ageYears
     : world.cohort.find((c) => c.id === championId)?.ageYears
-  if (age === undefined) return ''
-  if (!isFieldProId(championId)) return `, at ${age}`
+  if (age === undefined) return null
+  if (!isFieldProId(championId)) return { age, kind: 'plain' }
   const season = seasonIndexOf(world.week)
   const chair = Number(championId.slice(FIELD.idPrefix.length))
   const career = careerAt(world.seed, chair, season)
-  if (career.debutSeason === season) return `, at ${age} – a first season on tour`
-  if (careerAt(world.seed, chair, season + 1).index !== career.index) return `, at ${age} – in a last season on tour`
-  return `, at ${age}`
+  if (career.debutSeason === season) return { age, kind: 'debut' }
+  if (careerAt(world.seed, chair, season + 1).index !== career.index) return { age, kind: 'last' }
+  return { age, kind: 'plain' }
+}
+
+/** The champion line as a CopyRef: one of FOUR whole sentences of the frozen v92 table (no clause, her age, a first season, a last one). */
+export function championRef(name: string, label: string, clause: ChampionClause | null): CopyRef {
+  if (clause === null) return cp`🏆 ${name} won the ${label}.`
+  if (clause.kind === 'debut') return cp`🏆 ${name} won the ${label}, at ${clause.age} – a first season on tour.`
+  if (clause.kind === 'last') return cp`🏆 ${name} won the ${label}, at ${clause.age} – in a last season on tour.`
+  return cp`🏆 ${name} won the ${label}, at ${clause.age}.`
 }
 
 function announceTourChampion(world: WorldState, event: SeasonEvent, result: TournamentResult): void {
@@ -448,6 +472,7 @@ function announceTourChampion(world: WorldState, event: SeasonEvent, result: Tou
     week: world.week,
     type: 'info',
     text: `🏆 ${playerShortName(world, championId)} won the ${TIERS[event.tier].label}${championNote(world, championId)}.`,
+    c: championRef(playerShortName(world, championId), TIERS[event.tier].label, championClause(world, championId)),
   })
 }
 

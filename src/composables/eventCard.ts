@@ -23,7 +23,8 @@
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { venueArtUrl } from '../art/venues'
-import { surfaceStyleHint } from '../engine/match/style'
+import { surfaceStyleAffinity } from '../engine/match/style'
+import { t } from '../i18n'
 import type { Surface } from '../engine/match/types'
 import type { TierId } from '../engine/season/types'
 
@@ -70,14 +71,14 @@ export const DRAW_NOT_MADE_NOTE = 'The draw has not been made yet.'
  *  be drawing a ring at all in that state, and this arm is here so that if one ever does it says the
  *  true thing rather than reading "0 percent, against ". */
 export function firstMatchLabel(p: FirstMatchOdds): string {
-  if (p.firstMatchChance === null) return DRAW_NOT_MADE_NOTE
-  return `Her chance to win the first match: ${Math.round(p.firstMatchChance * 100)} percent, against ${p.opponentName}`
+  if (p.firstMatchChance === null) return t('The draw has not been made yet.')
+  return t('Her chance to win the first match: {pct} percent, against {opponent}', { pct: Math.round(p.firstMatchChance * 100), opponent: p.opponentName })
 }
 
 /** ...and its hover title, which is the short form of the same fact and travelled with it. */
 export function firstMatchTitle(p: FirstMatchOdds): string {
-  if (p.firstMatchChance === null) return DRAW_NOT_MADE_NOTE
-  return `First round vs ${p.opponentName}`
+  if (p.firstMatchChance === null) return t('The draw has not been made yet.')
+  return t('First round vs {opponent}', { opponent: p.opponentName })
 }
 
 /** ⭐⭐ ROUND 34 #5 – THE PRE-DRAW RING'S ACCESSIBLE NAME, and it is a DIFFERENT SENTENCE on purpose.
@@ -97,14 +98,14 @@ export function firstMatchTitle(p: FirstMatchOdds): string {
  *  `DRAW_NOT_MADE_NOTE` is already on the plaque beside the ring, which is what makes the state
  *  VISIBLE (this label and the title below are a screen reader's and a mouse's only route to it). */
 export function fieldChanceLabel(p: FieldOdds): string {
-  if (p.fieldChance === null) return DRAW_NOT_MADE_NOTE
-  return `Her chance to win a first match at this level: ${Math.round(p.fieldChance * 100)} percent. ${DRAW_NOT_MADE_NOTE}`
+  if (p.fieldChance === null) return t('The draw has not been made yet.')
+  return t('Her chance to win a first match at this level: {pct} percent. The draw has not been made yet.', { pct: Math.round(p.fieldChance * 100) })
 }
 
 /** ...and its hover title, the short form, exactly as `firstMatchTitle` is of `firstMatchLabel`. */
 export function fieldChanceTitle(p: FieldOdds): string {
-  if (p.fieldChance === null) return DRAW_NOT_MADE_NOTE
-  return 'A typical first round at this level'
+  if (p.fieldChance === null) return t('The draw has not been made yet.')
+  return t('A typical first round at this level')
 }
 
 /** ⭐⭐⭐ ROUND 34 #5b – WHAT THE PRE-DRAW FIGURE PROMISES, SAID OUT LOUD ON THE CARD.
@@ -168,9 +169,56 @@ export function fieldRingShown(p: RingState): boolean {
 }
 
 /** The store-backed half: the four facts that need the live snapshot to answer. */
+/** ⚠ L2-4 (RU-04 §2): THE SURFACE WORDS AND THE HINT, CONSUMING `surface` AND `affinity` INSTEAD OF SLICING AN ENGLISH «– ».
+ *  The engine's `surfaceStyleHint` returns finished English (`Clay – suits her game`) and three screens cut it at the dash to get the
+ *  fragment back; that only works in the language the dash was written in. `surfaceStyleAffinity` is the engine's own pure verdict, so the
+ *  UI composes the same two sentences from it and from the three words, byte-identical in English. Season, the next-tournament preview and
+ *  the tournament flow ask for the court sentence here and never slice. */
+export function surfaceWord(surface: Surface): string {
+  switch (surface) {
+    case 'hard':
+      return t('Hard')
+    case 'clay':
+      return t('Clay')
+    default:
+      return t('Grass')
+  }
+}
+
+/** The surface as a lowercase word inside a sentence («(W3, clay)») or a raw cell the stylesheet capitalises. */
+export function surfaceName(surface: Surface): string {
+  return surfaceWord(surface).toLowerCase()
+}
+
+type PlayStyleOf = Parameters<typeof surfaceStyleAffinity>[0]
+
+/** `Clay – suits her game` / `Clay – not her surface`; null on a neutral surface (the neutral affinity stays silent). */
+export function surfaceHint(style: PlayStyleOf, surface: Surface): string | null {
+  const affinity = surfaceStyleAffinity(style, surface)
+  if (affinity === 'neutral') return null
+  return affinity === 'suits' ? t('{0} – suits her game', [surfaceWord(surface)]) : t('{0} – not her surface', [surfaceWord(surface)])
+}
+
+/** The coach's court sentence, rendered from the affinity: «The court suits her game.» / «The court
+ *  is not her surface.»; null on neutral. ⚠ 10.10 (owner №7, «лучше грамотно написать»): the mismatch
+ *  arm used to read «The court not her surface.» – the sentence was glued from the CHIP's dash-form
+ *  tail («{0} – not her surface»), which has no verb by chip grammar, and the glue never added one. */
+export function courtSentence(style: PlayStyleOf, surface: Surface): string | null {
+  const affinity = surfaceStyleAffinity(style, surface)
+  if (affinity === 'neutral') return null
+  return affinity === 'suits' ? t('The court suits her game.') : t('The court is not her surface.')
+}
+
+/** `#12` / `Unranked` – `rankLabel`'s two shapes (shared/format.ts, engine-importable, so it cannot call `t()`) read through the catalog, as the
+ *  Home chip does since L2-3. `null` is «no rank»; `rankLabel(n, true)` and `#{rank}` are the same characters. */
+export function rankText(rank: number | null): string {
+  return rank === null ? t('Unranked') : t('#{rank}', { rank })
+}
+
 export function useEventCard(): {
   venueUrl: (e: PaintableEvent) => string
   surfaceVerdict: (surface: Surface) => string | null
+  courtRead: (surface: Surface) => string | null
   fundsShort: (e: PricedEvent) => boolean
   academyCoverPct: ComputedRef<number>
 } {
@@ -184,8 +232,8 @@ export function useEventCard(): {
     /** The engine's own verdict on this court for her build, whole sentence, surface named.
      *  Consumed, not re-worded: SURFACE_STYLE_DELTAS is what actually moves her attributes, and a
      *  card that words the verdict itself is a card that can contradict the table. */
-    surfaceVerdict: (surface: Surface) =>
-      game.snapshot ? surfaceStyleHint(game.snapshot.profile.playStyle, surface) : null,
+    surfaceVerdict: (surface: Surface) => (game.snapshot ? surfaceHint(game.snapshot.profile.playStyle, surface) : null),
+    courtRead: (surface: Surface) => (game.snapshot ? courtSentence(game.snapshot.profile.playStyle, surface) : null),
     /** ⭐ U-12 – CAN THE FAMILY PAY THE ENTRY FEE? It disables the Enter control on both cards and
      *  raises the same «Not enough funds» hint beside it, and it was the same two lines in both
      *  screens (`SeasonScreen.vue:856-858` == `CalendarScreen.vue:265-267`, byte-identical, listed

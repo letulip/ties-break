@@ -132,6 +132,13 @@ export interface CareerAtOptions {
    * calls a five-character id no letter will ever have.)
    */
   localStorage?: Record<string, string>
+  /**
+   * THE SPLASH'S ACCESSIBLE NAME, for a context whose language is not English (L4-3). The splash is a `role="button"` named by
+   * `t('Tap to start')`, so under `tb-locale=ru` the name is whatever the Russian catalog says – English today (a miss), the
+   * owner's Russian the day that row approves. Every spec of the English suite keeps the default; the LQA runner (e2e/lqa/) passes a
+   * matcher that follows the catalog, so a row landing never breaks its boot.
+   */
+  splash?: string | RegExp
 }
 
 /**
@@ -290,7 +297,9 @@ function payloadFor(entry: FixtureEntry, options: CareerAtOptions): SeedPayload 
       // write no real commit could produce (see SEEDED_REVISION).
       revision: records[records.length - 1].revision,
     },
-    storage: options.localStorage ?? {},
+    // ⚠ The language question is already answered (L1a): the seed's `localStorage.clear()` would otherwise
+    // put the first-run prompt in front of the splash this fixture clicks. See playwright.config.ts.
+    storage: { 'tb-locale': 'en', ...(options.localStorage ?? {}) },
   }
 }
 
@@ -520,7 +529,7 @@ export const test = base.extend<{ careerAt: CareerAt; storageComesBack: StorageC
       // also the wait for the store to have finished asking the worker for its careers. Clicking it
       // by name is a web-first action: it retries until the control is really there, and no spec
       // below needs to know that the app spends its first moments on "Loading…".
-      await page.getByRole('button', { name: 'Tap to start' }).click()
+      await page.getByRole('button', { name: options.splash ?? 'Tap to start' }).click()
 
       return entry
     })

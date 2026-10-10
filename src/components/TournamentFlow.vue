@@ -47,11 +47,12 @@ import { playSfx, primeSfx } from '../audio/sfx'
 import { replayMatch } from '../composables/annotatedMatch'
 import { computeMatchStats } from '../viz/match/matchStats'
 import { matchStatMeta, matchStatRows } from '../composables/matchStatTable'
-import { surfaceStyleHint } from '../engine/match/style'
+import { courtSentence, rankText, surfaceName } from '../composables/eventCard'
+import { t } from '../i18n'
 import { TIERS } from '../engine/season/calendar'
 import { KID_ID, flipScore, prizeCentsFor } from '../engine/world'
 import { LADDER_LABEL } from '../shared/protocol'
-import { formatShortName, rankLabel, shortTierLabel } from '../shared/format'
+import { formatShortName, shortTierLabel } from '../shared/format'
 import { formatCents } from '../shared/money'
 import { weekLabel, weekRange } from '../shared/dates'
 import type { AvatarEmotion } from '../shared/avatarEmotion'
@@ -124,7 +125,7 @@ const ladderLabel = computed<string | null>(() => {
 })
 /** ...and the shared "#N or Unranked" rule, so a girl with no counting result in THIS table is not
  *  introduced on the splash as the tie floor she shares with half the field. */
-const kidRankText = computed(() => rankLabel(kidRank.value ?? 0, kidRank.value !== null))
+const kidRankText = computed(() => rankText(kidRank.value))
 // HOW OLD THE TWO OF THEM ARE, on the card that introduces them (the owner: «и в турнирах перед
 // матчем тоже можно показывать»). BOTH sides or neither: one girl's age printed opposite a blank is
 // a comparison the reader cannot finish, and the comparison is the point at a junior event.
@@ -320,10 +321,14 @@ function stageName(round: number): string {
   // the engine's own name for the round rather than an invented one.
   if (drawSize.value === null) return pending.value?.bracket[round]?.roundLabel ?? ''
   const remaining = drawSize.value / 2 ** round
-  if (remaining === 2) return 'Final'
-  if (remaining === 4) return 'Semifinal'
-  if (remaining === 8) return 'Quarterfinal'
-  return `Round of ${remaining}`
+  if (remaining === 2) return t('Final')
+  if (remaining === 4) return t('Semifinal')
+  if (remaining === 8) return t('Quarterfinal')
+  if (remaining === 16) return t('Round of 16')
+  if (remaining === 32) return t('Round of 32')
+  if (remaining === 64) return t('Round of 64')
+  if (remaining === 128) return t('Round of 128')
+  return t('Round of {0}', [remaining])
 }
 const spectateRoundLabel = computed(() => stageName(spectateRound.value))
 /** Short stage name of a round in this draw – F / SF / QF / R16 … Same rule and the same words as
@@ -336,10 +341,14 @@ function shortStage(round: number): string {
   // draw's own `R16`.
   if (drawSize.value === null) return pending.value?.bracket[round]?.roundLabel ?? ''
   const remaining = drawSize.value / 2 ** round
-  if (remaining === 2) return 'F'
-  if (remaining === 4) return 'SF'
-  if (remaining === 8) return 'QF'
-  return `R${remaining}`
+  if (remaining === 2) return t('stage|F')
+  if (remaining === 4) return t('stage|SF')
+  if (remaining === 8) return t('stage|QF')
+  if (remaining === 16) return t('stage|R16')
+  if (remaining === 32) return t('stage|R32')
+  if (remaining === 64) return t('stage|R64')
+  if (remaining === 128) return t('stage|R128')
+  return t('stage|R{0}', [remaining])
 }
 
 // --- E. Tournament (Preview): the brief ---------------------------------------
@@ -377,11 +386,30 @@ const winnerPrizeCents = computed(() =>
  */
 const crowdFigure = computed(() => (pending.value?.crowd ?? 0).toLocaleString('en-US'))
 const crowdTitle = computed(() =>
-  pending.value ? `About ${crowdFigure.value} people around the courts – atmosphere, not a factor in play` : '',
+  pending.value ? t('About {0} people around the courts – atmosphere, not a factor in play', [crowdFigure.value]) : '',
 )
 /** How many wins the title costs from round one. log2 of the draw, in words, because the coach
  *  says it out loud rather than printing it. */
-const WINS_IN_WORDS = ['', 'One win', 'Two wins', 'Three wins', 'Four wins', 'Five wins', 'Six wins']
+/** The price of the title as a sentence. ⚠ L2-4 (08.10): the English NUMBER WORDS were data (`WINS_IN_WORDS[n]`); each is its own whole message now, with the
+ *  numeral form for a draw past six wins – English forks are separate literals (L2-3), and a Russian row can carry the count as a plural. */
+function titlePrice(wins: number): string {
+  switch (wins) {
+    case 1:
+      return t('One win for the title.')
+    case 2:
+      return t('Two wins for the title.')
+    case 3:
+      return t('Three wins for the title.')
+    case 4:
+      return t('Four wins for the title.')
+    case 5:
+      return t('Five wins for the title.')
+    case 6:
+      return t('Six wins for the title.')
+    default:
+      return t('{0} wins for the title.', [wins])
+  }
+}
 const winsToTitle = computed<number | null>(() => (drawSize.value ? Math.log2(drawSize.value) : null))
 /**
  * "COACH PREDICTION" – what a coach can honestly say about THIS event, which is not what the
@@ -398,18 +426,16 @@ const winsToTitle = computed<number | null>(() => (drawSize.value ? Math.log2(dr
  */
 const coachLine = computed(() => {
   if (!pending.value) return ''
-  const hint = profile.value ? surfaceStyleHint(profile.value.playStyle, pending.value.surface) : null
+  const court = profile.value ? courtSentence(profile.value.playStyle, pending.value.surface) : null
   // "Grass – suits her game" -> "The court suits her game." (R11-15's slice, same as Season's).
-  const dash = hint?.indexOf('– ') ?? -1
-  const fit = hint && dash >= 0 ? hint.slice(dash + 2) : hint
   // ⭐⭐⭐ ROUND 27 #6 – AND A WEEK WITH NO TITLE IN IT IS PRICED AT NOTHING, WHICH IS A DROPPED
   // CLAUSE RATHER THAN A ZERO. The old expression would have read « for the title.» over a Nations
   // Cup tie – `WINS_IN_WORDS[0]` is the empty string, and `??` does not catch it – and the sentence
   // would have been wrong twice over: she plays every rubber the captain gives her whatever happens
   // in them, and there is no title at the end of any of them.
-  if (winsToTitle.value === null) return fit ? `The court ${fit}.` : ''
-  const price = `${WINS_IN_WORDS[winsToTitle.value] ?? `${winsToTitle.value} wins`} for the title.`
-  return fit ? `The court ${fit}. ${price}` : price
+  if (winsToTitle.value === null) return court ?? ''
+  const price = titlePrice(winsToTitle.value)
+  return court ? `${court} ${price}` : price
 })
 /** The roster row marked `current`, or null while she is self-coached – shared by the signature and
  *  the portrait below rather than found twice. */
@@ -562,8 +588,10 @@ function beginFromSplash(): void {
 const showSkipConfirm = ref(false)
 const skipConfirmMessage = computed(() =>
   pending.value
-    ? `Skip ${pending.value.tierLabel}? The entry fee is forfeited – the list closed with her on it. ` +
-      'Travel is refunded and the week passes without playing.'
+    ? t(
+        'Skip {0}? The entry fee is forfeited – the list closed with her on it. Travel is refunded and the week passes without playing.',
+        [pending.value.tierLabel],
+      )
     : '',
 )
 async function confirmSkipEvent(): Promise<void> {
@@ -834,14 +862,14 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
            points at all; that one keeps its own place and its own confirm.
            The skip's conditions are unchanged - not before the run has begun, not after it is over -
            it just yields the slot while a match is being watched. -->
-      <button v-if="replayOpen" class="link" :disabled="game.busy" @click="endReplay">To result</button>
+      <button v-if="replayOpen" class="link" :disabled="game.busy" @click="endReplay">{{ t('To result') }}</button>
       <button
         v-else-if="!pending.finished && phase !== 'finale'"
         class="link"
         :disabled="game.busy"
         @click="skipAll"
       >
-        Skip all rounds
+        {{ t('Skip all rounds') }}
       </button>
     </template>
 
@@ -881,13 +909,13 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
           class="back-link tf-hero-back"
           variant="bare"
           icon="back"
-          label="Back"
+          :label="t('Back')"
           :disabled="game.busy"
           @click="$emit('back')"
         />
         <div class="tf-hero-caption">
           <h2 class="tf-hero-title">{{ pending.tierLabel }}</h2>
-          <p class="tf-hero-meta">{{ pending.surface }} &middot; {{ weekDates }}</p>
+          <p class="tf-hero-meta">{{ surfaceName(pending.surface) }} &middot; {{ weekDates }}</p>
         </div>
       </Card>
 
@@ -916,8 +944,8 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
           <span class="tf-fact-tile" aria-hidden="true">
             <SurfaceMark :surface="pending.surface" :show-name="false" />
           </span>
-          <span class="tf-fact-label">Surface</span>
-          <span class="tf-fact-value surface">{{ pending.surface }}</span>
+          <span class="tf-fact-label">{{ t('Surface') }}</span>
+          <span class="tf-fact-value surface">{{ surfaceName(pending.surface) }}</span>
         </div>
         <!-- "Prize Money" is the design's own third fact. The DASH was written when it was true of
              every event in the game, and on the junior tour it still is (engine/season/calendar.ts,
@@ -932,25 +960,25 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
           <span class="tf-fact-tile" aria-hidden="true">
             <AppIcon name="dollar" :size="19" />
           </span>
-          <span class="tf-fact-label">Prize money</span>
+          <span class="tf-fact-label">{{ t('Prize money') }}</span>
           <span
             v-if="winnerPrizeCents > 0"
             class="tf-fact-value"
-            title="The winner's cheque at this tier"
+            :title="t('The winner\'s cheque at this tier')"
             >{{ formatCents(winnerPrizeCents) }}</span
           >
-          <span v-else class="tf-fact-value" title="The junior tour pays no prize money at any level">–</span>
+          <span v-else class="tf-fact-value" :title="t('The junior tour pays no prize money at any level')">–</span>
         </div>
         <div class="tf-fact">
           <span class="tf-fact-tile" aria-hidden="true">
             <AppIcon name="trophy" :size="19" />
           </span>
-          <span class="tf-fact-label">Winner</span>
+          <span class="tf-fact-label">{{ t('splash|Winner') }}</span>
           <!-- ⭐⭐⭐ ROUND 26 #6: the dash, on the same rule the prize cell one tile up already
                keeps – a student field awards no ranking points, so there is no figure and the cell
                says so rather than printing a zero that reads like a tuning mistake. -->
-          <span v-if="!amateur" class="tf-fact-value">{{ winnerPoints }} pts</span>
-          <span v-else class="tf-fact-value" title="A student field awards no ranking points">–</span>
+          <span v-if="!amateur" class="tf-fact-value">{{ t('{0} pts', [winnerPoints]) }}</span>
+          <span v-else class="tf-fact-value" :title="t('A student field awards no ranking points')">–</span>
         </div>
         <!-- ⚠ THE CROWD CELL IS ABSENT AND NOT DASHED ON AN AMATEUR FIXTURE, WHICH IS A DIFFERENT
              CLAIM FROM THE TWO ABOVE. "No prize money" is a FACT about a student championship; "we
@@ -960,7 +988,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
           <span class="tf-fact-tile" aria-hidden="true">
             <AppIcon name="spectators" :size="19" />
           </span>
-          <span class="tf-fact-label">Spectators</span>
+          <span class="tf-fact-label">{{ t('Spectators') }}</span>
           <span class="tf-fact-value" :title="crowdTitle">{{ crowdFigure }}</span>
         </div>
       </div>
@@ -980,7 +1008,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
              sentence from a dash. -->
         <div class="tf-round-row">
           <p class="tf-round">{{ pending.roundLabel }}</p>
-          <p v-if="drawSize !== null" class="tf-draw">{{ drawSize }}-player draw</p>
+          <p v-if="drawSize !== null" class="tf-draw">{{ t('{0}-player draw', [drawSize]) }}</p>
         </div>
         <!-- Both ranks are read off the table THIS tournament is played on, and the panel says which
              one that is - a bare "#118" beside a bare "#4" is a comparison, and a comparison across
@@ -991,16 +1019,16 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
             <div class="tf-first-name">{{ kidShort }}</div>
             <div class="tf-first-rank">{{ kidRankText }}</div>
             <!-- Age, both sides or neither - see `showAges`. -->
-            <div v-if="showAges" class="tf-first-age">Age {{ kidAge }}</div>
+            <div v-if="showAges" class="tf-first-age">{{ t('Age {0}', [kidAge]) }}</div>
           </div>
-          <div class="tf-first-vs">VS</div>
+          <div class="tf-first-vs">{{ t('VS') }}</div>
           <div class="tf-first-side mirrored">
             <div class="tf-first-flag">{{ flagEmoji(pending.opponent.nation) }}</div>
             <div class="tf-first-name">{{ pending.opponent.name }}</div>
             <div class="tf-first-rank">
-              {{ pending.opponent.rank === null ? 'Unranked' : '#' + pending.opponent.rank }}
+              {{ rankText(pending.opponent.rank) }}
             </div>
-            <div v-if="showAges" class="tf-first-age">Age {{ oppAge }}</div>
+            <div v-if="showAges" class="tf-first-age">{{ t('Age {0}', [oppAge]) }}</div>
           </div>
         </div>
         <!-- ⭐⭐⭐ ROUND 26 #6 – AND AN AMATEUR FIXTURE NAMES NO TABLE, because it is played in
@@ -1020,7 +1048,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
              `PendingView.ladderNote` is non-null exactly when `ladder` is null and carries the
              competition's own clause; §5's ruling one screen along - the screen asks the engine and
              prints the answer, it does not compose its own. -->
-        <p v-if="ladderLabel !== null" class="hint tf-first-ladder">{{ ladderLabel }} ranking</p>
+        <p v-if="ladderLabel !== null" class="hint tf-first-ladder">{{ t('{0} ranking', [ladderLabel]) }}</p>
         <p v-else-if="pending.ladderNote" class="hint tf-first-ladder">{{ pending.ladderNote }}</p>
       </Card>
 
@@ -1041,7 +1069,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
              the card's own direct children - see `.tf-brief-body` for why the padding moved here. -->
         <div class="tf-brief-body">
           <div class="tf-brief-said">
-            <p class="tf-brief-label">Coach prediction</p>
+            <p class="tf-brief-label">{{ t('Coach prediction') }}</p>
             <p class="tf-brief-line">{{ coachLine }}</p>
             <p v-if="coachSignature" class="tf-brief-sign">{{ coachSignature }}</p>
             <!-- ⭐ ROUND-21 #2 – HE IS HERE, AND THE SCREEN SAYS SO. The owner reported for the THIRD
@@ -1056,23 +1084,23 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
                  (`PendingView.coachTravelled` off `coachTravelsWithHer`); this screen only draws it,
                  which is why the flow, the live commentary and the week's story cannot disagree about
                  one trip. -->
-            <p v-if="pending?.coachTravelled" class="tf-brief-here">At the tournament with her this week – one additional fare on this trip.</p>
+            <p v-if="pending?.coachTravelled" class="tf-brief-here">{{ t('At the tournament with her this week – one additional fare on this trip.') }}</p>
           </div>
           <div class="tf-brief-go">
-            <p class="tf-brief-ring-label">Her condition</p>
+            <p class="tf-brief-ring-label">{{ t('Her condition') }}</p>
             <!-- ⚠ THE LABEL NO LONGER ROUNDS – `toSnapshot` rounds `condition` once at the boundary
                  (the long goodbye §4a, owner 26.08). It used to be spelled here and in KidScreen and
                  nowhere else, while five other readers of the same field rounded nothing. -->
             <ProgressRing
               :value="condition / 100"
               :color="conditionColor"
-              :label="`Her condition going into this tournament: ${condition} percent`"
+              :label="t('Her condition going into this tournament: {0} percent', [condition])"
             />
             <!-- ⚠ JUST THE WORD - the owner, 30.07: on begin, simply drop the arrow. The arrow was doing
                  nothing the button was not: a lime CTA at the foot of a brief is already the way
                  forward, and §E's own copy for this control is one word. The design's onboarding CTA
                  is "Begin" bare as well, so the two now match. -->
-            <PrimaryPill variant="cta" :disabled="game.busy" @click="beginFromSplash">Begin</PrimaryPill>
+            <PrimaryPill variant="cta" :disabled="game.busy" @click="beginFromSplash">{{ t('Begin') }}</PrimaryPill>
           </div>
         </div>
       </Card>
@@ -1084,7 +1112,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
            command behind it, and `skipEvent` would throw on a reveal that owns no `SeasonEvent`.
            «Skip all rounds» in the exit slot is the honest way past this one, and it is still there. -->
       <button v-if="!amateur" class="link tf-skip-entry" :disabled="game.busy" @click="showSkipConfirm = true">
-        Skip this event – withdraw
+        {{ t('Skip this event – withdraw') }}
       </button>
     </template>
 
@@ -1106,7 +1134,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
       <div v-if="pending.bracket.length && phase !== 'finale' && !replayOpen" class="tf-strip">
         <div v-for="(r, i) in pending.bracket" :key="i" class="tf-strip-row" :class="{ won: r.kidWon }">
           <span class="tf-strip-round">{{ r.roundLabel }}</span>
-          <span class="tf-strip-result">{{ r.kidWon ? 'W' : 'L' }}</span>
+          <span class="tf-strip-result">{{ r.kidWon ? t('path|W') : t('path|L') }}</span>
           <span class="tf-strip-opp">{{ r.oppName }}</span>
           <span class="tf-strip-score num">{{ r.score }}</span>
         </div>
@@ -1117,7 +1145,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
            spectate round during the walk; the finale renders the same component again below
            its card. Only revealed rounds are in `fullBracket`, so no tab can leak ahead. -->
       <section v-if="showBracket && drawSize !== null" class="tf-card tf-bracket">
-        <p class="tf-bracket-title">Draw</p>
+        <p class="tf-bracket-title">{{ t('Draw') }}</p>
         <BracketTabs :matches="bracketMatches" :draw-size="drawSize" :active-round="bracketActiveRound" />
       </section>
 
@@ -1190,7 +1218,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
       :booth-private-life="pending?.boothPrivateLife ?? null"
       :booth-lineage="pending?.boothLineage ?? null"
       :mode="replayAdvances ? 'live' : 'replay'"
-      proceed-label="To the result"
+      :proceed-label="t('To the result')"
       @finish="endReplay"
       @end-applause="noteEndApplause"
     />
@@ -1222,14 +1250,13 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
           <div class="scene-name">{{ kidShort }} {{ kidFlag }}</div>
           <!-- The pre-match card carries the age too - the same two facts as the splash, in the
                screen's own register. Both sides or neither; see `showAges`. -->
-          <div class="scene-rank">{{ kidRankText }}<template v-if="showAges"> · Age {{ kidAge }}</template></div>
+          <div class="scene-rank">{{ kidRankText }}<template v-if="showAges"> · {{ t('Age {0}', [kidAge]) }}</template></div>
         </div>
-        <div class="scene-vs">vs</div>
+        <div class="scene-vs">{{ t('vs') }}</div>
         <div class="scene-side mirrored">
           <div class="scene-name">{{ pending.opponent.name }} {{ flagEmoji(pending.opponent.nation) }}</div>
           <div class="scene-rank">
-            {{ pending.opponent.rank === null ? 'Unranked' : '#' + pending.opponent.rank
-            }}<template v-if="showAges"> · Age {{ oppAge }}</template>
+            {{ rankText(pending.opponent.rank) }}<template v-if="showAges"> · {{ t('Age {0}', [oppAge]) }}</template>
           </div>
         </div>
       </div>
@@ -1240,15 +1267,15 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
            and "the one you usually want is where your thumb already is" is the whole argument. Only
            the ORDER moved: same handlers, same `.primary` on the same button, same `.sfx-watch`. -->
       <div class="tf-actions">
-        <button :disabled="game.busy" @click="showResult">Skip</button>
-        <button class="primary sfx-watch" :disabled="game.busy" @click="watchMatch">Watch match</button>
+        <button :disabled="game.busy" @click="showResult">{{ t('Skip') }}</button>
+        <button class="primary sfx-watch" :disabled="game.busy" @click="watchMatch">{{ t('Watch match') }}</button>
       </div>
     </MatchScene>
 
     <!-- Post-match box score -->
     <section v-else-if="phase === 'post'" class="tf-card">
       <div class="tf-result-head">
-        <span class="tf-badge" :class="kidWon ? 'win' : 'loss'">{{ kidWon ? 'Win' : 'Loss' }}</span>
+        <span class="tf-badge" :class="kidWon ? 'win' : 'loss'">{{ kidWon ? t('Win') : t('Loss') }}</span>
         <span class="tf-scoreline num">{{ kidScore }}</span>
       </div>
       <!-- ⚠ THE RESULTS TABLE THE OWNER WAS LOOKING AT (31.07). It printed her ITF rank under her name
@@ -1265,7 +1292,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
            header below are null there, so what is left is the two names, which is the whole of what
            this line has to say about a student match. -->
       <p class="hint" style="margin: 0 0 12px">
-        {{ kidShort }} vs {{ oppShort }}<template v-if="ladderLabel !== null"> · {{ ladderLabel }} ranking</template>
+        {{ t('{0} vs {1}', [kidShort, oppShort]) }}<template v-if="ladderLabel !== null"> · {{ t('{0} ranking', [ladderLabel]) }}</template>
       </p>
       <!-- ⚠ THE TABLE ITSELF IS `ui/BoxScoreTable.vue` NOW (F-08, 27.09) – the friendly had the same
            markup character for character, one layer out from the five ROWS the note below already
@@ -1278,10 +1305,10 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
         :opp-rank="currentOppRank"
         :rows="statRows"
       />
-      <p v-if="matchMeta" class="hint">Avg rally {{ matchMeta.rally }} shots · ~{{ matchMeta.duration }}</p>
+      <p v-if="matchMeta" class="hint">{{ t('Avg rally {0} shots · ~{1}', [matchMeta.rally, matchMeta.duration]) }}</p>
       <div class="tf-actions">
-        <button class="sfx-watch" :disabled="game.busy" @click="watchAgain">Watch again</button>
-        <button class="primary" :disabled="game.busy" @click="next">Next</button>
+        <button class="sfx-watch" :disabled="game.busy" @click="watchAgain">{{ t('Watch again') }}</button>
+        <button class="primary" :disabled="game.busy" @click="next">{{ t('result|Next') }}</button>
       </div>
     </section>
 
@@ -1290,10 +1317,10 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
     <section v-else-if="phase === 'spectate'" class="tf-card tf-spectate">
       <p class="tf-spectate-kid">{{ kidShort }} – {{ pending.finishLabel }}</p>
       <p class="tf-round">{{ spectateRoundLabel }}</p>
-      <p class="hint">She's out – see how the draw finishes.</p>
+      <p class="hint">{{ t('She\'s out – see how the draw finishes.') }}</p>
       <div class="tf-actions">
         <button class="primary" :disabled="game.busy" @click="nextSpectateRound">
-          {{ spectateRound < finalRound ? 'Next round' : 'Continue' }}
+          {{ spectateRound < finalRound ? t('Next round') : t('Continue') }}
         </button>
       </div>
     </section>
@@ -1331,11 +1358,11 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
           height="88"
           decoding="async"
         />
-        <p class="tf-poster-status">{{ pending.kidChampion ? 'Champion' : 'Runner-up' }}</p>
+        <p class="tf-poster-status">{{ pending.kidChampion ? t('Champion') : t('Runner-up') }}</p>
         <h2 class="tf-poster-name">{{ kidFullName }}</h2>
         <img class="tf-poster-photo" :src="finalePortrait" :style="finaleFocus" alt="" />
         <p v-if="finaleOpponent" class="tf-poster-line">
-          {{ pending.kidChampion ? 'def.' : 'lost to' }} <b>{{ finaleOpponent }}</b> in the Final
+          {{ pending.kidChampion ? t('poster|def.') : t('poster|lost to') }} <b>{{ finaleOpponent }}</b> {{ t('in the Final') }}
         </p>
         <p v-if="finaleSets.length" class="tf-poster-sets">
           <span v-for="(s, i) in finaleSets" :key="i">{{ s }}</span>
@@ -1348,11 +1375,11 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
              ⭐⭐⭐ ROUND 26 #6: and absent on a student title, because the poster may not print a
              gain there was none of. The chip beside the surface already names the competition, and
              the splash stated its terms before she walked on. -->
-        <p v-if="!amateur" class="tf-poster-points">+{{ pending.points }} pts</p>
+        <p v-if="!amateur" class="tf-poster-points">{{ t('+{0} pts', [pending.points]) }}</p>
         <div v-if="pathCells.length" class="tf-path" :style="{ gridTemplateColumns: `repeat(${pathCells.length}, 1fr)` }">
           <div v-for="(c, i) in pathCells" :key="i" class="tf-path-cell" :class="{ lost: !c.won }">
             <span class="tf-path-round">{{ c.short }}</span>
-            <span class="tf-path-opp">{{ c.won ? 'def.' : 'lost to' }} <b>{{ c.opp }}</b></span>
+            <span class="tf-path-opp">{{ c.won ? t('def.') : t('lost to') }} <b>{{ c.opp }}</b></span>
             <span class="tf-path-score num">{{ c.score }}</span>
             <svg class="tf-path-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
@@ -1362,7 +1389,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
           </div>
         </div>
         <PrimaryPill class="tf-poster-cta" variant="cta" :disabled="game.busy" @click="continueFinale">
-          Continue
+          {{ t('Continue') }}
         </PrimaryPill>
         <!-- The podium's paper, and it falls IN FRONT of the poster - which is why it is last in the
              card and carries the only z-index on this screen. Both posters get it, on the owner's
@@ -1391,7 +1418,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
             height="88"
             decoding="async"
           />
-          <p class="tf-poster-status">Champion</p>
+          <p class="tf-poster-status">{{ t('Champion') }}</p>
           <h2 class="tf-poster-name">{{ championName }}</h2>
           <p class="tf-poster-line">
             {{ kidShort }} – <b>{{ pending.finishLabel }}</b>
@@ -1405,11 +1432,11 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
           <SurfaceMark :surface="pending.surface" />
           <span class="pill">{{ pending.tierLabel }}</span>
         </div>
-        <p v-if="!amateur" class="tf-poster-points">+{{ pending.points }} pts</p>
+        <p v-if="!amateur" class="tf-poster-points">{{ t('+{0} pts', [pending.points]) }}</p>
         <div v-if="pathCells.length" class="tf-path" :style="{ gridTemplateColumns: `repeat(${pathCells.length}, 1fr)` }">
           <div v-for="(c, i) in pathCells" :key="i" class="tf-path-cell" :class="{ lost: !c.won }">
             <span class="tf-path-round">{{ c.short }}</span>
-            <span class="tf-path-opp">{{ c.won ? 'def.' : 'lost to' }} <b>{{ c.opp }}</b></span>
+            <span class="tf-path-opp">{{ c.won ? t('def.') : t('lost to') }} <b>{{ c.opp }}</b></span>
             <span class="tf-path-score num">{{ c.score }}</span>
             <svg class="tf-path-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
@@ -1419,14 +1446,14 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
           </div>
         </div>
         <PrimaryPill class="tf-poster-cta" variant="cta" :disabled="game.busy" @click="continueFinale">
-          Continue
+          {{ t('Continue') }}
         </PrimaryPill>
       </Card>
 
       <!-- The finished draw, below the celebration – same component, same tabs (her round is
            still the default one, and by now every round is revealed). -->
       <section v-if="showFinaleBracket && drawSize !== null" class="tf-card tf-bracket">
-        <p class="tf-bracket-title">Draw</p>
+        <p class="tf-bracket-title">{{ t('Draw') }}</p>
         <BracketTabs :matches="bracketMatches" :draw-size="drawSize" :active-round="bracketActiveRound" />
       </section>
     </template>
@@ -1443,7 +1470,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
     <ConfirmDialog
       v-if="showSkipConfirm"
       :message="skipConfirmMessage"
-      confirm-label="Skip event"
+      :confirm-label="t('Skip event')"
       @confirm="confirmSkipEvent"
       @cancel="showSkipConfirm = false"
     />

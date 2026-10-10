@@ -225,7 +225,8 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // own commit as the note below asks.
     // ⚠ AND AGAIN AT v91 (02.10, round 45 #5 – the first-touch latch `firstNo1`), NOT WEAKENED: one optional world key with its own full
     // move. 91 was moved by that item, never by this line's, and the cell is re-stamped in the schema's own commit as the note below asks.
-    expect(SAVE_SCHEMA_VERSION).toBe(92)
+    // ⚠ AND AGAIN AT v93 (09.10, the localization rig L3-0 – the sentence as data, `WorldEvent.c`): 92 was moved by SUCCESSION S1, never by this line's, and the cell is re-stamped in the schema's own commit as the note below asks.
+    expect(SAVE_SCHEMA_VERSION).toBe(93)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

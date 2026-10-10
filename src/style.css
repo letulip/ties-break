@@ -52,6 +52,52 @@
   src: url('/fonts/caveat-600.woff2') format('woff2');
 }
 
+/* ⭐⭐ L4-1 / P3 T3 (10.10) – THE RUSSIAN TYPE, WIRED ADDITIVELY. Spec: docs/specs/ru-typography-2026-09.md.
+   WHAT THE PROBE FOUND (`npm run fonts:probe`, T1): none of the three files above carries one Cyrillic code point – 0 of 256
+   in U+0400-04FF, 0 of 66 Russian letters, neither IO letter. "Latin subset only" was literally true, so the RU locale needs
+   Cyrillic faces, and the two blocks below declare them.
+
+   ⚠ NOTHING ABOVE THIS COMMENT CHANGED, and that is the English guarantee: the three declarations above and the three
+   font tokens in :root are byte-identical (the diff of this wave deletes no line of this file). Everything below is ADDED,
+   and each addition is gated by something English never produces:
+     – the two faces reuse the family names Manrope and Caveat with a unicode-range that claims ONLY Cyrillic code points. A
+       browser fetches a face only when text inside its range is laid out, so an English session requests neither file, and
+       for every Latin character the face above is still the only candidate (on an overlap the later rule wins, which is what
+       lets the Cyrillic face win for Cyrillic and for nothing else). Same family name also means anything that spells
+       'Manrope' by name would pick the subset up with no edit (nothing in src/ does today – the court canvas sets its text in
+       the system stack – so that is headroom, not a dependency).
+     – the one token override sits under :root[lang|='ru']; src/i18n/locale.ts sets <html lang> from the locale. (The attribute
+       selector, not :lang(ru): the two are the same on the root element, and the attribute form is the one the component
+       project's happy-dom can evaluate – it does not implement :lang(), measured 10.10: matches(':lang(ru)') is false for
+       lang="ru" – so the mounted smoke in tests/component/l4-1-ru-fonts.test.ts is a measurement and not a stand-in.)
+   ✔ THE FILES LANDED (10.10) – the owner's ruling: the faces the app already ships, no new family, no stress mark.
+   public/fonts/manrope-cyr.woff2 and caveat-cyr.woff2 were cut from the OFL sources by the commands in the spec's T3 section
+   (13.3 KiB and 45.8 KiB), and `npm run fonts:probe` reads both as FULL: 66 of 66 Russian letters, the IO letters included.
+   Before they landed a Russian session asked for them, got a 404 and fell through the stack to the system face; the build printed
+   one "didn't resolve" line per file and tests/helpers/fontLedger.ts listed them – both are gone, and the ledger is empty.
+   public/fonts/README.md names the files (tests/legal-assets.test.ts), the OFL texts travel with both families, and
+   scripts/install-size.mjs re-measured the install (+59 KiB).
+   U+0301 (Google's cyrillic subset keeps it for stress marks) is deliberately NOT claimed, and the owner ruled 10.10 that Russian
+   copy needs no stress mark: Latin text can reach it, and this range is Cyrillic and nothing else. The files were cut without it, so
+   adding it later widens BOTH this range and the --unicodes list of the spec's T3 commands, and the files are cut again. */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('/fonts/manrope-cyr.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+  font-family: 'Caveat';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/caveat-cyr.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
 :root {
   /* --- THE SURFACE NEUTRALS (epic/redesign-home, slice A) ---------------------------------------
      Taken VERBATIM off the owner's design export, docs/design/screens.dc.html – which is the source
@@ -569,6 +615,24 @@
   --stroke-hair: 1px;
 
   color-scheme: dark;
+}
+
+/* THE HEADING SEAM. Which Cyrillic face the headings get is the owner's pick (T2), so no heading file ships. Sora has no
+   Cyrillic, so under [lang|='ru'] the heading stack names a Cyrillic family right AFTER Sora: Latin letters in a Russian heading
+   still set in Sora, Cyrillic ones fall through to the seam. --font-heading-cyr DEFAULTS to the body face, which is Option B
+   of the sample sheet (Manrope for headings, zero new files). Option A lands as ONE @font-face block for the new family
+   (unicode-range as above) plus ONE line here – --font-heading-cyr: 'Onest' – and the body face stays behind it in the chain,
+   so a heading face that fails to load degrades to Manrope and not to the system.
+   ⚠ THIS BLOCK SITS AFTER THE MAIN :root BLOCK ON PURPOSE: redesign-home, round10 and round12-view cut the token block with
+   region(css, ':root {', ...), which starts at the FIRST `:root {` in the sheet, and a small block above it is read as THE token
+   block – every colour pin goes red. (tests/i18n-l4-1-fonts.test.ts pins the order.) */
+:root {
+  --font-body-cyr: 'Manrope';
+  --font-heading-cyr: var(--font-body-cyr);
+}
+
+:root[lang|='ru'] {
+  --font-heading: 'Sora', var(--font-heading-cyr), var(--font-body-cyr), system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 * {

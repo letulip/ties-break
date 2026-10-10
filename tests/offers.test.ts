@@ -94,7 +94,7 @@ import { DEFAULT_PROFILE, type EntryLetterTerms, type KitOfferTerms } from '../s
 // Comments are not code - the `codeOf` discipline, now in tests/helpers/source.ts. Load-bearing
 // here: this file's subjects document themselves at length, and one of them explains in prose
 // exactly the thing a raw scan is looking for.
-import { codeOf, regionToLast } from './helpers/source'
+import { codeOf, region, regionToLast } from './helpers/source'
 import { fnv1aHex } from './helpers/hash'
 
 const read = (p: string) => readFileSync(fileURLToPath(new URL(p, import.meta.url)), 'utf8')
@@ -760,6 +760,15 @@ describe('signing pays in equipment, and the equipment reaches the match', () =>
 describe('the letter states its terms in words the player can act on', () => {
   const letter = read('../src/components/OfferLetter.vue')
   const template = regionToLast(letter, '<template>', '</template>')
+  // ⚠ RE-AIMED BY WIDENING (L3-2, 10.10) – and only to the computeds the template RENDERS. The kit paper's term bullets are three script computeds
+  // now (`kitCoverLine`, `kitFreshLine`, `kitRunLine`: a sentence with an optional clause is built from messages in code, the L2-6 rule), so a claim
+  // about what the paper says reads the template PLUS those bodies. Not the whole file: a field declared in the script and printed nowhere would
+  // satisfy a whole-file `toContain` and the pin would stop meaning «on the paper». The template must call each of the three by name.
+  const kitBullets = ['kitCoverLine', 'kitFreshLine', 'kitRunLine'].map((name) => {
+    expect(template, `${name} is rendered by the template`).toContain(name)
+    return region(letter, `const ${name} = computed(`, '\n})')
+  })
+  const paper = template + kitBullets.join('\n')
 
   it('⚠ THE PAPER SAYS WHAT HAPPENS IF SHE FALLS SHORT', () => {
     // The owner, 31.07: «надо при подписании прояснить, что будет, если девочка не выполнит условия,
@@ -767,8 +776,8 @@ describe('the letter states its terms in words the player can act on', () => {
     // act on" - a player asked to commit to an obligation whose failure mode is invisible is not
     // choosing, he is guessing. Spec §4.1's consequence has to be legible ON the letter: the contract
     // lapses at the season boundary, is not renewed, and NOTHING IS CLAWED BACK.
-    expect(template).toMatch(/fall short/i)
-    expect(template).toMatch(/nothing to pay back/i)
+    expect(paper).toMatch(/fall short/i)
+    expect(paper).toMatch(/nothing to pay back/i)
     // ⚠ AND IT IS NOT IN THE CONFIRM. `ConfirmDialog` confirms the ACT; it does not counsel against
     // it (spec §4c: the game never editorialises). The information belongs where a person reading the
     // paper would find it.
@@ -795,9 +804,9 @@ describe('the letter states its terms in words the player can act on', () => {
     // which is what turns a list of line keys into the sentence the whole ladder exists to make
     // readable; the other three are printed by name.
     for (const field of ['brand', 'kitAllowanceCents', 'minEventsPerSeason', 'travelPct', 'seasonWord', 'keepDomesticRank']) {
-      expect(template, `the letter never prints ${field}`).toContain(field)
+      expect(paper, `the letter never prints ${field}`).toContain(field)
     }
-    expect(template, 'the letter never says what it covers').toMatch(/coveredList|coveredWords/)
+    expect(paper, 'the letter never says what it covers').toMatch(/coveredList|coveredWords/)
     // ...and the weeks left, quietly, under it.
     expect(template).toContain('weeksLeft')
     expect(template).toMatch(/to decide/)

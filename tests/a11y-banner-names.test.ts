@@ -57,30 +57,32 @@ describe('D11 - the two top banners do not answer to the same name', () => {
     // the point rather than an oversight: that one is about the owner's ONE WORD surviving (round 28
     // #10) and this one is about the control existing at all before its name is judged. Each has to
     // stand up on its own, because the lane sampled `it` blocks and a reader runs them one at a time.
+    // L2-1 (08.10): RE-AIMED – the visible word is `{{ t('Dismiss') }}` now (RU-01-T02/T04); the claim is the same two controls.
     expect(
-      app.match(/>\s*Dismiss\s*</g)?.length ?? 0,
+      app.match(/>\s*\{\{ t\('Dismiss'\) \}\}\s*</g)?.length ?? 0,
       'App.vue no longer draws two `Dismiss` controls. If a banner was deliberately removed, say ' +
         'which and retire the claim; until then the ban below is guarding nothing.',
     ).toBe(2)
     // The defect, stated backwards, at the layer the name now lives on. A bare `Dismiss` with no
     // `aria-label` in front of it is exactly the collision D11 found.
     expect(app, 'a `Dismiss` button with no accessible name is back - which banner is it?').not.toMatch(
-      /<button(?![^>]*aria-label)[^>]*>\s*Dismiss\s*</,
+      /<button(?![^>]*aria-label)[^>]*>\s*\{\{ t\('Dismiss'\) \}\}\s*</,
     )
   })
 
   it('each banner says what it is dismissing, in its accessible name', () => {
-    expect(app).toContain('aria-label="Dismiss autosave notice"')
-    expect(app).toContain('aria-label="Dismiss stop notice"')
+    // L2-1 (08.10): RE-AIMED – the accessible names are `:aria-label="t('…')"` now (contract rule 6: the name ships with its control).
+    expect(app).toContain(`:aria-label="t('Dismiss autosave notice')"`)
+    expect(app).toContain(`:aria-label="t('Dismiss stop notice')"`)
     // ...and they are still two different sentences. One button renamed and the other left behind is
     // the failure mode this pair exists to catch.
-    expect(new Set(app.match(/aria-label="Dismiss [^"]+"/g) ?? []).size).toBe(2)
+    expect(new Set(app.match(/aria-label="t\('Dismiss [^']+'\)"/g) ?? []).size).toBe(2)
   })
 
   it('...and the VISIBLE word is the owner\'s one word, on both', () => {
     // Round 28 #10, stated forwards at the only layer this file can see it. The mounted test is the
     // real evidence; this keeps the source honest for anyone reading App.vue rather than running it.
-    expect(app.match(/>\s*Dismiss\s*</g)?.length ?? 0).toBe(2)
-    expect(app, 'the three-word copy is back on a button').not.toMatch(/>\s*Dismiss [^<]+</)
+    expect(app.match(/>\s*\{\{ t\('Dismiss'\) \}\}\s*</g)?.length ?? 0).toBe(2)
+    expect(app, 'the three-word copy is back on a button').not.toMatch(/>\s*\{\{ t\('Dismiss [^']+'\) \}\}\s*</)
   })
 })

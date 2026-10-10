@@ -38,6 +38,7 @@ import { onRadioGroupKey } from '../composables/radioGroupKeys'
 import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
 import { weekLabel } from '../shared/dates'
+import { eventText, t } from '../i18n'
 import { useStartYear } from '../composables/startYear'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
@@ -113,11 +114,11 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            and whether it has happened before, the title says which part of her. Either one alone
            would name the dialog worse than the card names itself to somebody looking at it. -->
       <p id="knock-dialog-kicker" class="season-summary-kicker">
-        {{ prompt.repeat ? 'The same knock again' : 'A knock' }} – {{ weekLabel(week, startYear) }}
+        {{ prompt.repeat ? t('The same knock again – {0}', [weekLabel(week, startYear)]) : t('A knock – {0}', [weekLabel(week, startYear)]) }}
       </p>
-      <h2 id="knock-dialog-title" class="season-summary-title">Her {{ prompt.part }}.</h2>
-      <p class="knock-line">{{ prompt.line }}</p>
-      <p class="hint knock-read">{{ prompt.read }}</p>
+      <h2 id="knock-dialog-title" class="season-summary-title">{{ t('Her {0}.', [prompt.part]) }}</h2>
+      <p class="knock-line">{{ eventText({ text: prompt.line, c: prompt.lineC }) }}</p>
+      <p class="hint knock-read">{{ eventText({ text: prompt.read, c: prompt.readC }) }}</p>
 
       <!-- ⭐⭐⭐ ROUND 43 #10 – WHY. The owner asked the card to point at what might be behind it, or
            at least at what to go and look at; his words are in engine/knock.ts, where the sentence
@@ -131,7 +132,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            parent most deserves the answer.
            ⚠ UNDER THE READ AND ABOVE THE BRANCHES, because it is context for the decision rather
            than part of it. Nothing about the two choices moved. -->
-      <p class="knock-why">{{ prompt.cause }}</p>
+      <p class="knock-why">{{ eventText({ text: prompt.cause, c: prompt.causeC }) }}</p>
 
       <!-- ⚠⚠ W2 (26.09) – THE STORE'S REFUSAL, ABOVE THE ANSWERS AND BELOW EVERYTHING ELSE –
            ForkDialog's own arrangement, for the reason that card's note gives. This dialog has no
@@ -165,8 +166,8 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         >
           <span class="knock-mark" aria-hidden="true"></span>
           <span class="knock-choice-text">
-            <span class="knock-choice-verb">Rest it</span>
-            <span class="knock-choice-cost">{{ prompt.restCost }}</span>
+            <span class="knock-choice-verb">{{ t('Rest it') }}</span>
+            <span class="knock-choice-cost">{{ eventText({ text: prompt.restCost, c: prompt.restCostC }) }}</span>
           </span>
         </button>
         <button
@@ -179,8 +180,8 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         >
           <span class="knock-mark" aria-hidden="true"></span>
           <span class="knock-choice-text">
-            <span class="knock-choice-verb">Train through it</span>
-            <span class="knock-choice-cost">{{ prompt.pushCost }}</span>
+            <span class="knock-choice-verb">{{ t('Train through it') }}</span>
+            <span class="knock-choice-cost">{{ eventText({ text: prompt.pushCost, c: prompt.pushCostC }) }}</span>
           </span>
         </button>
       </div>
@@ -190,7 +191,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            the phone-fit measurement reads the way out off. The word is the prologue's shipped
            confirm vocabulary (round 41 #9), not a coinage. -->
       <button v-if="chosen !== null" class="knock-proceed dialog-proceed" type="button" :disabled="sending" @click="confirm()">
-        Proceed
+        {{ t('Proceed') }}
       </button>
     </div>
   </div>

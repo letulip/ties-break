@@ -345,7 +345,13 @@ import type { AcademySupport } from '../academy'
 // v92 – THE SUCCESSION BLOCK (SUCCESSION S1, 06.10): `startYear: number` (the calendar year season 0 opens in) AND the OPTIONAL `legacy?` block, declared TOGETHER so no later step of the wave adds a second bump.
 // ⚠⚠ v92: THE BACKFILL IS EXACT, NOT RECONSTRUCTED: every pre-v92 career began in 2031 by construction (the epoch was a constant), so `startYear` is 2031 on every old save; `legacy` stays absent – absent is what a generation-1 career is.
 // ⚠ v92: ZERO DRAWS, no sub-stream: `startYear` is a creation INPUT, not a roll; the frozen MAIN capture (41550 / e6b0c709) is untouched and a default career is byte-identical to its v91 self minus the one new key.
-export const SAVE_SCHEMA_VERSION = 92
+// v93 → docs/notes/engine/save-schema-history.md#v93--the-sentence-as-data
+// v93 – THE SENTENCE AS DATA (THE LOCALIZATION RIG, L3-0): ONE OPTIONAL KEY ON EVERY `WorldEvent` ROW – `c?: CopyRef` – and the migration that fills it from the frozen v92 template table.
+// ⚠⚠ v93: `text` STAYS ON EVERY ROW (the owner's ruling 4: legacy English may be RETAINED internally, never displayed in Russian mode); `c` is what the UI renders when present.
+// ⚠⚠ v93: THE BACKFILL IS A RECOGNITION, NOT A RECONSTRUCTION: a row gains `c` only if a template in `migrations/legacyTemplates.v92.ts` matches its text AND the resulting ref renders back to the same bytes in English; otherwise it is left alone and COUNTED (the remainder is stored nowhere).
+// ⚠ v93: ONLY `world.events` – letters, the diary and the album are separate prose classes and any move they need is a later wave's own.
+// ⚠ v93: ZERO DRAWS – pure string work against a frozen table; the frozen MAIN capture (41550 / e6b0c709) is untouched by construction. Nothing WRITES `c` yet, so a live career serialises as its v92 self plus the version number.
+export const SAVE_SCHEMA_VERSION = 93
 
 
 

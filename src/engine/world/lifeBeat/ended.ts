@@ -7,6 +7,7 @@
 // → docs/notes/life-beats/ended.md#endedts-header
 import { rngFromSeed } from '../../rng'
 import { ECONOMY } from '../../economy'
+import { cp } from '../../../shared/i18n'
 import { expressedTemperamentOf } from '../../spirit'
 import { addEvent } from '../ledger'
 import { activeEpisode, endEpisode } from '../loveEpisodes'
@@ -139,6 +140,8 @@ export function rollEnds(world: WorldState): void {
       // ⚠ NO AMOUNT – a life beat is never a purchase (rule 4), and there is no money in this wave
       // at all (spec §2.4, his wedding ruling extended).
       text: divorcedKeptRow(),
+      // ⭐ L3-5 (10.10): `c` beside the text – the kept row's one sentence, its own key
+      c: { k: divorcedKeptRow() },
       lifeKind: 'divorced',
     })
     // ⭐⭐⭐ v88 (the parting, wave 12 – T3) – AND THE ALBUM KEEPS A LINE, on his «можно» of 23.09.
@@ -152,7 +155,7 @@ export function rollEnds(world: WorldState): void {
     // ⚠ rollEnds: THE ALBUM LINE SETTLES NOTHING
     // ⚠ rollEnds: HIS REVIEW APPLIED 23.09
     // → docs/notes/life-beats/ended.md#rollends--v88-t3--the-album-keeps-a-line
-    fireMilestone(world, `divorce:${over.id}`, 'The marriage ended. We had no say in it, only in what we said next.')
+    fireMilestone(world, `divorce:${over.id}`, 'The marriage ended. We had no say in it, only in what we said next.', cp`The marriage ended. We had no say in it, only in what we said next.`)
     captureMilestone(world, { type: 'divorce', week: world.week, kind: over.id })
     raiseLifeBeat(world, 'divorced', over.id)
     return
@@ -173,6 +176,8 @@ export function rollEnds(world: WorldState): void {
     // ⚠⚠ rollEnds: SO `seed:life:ends:<week>:react` IS NOT DERIVED HERE ON EITHER ARM
     // → docs/notes/life-beats/ended.md#rollends--no-amount--a-life-beat-is-never-a-purchase
     text: endedKeptRow('told-now', 'space', frameNow),
+    // ⭐ L3-5 (10.10): `c` beside the text – the told-now row is one sentence whatever the read or the frame (`ENDED_NOW_EVENT`), its own key
+    c: { k: endedKeptRow('told-now', 'space', frameNow) },
     // ⭐ THE KIND, STAMPED – the same `'ended'` the told-late row carries, because it is the same
     // piece of news in the other register (see that row's note).
     lifeKind: 'ended',

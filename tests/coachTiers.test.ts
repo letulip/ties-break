@@ -1143,7 +1143,8 @@ describe('player-facing copy', () => {
     // is unchanged: no Cyrillic and no em dash in the strings this chooser renders.
     const wizard = readFileSync(fileURLToPath(new URL('../src/components/OnboardingWizard.vue', import.meta.url)), 'utf8')
     const options = region(wizard, 'const COACH_OPTIONS', 'const PLAY_STYLES').replace(/^[ \t]*\/\/.*$/gm, '')
-    expect(options).toContain("label: 'Coach yourself'") // the slice is real, not an empty string
+    // L2-1 (08.10): RE-AIMED – the label is a getter over `t()` now; the slice is still real, not an empty string.
+    expect(options).toContain("get label() { return t('Coach yourself') }")
     expect(options).not.toMatch(/[Ѐ-ӿ]/)
     expect(options).not.toContain('—')
   })

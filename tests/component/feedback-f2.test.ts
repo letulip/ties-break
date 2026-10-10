@@ -34,16 +34,16 @@ import { errorTail, recordError } from '../../src/errorBuffer'
 import {
   assembleReport,
   shareReport,
-  FEEDBACK_CLOSE_LABEL,
-  FEEDBACK_HOLDS_LINE,
-  FEEDBACK_LABEL,
-  FEEDBACK_PRIVACY_LINE,
-  FEEDBACK_SAVE_LINE,
-  FEEDBACK_SAVE_PENDING_LINE,
-  FEEDBACK_SEND_LABEL,
-  REPORT_ATTACH_LINE,
-  REPORT_NO_CAREER_LINE,
-  REPORT_NO_ERRORS_LINE,
+  FEEDBACK_CLOSE_LABEL as feedbackCloseLabel,
+  FEEDBACK_HOLDS_LINE as feedbackHoldsLine,
+  FEEDBACK_LABEL as feedbackLabel,
+  FEEDBACK_PRIVACY_LINE as feedbackPrivacyLine,
+  FEEDBACK_SAVE_LINE as feedbackSaveLine,
+  FEEDBACK_SAVE_PENDING_LINE as feedbackSavePendingLine,
+  FEEDBACK_SEND_LABEL as feedbackSendLabel,
+  REPORT_ATTACH_LINE as reportAttachLine,
+  REPORT_NO_CAREER_LINE as reportNoCareerLine,
+  REPORT_NO_ERRORS_LINE as reportNoErrorsLine,
   type Report,
 } from '../../src/feedback'
 import { request } from '../../src/worker/client'
@@ -59,6 +59,20 @@ vi.mock('../../src/worker/client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../src/worker/client')>()
   return { ...actual, request: vi.fn() }
 })
+
+// ⚠ L2-11 (RU-15, 08.10) – PREMISE MOVE, COUNTED: the ten sentence constants are THUNKS over `t()` now (a module constant froze the language the
+// module was imported in). No catalog is installed here, so each reads the English it read as a constant – evaluated ONCE, under the old names, and
+// every assertion below is unchanged. The words are the module's, not retyped in this file.
+const FEEDBACK_CLOSE_LABEL = feedbackCloseLabel()
+const FEEDBACK_HOLDS_LINE = feedbackHoldsLine()
+const FEEDBACK_LABEL = feedbackLabel()
+const FEEDBACK_PRIVACY_LINE = feedbackPrivacyLine()
+const FEEDBACK_SAVE_LINE = feedbackSaveLine()
+const FEEDBACK_SAVE_PENDING_LINE = feedbackSavePendingLine()
+const FEEDBACK_SEND_LABEL = feedbackSendLabel()
+const REPORT_ATTACH_LINE = reportAttachLine()
+const REPORT_NO_CAREER_LINE = reportNoCareerLine()
+const REPORT_NO_ERRORS_LINE = reportNoErrorsLine()
 
 const assembleMock = vi.mocked(assembleReport)
 const shareMock = vi.mocked(shareReport)

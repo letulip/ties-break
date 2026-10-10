@@ -135,6 +135,7 @@
 // the round twice inside 60px of each other. No word changed; one already-drawn word changed seat on
 // one beat. The splash and the match keep the header exactly as they had it.
 import { computed, ref } from 'vue'
+import { t } from '../i18n'
 import MatchScene from './MatchScene.vue'
 import MatchViewer from './MatchViewer.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
@@ -322,7 +323,7 @@ function next(): void {
       <p class="plo-facts"><SurfaceMark :surface="open.event.surface" size="sm" /> &middot; {{ drawLine }}</p>
       <div class="plo-vs">
         <span class="plo-vs-side">{{ kid.name }}</span>
-        <span class="plo-vs-mid">vs</span>
+        <span class="plo-vs-mid">{{ t('vs') }}</span>
         <span class="plo-vs-side plo-vs-opp">{{ opponent?.name }}</span>
       </div>
       <PrimaryPill variant="cta" class="plo-go" @click="begin()">{{ copy.begin }}</PrimaryPill>
@@ -367,7 +368,7 @@ function next(): void {
         <div class="scene-side">
           <div class="scene-name">{{ kid.name }}</div>
         </div>
-        <div class="scene-vs">vs</div>
+        <div class="scene-vs">{{ t('vs') }}</div>
         <div class="scene-side mirrored">
           <div class="scene-name">{{ opponent?.name }}</div>
         </div>

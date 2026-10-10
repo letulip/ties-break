@@ -32,6 +32,7 @@ import { mergedWtaRanking, universeForTier } from '../season/fieldPros'
 import { kidSeedIndexIn, runTournament, selectEntrants, weekFieldExclusion } from '../season/tournament'
 import { KID_ID } from './constants'
 import { addEvent } from './ledger'
+import { cp } from '../../shared/i18n'
 // ⚠ ONE-WAY ARROW. `world/lifeBeat.ts` imports `./ledger`, `./constants`, `./age`, `../spirit`,
 // `../economy` and `../rng` – never a phase – so this import closes no runtime loop, the same shape
 // `world/endings.ts` already uses to raise the fork-opinion row.
@@ -952,6 +953,7 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
       week: world.week,
       type: 'injury',
       text: `Walkover: too injured to play the ${TIERS[enteredThisWeek.tier].label} – 0 pts, entry fee forfeited.`,
+      c: cp`Walkover: too injured to play the ${TIERS[enteredThisWeek.tier].label} – 0 pts, entry fee forfeited.`,
     })
   } else if (enteredThisWeek && arrival!.verdict === 'medical') {
     // WITHDRAWN ON MEDICAL GROUNDS: no travel charge (she never boards), no shadow run, 0 points.
@@ -971,6 +973,7 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
       week: world.week,
       type: 'injury',
       text: `Withdrawn from the ${TIERS[enteredThisWeek.tier].label} – not cleared to play on medical advice. 0 pts, entry fee forfeited.`,
+      c: cp`Withdrawn from the ${TIERS[enteredThisWeek.tier].label} – not cleared to play on medical advice. 0 pts, entry fee forfeited.`,
     })
     // The week is match-free after all, so she earns the FULL free-week recovery ladder that
     // accrueCondition withheld when it still believed she would play (it ran with played = true, so
@@ -1039,6 +1042,7 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
         // never gendered anywhere in the engine, so "he" here was the same guess with nothing behind
         // it. Same fix, same dash.
         text: `Doctor's warning – she is cleared for the ${TIERS[enteredThisWeek.tier].label}, but only just. A warning is all it is; nobody can forbid it.`,
+        c: cp`Doctor's warning – she is cleared for the ${TIERS[enteredThisWeek.tier].label}, but only just. A warning is all it is; nobody can forbid it.`,
       })
     }
     world.pendingTournament = computeShadowTournament(world, enteredThisWeek, aiRanking, rivalFatigue, rivalEntries)

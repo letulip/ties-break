@@ -19,9 +19,9 @@ contract and ledger facts stay with the existing engine.
 | source / case | English source | Russian draft |
 | --- | --- | --- |
 | champion, age unknown | `🏆 {name} won the {tier}.` | `🏆 Победа на турнире «{tier}»: {name}.` |
-| champion, age known | `🏆 {name} won the {tier}, at {age}.` | `🏆 Победа на турнире «{tier}»: {name}, {age} {год/года/лет}.` |
-| champion, professional debut season | `🏆 {name} won the {tier}, at {age} – a first season on tour.` | `🏆 Победа на турнире «{tier}»: {name}, {age} {год/года/лет}. Первый сезон в профессиональном туре.` |
-| champion, final tour season | `🏆 {name} won the {tier}, at {age} – in a last season on tour.` | `🏆 Победа на турнире «{tier}»: {name}, {age} {год/года/лет}. Последний сезон в профессиональном туре.` |
+| champion, age known | `🏆 {name} won the {tier}, at {age}.` | `🏆 Победа на турнире «{tier}»: {name}, {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}.` |
+| champion, professional debut season | `🏆 {name} won the {tier}, at {age} – a first season on tour.` | `🏆 Победа на турнире «{tier}»: {name}, {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}. Первый сезон в профессиональном туре.` |
+| champion, final tour season | `🏆 {name} won the {tier}, at {age} – in a last season on tour.` | `🏆 Победа на турнире «{tier}»: {name}, {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}. Последний сезон в профессиональном туре.` |
 | junior-cohort turnover | `A new intake: {left} players have left the tour and {joined} thirteen-year-olds have taken their places.` | `Новый набор юниорского тура: ушедшие – {left}; тринадцатилетние новички – {joined}.` |
 | notable departure suffix | `{name} (#{rank}) is among those who stopped.` | `Среди завершивших выступления – {name} (№{rank}).` |
 

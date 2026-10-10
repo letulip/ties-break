@@ -84,11 +84,11 @@ shared localized week formatter; `W3–W10` must not survive inside an otherwise
 | RU04-G01 | `Close tier guide` | `Закрыть гид по туру` |
 | RU04-G02 | `Close` | `Закрыть` |
 | RU04-G03 | `Tour guide` | `Гид по туру` |
-| RU04-G04 | `Tier` | `Уровень` |
+| RU04-G04 | `Tier` (`TierGuide.vue`) | `Уровень` · `APPROVED` 10.10 |
 | RU04-G05 | `Opens at` | `Открывается при` |
 | RU04-G06 | `Draw` | `Сетка` |
 | RU04-G07 | `Entry fee` | `Взнос` |
-| RU04-G08 | `Travel` | `Поездка` |
+| RU04-G08 | `Travel` (`TierGuide.vue`) | `Поездка` · `APPROVED` 10.10 – заголовок колонки гайда: цена одной поездки этого уровня; категория расходов «Поездки» – ряд `spend\|Travel` в RU-06 |
 | RU04-G09 | `Points (W / F / SF / …)` | `Очки (П / Ф / ПФ / …)` |
 | RU04-G10 | zero entry fee | `none` | `нет` |
 
@@ -116,6 +116,13 @@ than copying the obsolete count:
 > международный и профессиональный рейтинги – разные таблицы: их очки не складываются. Юниорский
 > тур начинается с тринадцати лет и не приносит призовых; деньги появляются в профессиональном
 > туре.`
+
+⚙ RULED 10.10 (чат-ок №6): the stale English was corrected in TierGuide.vue to the mirror of the
+replacement above; the pair lives as the row below.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU04-G12 | `The bands overlap on purpose – there is always more than one place to go. National, international and professional rankings are separate tables: their points never add up. The Junior Tour starts at thirteen and pays no prize money; the money starts on the pro tour.` | `Диапазоны намеренно перекрываются – почти всегда есть выбор, куда ехать. Национальный, международный и профессиональный рейтинги – разные таблицы: их очки не складываются. Юниорский тур начинается с тринадцати лет и не приносит призовых; деньги появляются в профессиональном туре.` · `APPROVED` 10.10 |
 
 ## 5. Shared draw and probability wording
 
@@ -259,12 +266,12 @@ inside the Russian pool; it must not draw again or consume the main RNG stream.
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU04-E01 | `Withdraw` | `Сняться` |
+| RU04-E01 | `Withdraw` (`SeasonScreen.vue`) | `Сняться` · `APPROVED` 10.10 – турнирная форма; магазинная «Снять с продажи» – ряд `listing\|Withdraw` в RU-06 |
 | RU04-E02 | `Cancel entry` | `Отменить заявку` |
 | RU04-E03 | `Entries closed {week}` | `Заявки закрыты · {week}` |
 | RU04-E04 | `Enter` | `Подать заявку` |
-| RU04-E05 | accessible `Enter the {event}, {weekRange}` (`src/composables/eventName.ts:40`) | `Подать заявку на турнир «{event}» ({weekRange})` |
-| RU04-E06 | `Not enough funds` | `Недостаточно средств` |
+| RU04-E05 | `Enter the {event}, {weekRange}` – accessible (`src/composables/eventName.ts:40`) | `Подать заявку на турнир «{event}» ({weekRange})` |
+| RU04-E06 | `Not enough funds` (`SeasonScreen.vue`) | `Недостаточно средств` · `APPROVED` 10.10 |
 | RU04-E07 | `Exhausted – race anyway? Rest would be wiser.` | `Вымоталась – всё равно играть? Отдых был бы разумнее.` |
 | RU04-E08 | `+ Plan week` | `+ Спланировать неделю` |
 | RU04-E09 | `Exams this week` | `На этой неделе экзамены` |
@@ -331,7 +338,7 @@ plus a space.
 | RU04-W08 | `Practice match + coach` | `Тренировочный матч + тренер` |
 | RU04-W09 | `instead of {event}` | `вместо турнира «{event}»` |
 | RU04-W10 | `Play it and watch` | `Сыграть и посмотреть` |
-| RU04-W11 | `Cancel` | `Отменить` |
+| RU04-W11 | `undo\|Cancel` | `Отменить` · `APPROVED` 10.10 – ключ получил `undo\|`-тег (чат-ок: «Отмена» закрывает диалог, «Отменить» отменяет бронь; это кнопки отмены брони на Сезоне) |
 | RU04-W12 | `School owns this week.` | `Эта неделя принадлежит школе.` |
 | RU04-W13 | open-but-unscheduled note | `Ей также доступны: {tiers}. В ближайшие {weeks} их нет в календаре. Это не блокировка – просто такие турниры проходят реже.` |
 | RU04-W14 | stacked-week note | `На одной неделе теперь может быть несколько турниров. Сыграть можно только один – выбирать вам.` |
@@ -356,7 +363,7 @@ sentence builders merely because the sheet emits structured values.
 | --- | --- | --- |
 | RU04-F01 | `Friendly match` | `Тренировочный матч` |
 | RU04-F02 | `Top seed` | `Первая сеяная` |
-| RU04-F03 | visible `vs` | `–` |
+| RU04-F03 | `vs` – visible | `–` |
 | RU04-F04 | `No points, no money – a hit-out` | `Без очков и призовых – просто сыграть` |
 | RU04-F05 | `Play match` | `Сыграть матч` |
 | RU04-F06 | seed field label | `Ключ матча` |
@@ -441,7 +448,8 @@ feed a national placing through the knockout formatter.
 | RU04-T11 | crowd title | `About {n} people around the courts – atmosphere, not a factor in play` | `Около {people} у кортов – это атмосфера, а не фактор матча` |
 | RU04-T12 | draw size | `{n}-player draw` | `Сетка на {players}` |
 | RU04-T13 | age | `Age {n}` | `{age}` |
-| RU04-T14 | versus, visible | `VS` / `vs` | `–` |
+| RU04-T14 | versus, visible, panel | `VS` | `–` |
+| RU04-T14a | versus, visible, compact | `vs` | `–` |
 | RU04-T15 | versus, accessible | `{a} vs {b}` | `{a} против {b}` |
 | RU04-T16 | rank | `Unranked` | `Без рейтинга` |
 | RU04-T17 | ladder caption | `{ladder} ranking` | `{ladder}` |
@@ -466,9 +474,16 @@ would erase why the two competitions differ.
 | id | English | Russian |
 | --- | --- | --- |
 | RU04-T18 | `Coach prediction` | `Оценка тренера` |
-| RU04-T19 | fit | `The court suits her game.` | `Это покрытие подходит под её игру.` |
-| RU04-T20 | mismatch | `The court is not her surface.` | `Это не её покрытие.` |
-| RU04-T21 | title price | `{n} wins for the title.` | `До титула – {wins}.` |
+| RU04-T19 | `The court suits her game.` – fit | `Это покрытие подходит под её игру.` |
+| RU04-T20 | `The court is not her surface.` – mismatch | `Это не её покрытие.` · `APPROVED` 10.10 – чат-ок №7: «лучше грамотно написать» – код берёт форму таблицы (с «is»), правка английского едет следующим пушем |
+| RU04-T21 | title price | `{n} wins for the title.` | `До титула – {wins}.` – SUPERSEDED 10.10 (чат-ок №9: семь словесных форм остаются, генерик умер; ряды ниже – на твой русский) |
+| RU04-T21a | title price, 1 | `One win for the title.` | |
+| RU04-T21b | title price, 2 | `Two wins for the title.` | |
+| RU04-T21c | title price, 3 | `Three wins for the title.` | |
+| RU04-T21d | title price, 4 | `Four wins for the title.` | |
+| RU04-T21e | title price, 5 | `Five wins for the title.` | |
+| RU04-T21f | title price, 6 | `Six wins for the title.` | |
+| RU04-T21g | title price, fallback | `{0} wins for the title.` | |
 | RU04-T22 | travelled | `At the tournament with her this week – one additional fare on this trip.` | `На этой неделе тренер с ней на турнире – ещё один билет в расходах поездки.` |
 | RU04-T23 | `Her condition` | `Её форма` |
 | RU04-T24 | condition aria | `Her condition going into this tournament: {n} percent` | `Форма перед турниром: {n} процентов` |
@@ -526,15 +541,15 @@ write a second set.
 | --- | --- | --- |
 | RU04-T37 | `Win` | `Победа` |
 | RU04-T38 | `Loss` | `Поражение` |
-| RU04-T39 | result pair | `{kid} vs {opponent}` | `{kid} – {opponent}` |
+| RU04-T39 | `{kid} vs {opponent}` – result pair | `{kid} – {opponent}` · `APPROVED` 10.10 |
 | RU04-T40 | `Aces` | `Эйсы` |
 | RU04-T41 | `Double faults` | `Двойные ошибки` |
-| RU04-T42 | `Winners` | `Виннеры` |
+| RU04-T42 | `Winners` | `Удары навылет` · `APPROVED` 10.10 – чат-ок: таблица должна читаться без знания жаргона; «Виннеры» – историческая форма этой ячейки |
 | RU04-T43 | `Unforced errors` | `Невынужденные ошибки` |
 | RU04-T44 | `Max serve` | `Макс. скорость подачи` |
-| RU04-T45 | `km/h` | `км/ч` |
-| RU04-T46 | metadata | `Avg rally {n} shots · ~{duration}` | `В среднем {shots} за розыгрыш · около {duration}` |
-| RU04-T47 | `Watch again` | `Посмотреть ещё раз` |
+| RU04-T45 | `km/h` | `км/ч` · `APPROVED` 10.10 |
+| RU04-T46 | `Avg rally {n} shots · ~{duration}` – metadata | `В среднем {n} за розыгрыш · около {duration}` · `APPROVED` 10.10 – дыра переименована {shots}→{n} под английскую ячейку (позиционный маппинг) |
+| RU04-T47 | `Watch again` | `Посмотреть ещё раз` · `APPROVED` 10.10 |
 | RU04-T48 | `Next` | `Дальше` |
 | RU04-T49 | viewer proceed | `To the result` | `К результату` |
 
@@ -613,3 +628,37 @@ Test at 320 and 375 px, at 100% and 200% text, across:
 Batch status: **drafted end to end**. Every current Season, tournament-card and tournament-flow
 surface has a proposed Russian binding; cross-screen match commentary remains RU-08, historical
 records RU-07 and worker-event history RU-11.
+
+### ⚙ 10.10 добавка (№40, усмотрение архитектора): итоги сезона (SeasonSummaryDialog) – русская колонка твоя (DRAFT); общие ключи (Close, Continue, #{rank}, Unranked) живут в своих таблицах
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU04-SW01 | `Academy covered` | |
+| RU04-SW02 | `Best result` | |
+| RU04-SW03 | `Earned this season` | |
+| RU04-SW05 | `Final {0} rank` | |
+| RU04-SW08 | `Lost to injury` | |
+| RU04-SW09 | `Matches` | |
+| RU04-SW10 | `Money` | |
+| RU04-SW11 | `No result counted on that table this season. Her other standings are on the Stats tab.` | |
+| RU04-SW12 | `Off-season now: rest, family time, and the block where next year gets built.` | |
+| RU04-SW13 | `Off-season now: rest, school, family time.` | |
+| RU04-SW15 | `Ranking` | |
+| RU04-SW16 | `Record` | |
+| RU04-SW17 | `Season points` | |
+| RU04-SW18 | `Season {0} · wrap-up` | |
+| RU04-SW19 | `She has not played a Junior Tour event yet. Her national standing is on the Stats tab.` | |
+| RU04-SW21 | `Spent this season` | |
+| RU04-SW22 | `That's a season.` | |
+| RU04-SW23 | `Tournaments entered` | |
+| RU04-SW24 | `from #{0}` | |
+| RU04-SW25 | `{0} could not move her {1} ranking` | |
+| RU04-SW26 | `{0} wk` | |
+
+### ⚙ 10.10 добавка (№40, усмотрение архитектора): отчёт промежутка недель (WeekSpanReport) – русская колонка твоя (DRAFT); общие ключи (Close, Continue, #{rank}, Unranked) живут в своих таблицах
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU04-SP01 | `1 week passed. Everything they raised is below.` | |
+| RU04-SP02 | `Nothing was raised in that time.` | |
+| RU04-SP03 | `{n} weeks passed. Everything they raised is below.` | |

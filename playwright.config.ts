@@ -71,6 +71,20 @@ export default defineConfig({
 
   use: {
     baseURL: `http://localhost:${PORT}`,
+    // ⚠ THE FIRST-RUN LANGUAGE QUESTION IS ANSWERED BEFORE EVERY TEST STARTS (L1a, spec §3.4). The app
+    // asks a device that has never answered which language it wants, BEFORE the splash, so a fresh
+    // context would stop at that prompt and none of the ~20 specs that click `Tap to start` would find
+    // it. `tb-locale` is the preference's key (`LOCALE_STORAGE_KEY`, pinned equal to this literal in
+    // tests/i18n-purity.test.ts); both builds' origins are seeded because the service-worker project
+    // reaches the second one. A spec that is ABOUT the prompt starts from an empty context itself.
+    // `e2e/careerAt.ts` clears localStorage by design and re-seeds the same key.
+    storageState: {
+      cookies: [],
+      origins: [PORT, SW_PORT].map((port) => ({
+        origin: `http://localhost:${port}`,
+        localStorage: [{ name: 'tb-locale', value: 'en' }],
+      })),
+    },
     // ⚠ ON THE FIRST RETRY, NOT ALWAYS. A trace is tens of MB and a video more; recording every run
     // would make the CI artefact useless by the third PR. Recorded exactly when something failed
     // once, which is the only run anybody opens.

@@ -148,13 +148,21 @@ describe('the birthday popup', () => {
 
     // 1. THE CLIENT IS NOT TOLD THE ANSWER. Not "the UI chooses not to show it" – it is not there.
     const wire = JSON.parse(JSON.stringify(prompt)) as Record<string, unknown>
-    expect(Object.keys(wire).sort()).toEqual(['age', 'ask', 'heading', 'options', 'week'])
+    // ⭐ L3-4 (10.10) RE-AIMED: the prompt and each row also carry the CopyRef of every string they print (`headingC`, `askC`, `labelC`, `noteC`). That is NOT a new fact on the wire: a
+    // ref here is the KEY OF THE VERY STRING beside it (`{ k: text }`, or the heading line's own template) – so the claim stays structural: nothing but the printed words, and no
+    // field that names which row answers the ask.
+    expect(Object.keys(wire).sort()).toEqual(['age', 'ask', 'askC', 'heading', 'headingC', 'options', 'week'])
+    expect(wire.askC, 'the ask\'s ref is the key of the sentence printed and nothing else').toEqual({ k: wire.ask })
     for (const option of prompt.options) {
-      expect(Object.keys(option).sort(), 'a row carries an id, a label and a note – nothing else').toEqual([
+      expect(Object.keys(option).sort(), 'a row carries an id, a label and a note, and the key of each – nothing else').toEqual([
         'id',
         'label',
+        'labelC',
         'note',
+        'noteC',
       ])
+      expect(option.labelC).toEqual({ k: option.label })
+      expect(option.noteC).toEqual({ k: option.note })
     }
 
     // 2. AND THE POSITION IS UNIFORM, so "it is always the first one" can never be learned. 400

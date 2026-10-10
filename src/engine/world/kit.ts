@@ -38,6 +38,7 @@ import { vacationForWeek } from './bookings'
 import { addEvent } from './ledger'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
+import { cp } from '../../shared/i18n'
 
 /** The three lines, in the order the equipment model reads them and the screen draws them. */
 export const KIT_LINES: readonly KitLine[] = ['strings', 'frame', 'shoes']
@@ -231,6 +232,9 @@ export function setKitGrade(world: WorldState, line: KitLine, grade: KitGrade): 
     text: coveredCents > 0
       ? `Bought: ${ECONOMY.equipment.gradeCopy[grade][line].label} – on ${brand}`
       : `Bought: ${ECONOMY.equipment.gradeCopy[grade][line].label}`,
+    c: coveredCents > 0
+      ? cp`Bought: ${ECONOMY.equipment.gradeCopy[grade][line].label} – on ${brand}`
+      : cp`Bought: ${ECONOMY.equipment.gradeCopy[grade][line].label}`,
     // `|| 0` because a fully covered purchase makes `-paidCents` the NEGATIVE ZERO, which survives
     // into the ledger and out through any formatter as "-$0". JSON round-trips it to 0 anyway, so
     // this only ever changes what a screen would print.

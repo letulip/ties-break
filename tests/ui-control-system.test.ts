@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join, extname } from 'node:path'
-import { after, before, region } from './helpers/source'
+import { after, before, region, tTransparent } from './helpers/source'
 
 // ---------------------------------------------------------------------------
 // THE CONTROL SYSTEM (owner, 30.07). Three sentences from one playtest, and they are one problem:
@@ -207,7 +207,8 @@ describe('THE ACTION ROW: the affirmative is last, and it does not point (owner 
     // The app's own order, everywhere else: `.dialog-actions` is Cancel-then-Confirm, both box scores
     // are "Watch again"-then-primary. These two rows were the outliers, with the primary first.
     for (const [path, skip, watch] of PRE_MATCH) {
-      const text = readFileSync(join(root, path), 'utf8')
+      // ⚠ L2-4 (08.10): READ THROUGH `tTransparent` – the two button words are `t()` calls now and this pin asserts the order of the words.
+      const text = tTransparent(readFileSync(join(root, path), 'utf8'))
       const template = /<template>([\s\S]*)<\/template>/.exec(text)?.[1] ?? ''
       const row = after(template, 'class="tf-actions"')
       const skipAt = row.indexOf(`>${skip}<`)
@@ -262,7 +263,8 @@ describe('THE ACTION ROW: the affirmative is last, and it does not point (owner 
   it('the tournament brief\'s CTA is one word', () => {
     // «У begin просто убрать стрелку». A lime CTA at the foot of a brief is already the way forward;
     // the arrow was the button repeating itself, and the design's own copy for it is bare.
-    const flow = readFileSync(join(root, 'src/components/TournamentFlow.vue'), 'utf8')
+    // ⚠ L2-4 (08.10): READ THROUGH `tTransparent` – this screen's words are `t()` calls now and the pin asserts the words, not the wrapper.
+    const flow = tTransparent(readFileSync(join(root, 'src/components/TournamentFlow.vue'), 'utf8'))
     const template = /<template>([\s\S]*)<\/template>/.exec(flow)?.[1] ?? ''
     expect(template).toContain('>Begin</PrimaryPill>')
     expect(template, 'the arrow is back on Begin').not.toMatch(/Begin\s*(→|&rarr;)/)
@@ -541,7 +543,8 @@ describe('THE ICON IS A COMPONENT (owner 30.07)', () => {
   // three tiles that have an asset must reach for it, and the paths they replaced must be DELETED
   // rather than left in the file to be re-adopted by the next hand.
   it('screen E\'s fact tiles draw their glyphs from the assets, not from inline paths', () => {
-    const flow = readFileSync(join(root, 'src/components/TournamentFlow.vue'), 'utf8')
+    // ⚠ L2-4 (08.10): READ THROUGH `tTransparent` – this screen's words are `t()` calls now and the pin asserts the words, not the wrapper.
+    const flow = tTransparent(readFileSync(join(root, 'src/components/TournamentFlow.vue'), 'utf8'))
     const template = /<template>([\s\S]*)<\/template>/.exec(flow)?.[1] ?? ''
     const facts = region(template, 'class="tf-facts"', 'class="tf-first"')
     expect(facts, 'the facts row was not found').toContain('tf-fact-tile')

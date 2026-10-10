@@ -96,6 +96,7 @@ import type { Snapshot } from '../../src/shared/protocol'
 import { fnv1aHex } from '../helpers/hash'
 import { DESKTOP, setViewport } from './fits'
 import { SHELF_TAB_LABELS, openShelfTab } from './shelf'
+import { regionsText } from './identity-capture'
 
 // ⚠ `resolve(process.cwd(), …)` RATHER THAN `new URL(…, import.meta.url)`: the component project runs
 // under happy-dom, whose global `URL` is the DOM one, and `readFileSync` rejects what it produces
@@ -105,6 +106,14 @@ const FIXTURE_DIR = resolve(process.cwd(), 'tests/fixtures/shop-identity')
 const RECORD_FILE = resolve(FIXTURE_DIR, 'render.json')
 const CAREERS = resolve(process.cwd(), 'e2e/fixtures')
 const WRITING = process.env.TB_WRITE_SHOP_IDENTITY === '1'
+// ⚠ RE-RECORDED, L2-6 (08.10): the shop's copy calls `t()` now. The record is a text-node-by-text-node capture, and a paragraph that is only an interpolation
+// (`{{ t('…') }}`) loses the single space at each edge that Vue's condenser kept around the same words as bare text – 34 leaves moved, every one of them a space at the
+// edge of a text node, none a word: with all whitespace removed the old record and the new one are IDENTICAL (checked when it was rewritten, both ways). Rendered, the
+// difference is nil – inline whitespace at the edge of a block collapses – and the controls, the order, the counts and the tree hash did not move.
+// ⚠ RE-RECORDED A LAST TIME, L3-T (10.10): the cure is in the CAPTURE, not in another hand re-record. The `text` leaf is now read by `./identity-capture.ts` – text nodes trimmed and joined by
+// one space – so a paragraph becoming an interpolation (or the reverse) no longer moves it. This rewrite changed ONLY whitespace (every `text` leaf of the old record and of the new one are
+// identical with all whitespace removed, checked per leaf; the counts, the controls, the style probes and the tree hash are byte-identical); `identity-capture.test.ts` holds the capture's
+// own arms, mutation included.
 
 // -------------------------------------------------------------------------------------------------
 // THE CAREERS. Real export files, decoded through the product's own `decodeExportFile`.
@@ -228,8 +237,9 @@ function shopTree(wrapper: VueWrapper, label: string): string[] {
  *  renders OUTSIDE the five regions, so a capture that read only them would move the confirmation
  *  copy silently. */
 function shopText(wrapper: VueWrapper): string {
+  // L3-T (10.10): the shared capture – text NODES, each trimmed, joined by one space (see ./identity-capture.ts for why a node's edge space is not part of the record)
   return [...REGIONS, '.dialog-card']
-    .map((sel) => wrapper.findAll(sel).map((n) => n.text()).join(' ⟂ '))
+    .map((sel) => regionsText(wrapper, sel))
     .join(' ⟂ ')
     .replace(/\s+/g, ' ')
     .trim()

@@ -192,6 +192,7 @@ describe('wave 3 T6 – the `met` card on a phone', () => {
     const long = 'She has been turning it over for weeks and this is the whole of it at last. '
     const tall: LifeBeatPrompt = {
       ...snap.lifeBeatPrompt!,
+      saidC: undefined, // ⭐ L3-5 (10.10): the override drops the ref beside it (the dialog draws `eventText({ text, c })`)
       said: long.repeat(22).trim(),
       options: snap.lifeBeatPrompt!.options.map((o) => ({ ...o, label: `${o.label} – ${long.trim()}` })),
     }

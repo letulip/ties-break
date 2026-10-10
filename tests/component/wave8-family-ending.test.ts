@@ -41,6 +41,9 @@
 //          `CareerEndingType` member goes red in FOUR total records … and that is the design
 //          working»), and what a test can add is §A.1 and §A.4 – the copy really is on the screen,
 //          and the blurb really is on none.
+//          ⭐ AMENDED 10.10 (owner item 34): the last clause is no longer true and §A.4 says so – the nine
+//          blurbs are drawn now (one paragraph under the ending's title, tests/component/ending-blurb.test.ts),
+//          and §A.2's swap names the title AND the paragraph. T10's claim is unchanged: no branch on the type.
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -163,20 +166,20 @@ describe('T10 §A – the ninth ending draws on the screen the other eight draw 
     w.unmount()
   })
 
-  it('⚠⚠ THE BLURB IS ON NO SCREEN, AND THAT IS THE SHIPPED STATE RATHER THAN A T10 GAP', () => {
-    // ⚠ A FINDING, PINNED WHERE IT WAS FOUND. `ENDING_BLURB` is rendered by NOTHING in `src/` – its
-    // own note in `engine/ending.ts` records the owner's 18.08 ruling that it is writing waiting for
-    // an ending screen that has not been built out («может быть мы просто не добрались еще до
-    // концовок»), restored by him after an agent deleted it for having no consumer. So the wave's
-    // ninth blurb is in the same drawer as the other eight: authored, ruled, and unrendered.
-    // ⚠ T8's TABLE SAYS OTHERWISE about P22 («the epilogue's headline paragraph»), and the row is
-    // corrected in this task's own amendment rather than here – a test states the tree, the table
-    // states the tree, and this case is what keeps them honest with each other.
+  it('⭐⭐ THE BLURB IS ON THE SCREEN NOW – the ninth paragraph stands under the ending\'s title, like the eight before it (RE-AIMED 10.10)', () => {
+    // ⭐ RE-AIMED 10.10 (owner item 34, docs/decisions.md): THIS CASE USED TO PIN THE OPPOSITE, and the finding it recorded is kept below as the history it now is. The owner asked for the
+    // nine paragraphs to be built into the final screen, and `EndingScreen.vue` draws `ENDING_BLURB[type]` through `t()` as one `<p class="album-blurb">` between the title and the fact line
+    // (its mounted net is tests/component/ending-blurb.test.ts, all nine endings). What this case keeps is T10's own point – the ninth ending draws on the screen the other eight draw on – with
+    // the paragraph added to what «draws» means: the family's sentence is on the page once, to the character, and no branch on the type put it there.
+    //
+    // WAS (21.09, T10): «A FINDING, PINNED WHERE IT WAS FOUND. `ENDING_BLURB` is rendered by NOTHING in `src/` – its own note in `engine/ending.ts` records the owner's 18.08 ruling that it is
+    // writing waiting for an ending screen that has not been built out (his words: «может быть мы просто не добрались еще до концовок»), restored by him after an agent deleted it for having no
+    // consumer. So the wave's ninth blurb is in the same drawer as the other eight: authored, ruled, and unrendered. T8's TABLE SAYS OTHERWISE about P22 («the epilogue's headline
+    // paragraph»), and the row is corrected in this task's own amendment rather than here.» – and it asserted `w.text()` did NOT contain `ENDING_BLURB.family`.
     const w = open(toSnapshot(family))
     expect(ENDING_BLURB.family, 'the blurb exists and is not empty').toBeTruthy()
-    expect(w.text(), 'and no surface prints it – the eight before it are the same').not.toContain(
-      ENDING_BLURB.family,
-    )
+    expect(w.get('.album-blurb').text(), 'the paragraph on the page is the engine\'s sentence').toBe(ENDING_BLURB.family)
+    expect(w.text().split(ENDING_BLURB.family).length - 1, 'and it is printed once').toBe(1)
     w.unmount()
   })
 
@@ -185,8 +188,13 @@ describe('T10 §A – the ninth ending draws on the screen the other eight draw 
     // rendered pages are allowed to have is the title string. If `EndingScreen.vue` carried a branch
     // for this ending – or for any of the others – it would show up here as a page that differs by
     // more than eight words. ARM 6 is what says the comparison can see one.
+    // ⭐ RE-AIMED 10.10 (owner item 34): the strings that belong to an ending are TWO now – its title and its paragraph (`ENDING_BLURB`, drawn by `EndingScreen.vue` since this date) – so the
+    // swap names both. «The ONLY difference the rendered pages are allowed to have is the title string» became «is the title and its paragraph»; every other character must still be equal,
+    // which is what ARM 6 below keeps measuring (a branch on the type inside `.album-page` still differs by more than the two swapped strings).
     const swap = (html: string) =>
-      html.split(ENDING_TITLE.family).join('<the title>').split(ENDING_TITLE.stopped).join('<the title>')
+      html
+        .split(ENDING_TITLE.family).join('<the title>').split(ENDING_TITLE.stopped).join('<the title>')
+        .split(ENDING_BLURB.family).join('<the paragraph>').split(ENDING_BLURB.stopped).join('<the paragraph>')
 
     const view = open(toSnapshot(family))
     const fam = await pages(view)
@@ -211,6 +219,10 @@ describe('T10 §A – the ninth ending draws on the screen the other eight draw 
     const famText = await last(fam)
     expect(famText).toContain(ENDING_TITLE.family)
     expect(famText).not.toContain(ENDING_TITLE.stopped)
+    // ⭐ 10.10: and the two PARAGRAPHS are two, both really printed, on the page that carries them – the swap above normalises both, so this is what says it had something to normalise.
+    expect(ENDING_BLURB.family).not.toBe(ENDING_BLURB.stopped)
+    expect(famText).toContain(ENDING_BLURB.family)
+    expect(famText).not.toContain(ENDING_BLURB.stopped)
     fam.unmount()
 
     setActivePinia(createPinia())
@@ -218,6 +230,8 @@ describe('T10 §A – the ninth ending draws on the screen the other eight draw 
     const stopText = await last(stop)
     expect(stopText).toContain(ENDING_TITLE.stopped)
     expect(stopText).not.toContain(ENDING_TITLE.family)
+    expect(stopText).toContain(ENDING_BLURB.stopped)
+    expect(stopText).not.toContain(ENDING_BLURB.family)
     stop.unmount()
   })
 })

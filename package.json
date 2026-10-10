@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
-    "check": "npm run context:audit && node scripts/notes-pointers.mjs && node scripts/doc-facts.mjs && node scripts/engine-purity.mjs && npm run pins:check && npm run decisions:check && npm run map:world:check && npm run tools:registry:check && vue-tsc -b --force && npm run check:tools && node scripts/units.mjs && npm run test:component && vite build && node scripts/install-size.mjs",
+    "check": "npm run context:audit && node scripts/notes-pointers.mjs && node scripts/doc-facts.mjs && node scripts/engine-purity.mjs && npm run pins:check && npm run decisions:check && npm run map:world:check && npm run tools:registry:check && npm run i18n:check && vue-tsc -b --force && npm run check:tools && node scripts/units.mjs && npm run test:component && vite build && node scripts/install-size.mjs",
     "check:tools": "vue-tsc -p tsconfig.tools.json --noEmit",
     "map:world": "node scripts/world-map.mjs",
     "map:world:check": "node scripts/world-map.mjs --check",
@@ -67,6 +67,7 @@
     "test:all": "vitest run --no-file-parallelism --reporter=dot",
     "test:quiet": "node scripts/units.mjs",
     "test:component": "vitest run --project component",
+    "test:carpet": "vitest run --project component i18n-l4-2-xx-carpet",
     "test:e2e": "node scripts/e2e.mjs",
     "test:e2e:report": "node scripts/e2e.mjs --report",
     "test:e2e:ui": "node scripts/e2e.mjs --ui",
@@ -82,7 +83,12 @@
     "bench:form": "vite-node tools/form-bench.ts",
     "bench:gsweep": "vite-node tools/form-g-sweep.ts",
     "bench:dynasty": "vite-node tools/dynasty-bench.ts",
-    "shell:backup": "node shells/backup.mjs"
+    "shell:backup": "node shells/backup.mjs",
+    "i18n:extract": "vite-node tools/i18n-cli.ts extract",
+    "i18n:import": "vite-node tools/i18n-cli.ts import",
+    "i18n:check": "vite-node tools/i18n-cli.ts check",
+    "fonts:probe": "vite-node tools/font-cmap-probe.ts",
+    "lqa:ru": "vite-node tools/lqa-ru.ts"
   },
   "engines": {
     "node": ">=22"

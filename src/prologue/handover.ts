@@ -78,27 +78,33 @@ import { CARD_AGES } from './cards'
 import type { LocalOpenOutcome } from './cards'
 import type { PlayedOpen } from './run'
 import type { HandoverBaseBand } from '../shared/protocol'
+// ⚠ L2-2 (08.10) – EVERY STRING BELOW IS READ THROUGH `t()`, THE ENGLISH IS THE KEY, AND THE SHAPE OF EVERY EXPORT IS UNCHANGED. A
+// copy table is a set of getters (`HANDOVER_COPY.title` is still a `string` to every reader); a coach pool is the SAME shared
+// array object it always was, its items read through `t()` when they are indexed (`localizedList`), so `At her ceiling` still
+// shares `Close to her ceiling`'s lines by reference and `rng() * lines.length` still draws from the same indices. The words are
+// byte for byte the ones that shipped (CLAUDE.md invariant 4).
+import { localizedList, t } from '../i18n'
 
 /** ⭐ THE COACH'S READ, PER BAND – §8a, verbatim, keyed by the label `coachRoomBand` returns.
  *
  *  ⚠ FOUR KEYS AND THREE SETS OF LINES. The top two share an array by reference rather than by a
  *  copy of the sentences: see the header for why `At her ceiling` may not have a read of its own,
  *  and the test asserts all four labels resolve so a band can never fall through to nothing. */
-const NEAR_THE_END: readonly string[] = [
-  'She is near what she has. I have been wrong before – but not often about this.',
-  'What you see is close to what you get. Some find another gear at seventeen. Most do not.',
-  'There is not much more in there. She can have a good life in this sport. She will not have a famous one.',
-]
+const NEAR_THE_END: readonly string[] = localizedList(
+  () => t('She is near what she has. I have been wrong before – but not often about this.'),
+  () => t('What you see is close to what you get. Some find another gear at seventeen. Most do not.'),
+  () => t('There is not much more in there. She can have a good life in this sport. She will not have a famous one.'),
+)
 
 export const COACH_READS: Readonly<Record<string, readonly string[]>> = {
-  'Huge potential': [
-    'I do not say this often. There is a great deal more in there.',
-    'Whatever she is now, she is nowhere near the end of it.',
-  ],
-  'Still room to grow': [
-    'There is more in there. How much, I could not tell you yet.',
-    'She is not finished. The next three years will say how far.',
-  ],
+  'Huge potential': localizedList(
+    () => t('I do not say this often. There is a great deal more in there.'),
+    () => t('Whatever she is now, she is nowhere near the end of it.'),
+  ),
+  'Still room to grow': localizedList(
+    () => t('There is more in there. How much, I could not tell you yet.'),
+    () => t('She is not finished. The next three years will say how far.'),
+  ),
   'Close to her ceiling': NEAR_THE_END,
   'At her ceiling': NEAR_THE_END,
 }
@@ -145,14 +151,14 @@ export function coachReadFor(band: string, seed: string): string {
  *  lines, which is the failure `FALLBACK_BAND` above exists to catch for the stringly-typed room
  *  band. */
 export const COACH_BASE_READS: Readonly<Record<HandoverBaseBand, readonly string[]>> = {
-  ahead: [
-    'The years added to what she was born with. Somebody did the work.',
-    'She brings more than she started with – the childhood built it.',
-  ],
-  level: [
-    'She comes with what she was born with. The years neither added nor took.',
-    'The childhood held her level with what she brought.',
-  ],
+  ahead: localizedList(
+    () => t('The years added to what she was born with. Somebody did the work.'),
+    () => t('She brings more than she started with – the childhood built it.'),
+  ),
+  level: localizedList(
+    () => t('She comes with what she was born with. The years neither added nor took.'),
+    () => t('The childhood held her level with what she brought.'),
+  ),
   /** ⭐⭐ HIS, 08.09, AND THE ONLY TWO LINES ON THIS SCREEN HE HAS RULED ON. Round 40 #4 – variant B,
    *  chosen out of three after «давай смягчим формулировку нижней банды» and shipped verbatim.
    *
@@ -181,10 +187,10 @@ export const COACH_BASE_READS: Readonly<Record<HandoverBaseBand, readonly string
    *  lines above are NEW DRAFTS in the `behind` pair's register (his 08.09 model), recorded verbatim
    *  in the round-42 ledger, his вычитка and playtest the final read. «Somebody did the work» is the
    *  one clause carried over: it was already a sentence about the childhood's work. */
-  behind: [
-    'Most of what she has, she was born with. The years added little to it.',
-    'She comes with what she started with – the work has not reached it yet.',
-  ],
+  behind: localizedList(
+    () => t('Most of what she has, she was born with. The years added little to it.'),
+    () => t('She comes with what she started with – the work has not reached it yet.'),
+  ),
 }
 
 /** WHICH BASE LINE HE SAYS – the same shape as `coachReadFor`, on its OWN purpose-scoped key.
@@ -249,13 +255,16 @@ const DRAFT_AGE_WORD = 'fourteen'
 /** ⭐ THE KICKER, AT THE AGE THE WORLD SAYS SHE IS. The cards' own kicker shape, one year on.
  *  `ageWord` is `ageInWords(Snapshot.ageYears)` – see the note above for why it arrives spelled. */
 export function handoverKicker(ageWord: string): string {
-  return `She is ${ageWord}`
+  // L2-2 (08.10): the age arrives as the English word it always was (`ageInWords`) – the Russian spelling of an age is one shared
+  // formatter's job (RU02B-HO-01, doc §15.1–15.2), so this is wired as the English key with an `{age}` hole and the boundary is
+  // reported, not papered over.
+  return t('She is {age}', { age: ageWord })
 }
 
 /** ⭐ ...AND THE ROSE'S SCREEN-READER NAME. It says where she IS, never how far she could go: §1d,
  *  and the picture itself carries no number. */
 export function handoverRoseTitle(ageWord: string): string {
-  return `Where she is at ${ageWord}`
+  return t('Where she is at {age}', { age: ageWord })
 }
 
 /** ⭐ THE REST OF THE SCREEN'S WORDS – DRAFTS, EVERY ONE, and none of them has been seen by him.
@@ -271,17 +280,17 @@ export const HANDOVER_COPY = {
   /** DRAFT – the cards' own kicker shape, one year on. ⚠ ROUND 35 #7 – THE SCREEN DOES NOT BIND THIS
    *  ANY MORE; it binds `handoverKicker(snapshot.ageYears)`, and this is the same sentence at the
    *  handover age, kept so the sweep above it still has a string to read. */
-  kicker: handoverKicker(DRAFT_AGE_WORD),
+  get kicker() { return handoverKicker(DRAFT_AGE_WORD) },
   /** DRAFT */
-  title: 'This is the girl you raised.',
+  get title() { return t('This is the girl you raised.') },
   /** DRAFT – the screen-reader name for the rose. ⚠ ROUND 35 #7 – as `kicker`: the screen binds
    *  `handoverRoseTitle(snapshot.ageYears)` and this is that sentence at the handover age. */
-  roseTitle: handoverRoseTitle(DRAFT_AGE_WORD),
+  get roseTitle() { return handoverRoseTitle(DRAFT_AGE_WORD) },
   /** DRAFT – the label above his sentence. No name and no pronoun: R15-7, «every professional is
    *  UNNAMED», and the person who taught her for nine years was never given a gender. */
-  coachLabel: 'The coach who has watched her',
+  get coachLabel() { return t('The coach who has watched her') },
   /** DRAFT */
-  goOn: 'Go on with her',
+  get goOn() { return t('Go on with her') },
   /** ⭐⭐ DRAFT, AND THE OWNER HAS ASKED FOR OPTIONS ON THIS ONE LINE (02.09): «по вордингу вроде
    *  всё ок, кроме "Raise another child" – давай подумаем как еще можно написать.»
    *
@@ -295,7 +304,7 @@ export const HANDOVER_COPY = {
    *  говорим»: no candidate may mention a reroll, odds, a seed, a floor or a chance, and each one
    *  has to stay a choice about HER rather than about a mechanism. `tests/prologue-handover.test.ts`
    *  sweeps this whole table, drafts included. */
-  startAgain: 'Start again',
+  get startAgain() { return t('Start again') },
 } as const
 
 /** ⭐ THE THREE THE OWNER HAS TO PICK FROM, and the recommended one is `HANDOVER_COPY.startAgain`
@@ -350,14 +359,14 @@ export const START_AGAIN_DRAFTS: readonly string[] = [
  *  exist cannot drift. */
 export const WALK_COPY = {
   /** DRAFT */
-  skip: 'Skip the childhood',
+  get skip() { return t('Skip the childhood') },
   /** ⭐⭐⭐ ROUND 41 #9 – THE YELLOW BUTTON. DRAFT, and the word is his own: «при выборе всех будет
    *  появляться наша желтая кнопка proceed». One word and no punctuation, deliberately – it is the
    *  way on off a card whose questions are all answered, not a sentence about having answered them.
    *
    *  ⚠ IT IS ONE STRING FOR ALL EIGHT CARDS THAT SHOW IT. A per-card way on would be eight more
    *  drafts for the owner to read and eight places for the same button to drift apart. */
-  proceed: 'Proceed',
+  get proceed() { return t('Proceed') },
 } as const
 
 /** ⭐⭐ THE MONEY, ONCE, AND THIS IS THE ONLY PLACE IT IS EVER SAID. Build spec §2.4: each card names
@@ -370,7 +379,7 @@ export const WALK_COPY = {
  *  game's own Family budget card from week 0 onwards, and a second number here would be the ledger
  *  §2.4 says the prologue must not have. */
 export function spentLine(cents: number): string {
-  return `Nine years of it cost you ${formatCents(cents)}.`
+  return t('Nine years of it cost you {amount}.', { amount: formatCents(cents) })
 }
 
 /** ⭐⭐ WHAT THAT WAS PER WEEK – HIS IDEA, AND IT IS THE THESIS OF THE GAME IN ONE FIGURE.
@@ -396,7 +405,7 @@ export function spentLine(cents: number): string {
  *  DRAFT, like every other sentence on this screen, and he has not read it. */
 export function weeklySpentLine(cents: number): string {
   const weeks = CARD_AGES.length * WEEKS_IN_SEASON
-  return `That is about ${formatCents(Math.round(cents / weeks))} a week, every week of it.`
+  return t('That is about {amount} a week, every week of it.', { amount: formatCents(Math.round(cents / weeks)) })
 }
 
 // =================================================================================================
@@ -421,7 +430,7 @@ export function weeklySpentLine(cents: number): string {
  *  things substituted; every other character, punctuation included, is copy, so replacing the fold
  *  is the same table edit as replacing a clause. */
 export const PLAYED_COPY = {
-  sentence: 'She played {n}, and {best}.',
+  get sentence() { return t('She played {n}, and {best}.') },
   /** ⚠ THE NOUN IS IN THE COUNT AND NOT IN THE SENTENCE, so «one local tournament» and «two local
    *  tournaments» are both a table entry rather than a plural rule in code. One less thing that
    *  cannot be replaced by editing this table.
@@ -430,24 +439,24 @@ export const PLAYED_COPY = {
    *  cannot produce more than eight (four years from his floor, at his cap of two), so the tail of
    *  this list is unreachable today – it is there so a future card cannot make this function return
    *  `undefined` on a screen. */
-  counts: [
-    'no local tournaments',
-    'one local tournament',
-    'two local tournaments',
-    'three local tournaments',
-    'four local tournaments',
-    'five local tournaments',
-    'six local tournaments',
-    'seven local tournaments',
-    'eight local tournaments',
-  ] as readonly string[],
+  counts: localizedList(
+    () => t('no local tournaments'),
+    () => t('one local tournament'),
+    () => t('two local tournaments'),
+    () => t('three local tournaments'),
+    () => t('four local tournaments'),
+    () => t('five local tournaments'),
+    () => t('six local tournaments'),
+    () => t('seven local tournaments'),
+    () => t('eight local tournaments'),
+  ),
   best: {
     /** DRAFT – she won at least one of them */
-    won: 'she has won one',
+    get won() { return t('she has won one') },
     /** DRAFT – she reached at least one final and won none */
-    final: 'she has been in a final',
+    get final() { return t('she has been in a final') },
     /** DRAFT – she never reached a final */
-    lost: 'she has not been past a semifinal yet',
+    get lost() { return t('she has not been past a semifinal yet') },
   },
 } as const
 

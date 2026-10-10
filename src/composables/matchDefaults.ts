@@ -26,6 +26,7 @@
 // screen is a default he cannot find to undo. The setters below have exactly one caller: More.
 
 import type { ViewMode } from '../viz/types'
+import { t } from '../i18n'
 
 /** The viewer's three speeds. `MatchViewer.speed` is typed off this so the two cannot drift. */
 export type MatchSpeed = 1 | 2 | 4
@@ -36,12 +37,43 @@ export const MATCH_VIEWS: readonly ViewMode[] = ['full', 'key', 'skip']
 
 /** Picker labels. The visible words are the viewer's own `short` labels and the titles its full
  *  ones, so the settings row and the in-match row describe one control in one vocabulary. */
-export const MATCH_SPEED_LABEL: Record<MatchSpeed, string> = { 1: '1×', 2: '2×', 4: '4×' }
-export const MATCH_VIEW_LABEL: Record<ViewMode, string> = { full: 'Full', key: 'Key', skip: 'Skip' }
+// ⭐ L2-11 (RU-13B) – THE THREE TABLES ARE GETTERS OVER `t()` (a module constant would freeze the language it was imported in) and keep their
+// types, their keys and their call sites. They SHARE the match viewer's keys (L2-8, `MatchControls.vue`) wherever the words repeat – `1×` `2×`
+// `4×`, `Full`, `Key`, and the three full titles – because RU-08 §2.1 and RU-13B give the one control the same compact and full Russian.
+// ⚠ ONE EXCEPTION, MEASURED: the compact `Skip` is `view|Skip`. RU-13B words the pill one way; the bare `Skip` already belongs to the
+// tournament flow's button, which RU04-T35 words another – one English, two Russians, two surfaces.
+export const MATCH_SPEED_LABEL: Record<MatchSpeed, string> = {
+  get 1() {
+    return t('1×')
+  },
+  get 2() {
+    return t('2×')
+  },
+  get 4() {
+    return t('4×')
+  },
+}
+export const MATCH_VIEW_LABEL: Record<ViewMode, string> = {
+  get full() {
+    return t('Full')
+  },
+  get key() {
+    return t('Key')
+  },
+  get skip() {
+    return t('view|Skip')
+  },
+}
 export const MATCH_VIEW_TITLE: Record<ViewMode, string> = {
-  full: 'Every point',
-  key: 'Key points only',
-  skip: 'Skip to the result',
+  get full() {
+    return t('Every point')
+  },
+  get key() {
+    return t('Key points only')
+  },
+  get skip() {
+    return t('Skip to the result')
+  },
 }
 
 // The shipped openings before this file existed – and still the answer wherever storage is not.

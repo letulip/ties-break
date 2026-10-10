@@ -157,7 +157,9 @@ describe('the wizard is six steps, and the rail counts them', () => {
 
   it('the rail is one <li> per step, driven by STEP_COUNT rather than six hand-written circles', () => {
     expect(template).toContain('v-for="n in STEP_COUNT"')
-    expect(template).toContain('`Step ${step} of ${STEP_COUNT}`')
+    // L2-1 (08.10): RE-AIMED – the label is a `t()` call in the script (`stepLabel`), the template binds it.
+    expect(template).toContain(':aria-label="stepLabel"')
+    expect(wizard).toContain("t('Step {step} of {count}', { step: step.value, count: STEP_COUNT })")
   })
 })
 
@@ -234,7 +236,8 @@ describe('the wizard is built from the shared components, not from hand-rolled c
       expect(pill, 'a glyph came back onto an onboarding CTA').not.toContain('<svg')
     }
     // The three of them, and nothing between the tags but the word.
-    expect([...copy.matchAll(/<PrimaryPill[^>]*>\s*<span>([^<]+)<\/span>\s*<\/PrimaryPill>/g)]
+    // L2-1 (08.10): RE-AIMED – the word sits in `{{ t('…') }}` now; the three words and "nothing between the tags but the word" are the claim.
+    expect([...copy.matchAll(/<PrimaryPill[^>]*>\s*<span>\{\{ t\('([^']+)'\) \}\}<\/span>\s*<\/PrimaryPill>/g)]
       .map((m) => m[1])).toEqual(['Begin', 'Start career', 'Next'])
   })
 
@@ -317,7 +320,8 @@ describe('S: the summary shows what the six steps collected', () => {
   const summary = region(template, 'ob-summary', '#footer')
 
   it('names all six readings, in the design\'s order', () => {
-    expect([...summary.matchAll(/<dt>([^<]+)<\/dt>/g)].map((m) => m[1])).toEqual([
+    // L2-1 (08.10): RE-AIMED – each term is `{{ t('…') }}`; the birth term carries the summary context tag (RU-02A-C04), stripped here.
+    expect([...summary.matchAll(/<dt>\{\{ t\('(?:summary\|)?([^']+)'\) \}\}<\/dt>/g)].map((m) => m[1])).toEqual([
       'Name', 'Country', 'Birth month', 'Background', 'Coaching', 'Play style',
     ])
   })
@@ -335,7 +339,7 @@ describe('S: the summary shows what the six steps collected', () => {
     // quiet underlined line, where N puts Skip. It is now `.ob-back`, the pill R carries, in R's
     // place. WHAT DID NOT MOVE: that there IS a way back, which is all the old assertion pinned.
     const foot = after(template, 'step === STEP_COUNT')
-    expect(foot).toContain('<button class="ob-back" type="button" @click="back">Back</button>')
+    expect(foot).toContain(`<button class="ob-back" type="button" @click="back">{{ t('Back') }}</button>`) // L2-1: RE-AIMED, a `t()` call
     // Same shape as the step before it: a footer ROW, not the solo column N ends on.
     expect(before(foot, '>')).not.toContain('ob-foot--solo')
   })
@@ -411,11 +415,14 @@ describe('the copy a player reads', () => {
     // without re-casing the strings ships six sentence-case headings; re-casing them and leaving the
     // transform on ships the caps he asked us to remove. Neither half can come back on its own.
     const heads = wizardRegion('const STEP_HEADS', 'function poseUrl')
-    expect([...heads.matchAll(/title: '([^']+)'/g)].map((m) => m[1])).toEqual([
+    // L2-1 (08.10): RE-AIMED – each title is a getter over `t()`; the six headings and their case are the claim.
+    expect([...heads.matchAll(/get title\(\) \{ return t\('([^']+)'\) \}/g)].map((m) => m[1])).toEqual([
       'Raise a Champion', 'Who Is Your Player?', 'Where Are You Starting?',
       'Family Setup', 'Choose Play Style', 'All Set!',
     ])
-    expect(copy).toContain('Raise a Champion.<br /><span>Together.</span>')
+    // The hero is ONE key cut at its first sentence (RU-02A-H02): the markup keeps the break and the span, the words are the key.
+    expect(copy).toContain('{{ heroBeats[0] }}<br /><span>{{ heroBeats[1] }}</span>')
+    expect(wizard).toContain("t('Raise a Champion. Together.')")
     // ...and no heading rule shouts. `capitalize` is banned with it: it would raise the "a" in
     // "Raise a Champion" and leave the source lying about what the screen says.
     for (const rule of ['.ob-title', '.ob-hero-title']) {

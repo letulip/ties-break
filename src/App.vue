@@ -66,7 +66,10 @@ import { useTabSeen } from './composables/tabSeen'
 // live: the first press asks one line, the second leaves. Module state with two askers (this shell
 // and the calendar's CTA, which runs its sweep BEFORE handing the press back) – the whole argument
 // is the composable's header.
-import { SOFT_LEAVE_LINE, useSoftLeaveGuard } from './composables/softLeave'
+import { softLeaveLine, useSoftLeaveGuard } from './composables/softLeave'
+// L2-1 (08.10): the shell speaks through `t()` – every literal passed to it is its own key; English renders itself.
+import { t } from './i18n'
+import { errorText } from './composables/errorText'
 // The trophy that flies to the Trophies tab. ⚠ WAVE B: its DOT went to composables/tabSeen.ts with
 // the other three; what the shell keeps is the flight itself, because the flying element is rendered
 // at the root of this component and nothing else can draw the whole path.
@@ -350,12 +353,16 @@ function openFromHome(target: 'money' | 'week:tournament' | 'more' | 'kid' | 'ma
 // state ('money', 'kid', 'week', 'more'), reached by the gear on Home (HomeScreen's `.diary-tool`)
 // and by the gear on the Kid screen. Both of those doors predate this change and neither moved; the
 // screen simply stopped having two ways in, one of which cost a fifth of the bottom bar.
+// ⭐ L2-1 (08.10) – THE LABELS ARE GETTERS OVER `t()`: the bar follows the locale on the next render and the table
+// keeps its shape (`TABS`, `(typeof TABS)[number]`, the template's `t.label`). ⚠ `Stats` is the NAV label and carries
+// its context tag (`nav|Stats`): the screen heading it opens is a different key, because his ruling of 01.10 is for
+// the tab label and is not a ruling for the heading.
 const TABS: { id: TabId; icon: string; label: string }[] = [
-  { id: 'play', icon: 'season', label: 'Season' },
-  { id: 'calendar', icon: 'week', label: 'Calendar' },
-  { id: 'home', icon: 'home', label: 'Home' },
-  { id: 'stats', icon: 'stats', label: 'Stats' },
-  { id: 'trophies', icon: 'trophy', label: 'Trophies' },
+  { id: 'play', icon: 'season', get label() { return t('Season') } },
+  { id: 'calendar', icon: 'week', get label() { return t('Calendar') } },
+  { id: 'home', icon: 'home', get label() { return t('Home') } },
+  { id: 'stats', icon: 'stats', get label() { return t('nav|Stats') } },
+  { id: 'trophies', icon: 'trophy', get label() { return t('Trophies') } },
 ]
 /** The one writer of `tab` from the bar. Every entry now routes to a screen that exists, which is
  *  what the deleted `soon` guard was standing in for. */
@@ -746,10 +753,12 @@ const { flight: trophyFlight } = useTrophyFlight()
 // nothing disagrees) which pins the name, and the dot is handed over as the DESCRIPTION, which is
 // where a changing fact belongs. `getByRole('button', { name: 'Home', exact: true })` keeps working
 // in every state, which is what four e2e specs already assume.
-const TAB_DOT_LABEL: Partial<Record<TabId, string>> = {
-  play: 'New on the season calendar',
-  home: 'Unread news',
-  trophies: 'A new trophy in the cabinet',
+// L2-1: READERS, NOT STRINGS – a sentence is looked up only when its dot is drawn, so a dot that is not on screen
+// never counts a miss in a non-English locale.
+const TAB_DOT_LABEL: Partial<Record<TabId, () => string>> = {
+  play: () => t('New on the season calendar'),
+  home: () => t('Unread news'),
+  trophies: () => t('A new trophy in the cabinet'),
 }
 function tabDot(id: TabId): boolean {
   if (id === 'play') return seasonHasNew.value
@@ -942,7 +951,7 @@ async function playWeek(weeks: number): Promise<void> {
   }
   // ⭐⭐ ROUND 42 #20 (ruled B) – THE LEAVE-ANYWAY GUARD, after the resume arm (re-opening a paused
   // reveal leaves nobody) and BEFORE the calendar detour and the tick: while her soft chip is live,
-  // the first press shows one line (`SOFT_LEAVE_LINE`, above the bar) and spends nothing; the second
+  // the first press shows one line (`softLeaveLine()`, above the bar) and spends nothing; the second
   // press falls through. The calendar's own CTA asks the same guard before its sweep, and the
   // sweep's hand-back re-enters here as the SAME logical press – `pass()` is idempotent per week,
   // so the detour never asks twice. The chip stays missable: this costs one honest tap, not a block.
@@ -1004,17 +1013,18 @@ async function playWeek(weeks: number): Promise<void> {
 //
 // 'injury' / 'tournament' / 'season-end' are absent from STOP_REASON_TEXT precisely BECAUSE they own
 // a dialog, so they now fall out of the toast for free instead of needing to be listed twice.
-const STOP_REASON_TEXT: Record<string, string> = {
-  deadline: 'Stopped: an entry deadline is coming up next week.',
-  funds: 'Stopped: funds ran below zero.',
+// L2-1 (08.10): READERS, NOT STRINGS, for the reason the dot labels are – only the reason that is shown is looked up.
+const STOP_REASON_TEXT: Record<string, () => string> = {
+  deadline: () => t('Stopped: an entry deadline is coming up next week.'),
+  funds: () => t('Stopped: funds ran below zero.'),
   // A withdrawal costs her an entry AND its fee, so it must never slide past during a multi-week
   // advance – the same trap the owner hit with a silent injury withdrawal.
-  medical: 'Stopped: she was not cleared to play – withdrawn on medical advice.',
+  medical: () => t('Stopped: she was not cleared to play – withdrawn on medical advice.'),
   // R12-15 – THE DEAD CLICK. This beat had no copy anywhere and no stop at all: an entry whose list
   // had already closed came round while she was still laid up, the week resolved as a walkover with
   // the fee forfeited, and the only trace was one line in the news feed. The button that spent it
   // had just said "Play". Now the advance halts and says what it cost.
-  walkover: 'Stopped: she was too injured to play – walkover, entry fee forfeited.',
+  walkover: () => t('Stopped: she was too injured to play – walkover, entry fee forfeited.'),
   // ROUND 23 #16 – the same shape as the walkover above, and found the same way: the owner did not
   // see it happen. The academy's verdict fires at the season boundary, the advance hard-stops three
   // weeks earlier, and a player stepping by four lands on 49 then 53 - never on the week it spoke.
@@ -1028,14 +1038,14 @@ const STOP_REASON_TEXT: Record<string, string> = {
   // rather than an instruction. ⚠ THAT VOICE WAS BORROWED FROM THE 'call-up' LINE, WHICH IS NO LONGER
   // IN THIS TABLE (round 27 #6, four rows down): the call-up's own destination is a letter and a
   // tournament flow now, so it needs no toast at all. The rule the two shared is the one that stays.
-  academy: 'Stopped: the academy has reviewed her year – the letter is in her inbox, on Home.',
+  academy: () => t('Stopped: the academy has reviewed her year – the letter is in her inbox, on Home.'),
   // ⭐ THE OFFER STOP – R2-13's own item text lists «offers» among the events the span must stop
   // before, and phase 1 shipped without one. It is the academy line's sibling and its copy is built
   // the same way – the surface, named, rather than an instruction – with ONE word the academy's does
   // not need: an academy notice keeps for ever and this one does not. Only a DECISION raises this
   // reason (`stoppableOfferWeek`: an `open` letter, on the week it arrived), so the sentence can
   // promise something to answer without ever being wrong about a receipt.
-  offer: 'Stopped: a new offer is in her inbox, on Home – answer it before its deadline or it lapses.',
+  offer: () => t('Stopped: a new offer is in her inbox, on Home – answer it before its deadline or it lapses.'),
   // ⭐⭐⭐ ROUND 27 #6 – 'call-up' HAD A LINE HERE AND IT IS DELETED, WHICH IS THE ITEM. It read «Her
   // country called this year – her matches are in the news feed, and they can be watched», and the
   // owner: «И опять на те же грабли: "Her country called this year…" во всплывашке сверху и матчи
@@ -1060,8 +1070,8 @@ const STOP_REASON_TEXT: Record<string, string> = {
   // re-latch the epilogue and this toast sits behind the college card; the year that FINISHES the
   // course takes the latch off and hands the player the tab shell. The feed is where the rows are on
   // both paths; the card is not.
-  'college-league':
-    'She played the college championship – the matches are in the news feed, and they can be watched.',
+  'college-league': () =>
+    t('She played the college championship – the matches are in the news feed, and they can be watched.'),
 }
 // R11-1: an advance reports the SET of reasons it stopped for, already in surfacing order
 // (STOP_PRECEDENCE, medical first). Every gate below asks "is my reason in the set?" instead of
@@ -1079,11 +1089,13 @@ const stopReasonText = computed(() => {
     if (reason === 'funds' && game.snapshot?.debt) {
       const d = game.snapshot.debt
       const left = Math.max(0, d.graceWeeks - d.weeks)
-      return left === 0
-        ? 'Stopped: below zero, and out of time.'
-        : `Stopped: ${d.weeks} ${d.weeks === 1 ? 'week' : 'weeks'} below zero – ${left} before the money runs out for good.`
+      if (left === 0) return t('Stopped: below zero, and out of time.')
+      // L2-1: the English plural stays a FORK OF TWO LITERALS (spec §3.3 – English sources never carry ICU), each one key.
+      return d.weeks === 1
+        ? t('Stopped: {weeks} week below zero – {left} before the money runs out for good.', { weeks: d.weeks, left })
+        : t('Stopped: {weeks} weeks below zero – {left} before the money runs out for good.', { weeks: d.weeks, left })
     }
-    const text = STOP_REASON_TEXT[reason]
+    const text = STOP_REASON_TEXT[reason]?.()
     if (text) return text
   }
   return ''
@@ -1585,34 +1597,33 @@ function reopenTour(): void {
        without moving focus is announced by nothing otherwise»). A polite live region: it never
        interrupts, and it is an ATTRIBUTE – not one word of the three notices moves. -->
   <div v-if="needRefresh" class="update-banner" role="status">
-    <span>New version available</span>
-    <button class="primary" @click="applyUpdate">Update</button>
+    <span>{{ t('New version available') }}</span>
+    <button class="primary" @click="applyUpdate">{{ t('Update') }}</button>
   </div>
 
   <!-- Storage recovery: the failure path OUT of the splash. Never behind splashDone – a player
        whose database is broken must meet the choices, not a wordmark waiting on data. -->
   <div v-if="game.phase === 'recovery'" class="recovery-screen">
-    <h2>Saved games can't be reached</h2>
+    <h2>{{ t("Saved games can't be reached") }}</h2>
     <p class="hint">
-      The browser refused to open this game's storage – this can happen in private browsing, when
-      disk is full, or after a browser update.
+      {{ t("The browser refused to open this game's storage – this can happen in private browsing, when disk is full, or after a browser update.") }}
     </p>
-    <p v-if="game.initError" class="error">{{ game.initError }}</p>
+    <p v-if="game.initError" class="error">{{ errorText(game.initErrorCode, game.initError, game.initErrorC) }}</p>
     <div class="recovery-actions">
-      <button class="primary" :disabled="game.busy" @click="game.retryInit()">Retry</button>
-      <button :disabled="game.busy" @click="recoveryFileInput?.click()">Import a save file</button>
-      <button :disabled="game.busy" @click="game.startFreshFromRecovery()">Start a new career</button>
+      <button class="primary" :disabled="game.busy" @click="game.retryInit()">{{ t('Retry') }}</button>
+      <button :disabled="game.busy" @click="recoveryFileInput?.click()">{{ t('Import a save file') }}</button>
+      <button :disabled="game.busy" @click="game.startFreshFromRecovery()">{{ t('Start a new career') }}</button>
     </div>
     <input ref="recoveryFileInput" type="file" accept=".tsave" hidden @change="onRecoveryImportPicked" />
     <p v-if="game.saveOp?.op === 'import' && game.saveOp.status === 'error'" class="error">
-      {{ game.saveOp.message }}
+      {{ errorText(game.saveOp.code, game.saveOp.message ?? '', game.saveOp.c) }}
     </p>
     <p class="hint">
-      Nothing has been deleted – if storage comes back, your careers will still be here.
+      {{ t('Nothing has been deleted – if storage comes back, your careers will still be here.') }}
     </p>
   </div>
 
-  <div v-else-if="!game.ready" class="app-loading">Loading…</div>
+  <div v-else-if="!game.ready" class="app-loading">{{ t('Loading…') }}</div>
 
   <SplashScreen v-else-if="!splashDone" @done="splashDone = true" />
 
@@ -1678,8 +1689,8 @@ function reopenTour(): void {
          save, and until this wave a screen reader was told nothing about it. See the update
          banner above for the treatment; no wording moves. -->
     <div v-if="game.recovered" class="recovered-banner" role="status">
-      <span>Autosave was damaged – restored the previous one.</span>
-      <button aria-label="Dismiss autosave notice" @click="dismissRecovered">Dismiss</button>
+      <span>{{ t('Autosave was damaged – restored the previous one.') }}</span>
+      <button :aria-label="t('Dismiss autosave notice')" @click="dismissRecovered">{{ t('Dismiss') }}</button>
     </div>
 
     <!-- R11-1: NOT gated on the Home tab any more – an advance can be triggered from the Season
@@ -1691,7 +1702,7 @@ function reopenTour(): void {
       <span>{{ stopReasonText }}</span>
       <!-- Its message always opens with the word "Stopped:", so the accessible name's own noun is
            the sentence's and not a new one invented for the button. -->
-      <button aria-label="Dismiss stop notice" @click="dismissStopToast">Dismiss</button>
+      <button :aria-label="t('Dismiss stop notice')" @click="dismissStopToast">{{ t('Dismiss') }}</button>
     </div>
 
     <!-- R13-12: the paused-tournament banner is GONE – the sticky bar below is global now, and
@@ -1802,11 +1813,11 @@ function reopenTour(): void {
     >
       <!-- ⭐⭐ ROUND 42 #20 (ruled B) – the leave-anyway ask, floated above the bar in the calendar
            note's own visual vocabulary (`.cal-go-note`, the lightest of the knock-style surfaces).
-           The sentence is `SOFT_LEAVE_LINE`, declared once in composables/softLeave.ts and read by
+           The sentence is `softLeaveLine()`, declared once in composables/softLeave.ts and read by
            both projections of the press – DRAFT, recorded in docs/rounds/round-42.md #20. Shown from
            the consumed first press until the press that leaves; the second press goes through the
            same button underneath it. -->
-      <p v-if="softLeave.asking.value" class="next-week-note floating-cta-note">{{ SOFT_LEAVE_LINE }}</p>
+      <p v-if="softLeave.asking.value" class="next-week-note floating-cta-note">{{ softLeaveLine() }}</p>
       <!-- ⭐⭐ R2-13 PHASE 1 – THE SPAN, AND IT IS ABSENT FAR MORE OFTEN THAN IT IS HERE. The 28.07
            deletion of the old skip-4 stands as written ("a testing shortcut that offered to skip the
            thing the player came to play"); what makes this one a different button is `multi`, which
@@ -1854,7 +1865,7 @@ function reopenTour(): void {
          instead of only through a CSS class. `aria-current="page"` and not `role="tab"`: these
          buttons swap the whole screen and there is no `tabpanel` behind them to point at, so a
          tablist would be a costume. -->
-    <nav class="tab-bar" aria-label="Main">
+    <nav class="tab-bar" :aria-label="t('Main')">
       <!-- ⭐⭐⭐ ROUND 36 REVIEW #3, RE-RULED BY THE SECOND PASS'S P2-6 – her face, the week and her
            rank live in the top-left corner of the menu, above every item in it, ON EVERY PAGE. His
            own sentences are in docs/rounds/round-36-review.md, beside `.rail-id` in src/style.css
@@ -1895,7 +1906,7 @@ function reopenTour(): void {
           :id="`tab-dot-${t.id}`"
           class="tab-dot"
           role="img"
-          :aria-label="TAB_DOT_LABEL[t.id]"
+          :aria-label="TAB_DOT_LABEL[t.id]?.()"
         ></span>
       </button>
       <!-- ⭐⭐ THE MINI-DASHBOARD, AND IT IS INSIDE THE STRIP RATHER THAN BESIDE IT. His words are in

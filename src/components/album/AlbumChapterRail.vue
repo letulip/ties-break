@@ -21,13 +21,14 @@
 // the only word this template contributes is the landmark's name, and it is the word the phone's card
 // already answers to.
 import type { AlbumChapter } from '../../shared/protocol'
+import { t } from '../../i18n'
 
 defineProps<{ chapters: readonly AlbumChapter[]; currentChapter: number }>()
 const emit = defineEmits<{ pick: [number] }>()
 </script>
 
 <template>
-  <nav class="album-rail" aria-label="Chapters">
+  <nav class="album-rail" :aria-label="t('Chapters')">
     <ol class="album-rail-list">
       <li v-for="c in chapters" :key="c.index">
         <button

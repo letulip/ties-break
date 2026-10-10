@@ -41,6 +41,7 @@ import { practiceCoachRateFor } from './coachMarket'
 import { grantedVacationIds } from './assets'
 import type { WorldState } from '../world'
 import { guardNotEnded, guardNotEndedForGood } from './endings'
+import { cp } from '../../shared/i18n'
 
 // --- Season planner: vacations + practice matches ------------------------------
 // docs/specs/season-planner.md. TWO player-planned week types on otherwise empty weeks.
@@ -162,10 +163,11 @@ export function bookVacation(world: WorldState, week: number, packageId: string)
       type: 'expense',
       category: 'vacation',
       text: `Booked: ${pkg.label} – ${weekLabel(week, world.startYear)}`,
+      c: cp`Booked: ${pkg.label} – ${weekLabel(week, world.startYear)}`,
       amountCents: -priceCents,
     })
   }
-  addEvent(world, { week: world.week, type: 'entry', text: `Family vacation booked – ${weekLabel(week, world.startYear)} (${pkg.label})` })
+  addEvent(world, { week: world.week, type: 'entry', text: `Family vacation booked – ${weekLabel(week, world.startYear)} (${pkg.label})`, c: cp`Family vacation booked – ${weekLabel(week, world.startYear)} (${pkg.label})` })
 }
 
 /** Cancel a booked vacation before its week starts: FULL refund (mirror of entry withdrawal). */
@@ -204,10 +206,11 @@ export function cancelVacation(world: WorldState, week: number): void {
       type: 'income',
       category: 'vacation',
       text: `Vacation refunded: ${label}`,
+      c: cp`Vacation refunded: ${label}`,
       amountCents: booking.paidCents,
     })
   }
-  addEvent(world, { week: world.week, type: 'entry', text: `Cancelled the family vacation – ${weekLabel(week, world.startYear)}` })
+  addEvent(world, { week: world.week, type: 'entry', text: `Cancelled the family vacation – ${weekLabel(week, world.startYear)}`, c: cp`Cancelled the family vacation – ${weekLabel(week, world.startYear)}` })
 }
 
 /** Book a practice match (a watchable friendly) on an empty future week: charges the court
@@ -236,9 +239,10 @@ export function bookPractice(world: WorldState, week: number, withCoach: boolean
     type: 'expense',
     category: 'practice',
     text: withCoach ? `Court rental + coach – practice match ${weekLabel(week, world.startYear)}` : `Court rental – practice match ${weekLabel(week, world.startYear)}`,
+    c: withCoach ? cp`Court rental + coach – practice match ${weekLabel(week, world.startYear)}` : cp`Court rental – practice match ${weekLabel(week, world.startYear)}`,
     amountCents: -paidCents,
   })
-  addEvent(world, { week: world.week, type: 'entry', text: `Practice match booked – ${weekLabel(week, world.startYear)}` })
+  addEvent(world, { week: world.week, type: 'entry', text: `Practice match booked – ${weekLabel(week, world.startYear)}`, c: cp`Practice match booked – ${weekLabel(week, world.startYear)}` })
 }
 
 /** Cancel a booked practice before its week starts: full refund of the rental. */
@@ -340,6 +344,10 @@ export function resolveVacation(world: WorldState): void {
       buffFactor < 1
         ? `Family vacation – ${pkg.label}: +${pkg.conditionGain} condition, and the recovery holds for ${ECONOMY.vacation.buffWeeks} weeks.`
         : `Family vacation – ${pkg.label}: +${pkg.conditionGain} condition.`,
+    c:
+      buffFactor < 1
+        ? cp`Family vacation – ${pkg.label}: +${pkg.conditionGain} condition, and the recovery holds for ${ECONOMY.vacation.buffWeeks} weeks.`
+        : cp`Family vacation – ${pkg.label}: +${pkg.conditionGain} condition.`,
   })
 }
 
@@ -502,6 +510,15 @@ export function resolvePractice(world: WorldState): void {
       `Practice match: ${kidShort} ` +
       `${retiredId === KID_ID ? 'had to stop against' : retiredId ? 'was playing a retiring' : kidWon ? 'beat' : 'lost to'} ` +
       `${formatShortName(opp.name)} ${score} – no ranking points`,
+    // the verb fork is part of each key (the frozen table's four spellings)
+    c:
+      retiredId === KID_ID
+        ? cp`Practice match: ${kidShort} had to stop against ${formatShortName(opp.name)} ${score} – no ranking points`
+        : retiredId
+          ? cp`Practice match: ${kidShort} was playing a retiring ${formatShortName(opp.name)} ${score} – no ranking points`
+          : kidWon
+            ? cp`Practice match: ${kidShort} beat ${formatShortName(opp.name)} ${score} – no ranking points`
+            : cp`Practice match: ${kidShort} lost to ${formatShortName(opp.name)} ${score} – no ranking points`,
     match: {
       round: 0,
       aId: KID_ID,

@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RADAR_AXIS_LABEL } from '../engine/radar'
+import { t } from '../i18n'
 import { SKILL_CEILING_MAX, SKILL_KEYS, type SkillKey } from '../engine/development'
 import type { RadarAxis } from '../shared/protocol'
 
@@ -63,7 +63,27 @@ const props = defineProps<{
 /** The words on the axes, READ OUT OF THE ENGINE (`RADAR_AXIS_LABEL`) rather than copied. Its own
  *  comment gives the reason - a second copy in a screen is a second chance for two surfaces to call
  *  the same thing different things, and `ret` must never reach a player as an engine field name. */
-const AXIS_LABEL: Record<SkillKey, string> = RADAR_AXIS_LABEL
+// ⚠ L2-5: `RADAR_AXIS_LABEL` STAYS IN THE ENGINE (engine/radar.ts – engine-importable, so it can never call `t()`) AND STAYS THE ENGLISH SOURCE. This is the
+// chart's own table of getters over the same five words; `tests/component/i18n-l2-5-profile-coaching.test.ts` pins it to the engine's, word for word, so
+// «read out of the engine rather than copied» still cannot drift. The engine's `RadarAxis.note` text and the axis name inside `{axis}` params elsewhere
+// stay raw engine words (L3 / the case layer).
+const AXIS_LABEL: Record<SkillKey, string> = {
+  get serve() {
+    return t('Serve')
+  },
+  get ret() {
+    return t('Return')
+  },
+  get composure() {
+    return t('Composure')
+  },
+  get stamina() {
+    return t('Stamina')
+  },
+  get groundstrokes() {
+    return t('Groundstrokes')
+  },
+}
 
 // The box. Wider than it is tall because the horizontal labels need room the vertical ones do not,
 // and a viewBox is free.
@@ -294,7 +314,7 @@ const notes = computed(() =>
             :style="{ strokeOpacity: 0.55 * sharpness, strokeWidth: `${(1.2 + 0.7 * sharpness).toFixed(2)}px` }"
           />
         </svg>
-        <span>Where she started</span>
+        <span>{{ t('Where she started') }}</span>
       </li>
       <li>
         <svg class="radar-key" viewBox="0 0 24 6" aria-hidden="true">
@@ -304,16 +324,16 @@ const notes = computed(() =>
             :style="{ strokeOpacity: sharpness, strokeWidth: `${(1.2 + 0.7 * sharpness).toFixed(2)}px` }"
           />
         </svg>
-        <span>Where she is</span>
+        <span>{{ t('Where she is') }}</span>
       </li>
       <li>
         <svg class="radar-key" viewBox="0 0 24 6" aria-hidden="true">
           <rect class="radar-ceiling" x="1" y="0.5" width="22" height="5" rx="1.5" />
         </svg>
-        <span>How far she could go</span>
+        <span>{{ t('How far she could go') }}</span>
       </li>
     </ul>
-    <p class="radar-legend-note">The fainter it is, the less anyone can tell.</p>
+    <p class="radar-legend-note">{{ t('The fainter it is, the less anyone can tell.') }}</p>
 
     <!-- WHAT STANDS IN FOR THE NUMBERS. One sentence per axis the coach has read; nothing for the
          rest. R15-7: no pronoun names the coach on this screen either - women are on every roster by
@@ -324,7 +344,7 @@ const notes = computed(() =>
         <span class="radar-note-text">{{ n.note }}</span>
       </li>
     </ul>
-    <p v-else class="radar-quiet">Too early to say – still learning what she has.</p>
+    <p v-else class="radar-quiet">{{ t('Too early to say – still learning what she has.') }}</p>
   </div>
 </template>
 

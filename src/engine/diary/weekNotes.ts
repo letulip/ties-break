@@ -8,6 +8,8 @@
 // ⚠ RNG: `weekNoteFor` picks on a PURPOSE-SCOPED sub-stream from the passed seed, never MAIN. The
 // note is also RATIONED (WEEK_NOTE_CHANCE) - a quiet week that says nothing is the point.
 import { rngFromSeed } from '../rng'
+// ⭐ L3-4 (10.10): the week note rides the snapshot as a CopyRef beside the English (docs/specs/i18n-2026-10.md §8, row L3-4).
+import { cp, type CopyRef } from '../../shared/i18n'
 import { bodyGroupOf, bodyPartOf, type BodyGroup } from '../body'
 // ⭐ R2-09: the noun moved to an engine leaf; the FACTS shape is still the wire's (see the cycle
 // note in world/birthdayGift.ts – this module is inside world/birthday.ts's own import closure).
@@ -15,7 +17,7 @@ import { BIRTHDAY_DAY_NOUN } from '../world/birthdayGift'
 import type { DiaryFacts, DiaryLifeStage, MoodRegister, MotherhoodBand } from '../../shared/protocol'
 // ⭐ v72: who she is, type-only – the four ids and their physics live in engine/spirit.ts.
 import type { Temperament } from '../spirit'
-import { ageWord, capitalise, familyHomeVoice, independentVoice, underOneRoof } from './words'
+import { ageWord, capitalise, familyHomeVoice, independentVoice, underOneRoof, type DiaryLine } from './words'
 
 // --- W2: THE ORDINARY WEEK GETS THE SAME SCRAP AND THE SAME HAND ------------------------------
 //
@@ -315,6 +317,10 @@ export interface WeekNote {
    *  entry, because silence here means the scrap falls back to the ledger line. */
   text: string | ((f: DiaryFacts) => string)
   claims: WeekClaims
+  /** ⭐ L3-4 (10.10): THE CELL'S OWN KEY, for a TEXT-FUNCTION cell only – the template with its holes, written BESIDE the `text` it mirrors and saying the same characters. A STATIC cell
+   *  needs none: its seat is `{ k: text }`, the string IS the key. A function cell without one yields a note with no ref (the screen prints the English), and
+   *  tests/i18n-l3-4-diary-corpora.test.ts refuses that state. */
+  ref?: (f: DiaryFacts) => CopyRef
   license: (f: DiaryFacts) => boolean
 }
 
@@ -565,7 +571,7 @@ const STAGE_LICENSE: Record<DiaryLifeStage, (f: DiaryFacts) => boolean> = {
   independent: (f) => f.lifeStage === 'independent',
 }
 
-const VOICE_LINES: Record<Temperament, Record<StagedMoment, Record<DiaryLifeStage, WeekNote['text']>>> = {
+export const VOICE_LINES: Record<Temperament, Record<StagedMoment, Record<DiaryLifeStage, WeekNote['text']>>> = {
   sunny: {
     grind: {
       school: 'She said it over dinner. "Hard week, good week, and I\'d take another."',
@@ -774,14 +780,14 @@ const VOICE_LINES: Record<Temperament, Record<StagedMoment, Record<DiaryLifeStag
  *  week»). The 11.09 amendment's «exams × 3 stages» column was corrected against this fact –
  *  college exams, if ever wanted, are a new mechanic before they are new copy. The birthday and
  *  the off-season are stage-scoped by CONTENT DECISION, recorded at their MOMENTS entries. */
-const EXAM_LINES: Record<Temperament, WeekNote['text']> = {
+export const EXAM_LINES: Record<Temperament, WeekNote['text']> = {
   sunny: 'She ran it like a timetable. "Papers first, then the court. In that order."',
   fiery: 'She stacked textbooks where the racquets live. "One hour on court. One!"',
   quiet: 'She kept the desk light on late all week. "The papers are on schedule."',
   deep: 'She said it with the last paper handed in. "Done. I want the court back."',
 }
 
-const BIRTHDAY_LINES: Record<Temperament, Record<'school' | 'after-school', WeekNote['text']>> = {
+export const BIRTHDAY_LINES: Record<Temperament, Record<'school' | 'after-school', WeekNote['text']>> = {
   sunny: {
     school: (f) => `${capitalise(ageWord(f.birthdayAge))} today. "Save me the corner piece," she said at the table.`,
     'after-school': (f) => `${capitalise(ageWord(f.birthdayAge))} today. She had the family round. "Let's make it big."`,
@@ -800,7 +806,28 @@ const BIRTHDAY_LINES: Record<Temperament, Record<'school' | 'after-school', Week
   },
 }
 
-const OFF_SEASON_LINES: Record<Temperament, Record<'college' | 'independent', WeekNote['text']>> = {
+/** ⭐ L3-4 (10.10): THE KEYS OF THE EIGHT BIRTHDAY NOTES, beside the eight texts above – the same cells, the same characters, `cp` instead of a plain template. Exported so the net
+ *  can walk text and ref in step; `voicedNotes()` hangs each on its cell as `ref`. */
+export const BIRTHDAY_REFS: Record<Temperament, Record<'school' | 'after-school', (f: DiaryFacts) => CopyRef>> = {
+  sunny: {
+    school: (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. "Save me the corner piece," she said at the table.`,
+    'after-school': (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. She had the family round. "Let's make it big."`,
+  },
+  fiery: {
+    school: (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. She ran the whole day. "Cake first! Questions later!"`,
+    'after-school': (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. She had the day mapped by breakfast. "Make it a big one!"`,
+  },
+  quiet: {
+    school: (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. "Can we keep it small?" she asked.`,
+    'after-school': (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. "Dinner in is plenty," she said, setting the table.`,
+  },
+  deep: {
+    school: (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. "No fuss," she said. She let the cake wait.`,
+    'after-school': (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. "Older, and further in," she said, back home late.`,
+  },
+}
+
+export const OFF_SEASON_LINES: Record<Temperament, Record<'college' | 'independent', WeekNote['text']>> = {
   sunny: {
     college: 'She called on a weekday morning. "No matches for a while. Glad of the break."',
     independent: 'She came over and took the kitchen. "No matches now. I\'m taking the break."',
@@ -844,6 +871,7 @@ function voicedNotes(): WeekNote[] {
     },
     ...(['school', 'after-school'] as const).map((stage) => ({
       text: BIRTHDAY_LINES[voice][stage],
+      ref: BIRTHDAY_REFS[voice][stage],
       claims: { ...MOMENTS.birthday.claims, voice, rail: stage, closeBond: true as const },
       license: (f: DiaryFacts) =>
         voiceOf(voice)(f) && STAGE_LICENSE[stage](f) && MOMENTS.birthday.license(f),
@@ -993,7 +1021,7 @@ export const BEREAVED_WEEKS = 6
  *  ⚠ EVERY LINE IS THE PARENT REPORTING A WEEK – no interior stated as fact, no relation named, no
  *  date and no number (the `bereaved` claim's own licence). ⚠ AND THEY FIT THE SCRAP: 80 characters,
  *  the budget `docs/specs/voice-bibles-2026-09.md` pins and `tests/week-notes.test.ts` sweeps. */
-const BEREAVED_WORDS: Record<Temperament, string> = {
+export const BEREAVED_WORDS: Record<Temperament, string> = {
   sunny: 'She rang more than usual this week, and talked about ordinary things.',
   fiery: 'She trained through it. Nobody suggested otherwise.',
   quiet: 'A quiet week at her place. The kettle went on a lot.',
@@ -1040,7 +1068,7 @@ export const DIVORCED_WEEKS = 8
  *
  *  ⚠ THE TWO PRIVATE VOICES SAY THE LEAST, which is §4's «openness owns expression» arriving in the
  *  diary rather than a second pricing of anything – `BEREAVED_WORDS`' own shape one pool up. */
-const DIVORCED_WORDS: Record<Temperament, string> = {
+export const DIVORCED_WORDS: Record<Temperament, string> = {
   sunny: 'She called about the court, the weather, the week ahead. Not the marriage.',
   fiery: 'She trained. When the subject came up, she put it straight back down.',
   quiet: 'She sent next week\'s dates. There was nothing else in the message.',
@@ -1086,7 +1114,7 @@ const DIVORCED_VOICES: readonly WeekNote[] = /*#__PURE__*/ (Object.keys(DIVORCED
  *
  *  ⚠ HIS REVIEW APPLIED 23.09 (awaiting his final pass) – all eight, inside the 80-character
  *  scrap budget. */
-const FORK_AFTERMATH_WORDS: Record<Temperament, Record<'with' | 'against', string>> = {
+export const FORK_AFTERMATH_WORDS: Record<Temperament, Record<'with' | 'against', string>> = {
   sunny: {
     with: 'She thanked us, then changed the subject before it could turn solemn.',
     against: 'She said all right, then asked about something else.',
@@ -1421,6 +1449,7 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
   // retires the knock at onset and the combination cannot actually occur.
   {
     text: (f) => `A week off the ${f.knockPart}. She was bored by Tuesday and said so by Wednesday.`,
+    ref: (f) => cp`A week off the ${String(f.knockPart)}. She was bored by Tuesday and said so by Wednesday.`,
     claims: { restingKnock: true, notTravellingWeek: true },
     license: (f) => notTravellingWeek(f) && f.injured === null && f.knockChoice === 'rest',
   },
@@ -1431,6 +1460,7 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
   },
   {
     text: (f) => `Ice, stretching, no court. The ${f.knockPart} is quieter than it was.`,
+    ref: (f) => cp`Ice, stretching, no court. The ${String(f.knockPart)} is quieter than it was.`,
     claims: { restingKnock: true, notTravellingWeek: true },
     license: (f) => notTravellingWeek(f) && f.injured === null && f.knockChoice === 'rest',
   },
@@ -1446,6 +1476,7 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
   },
   {
     text: (f) => `She trained on the ${f.knockPart} all week and did not mention it once.`,
+    ref: (f) => cp`She trained on the ${String(f.knockPart)} all week and did not mention it once.`,
     claims: { pushingKnock: true, notTravellingWeek: true },
     license: (f) => notTravellingWeek(f) && f.injured === null && f.knockChoice === 'push',
   },
@@ -1456,6 +1487,7 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
   },
   {
     text: (f) => `The ${f.knockPart} held. We watched her serve more closely than usual.`,
+    ref: (f) => cp`The ${String(f.knockPart)} held. We watched her serve more closely than usual.`,
     claims: { pushingKnock: true, notTravellingWeek: true },
     license: (f) => notTravellingWeek(f) && f.injured === null && f.knockChoice === 'push',
   },
@@ -1489,16 +1521,19 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
   // thirteen-year-old is the relative-age story in one line.
   {
     text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. She cut the first slice too large.`,
+    ref: (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. She cut the first slice too large.`,
     claims: { birthday: true, notTravellingWeek: true },
     license: (f) => notTravellingWeek(f) && familyHomeVoice(f) && f.birthdayAge !== null && f.injured === null,
   },
   {
     text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. She says nothing feels different.`,
+    ref: (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. She says nothing feels different.`,
     claims: { birthday: true, notTravellingWeek: true },
     license: (f) => notTravellingWeek(f) && familyHomeVoice(f) && f.birthdayAge !== null && f.injured === null,
   },
   {
     text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. We worked around her calendar for once.`,
+    ref: (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. We worked around her calendar for once.`,
     claims: { birthday: true, notTravellingWeek: true },
     license: (f) => notTravellingWeek(f) && independentVoice(f) && f.birthdayAge !== null && f.injured === null,
   },
@@ -1534,12 +1569,14 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
   // shortened in the same pass, which is why 31 is the number.
   {
     text: (f) => `${capitalise(ageWord(f.birthdayAge))}. ${capitalise(f.birthdayGift ?? '')}, and a smile she tried to hide.`,
+    ref: (f) => cp`${capitalise(ageWord(f.birthdayAge))}. ${capitalise(f.birthdayGift ?? '')}, and a smile she tried to hide.`,
     claims: { birthday: true, notTravellingWeek: true },
     license: (f) => notTravellingWeek(f) && f.birthdayAge !== null && f.injured === null &&
       f.birthdayGift !== null && f.birthdayWanted && f.birthdayRepeatAge === null && f.birthdayGift !== BIRTHDAY_DAY_NOUN,
   },
   {
     text: (f) => `${capitalise(ageWord(f.birthdayAge))}. ${capitalise(f.birthdayGift ?? '')}. A pause, then a very good thank-you.`,
+    ref: (f) => cp`${capitalise(ageWord(f.birthdayAge))}. ${capitalise(f.birthdayGift ?? '')}. A pause, then a very good thank-you.`,
     claims: { birthday: true, notTravellingWeek: true },
     license: (f) => notTravellingWeek(f) && f.birthdayAge !== null && f.injured === null &&
       f.birthdayGift !== null && !f.birthdayWanted && f.birthdayRepeatAge === null && f.birthdayGift !== BIRTHDAY_DAY_NOUN,
@@ -1548,12 +1585,14 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
   // as one of the good choices or the scene collapses into a menu with a correct order (spec §0).
   {
     text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. She left the day blank, so we took it slowly.`,
+    ref: (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. She left the day blank, so we took it slowly.`,
     claims: { birthday: true, notTravellingWeek: true },
     license: (f) => notTravellingWeek(f) && f.birthdayAge !== null && f.injured === null && f.birthdayGift === BIRTHDAY_DAY_NOUN,
   },
   // ⭐ THE CALLBACK, and it is the line this whole slice was built to be able to write.
   {
     text: (f) => `${capitalise(ageWord(f.birthdayAge))}. ${capitalise(f.birthdayGift ?? '')} again – a tradition since ${f.birthdayRepeatAge}.`,
+    ref: (f) => cp`${capitalise(ageWord(f.birthdayAge))}. ${capitalise(f.birthdayGift ?? '')} again – a tradition since ${String(f.birthdayRepeatAge)}.`,
     claims: { birthday: true, notTravellingWeek: true },
     license: (f) => notTravellingWeek(f) && f.birthdayAge !== null && f.injured === null && f.birthdayRepeatAge !== null,
   },
@@ -1564,11 +1603,13 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
     // shipped, which is the whole return on having written it. A birthday line has no business naming a
     // body part in the first place.
     text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. Candles, a brace, and very bad timing.`,
+    ref: (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. Candles, a brace, and very bad timing.`,
     claims: { birthday: true, injured: true, notTravellingWeek: true },
     license: (f) => notTravellingWeek(f) && familyHomeVoice(f) && f.birthdayAge !== null && f.injured !== null,
   },
   {
     text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. The physio got the first call; we got the second.`,
+    ref: (f) => cp`${capitalise(ageWord(f.birthdayAge))} today. The physio got the first call; we got the second.`,
     claims: { birthday: true, injured: true, notTravellingWeek: true },
     license: (f) => notTravellingWeek(f) && independentVoice(f) && f.birthdayAge !== null && f.injured !== null,
   },
@@ -1644,6 +1685,7 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
   },
   {
     text: (f) => `She revised one-handed, the ${injuredPart(f)} strapped up beside her on the table.`,
+    ref: (f) => cp`She revised one-handed, the ${injuredPart(f)} strapped up beside her on the table.`,
     claims: { exams: true, injured: true, notTravellingWeek: true, bodyGroup: 'arm', domestic: true },
     license: (f) => underOneRoof(f) && notTravellingWeek(f) && f.examsWeek && injuredGroup(f) === 'arm',
   },
@@ -1660,6 +1702,7 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
   // so "twice a day, and she times it herself" is in and "her foot up on a cushion" is out).
   {
     text: (f) => `Ice on the ${injuredPart(f)}, twice a day. She times it herself.`,
+    ref: (f) => cp`Ice on the ${injuredPart(f)}, twice a day. She times it herself.`,
     claims: { injured: true, notTravellingWeek: true, bodyGroup: 'leg', domestic: true },
     license: (f) => underOneRoof(f) && notTravellingWeek(f) && !f.examsWeek && injuredGroup(f) === 'leg',
   },
@@ -1676,6 +1719,7 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
   },
   {
     text: (f) => `Band exercises for the ${injuredPart(f)}, in front of the hall mirror.`,
+    ref: (f) => cp`Band exercises for the ${injuredPart(f)}, in front of the hall mirror.`,
     claims: { injured: true, notTravellingWeek: true, bodyGroup: 'arm', domestic: true },
     license: (f) => underOneRoof(f) && notTravellingWeek(f) && !f.examsWeek && injuredGroup(f) === 'arm',
   },
@@ -1692,6 +1736,7 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
     // R2-18: both of the arm group's lines were domestic – the hall mirror, and watching her manage
     // one-handed. These two say the same things without claiming to have watched.
     text: (f) => `Everything is one-handed for now. The ${injuredPart(f)} sets the terms.`,
+    ref: (f) => cp`Everything is one-handed for now. The ${injuredPart(f)} sets the terms.`,
     claims: { injured: true, notTravellingWeek: true, bodyGroup: 'arm' },
     license: (f) => notTravellingWeek(f) && !f.examsWeek && injuredGroup(f) === 'arm',
   },
@@ -1718,6 +1763,7 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
   },
   {
     text: (f) => `The ${injuredPart(f)} decides how she sits, stands and sleeps this week.`,
+    ref: (f) => cp`The ${injuredPart(f)} decides how she sits, stands and sleeps this week.`,
     claims: { injured: true, notTravellingWeek: true, bodyGroup: 'trunk' },
     license: (f) => notTravellingWeek(f) && !f.examsWeek && injuredGroup(f) === 'trunk',
   },
@@ -2177,7 +2223,7 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
  * Returns null on a come-home week without being asked to know about one – `notTravellingWeek` reads
  * `travelHomeScene`, so the scrap can never have two authors in one week.
  */
-export function weekNoteFor(facts: DiaryFacts, seed: string): string | null {
+export function weekNoteLine(facts: DiaryFacts, seed: string): DiaryLine | null {
   const pool = WEEK_NOTES.filter((n) => n.license(facts))
   if (pool.length === 0) return null
   const rng = rngFromSeed(`${seed}:weeknote:${facts.week}`)
@@ -2206,6 +2252,15 @@ export function weekNoteFor(facts: DiaryFacts, seed: string): string | null {
   const idx = plainTraining(facts)
     ? Math.floor(rng() * pool.length)
     : (Math.floor(rngFromSeed(`${seed}:weeknote:entry`)() * pool.length) + facts.week) % pool.length
-  const { text } = pool[idx]
-  return typeof text === 'function' ? text(facts) : text
+  const { text, ref } = pool[idx]
+  if (typeof text === 'function') {
+    const c = ref?.(facts)
+    return c ? { text: text(facts), c } : { text: text(facts) }
+  }
+  return { text, c: { k: text } }
+}
+
+/** The English alone – the old signature, for every caller that wants no ref. */
+export function weekNoteFor(facts: DiaryFacts, seed: string): string | null {
+  return weekNoteLine(facts, seed)?.text ?? null
 }

@@ -65,8 +65,8 @@ last-reviewed: 2026-10-06
 | S04 | `Declined – the rate stays at {from} {unit}.` | `В повышении отказано – ставка остаётся {from} {unit}.` |
 | S05 | `Lapsed – the rate stays at {from} {unit}.` | `Срок ответа истёк – ставка остаётся {from} {unit}.` |
 | S06 | `Accept the raise? The rate goes from {from} to {to} {unit}. This cannot be undone.` | `Принять повышение? Ставка изменится с {from} до {to} {unit}. Отменить это решение нельзя.` |
-| S07 | `{n} week(s) to decide. The terms will not change.` | `На ответ {n} {неделя/недели/недель}. Условия не изменятся.` |
-| S08 | `{filed} · {n} week(s) to decide` | `{filed} · на ответ {n} {неделя/недели/недель}` |
+| S07 | `{n} week(s) to decide. The terms will not change.` | `На ответ {n, plural, one {{n} неделя} few {{n} недели} many {{n} недель} other {{n} недель}}. Условия не изменятся.` |
+| S08 | `{filed} · {n} week(s) to decide` | `{filed} · на ответ {n, plural, one {{n} неделя} few {{n} недели} many {{n} недель} other {{n} недель}}` |
 | S09 | `an hour` / `a session` / `a week` | `в час` / `за сеанс` / `в неделю` |
 | S10 | `We did not choose a new direction this year, so we kept working on the previous one – the one chosen for {year}.` | `В этом году мы не выбирали новую цель и продолжили работать над прежней – той, что выбрали в {year} году.` |
 
@@ -105,7 +105,7 @@ none is needed; see the ruling note in [RU-13D](ru-formatters-countries-2026-10.
 | X03 | `CalendarScreen.vue` | `Her wedding` | `Её свадьба` |
 | X04 | `world/lifeMomentCopy.ts` | `Continue` | `Продолжить` |
 | X05 | `world/age.ts` | `A college place is reserved. She leaves when the academic year starts – {week} – and plays until then.` | `Место в университете за ней. Она уедет к началу учебного года – {week}; до тех пор продолжит играть.` |
-| X06 | `composables/identityCopy.ts` | `Pregnancy loss and bereavement` | `Потеря беременности и смерть близкого` |
+| X06 | `composables/identityCopy.ts` | `Pregnancy loss and bereavement` | `Потеря беременности и смерть близкого` · `APPROVED` 10.10 |
 | X07 | `composables/identityCopy.ts` | `Her mother's career leaves her a head start.` | `Благодаря карьере матери у неё есть поддержка на старте.` |
 | X08 | `screens/AlbumScreen.vue` | `Her mother’s album` | `Альбом её мамы` |
 

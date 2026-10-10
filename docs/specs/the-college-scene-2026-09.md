@@ -197,6 +197,12 @@ card that quietly loses a button nobody asked to lose is round 29's rename in a 
    graduated at twenty-two shares her chapter with her seventeenth year and those weeks sort ahead
    of the degree. Measured – **one junior title erased all three college rows**. Captured is not
    surfaced, and the fix was to ask the sheet.
+
+   ⚙ RULED 10.10 (decisions.md «THE MORNING BATCH» №38, LB-note): the checklist lies UNDER the
+   sentence in the same note – until then the card drew the list only when the note had no prose,
+   and the degree's rows reached no screen. The scrap is written at the hand the two blocks'
+   joint length earns, and the sheet that carries the rows is drawn on layout A (engine-side,
+   `planBook` in `albumBook.ts`) wherever the owner's no-two-in-a-row law allows it.
 2. **The handover** (schema v89, the wave's one move): `motherCareer` gains
    `collegeTitles: number` – the count of her banked years with `wonTheLeague` – carried through
    `DynastyRecord` like every sibling field. Back-fill 0 for saves that predate it; append-only

@@ -105,7 +105,7 @@
 // to move out of it: the next cut splits that describe, putting those two sweeps in different
 // files. Do that before trimming a seed from either of them.
 
-import { spawn } from 'node:child_process'
+import { spawn, execSync } from 'node:child_process'
 import { availableParallelism } from 'node:os'
 import { classify, lateAckNote, lateAckOnly, recoveredNote } from './lib/stall.mjs'
 // ⚠ IMPORTED, NOT A SECOND COPY (round-22 review). This file used to carry its own hand-maintained
@@ -119,6 +119,16 @@ import { HEAVY_UNIT_FILES } from './heavy-tests.mjs'
 
 const reporter = process.argv.includes('--verbose') ? 'default' : 'dot'
 const started = Date.now()
+
+// ⚠ A red produced against a mid-edit tree names nothing and reproduces nowhere – measured 10.10:
+// a morning run in the shared checkout crossed a night builder's half-written state, its digests
+// matched no commit that ever existed, and the hunt cost an hour that this one line would have
+// ended at the paste. A note, not a gate: dirty trees are normal while working; the line only
+// matters when a red from this run is being read LATER, against a tree that has since converged.
+try {
+  const dirty = execSync('git status --porcelain -uno', { encoding: 'utf8' }).trim()
+  if (dirty) console.log(`  unit  ⚠ tree has ${dirty.split('\n').length} modified tracked file(s) at run start – a red below may be reading a mid-edit state another session has since finished`)
+} catch { /* not a git checkout (a CI tarball) – the note simply does not apply */ }
 const failed = []
 const stalled = []
 const recovered = []

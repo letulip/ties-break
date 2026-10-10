@@ -1,3 +1,4 @@
+import { cp } from '../shared/i18n'
 import type { WorldState } from './world'
 import { SAVE_SCHEMA_VERSION } from './world'
 import { migrateSave } from './migrations'
@@ -8,7 +9,11 @@ import {
   guardPayloadBounds,
   MAX_EXPANDED_BYTES,
   SaveFileError,
+  unreadableSaveFile,
 } from './saveGuard'
+
+// ⭐ L3-7 CLOSE-OUT (10.10): every sentence below that a player can read is built from `cp` – a ref the UI renders through the catalog – and `SaveFileError` writes the English `message` from that very ref
+// (saveGuard.ts says why). No sentence moved a character. The ONE message that is not a ref is `asCorrupted`'s: a lower layer's own text, named there.
 
 // Export-file layout: MAGIC(8) | schemaVersion u32 BE | sha256(32) of gzip payload | gzip(JSON)
 // The same gzip payload + checksum are what save slots store in IndexedDB.
@@ -49,7 +54,7 @@ async function gunzipBounded(data: Uint8Array, maxBytes: number): Promise<Uint8A
       await reader.cancel()
       throw new SaveFileError(
         'oversized-expanded',
-        'This save file expands far beyond any real career – refusing to unpack it',
+        cp`This save file expands far beyond any real career – refusing to unpack it`,
       )
     }
     chunks.push(value)
@@ -76,7 +81,7 @@ export async function compressWorld(world: WorldState): Promise<{ payload: Uint8
 async function verifyChecksum(payload: Uint8Array, checksum: Uint8Array): Promise<void> {
   const actual = await sha256(payload)
   if (actual.length !== checksum.length || !actual.every((b, i) => b === checksum[i])) {
-    throw new SaveFileError('corrupted', 'Save checksum mismatch: data is corrupted')
+    throw new SaveFileError('corrupted', cp`Save checksum mismatch: data is corrupted`)
   }
 }
 
@@ -93,6 +98,10 @@ async function asCorrupted<T>(step: () => T | Promise<T>): Promise<T> {
     return await step()
   } catch (err) {
     if (err instanceof SaveFileError) throw err
+    // ⭐ L3-7 CLOSE-OUT – THE ONE `SaveFileError` THAT STAYS A RAW STRING, ON PURPOSE (tests/i18n-l3-7-save-file-errors.test.ts §3 names it as the only one). The message is whatever a LOWER layer threw while
+    // reading a record out of the player's own database – a torn gzip stream, JSON that will not parse, a migration block tripping over data – so there is no fixed sentence to type, and a ref around a
+    // V8 message would only be a key that is the message itself. It carries no `c`; the UI prints it raw (`errorText` has nothing to look up), and `readLatestAutosave` falls back to the older generation on
+    // this very code before a player reads it. Named, not forgotten: the ~100 engine guard `Error`s are the same class of leftover.
     throw new SaveFileError('corrupted', err instanceof Error ? err.message : String(err))
   }
 }
@@ -120,7 +129,7 @@ export async function decompressWorld(payload: Uint8Array, checksum?: Uint8Array
   // and the fallback can tell "unrecoverable" from "recoverable by updating".
   const declared = (parsed as { schemaVersion?: unknown } | null)?.schemaVersion
   if (typeof declared === 'number' && declared > SAVE_SCHEMA_VERSION) {
-    throw new SaveFileError('future-schema', `Save schema ${declared} is newer than supported ${SAVE_SCHEMA_VERSION}`)
+    throw new SaveFileError('future-schema', cp`Save schema ${declared} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }
   // ⚠ AND EVERY OTHER FAILURE OF THIS DOOR CARRIES THE `corrupted` CODE, which is what lets
   // `readLatestAutosave` fall back on corruption ALONE. Without it, "fall back only on 'corrupted'"
@@ -158,10 +167,10 @@ export async function encodeExportFile(world: WorldState): Promise<Uint8Array> {
 export async function decodeExportFile(bytes: Uint8Array): Promise<WorldState> {
   guardCompressedSize(bytes.byteLength)
   if (bytes.length < 8 || new TextDecoder().decode(bytes.subarray(0, 8)) !== MAGIC) {
-    throw new SaveFileError('not-a-save', 'Not a Tennis Sim save file')
+    throw new SaveFileError('not-a-save', cp`Not a Tennis Sim save file`)
   }
   if (bytes.length < HEADER_BYTES) {
-    throw new SaveFileError('truncated', 'This save file is cut short – it is smaller than its own header')
+    throw new SaveFileError('truncated', cp`This save file is cut short – it is smaller than its own header`)
   }
   const declaredVersion = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(8)
   guardDeclaredVersion(declaredVersion)
@@ -175,7 +184,7 @@ export async function decodeExportFile(bytes: Uint8Array): Promise<WorldState> {
     parsed = JSON.parse(json)
   } catch (err) {
     if (err instanceof SaveFileError) throw err
-    throw new SaveFileError('corrupted', 'This save file is damaged – its contents cannot be read')
+    throw unreadableSaveFile()
   }
 
   guardPayloadBounds(parsed)
@@ -186,6 +195,7 @@ export async function decodeExportFile(bytes: Uint8Array): Promise<WorldState> {
   } catch (err) {
     if (err instanceof SaveFileError) throw err
     const detail = err instanceof Error ? err.message : String(err)
-    throw new SaveFileError('corrupted', `This save file could not be upgraded – ${detail}`)
+    // the hole is the ladder's own message (a migration block's `Error`, or a V8 `TypeError` on data the spine does not cover) – a diagnostic, not a sentence of ours, so it stays as the lower layer wrote it
+    throw new SaveFileError('corrupted', cp`This save file could not be upgraded – ${detail}`)
   }
 }

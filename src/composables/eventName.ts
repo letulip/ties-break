@@ -18,6 +18,7 @@
 // must reach the button that reads Enter. So the name is the visible label plus what it acts on,
 // in that order – never a replacement for it.
 import { weekRange } from '../shared/dates'
+import { t } from '../i18n'
 
 /** Just enough of an event to name a control about it. Deliberately structural rather than
  *  `UpcomingEvent`, so the Calendar's marker (a different shape with the same two fields) can use
@@ -37,5 +38,5 @@ export interface NameableEvent {
  * this name and the dates printed on the card cannot drift apart.
  */
 export function enterActionName(event: NameableEvent, startYear?: number): string {
-  return `Enter the ${event.label}, ${weekRange(event.week, startYear)}`
+  return t('Enter the {event}, {weekRange}', { event: event.label, weekRange: weekRange(event.week, startYear) })
 }

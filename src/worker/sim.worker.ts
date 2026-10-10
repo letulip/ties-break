@@ -64,7 +64,7 @@ import { heirloomBookOf } from '../engine/world/heirloom'
 import { mainStateConsistent, resumeMain, type MainRngState, type Rng } from '../engine/rng'
 import { planFromWeek, planShapeError, planWeek } from '../engine/plan'
 import { encodeExportFile, decodeExportFile } from '../engine/saveCodec'
-import { SaveFileError } from '../engine/saveGuard'
+import { SaveFileError, unreadableSaveFile } from '../engine/saveGuard'
 import {
   commitAutosave,
   adoptAutosave,
@@ -79,7 +79,7 @@ import {
   touchCareer,
 } from '../db/saves'
 // ⭐⭐ A-05 (26.09): three shape checks now, not one – the profile, the childhood and the inheritance.
-import { CommandRefusedError, dynastyShapeError, profileShapeError, prologueShapeError } from '../shared/protocol'
+import { CodedRefusalError, CommandRefusedError, dynastyShapeError, profileShapeError, prologueShapeError } from '../shared/protocol'
 import type { ErrorReply, Snapshot, SnapshotReply, StopReason, ToWorker, ToUI } from '../shared/protocol'
 
 // The worker owns the authoritative world state (plain objects, non-reactive) for the ACTIVE career.
@@ -208,10 +208,20 @@ function recoverMainState(w: WorldState): MainRngState {
  *  defect; see `refreshDerivedRankCaches`). The refresh is deterministic and idempotent, so it is
  *  NOT a recovery: its answer never touches the `recovered` flag the player is warned with. */
 function ensureMainState(w: WorldState): boolean {
-  const rngRepaired = !verifyMainState(w)
-  if (rngRepaired) w.rngMain = recoverMainState(w)
-  refreshDerivedRankCaches(w)
-  return rngRepaired
+  // ⚠ A RAW THROW HERE IS A DAMAGED FILE, AND IT USED TO ESCAPE WITHOUT A CODE (09.10, found by the v93 golden joining the save-doors fuzz as a base).
+  // `refreshDerivedRankCaches` reads `results` and trusts every element to be a row; a foreign file with `results[767] := true` passed the spine, threw a
+  // bare TypeError here – outside `importDryRun`'s guard – and the door answered «Cannot read properties of undefined» with NO `code`, which is the one
+  // thing invariant 2 of tests/save-doors-fuzz.test.ts forbids («a refusal the store can branch on»). The same typed refusal `importDryRun` gives, the same
+  // sentence: no new copy, only the news arriving in the right type. Pre-existing and independent of v93 – the newest base simply sampled it first.
+  try {
+    const rngRepaired = !verifyMainState(w)
+    if (rngRepaired) w.rngMain = recoverMainState(w)
+    refreshDerivedRankCaches(w)
+    return rngRepaired
+  } catch (err) {
+    if (err instanceof SaveFileError) throw err
+    throw unreadableSaveFile()
+  }
 }
 
 /**
@@ -248,7 +258,7 @@ function importDryRun(candidate: WorldState): Snapshot {
     return snapshot
   } catch (err) {
     if (err instanceof SaveFileError) throw err
-    throw new SaveFileError('corrupted', 'This save file is damaged – its contents cannot be read')
+    throw unreadableSaveFile()
   }
 }
 
@@ -989,6 +999,11 @@ function errorMsg(id: number, err: unknown): ErrorReply {
   if (err instanceof CommandRefusedError) {
     return { id, ok: false, error: err.message, code: 'INVALID_COMMAND' }
   }
+  // ⭐ L3-7 (10.10) – A REFUSAL THAT CARRIES ITS OWN CODE (a letter that cannot be answered, a last offer that is not a question). The sentence is still the `error`; the code is what the UI keys the
+  // translation by. NO `revision`, for the same reason `INVALID_COMMAND` has none: nothing was measured against one.
+  if (err instanceof CodedRefusalError) {
+    return { id, ok: false, error: err.message, code: err.code }
+  }
   // ⭐⭐ E-05 (05.09 engine review) – AND THE SAVE-FILE CODE CROSSES THE BOUNDARY TOO. `SaveFileError`
   // has carried seven machine-readable kinds since the import gate was written, and that gate's own
   // header states the reason: "the code exists so tests (and any future UI that wants to branch)
@@ -999,8 +1014,12 @@ function errorMsg(id: number, err: unknown): ErrorReply {
   // ⚠ NO `revision`: a refused file never measured itself against one. The field is for the two
   // concurrency kinds above and stays absent here, which is what the arm in
   // tests/worker-reply-correlation.test.ts asserts alongside the code.
+  // ⭐ L3-7 CLOSE-OUT (10.10) – AND SO DOES THE SENTENCE. The kind says WHICH of the seven this is; it cannot say which of the several sentences of that kind, or what its holes hold (a schema version, a
+  // size, the name of the field that failed the spine). `err.c` is the sentence as a `CopyRef`, the same carrier the engine uses for every sentence with holes: it rides BESIDE `error` (the English, as ever –
+  // an older store, a log and every test read that) and `code` (the kind, unchanged), and `composables/errorText.ts` renders it through the catalog. Absent for the one refusal that is a lower layer's raw
+  // message (saveCodec.ts `asCorrupted`). Still NO `revision`.
   if (err instanceof SaveFileError) {
-    return { id, ok: false, error: err.message, code: err.code }
+    return { id, ok: false, error: err.message, code: err.code, ...(err.c ? { c: err.c } : {}) }
   }
   return { id, ok: false, error: err instanceof Error ? err.message : String(err) }
 }

@@ -31,13 +31,18 @@
 //   M8  the cabinet's finals not emitted                                    4 RED
 import { describe, it, expect } from 'vitest'
 import { createWorld, type WorldState } from '../src/engine/world'
-import { buildScroll } from '../src/engine/world/album'
+import { buildScroll as buildScrollWithRefs } from '../src/engine/world/album'
 import { TIERS, OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 import type { Milestone, ScrollSeason, SeasonHistoryEntry, SeasonTrackRow } from '../src/shared/protocol'
 import { engineModuleSource } from './worldSource'
 import { codeOf } from './helpers/source'
 import { runCareer } from './radarFixtures'
+
+// ⭐ RE-AIMED 10.10 BY L3-6: the scroll's rows carry `labelC` / `detailC` BESIDE the strings now (the refs a Russian screen renders). This file's subject is the English label and detail – which table a
+// season close names, what a row prints – so every scroll it builds is compared without them; tests/i18n-l3-6-endings-album.test.ts renders every ref against its string.
+const buildScroll = (world: WorldState): ScrollSeason[] =>
+  buildScrollWithRefs(world).map((s) => ({ ...s, rows: s.rows.map(({ labelC: _labelC, detailC: _detailC, ...row }) => row) }))
 
 // --- fixtures ------------------------------------------------------------------------------------
 

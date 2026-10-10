@@ -30,6 +30,9 @@ import { useKidEmotion } from '../composables/kidEmotion'
 import { useLifeMoment } from '../composables/lifeMoment'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { playSfx } from '../audio/sfx'
+// ⚙ L2-10b (08.10) – THE LAW HOLDS, AND THE ONE CONTROL LABEL IS READ THROUGH THE CATALOG: `t(moment.confirm)` looks the engine's own literal (`LIFE_MOMENT_CONFIRM`, a CERTAIN
+// `Continue` key already) up as a DYNAMIC key, LifeBeatDialog's L2-9b seat exactly. The line stays the feed's kept text, verbatim; English renders itself.
+import { eventText, t } from '../i18n'
 
 const { moment, dismiss: dismissMoment } = useLifeMoment()
 const { stage } = useKidEmotion()
@@ -64,8 +67,8 @@ useDialogFocus(card, dismiss, { focusOn: 'card', restore: false })
       <!-- ⚠ `alt=""` – atmosphere beside a line that already says what happened; a screen reader that read
            the picture too would say it twice (LifeBeatDialog's own note on its funeral painting). -->
       <img v-if="art" class="life-moment-art" :src="art" alt="" />
-      <p id="life-moment-line" class="life-moment-line">{{ moment.line }}</p>
-      <button type="button" class="life-moment-go" @click="dismiss">{{ moment.confirm }}</button>
+      <p id="life-moment-line" class="life-moment-line">{{ eventText({ text: moment.line, c: moment.lineC }) }}</p>
+      <button type="button" class="life-moment-go" @click="dismiss">{{ t(moment.confirm) }}</button>
     </div>
   </div>
 </template>

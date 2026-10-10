@@ -60,7 +60,8 @@ import { formatCents } from '../shared/money'
 import { weekLabel } from '../shared/dates'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
-import { TEAM_BUDGET_LABEL, useCoachingBudget } from '../composables/coachingBudget'
+import { teamBudgetLabel, useCoachingBudget } from '../composables/coachingBudget'
+import { t } from '../i18n'
 import { enteredEvents } from '../composables/seasonEntries'
 import { useStartYear } from '../composables/startYear'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
@@ -95,7 +96,7 @@ const entries = computed(() => enteredEvents(game.snapshot?.upcoming ?? []))
        the harness's selector fails the boundary test rather than silently widening the hole. -->
   <div v-if="game.snapshot" class="rail-dash">
     <Card as="article" class="rail-dash-card">
-      <Eyebrow as="h2" class="rail-dash-title">In the account</Eyebrow>
+      <Eyebrow as="h2" class="rail-dash-title">{{ t('In the account') }}</Eyebrow>
       <!-- The negative tint is Home's own `.budget-total.negative` rule, on the same figure. -->
       <p class="rail-dash-figure" :class="{ negative: fundsCents < 0 }">{{ funds }}</p>
     </Card>
@@ -118,7 +119,7 @@ const entries = computed(() => enteredEvents(game.snapshot?.upcoming ?? []))
            rename one edit instead of two spellings. ⚠ Nothing else on this card changed a
            character – the free figure, the bar and both legend lines are exactly what round 36
            review #9 shipped. -->
-      <Eyebrow as="h2" class="rail-dash-title">{{ TEAM_BUDGET_LABEL }}</Eyebrow>
+      <Eyebrow as="h2" class="rail-dash-title">{{ teamBudgetLabel() }}</Eyebrow>
       <p class="rail-dash-figure">{{ coachingFree }}</p>
       <!-- ⚠ THE CLASSES ARE THE METER'S OWN, NOT A SECOND SET. `.budget-bar`, `.budget-legend` and
            `.legend-dot` are declared once in src/style.css and the Coach Market's meter is their
@@ -126,8 +127,8 @@ const entries = computed(() => enteredEvents(game.snapshot?.upcoming ?? []))
            surface it shortcuts to. The only difference is that a 196px strip takes the legend as two
            lines where an 880px screen takes it as one. -->
       <div class="budget-bar"><i :style="{ width: meterPct + '%' }"></i></div>
-      <p class="budget-legend"><span class="legend-dot committed"></span>{{ coachingCommitted }} committed</p>
-      <p class="budget-legend"><span class="legend-dot cap"></span>{{ coachingCap }} weekly cap</p>
+      <p class="budget-legend"><span class="legend-dot committed"></span>{{ t('{0} committed', [coachingCommitted]) }}</p>
+      <p class="budget-legend"><span class="legend-dot cap"></span>{{ t('{0} weekly cap', [coachingCap]) }}</p>
       <!-- ⭐⭐ ROUND 42 #23's OTHER HALF – EVERY FILLED SEAT, the same list the market's meter draws
            and from the same computed. ⚠ `.budget-seat` is a THIRD class alongside `.budget-legend`
            rather than two more legend lines, because round 36 review #9's own guard counts those
@@ -135,13 +136,13 @@ const entries = computed(() => enteredEvents(game.snapshot?.upcoming ?? []))
            entry. Silent for a family that has hired nobody. -->
       <p v-for="seat in seats" :key="seat.key" class="budget-seat" :data-seat="seat.key">
         <span class="seat-name">{{ seat.label }}</span>
-        <span class="seat-cost">{{ formatCents(seat.weeklyCents) }} /wk</span>
+        <span class="seat-cost">{{ t('{0} /wk', [formatCents(seat.weeklyCents)]) }}</span>
       </p>
     </Card>
 
     <!-- Silent with nothing entered – the same condition the Season strip carries. -->
     <Card v-if="entries.length" as="article" class="rail-dash-card">
-      <Eyebrow as="h2" class="rail-dash-title">My entries</Eyebrow>
+      <Eyebrow as="h2" class="rail-dash-title">{{ t('My entries') }}</Eyebrow>
       <p v-for="e in entries" :key="e.id" class="rail-dash-figure rail-dash-entry">
         {{ e.label }} · {{ weekLabel(e.week, startYear) }}
       </p>

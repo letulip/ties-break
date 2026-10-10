@@ -164,8 +164,10 @@ describe('E-P05: the ad confirm quotes the week the signature will write', () =>
 
   it('⚠ ...and so does the confirm, which quotes it to the player first', () => {
     const sheet = codeOf(componentFile('components/InboxSheet.vue'))
-    expect(sheet, 'the sheet calls the engine\'s function').toContain('adUntilWeek(t, week.value)')
-    expect(sheet, 'and spells no term arithmetic of its own').not.toContain('Math.max(1, t.termWeeks)')
+    // ⚠ L2-6 (08.10): the terms local of `confirmMessage` is `tm` now, not `t` – a local named `t` would shadow the `t()` the sheet imports and the confirm
+    // is built of whole messages. The call and the claim are the same; only the local's name moved (a genuine premise, re-aimed, not saved by `tTransparent`).
+    expect(sheet, 'the sheet calls the engine\'s function').toContain('adUntilWeek(tm, week.value)')
+    expect(sheet, 'and spells no term arithmetic of its own').not.toContain('Math.max(1, tm.termWeeks)')
   })
 
   it('⭐ the window is INCLUSIVE of the signing week, and a zero-week paper still covers it', () => {

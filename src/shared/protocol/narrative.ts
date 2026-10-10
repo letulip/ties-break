@@ -13,6 +13,8 @@ import type { TierId } from '../../engine/season/types'
 import type { SpiritBand, Temperament } from '../../engine/spirit'
 import type { MemoryFace, PortraitEmotion, PortraitStage } from '../avatarEmotion'
 import type { KnockChoice } from './health'
+// v93 (L3-0), type-only: the life-moment line is a COPY of a ledger row's sentence, so it carries the row's ref when the row has one.
+import type { CopyRef } from '../i18n'
 
 // --- Diary-1 + Memory (docs/specs/family-diary.md, D1/D2/D3 + D10) -------------
 // The diary speaks in WORDS licensed by FACTS. The engine assembles the facts at snapshot time
@@ -126,6 +128,11 @@ export interface BirthdayOption {
   id: string
   label: string
   note: string
+  /** ⭐ L3-4 (10.10): `label` / `note` as CopyRefs, BESIDE the English (the `LifeMoment.lineC` shape). The prompt is class (b) – assembled at snapshot time from the
+   *  catalogue and never stored – so each ref is the key of the very string printed beside it; the dialog draws `eventText({ text, c })`. Optional: a caller with no
+   *  ref prints the English, as before. */
+  labelC?: CopyRef
+  noteC?: CopyRef
 }
 
 /** THE POPUP, on her birthday week. Always fires (owner: «я бы оставил попап на ДР всегда»), and
@@ -138,9 +145,13 @@ export interface BirthdayPrompt {
   /** A deterministic, age-aware heading. The component does not flatten every year into the same
    *  "She is N today" sentence. */
   heading: string
+  /** ⭐ L3-4 (10.10): the heading as a CopyRef, beside the English (see `BirthdayOption.labelC`). */
+  headingC?: CopyRef
   /** ⭐ what she has been asking for, in prose. EXACTLY ONE of the four options answers it, and
    *  nothing marks which (spec §2ab / §5.4). */
   ask: string
+  /** ⭐ L3-4 (10.10): the ask as a CopyRef, beside the English. It names no option and marks none (the 11.08 rule stands): it is the key of the sentence above, nothing else. */
+  askC?: CopyRef
   /** four, in a COLUMN (owner: «в колонку ставь, там хватит места»), in the order to show them.
    *  The order is drawn, so the answer's position carries no information. */
   options: BirthdayOption[]
@@ -159,10 +170,17 @@ export interface LifeBeatPrompt {
   kind: LifeBeatKind
   /** the engine's heading for this beat, already in her register */
   heading: string
+  /** ⭐ L3-5 (10.10): THE HEADING AS A COPYREF, BESIDE THE ENGLISH (the `LifeMoment.lineC` shape; docs/specs/i18n-2026-10.md §8, row L3-5). The prompt is CLASS (b) – assembled by
+   *  `lifeBeatPromptFor` at snapshot time off the row's stamped facts and never stored – so every heading is the very string of a pool cell and its ref is that cell's key
+   *  (`{ k: heading }`); the dialog draws `eventText({ text, c })`. Optional: a caller with no ref prints the English, as before. */
+  headingC?: CopyRef
   /** ⭐ HER LINE, in her voice – written against the four voice bibles and obeying their two shape
    *  rules (one quoted span, and `she` in the narration outside it), which the week-note pins
    *  enforce for the whole corpus since wave 1. */
   said: string
+  /** ⭐ L3-5 (10.10): HER LINE AS A COPYREF, beside the English. A pool cell is a seat (`{ k: said }`); the two composed lines are real refs – small talk's frame joined to
+   *  its opener (`{0} {1}` over two seats) and the announcement's pool line joined to the sentence that says how long they have been together. */
+  saidC?: CopyRef
   /** his possible responses, in the order to show them. Never her choices – the decision stays
    *  hers, and these are what the parent may say about it. */
   options: LifeBeatOption[]
@@ -215,6 +233,8 @@ export interface LifeBeatFollowUp {
   optionId: string
   /** her reply, in the order to render it. One paragraph, or two for a `story`. */
   said: readonly string[]
+  /** ⭐ L3-5 (10.10): the paragraphs as CopyRefs, beside the English, one per entry of `said` and in the same order (each a seat – the corpus string IS the key). */
+  saidC?: readonly CopyRef[]
   /** the label of the one control that then records `optionId` */
   done: string
 }
@@ -238,6 +258,8 @@ export interface LifeBeatFollowUp {
 export interface SoftBeatInvite {
   /** the Home card's line – the invitation, never what she came with */
   card: string
+  /** ⭐ L3-5 (10.10): the card's line as a CopyRef, beside the English (a seat – the card constants are catalog keys). */
+  cardC?: CopyRef
   /** the conversation the card opens, on the ordinary prompt contract */
   prompt: LifeBeatPrompt
 }
@@ -1256,6 +1278,9 @@ export interface MemoryCard {
   milestone: Milestone | null
   /** e.g. "one year ago" (anniversary) or the milestone's week label "W14 '31" (echo/recent) */
   whenLabel: string
+  /** ⭐ L3-4 (10.10): `whenLabel` as a CopyRef – present ONLY for the sentence ("one year ago"). The week label ("W14 '31") is a FORMATTER's output (`weekLabel`, RU-13D),
+   *  not copy, so it has no ref and the card prints its text. Like every `*C` field it is derived at snapshot time and never saved. */
+  whenLabelC?: CopyRef
   /** the age band she was in at the milestone's week – what makes time felt */
   stage: PortraitStage
   /** the painting emotion the memory shows (title → happy, injury → injury, wedding → bride, …).
@@ -1273,6 +1298,9 @@ export interface MemoryCard {
    *  derived at snapshot time and never saved. */
   emotion: MemoryFace
   line: string
+  /** ⭐ L3-4 (10.10): `line` as a CopyRef, beside the English. The line is REBUILT every week from the milestone ledger (type / tier / kind / season / rank), never stored, so
+   *  a memory from seasons ago reads in the language of the day it is shown. */
+  lineC?: CopyRef
 }
 
 /** The diary as the UI sees it: the facts, plus at most ONE selected line per surface. The photo
@@ -1281,12 +1309,20 @@ export interface DiarySnapshot {
   facts: DiaryFacts
   /** the one phrase under her name on the Home photo card (D2), or null for a quiet week */
   photoLine: string | null
+  /** ⭐ L3-4 (10.10): THE SIX LINES BELOW AS COPYREFS, BESIDE THE ENGLISH (the `LifeMoment.lineC` shape; docs/specs/i18n-2026-10.md §8, row L3-4). The diary is CLASS (b): every line
+   *  is assembled here at snapshot time from state that already exists, so nothing is stored and no schema moves. Each `*C` is present on exactly the weeks its text is non-null
+   *  (a function cell's ref spells the cell's own key and holes; a static cell's is `{ k: text }`), and `renderCopy(c)` is the English `text` under the source locale – the
+   *  twin and `tests/i18n-l3-4-diary-corpora.test.ts` prove it. A screen draws `eventText({ text, c })`; a consumer that reads the ENGLISH as a tag (HomeScreen's greeting
+   *  collision test reads `photoLine`) keeps reading the text. */
+  photoLineC?: CopyRef
   /** epic/redesign-home: the time-of-day word the diary page opens with – "Good morning" before the
    *  week is played, "Good evening" once its tournaments have resolved, otherwise varied off
    *  `seed:greet:<week>` and never repeating a word the caption already used. See greetingFor. */
   greeting: string
+  greetingC?: CopyRef
   /** the one WHY line beside the condition bar (D1) – never empty */
   conditionNote: string
+  conditionNoteC?: CopyRef
   /** THE NOTE ON THE SCRAP UNDER THE JOURNEY PAINTING (screen D). Non-null on exactly the weeks
    *  `facts.travelHomeScene` is non-null, and never null on those – the picture is of a journey and
    *  a picture of a journey wants a caption, the same argument that keeps `conditionNote` from being
@@ -1294,11 +1330,13 @@ export interface DiarySnapshot {
    *  by facts of the trip she is coming back from, so it can never describe a final she did not
    *  reach. See engine/diary.ts TRAVEL_NOTES. */
   travelNote: string | null
+  travelNoteC?: CopyRef
   /** THE ORDINARY WEEK'S NOTE, on the same scrap `travelNote` uses (screen D) and in the same
    *  parent's hand – null on most weeks, and null on every week `travelNote` speaks. W2: the owner's
    *  «чтобы тренировочные недели не просто скипались ... что происходит на этих неделях». See
    *  engine/diary.ts WEEK_NOTES for the cadence and the licences. */
   weekNote: string | null
+  weekNoteC?: CopyRef
   /** ⭐ ROUND-21 #2 – THE COACH WAS THERE, in the week's story. Non-null on exactly the weeks she
    *  came home from a tournament AND the coach travelled with her; null on every other week,
    *  including every trip he stayed home for.
@@ -1312,6 +1350,7 @@ export interface DiarySnapshot {
    *  Parent's voice, like the scrap it sits under (diary/travelNotes.ts rule 1): the family noticing
    *  him, never him assessing her. */
   coachNote: string | null
+  coachNoteC?: CopyRef
   /** the Memory card to show this week, or null */
   memory: MemoryCard | null
   /** W5: WHICH PAINTING THIS WEEK SHOWS – the journey home, the layoff, the holiday, or the week's
@@ -1528,6 +1567,9 @@ export interface LifeMoment {
   face: MemoryFace
   /** the ONE line – the feed's own kept text for the day, engine-assembled and never the view's */
   line: string
+  /** ⭐ v93 (L3-0) – the same line as data, copied from the ledger row's `c` when it has one; the overlay renders it under the locale and
+   *  falls back to `line`. OPTIONAL and ABSENT when the row carries no ref – a snapshot field, never persisted, so no schema move. */
+  lineC?: CopyRef
   /** the one control's label, engine-side for the same reason */
   confirm: string
 }

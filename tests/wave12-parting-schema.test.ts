@@ -202,7 +202,11 @@ describe('wave 12 T1 B – a marriage that ended BEFORE the wave keeps every wor
     // cases above are what say WHICH byte when it does.
     const before = craftedLivedDivorce()
     const after = rec(migrateSave(craftedLivedDivorce()))
-    const moved = Object.keys(before).filter((k) => JSON.stringify(before[k]) !== JSON.stringify(after[k]))
+    // ⚠ RE-AIMED 09.10 BY v93 (the localization rig L3-0, `WorldEvent.c`): the head's step attaches a ref BESIDE each recognised ledger row's text, so `events` is compared
+    // without that one optional key – every other byte of every row, and every other key, is compared exactly as before.
+    const bare = (k: string, v: unknown): string =>
+      JSON.stringify(k === 'events' && Array.isArray(v) ? v.map(({ c: _c, ...row }: Record<string, unknown>) => row) : v)
+    const moved = Object.keys(before).filter((k) => bare(k, before[k]) !== bare(k, after[k]))
     expect(moved).toEqual(['schemaVersion'])
     // ⚠ RE-AIMED 24.09 AT v89 (the college scene, T4), NOT WEAKENED: the claim is «the whole payload
     // survives and the version is the only difference», and the version is the LADDER'S HEAD rather

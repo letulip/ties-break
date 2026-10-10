@@ -92,6 +92,7 @@ import type {
   AcademyLetterTerms, AdCategory, AdOfferTerms, AdTradeCategory, BuildLetterTerms, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason,
   KitLine, KitOfferTerms, Offer, PenaltyReason, SaleOfferTerms, SponsorTier, StaffLetterTerms, StaffSeat, TourLetterTerms,
 } from '../shared/protocol'
+import { CodedRefusalError, type RefusalCode } from '../shared/protocol'
 
 /** Every sponsor tier's letterhead lives at `public/images/sponsors/<key>.webp`, and this is the
  *  lookup - a tier, never a filename spelled out at a call site. All three rungs are reachable since
@@ -1086,6 +1087,22 @@ export function expireOffers(offers: Offer[], week: number): Offer[] {
 
 /** Why an answer was refused, or null when it is allowed. One reason string, because the UI shows it
  *  and the worker returns it as an error - two spellings of "too late" would be two bugs. */
+/** ⭐ L3-7 (10.10): THE STABLE CODE OF EACH REFUSAL SENTENCE `offerAnswerError` CAN RETURN – the only place the four meet their codes. It is keyed by the sentence because `offerAnswerError` keeps returning the
+ *  literals itself (tests/principles-e07-offer-live.test.ts pins that, and one sentence for the three ways of being gone); `tests/i18n-l3-7-errors.test.ts` reads the function's own `return '…'` literals and
+ *  requires every one to have a code here, so a fifth sentence cannot ship without one. */
+export const OFFER_REFUSAL_CODES: Readonly<Record<string, RefusalCode>> = {
+  'That letter is not in the inbox.': 'offer-not-in-inbox',
+  'That deal is already signed.': 'offer-already-signed',
+  'That offer has already gone.': 'offer-gone',
+  'She is already signed for next season.': 'offer-next-season-signed',
+}
+
+/** The Error to throw for one of `offerAnswerError`'s sentences: a `CodedRefusalError` when the sentence has a code (all four do), the plain `Error` it always was when it does not. */
+export function offerRefusal(message: string): Error {
+  const code = OFFER_REFUSAL_CODES[message]
+  return code === undefined ? new Error(message) : new CodedRefusalError(code, message)
+}
+
 export function offerAnswerError(offers: Offer[], offerId: string, week: number): string | null {
   const offer = offers.find((o) => o.id === offerId)
   if (!offer) return 'That letter is not in the inbox.'

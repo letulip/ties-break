@@ -1,0 +1,2861 @@
+{
+ "capturedOn": "8f8c9298 (pre-wave tree)",
+ "variantCount": 1775,
+ "refused": {
+  "size:16777217": [
+   "SaveFileError",
+   "oversized",
+   "This file is too large to be a save (16.0 MB – the limit is 16 MB)"
+  ],
+  "size:17000000": [
+   "SaveFileError",
+   "oversized",
+   "This file is too large to be a save (16.2 MB – the limit is 16 MB)"
+  ],
+  "size:20000000": [
+   "SaveFileError",
+   "oversized",
+   "This file is too large to be a save (19.1 MB – the limit is 16 MB)"
+  ],
+  "size:33554432": [
+   "SaveFileError",
+   "oversized",
+   "This file is too large to be a save (32.0 MB – the limit is 16 MB)"
+  ],
+  "size:100000000": [
+   "SaveFileError",
+   "oversized",
+   "This file is too large to be a save (95.4 MB – the limit is 16 MB)"
+  ],
+  "version:negative": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – it declares an impossible save version"
+  ],
+  "version:fraction": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – it declares an impossible save version"
+  ],
+  "version:nan": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – it declares an impossible save version"
+  ],
+  "version:one-newer": [
+   "SaveFileError",
+   "future-schema",
+   "This save is from a newer version of the game (schema v<V+1>, this build reads up to v<V+0>) – update the app, then import it"
+  ],
+  "version:far-newer": [
+   "SaveFileError",
+   "future-schema",
+   "This save is from a newer version of the game (schema v<V+57>, this build reads up to v<V+0>) – update the app, then import it"
+  ],
+  "version:u32-max": [
+   "SaveFileError",
+   "future-schema",
+   "This save is from a newer version of the game (schema v4294967295, this build reads up to v<V+0>) – update the app, then import it"
+  ],
+  "bounds:nodes": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – it contains more data points than any career can hold"
+  ],
+  "bounds:depth": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – its data nests deeper than any save the game writes"
+  ],
+  "bounds:non-finite": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – it contains a non-finite number"
+  ],
+  "bounds:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – it contains an implausibly long text field"
+  ],
+  "bounds:long-list": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – one of its lists is implausibly long"
+  ],
+  "bounds:long-field-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – it contains an implausibly long field name"
+  ],
+  "shape:not-a-career:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – it does not contain a career"
+  ],
+  "shape:not-a-career:number": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – it does not contain a career"
+  ],
+  "shape:not-a-career:list": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – it does not contain a career"
+  ],
+  "shape:not-a-career:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – it does not contain a career"
+  ],
+  "shape:header-body-disagree": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "shape:header-without-body-version": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:bereavementWeeks:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:bereavementWeeks:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"bereavementWeeks\" must be a list"
+  ],
+  "spine:birthdays:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:birthdays:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"birthdays\" must be a list"
+  ],
+  "spine:careerId:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerId:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerId:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerId:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" is longer than 200 characters"
+  ],
+  "spine:careerId:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerId:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerId:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerId:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerId:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerId:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerId:list": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerId:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerId:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerId:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerId:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerId:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerId:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerId\" must be a non-empty text"
+  ],
+  "spine:careerTotals:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:list": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:careerTotals:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"careerTotals\" must carry the career totals"
+  ],
+  "spine:children:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:children:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"children\" must be a list"
+  ],
+  "spine:cohort:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:cohort:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"cohort\" must be a list"
+  ],
+  "spine:entries:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:entries:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"entries\" must be a list"
+  ],
+  "spine:events:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:events:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"events\" must be a list"
+  ],
+  "spine:financeWeeks:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:financeWeeks:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"financeWeeks\" must be a list"
+  ],
+  "spine:fundsCents:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"fundsCents\" is out of range"
+  ],
+  "spine:fundsCents:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"fundsCents\" is out of range"
+  ],
+  "spine:fundsCents:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"fundsCents\" is out of range"
+  ],
+  "spine:fundsCents:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"fundsCents\" is out of range"
+  ],
+  "spine:fundsCents:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"fundsCents\" is out of range"
+  ],
+  "spine:fundsCents:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"fundsCents\" is out of range"
+  ],
+  "spine:fundsCents:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"fundsCents\" is out of range"
+  ],
+  "spine:fundsCents:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"fundsCents\" is out of range"
+  ],
+  "spine:fundsCents:list": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"fundsCents\" is out of range"
+  ],
+  "spine:fundsCents:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"fundsCents\" is out of range"
+  ],
+  "spine:fundsCents:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"fundsCents\" is out of range"
+  ],
+  "spine:fundsCents:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"fundsCents\" is out of range"
+  ],
+  "spine:fundsCents:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"fundsCents\" is out of range"
+  ],
+  "spine:fundsCents:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"fundsCents\" is out of range"
+  ],
+  "spine:fundsCents:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"fundsCents\" is out of range"
+  ],
+  "spine:injuryHistory:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:injuryHistory:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"injuryHistory\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:internationalEntryWeeks:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"internationalEntryWeeks\" must be a list"
+  ],
+  "spine:knockHistory:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:knockHistory:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"knockHistory\" must be a list"
+  ],
+  "spine:milestones:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:milestones:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"milestones\" must be a list"
+  ],
+  "spine:nextEventId:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:list": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:nextEventId:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"nextEventId\" must be a whole number between 0 and 9007199254740991"
+  ],
+  "spine:offers:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:offers:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"offers\" must be a list"
+  ],
+  "spine:onRampCleared:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:list": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:onRampCleared:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"onRampCleared\" must carry the on-ramp latches"
+  ],
+  "spine:penalties:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:penalties:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"penalties\" must be a list"
+  ],
+  "spine:plan:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:list": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:plan:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"plan\" must carry the weekly plan"
+  ],
+  "spine:practices:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:practices:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"practices\" must be a list"
+  ],
+  "spine:proEntryWeeks:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:proEntryWeeks:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"proEntryWeeks\" must be a list"
+  ],
+  "spine:profile:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:list": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:profile:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"profile\" must carry the player profile"
+  ],
+  "spine:results:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:results:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "spine:rngMain:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:list": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:rngMain:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"rngMain\" must carry a valid RNG position"
+  ],
+  "spine:schemaVersion:missing": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:null": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:text": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:empty-text": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:long-text": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:negative": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:fraction": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:huge": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:past-the-week-cap": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:past-safe-integer": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:infinity": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:list": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:object": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:profile-without-name": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:plan-with-text": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:totals-partial": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:latches-partial": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:schemaVersion:rng-fraction": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "spine:season:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:season:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"season\" must be a list"
+  ],
+  "spine:seasonHistory:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seasonHistory:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seasonHistory\" must be a list"
+  ],
+  "spine:seed:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:seed:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:seed:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:seed:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" is longer than 200 characters"
+  ],
+  "spine:seed:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:seed:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:seed:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:seed:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:seed:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:seed:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:seed:list": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:seed:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:seed:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:seed:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:seed:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:seed:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:seed:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"seed\" must be a non-empty text"
+  ],
+  "spine:trophiesByTier:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"trophiesByTier\" must be the trophies ledger"
+  ],
+  "spine:trophiesByTier:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"trophiesByTier\" must be the trophies ledger"
+  ],
+  "spine:trophiesByTier:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"trophiesByTier\" must be the trophies ledger"
+  ],
+  "spine:trophiesByTier:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"trophiesByTier\" must be the trophies ledger"
+  ],
+  "spine:trophiesByTier:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"trophiesByTier\" must be the trophies ledger"
+  ],
+  "spine:trophiesByTier:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"trophiesByTier\" must be the trophies ledger"
+  ],
+  "spine:trophiesByTier:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"trophiesByTier\" must be the trophies ledger"
+  ],
+  "spine:trophiesByTier:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"trophiesByTier\" must be the trophies ledger"
+  ],
+  "spine:trophiesByTier:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"trophiesByTier\" must be the trophies ledger"
+  ],
+  "spine:trophiesByTier:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"trophiesByTier\" must be the trophies ledger"
+  ],
+  "spine:trophiesByTier:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"trophiesByTier\" must be the trophies ledger"
+  ],
+  "spine:trophiesByTier:list": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"trophiesByTier\" must be the trophies ledger"
+  ],
+  "spine:vacations:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:vacations:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"vacations\" must be a list"
+  ],
+  "spine:week:missing": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:null": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:empty-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:long-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:negative": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:huge": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:past-the-week-cap": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:past-safe-integer": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:infinity": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:list": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:profile-without-name": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:plan-with-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:totals-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:latches-partial": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "spine:week:rng-fraction": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "file:empty": [
+   "SaveFileError",
+   "not-a-save",
+   "Not a Tennis Sim save file"
+  ],
+  "file:wrong-magic": [
+   "SaveFileError",
+   "not-a-save",
+   "Not a Tennis Sim save file"
+  ],
+  "file:short-before-magic": [
+   "SaveFileError",
+   "not-a-save",
+   "Not a Tennis Sim save file"
+  ],
+  "file:cut-short": [
+   "SaveFileError",
+   "truncated",
+   "This save file is cut short – it is smaller than its own header"
+  ],
+  "file:oversized": [
+   "SaveFileError",
+   "oversized",
+   "This file is too large to be a save (16.0 MB – the limit is 16 MB)"
+  ],
+  "file:future-header": [
+   "SaveFileError",
+   "future-schema",
+   "This save is from a newer version of the game (schema v<V+1>, this build reads up to v<V+0>) – update the app, then import it"
+  ],
+  "file:far-future-header": [
+   "SaveFileError",
+   "future-schema",
+   "This save is from a newer version of the game (schema v<V+57>, this build reads up to v<V+0>) – update the app, then import it"
+  ],
+  "file:checksum-rot": [
+   "SaveFileError",
+   "corrupted",
+   "Save checksum mismatch: data is corrupted"
+  ],
+  "file:not-gzip": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its contents cannot be read"
+  ],
+  "file:gzip-of-not-json": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its contents cannot be read"
+  ],
+  "file:expansion-bomb": [
+   "SaveFileError",
+   "oversized-expanded",
+   "This save file expands far beyond any real career – refusing to unpack it"
+  ],
+  "file:bounds-too-deep": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – its data nests deeper than any save the game writes"
+  ],
+  "file:spine-results-text": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"results\" must be a list"
+  ],
+  "file:spine-week-over": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – \"week\" must be a whole number between 0 and 52000"
+  ],
+  "file:header-body-disagree": [
+   "SaveFileError",
+   "corrupted",
+   "This save file is damaged – its header and its data disagree about the save version"
+  ],
+  "file:not-an-object": [
+   "SaveFileError",
+   "invalid-shape",
+   "This save file is malformed – it does not contain a career"
+  ],
+  "file:ladder-throws": [
+   "SaveFileError",
+   "corrupted",
+   "This save file could not be upgraded – "
+  ],
+  "db:newer-build": [
+   "SaveFileError",
+   "future-schema",
+   "Save schema <V+3> is newer than supported <V+0>"
+  ],
+  "db:checksum-rot": [
+   "SaveFileError",
+   "corrupted",
+   "Save checksum mismatch: data is corrupted"
+  ],
+  "db:not-gzip": [
+   "SaveFileError",
+   "corrupted",
+   "<raw>"
+  ],
+  "db:ladder-throws": [
+   "SaveFileError",
+   "corrupted",
+   "<raw>"
+  ]
+ }
+}

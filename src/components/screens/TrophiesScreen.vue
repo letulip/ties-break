@@ -85,6 +85,7 @@ import Card from '../ui/Card.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
 import { useStartYear } from '../../composables/startYear'
+import { t } from '../../i18n'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
 
@@ -104,7 +105,9 @@ function yearOf(week: number): number {
 /** The owner's format: `3x'31`. Two-digit year, because it sits three-to-a-line under a 128px plate
  *  and a four-digit one costs a whole chip's width. */
 function yearChip(year: number, count: number): string {
-  return `${count}x'${String(((year % 100) + 100) % 100).padStart(2, '0')}`
+  // L2-7 (08.10, RU-07 §13): the chip is ONE message with the count and the two-digit year as its holes – the Russian form puts the multiplication sign and the
+  // typographic apostrophe in the VALUE, and the English stays `3x'31` character for character.
+  return t("{0}x'{1}", [count, String(((year % 100) + 100) % 100).padStart(2, '0')])
 }
 
 /** Weeks -> the owner's chips, NEWEST YEAR FIRST.
@@ -166,7 +169,7 @@ const shelves = computed<Shelf[]>(() => {
           key: `${tier}-gold`,
           tier,
           metal: 'gold' as const,
-          label: 'Champion',
+          label: t('Champion'),
           art: trophyArtUrl(tier, 'gold'),
           count: titles.length,
           chips: chipsOf(titles),
@@ -179,7 +182,7 @@ const shelves = computed<Shelf[]>(() => {
           key: `${tier}-silver`,
           tier,
           metal: 'silver' as const,
-          label: 'Runner-up',
+          label: t('Runner-up'),
           art: trophyArtUrl(tier, 'silver'),
           count: finals.length,
           chips: chipsOf(finals),
@@ -208,10 +211,12 @@ const totals = computed(() => {
  *  that reads as a typo. Same fact, said the way each place can say it. */
 const summary = computed(() => {
   const { titles, finals } = totals.value
-  if (titles === 0 && finals === 0) return 'Empty for now – her first final puts something in it.'
+  if (titles === 0 && finals === 0) return t('Empty for now – her first final puts something in it.')
+  // L2-7 (RU-07 §12): a counted phrase is a WHOLE message per form, so the Russian plural lives in the value (`1 title` / `{0} titles`, `1 lost final` / `{0} lost finals`);
+  // the ` · ` between the parts is the doc's own design and stays in code.
   const parts: string[] = []
-  if (titles > 0) parts.push(`${titles} ${titles === 1 ? 'title' : 'titles'}`)
-  if (finals > 0) parts.push(`${finals} lost ${finals === 1 ? 'final' : 'finals'}`)
+  if (titles > 0) parts.push(titles === 1 ? t('1 title') : t('{0} titles', [titles]))
+  if (finals > 0) parts.push(finals === 1 ? t('1 lost final') : t('{0} lost finals', [finals]))
   return parts.join(' · ')
 })
 
@@ -256,9 +261,13 @@ function hiddenCount(cell: Cell): number {
  *  contract - one name, standing in for content a reader should not be walked through. The foldable
  *  ones stay buttons and keep taking their name from the same sentence. */
 function cellLabel(cell: Cell, shelf: Shelf): string {
-  if (!cell.won) return `${shelf.full}, ${cell.label}: not won yet`
+  // L2-7: three whole messages (locked / once / many). ⚠ The `{years}` hole is still the compact chips – RU-07 §14 wants a SPOKEN year list built from the same
+  // grouped `{ year, count }[]`, and the English name has never said one; speaking years would change the English accessible name (invariant 4), so it waits for his go.
+  if (!cell.won) return t('{0}, {1}: not won yet', [shelf.full, cell.label])
   const years = cell.chips.join(', ')
-  return `${shelf.full}, ${cell.label}: ${cell.count} time${cell.count === 1 ? '' : 's'} – ${years}`
+  return cell.count === 1
+    ? t('{0}, {1}: 1 time – {2}', [shelf.full, cell.label, years])
+    : t('{0}, {1}: {2} times – {3}', [shelf.full, cell.label, cell.count, years])
 }
 </script>
 
@@ -266,7 +275,7 @@ function cellLabel(cell: Cell, shelf: Shelf): string {
   <ScreenShell class="trophies">
     <template #header>
       <div class="trophy-topbar">
-        <h1 class="trophy-title">Trophy cabinet</h1>
+        <h1 class="trophy-title">{{ t('Trophy cabinet') }}</h1>
         <p class="trophy-sub">{{ summary }}</p>
       </div>
     </template>
@@ -302,14 +311,14 @@ function cellLabel(cell: Cell, shelf: Shelf): string {
                 loading="lazy"
                 decoding="async"
               />
-              <span v-if="cell.won" class="trophy-count">x{{ cell.count }}</span>
+              <span v-if="cell.won" class="trophy-count">{{ t('x{0}', [cell.count]) }}</span>
             </span>
             <span class="trophy-metal">{{ cell.label }}</span>
             <span v-if="cell.won" class="trophy-years">
               <span v-for="chip in shownChips(cell)" :key="chip" class="trophy-year">{{ chip }}</span>
               <span v-if="hiddenCount(cell) > 0" class="trophy-year trophy-more">+{{ hiddenCount(cell) }}</span>
             </span>
-            <span v-else class="trophy-years trophy-empty">Not yet</span>
+            <span v-else class="trophy-years trophy-empty">{{ t('Not yet') }}</span>
           </component>
         </div>
       </Card>

@@ -43,11 +43,15 @@ import HomeScreen from '../../src/components/screens/HomeScreen.vue'
 import CalendarScreen from '../../src/components/screens/CalendarScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import { useWeekAction } from '../../src/composables/weekAction'
-import { SOFT_LEAVE_LINE, resetSoftLeaveGuard, useSoftLeaveGuard } from '../../src/composables/softLeave'
+import { softLeaveLine, resetSoftLeaveGuard, useSoftLeaveGuard } from '../../src/composables/softLeave'
 import { setDayCrossOff } from '../../src/composables/dayCross'
 import { buildSoftBeatInvite, createWorld, raiseLifeBeat, toSnapshot } from '../../src/engine/world'
 import { bondBandOf } from '../../src/engine/spirit'
 import { DEFAULT_PROFILE, type LifeBeatPrompt, type Snapshot } from '../../src/shared/protocol'
+
+// L2-1 (08.10): the one declaration became a function (it is looked up when drawn, so it follows the locale). The suite runs in English,
+// so the value it compares the rendered note with is the same string it always was.
+const SOFT_LEAVE_LINE = softLeaveLine()
 
 // ⚠ THIS RUNNER HAS NO localStorage AND THE SHELL'S WATERMARKS ARE localStorage – the same shim
 // r2-13-span-report and round19-wrapup install; supply the browser's object, do not weaken the app.

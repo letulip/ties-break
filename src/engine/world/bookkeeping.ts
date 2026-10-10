@@ -25,6 +25,7 @@ import { captureBreakEven } from './milestones'
 import { recordGearRestWeek } from './kit'
 import { recomputeKidRank } from './ladder'
 import { prunePlannerBookings, pruneInternationalEntries } from './planner'
+import { cp } from '../../shared/i18n'
 
 // --- rolling calendar --------------------------------------------------------
 // Extend the season in whole deterministic year-blocks until at least
@@ -43,7 +44,9 @@ export function ensureSeason(world: WorldState): void {
     coveredChunk++
     const start = coveredChunk * SEASON_CHUNK
     world.season.push(...buildSeason(`${world.seed}:s${coveredChunk}`, start, SEASON_CHUNK, world.profile.background))
-    if (hadSeason) addEvent(world, { week: world.week, type: 'info', text: 'New events on the calendar' })
+    // ⭐ v93 (L3-3): `c` beside the sentence. ⚠ `composables/tabSeen.ts` COMPARES this row's `text` to the literal (the calendar tab's unseen dot) – `text` is still
+    // written, byte for byte, so that reader is unmoved; it is on the list in tests/i18n-l3-0-event-readers.test.ts for the wave that stops writing `text`.
+    if (hadSeason) addEvent(world, { week: world.week, type: 'info', text: 'New events on the calendar', c: cp`New events on the calendar` })
   }
   world.season = world.season.filter((e) => e.week >= world.week).sort((a, b) => a.week - b.week)
   const future = new Set(world.season.filter((e) => e.week > world.week).map((e) => e.id))

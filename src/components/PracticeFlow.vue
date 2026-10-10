@@ -10,6 +10,7 @@
 // under the stored seed reproduces that exact match – winner, sets, every point. Watching cannot
 // change the result and draws no RNG the engine hasn't already drawn.
 import { computed, ref } from 'vue'
+import { t } from '../i18n'
 import MatchViewer from './MatchViewer.vue'
 import MatchScene from './MatchScene.vue'
 import BoxScoreTable from './ui/BoxScoreTable.vue'
@@ -131,7 +132,7 @@ function close(): void {
   <!-- `screen` is the phase (owner, 31.07): the pre-match card, the match and the box score share one
        scroller that is never unmounted between them, so the box score used to open at whatever
        scroll position the match had been left at. -->
-  <TakeoverShell title="Practice match" :screen="phase">
+  <TakeoverShell :title="t('Practice match')" :screen="phase">
     <template #sub>
       <SurfaceMark :surface="match.surface" size="sm" />
       <span class="hint tf-week-dates">{{ weekLabel(week, startYear) }} · {{ weekDates }}</span>
@@ -146,12 +147,12 @@ function close(): void {
            sitting next to a "To result →" that did the useful thing. So the slot now carries the
            useful thing, and on the box score itself it carries nothing at all: "Done" below is
            already the way out, and two exits on one screen is what he was asking about. -->
-      <button v-if="phase !== 'post'" class="link" @click="toResult">To result</button>
+      <button v-if="phase !== 'post'" class="link" @click="toResult">{{ t('To result') }}</button>
     </template>
 
     <!-- The VS card: the friendly is about to be played, exactly like a tournament round – which
          is why it is the same F scene, with the club's own label on it. -->
-    <MatchScene v-if="phase === 'pre'" class="pf-scene" :stage="kidStage" emotion="serious" label="Friendly at the club">
+    <MatchScene v-if="phase === 'pre'" class="pf-scene" :stage="kidStage" emotion="serious" :label="t('Friendly at the club')">
       <!-- ⭐⭐⭐ ROUND 42 #36 – THE PLATE'S VOCABULARY IS SHARED NOW (`.scene-*`, src/style.css) and
            this was one of the two copies of it. It differed from the tournament's by exactly one
            declaration – the rank line here carried no `font-variant-numeric: tabular-nums` – which
@@ -161,16 +162,16 @@ function close(): void {
       <div class="scene-grid">
         <div class="scene-side">
           <div class="scene-name">{{ kidShort }}</div>
-          <div v-if="kidRank" class="scene-rank">#{{ kidRank }}</div>
+          <div v-if="kidRank" class="scene-rank">{{ t('#{rank}', { rank: kidRank }) }}</div>
         </div>
-        <div class="scene-vs">vs</div>
+        <div class="scene-vs">{{ t('practice|vs') }}</div>
         <div class="scene-side mirrored">
           <div class="scene-name">{{ oppShort }}</div>
-          <div class="scene-rank">sparring partner</div>
+          <div class="scene-rank">{{ t('sparring partner') }}</div>
         </div>
       </div>
       <div class="controls pf-chips">
-        <span class="pill">No ranking points</span>
+        <span class="pill">{{ t('No ranking points') }}</span>
       </div>
       <!-- ⚠ SKIP FIRST, WATCH SECOND - the owner's 30.07 ruling (quoted on the script side): swap
            the skip and watch buttons on the pre-match screen, it reads more logically that way.
@@ -180,8 +181,8 @@ function close(): void {
            the sheet's `.dialog-actions`. Order only - same handlers, same `.primary`, same
            `.sfx-watch`. -->
       <div class="tf-actions">
-        <button @click="toResult">Skip to result</button>
-        <button class="primary sfx-watch" @click="watchIt">Watch it</button>
+        <button @click="toResult">{{ t('Skip to result') }}</button>
+        <button class="primary sfx-watch" @click="watchIt">{{ t('Watch it') }}</button>
       </div>
     </MatchScene>
 
@@ -221,26 +222,26 @@ function close(): void {
       :rank-b="viewerRankB"
       :preview-event="previewEvent"
       mode="replay"
-      proceed-label="To the result"
+      :proceed-label="t('To the result')"
       @finish="toResult"
     />
 
     <!-- Box score: her result, with the honest "no ranking points" line. -->
     <section v-else class="tf-card">
       <div class="tf-result-head">
-        <span class="tf-badge" :class="kidWon ? 'win' : 'loss'">{{ kidWon ? 'Win' : 'Loss' }}</span>
+        <span class="tf-badge" :class="kidWon ? 'win' : 'loss'">{{ kidWon ? t('Win') : t('Loss') }}</span>
         <span class="tf-scoreline num">{{ kidScore }}</span>
       </div>
-      <p class="hint" style="margin: 0 0 12px">{{ kidShort }} vs {{ oppShort }} · practice – no ranking points</p>
+      <p class="hint" style="margin: 0 0 12px">{{ t('{0} vs {1} · practice – no ranking points', [kidShort, oppShort]) }}</p>
       <!-- ⚠ THE TABLE ITSELF IS `ui/BoxScoreTable.vue` NOW (F-08, 27.09) – it was written out character
            for character in TournamentFlow, one layer out from the five ROWS this screen's own note
            above already says have one author. `opp-rank` is null because a friendly belongs to
            neither table, which is what the "No ranking points" pill one row up says in words. -->
       <BoxScoreTable :kid-name="kidShort" :opp-name="oppShort" :kid-rank="kidRank" :opp-rank="null" :rows="statRows" />
-      <p class="hint">Avg rally {{ matchMeta.rally }} shots · ~{{ matchMeta.duration }}</p>
+      <p class="hint">{{ t('Avg rally {0} shots · ~{1}', [matchMeta.rally, matchMeta.duration]) }}</p>
       <div class="tf-actions">
-        <button class="sfx-watch" @click="watchIt">Watch again</button>
-        <button class="primary" @click="close">Done</button>
+        <button class="sfx-watch" @click="watchIt">{{ t('Watch again') }}</button>
+        <button class="primary" @click="close">{{ t('Done') }}</button>
       </div>
     </section>
   </TakeoverShell>

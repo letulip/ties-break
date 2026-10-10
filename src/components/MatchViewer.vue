@@ -21,6 +21,8 @@ import { buildClockTrack, clockSecondsAt, formatMatchClock, type ClockTrack } fr
 import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { initSfx, playSfx, primeSfx } from '../audio/sfx'
 import { formatShortName } from '../shared/format'
+import { eventText, localizedList, t } from '../i18n'
+import type { CopyRef } from '../shared/i18n'
 import { pointServeSpeeds, type StruckServe } from '../engine/match/serveSpeed'
 import { matchSpeedDefault, matchViewDefault, type MatchSpeed } from '../composables/matchDefaults'
 // R2-11 – THE TWO OWNERS THIS FILE NO LONGER IS. `usePlaybackClock` is the ONE clock: the rAF loop,
@@ -908,22 +910,36 @@ const visibleBeats = computed(() =>
 // greps for `\byou\b` and fails on it. A shout is the one surface where speaking TO her is the whole
 // point, and that guard is about the DIARY's voice - a note written down later - not about a sentence
 // shouted across a fence.
-const SHOUT_PHRASES = [
-  'Still here.',
-  'Take your time.',
-  'I saw that.',
-  'Next one.',
-  'Drink something.',
-  'Enjoy it.',
-] as const
-const shoutPhrase = ref<string>(SHOUT_PHRASES[0])
+//
+// ⚙ L2-8 (08.10) – RU-08 §3: THE POOL IS COMPONENT-AUTHORED COPY, SO IT IS WIRED (the engine's commentary pool is not this – it stays raw for
+// L3). It is a `localizedList` – the same array object it always was, its items read through `t()` when they are indexed – and the picker
+// holds an INDEX, not the phrase it showed: a phrase is a string in one language, and a held English string would match no option the
+// moment the locale changed. The picker's model is a computed over the index (the leaf still speaks strings, `update:shoutPhrase` is
+// unchanged), and a row in the log stores which phrase was shouted, not its words, so a flip re-labels a log that is already on screen.
+const SHOUT_PHRASES = localizedList(
+  () => t('Still here.'),
+  () => t('Take your time.'),
+  () => t('I saw that.'),
+  () => t('Next one.'),
+  () => t('Drink something.'),
+  () => t('Enjoy it.'),
+)
+const shoutIndex = ref(0)
+const shoutPhrase = computed<string>({
+  get: () => SHOUT_PHRASES[shoutIndex.value] ?? '',
+  set: (v) => {
+    const at = SHOUT_PHRASES.indexOf(v)
+    if (at >= 0) shoutIndex.value = at
+  },
+})
 
 interface ShoutRow {
   /** monotonic, so two identical phrases are two rows and the newest sorts on top */
   n: number
   pointIndex: number
   set: number
-  text: string
+  /** which of `SHOUT_PHRASES` was shouted – read through the catalog when the row is drawn (L2-8) */
+  phrase: number
 }
 const shouts = ref<ShoutRow[]>([])
 let shoutSeq = 0
@@ -941,7 +957,7 @@ function setOfPoint(index: number): number {
  *  place in a log that is ordered by point and read newest-first. */
 function shoutIt(): void {
   const at = Math.max(0, displayedPointIndex.value)
-  shouts.value.push({ n: ++shoutSeq, pointIndex: at, set: setOfPoint(at), text: shoutPhrase.value })
+  shouts.value.push({ n: ++shoutSeq, pointIndex: at, set: setOfPoint(at), phrase: shoutIndex.value })
   playSfx('click')
 }
 
@@ -969,7 +985,7 @@ const previewRows = computed<LogRow[]>(() =>
     oppRank: heroSide.value === 0 ? props.rankB : props.rankA,
     event: props.previewEvent,
     temperatureC: props.temperatureC,
-  }).map((line) => ({ key: `p-${line.key}`, kind: 'intro', rail: '', lead: null, text: line.text, score: '' })),
+  }).map((line) => ({ key: `p-${line.key}`, kind: 'intro', rail: '', lead: null, text: line.text, textC: line.c, score: '' })),
 )
 
 /** A row of the log: a commentary beat, or something the parent shouted. ONE flat shape rather than
@@ -981,7 +997,11 @@ interface LogRow {
   /** the left-rail label ("S2"), or '' for a row that belongs to no set - see `previewRows` */
   rail: string
   lead: string | null
+  /** ⭐ L3-7: the ref beside the English `lead` – the row draws `eventText`, so the bold head follows the locale */
+  leadC?: CopyRef
   text: string
+  /** ⭐ L3-7: the ref beside the English `text` (a commentary beat's, or a preview line's) */
+  textC?: CopyRef
   score: string
 }
 
@@ -1003,13 +1023,13 @@ const visibleRows = computed<LogRow[]>(() => {
   const merged: { pointIndex: number; order: number; row: LogRow }[] = visibleBeats.value.map((b) => ({
     pointIndex: b.pointIndex,
     order: 0,
-    row: { key: `b${b.pointIndex}`, kind: 'beat', rail: `S${b.set}`, lead: b.lead, text: b.text, score: b.score },
+    row: { key: `b${b.pointIndex}`, kind: 'beat', rail: t('S{0}', [b.set]), lead: b.lead, leadC: b.leadC, text: b.text, textC: b.textC, score: b.score },
   }))
   for (const s of shouts.value) {
     merged.push({
       pointIndex: s.pointIndex,
       order: s.n,
-      row: { key: `s${s.n}`, kind: 'shout', rail: `S${s.set}`, lead: null, text: s.text, score: '' },
+      row: { key: `s${s.n}`, kind: 'shout', rail: t('S{0}', [s.set]), lead: null, text: SHOUT_PHRASES[s.phrase] ?? '', score: '' },
     })
   }
   merged.sort((x, y) => y.pointIndex - x.pointIndex || y.order - x.order)
@@ -1091,7 +1111,9 @@ const retirementNotice = ref(false)
  * commentary beat (docs/specs/round16-commentary.md §2), deliberately: two surfaces saying one fact
  * must say it the same way.
  */
-const RETIREMENT_REASON = 'A long match on tired legs.'
+// L2-8 (08.10): a computed, not a constant – a constant would freeze the language the module was imported in. It is the SAME key the commentary
+// beat's retirement line asks for (`viz/commentary.ts`, raw until L3), so the two surfaces still say one fact one way.
+const retirementReason = computed(() => t('A long match on tired legs.'))
 
 function dismissRetirementNotice(): void {
   retirementNotice.value = false
@@ -1181,7 +1203,7 @@ watch(finished, (isFinished) => {
           <!-- The export's Live badge. `replay` mode drops it deliberately: docs/specs/ui-inventory
                §2 says the replay "IS the live match minus the blinking Live and minus shouting". -->
           <span v-if="props.mode === 'live' && !finished" class="mv-live"
-            ><i class="mv-live-dot" aria-hidden="true"></i>Live</span
+            ><i class="mv-live-dot" aria-hidden="true"></i>{{ t('Live') }}</span
           >
           <!-- ⚠ THE ELAPSED MATCH TIME, BETWEEN THE BADGE AND THE WEATHER (owner, R17 #24) - the
                third piece of furniture in a band that had room for exactly one more. It is a
@@ -1191,7 +1213,7 @@ watch(finished, (isFinished) => {
                function of the playback position. See `elapsedMatchSeconds`.
                It survives the end of the match on purpose: once the badge goes, the reading is how
                long the thing the player just watched actually took. -->
-          <span class="mv-clock num" :aria-label="`Elapsed match time ${elapsedClock}`">{{ elapsedClock }}</span>
+          <span class="mv-clock num" :aria-label="t('Elapsed match time {0}', [elapsedClock])">{{ elapsedClock }}</span>
           <!-- The export puts this bottom-right ON the court as a two-line chip; the owner asked for
                one line and off the surface, so it is a single row up here. Same plate the Season
                card draws, so the same fact looks like the same fact. -->
@@ -1214,13 +1236,13 @@ watch(finished, (isFinished) => {
                hidden: the class IS the end (see `.mv-speed.left` / `.mv-speed.right`), so there is
                one piece of markup and one place a future change to the reading has to be made. -->
           <span v-if="serveSpeedEnd" class="mv-speed num" :class="serveSpeedEnd"
-            >{{ liveServeSpeed?.kmh }}<i class="mv-speed-unit">km/h</i></span
+            >{{ liveServeSpeed?.kmh }}<i class="mv-speed-unit">{{ t('km/h') }}</i></span
           >
           <!-- THE POINT SCORE, ONE NUMBER PER END (owner, 04.08). Her number carries the accent,
                and the pair swaps with the players on a change of ends - see `courtScore`. Split
                into three spans rather than one string so exactly one digit can be coloured. -->
           <span v-if="courtScore" class="mv-score num">
-            <i class="mv-score-tb" v-if="courtScore.tiebreak">TB</i>
+            <i class="mv-score-tb" v-if="courtScore.tiebreak">{{ t('TB') }}</i>
             <i class="mv-score-pt" :class="{ hers: courtScore.hersAt === 'left' }">{{ courtScore.left }}</i>
             <i class="mv-score-sep">-</i>
             <i class="mv-score-pt" :class="{ hers: courtScore.hersAt === 'right' }">{{ courtScore.right }}</i>
@@ -1241,10 +1263,10 @@ watch(finished, (isFinished) => {
 
       <div class="ends-labels">
         <span :class="{ serving: liveServer === leftSide }">
-          {{ formatShortName(playerName(leftSide)) }}{{ liveServer === leftSide ? ' · serving' : '' }}
+          {{ formatShortName(playerName(leftSide)) }}{{ liveServer === leftSide ? ' ' + t('· serving') : '' }}
         </span>
         <span :class="{ serving: liveServer === rightSide }">
-          {{ formatShortName(playerName(rightSide)) }}{{ liveServer === rightSide ? ' · serving' : '' }}
+          {{ formatShortName(playerName(rightSide)) }}{{ liveServer === rightSide ? ' ' + t('· serving') : '' }}
         </span>
       </div>
 
@@ -1252,7 +1274,7 @@ watch(finished, (isFinished) => {
         <div v-for="side in SIDES" :key="side" class="mv-prow">
           <span class="mv-serve-dot" :class="{ on: liveServer === side }" aria-hidden="true"></span>
           <span class="mv-pname" :class="{ hers: side === kidSide }">{{ playerName(side) }}</span>
-          <span v-if="(side === 0 ? rankA : rankB) != null" class="mv-prank">#{{ side === 0 ? rankA : rankB }}</span>
+          <span v-if="(side === 0 ? rankA : rankB) != null" class="mv-prank">{{ t('#{rank}', { rank: side === 0 ? rankA : rankB }) }}</span>
           <span class="mv-cells">
             <span
               v-for="(cell, i) in setCells"
@@ -1284,14 +1306,14 @@ watch(finished, (isFinished) => {
 
       <div class="mv-stats">
         <div class="mv-stat">
-          <p class="mv-stat-label">Momentum</p>
+          <p class="mv-stat-label">{{ t('Momentum') }}</p>
           <svg
             class="mv-mom"
             :viewBox="`0 0 ${MOM_W} ${MOM_H}`"
             :width="MOM_W"
             :height="MOM_H"
             role="img"
-            :aria-label="`Momentum: ${momentumCaption}`"
+            :aria-label="t('Momentum: {0}', [momentumCaption])"
           >
             <template v-if="momentum">
               <polyline class="mv-mom-rival" :points="momentum.rival" />
@@ -1302,7 +1324,7 @@ watch(finished, (isFinished) => {
         </div>
 
         <div class="mv-stat">
-          <p class="mv-stat-label">1st serve %</p>
+          <p class="mv-stat-label">{{ t('1st serve %') }}</p>
           <p class="mv-stat-pair">
             <span class="num" :class="{ hers: heroSide === 0 }">{{ pct(panelStats.firstIn[0], panelStats.firstPlayed[0]) }}%</span>
             <i class="mv-stat-rule" aria-hidden="true"></i>
@@ -1317,7 +1339,7 @@ watch(finished, (isFinished) => {
         </div>
 
         <div class="mv-stat">
-          <p class="mv-stat-label">Break points</p>
+          <p class="mv-stat-label">{{ t('Break points') }}</p>
           <p class="mv-stat-pair">
             <span class="num" :class="{ hers: heroSide === 0 }">{{ panelStats.bpWon[0] }}/{{ panelStats.bpHad[0] }}</span>
             <i class="mv-stat-rule" aria-hidden="true"></i>
@@ -1366,7 +1388,7 @@ watch(finished, (isFinished) => {
            on the rail because it is part of the same story, and it is not a moment IN the match.
            How much it says is the ladder of voices - see viz/preview.ts. -->
       <Card variant="photo" class="mv-log" pad="8px 12px 10px">
-        <p v-if="!visibleRows.length" class="mv-log-empty">Warming up. The first ball is on its way.</p>
+        <p v-if="!visibleRows.length" class="mv-log-empty">{{ t('Warming up. The first ball is on its way.') }}</p>
         <ol v-else class="mv-log-list">
           <li
             v-for="(row, i) in visibleRows"
@@ -1383,8 +1405,8 @@ watch(finished, (isFinished) => {
             <span class="mv-beat-text">
               <q v-if="row.kind === 'shout'">{{ row.text }}</q>
               <template v-else>
-                <b v-if="row.lead" class="mv-beat-lead">{{ row.lead }}</b>
-                {{ row.text }}
+                <b v-if="row.lead" class="mv-beat-lead">{{ eventText({ text: row.lead ?? '', c: row.leadC }) }}</b>
+                {{ eventText({ text: row.text, c: row.textC }) }}
               </template>
             </span>
             <span v-if="row.score" class="mv-beat-score num">{{ row.score }}</span>
@@ -1431,7 +1453,7 @@ watch(finished, (isFinished) => {
       <div v-if="props.mode === 'replay' && finished && !props.proceedLabel" class="mv-actions">
         <!-- U0's PrimaryPill: `solid` IS `.primary`, so the class stays and the sound layer's
              `.sfx-watch` hook keeps working - what arrives is the one door for the affirmative. -->
-        <PrimaryPill class="sfx-watch" @click="restart">Watch again ↻</PrimaryPill>
+        <PrimaryPill class="sfx-watch" @click="restart">{{ t('Watch again ↻') }}</PrimaryPill>
       </div>
 
       <!-- ===== WHERE THE BOX SCORE WENT (owner, 12.08) ========================================
@@ -1471,10 +1493,10 @@ watch(finished, (isFinished) => {
         aria-labelledby="mv-hurt-title"
         tabindex="-1"
       >
-        <p id="mv-hurt-title" class="mv-hurt-title">{{ retiredName }} could not continue.</p>
+        <p id="mv-hurt-title" class="mv-hurt-title">{{ t('{0} could not continue.', [retiredName]) }}</p>
         <p class="dialog-message">
-          She retired hurt at <span class="num">{{ finalScoreLine }}</span
-          >. {{ RETIREMENT_REASON }}
+          {{ t('She retired hurt at') }} <span class="num">{{ finalScoreLine }}</span
+          >. {{ retirementReason }}
         </p>
         <!-- ROUND 39 #15a - the caller's own quiet line under the reason, when it has one. The
              prologue is the one caller today (see the prop): a weekend there stores no injury, so
@@ -1482,7 +1504,7 @@ watch(finished, (isFinished) => {
              paragraph does not exist for them. -->
         <p v-if="props.hurtNote" class="hint mv-hurt-note">{{ props.hurtNote }}</p>
         <div class="dialog-actions">
-          <button class="primary" @click="dismissRetirementNotice">Stay with her</button>
+          <button class="primary" @click="dismissRetirementNotice">{{ t('Stay with her') }}</button>
         </div>
       </div>
     </div>

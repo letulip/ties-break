@@ -56,10 +56,13 @@ import type {
 import { LADDER_LABEL } from '../shared/protocol'
 import { finishLabel } from '../engine/world/labels'
 import { formatCents } from '../shared/money'
+import { t } from '../i18n'
 import { WEEKS_IN_SEASON, seasonYear, weekLabel, weekRange } from '../shared/dates'
 // ⭐⭐ T4.2 · E-07 – `isOfferLive` rides this same import: the engine's own «is this letter still a
 // decision», which the foot's two controls are gated on. See the `live` computed for what it replaced.
 import { adCampaignCutShort, apparelBondCost, dealUntilWeek, isOfferLive, sponsorTierOfBrand, staffAskPer } from '../engine/offers'
+// ⭐⭐ L3-2 – the two stored English phrases a letter carries (`trade`, `requirements`) and the raise request's unit word, localized at the reader.
+import { requirementLine, staffAskPerPhrase, tradeClause } from '../composables/letterCopy'
 // ⭐⭐⭐ THE BUYER'S LETTER (the secondary market, S5): the memory window the stale notice quotes is the ENGINE's constant, imported rather than
 // retyped (a retune of `memoryWeeks` moves the sentence with it), and the two senders' words are the ones the inbox LIST prints too.
 import { ECONOMY } from '../engine/economy'
@@ -139,6 +142,15 @@ const entryWithdrew = computed(() => entryTerms.value.cancelled === true && !ent
 // real suspension through `chargeMandatoryPenalty` and reads the paper rather than the source.
 const isTour = computed(() => props.offer.kind === 'tour')
 const tourTerms = computed(() => props.offer.terms as TourLetterTerms)
+/** The penalty notice's lead (L3-2): the count's singular and plural are two sentences, and the "which event" clause is a message of its own –
+ *  a semantic variant, not an optional English substring (the editorial note's `{eventClause}`). */
+const tourPenaltyLine = computed(() => {
+  const tm = tourTerms.value
+  const where = tm.label ? t('for the {0}', [tm.label]) : t("against this season's required 500-level events")
+  return tm.points === 1
+    ? t('{0} penalty point has been recorded {1}.', [tm.points, where])
+    : t('{0} penalty points have been recorded {1}.', [tm.points, where])
+})
 
 // ⭐⭐ THE ACADEMY (round 24 #1). The owner, 20.08: «сейчас как-то незаметно появляется один
 // маленький попапчик сверху, который призывает изучить scholarship и кнопка dismiss. Я бы и рад
@@ -164,15 +176,21 @@ const academyRose = computed(() => academyTerms.value.sharePct > (academyTerms.v
  *  the true one; none of them tells the player off, which is the same ruling the tour's letters keep
  *  («мы ни за что не наказываем» – the game states prices, it does not scold). */
 const academyEndBody = computed(() => {
-  const t = academyTerms.value
-  if (t.reason === 'aged-out') {
-    return 'Our programme is a junior one and she has grown out of the age we can fund, so this is where our part of it finishes. She was ours for a good stretch of it.'
+  const tm = academyTerms.value
+  if (tm.reason === 'aged-out') {
+    return t('Our programme is a junior one and she has grown out of the age we can fund, so this is where our part of it finishes. She was ours for a good stretch of it.')
   }
-  if (t.reason === 'stopped-playing') {
-    return 'What we fund is a player who is out competing, and this year there were too few tournaments behind her for us to carry it on.'
+  if (tm.reason === 'stopped-playing') {
+    return t('What we fund is a player who is out competing, and this year there were too few tournaments behind her for us to carry it on.')
   }
-  return 'We have read her year and we are not able to go on backing her through the next one. It is a decision about our list rather than about her.'
+  return t('We have read her year and we are not able to go on backing her through the next one. It is a decision about our list rather than about her.')
 })
+/** The review letter's lead, one whole sentence per direction (L3-2): the verb is the sentence's, so a translation owns it. */
+const academyReviewLine = computed(() =>
+  academyRose.value
+    ? t('We have read her season. From this year our share of her travel goes up to {0}%, from {1}%.', [academyTerms.value.sharePct, academyTerms.value.wasPct])
+    : t('We have read her season. From this year our share of her travel comes down to {0}%, from {1}%.', [academyTerms.value.sharePct, academyTerms.value.wasPct]),
+)
 
 // ⭐⭐⭐ THE STAFF'S YEAR-END POST (round 44 #7). The owner, 18.09: «письмо от тренера по итогу года
 // мне так и не пришло, да и ни от одного специалиста не пришло.» Four seats, one sheet each, no
@@ -201,10 +219,10 @@ const staffTerms = computed(() => props.offer.terms as StaffLetterTerms)
  *  signature in silence – the `never` narrowing `InboxSheet`'s tour arm uses, for its reason. */
 const staffSignOff = computed(() => {
   const seat = staffTerms.value.seat
-  if (seat === 'coach') return '– Her coach'
-  if (seat === 'masseur') return '– Her masseur'
-  if (seat === 'psychologist') return '– Her psychologist'
-  if (seat === 'sparring') return '– Her hitting partner'
+  if (seat === 'coach') return t('– Her coach')
+  if (seat === 'masseur') return t('– Her masseur')
+  if (seat === 'psychologist') return t('– Her psychologist')
+  if (seat === 'sparring') return t('– Her hitting partner')
   const unhandled: never = seat
   return unhandled
 })
@@ -214,9 +232,33 @@ const staffMatches = computed(() => (staffTerms.value.wins ?? 0) + (staffTerms.v
 /** WHERE SHE FINISHED, NAMED WITH ITS TABLE. `LADDER_LABEL` so the letter and every rank surface use
  *  one word for one table – «Professional», never «her WTA ranking». */
 const staffRankLine = computed(() => {
-  const t = staffTerms.value
-  if (t.endRank === undefined || !t.rankTrack) return ''
-  return `${LADDER_LABEL[t.rankTrack]} #${t.endRank}`
+  const tm = staffTerms.value
+  if (tm.endRank === undefined || !tm.rankTrack) return ''
+  return `${LADDER_LABEL[tm.rankTrack]} #${tm.endRank}`
+})
+/** The coach's deepest run (L3-2): the sentence, with the titles clause as part of the same message so a translation owns its order. */
+const staffRunLine = computed(() => {
+  const tm = staffTerms.value
+  if (tm.bestFinish === undefined) return ''
+  const finish = finishLabel(tm.bestFinish)
+  if (!tm.titles) return t('Her deepest run of the year finished at {0}.', [finish])
+  return tm.titles === 1
+    ? t('Her deepest run of the year finished at {0}, and she took {1} title home.', [finish, tm.titles])
+    : t('Her deepest run of the year finished at {0}, and she took {1} titles home.', [finish, tm.titles])
+})
+/** The masseur's layoffs (L3-2): time/times x week/weeks are four whole sentences, the counted-phrase rule. */
+const staffLayoffLine = computed(() => {
+  const tm = staffTerms.value
+  if (!tm.layoffs) return ''
+  const saved = tm.weeksSaved ?? ''
+  if (tm.layoffs === 1) {
+    return tm.weeksSaved === 1
+      ? t('She came to me hurt {0} time this year, and between us we took {1} week off the time she was going to be out.', [tm.layoffs, saved])
+      : t('She came to me hurt {0} time this year, and between us we took {1} weeks off the time she was going to be out.', [tm.layoffs, saved])
+  }
+  return tm.weeksSaved === 1
+    ? t('She came to me hurt {0} times this year, and between us we took {1} week off the time she was going to be out.', [tm.layoffs, saved])
+    : t('She came to me hurt {0} times this year, and between us we took {1} weeks off the time she was going to be out.', [tm.layoffs, saved])
 })
 /** ⚠⚠ THE PAIR, AND THE SHEET PRINTS NO NUMBER FOR IT. The sign is the whole of what is said: the
  *  letter is reached only when `chemistryReading` has already decided the gauge may show this pair
@@ -227,27 +269,27 @@ const staffChemLine = computed(() => {
   const chem = staffTerms.value.chem
   if (chem === undefined) return ''
   return chem >= 0
-    ? 'Working with her has got easier as the year went on, and I say that as somebody who has been wrong about it before.'
-    : 'I will say the other part too: she and I have not found an easy way of working yet, and a year is long enough that I notice it.'
+    ? t('Working with her has got easier as the year went on, and I say that as somebody who has been wrong about it before.')
+    : t('I will say the other part too: she and I have not found an easy way of working yet, and a year is long enough that I notice it.')
 })
 /** WHAT THE YEAR WAS FOR, in the seat's own words – one sentence per focus, and the `Record` is
  *  type-forced over `PsyFocus` so a sixth focus cannot ship without its sentence. */
-const PSY_FOCUS_LINE: Record<NonNullable<StaffLetterTerms['focus']>, string> = {
-  coolhead: 'What we worked on this year was her head in the tight games – the point after a break back, the second serve at 4-5.',
-  recovery: 'What we worked on this year was the walk back from the weeks that knocked her over, so that they stayed weeks and did not become a season.',
-  listen: 'What we worked on this year was as much yours as hers – how to hear what she is telling you before she has the words for it.',
+const PSY_FOCUS_LINE: Record<NonNullable<StaffLetterTerms['focus']>, () => string> = {
+  coolhead: () => t('What we worked on this year was her head in the tight games – the point after a break back, the second serve at 4-5.'),
+  recovery: () => t('What we worked on this year was the walk back from the weeks that knocked her over, so that they stayed weeks and did not become a season.'),
+  listen: () => t('What we worked on this year was as much yours as hers – how to hear what she is telling you before she has the words for it.'),
   // ⚠ «TEMPERAMENT» IS UNSAYABLE ON A SURFACE and TWO draft lines reached for it – this one and
   // the composure sentence below.
   // `WorldState.temperament` is drawn once and NEVER shown as a label; tests/spirit.test.ts keeps a
   // source fence over every component («`temperament` reaches the facts and no surface at all») and
   // that fence caught this word in prose rather than in a label. The sentence loses nothing by
   // saying «what she was born with», and the fence is worth more than the noun.
-  herself: 'What we worked on this year was the part of her that is hers rather than her nature’s – the deliberate work underneath what she was born with.',
-  publicLife: 'What we worked on this year was being looked at – the weight of the cameras and the strangers, and how to put it down between matches.',
+  herself: () => t('What we worked on this year was the part of her that is hers rather than her nature’s – the deliberate work underneath what she was born with.'),
+  publicLife: () => t('What we worked on this year was being looked at – the weight of the cameras and the strangers, and how to put it down between matches.'),
 }
 const staffFocusLine = computed(() => {
   const focus = staffTerms.value.focus
-  return focus ? PSY_FOCUS_LINE[focus] : ''
+  return focus ? PSY_FOCUS_LINE[focus]() : ''
 })
 /** ⭐⭐ ROUND 45 #4 – THE CARRY-OVER LINE, DRAFT. Printed only when the engine says the direction was
  *  never chosen for this season (`focusCarriedFrom`, the season the carried pick was last bought
@@ -256,7 +298,7 @@ const staffFocusLine = computed(() => {
 const staffCarriedLine = computed(() => {
   const from = staffTerms.value.focusCarriedFrom
   if (from === undefined || !staffTerms.value.focus) return ''
-  return `We did not choose a new direction this year, so we kept working on the previous one – the one chosen for ${seasonYear(from, startYear.value)}.`
+  return t('We did not choose a new direction this year, so we kept working on the previous one – the one chosen for {0}.', [seasonYear(from, startYear.value)])
 })
 /** ⭐⭐⭐ ROUND 45 #3 – A RAISE REQUEST, DRAFT copy. The figures are the two the engine froze on the
  *  paper (`terms.ask`); nothing here is computed from the world. */
@@ -264,19 +306,19 @@ const staffAsk = computed(() => (isStaff.value ? (staffTerms.value.ask ?? null) 
 /** The unit the seat is paid in, WITH its article – «a session» for the masseur, «a week» for the two
  *  retainers, «an hour» for the coach (`staffAskPer`). DRAFT copy: the masseur's sentences are unchanged, the
  *  other two are R45-S10..S13 and the coach's are R45-S23..S27. */
-const staffAskPerWord = computed(() => staffAskPer(staffTerms.value.seat))
+const staffAskPerWord = computed(() => staffAskPerPhrase(staffAskPer(staffTerms.value.seat)))
 const staffAskLead = computed(() => {
   const ask = staffAsk.value
   if (!ask) return ''
-  return `I have now worked a full year with her, so I am asking for a raise: my rate would go from ${formatCents(ask.fromCents)} to ${formatCents(ask.toCents)} ${staffAskPerWord.value}.`
+  return t('I have now worked a full year with her, so I am asking for a raise: my rate would go from {0} to {1} {2}.', [formatCents(ask.fromCents), formatCents(ask.toCents), staffAskPerWord.value])
 })
 /** What the foot says once the window is shut – one sentence per way a request can end. */
 const staffAskSettled = computed(() => {
   const ask = staffAsk.value
   if (!ask) return ''
-  if (props.offer.state === 'signed') return `Accepted – the rate is ${formatCents(ask.toCents)} ${staffAskPerWord.value}.`
-  if (props.offer.state === 'refused') return `Declined – the rate stays at ${formatCents(ask.fromCents)} ${staffAskPerWord.value}.`
-  return `Lapsed – the rate stays at ${formatCents(ask.fromCents)} ${staffAskPerWord.value}.`
+  if (props.offer.state === 'signed') return t('Accepted – the rate is {0} {1}.', [formatCents(ask.toCents), staffAskPerWord.value])
+  if (props.offer.state === 'refused') return t('Declined – the rate stays at {0} {1}.', [formatCents(ask.fromCents), staffAskPerWord.value])
+  return t('Lapsed – the rate stays at {0} {1}.', [formatCents(ask.fromCents), staffAskPerWord.value])
 })
 
 // ⭐⭐ THE ADVERTISING LETTER (round 24 item 2, the-face-and-the-court.md §6 steps 1-2). The other
@@ -328,10 +370,16 @@ const callUpTerms = computed(() => props.offer.terms as CallUpLetterTerms)
 const callUpBecause = computed(() => {
   const n = callUpTerms.value.leagueRoundsWon
   if (n === null) return ''
-  if (n <= 0) return 'We watched her at the college championship'
-  if (n === 1) return 'She reached the last four of the college championship'
-  if (n === 2) return 'She played the final of the college championship'
-  return 'She won the college championship'
+  if (n <= 0) return t('We watched her at the college championship, and the selectors have read it.')
+  if (n === 1) return t('She reached the last four of the college championship, and the selectors have read it.')
+  if (n === 2) return t('She played the final of the college championship, and the selectors have read it.')
+  return t('She won the college championship, and the selectors have read it.')
+})
+/** The invitation's opening paragraph (L3-2): the optional "because" sentence, then the naming sentence, joined with the one space
+ *  the template's two text nodes used to leave between them. */
+const callUpBody = computed(() => {
+  const named = t('She is named in the squad for {0} – she is expected on court for {1}.', [callUpTerms.value.label, weekRange(callUpTerms.value.tieWeek, startYear.value)])
+  return callUpBecause.value ? `${callUpBecause.value} ${named}` : named
 })
 // ⭐⭐ ROUND 43 #11 – THE BUILD THAT FINISHED. The owner: «давай на почту присылать письмо про те
 // объекты, которые у нас строятся в магазине, в момент, когда они достроены», and «только те, которые
@@ -383,11 +431,11 @@ const buildTerms = computed(() => props.offer.terms as BuildLetterTerms)
  *  the load-bearing half and it points the other way from the example rungs. */
 const buildWaitWord = computed(() => {
   const weeks = Math.max(0, props.offer.week - buildTerms.value.orderedWeek)
-  if (weeks <= 1) return 'a week'
-  if (weeks < WEEKS_IN_SEASON) return `${weeks} weeks`
+  if (weeks <= 1) return t('a week')
+  if (weeks < WEEKS_IN_SEASON) return t('{0} weeks', [weeks])
   const years = weeks / WEEKS_IN_SEASON
-  if (!Number.isInteger(years)) return `${weeks} weeks`
-  return years === 1 ? 'a year' : `${years} years`
+  if (!Number.isInteger(years)) return t('{0} weeks', [weeks])
+  return years === 1 ? t('a year') : t('{0} years', [years])
 })
 const isAd = computed(() => props.offer.kind === 'ad')
 const adTerms = computed(() => props.offer.terms as AdOfferTerms)
@@ -401,10 +449,18 @@ const adYears = computed(() => Math.max(1, adTerms.value.termYears ?? (adTerms.v
 /** "Twelve months" / "Two years" / "Eight years", because a house writing to a family says it the
  *  way the kit letters say "three seasons" – words, not a numeral – falling back to the numeral
  *  past the terms the game issues. */
+const AD_YEARS_WORD: Record<number, () => string> = {
+  2: () => t('Two years'),
+  3: () => t('Three years'),
+  4: () => t('Four years'),
+  5: () => t('Five years'),
+  6: () => t('Six years'),
+  7: () => t('Seven years'),
+  8: () => t('Eight years'),
+}
 const adTermWord = computed(() => {
-  if (adYears.value === 1) return adTerms.value.termWeeks === 52 ? 'Twelve months' : `${adTerms.value.termWeeks} weeks`
-  const words = ['', '', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight']
-  return `${words[adYears.value] || adYears.value} years`
+  if (adYears.value === 1) return adTerms.value.termWeeks === 52 ? t('Twelve months') : t('{0} weeks', [adTerms.value.termWeeks])
+  return AD_YEARS_WORD[adYears.value]?.() ?? t('{0} years', [adYears.value])
 })
 /** ⭐ P6 – the money sentence differs by shape: a one-year letter states its one fee, a multi-year
  *  letter states the year-fee and when the rest of it arrives. Numbers off the paper, never prose
@@ -413,9 +469,9 @@ const adFeeLine = computed(() => {
   const fee = formatCents(adTerms.value.cashCents)
   // ⭐ ROUND 39 #3 – the lifetime letter's money sentence: the same anniversary arithmetic as any
   // multi-year paper, with no last year. DRAFT copy, like the whole letter.
-  if (adLifetime.value) return `${fee} every year, for as long as she lives – the first paid the day this is signed, the rest on its anniversary, with no last one. Money for her name, nothing else.`
-  if (adYears.value === 1) return `A one-time fee of ${fee}, paid the day this is signed. Money, not kit – we are not a tennis house.`
-  return `${fee} for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.`
+  if (adLifetime.value) return t('{0} every year, for as long as she lives – the first paid the day this is signed, the rest on its anniversary, with no last one. Money for her name, nothing else.', [fee])
+  if (adYears.value === 1) return t('A one-time fee of {0}, paid the day this is signed. Money, not kit – we are not a tennis house.', [fee])
+  return t('{0} for each contract year – the first paid the day this is signed, the rest on its anniversary. Money for her face, nothing else.', [fee])
 })
 /** ⭐ P6/§7 – THE EXCLUSIVITY IS THE CATEGORY'S, not the whole post's: the portfolio holds one deal
  *  per trade, so the clause the letter states is «in no other campaign OF OUR TRADE». A letter from
@@ -426,13 +482,20 @@ const adExclusivityLine = computed(() => {
   // open with, because there is no term. DRAFT copy.
   // ⭐ 10.09 – the delegated tone pass («посмотри на наш общий тон-оф-войс сам»): one word added,
   // matching the capstone arm's own «only ever one» idiom. Still DRAFT; his in-game read stands.
-  if (adLifetime.value) return 'From signing, her name is with us for life – only one of these is ever written, and it does not run out.'
-  if (!c) return `${adTermWord.value} from signing, her face is with us – and in no other campaign while that runs.`
-  if (c === 'capstone') return `${adTermWord.value} from signing, her face is with us – the house deal of her career, and there is only ever one of these.`
-  const trade: Record<string, string> = {
-    watches: 'watch', cars: 'car', drinks: 'drinks', clothing: 'clothing', airline: 'airline', fragrance: 'fragrance',
+  if (adLifetime.value) return t('From signing, her name is with us for life – only one of these is ever written, and it does not run out.')
+  if (!c) return t('{0} from signing, her face is with us – and in no other campaign while that runs.', [adTermWord.value])
+  if (c === 'capstone') return t('{0} from signing, her face is with us – the house deal of her career, and there is only ever one of these.', [adTermWord.value])
+  // ⭐ L3-2 – the trade word is a message of its own (the editorial note's `{categoryGenitive}` is a dedicated word resource): a tag marks it
+  // because "clothing" and "drinks" are also shelf and category words elsewhere, with other Russian.
+  const trade: Record<string, () => string> = {
+    watches: () => t('campaign|watch'),
+    cars: () => t('campaign|car'),
+    drinks: () => t('campaign|drinks'),
+    clothing: () => t('campaign|clothing'),
+    airline: () => t('campaign|airline'),
+    fragrance: () => t('campaign|fragrance'),
   }
-  return `${adTermWord.value} from signing, her face is with us – and in no other ${trade[c] ?? c} campaign while that runs.`
+  return t('{0} from signing, her face is with us – and in no other {1} campaign while that runs.', [adTermWord.value, trade[c]?.() ?? c])
 })
 /** ⭐ WHAT THE HOUSE MAKES, in its own words – the letter's opening clause, and since round 29 part
  *  two #19 it comes off the PAPER rather than out of the template. It was «We make watches» in the
@@ -443,7 +506,7 @@ const adExclusivityLine = computed(() => {
  *  ⚠ THE FALLBACK IS EXACT, NOT A GUESS. An ad letter written before the ladder carries no `trade`,
  *  and every one of those is a Quiet Hour letter by construction – so an old letter in an old inbox
  *  still reads word for word what it read the day it arrived. */
-const adTrade = computed(() => adTerms.value.trade ?? 'We make watches')
+const adTrade = computed(() => tradeClause(adTerms.value.trade ?? 'We make watches'))
 /** The promise count, in a house's words ("Two") – same rule as the term above – falling back to
  *  the numeral past the counts the game issues. The catalogue asks 2 / 4 / 6, which is the plan's
  *  own recorded ladder and its own annual cap, so the words run to six. */
@@ -457,8 +520,15 @@ const adShootWeekLine = computed(() => {
   const weeks = adTerms.value.shootWeeks ?? []
   const labels = weeks.map((w) => weekLabel(w, startYear.value))
   if (labels.length <= 1) return labels[0] ?? ''
-  return `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`
+  return t('{0} and {1}', [labels.slice(0, -1).join(', '), labels[labels.length - 1]])
 })
+/** The shoot bullet (L3-2): one whole sentence for a single week, one for several – the English count word ("Two") is a param, as the age word is
+ *  on the prologue's card, until the shared spelled-number formatter of the editorial doc's section 15 lands. */
+const adShootLine = computed(() =>
+  adTerms.value.shootCount === 1
+    ? t('{0} week of her year is a shoot week – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.', [adShootCountWord.value])
+    : t('{0} weeks of her year are shoot weeks – ours, each year of the term. We book the winter first – the off-season is the shoot season – and what the winter cannot hold lands in season, spread apart, named the day this is signed so the family can plan around it. A shoot is a working week: she will rest less in it, as she would on any trip.', [adShootCountWord.value]),
+)
 /** What the paper reports once it is a record. The signed arm quotes the engine's own `untilWeek`
  *  and `shootWeeks` – the facts `signOffer`/`acceptOffer` froze onto the deal – never a number this
  *  sheet worked out. */
@@ -467,27 +537,30 @@ const adSettled = computed(() => {
   switch (o.state) {
     case 'signed': {
       // ⭐ ROUND 39 #3 – a signed lifetime paper has no untilWeek and never runs its course.
-      if (adLifetime.value) return 'Signed – the fee is banked, and it comes again every year, for life.'
+      if (adLifetime.value) return t('Signed – the fee is banked, and it comes again every year, for life.')
       const running = props.week <= (o.untilWeek ?? -1)
       const shoots = adShootWeekLine.value
       if (running) {
-        return `Signed – the fee is banked, the campaign runs to ${weekLabel(o.untilWeek ?? o.week, startYear.value)}${shoots ? `, and her shoot weeks are ${shoots}` : ''}.`
+        const runsTo = weekLabel(o.untilWeek ?? o.week, startYear.value)
+        return shoots
+          ? t('Signed – the fee is banked, the campaign runs to {0}, and her shoot weeks are {1}.', [runsTo, shoots])
+          : t('Signed – the fee is banked, the campaign runs to {0}.', [runsTo])
       }
       // ⭐⭐ ROUND 39 #17 – A CAMPAIGN THAT WAS ENDED DID NOT RUN ITS COURSE, and the record may not
       // say it did. `adCampaignCutShort` reads the shortened span off the paper's own frozen term –
       // no new field – so a clothing campaign closed by a signature with another house reports what
       // actually happened, exactly as the kit goodbye's `stepped` arm does one paper over. DRAFT.
       if (adCampaignCutShort(o)) {
-        return 'Signed. The fees paid are hers to keep, and the campaign ended when she signed with another house.'
+        return t('Signed. The fees paid are hers to keep, and the campaign ended when she signed with another house.')
       }
-      return 'Signed. The fee was banked, and the campaign has run its course.'
+      return t('Signed. The fee was banked, and the campaign has run its course.')
     }
     case 'refused':
-      return 'Turned down.'
+      return t('Turned down.')
     case 'expired':
-      return 'Expired – they needed an answer.'
+      return t('Expired – they needed an answer.')
     default:
-      return props.week > props.offer.deadlineWeek ? 'Expired – they needed an answer.' : ''
+      return props.week > props.offer.deadlineWeek ? t('Expired – they needed an answer.') : ''
   }
 })
 
@@ -497,22 +570,22 @@ const terms = computed(() => props.offer.terms as KitOfferTerms)
  *  person writing, not as a rule firing – the deal ended, and the letter says the true reason
  *  without scolding: the tour is what has terms, the game does not tell anybody off. */
 const endBody = computed(() => {
-  const t = terms.value
-  const played = t.endedEventsPlayed ?? 0
-  if (t.ended === 'events') {
-    return `We kitted her out all season and enjoyed doing it. We asked for ${t.minEventsPerSeason} tournaments a year and she played ${played}, so this is where we shake hands – our end of it is done.`
+  const tm = terms.value
+  const played = tm.endedEventsPlayed ?? 0
+  if (tm.ended === 'events') {
+    return t('We kitted her out all season and enjoyed doing it. We asked for {0} tournaments a year and she played {1}, so this is where we shake hands – our end of it is done.', [tm.minEventsPerSeason, played])
   }
-  if (t.ended === 'standing') {
-    return `We kitted her out all season and enjoyed doing it. We back a girl who is somebody at home, and she has slid out of that band while she has been away, so this is where we shake hands.`
+  if (tm.ended === 'standing') {
+    return t('We kitted her out all season and enjoyed doing it. We back a girl who is somebody at home, and she has slid out of that band while she has been away, so this is where we shake hands.')
   }
   // ⭐⭐ ROUND 29 PART TWO #12 – SHE HAS SIGNED WITH A BIGGER HOUSE, and the brand she is leaving is
   // the one who tells her so. It is its own sentence and not the `term` one because the term was
   // NOT served: this deal had a year or more still to run. No scolding and nothing owed – the same
   // register as the other three, and the same law («мы ни за что не наказываем»).
-  if (t.ended === 'stepped') {
-    return `We hear she is going somewhere bigger, and honestly we are not surprised. Our contract stops with this season – no notice to give and nothing to settle. It was a pleasure putting her in our kit.`
+  if (tm.ended === 'stepped') {
+    return t('We hear she is going somewhere bigger, and honestly we are not surprised. Our contract stops with this season – no notice to give and nothing to settle. It was a pleasure putting her in our kit.')
   }
-  return `That is our term served, and she held up every part of it – ${played} tournaments in our kit this season. We are stopping here for now, with thanks.`
+  return t('That is our term served, and she held up every part of it – {0} tournaments in our kit this season. We are stopping here for now, with thanks.', [played])
 })
 /** THE LETTERHEAD, BY TIER. `public/images/sponsors/<tier>.webp` - never a filename written out at a
  *  call site, which is why the national and global rungs needed no change when the ladder grew.
@@ -573,16 +646,22 @@ const bondBrand = computed(() => (bondCost.value?.campaign.terms as AdOfferTerms
  *  than written three times: a rung whose coverage changed and whose letter did not would be the
  *  exact trap spec §3 forbids. */
 const LINE_WORDS: Record<string, string> = {
-  strings: 'strings',
-  frame: 'racquets',
-  shoes: 'shoes',
+  get strings() {
+    return t('strings')
+  },
+  get frame() {
+    return t('racquets')
+  },
+  get shoes() {
+    return t('shoes')
+  },
 }
 const coveredWords = computed(() => terms.value.covers.map((l) => LINE_WORDS[l] ?? l))
 const coveredList = computed(() => {
   const words = coveredWords.value
-  if (words.length === 0) return 'nothing'
+  if (words.length === 0) return t('nothing')
   if (words.length === 1) return words[0]
-  return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
+  return t('{0} and {1}', [words.slice(0, -1).join(', '), words[words.length - 1]])
 })
 /** ...AND WHAT THEY DO NOT, which is the half a player can act on. A letter that lists what is
  *  covered and stays quiet about the rest reads as "everything" to anyone who is not counting, and
@@ -593,8 +672,19 @@ const uncoveredList = computed(() => {
     .map((l) => LINE_WORDS[l])
   if (missing.length === 0) return ''
   if (missing.length === 1) return missing[0]
-  return `${missing.slice(0, -1).join(', ')} and ${missing[missing.length - 1]}`
+  return t('{0} and {1}', [missing.slice(0, -1).join(', '), missing[missing.length - 1]])
 })
+/** The coverage bullet (L3-2): the sentence, and the "stays hers" clause as its own message glued after it with the one space the template left. */
+const kitCoverLine = computed(() => {
+  const main = t('Her {0} – up to {1} of kit over the season, on us.', [coveredList.value, formatCents(terms.value.kitAllowanceCents)])
+  return uncoveredList.value ? `${main} ${t('Her {0} stay hers.', [uncoveredList.value])}` : main
+})
+/** The freshness bullet (L3-2): "them" for one line, "it all" for several – two whole sentences. */
+const kitFreshLine = computed(() =>
+  coveredWords.value.length === 1
+    ? t('We keep them fresh. She will not play a match on dead {0}.', [coveredWords.value[0] ?? ''])
+    : t('We keep it all fresh. She will not play a match on dead {0}.', [coveredWords.value[0] ?? '']),
+)
 /** ⭐⭐ ROUND-21 #2, 17.08 – AND THIS ONE NUMBER NOW BUYS TWO SEATS. The same share comes off the
  *  COACH's fare at the tournaments that pay prize money (`coachTravelFareFor`), so the letter says it
  *  as ONE promise in one sentence rather than printing the same percentage twice. Every field of
@@ -608,10 +698,20 @@ const travelPct = computed(() => Math.round((terms.value.travelShare ?? 0) * 100
 /** A brand writing to a family says "three seasons", not "3 seasons" - the letter is handwritten and
  *  a numeral in the middle of a sentence reads as a form. Falls back to the numeral past the terms
  *  this game can actually issue rather than carrying a dictionary. */
-const SEASON_WORDS = ['', 'One season', 'Two seasons', 'Three seasons', 'Four seasons']
+const SEASON_WORDS: (() => string)[] = [() => '', () => t('One season'), () => t('Two seasons'), () => t('Three seasons'), () => t('Four seasons')]
 const seasonWord = computed(() => {
   const n = terms.value.seasons ?? 1
-  return SEASON_WORDS[n] ?? `${n} seasons`
+  return SEASON_WORDS[n]?.() ?? t('{0} seasons', [n])
+})
+/** The term bullet (L3-2): the length and the week it runs to, then the optional domestic-standing sentence, then the closing – three messages
+ *  joined with the single space between sentences. */
+const kitRunLine = computed(() => {
+  const parts = [t('{0}, starting with the one ahead – she is in our kit to {1}.', [seasonWord.value, weekLabel(runsToWeek.value, startYear.value)])]
+  if (terms.value.keepDomesticRank) {
+    parts.push(t('We back a girl who is somebody at home, so she stays inside the national top {0} while we are with her.', [terms.value.keepDomesticRank]))
+  }
+  parts.push(t('Hold up your end and we will write again after; fall short and we shake hands at the end of that season and part friends. Either way the kit is hers and there is nothing to pay back.'))
+  return parts.join(' ')
 })
 
 /** ⚠ HOW LONG IT ACTUALLY RUNS, IN WEEKS AND NOT ONLY IN SEASONS (09.08, the owner: «Непонятно на
@@ -634,7 +734,7 @@ const runsToWeek = computed(() => props.offer.untilWeek ?? dealUntilWeek(props.o
 const signedRun = computed(() => {
   const o = props.offer
   if (o.state !== 'signed' || o.fromWeek === undefined || o.untilWeek === undefined) return ''
-  return `In their kit ${weekLabel(o.fromWeek, startYear.value)} – ${weekLabel(o.untilWeek, startYear.value)} · ${seasonWord.value.toLowerCase()}`
+  return t('In their kit {0} – {1} · {2}', [weekLabel(o.fromWeek, startYear.value), weekLabel(o.untilWeek, startYear.value), seasonWord.value.toLowerCase()])
 })
 
 /** IS THIS PAPER STILL A DECISION – the ENGINE's own question, asked (T4.2 · E-07, 27.09).
@@ -662,24 +762,24 @@ const settled = computed(() => {
   const o = props.offer
   switch (o.state) {
     case 'signed': {
-      const t = o.terms as KitOfferTerms
+      const tm = o.terms as KitOfferTerms
       // ⚠ A MULTI-SEASON DEAL IS REVIEWED EVERY YEAR AND ENDS ONCE, so "has it been reviewed" and
       // "is it over" stopped being the same question when the ladder shipped. `untilWeek` is the
       // only one of the two that says whether she is still in their kit this week.
       const running = props.week <= (o.untilWeek ?? -1)
-      if (o.eventsPlayed === undefined) return running ? 'Signed – they are kitting her out.' : 'Signed.'
-      const asked = t.minEventsPerSeason
-      if (running) return `Signed – they are kitting her out. ${o.eventsPlayed} of ${asked} events last season.`
+      if (o.eventsPlayed === undefined) return running ? t('Signed – they are kitting her out.') : t('Signed.')
+      const asked = tm.minEventsPerSeason
+      if (running) return t('Signed – they are kitting her out. {0} of {1} events last season.', [o.eventsPlayed, asked])
       return o.eventsPlayed >= asked
-        ? `Signed. She played ${o.eventsPlayed} of the ${asked} events they asked for, and the deal ran its course.`
-        : `Signed. She played ${o.eventsPlayed} of the ${asked} events they asked for, so it ended. Nothing was paid back.`
+        ? t('Signed. She played {0} of the {1} events they asked for, and the deal ran its course.', [o.eventsPlayed, asked])
+        : t('Signed. She played {0} of the {1} events they asked for, so it ended. Nothing was paid back.', [o.eventsPlayed, asked])
     }
     case 'refused':
-      return 'Turned down.'
+      return t('Turned down.')
     case 'expired':
-      return 'Expired – they needed an answer.'
+      return t('Expired – they needed an answer.')
     default:
-      return props.week > props.offer.deadlineWeek ? 'Expired – they needed an answer.' : ''
+      return props.week > props.offer.deadlineWeek ? t('Expired – they needed an answer.') : ''
   }
 })
 
@@ -700,20 +800,20 @@ const saleSender = computed(() => (saleIsNotice.value ? SALE_SENDER.market : SAL
 const saleOffer = computed(() => {
   const label = saleName.value
   const price = formatCents(saleTerms.value.priceCents)
-  return `A buyer offers ${price} for ${label}.`
+    return t('A buyer offers {0} for {1}.', [price, label])
 })
 const saleStands = computed(() => {
   const week = weekLabel(props.offer.deadlineWeek, startYear.value)
-  return `The offer stands until ${week}. Refusing it leaves the listing up.`
+    return t('The offer stands until {0}. Refusing it leaves the listing up.', [week])
 })
 const saleQuiet = computed(() => {
   const label = saleName.value
   const weeks = ECONOMY.shop.secondary.memoryWeeks
-  return `Interest in ${label} has gone quiet. You can wait it out, or withdraw it and try again later – but buyers remember an ad for about ${weeks} weeks, so a quick re-list starts where this one left off.`
+    return t('Interest in {0} has gone quiet. You can wait it out, or withdraw it and try again later – but buyers remember an ad for about {1} weeks, so a quick re-list starts where this one left off.', [label, weeks])
 })
 /** ⚠ ONLY THE SIGNED RECORD IS ITS OWN: `settled` above reads kit terms for a signature, and a buyer's paper has none of them. A refusal and a lapse
  *  are the same words for every proposal (`settled`'s own arms), so they are reused rather than reworded. */
-const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at that price.' : settled.value))
+const saleSettled = computed(() => (props.offer.state === 'signed' ? t('Sold at that price.') : settled.value))
 </script>
 
 <template>
@@ -731,36 +831,29 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <template v-if="!entryTerms.cancelled">
         <p class="offer-body">
-          Your entry for the {{ entryTerms.label }} is confirmed – she is in the draw for
-          {{ weekRange(entryTerms.eventWeek, startYear) }}.
+          {{ t('Your entry for the {0} is confirmed – she is in the draw for {1}.', [entryTerms.label, weekRange(entryTerms.eventWeek, startYear)]) }}
         </p>
         <ul class="offer-terms">
-          <li>She is expected on court that week.</li>
+          <li>{{ t('She is expected on court that week.') }}</li>
           <li>
-            Withdrawal is free until the end of {{ weekLabel(entryTerms.freeUntilWeek, startYear) }} – the
-            entry fee comes back and the year's entry is returned.
+            {{ t("Withdrawal is free until the end of {0} – the entry fee comes back and the year's entry is returned.", [weekLabel(entryTerms.freeUntilWeek, startYear)]) }}
           </li>
-          <li>After that the tournament's rules apply – the tour records late withdrawals and absences.</li>
+          <li>{{ t("After that the tournament's rules apply – the tour records late withdrawals and absences.") }}</li>
         </ul>
       </template>
       <template v-else-if="entryWithdrew">
         <p class="offer-body">
-          Your withdrawal from the {{ entryTerms.label }} ({{ weekRange(entryTerms.eventWeek, startYear) }})
-          is confirmed – in time, free of charge, and nothing is recorded against her. The entry
-          fee is on its way back.
+          {{ t('Your withdrawal from the {0} ({1}) is confirmed – in time, free of charge, and nothing is recorded against her. The entry fee is on its way back.', [entryTerms.label, weekRange(entryTerms.eventWeek, startYear)]) }}
         </p>
       </template>
       <template v-else-if="entryTerms.releasedBy === 'injury'">
         <p class="offer-body">
-          We have taken her name off the entry list for the {{ entryTerms.label }}
-          ({{ weekRange(entryTerms.eventWeek, startYear) }}). She is not fit to play that week, and our list
-          closes before she is due back on court – so rather than leave her in a draw she cannot
-          make, we have withdrawn her ourselves.
+          {{ t('We have taken her name off the entry list for the {0} ({1}). She is not fit to play that week, and our list closes before she is due back on court – so rather than leave her in a draw she cannot make, we have withdrawn her ourselves.', [entryTerms.label, weekRange(entryTerms.eventWeek, startYear)]) }}
         </p>
         <ul class="offer-terms">
-          <li>The entry fee is refunded in full, and the year's entry is returned.</li>
-          <li>This is our decision, not hers – nothing is recorded against her.</li>
-          <li>Her place goes to the next name on the list. We hope to see her back soon.</li>
+          <li>{{ t("The entry fee is refunded in full, and the year's entry is returned.") }}</li>
+          <li>{{ t('This is our decision, not hers – nothing is recorded against her.') }}</li>
+          <li>{{ t('Her place goes to the next name on the list. We hope to see her back soon.') }}</li>
         </ul>
       </template>
       <!-- ⭐ ROUND 24: the college freeze releases every entry that was still outstanding when it
@@ -771,15 +864,12 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
            in engine/world/entries.ts for the ruling that this letter is the receipt for. -->
       <template v-else-if="entryTerms.releasedBy === 'college'">
         <p class="offer-body">
-          We have taken her name off the entry list for the {{ entryTerms.label }}
-          ({{ weekRange(entryTerms.eventWeek, startYear) }}). She has accepted a college place, so she is off the
-          tour for the next few years – rather than hold a spot she cannot travel to, we have released
-          her ourselves.
+          {{ t('We have taken her name off the entry list for the {0} ({1}). She has accepted a college place, so she is off the tour for the next few years – rather than hold a spot she cannot travel to, we have released her ourselves.', [entryTerms.label, weekRange(entryTerms.eventWeek, startYear)]) }}
         </p>
         <ul class="offer-terms">
-          <li>The entry fee is refunded in full, and the year's entry is returned.</li>
-          <li>Nothing is recorded against her – this is not a withdrawal, and there is no charge.</li>
-          <li>Her name comes back on the list the day she wants it there. Good luck at school.</li>
+          <li>{{ t("The entry fee is refunded in full, and the year's entry is returned.") }}</li>
+          <li>{{ t('Nothing is recorded against her – this is not a withdrawal, and there is no charge.') }}</li>
+          <li>{{ t('Her name comes back on the list the day she wants it there. Good luck at school.') }}</li>
         </ul>
       </template>
       <!-- ⚠ THE FALLBACK IS DELIBERATELY GENERIC RATHER THAN THE NEAREST NICE PARAGRAPH, and that
@@ -791,15 +881,13 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
            than a licence to skip writing one. -->
       <template v-else>
         <p class="offer-body">
-          We have taken her name off the entry list for the {{ entryTerms.label }}
-          ({{ weekRange(entryTerms.eventWeek, startYear) }}). This is our decision, not hers, and the entry fee
-          is refunded in full.
+          {{ t('We have taken her name off the entry list for the {0} ({1}). This is our decision, not hers, and the entry fee is refunded in full.', [entryTerms.label, weekRange(entryTerms.eventWeek, startYear)]) }}
         </p>
       </template>
-      <p class="offer-sign-off">– Tournament desk</p>
+      <p class="offer-sign-off">{{ t('– Tournament desk') }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
     </div>
   </article>
 
@@ -809,27 +897,22 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <template v-if="tourTerms.notice === 'due'">
         <p class="offer-body">
-          The {{ tourTerms.label }} ({{ weekRange(tourTerms.eventWeek ?? 0, startYear) }}) is a required event
-          at her current ranking, and entries close at the end of
-          {{ weekLabel(tourTerms.freeUntilWeek ?? 0, startYear) }}.
+          {{ t('The {0} ({1}) is a required event at her current ranking, and entries close at the end of {2}.', [tourTerms.label, weekRange(tourTerms.eventWeek ?? 0, startYear), weekLabel(tourTerms.freeUntilWeek ?? 0, startYear)]) }}
         </p>
         <ul class="offer-terms">
-          <li>She is on the required list for this one – the top 50 play the majors, the 1000s and six 500s.</li>
-          <li>Not entering costs {{ tourTerms.points }} penalty points and a zero in one counted slot.</li>
-          <li>Entering and then withdrawing after the list closes costs more; not appearing costs most.</li>
+          <li>{{ t('She is on the required list for this one – the top 50 play the majors, the 1000s and six 500s.') }}</li>
+          <li>{{ t('Not entering costs {0} penalty points and a zero in one counted slot.', [tourTerms.points]) }}</li>
+          <li>{{ t('Entering and then withdrawing after the list closes costs more; not appearing costs most.') }}</li>
         </ul>
       </template>
       <template v-else-if="tourTerms.notice === 'penalty'">
         <p class="offer-body">
-          {{ tourTerms.points }} penalty
-          {{ tourTerms.points === 1 ? 'point has' : 'points have' }} been recorded
-          <template v-if="tourTerms.label">for the {{ tourTerms.label }}</template>
-          <template v-else>against this season's required 500-level events</template>.
+          {{ tourPenaltyLine }}
         </p>
         <ul class="offer-terms">
-          <li>Her total is {{ tourTerms.runningPoints }} of {{ tourTerms.suspensionAt }} over the last 52 weeks.</li>
-          <li>Points fall out of that window on their own as the year moves.</li>
-          <li>At {{ tourTerms.suspensionAt }} the tour suspends entries for four weeks.</li>
+          <li>{{ t('Her total is {0} of {1} over the last 52 weeks.', [tourTerms.runningPoints, tourTerms.suspensionAt]) }}</li>
+          <li>{{ t('Points fall out of that window on their own as the year moves.') }}</li>
+          <li>{{ t('At {0} the tour suspends entries for four weeks.', [tourTerms.suspensionAt]) }}</li>
         </ul>
       </template>
       <!-- THE SEASON NOTICE (round-18 #8) – the quiet reminder, one a season while her ranking
@@ -837,42 +920,36 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
            drift from ECONOMY.mandatory; the requirement list is the same one the briefing prints. -->
       <template v-else-if="tourTerms.notice === 'season'">
         <p class="offer-body">
-          Her ranking is inside the top {{ tourTerms.maxRank }}, so the season ahead is a required
-          one. These are the events the tour asks her for.
+          {{ t('Her ranking is inside the top {0}, so the season ahead is a required one. These are the events the tour asks her for.', [tourTerms.maxRank]) }}
         </p>
         <ul class="offer-terms">
-          <li v-for="requirement in tourTerms.requirements ?? []" :key="requirement">{{ requirement }}</li>
+          <li v-for="requirement in tourTerms.requirements ?? []" :key="requirement">{{ requirementLine(requirement) }}</li>
           <li>
-            Not entering one costs {{ tourTerms.points }} penalty points and a zero in one of her
-            {{ tourTerms.countingSlots }} counting results.
+            {{ t('Not entering one costs {0} penalty points and a zero in one of her {1} counting results.', [tourTerms.points, tourTerms.countingSlots]) }}
           </li>
           <li>
-            {{ tourTerms.suspensionAt }} points inside {{ tourTerms.windowWeeks }} weeks suspends
-            entries for {{ tourTerms.suspensionWeeks }} weeks. Nothing is owed for a week she could
-            not play.
+            {{ t('{0} points inside {1} weeks suspends entries for {2} weeks. Nothing is owed for a week she could not play.', [tourTerms.suspensionAt, tourTerms.windowWeeks, tourTerms.suspensionWeeks]) }}
           </li>
         </ul>
       </template>
       <template v-else>
         <p class="offer-body">
-          Entries are suspended through {{ weekLabel(tourTerms.untilWeek ?? 0, startYear) }} –
-          {{ tourTerms.runningPoints }} penalty points inside 52 weeks.
+          {{ t('Entries are suspended through {0} – {1} penalty points inside 52 weeks.', [weekLabel(tourTerms.untilWeek ?? 0, startYear), tourTerms.runningPoints]) }}
         </p>
         <ul class="offer-terms">
-          <li>She may train and travel; she may not enter a tournament until that week has passed.</li>
+          <li>{{ t('She may train and travel; she may not enter a tournament until that week has passed.') }}</li>
           <!-- ⭐ ROUND-23 #2 – THE CLOSING LINE, REWRITTEN. It read "Nothing is owed and nothing is
                taken back." and the owner said it made him feel she had been struck off something.
                The owner's words and the argument are on the script side, at `isTour`. -->
           <li>
-            Her ranking, her points and her place on every entry list are exactly where she left
-            them – the weeks are the whole price, and there is no fine on top.
+            {{ t('Her ranking, her points and her place on every entry list are exactly where she left them – the weeks are the whole price, and there is no fine on top.') }}
           </li>
         </ul>
       </template>
-      <p class="offer-sign-off">– Tour office</p>
+      <p class="offer-sign-off">{{ t('– Tour office') }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
     </div>
   </article>
 
@@ -884,46 +961,42 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <template v-if="academyTerms.notice === 'arrived'">
         <p class="offer-body">
-          We have been watching her play, and we would like to take her on. From here we pay
-          {{ academyTerms.sharePct }}% of what it costs to get her to tournaments – the fares and the
-          nights away, on every trip she makes.
+          {{ t('We have been watching her play, and we would like to take her on. From here we pay {0}% of what it costs to get her to tournaments – the fares and the nights away, on every trip she makes.', [academyTerms.sharePct]) }}
         </p>
         <ul class="offer-terms">
-          <li>{{ academyTerms.sharePct }}% comes off each travel bill as it is charged, so there is nothing to claim back.</li>
+          <li>{{ t('{0}% comes off each travel bill as it is charged, so there is nothing to claim back.', [academyTerms.sharePct]) }}</li>
           <li v-if="academyTerms.grantCents">
-            A kit grant of {{ formatCents(academyTerms.grantCents) }} comes with this – rackets, strings and shoes for the season.
+            {{ t('A kit grant of {0} comes with this – rackets, strings and shoes for the season.', [formatCents(academyTerms.grantCents)]) }}
           </li>
-          <li>We look at it again at the end of each season, and the share moves with her year.</li>
+          <li>{{ t('We look at it again at the end of each season, and the share moves with her year.') }}</li>
         </ul>
       </template>
 
       <template v-else-if="academyTerms.notice === 'reviewed'">
         <p class="offer-body">
-          We have read her season. From this year our share of her travel
-          {{ academyRose ? 'goes up' : 'comes down' }} to {{ academyTerms.sharePct }}%, from
-          {{ academyTerms.wasPct }}%.
+          {{ academyReviewLine }}
         </p>
         <ul class="offer-terms">
-          <li>We have backed her since {{ weekLabel(academyTerms.sinceWeek, startYear) }}, and this carries that on.</li>
+          <li>{{ t('We have backed her since {0}, and this carries that on.', [weekLabel(academyTerms.sinceWeek, startYear)]) }}</li>
           <li v-if="academyTerms.grantCents">
-            This year's kit grant is {{ formatCents(academyTerms.grantCents) }}.
+            {{ t("This year's kit grant is {0}.", [formatCents(academyTerms.grantCents)]) }}
           </li>
-          <li>The next look is at the end of the coming season.</li>
+          <li>{{ t('The next look is at the end of the coming season.') }}</li>
         </ul>
       </template>
 
       <template v-else>
         <p class="offer-body">{{ academyEndBody }}</p>
         <ul class="offer-terms">
-          <li>We backed her from {{ weekLabel(academyTerms.sinceWeek, startYear) }} to {{ weekLabel(offer.week, startYear) }}.</li>
-          <li>The kit she has is hers, and from here her travel is the family's again.</li>
-          <li>If her tennis brings her back to us, our list is open every off-season.</li>
+          <li>{{ t('We backed her from {0} to {1}.', [weekLabel(academyTerms.sinceWeek, startYear), weekLabel(offer.week, startYear)]) }}</li>
+          <li>{{ t("The kit she has is hers, and from here her travel is the family's again.") }}</li>
+          <li>{{ t('If her tennis brings her back to us, our list is open every off-season.') }}</li>
         </ul>
       </template>
-      <p class="offer-sign-off">– The academy</p>
+      <p class="offer-sign-off">{{ t('– The academy') }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
     </div>
   </article>
 
@@ -945,23 +1018,19 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
            about the two of them rather than about her. -->
       <template v-else-if="staffTerms.seat === 'coach'">
         <p class="offer-body">
-          That is the season done. I have been with her {{ staffTerms.weeksServed }} of its weeks, and this is
-          what I have to say about them before we start the next one.
+          {{ t('That is the season done. I have been with her {0} of its weeks, and this is what I have to say about them before we start the next one.', [staffTerms.weeksServed]) }}
         </p>
         <ul class="offer-terms">
           <li v-if="staffTerms.wins !== undefined">
-            {{ staffMatches }} matches, {{ staffTerms.wins }} of them won and {{ staffTerms.losses }} lost.
+            {{ t('{0} matches, {1} of them won and {2} lost.', [staffMatches, staffTerms.wins, staffTerms.losses]) }}
           </li>
           <li v-if="staffTerms.bestFinish !== undefined">
-            Her deepest run of the year finished at {{ finishLabel(staffTerms.bestFinish) }}<template
-              v-if="staffTerms.titles"
-            >, and she took {{ staffTerms.titles }} {{ staffTerms.titles === 1 ? 'title' : 'titles' }} home</template
-            >.
+            {{ staffRunLine }}
           </li>
           <li v-else-if="staffTerms.wins !== undefined">
-            No run this year finished deep enough to score, which is a sentence about the draws as much as about her.
+            {{ t('No run this year finished deep enough to score, which is a sentence about the draws as much as about her.') }}
           </li>
-          <li v-if="staffRankLine">She ends the year at {{ staffRankLine }}.</li>
+          <li v-if="staffRankLine">{{ t('She ends the year at {0}.', [staffRankLine]) }}</li>
           <li v-if="staffChemLine">{{ staffChemLine }}</li>
         </ul>
       </template>
@@ -971,19 +1040,16 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
            apology: a year his hands were on her and nothing tore is the year he would pick. -->
       <template v-else-if="staffTerms.seat === 'masseur'">
         <p class="offer-body">
-          A note on the year from the table. I have had her {{ staffTerms.weeksServed }} weeks of this season.
+          {{ t('A note on the year from the table. I have had her {0} weeks of this season.', [staffTerms.weeksServed]) }}
         </p>
         <ul class="offer-terms">
           <li v-if="staffTerms.layoffs">
-            She came to me hurt {{ staffTerms.layoffs }} {{ staffTerms.layoffs === 1 ? 'time' : 'times' }} this
-            year, and between us we took {{ staffTerms.weeksSaved }}
-            {{ staffTerms.weeksSaved === 1 ? 'week' : 'weeks' }} off the time she was going to be out.
+            {{ staffLayoffLine }}
           </li>
           <li v-else>
-            She did not lose a week to anything I had to work back this year. That is the year I would pick,
-            and it is not the same thing as a year with nothing in it.
+            {{ t('She did not lose a week to anything I had to work back this year. That is the year I would pick, and it is not the same thing as a year with nothing in it.') }}
           </li>
-          <li>Rest is the half of this nobody sends a bill for. She still needs it in the weeks she feels fine.</li>
+          <li>{{ t('Rest is the half of this nobody sends a bill for. She still needs it in the weeks she feels fine.') }}</li>
         </ul>
       </template>
 
@@ -992,21 +1058,18 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
            every week the nerve focus is not worked, so a gain is a figure it cannot support. -->
       <template v-else-if="staffTerms.seat === 'psychologist'">
         <p class="offer-body">
-          The year is over, so here is what I think we did with it. We have had {{ staffTerms.weeksServed }}
-          weeks of this season together.
+          {{ t('The year is over, so here is what I think we did with it. We have had {0} weeks of this season together.', [staffTerms.weeksServed]) }}
         </p>
         <ul class="offer-terms">
           <li v-if="staffCarriedLine">{{ staffCarriedLine }}</li>
           <li v-if="staffFocusLine">{{ staffFocusLine }}</li>
           <li v-else>
-            We have worked the season through without settling on one thing to carry, which happens and is
-            worth naming rather than tidying away.
+            {{ t('We have worked the season through without settling on one thing to carry, which happens and is worth naming rather than tidying away.') }}
           </li>
           <li v-if="staffTerms.composureBonus">
-            She now stands a little above where her own nature would have left her under pressure. It is
-            slow to build and it goes back down when we stop, which is the honest shape of it.
+            {{ t('She now stands a little above where her own nature would have left her under pressure. It is slow to build and it goes back down when we stop, which is the honest shape of it.') }}
           </li>
-          <li>Whatever we take on next year, it wants to be one thing. It is a year, not a list.</li>
+          <li>{{ t('Whatever we take on next year, it wants to be one thing. It is a year, not a list.') }}</li>
         </ul>
       </template>
 
@@ -1017,8 +1080,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
            what the job IS and reports no outcome, rather than borrowing a figure from a neighbour. -->
       <template v-else>
         <p class="offer-body">
-          End of the year, so I will say my piece – it is shorter than the others'. I have hit with her
-          {{ staffTerms.weeksServed }} weeks of this season.
+          {{ t("End of the year, so I will say my piece – it is shorter than the others'. I have hit with her {0} weeks of this season.", [staffTerms.weeksServed]) }}
         </p>
         <ul class="offer-terms">
           <!-- ⚠ «SOMEBODY ACROSS THE NET» IS UNSAYABLE HERE, and that is his own ruling rather than
@@ -1027,10 +1089,9 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
                described in his terminology instead – MATCH-STYLE PRACTICE, the words world/sparring.ts
                already puts in the ledger. -->
           <li>
-            The job is the weeks with no tournament in them: match-style practice, so that the quiet stretches
-            do not arrive in her hands the next time she plays for something.
+            {{ t('The job is the weeks with no tournament in them: match-style practice, so that the quiet stretches do not arrive in her hands the next time she plays for something.') }}
           </li>
-          <li>Nobody keeps a score of that, and I am not going to invent one for a letter. She knows. I know.</li>
+          <li>{{ t('Nobody keeps a score of that, and I am not going to invent one for a letter. She knows. I know.') }}</li>
         </ul>
       </template>
       <p class="offer-sign-off">{{ staffSignOff }}</p>
@@ -1040,15 +1101,15 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
            report only says when it was filed. -->
       <template v-if="staffAsk">
         <p v-if="live" class="offer-window">
-          {{ weeksLeft }} {{ weeksLeft === 1 ? 'week' : 'weeks' }} to decide. The terms will not change.
+          {{ weeksLeft === 1 ? t('1 week to decide. The terms will not change.') : t('{0} weeks to decide. The terms will not change.', [weeksLeft]) }}
         </p>
         <p v-else class="offer-window settled">{{ staffAskSettled }}</p>
         <div v-if="live" class="offer-actions">
-          <button class="offer-refuse" @click="emit('refuse', offer.id)">Decline</button>
-          <button class="offer-sign primary" @click="emit('sign', offer.id)">Accept</button>
+          <button class="offer-refuse" @click="emit('refuse', offer.id)">{{ t('Decline') }}</button>
+          <button class="offer-sign primary" @click="emit('sign', offer.id)">{{ t('Accept') }}</button>
         </div>
       </template>
-      <p v-else class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p v-else class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
     </div>
   </article>
 
@@ -1060,31 +1121,26 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
   <article v-else-if="isCallUp" class="offer-letter">
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <p class="offer-body">
-        <template v-if="callUpBecause">{{ callUpBecause }}, and the selectors have read it.</template>
-        She is named in the squad for {{ callUpTerms.label }} – she is expected on court for
-        {{ weekRange(callUpTerms.tieWeek, startYear) }}.
+        {{ callUpBody }}
       </p>
       <ul class="offer-terms">
         <!-- THE WEEK IS STATED AS A RANGE, exactly as the tournament desk's own entry letter states
              a week she is expected on court. A letter about a week that has not happened yet is only
              useful if it says WHEN, and «W15 '33» is the game's shorthand rather than a date. -->
         <li>
-          {{ callUpTerms.squadSize }} players are named and the week holds {{ callUpTerms.tiesInTheWeek }} ties,
-          so the captain picks the side for each of them – she may be named and never take the court.
+          {{ t('{0} players are named and the week holds {1} ties, so the captain picks the side for each of them – she may be named and never take the court.', [callUpTerms.squadSize, callUpTerms.tiesInTheWeek]) }}
         </li>
         <li>
-          {{ callUpTerms.nationsAtHerLevel }} nations play at this level, and where the country finishes
-          is the country's result rather than hers.
+          {{ t("{0} nations play at this level, and where the country finishes is the country's result rather than hers.", [callUpTerms.nationsAtHerLevel]) }}
         </li>
         <li>
-          There are no ranking points and no prize money here – the competition awards neither to
-          anybody in it. Playing when we call is what representing asks of her.
+          {{ t('There are no ranking points and no prize money here – the competition awards neither to anybody in it. Playing when we call is what representing asks of her.') }}
         </li>
       </ul>
-      <p class="offer-sign-off">– Her national federation</p>
+      <p class="offer-sign-off">{{ t('– Her national federation') }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
     </div>
   </article>
 
@@ -1111,25 +1167,23 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
   <article v-else-if="isBuild" class="offer-letter">
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <p class="offer-body">
-        {{ buildTerms.label }} is ready.
+        {{ t('{0} is ready.', [buildTerms.label]) }}
       </p>
       <p class="offer-body">
-        The order was placed in {{ weekLabel(buildTerms.orderedWeek, startYear) }}. After {{ buildWaitWord }},
-        it now belongs to the family.
+        {{ t('The order was placed in {0}. After {1}, it now belongs to the family.', [weekLabel(buildTerms.orderedWeek, startYear), buildWaitWord]) }}
       </p>
       <p class="offer-body">
-        Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts
-        this week and will appear in the family accounts.
+        {{ t('Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts this week and will appear in the family accounts.') }}
       </p>
       <!-- ⚠ THE SIGNATURE STAYS, AND HE MADE THAT CONDITIONAL ON THE SURFACE: «only if the interface
            requires one; otherwise omit it, because the sender is already visible». On THIS surface it
            is not. `InboxSheet` shows `senderOf` in the LIST; the moment a letter is opened the list is
            replaced by the paper alone, so the signature is the only thing that says who wrote. All
            seven letter arms in this file sign, and the build would be the only one that did not. -->
-      <p class="offer-sign-off">– Order desk</p>
+      <p class="offer-sign-off">{{ t('– Order desk') }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
     </div>
   </article>
 
@@ -1150,15 +1204,15 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <p class="offer-sign-off">– {{ saleSender }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p v-if="saleIsNotice" class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p v-if="saleIsNotice" class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
       <template v-else>
         <p v-if="live" class="offer-window">
-          {{ weeksLeft }} {{ weeksLeft === 1 ? 'week' : 'weeks' }} to decide. The terms will not change.
+          {{ weeksLeft === 1 ? t('1 week to decide. The terms will not change.') : t('{0} weeks to decide. The terms will not change.', [weeksLeft]) }}
         </p>
         <p v-else class="offer-window settled">{{ saleSettled }}</p>
         <div v-if="live" class="offer-actions">
-          <button class="offer-refuse" @click="emit('refuse', offer.id)">Refuse</button>
-          <button class="offer-sign primary" @click="emit('sign', offer.id)">Sign</button>
+          <button class="offer-refuse" @click="emit('refuse', offer.id)">{{ t('Refuse') }}</button>
+          <button class="offer-sign primary" @click="emit('sign', offer.id)">{{ t('Sign') }}</button>
         </div>
       </template>
     </div>
@@ -1179,8 +1233,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
            the old split produced, which is the sentence the ruling exists to end. ⚠ NO FIGURE MOVED
            and none is split on this paper – the fee below is the whole cheque. -->
       <p class="offer-body">
-        {{ adTrade }}, and we have been following her results. We would like her face in our
-        campaign – her photograph beside our name, and the fee below is hers.
+        {{ t('{0}, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.', [adTrade]) }}
       </p>
       <ul class="offer-terms">
         <li>
@@ -1197,34 +1250,27 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
                ⚠ ROUND 39 #3 gated this bullet on the count, byte-identical on every letter that
                asks a week: only the lifetime letter asks none, and «Zero weeks of her year are
                shoot weeks» is not a clause a house would write. -->
-          {{ adShootCountWord }} {{ adTerms.shootCount === 1 ? 'week' : 'weeks' }} of her year
-          {{ adTerms.shootCount === 1 ? 'is a shoot week' : 'are shoot weeks' }} – ours, each year
-          of the term. We book the winter first – the off-season is the shoot season – and what the
-          winter cannot hold lands in season, spread apart, named the day this is signed so the
-          family can plan around it. A shoot is a working week: she will rest less in it, as she
-          would on any trip.
+          {{ adShootLine }}
         </li>
         <li v-if="adTerms.shootCount > 0">
-          Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back –
-          whatever the season brings.
+          {{ t('Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back – whatever the season brings.') }}
         </li>
         <li v-else>
           <!-- ⭐ ROUND 39 #3 – the lifetime letter's own closing bound: it asks no weeks at all,
                and the sentence has to say so where the shoot clause would have stood. DRAFT. -->
-          Nothing is owed, ever: no shoots, no tournaments, no results – the name she made is the
-          whole of it.
+          {{ t('Nothing is owed, ever: no shoots, no tournaments, no results – the name she made is the whole of it.') }}
         </li>
       </ul>
       <p class="offer-sign-off">– {{ adTerms.brand }}</p>
     </PaperNote>
     <div class="offer-foot">
       <p v-if="live" class="offer-window">
-        {{ weeksLeft }} {{ weeksLeft === 1 ? 'week' : 'weeks' }} to decide. The terms will not change.
+        {{ weeksLeft === 1 ? t('1 week to decide. The terms will not change.') : t('{0} weeks to decide. The terms will not change.', [weeksLeft]) }}
       </p>
       <p v-else class="offer-window settled">{{ adSettled }}</p>
       <div v-if="live" class="offer-actions">
-        <button class="offer-refuse" @click="emit('refuse', offer.id)">Refuse</button>
-        <button class="offer-sign primary" @click="emit('sign', offer.id)">Sign</button>
+        <button class="offer-refuse" @click="emit('refuse', offer.id)">{{ t('Refuse') }}</button>
+        <button class="offer-sign primary" @click="emit('sign', offer.id)">{{ t('Sign') }}</button>
       </div>
     </div>
   </article>
@@ -1237,13 +1283,12 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
       <img class="offer-mark" :src="markUrl" :alt="terms.brand" />
       <p class="offer-body">{{ endBody }}</p>
       <p class="offer-body">
-        Her kit is hers – there is nothing to send back and nothing to pay. From next season her
-        {{ coveredList }} are the family's again.
+        {{ t("Her kit is hers – there is nothing to send back and nothing to pay. From next season her {0} are the family's again.", [coveredList]) }}
       </p>
       <p class="offer-sign-off">– {{ terms.brand }}</p>
     </PaperNote>
     <div class="offer-foot">
-      <p class="offer-window settled">Filed {{ weekLabel(offer.week, startYear) }}.</p>
+      <p class="offer-window settled">{{ t('Filed {0}.', [weekLabel(offer.week, startYear)]) }}</p>
     </div>
   </article>
 
@@ -1264,9 +1309,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
            and Refuse controls, the deadline and the exclusivity clause are the ordinary letter's.
            DRAFT copy. -->
       <p v-if="terms.apparelBond" class="offer-body">
-        Her face is already on our posters, and we would rather she wore our kit while it is there.
-        Our kit paper with her has run out, so this is us renewing it – on the terms her ranking
-        earns today.
+        {{ t('Her face is already on our posters, and we would rather she wore our kit while it is there. Our kit paper with her has run out, so this is us renewing it – on the terms her ranking earns today.') }}
       </p>
       <!-- ⚠ ONE LINE IS THE WHOLE DIFFERENCE, AND IT HAS TO BE THERE. A renewal (10.08) carries the
            SAME terms as the contract that is ending – `raiseKitRenewal` copies them verbatim, because
@@ -1275,36 +1318,32 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
            below is unchanged and stays true of a second year: the coverage, the freshness, the
            events she owes, the exclusivity and the term. -->
       <p v-else-if="terms.renewal" class="offer-body">
-        She has been in our kit all season and we have enjoyed every week of it. We would like to keep
-        her in it – the same deal, another year.
+        {{ t('She has been in our kit all season and we have enjoyed every week of it. We would like to keep her in it – the same deal, another year.') }}
       </p>
       <p v-else class="offer-body">
-        We have been watching your daughter play all season, and we would like to put her in our kit.
+        {{ t('We have been watching your daughter play all season, and we would like to put her in our kit.') }}
       </p>
       <!-- THE DEAL, IN THE WORDS THE BUTTON COMMITS TO. Generated from the terms themselves; the
            last line is the FAILURE MODE, and the script header above says why it has to be here. -->
       <ul class="offer-terms">
         <li>
-          Her {{ coveredList }} – up to {{ formatCents(terms.kitAllowanceCents) }} of kit over the
-          season, on us.<template v-if="uncoveredList"> Her {{ uncoveredList }} stay hers.</template>
+          {{ kitCoverLine }}
         </li>
         <li>
-          We keep {{ coveredWords.length === 1 ? 'them' : 'it all' }} fresh. She will not play a
-          match on dead {{ coveredWords[0] }}.
+          {{ kitFreshLine }}
         </li>
         <!-- ⭐ ONE PROMISE, TWO SEATS (17.08). The same share comes off the coach's fare at the rungs
              that pay prize money, so it is a clause on this line rather than a second line repeating
              the figure. The coach is named without a pronoun - the roster carries women. -->
         <li v-if="travelPct > 0">
-          And we will take {{ travelPct }}% of what a trip costs her – and the same off the coach's
-          fare, at the tournaments that pay prize money.
+          {{ t("And we will take {0}% of what a trip costs her – and the same off the coach's fare, at the tournaments that pay prize money.", [travelPct]) }}
         </li>
-        <li>In return she enters at least {{ terms.minEventsPerSeason }} tournaments a season – we are paying to be seen.</li>
+        <li>{{ t('In return she enters at least {0} tournaments a season – we are paying to be seen.', [terms.minEventsPerSeason]) }}</li>
         <!-- ⚠ EXCLUSIVITY IS A TERM AND BELONGS ON THE PAPER. It is the counterweight to the
              coverage – one brand at a time is what stops a career collecting all three rungs – and
              a player who cannot read it here would be committing to it blind. In the brand's own
              voice, plainly, the way a commercial term is really written. -->
-        <li>And while she is in our kit she is in nobody else's.</li>
+        <li>{{ t("And while she is in our kit she is in nobody else's.") }}</li>
         <!-- ⭐⭐⭐ ROUND 39 #17, WAVE G3 – AND WHAT THAT CLAUSE COSTS HER, WITHOUT A NUMBER THIS
              HOUSE COULD NOT KNOW. Wave G printed the competitor's remaining fees on this paper and
              the owner overturned it on 08.09 (his sentence is quoted in the script above – no
@@ -1318,21 +1357,13 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
              and a split that renders one sentence twice would be a lie about the paper. DRAFT
              copy. -->
         <li v-if="bondCost">
-          While you wear us, she appears in no other apparel campaign – hers with {{ bondBrand }}
-          would end on signature.
+          {{ t('While you wear us, she appears in no other apparel campaign – hers with {0} would end on signature.', [bondBrand]) }}
         </li>
         <li>
           <!-- HOW LONG IT RUNS, in seasons AND in weeks. "Three seasons" left the parent counting
                off a calendar he cannot see, and the end week was persisted on the offer all along -
                see `runsToWeek` in the script for why the letter may not compute it itself. -->
-          {{ seasonWord }}, starting with the one ahead – she is in our kit to
-          {{ weekLabel(runsToWeek, startYear) }}.
-          <template v-if="terms.keepDomesticRank">
-            We back a girl who is somebody at home, so she stays inside the national top
-            {{ terms.keepDomesticRank }} while we are with her.
-          </template>
-          Hold up your end and we will write again after; fall short and we shake hands at the end of
-          that season and part friends. Either way the kit is hers and there is nothing to pay back.
+          {{ kitRunLine }}
         </li>
       </ul>
       <p class="offer-sign-off">– {{ terms.brand }}</p>
@@ -1340,7 +1371,7 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
 
     <div class="offer-foot">
       <p v-if="live" class="offer-window">
-        {{ weeksLeft }} {{ weeksLeft === 1 ? 'week' : 'weeks' }} to decide. The terms will not change.
+        {{ weeksLeft === 1 ? t('1 week to decide. The terms will not change.') : t('{0} weeks to decide. The terms will not change.', [weeksLeft]) }}
       </p>
       <p v-else class="offer-window settled">{{ settled }}</p>
       <!-- THE CONTRACT AS AN INTERVAL, once it is a record rather than a decision. Both weeks are
@@ -1348,8 +1379,8 @@ const saleSettled = computed(() => (props.offer.state === 'signed' ? 'Sold at th
            brand is committed to and the parent stops having to count seasons. -->
       <p v-if="signedRun" class="offer-window settled">{{ signedRun }}</p>
       <div v-if="live" class="offer-actions">
-        <button class="offer-refuse" @click="emit('refuse', offer.id)">Refuse</button>
-        <button class="offer-sign primary" @click="emit('sign', offer.id)">Sign</button>
+        <button class="offer-refuse" @click="emit('refuse', offer.id)">{{ t('Refuse') }}</button>
+        <button class="offer-sign primary" @click="emit('sign', offer.id)">{{ t('Sign') }}</button>
       </div>
     </div>
   </article>

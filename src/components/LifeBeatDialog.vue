@@ -11,6 +11,18 @@
 // `tests/component/life-beat-dialog.test.ts` asserts the rendered text is EXACTLY the prompt's own
 // strings and nothing else, so a sentence added here fails rather than ships.
 //
+// ⚙ L2-9b (08.10) – THE LAW HOLDS, AND THREE OF THE ENGINE'S LABELS ARE NOW READ THROUGH THE CATALOG. `t(option.label)`,
+// `t(prompt.confirm)` and `t(replying.done)` look the ENGINE'S OWN literal up as a DYNAMIC key: the answers are `LIFE_BEAT_OPTIONS` and the
+// small-talk stances (RU-10G and the situation volumes' shared stance labels), the two buttons are `CONFIRM_LABEL` and `LISTEN_DONE_LABEL`,
+// and every one of them is a CERTAIN key in the catalog – `tests/component/i18n-l2-9-diary-birthday-life-beats.test.ts` walks every string
+// the engine can hand these three seats and fails on one that is not a key, which is what keeps a call the extractor cannot read honest.
+// English renders itself (`t(x)` is `x` when no catalog speaks), so this file still prints EXACTLY the prompt's own strings and owns no
+// sentence; a label no row covers falls back to English and is counted as a miss under another locale. ⚠ THE HEADING, HER LINE AND HER
+// REPLIES ARE NOT READ THROUGH A KEY: they are the engine's prose – the RU-10 presence frames, openers, headings and replies – assembled and
+// interpolated before the wire, so a lookup of the finished string cannot translate them.
+// ⭐ L3-5 (10.10): THEY NOW RIDE THE SNAPSHOT AS COPYREFS BESIDE THE ENGLISH – `headingC`, `saidC`, `followUps[i].saidC` – and are drawn through
+// `eventText({ text, c })`, the call the feed makes. English renders the ref to the very bytes of `text`, so this file still prints EXACTLY the prompt's own strings and owns no sentence.
+//
 // ⭐⭐⭐ v74 T15 – AND IT NOW SERVES TWO ENTRANCES ON ONE CONTRACT. `snapshot.lifeBeatPrompt` is the
 // blocking one (the week is stopped and this card is why); `snapshot.softBeat.prompt` is tier 1's,
 // opened from a Home card the player chose to tap, on a week that never stopped at all. ⚠ THE ONLY
@@ -67,6 +79,7 @@ import { useDialogFocus } from '../composables/dialogFocus'
 import { onRadioGroupKey } from '../composables/radioGroupKeys'
 import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
+import { eventText, t } from '../i18n'
 
 const game = useGameStore()
 
@@ -268,7 +281,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
       <!-- ⚠ THE ENGINE'S WORDS, VERBATIM, AND THERE ARE NO OTHERS ON THIS CARD. No kicker and no
            week label: both would be sentences of this component's own, and her voice is the pools'.
            See the script header for the whole argument. -->
-      <h2 id="life-beat-heading" class="season-summary-title">{{ prompt.heading }}</h2>
+      <h2 id="life-beat-heading" class="season-summary-title">{{ eventText({ text: prompt.heading, c: prompt.headingC }) }}</h2>
 
       <!-- ⭐⭐⭐ v87 (the weight, wave 11 - T5) - THE FUNERAL PAINTING, WIRED AT LAST.
            `fem-euro-brunnet-adult-funeral.webp` shipped with the art set on 11.09 and has been
@@ -290,7 +303,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
 
       <!-- HER LINE. Written against the four voice bibles engine-side and printed as it was
            written – this template may not touch it, shorten it or wrap it in anything. -->
-      <p id="life-beat-said" class="life-beat-said">{{ prompt.said }}</p>
+      <p id="life-beat-said" class="life-beat-said">{{ eventText({ text: prompt.said, c: prompt.saidC }) }}</p>
 
       <!-- ⭐ 10.09 – HER REPLY, only once he has chosen. The engine's words verbatim, exactly like
            the line above; rendered as further paragraphs of the same voice, because they ARE.
@@ -303,7 +316,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         :key="i"
         class="life-beat-said life-beat-continued"
       >
-        {{ line }}
+        {{ eventText({ text: line, c: replying?.saidC?.[i] }) }}
       </p>
 
       <!-- ⚠⚠ W2 (26.09) – THE STORE'S REFUSAL, ABOVE THE ANSWERS AND BELOW HER WORDS – ForkDialog's
@@ -350,7 +363,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
           @click="select(option.id)"
         >
           <span class="life-beat-mark" aria-hidden="true"></span>
-          <span class="life-beat-choice-label">{{ option.label }}</span>
+          <span class="life-beat-choice-label">{{ t(option.label) }}</span>
         </button>
       </div>
 
@@ -366,7 +379,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         :disabled="busy"
         @click="finishReply()"
       >
-        {{ replying.done }}
+        {{ t(replying.done) }}
       </button>
 
       <!-- ⭐⭐⭐ ROUND 42 #8 – THE PROCEED, the prologue's round-41 #9 shape on the owner's own ask.
@@ -386,7 +399,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         :disabled="busy"
         @click="confirm()"
       >
-        {{ prompt.confirm }}
+        {{ t(prompt.confirm) }}
       </button>
     </div>
   </div>

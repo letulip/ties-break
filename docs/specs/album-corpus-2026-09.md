@@ -395,6 +395,11 @@ note's ruled CHECKLIST (`AlbumNote.lines`, the form mockups AZ-B and AZ-C alread
 engine-side in `dynastyCandidates`. An absent fact prints NOTHING: a mother who won nothing gets no
 titles row, because «Titles: 0» would be the book telling a girl her mother lost.
 
+⚙ RULED 10.10 (decisions.md «THE MORNING BATCH» №38, LB-note): the checklist lies UNDER the note's
+sentence in the same scrap – the card used to draw the list only when the note had no prose, so
+this page's cabinet reached no screen. The two blocks are written at one hand (their joint length
+picks it) and the page that carries a checklist is drawn on layout A.
+
 ⚠ **Drafts, awaiting his pass.** Four voices, and the voice key is the DAUGHTER's birth temperament –
 this corpus's standing rule, unchanged: the girl the book is about is the girl whose syntax it is
 written in.

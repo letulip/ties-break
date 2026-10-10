@@ -19,6 +19,7 @@
 // using 0 for "unranked"), and both props are `number | null`, so neither 0 nor `undefined` is
 // reachable and `!= null` is the one rule.
 import type { MatchStatRow } from '../../composables/matchStatTable'
+import { t } from '../../i18n'
 
 defineProps<{
   /** her short name, as the host already short-formed it */
@@ -41,11 +42,11 @@ defineProps<{
         <th></th>
         <th>
           <span class="ph-name">{{ kidName }}</span>
-          <span v-if="kidRank != null" class="ph-rank">#{{ kidRank }}</span>
+          <span v-if="kidRank != null" class="ph-rank">{{ t('#{rank}', { rank: kidRank }) }}</span>
         </th>
         <th>
           <span class="ph-name">{{ oppName }}</span>
-          <span v-if="oppRank != null" class="ph-rank">#{{ oppRank }}</span>
+          <span v-if="oppRank != null" class="ph-rank">{{ t('#{rank}', { rank: oppRank }) }}</span>
         </th>
       </tr>
     </thead>

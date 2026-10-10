@@ -28,12 +28,17 @@
 // «did you mean to leave her?» before it spends the press.
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
+import { t } from '../i18n'
 
 /** ⭐ DRAFT (round 42 #20, ruled B – the ledger carries this line verbatim as the register). The one
  *  sentence the first press shows. Declared ONCE and read by both surfaces (App.vue's bar note and
  *  CalendarScreen's `.cal-go-note` slot), because a string declared twice is a string that can
  *  drift in one copy (invariant 4). Short dash, per the house copy rule. */
-export const SOFT_LEAVE_LINE = 'She wanted a minute – leave anyway?'
+export function softLeaveLine(): string {
+  // L2-1 (08.10): a FUNCTION NOW, because the sentence is looked up when it is drawn – a constant would freeze the
+  // language it was imported in. Still ONE declaration, still read by both surfaces.
+  return t('She wanted a minute – leave anyway?')
+}
 
 /** The career:week the ask was already spent on, or null. Module state, like
  *  `postAdvanceNavHeld` – one press, however many surfaces project the button. */

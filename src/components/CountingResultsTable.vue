@@ -9,6 +9,7 @@ import type { TierId } from '../engine/season/types'
 import type { CountingResult } from '../shared/protocol'
 import { weekLabel } from '../shared/dates'
 import { useStartYear } from '../composables/startYear'
+import { t } from '../i18n'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
 
@@ -43,9 +44,9 @@ function tierLabel(tier?: TierId): string {
   <table v-if="results.length" :aria-label="label">
     <thead>
       <tr>
-        <th>Week</th>
-        <th>Tier</th>
-        <th>Pts</th>
+        <th>{{ t('Week') }}</th>
+        <th>{{ t('counting|Tier') }}</th>
+        <th>{{ t('Pts') }}</th>
       </tr>
     </thead>
     <tbody>
@@ -57,11 +58,11 @@ function tierLabel(tier?: TierId): string {
     </tbody>
     <tfoot>
       <tr class="counting-total">
-        <th>Total</th>
+        <th>{{ t('Total') }}</th>
         <td></td>
         <td class="num">{{ total }}</td>
       </tr>
     </tfoot>
   </table>
-  <p v-else class="hint">{{ emptyNote ?? 'No counted results yet – enter a tournament to earn ranking points.' }}</p>
+  <p v-else class="hint">{{ emptyNote ?? t('No counted results yet – enter a tournament to earn ranking points.') }}</p>
 </template>

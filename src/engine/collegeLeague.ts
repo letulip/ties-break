@@ -37,6 +37,7 @@ import { stageLabel } from './world/labels'
 import { FIRST_NAMES, SURNAMES } from './season/names'
 import { pickInt, type Rng } from './rng'
 import type { MatchPlayer } from './match/types'
+import { cp, type CopyRef } from '../shared/i18n'
 
 /** ⚠ EVERY NUMBER HERE IS OURS AND SAYS SO. There is no research file behind a student championship
  *  the way `docs/research/national-team-competitions.md` sits behind the Nations Cup, so nothing
@@ -178,4 +179,31 @@ export function collegeLeagueLine(run: CollegeLeagueResult, label: string = COLL
   const matches = `${played} ${played === 1 ? 'match' : 'matches'}, ${run.roundsWon} ${run.roundsWon === 1 ? 'win' : 'wins'}`
   const run_ = wonTheLeague(run) ? 'she won it' : `she went out in the ${leagueExitLabel(run)}`
   return `${label}: ${run_} – ${matches}. No prize money and no ranking points – a student field awards neither.`
+}
+
+/** ⭐ L3-7 (10.10): THE REF OF `collegeLeagueLine`, beside it – the eight sentences the frozen v92 table keeps for this row (went out / won it, a match / matches, a win / wins; the label is a hole,
+ *  as it is in the table). A counted form is a whole sentence per form (the house rule). The English is `collegeLeagueLine`'s, character for character. */
+export function collegeLeagueRef(run: CollegeLeagueResult, label: string = COLLEGE_LEAGUE.label): CopyRef {
+  const played = leagueMatchesPlayed(run)
+  const one = played === 1
+  const win = run.roundsWon === 1
+  if (wonTheLeague(run)) {
+    if (one) {
+      return win
+        ? cp`${label}: she won it – ${played} match, ${run.roundsWon} win. No prize money and no ranking points – a student field awards neither.`
+        : cp`${label}: she won it – ${played} match, ${run.roundsWon} wins. No prize money and no ranking points – a student field awards neither.`
+    }
+    return win
+      ? cp`${label}: she won it – ${played} matches, ${run.roundsWon} win. No prize money and no ranking points – a student field awards neither.`
+      : cp`${label}: she won it – ${played} matches, ${run.roundsWon} wins. No prize money and no ranking points – a student field awards neither.`
+  }
+  const exit = leagueExitLabel(run)
+  if (one) {
+    return win
+      ? cp`${label}: she went out in the ${exit} – ${played} match, ${run.roundsWon} win. No prize money and no ranking points – a student field awards neither.`
+      : cp`${label}: she went out in the ${exit} – ${played} match, ${run.roundsWon} wins. No prize money and no ranking points – a student field awards neither.`
+  }
+  return win
+    ? cp`${label}: she went out in the ${exit} – ${played} matches, ${run.roundsWon} win. No prize money and no ranking points – a student field awards neither.`
+    : cp`${label}: she went out in the ${exit} – ${played} matches, ${run.roundsWon} wins. No prize money and no ranking points – a student field awards neither.`
 }

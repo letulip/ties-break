@@ -50,6 +50,9 @@ import type {
 // ⭐⭐⭐ THE BUYER'S LETTER (the secondary market, S5) – the two senders' words and the lot's label are shared with the paper (`OfferLetter`), so the
 // list row and the sheet it opens cannot name the same letter two ways.
 import { SALE_SENDER, saleLabelOf } from '../composables/saleLetter'
+// ⭐⭐ L3-2 – the raise request's unit word ("an hour", "a session", "a week") is a message of its own, as on the paper (`OfferLetter`).
+import { staffAskPerPhrase } from '../composables/letterCopy'
+import { t } from '../i18n'
 // ⭐⭐ ROUND 42 #39a – `activeKitDeal` joins the same import, for the reason the four beside it are
 // here: it is the ENGINE's own predicate for «is she under contract this week» – the very function
 // the wear ceiling reads – so the line below cannot claim a deal the engine is not honouring. Pure:
@@ -207,7 +210,7 @@ const contractNote = computed(() => {
   const deal = activeKitDeal(game.snapshot?.offers ?? [], week.value)
   if (!deal) return ''
   const terms = deal.terms as KitOfferTerms
-  return `Her kit is ${terms.brand}'s until ${weekLabel(deal.untilWeek ?? week.value, startYear.value)} – while it runs, only a bigger name can write.`
+  return t("Her kit is {0}'s until {1} – while it runs, only a bigger name can write.", [terms.brand, weekLabel(deal.untilWeek ?? week.value, startYear.value)])
 })
 
 // --- the list ------------------------------------------------------------------------------
@@ -215,14 +218,14 @@ const contractNote = computed(() => {
  *  have no brand say which desk they are - the same distinction `OfferLetter` draws when it decides
  *  whether to print a mark at all. */
 function senderOf(o: Offer): string {
-  if (o.kind === 'entry') return 'Tournament desk'
-  if (o.kind === 'tour') return 'Tour office'
+  if (o.kind === 'entry') return t('Tournament desk')
+  if (o.kind === 'tour') return t('Tour office')
   // ⭐ ROUND 24 #1 – and the academy signs like the two desks do, with what it IS rather than with a
   // name. It has no brand and it never gets one: `engine/academy.ts` models the scholarship as a
   // continuous level and a need factor, not as a named institution on a ladder, so inventing a
   // letterhead here would be inventing a fact the engine does not hold. (It is also the one place
   // this letter does not fit the kit shape – no `tier`, no mark, no `SPONSOR_TIERS` rung.)
-  if (o.kind === 'academy') return 'The academy'
+  if (o.kind === 'academy') return t('The academy')
   // ⭐⭐⭐ ROUND 44 #7 – and each salaried seat signs with what it IS, the desks' and the academy's own
   // rule. It is not a missing name: a coach HAS one (`buildCoachRoster` draws him, or her, per
   // career) but this union has ONE sender per kind and the four seats are four different people, so
@@ -230,10 +233,10 @@ function senderOf(o: Offer): string {
   // which chair they sit in. ⚠ DRAFT copy.
   if (o.kind === 'staff') {
     const seat = (o.terms as StaffLetterTerms).seat
-    if (seat === 'coach') return 'Her coach'
-    if (seat === 'masseur') return 'Her masseur'
-    if (seat === 'psychologist') return 'Her psychologist'
-    if (seat === 'sparring') return 'Her hitting partner'
+    if (seat === 'coach') return t('Her coach')
+    if (seat === 'masseur') return t('Her masseur')
+    if (seat === 'psychologist') return t('Her psychologist')
+    if (seat === 'sparring') return t('Her hitting partner')
     // A fifth seat cannot inherit a sender in silence – the tour notice's own `never` guard.
     const unhandled: never = seat
     return unhandled
@@ -241,7 +244,7 @@ function senderOf(o: Offer): string {
   // ⭐⭐⭐ ROUND 27 #6 – and her federation signs like the desks and the academy do, with what it IS.
   // It cannot sign with a country's name: `profile.country` is an ISO-2 code, and
   // `engine/nationalTeam.ts` forbids naming nations outright («NAMES ARE FICTIONAL»).
-  if (o.kind === 'call-up') return 'Her national federation'
+  if (o.kind === 'call-up') return t('Her national federation')
   // ⭐ ROUND 24 ITEM 2 – the advertising house signs with its name exactly as a kit brand does: it
   // HAS a brand, unlike the desks; what it lacks is a rung, so `rungOf` leaves it at -1 with the
   // rest of the non-kit post and the letter prints no mark (see OfferLetter's script).
@@ -256,7 +259,7 @@ function senderOf(o: Offer): string {
   // ON THIS SURFACE: the two other desks are `Tournament desk` and `Tour office`, and the article
   // belongs to the two senders that are institutions rather than desks («The academy», «Her national
   // federation»). The letter's own signature moved with it.
-  if (o.kind === 'build') return 'Order desk'
+  if (o.kind === 'build') return t('Order desk')
   // ⭐⭐⭐ S5 – the buyer's letter signs with what it IS, like the desks do: a buyer, or – for the notice that an ad has gone quiet – the market.
   // ⚠ DRAFT copy (SM18, SM19), and the words are `saleLetter.ts`'s, shared with the paper's own signature.
   if (o.kind === 'sale') return o.state === 'info' ? SALE_SENDER.market : SALE_SENDER.buyer
@@ -274,16 +277,16 @@ function saleLabelFor(o: Offer): string {
  *  on. Nothing is invented - each one restates its own letter's first sentence. */
 function subjectOf(o: Offer): string {
   if (o.kind === 'entry') {
-    const t = o.terms as EntryLetterTerms
-    if (!t.cancelled) return `Entry confirmed – ${t.label}`
+    const tm = o.terms as EntryLetterTerms
+    if (!tm.cancelled) return t('Entry confirmed – {0}', [tm.label])
     // The desk acting and the parent acting are two different letters (fix/outgrown-entry): a
     // release the parent never asked for must not be titled as his own withdrawal.
-    return (t.releasedBy ?? 'parent') !== 'parent' ? `Withdrawn by the desk – ${t.label}` : `Withdrawal confirmed – ${t.label}`
+    return (tm.releasedBy ?? 'parent') !== 'parent' ? t('Withdrawn by the desk – {0}', [tm.label]) : t('Withdrawal confirmed – {0}', [tm.label])
   }
   if (o.kind === 'tour') {
-    const t = o.terms as TourLetterTerms
-    if (t.notice === 'due') return `Required event – ${t.label ?? 'the tour'}`
-    if (t.notice === 'penalty') return 'Penalty points recorded'
+    const tm = o.terms as TourLetterTerms
+    if (tm.notice === 'due') return t('Required event – {0}', [tm.label ?? t('the tour')])
+    if (tm.notice === 'penalty') return t('Penalty points recorded')
     // ⚠⚠ ROUND 29 #16 – THE SEASON BRIEFING USED TO WEAR THE SUSPENSION LETTER'S TITLE, and it was
     // not a wording complaint. The owner: «письмо с Заголовком Entries Suspended … мне кажется этот
     // заголовок сбивает с толку, я его перевожу как "Заявки приостановлены", в то время как письмо
@@ -298,22 +301,22 @@ function subjectOf(o: Offer): string {
     // «a subject line that promised something the sheet does not say would be worse than no subject
     // line». It restates its own sheet's first sentence now, like every other arm: the paper opens
     // «Her ranking is inside the top N, so the season ahead is a required one.»
-    if (t.notice === 'season') return t.maxRank ? `Required season – the top ${t.maxRank}` : 'Required season'
-    if (t.notice === 'suspension') return 'Entries suspended'
+    if (tm.notice === 'season') return tm.maxRank ? t('Required season – the top {0}', [tm.maxRank]) : t('Required season')
+    if (tm.notice === 'suspension') return t('Entries suspended')
     // ⚠ AND A FIFTH NOTICE CANNOT INHERIT A TITLE IN SILENCE AGAIN. `notice` is a closed union, so
     // TypeScript narrows it to `never` here: adding a value to it without adding an arm above stops
     // the build rather than borrowing whichever line happened to be last.
-    const unhandled: never = t.notice
+    const unhandled: never = tm.notice
     return unhandled
   }
   // ⭐ ROUND 24 #1 – the scholarship's three subjects. Each one restates its own sheet's first
   // sentence, which is this function's rule; the share is on the line because the share is the whole
   // content of two of the three, and it is the number the owner went looking for and could not find.
   if (o.kind === 'academy') {
-    const t = o.terms as AcademyLetterTerms
-    if (t.notice === 'arrived') return `A scholarship – ${t.sharePct}% of her travel`
-    if (t.notice === 'ended') return 'The scholarship has ended'
-    return `Scholarship review – ${t.sharePct}% of her travel`
+    const tm = o.terms as AcademyLetterTerms
+    if (tm.notice === 'arrived') return t('A scholarship – {0}% of her travel', [tm.sharePct])
+    if (tm.notice === 'ended') return t('The scholarship has ended')
+    return t('Scholarship review – {0}% of her travel', [tm.sharePct])
   }
   // ⭐ ROUND 24 ITEM 2 – the endorsement's subject restates its own sheet's first sentence, this
   // function's rule, and carries the fee because the fee is the whole content: cash for her face is
@@ -322,24 +325,24 @@ function subjectOf(o: Offer): string {
   // function's rule, and carries the WEEK because the week is the whole content: a letter about a
   // fixture that has not happened yet is only useful if it says when.
   if (o.kind === 'call-up') {
-    const t = o.terms as CallUpLetterTerms
-    return `Named in the squad – ${t.label}, ${weekLabel(t.tieWeek, startYear.value)}`
+    const tm = o.terms as CallUpLetterTerms
+    return t('Named in the squad – {0}, {1}', [tm.label, weekLabel(tm.tieWeek, startYear.value)])
   }
-  if (o.kind === 'ad') return `Her face in a campaign – ${formatCents((o.terms as AdOfferTerms).cashCents)}`
+  if (o.kind === 'ad') return t('Her face in a campaign – {0}', [formatCents((o.terms as AdOfferTerms).cashCents)])
   // ⭐⭐ ROUND 43 #11 – and the build's subject restates its own sheet's first sentence, this
   // function's rule. The LABEL is the whole content: a family that has three things on order wants
   // to know which one has arrived before it opens anything, and the shelf's labels already begin
   // with their own article («The yacht», «The clubhouse»). ⚠ The label is the letter's OWN, frozen
   // the week it was written, never today's catalogue – see `BuildLetterTerms.label`.
   // ⭐ KEPT VERBATIM BY HIS 17.09 REVIEW, which rewrote the sheet under it and left this line alone.
-  if (o.kind === 'build') return `${(o.terms as BuildLetterTerms).label} is ready`
+  if (o.kind === 'build') return t('{0} is ready', [(o.terms as BuildLetterTerms).label])
   // ⭐⭐⭐ S5 – the buyer's subject restates its own sheet's first sentence, this function's rule: the lot and the printed price for a proposal, and
   // the quiet notice's opening words for the notice. ⚠ DRAFT copy (SM24, SM25).
   if (o.kind === 'sale') {
     const label = saleLabelFor(o)
-    if (o.state === 'info') return `Interest in ${label} has gone quiet`
+    if (o.state === 'info') return t('Interest in {0} has gone quiet', [label])
     const price = formatCents((o.terms as SaleOfferTerms).priceCents)
-    return `${label} – an offer of ${price}`
+    return t('{0} – an offer of {1}', [label, price])
   }
   // ⭐⭐⭐ ROUND 44 #7 – the staff's subject restates its own sheet's first sentence, this function's
   // rule, and it carries the YEAR because four seats write in ONE post and a career keeps every
@@ -354,28 +357,28 @@ function subjectOf(o: Offer): string {
   // sheet. Each line restates its OWN sheet's opening, which is what this function has always asked
   // for. ⚠ DRAFT copy.
   if (o.kind === 'staff') {
-    const t = o.terms as StaffLetterTerms
-    const year = seasonYear(t.seasonIndex, startYear.value)
+    const tm = o.terms as StaffLetterTerms
+    const year = seasonYear(tm.seasonIndex, startYear.value)
     // ⭐⭐⭐ ROUND 45 #3 – a raise request has its own subject: it arrives on a seat's anniversary, so
     // it can share a season with that seat's year-end report, and two letters wearing one title is the
     // round-29 #16 defect. DRAFT copy.
-    if (t.ask) return `A raise request – ${year}`
-    if (t.seat === 'coach') return `The season on court – ${year}`
-    if (t.seat === 'masseur') return `The season on the table – ${year}`
-    if (t.seat === 'psychologist') return `The season's work in the room – ${year}`
-    if (t.seat === 'sparring') return `The season's practice – ${year}`
-    const unhandled: never = t.seat
+    if (tm.ask) return t('A raise request – {0}', [year])
+    if (tm.seat === 'coach') return t('The season on court – {0}', [year])
+    if (tm.seat === 'masseur') return t('The season on the table – {0}', [year])
+    if (tm.seat === 'psychologist') return t("The season's work in the room – {0}", [year])
+    if (tm.seat === 'sparring') return t("The season's practice – {0}", [year])
+    const unhandled: never = tm.seat
     return unhandled
   }
-  const t = o.terms as KitOfferTerms
-  if (t.ended) return 'The kit deal has ended'
+  const tm = o.terms as KitOfferTerms
+  if (tm.ended) return t('The kit deal has ended')
   // ⭐⭐⭐ ROUND 39 #17, WAVE G2 – THE APPAREL BOND'S LETTER IS A RENEWAL NOTICE (his ruling of
   // 08.09), so the subject line has to say so: the house is already dressing her and already paying
   // for the posters. It is NOT `renewal` – that one is the same contract offered again, and this one
   // is the ladder's rung for her rank today – so it gets its own subject rather than borrowing one
   // that would misdescribe the terms inside. DRAFT copy.
-  if (t.apparelBond) return 'Renewing her kit with us'
-  return t.renewal ? 'Another year in our kit' : 'A kit deal for your daughter'
+  if (tm.apparelBond) return t('Renewing her kit with us')
+  return tm.renewal ? t('Another year in our kit') : t('A kit deal for your daughter')
 }
 
 /** The quiet second line: when it arrived, and whether it is still waiting on him. The weeks-left
@@ -384,7 +387,7 @@ function metaOf(o: Offer): string {
   const filed = weekLabel(o.week, startYear.value)
   if (!live(o)) return filed
   const weeksLeft = Math.max(0, o.deadlineWeek - week.value + 1)
-  return `${filed} · ${weeksLeft} ${weeksLeft === 1 ? 'week' : 'weeks'} to decide`
+  return weeksLeft === 1 ? t('{0} · 1 week to decide', [filed]) : t('{0} · {1} weeks to decide', [filed, weeksLeft])
 }
 
 interface Row {
@@ -433,7 +436,7 @@ function backToList(): void {
 const pendingBin = ref<Offer | null>(null)
 const binMessage = computed(() =>
   pendingBin.value
-    ? `Take this letter from ${senderOf(pendingBin.value)} off your list? Nothing that happened is undone – it stays in her history, it just stops showing here.`
+    ? t('Take this letter from {0} off your list? Nothing that happened is undone – it stays in her history, it just stops showing here.', [senderOf(pendingBin.value)])
     : '',
 )
 function askBin(o: Offer): void {
@@ -453,7 +456,17 @@ const pendingSign = ref<Offer | null>(null)
 /** WHAT SIGNING COVERS, in the same words the paper used. `frame` is a racquet to a reader and a
  *  frame to the equipment model; the letter already made that translation and the confirm must not
  *  make a different one. */
-const LINE_WORDS: Record<string, string> = { strings: 'strings', frame: 'racquets', shoes: 'shoes' }
+const LINE_WORDS: Record<string, string> = {
+  get strings() {
+    return t('strings')
+  },
+  get frame() {
+    return t('racquets')
+  },
+  get shoes() {
+    return t('shoes')
+  },
+}
 const confirmMessage = computed(() => {
   if (!pendingSign.value) return ''
   // ⭐⭐⭐ ROUND 45 #3 – A STAFF RAISE REQUEST: the two figures printed on the paper, and that the
@@ -461,7 +474,7 @@ const confirmMessage = computed(() => {
   if (pendingSign.value.kind === 'staff') {
     const ask = (pendingSign.value.terms as StaffLetterTerms).ask
     if (ask) {
-      return `Accept the raise? The rate goes from ${formatCents(ask.fromCents)} to ${formatCents(ask.toCents)} ${staffAskPer((pendingSign.value.terms as StaffLetterTerms).seat)}. This cannot be undone.`
+      return t('Accept the raise? The rate goes from {0} to {1} {2}. This cannot be undone.', [formatCents(ask.fromCents), formatCents(ask.toCents), staffAskPerPhrase(staffAskPer((pendingSign.value.terms as StaffLetterTerms).seat))])
     }
   }
   // ⭐⭐⭐ S5 – A BUYER'S SIGNATURE SELLS THE LOT, so it has its own question: every number below the ad arm is kit or campaign arithmetic. The price
@@ -469,7 +482,7 @@ const confirmMessage = computed(() => {
   if (pendingSign.value.kind === 'sale') {
     const label = saleLabelFor(pendingSign.value)
     const price = formatCents((pendingSign.value.terms as SaleOfferTerms).priceCents)
-    return `Sell ${label} for ${price}? The sale settles this week and cannot be undone.`
+    return t('Sell {0} for {1}? The sale settles this week and cannot be undone.', [label, price])
   }
   // ⭐ ROUND 24 ITEM 2 – the endorsement's own confirm, because every number below this branch is
   // kit arithmetic (`dealUntilWeek` anchors on seasons; an ad term runs from the signature). The
@@ -486,19 +499,19 @@ const confirmMessage = computed(() => {
   // DECIDES knowing the weeks, which is the whole point of naming them: he plans the season around
   // them, starting now.
   if (pendingSign.value.kind === 'ad') {
-    const t = pendingSign.value.terms as AdOfferTerms
+    const tm = pendingSign.value.terms as AdOfferTerms
     // ⭐ ROUND 39 #3 – the lifetime letter's confirm: no until-week exists to quote (the paper has
     // no end) and no shoot weeks exist to preview (it names none), so the sentence carries the two
     // facts that ARE the deal – the yearly fee and that it never stops. DRAFT copy.
-    if (t.lifetime === true) {
-      return `Sign with ${t.brand}? ${formatCents(t.cashCents)} a year, paid to her every year for life – no shoot weeks, no end date. This cannot be undone.`
+    if (tm.lifetime === true) {
+      return t('Sign with {0}? {1} a year, paid to her every year for life – no shoot weeks, no end date. This cannot be undone.', [tm.brand, formatCents(tm.cashCents)])
     }
     // ⚠ THE WEEK THE ENGINE WILL WRITE, ASKED (E-P05, 27.09). This spelled the clamp and the inclusive
     // `- 1` itself; `adUntilWeek` is the function `signOffer` uses, so the confirm cannot promise an end
     // date the signature does not produce – `dealUntilWeek`'s rule for the kit confirm, one letter
     // family over, and the same-code rule the shoot-week preview above already follows.
-    const until = weekLabel(adUntilWeek(t, week.value), startYear.value)
-    const years = Math.max(1, t.termYears ?? 1)
+    const until = weekLabel(adUntilWeek(tm, week.value), startYear.value)
+    const years = Math.max(1, tm.termYears ?? 1)
     // ⭐ P6 – the fee is PER CONTRACT YEAR on a multi-year paper, and the confirm says when the
     // rest of it arrives; a one-year letter keeps its original sentence to the word.
     // ⚠⚠ «TO HER», NOT «TO THE FAMILY», SINCE ROUND 29 PART THREE P3. The owner's ruling of 29.08 is
@@ -509,13 +522,13 @@ const confirmMessage = computed(() => {
     // point of his «контракт на полную сумму ребенку приходит на почту».
     const feeClause =
       years === 1
-        ? `A one-time fee of ${formatCents(t.cashCents)}, paid to her now`
-        : `${formatCents(t.cashCents)} a year for ${years} years – the first year's fee paid to her now, the rest on each anniversary`
+        ? t('A one-time fee of {0}, paid to her now', [formatCents(tm.cashCents)])
+        : t("{0} a year for {1} years – the first year's fee paid to her now, the rest on each anniversary", [formatCents(tm.cashCents), years])
     const shoots = chooseShootWeeks(
       game.snapshot?.seed ?? '',
       week.value,
-      t.termWeeks,
-      t.shootCount,
+      tm.termWeeks,
+      tm.shootCount,
       ECONOMY.advertising.shootLeadWeeks,
     )
     // ⚠ THE PHONE RULE (round-20 #3, CLAUDE.md): the capstone names 16 weeks over eight years, and
@@ -524,19 +537,19 @@ const confirmMessage = computed(() => {
     const named = shoots.slice(0, 6).map((w) => weekLabel(w, startYear.value))
     const more = shoots.length - named.length
     const shootLine =
-      named.length > 1 ? `${named.slice(0, -1).join(', ')} and ${named[named.length - 1]}` : (named[0] ?? '')
+      named.length > 1 ? t('{0} and {1}', [named.slice(0, -1).join(', '), named[named.length - 1]]) : (named[0] ?? '')
     // The clause folds away on a degenerate term with no room for a shoot (`chooseShootWeeks`
     // yields fewer weeks rather than a broken promise) – the shipped catalogue always names them.
     const shootClause = shootLine
-      ? `, with her shoot weeks on ${shootLine}${more > 0 ? ` and ${more} more across the term` : ''} – working weeks, less rest in them`
+      ? t(', with her shoot weeks on {0}{1} – working weeks, less rest in them', [shootLine, more > 0 ? ` ${t('and {0} more across the term', [more])}` : ''])
       : ''
-    return `Sign with ${t.brand}? ${feeClause} – her face in their campaign to ${until}${shootClause}. This cannot be undone.`
+    return t('Sign with {0}? {1} – her face in their campaign to {2}{3}. This cannot be undone.', [tm.brand, feeClause, until, shootClause])
   }
-  const t = pendingSign.value.terms as KitOfferTerms
-  const value = formatCents(t.kitAllowanceCents)
-  const words = t.covers.map((l) => LINE_WORDS[l] ?? l)
-  const covered = words.length === 1 ? words[0] : `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
-  const seasons = (t.seasons ?? 1) === 1 ? 'a season' : `${t.seasons} seasons`
+  const tm = pendingSign.value.terms as KitOfferTerms
+  const value = formatCents(tm.kitAllowanceCents)
+  const words = tm.covers.map((l) => LINE_WORDS[l] ?? l)
+  const covered = words.length === 1 ? words[0] : t('{0} and {1}', [words.slice(0, -1).join(', '), words[words.length - 1]])
+  const seasons = (tm.seasons ?? 1) === 1 ? t('a season') : t('{0} seasons', [tm.seasons])
   // ⚠ ...AND THE WEEK IT RUNS TO (09.08, the owner: «Непонятно на какое количество лет спонсор
   // контракт заключает, нигде не видно этой информации»). "Three seasons" is a length; the last
   // thing a parent reads before an irreversible signature should also say WHEN, and `dealUntilWeek`
@@ -567,20 +580,20 @@ const confirmMessage = computed(() => {
   // ⚠ AND IT STAYS ON THE SNAPSHOT AFTER T6.2 · D-07, for `contractNote`'s reason: the bond reads
   // `runningClothingCampaign`, which is `activeAdDeals` asked about one category, and the deals in
   // force are precisely what the weekly wire carries. Same question, same answer, one frame earlier.
-  const bond = apparelBondCost(game.snapshot?.offers ?? [], week.value, t.brand)
+  const bond = apparelBondCost(game.snapshot?.offers ?? [], week.value, tm.brand)
   const bondBrand = bond ? (bond.campaign.terms as AdOfferTerms).brand : ''
   // Two arms, and the second is the owner's own wording: a term played out owes nothing, and saying
   // so is not consolation, it is the accurate half of the same fact. DRAFT copy.
   const bondClause = !bond
     ? ''
     : bond.cents > 0
-      ? ` Signing ends her campaign with ${bondBrand} – ${formatCents(bond.cents)} of fees still to come on it.`
-      : ` Signing ends her campaign with ${bondBrand}. Every fee it owed her is already banked and stays hers.`
+      ? ` ${t('Signing ends her campaign with {0} – {1} of fees still to come on it.', [bondBrand, formatCents(bond.cents)])}`
+      : ` ${t('Signing ends her campaign with {0}. Every fee it owed her is already banked and stays hers.', [bondBrand])}`
   // The deal, restated, and the one thing the letter cannot say for itself: that this cannot be
   // undone. No editorialising beyond that – the game does not tell him whether it is a good idea,
   // and in particular it does not mention that signing turns other brands away. That is a term, it
   // is on the paper, and a confirm that argued the case would be counselling rather than confirming.
-  return `Sign with ${t.brand}? They cover her ${covered} for ${seasons} – up to ${value}, to ${until} – and she must enter at least ${t.minEventsPerSeason} tournaments a season.${bondClause} This cannot be undone.`
+  return t('Sign with {0}? They cover her {1} for {2} – up to {3}, to {4} – and she must enter at least {5} tournaments a season.{6} This cannot be undone.', [tm.brand, covered, seasons, value, until, tm.minEventsPerSeason, bondClause])
 })
 
 function askSign(id: string): void {
@@ -615,9 +628,9 @@ async function doRefuse(id: string): Promise<void> {
        ⚠ `:screen` IS THE SHELL'S SCROLL RESET, and this surface is exactly the case the prop exists
        for: the list and an open letter are two screens in one scroller, so without it a letter opened
        from the bottom of a long list arrived already scrolled past its own first line. -->
-  <TakeoverShell title="Inbox" :screen="openLetter?.id ?? 'list'">
+  <TakeoverShell :title="t('Inbox')" :screen="openLetter?.id ?? 'list'">
     <template #exit>
-      <IconButton icon="close" label="Close" title="Close" @click="$emit('close')" />
+      <IconButton icon="close" :label="t('Close')" :title="t('Close')" @click="$emit('close')" />
     </template>
 
     <!-- ⚠ ONE WRAPPER, because `.tf-body` is a flex column with a 16px gap and this surface is a
@@ -635,7 +648,7 @@ async function doRefuse(id: string): Promise<void> {
       <template v-if="openLetter">
         <!-- The app has ONE back control and this is it (IconButton, bare) – see its own header for
              why the hand-written arrow character was retired everywhere. -->
-        <IconButton class="inbox-back" icon="back" label="Back to all letters" variant="bare" @click="backToList" />
+        <IconButton class="inbox-back" icon="back" :label="t('Back to all letters')" variant="bare" @click="backToList" />
         <!-- ⭐ ROUND 39 #17 – the whole inbox goes with the letter, because one clause on a rival
              house's kit paper is about a CAMPAIGN that is not on that paper: signing ends it, and
              the letter has to name the money. The sheet derives nothing – `OfferLetter` asks the
@@ -671,12 +684,12 @@ async function doRefuse(id: string): Promise<void> {
              right. -->
         <template v-if="loaded">
           <p v-if="letters.length === 0" class="hint">
-            Nothing yet. Sponsors write to players they have been watching for a season.
+            {{ t('Nothing yet. Sponsors write to players they have been watching for a season.') }}
           </p>
           <p v-else-if="rows.length === 0" class="hint">
-            Your inbox is clear. Everything you took off the list is still in her history.
+            {{ t('Your inbox is clear. Everything you took off the list is still in her history.') }}
           </p>
-          <p v-else-if="open.length === 0" class="hint">Nothing waiting on an answer.</p>
+          <p v-else-if="open.length === 0" class="hint">{{ t('Nothing waiting on an answer.') }}</p>
 
           <ul v-if="rows.length" class="inbox-list">
             <li v-for="row in rows" :key="row.offer.id" class="inbox-row" :class="{ unread: row.unread }">
@@ -686,7 +699,7 @@ async function doRefuse(id: string): Promise<void> {
               <button class="inbox-open" type="button" @click="openRow(row.offer.id)">
                 <span class="inbox-line">
                   <span class="inbox-from">{{ row.from }}</span>
-                  <span v-if="row.waiting" class="pill ok inbox-waiting">Needs an answer</span>
+                  <span v-if="row.waiting" class="pill ok inbox-waiting">{{ t('Needs an answer') }}</span>
                 </span>
                 <span class="inbox-subject">{{ row.subject }}</span>
                 <span class="hint inbox-meta">{{ row.meta }}</span>
@@ -706,7 +719,7 @@ async function doRefuse(id: string): Promise<void> {
                 icon="bin"
                 variant="bare"
                 :icon-size="16"
-                :label="`Delete the letter: ${row.from} – ${row.subject}`"
+                :label="t('Delete the letter: {0} – {1}', [row.from, row.subject])"
                 @click="askBin(row.offer)"
               />
             </li>
@@ -727,7 +740,7 @@ async function doRefuse(id: string): Promise<void> {
   <ConfirmDialog
     v-if="pendingSign"
     :message="confirmMessage"
-    confirm-label="Sign it"
+    :confirm-label="t('Sign it')"
     @confirm="doSign"
     @cancel="pendingSign = null"
   />
@@ -735,8 +748,8 @@ async function doRefuse(id: string): Promise<void> {
   <ConfirmDialog
     v-if="pendingBin"
     :message="binMessage"
-    confirm-label="Delete"
-    cancel-label="Keep it"
+    :confirm-label="t('Delete')"
+    :cancel-label="t('Keep it')"
     danger
     @confirm="doBin"
     @cancel="pendingBin = null"

@@ -88,6 +88,7 @@ import { assetHeldWeeks, assetUpkeepCents, deliveredAssets, reachableFundsCents 
 // The businesses' one arithmetic (round 29 part four P7) – the till charges what these quote, and
 // the household meter quotes the same two functions, so the strip and the ledger cannot disagree.
 import { academyWeeklyIncomeCents, assetKidShareCents, merchWeeklyIncomeCents } from './business'
+import { cp, type CopyRef } from '../../shared/i18n'
 
 // Flavor lists are background-aware but a flavor is always chosen with ONE `pickInt`
 // (a single rng() call regardless of list length), so the per-tick draw count is
@@ -128,11 +129,15 @@ const AFTER_SCHOOL = (e: string): string =>
 const POST_SCHOOL_REST_EVENTS = REST_EVENTS.map(AFTER_SCHOOL)
 const POST_SCHOOL_WEALTHY_REST_EVENTS = WEALTHY_REST_EVENTS.map(AFTER_SCHOOL)
 
-function trainFlavors(background: FamilyBackground): string[] {
+// Exported for tools/i18n-seats.ts (10.10): the writer below stores a pick as `c: { k: flavor }`,
+// so every pool line is a translation key – and the census walker cannot evaluate a look-up, so the
+// seat enumerates these pools by calling the real functions over both axes. Engine callers are
+// unchanged; nothing here enters the world barrel.
+export function trainFlavors(background: FamilyBackground): string[] {
   return background === 'working' ? WORKING_TRAIN_EVENTS : TRAIN_EVENTS
 }
 
-function restFlavors(background: FamilyBackground, schoolOver: boolean): string[] {
+export function restFlavors(background: FamilyBackground, schoolOver: boolean): string[] {
   if (background === 'wealthy') return schoolOver ? POST_SCHOOL_WEALTHY_REST_EVENTS : WEALTHY_REST_EVENTS
   return schoolOver ? POST_SCHOOL_REST_EVENTS : REST_EVENTS
 }
@@ -226,7 +231,7 @@ function facilityFlavor(input: {
   jitter: number
   /** has she finished school - `restFlavors`' own question, one line over */
   schoolOver: boolean
-}): string {
+}): { text: string; c: CopyRef } {
   const { background, tier, hours, seed, week, jitter, schoolOver } = input
   const step = tier === 'elite' ? 3 : tier === 'high' ? 2 : tier === 'middle' ? 1 : 0
   const venue = FACILITY_VENUE[background][step]
@@ -246,7 +251,8 @@ function facilityFlavor(input: {
   // against that head, and the rule it protects - one venue step per distinct court price, so two
   // rungs that pay the same read the same - is a claim about the HEAD alone. The clause is a
   // property of the week; letting it into that comparison would have made the pin about the dice.
-  return `${venue} – ${shown} h, ${clause}`
+  // ⭐ v93 (L3-1): the sentence and its CopyRef come out of ONE call, so the pick (the sub-stream above) is made once and the two cannot name different words.
+  return { text: `${venue} – ${shown} h, ${clause}`, c: cp`${venue} – ${shown} h, ${clause}` }
 }
 
 // --- weekly resolution pieces ------------------------------------------------
@@ -289,6 +295,7 @@ function resolveParentIncome(world: WorldState): void {
     type: 'income',
     category: 'income',
     text: "Parents' contribution",
+    c: cp`Parents' contribution`,
     amountCents: income,
   })
 }
@@ -408,6 +415,10 @@ function resolveBusinessIncome(world: WorldState): void {
           herCents > 0
             ? `Merch – her name on the shelves, less her ${herBps / 100}% share`
             : 'Merch – her name on the shelves',
+        c:
+          herCents > 0
+            ? cp`Merch – her name on the shelves, less her ${herBps / 100}% share`
+            : cp`Merch – her name on the shelves`,
         amountCents: merch,
       })
     }
@@ -419,6 +430,7 @@ function resolveBusinessIncome(world: WorldState): void {
         week: world.week,
         type: 'info',
         text: `${world.profile.kidName}'s share of the brand – ${formatCents(herCents)} into her own account`,
+        c: cp`${world.profile.kidName}'s share of the brand – ${formatCents(herCents)} into her own account`,
       })
       // ⭐ TAGGED `brand`, NOT `prize`, AND ROUND 31 #2 IS WHY. The week recap prints ONE line and it
       // picks the `prize` part by name – «Her cut N% – $X into her own account» – after he refused a
@@ -439,6 +451,7 @@ function resolveBusinessIncome(world: WorldState): void {
       // The Nadal shape as flavour (endorsement-tiers-and-academy-money.md §3a): the campus is the
       // business – programmes, beds, its own sponsors – and ONE number reaches the ledger.
       text: 'The academy – programmes, lodging and its own sponsors',
+      c: cp`The academy – programmes, lodging and its own sponsors`,
       amountCents: academy,
     })
   }
@@ -551,6 +564,9 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
       text: inCollege(world)
         ? 'At college – the programme coaches her, not us'
         : 'A week away as a family – no coaching billed',
+      c: inCollege(world)
+        ? cp`At college – the programme coaches her, not us`
+        : cp`A week away as a family – no coaching billed`,
       amountCents: 0,
     })
   } else {
@@ -582,22 +598,26 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
         type: 'expense',
         category: 'coaching',
         text: flavor,
+        // a pool's pick is already a whole English sentence, and the frozen table holds every pool line as its own key: the key IS the sentence
+        c: { k: flavor },
         amountCents: -split.coachCents,
       })
     }
+    const facility = facilityFlavor({
+      background: world.profile.background,
+      tier,
+      hours: coachHoursForPlan(world.plan),
+      seed: world.seed,
+      week: world.week,
+      jitter,
+      schoolOver,
+    })
     addEvent(world, {
       week: world.week,
       type: 'expense',
       category: 'facility',
-      text: facilityFlavor({
-        background: world.profile.background,
-        tier,
-        hours: coachHoursForPlan(world.plan),
-        seed: world.seed,
-        week: world.week,
-        jitter,
-        schoolOver,
-      }),
+      text: facility.text,
+      c: facility.c,
       amountCents: -split.facilityCents,
     })
   }
@@ -700,6 +720,7 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
       // ⚠ INVARIANT 4 – not one character of this line moved. Round 42 #5 is a cadence item and #47
       // is a sizing item; neither is a copy item, and neither asked for one.
       text: 'A local sponsor chipped in!',
+      c: cp`A local sponsor chipped in!`,
       amountCents: gift,
     })
   }
@@ -866,6 +887,12 @@ function resolveGear(world: WorldState): void {
         const payer = forLifeBrand ?? terms?.brand
         return covered > 0 && payer ? `${flavor} – on ${payer}` : flavor
       })(),
+      // the same pick and the same payer, as a ref: a pool line is its own key, the covered form is the table's `{0} – on {1}`
+      c: (() => {
+        const flavor = line.flavor[gearVoice(bg, inDeal || !!forLifeBrand)]
+        const payer = forLifeBrand ?? terms?.brand
+        return covered > 0 && payer ? cp`${flavor} – on ${payer}` : { k: flavor }
+      })(),
       // ⚠ `|| 0` IS `setKitGrade`'s OWN GUARD, ONE TILL OVER, and round 39 #17 is what makes it
       // routine here: a fully covered line makes `-paid` the NEGATIVE ZERO, which survives into the
       // ledger and out through any formatter as «-$0». The allowance could already cover a line
@@ -914,6 +941,7 @@ function resolveAssetUpkeep(world: WorldState): void {
       // not repeated on every row. The row names the THING, which is what the player is deciding
       // about when he reads it beside the masseur.
       text: `Upkeep: ${item.label}`,
+      c: cp`Upkeep: ${item.label}`,
       amountCents: -amountCents,
     })
   }

@@ -100,6 +100,7 @@
 // answer as `planDays` - see `planRoles` below for why that is a repair rather than a rename.
 import type { CalendarDay, CalendarWeek, DayBeat, DayKind, TripFacts } from './weekDays'
 import { hash32 } from './fridgeNote'
+import { t } from '../i18n'
 
 /** One coloured block in the grid. Hours are PRESENTATION – see the header. */
 export interface DayBlock {
@@ -1253,6 +1254,95 @@ const COURT_SESSIONS: readonly string[] = [
  *  otherwise be the one block that reads identically in every week of a career. */
 const GYM_SESSIONS: readonly string[] = ['Gym', 'Core work', 'Leg work', 'Gym drills']
 
+/** ⭐ L4-2b (10.10) – THE BLOCK LEXICON: every label the tables above can write, as a reader over `t()`. The tables keep their English because they are
+ *  module-level constants evaluated once at import (a getter per literal would be 138 edits, and a label frozen in the language the module was imported
+ *  in), so the grid's ONE exit – `localizeDay`, at the bottom of `weekGridFor` – maps each block's English label through this table at the moment the
+ *  grid is built, inside the screen's computed, and the locale follows. A label the table does not know falls through UNCHANGED, which is why
+ *  `tests/component/i18n-l4-2b-wrap-pass.test.ts` holds the table to the file both ways: a label added to a table without a row here is red, and a row here
+ *  that no table writes is red. The session pools (`COURT_SESSIONS`, `GYM_SESSIONS`) stay plain English arrays – the PICK is a hash of the seed, so
+ *  the same index lands in every language, and the exit translates what was picked. */
+const BLOCK_WORD: Readonly<Record<string, () => string>> = {
+  'Aboard': () => t('Aboard'),
+  'Ashore': () => t('Ashore'),
+  'Body work': () => t('Body work'),
+  'Call': () => t('Call'),
+  'Camp day': () => t('Camp day'),
+  'Cardio': () => t('Cardio'),
+  'Check-up': () => t('Check-up'),
+  'Core work': () => t('Core work'),
+  'Court hit': () => t('Court hit'),
+  'Court work': () => t('Court work'),
+  'Day off': () => t('Day off'),
+  'Day out': () => t('Day out'),
+  'Draw day': () => t('Draw day'),
+  'Early hit': () => t('Early hit'),
+  'Exam': () => t('Exam'),
+  'Family time': () => t('Family time'),
+  'Final review': () => t('Final review'),
+  'Flight home': () => t('Flight home'),
+  'Flight out': () => t('Flight out'),
+  'Free time': () => t('Free time'),
+  'Gym': () => t('Gym'),
+  'Gym drills': () => t('Gym drills'),
+  'Her pals': () => t('Her pals'),
+  'Home': () => t('Home'),
+  'Home day': () => t('Home day'),
+  'Last day': () => t('Last day'),
+  'Last one': () => t('Last one'),
+  'Last swim': () => t('Last swim'),
+  'Leg work': () => t('Leg work'),
+  'Lie-in': () => t('Lie-in'),
+  'Long lunch': () => t('Long lunch'),
+  'Long way home': () => t('Long way home'),
+  'Match play': () => t('Match play'),
+  'Moving': () => t('Moving'),
+  'Net play': () => t('Net play'),
+  'No plans': () => t('No plans'),
+  'Out all day': () => t('Out all day'),
+  'Physio': () => t('Physio'),
+  'Point play': () => t('Point play'),
+  'Pool': () => t('Pool'),
+  'Pre-season': () => t('Pre-season'),
+  'Press': () => t('Press'),
+  'Rally work': () => t('Rally work'),
+  'Rehab gym': () => t('Rehab gym'),
+  'Rest': () => t('Rest'),
+  'Rest day': () => t('Rest day'),
+  'Return work': () => t('Return work'),
+  'Road-trip home': () => t('Road-trip home'),
+  'Road-trip out': () => t('Road-trip out'),
+  'Rub-down': () => t('Rub-down'),
+  'School': () => t('School'),
+  'Serve work': () => t('Serve work'),
+  'Shoot': () => t('Shoot'),
+  'Slow day': () => t('Slow day'),
+  'Speed work': () => t('Speed work'),
+  'Study': () => t('Study'),
+  'Summer read': () => t('Summer read'),
+  'Swim': () => t('Swim'),
+  'Tennis drills': () => t('Tennis drills'),
+  'Tests': () => t('Tests'),
+  'The garden': () => t('The garden'),
+  'The lake': () => t('The lake'),
+  'The pool': () => t('The pool'),
+  'The river': () => t('The river'),
+  'The sea': () => t('The sea'),
+  'Travel home': () => t('Travel home'),
+  'Travel out': () => t('Travel out'),
+  'Two trains': () => t('Two trains'),
+  'Volley work': () => t('Volley work'),
+  'Walk': () => t('Walk'),
+}
+
+/** A block's label in the player's words; an unknown label is returned as written (English, the source). */
+export function blockWord(label: string): string {
+  return Object.prototype.hasOwnProperty.call(BLOCK_WORD, label) ? BLOCK_WORD[label]() : label
+}
+
+function localizeDay(day: GridDay): GridDay {
+  return { ...day, blocks: day.blocks.map((b) => ({ ...b, label: blockWord(b.label) })) }
+}
+
 function namedSession(blocks: DayBlock[], seed: string, week: number, index: number): DayBlock[] {
   if (!seed) return blocks
   return blocks.map((b) => {
@@ -1341,5 +1431,5 @@ export function weekGridFor(
         ),
       ),
     ),
-  }))
+  })).map(localizeDay)
 }

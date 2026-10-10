@@ -83,7 +83,7 @@ last-reviewed: 2026-10-06
 | English | Русский черновик |
 | --- | --- |
 | `Call when you have a minute. No emergency, for once.` | `Позвони, когда будет минутка. На этот раз ничего срочного.` |
-| `Your post came here again. I did not open it.` | `Тебе опять пришло письмо сюда. Оно закрыто, честно.` |
+| `Your post came here again. I did not open it.` | `Тебе опять пришло письмо сюда. Мы его не открывали, честно.` |
 | `Dinner Sunday? This is me booking early.` | `Поужинаем в воскресенье? Зовём заранее.` |
 | `The spare key is still where you left it.` | `Запасной ключ всё там же, где ты его оставила.` |
 | `Grandma says you never ring. She told me by ringing.` | `Бабушка говорит, ты ей не звонишь. Сама позвонила сообщить.` |
@@ -97,7 +97,7 @@ last-reviewed: 2026-10-06
 | `Proud of you. Not because of anything in particular.` | `Гордимся тобой. Не за что-то конкретное.` |
 | `Parcel here for you. It can wait. I apparently cannot.` | `Тебе посылка сюда пришла. Она подождёт. Мы, похоже, нет.` |
 | `Saw your message. I was asleep at nine. Roles reversed.` | `Твоё сообщение пришло в девять, а мы уже спать. Теперь всё наоборот.` |
-| `Your keys are not here. I checked before you asked.` | `Твоих ключей здесь нет. Уже проверено – до твоего вопроса.` |
+| `Your keys are not here. I checked before you asked.` | `Твоих ключей здесь нет. Проверили ещё до твоего вопроса.` |
 | `Sunday lunch still counts if you arrive at three.` | `Воскресный обед считается и в три часа.` |
 | `The hall is quieter. I am not saying that is better.` | `В прихожей стало тише. Не говорим, что лучше.` |
 | `Blue mug found. You did not take everything after all.` | `Синяя кружка нашлась. Значит, не всё ты забрала.` |
@@ -106,9 +106,12 @@ last-reviewed: 2026-10-06
 | `The plant you left us is doing suspiciously well.` | `Цветок, который ты нам оставила, подозрительно хорошо себя чувствует.` |
 | `Nothing urgent. I just wanted to hear your voice.` | `Ничего срочного. Просто хотелось услышать твой голос.` |
 | `Too much bread again. Some things do not change.` | `Опять хлеба больше, чем нужно. Некоторые вещи не меняются.` |
-| `Missed you by a minute. Rang back into voicemail.` | `Разминулись на минуту. В ответ – только автоответчик.` |
-| `Sent you a photo of the garden. No caption needed.` | `Фото сада уже у тебя. Без подписи понятно.` |
-| `Played your voice note twice. Once was on purpose.` | `Твоё голосовое – два раза подряд. Второй раз нарочно.` |
+| `Missed you by a minute. Rang back into voicemail.` | `Разминулись на минуту. Перезвонили – и сразу автоответчик.` |
+| `Sent you a photo of the garden. No caption needed.` | `Отправили тебе фото сада. Подпись не нужна.` |
+| `Played your voice note twice. Once was on purpose.` | `Твоё голосовое слушали дважды. Второй раз – нарочно.` |
+
+
+⚙ 10.10 «лечим» (RU-03A′): пять строк выше переведены в семейный голос (формула № 10: множественное прошедшее без пола) – было: «Оно закрыто, честно», «Уже проверено – до твоего вопроса», «В ответ – только автоответчик», «Без подписи понятно», «два раза подряд». Пул остаётся DRAFT до его читки.
 
 `В девять, а я уже спать` – намеренно разговорная записка, а не интерфейсная фраза.
 У этих трёх строк особенно важна читка владельца: в русском нельзя использовать прошлое

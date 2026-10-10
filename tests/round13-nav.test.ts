@@ -16,7 +16,7 @@ import type { Snapshot, WorldEvent } from '../src/shared/protocol'
 // Comments are not code – the house helper, now in tests/helpers/source.ts. This codebase documents
 // at length, INCLUDING documenting what it deliberately no longer does, so a `not.toContain` over
 // raw source fails on a note that merely names the thing it forbids.
-import { after, at, codeOf, region, regionToLast } from './helpers/source'
+import { after, at, codeOf, region, regionToLast, tTransparent } from './helpers/source'
 // ⚠ T6.4 · F-09 (28.09) – a class attribute is a set of tokens; see the helper's header for why the
 // exact-attribute pin below became a whole-token one.
 import { carriesClasses } from './helpers/markup'
@@ -25,7 +25,8 @@ import { componentLogic, engineModuleSource } from './worldSource'
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
 const app = read('../src/App.vue')
-const home = read('../src/components/screens/HomeScreen.vue')
+// L2-3 (08.10): HOME'S COPY IS `t('…')` NOW (RU-03) – the eyebrows and labels this file pins are the same words; read through `tTransparent`.
+const home = tTransparent(read('../src/components/screens/HomeScreen.vue'))
 // ⚠ RE-AIMED BY ROUND 36's SECOND PASS, P2-6 – THE SFC **PLUS THE COMPOSABLES IT IMPORTS**, which is
 // the helper CLAUDE.md names for a POSITIVE claim that must survive an extraction. Her face, the
 // week's strings, the rank chip's five derived facts and the one-time callout's ref moved out of
@@ -43,7 +44,8 @@ const homeLogic = componentLogic('components/screens/HomeScreen.vue')
 // ⚠ NEVER IN A NEGATIVE ASSERTION (tests/pin-hygiene.test.ts): `app` above is still the .vue alone
 // and is what every `not.toContain` in this file keeps using.
 const appLogic = componentLogic('App.vue')
-const weekScreen = read('../src/components/screens/ThisWeekScreen.vue')
+// L2-3 (08.10): This Week's copy is `t('…')` now (RU03 §19) – the words are what these pins claim; `tTransparent` reads them as written.
+const weekScreen = tTransparent(read('../src/components/screens/ThisWeekScreen.vue'))
 const tour = read('../src/components/OnboardingTour.vue')
 
 // ===========================================================================
@@ -130,7 +132,10 @@ function globToRegExp(pattern: string): RegExp {
 describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Home in the centre', () => {
   it('TABS carries exactly the five entries, in order, and no Kid entry', () => {
     const tabs = region(app, 'const TABS', '/** The one writer')
-    const labels = [...tabs.matchAll(/label: '([^']+)'/g)].map((m) => m[1])
+    // L2-1 (08.10): RE-AIMED – each label is a getter over `t()` (the Stats one carries the nav context tag: the tab still READS `Stats` in English).
+    // L3-T (10.10): THE HAND-ROLLED TAG STRIP IS GONE – `tTransparent` folds `nav|` now, so the five labels are read as the getters read before the wrap
+    // (`label: 'Stats'`), through the same reader every other wrapped pin uses. The five labels asserted are the five that shipped; a reworded one still fails.
+    const labels = [...tTransparent(tabs).matchAll(/label: '([^']+)'/g)].map((m) => m[1])
     expect(labels).toEqual(['Season', 'Calendar', 'Home', 'Stats', 'Trophies'])
     const ids = [...tabs.matchAll(/id: '([^']+)'/g)].map((m) => m[1])
     expect(ids).toEqual(['play', 'calendar', 'home', 'stats', 'trophies'])
@@ -158,7 +163,7 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
   })
 
   it('the Trophies tab is LIVE: a real screen, a real glyph, and the cabinet art it draws', () => {
-    expect(app).toContain(`{ id: 'trophies', icon: 'trophy', label: 'Trophies' }`)
+    expect(app).toContain(`{ id: 'trophies', icon: 'trophy', get label() { return t('Trophies') } }`) // L2-1: RE-AIMED, the label is a getter
     expect(app).toContain(`<TrophiesScreen v-else-if="tab === 'trophies'" />`)
     expect(app).toContain("import TrophiesScreen from './components/screens/TrophiesScreen.vue'")
     expect(existsSync(new URL('../public/icons/trophy.svg', import.meta.url))).toBe(true)
@@ -267,7 +272,7 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
   // WHAT IS UNCHANGED, and it is the seat itself: the entry is still the second of five, still
   // week.svg, still labelled Calendar, and Home is still the middle slot (the test above).
   it('the Calendar slot is LIVE: it routes to screen H, and the placeholder machinery is gone', () => {
-    expect(app).toContain(`{ id: 'calendar', icon: 'week', label: 'Calendar' }`)
+    expect(app).toContain(`{ id: 'calendar', icon: 'week', get label() { return t('Calendar') } }`) // L2-1: RE-AIMED, the label is a getter
     expect(app).toContain(`<CalendarScreen\n        v-else-if="tab === 'calendar'"`)
     expect(app).toContain("import CalendarScreen from './components/screens/CalendarScreen.vue'")
     // `openNav` is still the ONE writer of `tab` from the bar, and it no longer has a slot to refuse.
@@ -913,7 +918,7 @@ describe('W1 — the end of a week lands on the story', () => {
 //   * «на week recap после отпуска можно использовать картинки соответствующих отпусков»
 // ===========================================================================
 describe('W4 — the story has a way out, and its painting is the week it is about', () => {
-  const card = read('../src/components/WeekRecapCard.vue')
+  const card = tTransparent(read('../src/components/WeekRecapCard.vue')) // L2-3 (08.10): the recap's copy is `t('…')` now (RU03 §20–§23)
   const season = read('../src/components/screens/SeasonScreen.vue')
 
   it('the Proceed pill is Home\'s CTA shape, centred at the bottom, and only on a story week', () => {
@@ -1053,7 +1058,7 @@ describe('R13-12 player copy', () => {
   // Russian went into each of their templates before this pin caught it. The rule is unchanged and no
   // assertion is relaxed; it simply now reads every template the touched items render through.
   it('no long dash, no Cyrillic in the rendered copy of the touched surfaces', () => {
-    const card = read('../src/components/WeekRecapCard.vue')
+    const card = tTransparent(read('../src/components/WeekRecapCard.vue')) // L2-3 (08.10): the recap's copy is `t('…')` now (RU03 §20–§23)
     const sheet = read('../src/components/PlanWeekSheet.vue')
     for (const src of [app, weekScreen, home, tour, card, sheet]) {
     // ⚠ RE-AIMED by U0 – the EXTRACTION, not the assertion. `slice(indexOf('<template>'))` ran to

@@ -40,7 +40,9 @@
 import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
-import { herDeclineLine, seasonLastWinterLine } from '../composables/declineVoice'
+import { declineRef, herDeclineLine, seasonLastWinterLine, seasonLastWinterRef } from '../composables/declineVoice'
+// ⭐ L3-6 (10.10): her line and the winter warning are drawn from their refs when the locale has them – the PICKS (which sentence, which count) are the composable's and did not move.
+import { eventText, t } from '../i18n'
 import { formatCentsCompact, formatCentsSignedCompact } from '../shared/money'
 import { LADDER_LABEL } from '../shared/protocol'
 import Card from './ui/Card.vue'
@@ -67,8 +69,8 @@ const closingScrap = computed(() => {
   const snap = game.snapshot
   const over = snap !== null && snap.week >= snap.schoolEndsWeek
   return over
-    ? 'Off-season now: rest, family time, and the block where next year gets built.'
-    : 'Off-season now: rest, school, family time.'
+    ? t('Off-season now: rest, family time, and the block where next year gets built.')
+    : t('Off-season now: rest, school, family time.')
 })
 
 
@@ -167,7 +169,8 @@ const herLine = computed(() => {
   const snap = game.snapshot
   const year = summary.value?.seasonYear
   if (!snap || year === undefined) return null
-  return herDeclineLine(snap.physicalShare, snap.seed, year)
+  const line = herDeclineLine(snap.physicalShare, snap.seed, year)
+  return line === null ? null : eventText({ text: line, c: declineRef(line) })
 })
 
 // ⭐⭐⭐ ROUND 40 #14b – HOW MANY WINTERS BEFORE THE LAST ONE, in the card's own reporting voice. The
@@ -185,7 +188,11 @@ const herLine = computed(() => {
 //
 // ⚠ AND IT DRAWS NOTHING, unlike the line above it: the count is a projection over persisted state,
 // so this card says the same thing every time it is opened.
-const lastWinterNote = computed(() => seasonLastWinterLine(game.snapshot?.lastWinterIn))
+const lastWinterNote = computed(() => {
+  const winters = game.snapshot?.lastWinterIn
+  const line = seasonLastWinterLine(winters)
+  return line === null ? null : eventText({ text: line, c: seasonLastWinterRef(winters) ?? undefined })
+})
 </script>
 
 <template>
@@ -201,18 +208,18 @@ const lastWinterNote = computed(() => seasonLastWinterLine(game.snapshot?.lastWi
       aria-labelledby="season-summary-kicker season-summary-title"
       tabindex="-1"
     >
-      <p id="season-summary-kicker" class="season-summary-kicker">Season {{ summary.seasonYear }} · wrap-up</p>
-      <h2 id="season-summary-title" class="season-summary-title">That's a season.</h2>
+      <p id="season-summary-kicker" class="season-summary-kicker">{{ t('Season {0} · wrap-up', [summary.seasonYear]) }}</p>
+      <h2 id="season-summary-title" class="season-summary-title">{{ t(`That's a season.`) }}</h2>
 
       <div class="season-grid">
         <!-- WHERE SHE FINISHED -->
         <Card class="season-tile" pad="12px 13px">
-          <Eyebrow>Ranking</Eyebrow>
+          <Eyebrow>{{ t('Ranking') }}</Eyebrow>
           <div class="season-rows">
             <div class="season-row">
-              <span class="season-key">Final {{ rankLabel }} rank</span>
+              <span class="season-key">{{ t('Final {0} rank', [rankLabel]) }}</span>
               <span class="season-val">
-                <span class="rank-value">{{ ranked ? '#' + rankInTrack : 'Unranked' }}</span>
+                <span class="rank-value">{{ ranked ? t('#{rank}', { rank: rankInTrack }) : t('Unranked') }}</span>
                 <template v-if="showRankMove">
                   <span v-if="rankMove.dir === 'up'" class="rank-move up">&uarr;{{ rankMove.by }}</span>
                   <span v-else-if="rankMove.dir === 'down'" class="rank-move down">&darr;{{ rankMove.by }}</span>
@@ -220,19 +227,19 @@ const lastWinterNote = computed(() => seasonLastWinterLine(game.snapshot?.lastWi
                 </template>
               </span>
             </div>
-            <p v-if="showRankMove && summary.startRank !== null" class="hint season-summary-from">from #{{ summary.startRank }}</p>
+            <p v-if="showRankMove && summary.startRank !== null" class="hint season-summary-from">{{ t('from #{0}', [summary.startRank]) }}</p>
             <!-- The junior table keeps its own sentence: "not ranked yet" means something specific
                  and encouraging for a girl who has not left the country. Every other table gets the
                  plain statement, because "she has not played a Junior Tour event" is nonsense said
                  to a professional - which is exactly the bug this replaced. -->
             <p v-else-if="!ranked && rankTrack === 'itf'" class="hint season-summary-from">
-              She has not played a Junior Tour event yet. Her national standing is on the Stats tab.
+              {{ t('She has not played a Junior Tour event yet. Her national standing is on the Stats tab.') }}
             </p>
             <p v-else-if="!ranked" class="hint season-summary-from">
-              No result counted on that table this season. Her other standings are on the Stats tab.
+              {{ t('No result counted on that table this season. Her other standings are on the Stats tab.') }}
             </p>
             <div class="season-row">
-              <span class="season-key">Season points</span>
+              <span class="season-key">{{ t('Season points') }}</span>
               <span class="season-val num">{{ summary.points }}</span>
             </div>
           </div>
@@ -240,27 +247,27 @@ const lastWinterNote = computed(() => seasonLastWinterLine(game.snapshot?.lastWi
 
         <!-- HOW SHE PLAYED -->
         <Card class="season-tile" pad="12px 13px">
-          <Eyebrow>Matches</Eyebrow>
+          <Eyebrow>{{ t('Matches') }}</Eyebrow>
           <div class="season-rows">
             <div class="season-row">
-              <span class="season-key">Record</span>
+              <span class="season-key">{{ t('Record') }}</span>
               <span class="season-val num">{{ summary.wins }}–{{ summary.losses }}</span>
             </div>
             <div class="season-row">
-              <span class="season-key">Best result</span>
+              <span class="season-key">{{ t('Best result') }}</span>
               <span class="season-val">{{ summary.bestResultText }}</span>
             </div>
             <div class="season-row">
-              <span class="season-key">Lost to injury</span>
+              <span class="season-key">{{ t('Lost to injury') }}</span>
               <!-- weeksInjured is optional (pre-slice-C summaries never stored it): default 0 -->
-              <span class="season-val num">{{ summary.weeksInjured ?? 0 }} wk</span>
+              <span class="season-val num">{{ t('{0} wk', [summary.weeksInjured ?? 0]) }}</span>
             </div>
             <!-- The mirror sits in MATCHES rather than in RANKING on purpose: the number it corrects is
                  the record two rows above it. A season of 47 matches at 67% reads as a career that is
                  working, and it is the reading the probe found a parent cannot get past. -->
             <template v-if="entryMirror">
               <div class="season-row">
-                <span class="season-key">Tournaments entered</span>
+                <span class="season-key">{{ t('Tournaments entered') }}</span>
                 <span class="season-val num">{{ entryMirror.entered }}</span>
               </div>
               <!-- ⚠ IT NAMES THE SAME TABLE THE ROW ABOVE NAMES, and that is not decoration. The
@@ -269,7 +276,7 @@ const lastWinterNote = computed(() => seasonLastWinterLine(game.snapshot?.lastWi
                    judged it against the LIVE table and printed "13 could not move her ranking" under
                    "Final national rank #3", about the very events that had made her third. -->
               <p class="hint season-mirror-note">
-                {{ entryMirror.couldNotMove }} could not move her {{ rankLabel }} ranking
+                {{ t('{0} could not move her {1} ranking', [entryMirror.couldNotMove, rankLabel]) }}
               </p>
             </template>
           </div>
@@ -277,7 +284,7 @@ const lastWinterNote = computed(() => seasonLastWinterLine(game.snapshot?.lastWi
 
         <!-- WHAT IT COST -->
         <Card class="season-tile season-tile-wide" pad="12px 13px">
-          <Eyebrow>Money</Eyebrow>
+          <Eyebrow>{{ t('Money') }}</Eyebrow>
           <!-- ⭐ ROUND 46 #19 – ONE TWO-COLUMN GRID FOR THE WHOLE TILE, rows and hairlines together. It was a
                column of wrapping flex rows with the bottom line set a point larger than the rest, which is how
                the figures came to dance: a long one dropped under its label, a short one sat beside it, and no
@@ -286,25 +293,25 @@ const lastWinterNote = computed(() => seasonLastWinterLine(game.snapshot?.lastWi
                even a rich family's column stays narrow. -->
           <div class="season-money">
             <div v-if="spentCents !== undefined" class="season-row">
-              <span class="season-key">Spent this season</span>
+              <span class="season-key">{{ t('Spent this season') }}</span>
               <span class="season-val num negative">{{ formatCentsSignedCompact(-spentCents) }}</span>
             </div>
             <!-- ⭐⭐⭐ ROUND 46, MORNING ITEM 4 – A SALE THAT FIXED A LOSS IS A REAL EXPENSE: its own row on the expense side, under «Spent», hidden at zero (a net realised
                  GAIN is not income and shows nowhere here). The loss is already inside the shelf figure below, which is why that row prints without it. DRAFT R46-S46
                  (docs/rounds/round-46.md). -->
             <div v-if="realisedLossCents > 0" class="season-row">
-              <span class="season-key">Sold at a loss</span>
+              <span class="season-key">{{ t('Sold at a loss') }}</span>
               <span class="season-val num negative">{{ formatCentsSignedCompact(-realisedLossCents) }}</span>
             </div>
             <div v-if="earnedCents !== undefined" class="season-row">
-              <span class="season-key">Earned this season</span>
+              <span class="season-key">{{ t('Earned this season') }}</span>
               <span class="season-val num positive">{{ formatCentsSignedCompact(earnedCents) }}</span>
             </div>
             <!-- v21: the scholarship never shows up in "Earned" – its travel half is a discount on
                  the travel line, not income – so this is the only place the year's help is a number.
                  Hidden at zero: a family nobody backed should not read a row of dashes. -->
             <div v-if="(summary.academyCoveredCents ?? 0) > 0" class="season-row">
-              <span class="season-key">Academy covered</span>
+              <span class="season-key">{{ t('Academy covered') }}</span>
               <span class="season-val num positive">{{ formatCentsSignedCompact(summary.academyCoveredCents ?? 0) }}</span>
             </div>
             <!-- ⭐⭐⭐ ROUND 46 #8 + #19 – WHAT MOVED TO AND FROM THE SHELF, between «Earned» and the bottom line
@@ -312,12 +319,12 @@ const lastWinterNote = computed(() => seasonLastWinterLine(game.snapshot?.lastWi
                  deposit and the cars' upkeep went when they stopped being «spent». Hidden at zero. DRAFT
                  R46-S12 (docs/rounds/round-46.md). -->
             <div v-if="shelfRowCents !== 0" class="season-row">
-              <span class="season-key">Holdings and upkeep</span>
+              <span class="season-key">{{ t('Holdings and upkeep') }}</span>
               <span class="season-val num" :class="shelfRowCents < 0 ? 'negative' : 'positive'">{{ formatCentsSignedCompact(shelfRowCents) }}</span>
             </div>
             <span class="season-hairline"></span>
             <div class="season-row">
-              <span class="season-key">Funds this season</span>
+              <span class="season-key">{{ t('Funds this season') }}</span>
               <span
                 class="season-net num"
                 :class="{ negative: summary.fundsDeltaCents < 0, positive: summary.fundsDeltaCents >= 0 }"
@@ -330,11 +337,11 @@ const lastWinterNote = computed(() => seasonLastWinterLine(game.snapshot?.lastWi
             <template v-if="wealthRows">
               <span class="season-hairline"></span>
               <div class="season-row">
-                <span class="season-key">Family's portfolio</span>
+                <span class="season-key">{{ t(`Family's portfolio`) }}</span>
                 <span class="season-val num">{{ formatCentsCompact(wealthRows.portfolioCents) }}</span>
               </div>
               <div v-if="wealthRows.growthCents !== undefined" class="season-row">
-                <span class="season-key">Portfolio growth</span>
+                <span class="season-key">{{ t('Portfolio growth') }}</span>
                 <span class="season-val num" :class="wealthRows.growthCents < 0 ? 'negative' : 'positive'">{{ formatCentsSignedCompact(wealthRows.growthCents) }}</span>
               </div>
             </template>
@@ -362,7 +369,7 @@ const lastWinterNote = computed(() => seasonLastWinterLine(game.snapshot?.lastWi
       </PaperNote>
 
       <div class="dialog-actions">
-        <PrimaryPill @click="emit('continue')">Continue</PrimaryPill>
+        <PrimaryPill @click="emit('continue')">{{ t('Continue') }}</PrimaryPill>
       </div>
     </div>
   </div>

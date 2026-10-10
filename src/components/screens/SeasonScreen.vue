@@ -17,6 +17,7 @@
 // reasoning IS the record, and the record now lives in two places rather than one.
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
+import { eventText, localizedList, t } from '../../i18n'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import MatchReplay from '../MatchReplay.vue'
 import MatchViewer from '../MatchViewer.vue'
@@ -59,7 +60,7 @@ import { WILD_CARD } from '../../engine/season/tournament'
 import { vacationArtUrl, weekArtUrl, weekHomeArtUrl } from '../../art/weeks'
 import { portraitStage } from '../../shared/avatarEmotion'
 import { rngFromSeed } from '../../engine/rng'
-import { coachDeclineLine } from '../../composables/declineVoice'
+import { coachDeclineLine, declineRef } from '../../composables/declineVoice'
 import type { FieldStrength } from '../../engine/season/preview'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
 // R11-5a: the ONE tier-state rule, shared with the Home season ladder. R15-9 adds the sliding
@@ -79,7 +80,7 @@ import { UPCOMING_WEEKS } from '../../engine/world/constants'
 // THE UPCOMING-EVENT CARD'S OWN PARTS, shared with the Calendar's marker card: the photograph, the
 // court's verdict for her build, the scholarship's share, and how an odds ring is NAMED. Its colour
 // is no longer one of them – that ramp is drawn on five surfaces, not two, so it lives a line below.
-import { DRAW_NOT_MADE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
+import { fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, surfaceName, surfaceWord, useEventCard } from '../../composables/eventCard'
 import { useWeekPager } from '../../composables/weekPager'
 // ⭐ ROUND 36 PHASE 6 – the «she is entered» predicate, shared with the rail dashboard's card. See
 // the note at `myEntries` below.
@@ -94,7 +95,6 @@ import { enterActionName } from '../../composables/eventName'
 import { TIER_SHORT } from '../../composables/weekAhead'
 import { layoffHoldsWeek, layoffNoteFor } from '../../composables/weekDays'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
-import { rankLabel } from '../../shared/format'
 import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
 import { formatCents, entryFeeLabel } from '../../shared/money'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
@@ -113,7 +113,7 @@ const game = useGameStore()
 // ⭐ U-12 – `fundsShort` JOINED THEM 05.09. It was two byte-identical lines, here and on the
 // Calendar, listed as still open by two reviews running; the module took the name both files used,
 // so nothing at the call sites below reads differently.
-const { academyCoverPct, fundsShort, surfaceVerdict, venueUrl } = useEventCard()
+const { academyCoverPct, courtRead, fundsShort, surfaceVerdict, venueUrl } = useEventCard()
 // ⭐⭐⭐ ROUND 36 PHASE 5 – the week's horizontal listing, in JS. One instance for the whole feed;
 // each strip registers itself by its own week through `pager.bind`. His ruling and the measurement
 // behind it are at the head of composables/weekPager.ts, where Cyrillic is allowed.
@@ -168,19 +168,15 @@ const playIconStyle = {
 // into three files and whose hues are not the `--surface-*` tokens the ring uses, so the same clay
 // court was one orange here and a different orange there. `affinity` and `fit` moved to the coach's
 // plaque a wave ago and are read there directly. What is left is the one thing the card asks for.
-/** The engine's hint MINUS its surface-name prefix. `surfaceStyleHint` writes "Grass – suits her
+/** ⚠ L2-4 (08.10): `surfaceFit` IS GONE – the coach's court sentence is `courtRead` (composables/eventCard.ts), worded from the engine's affinity and
+ *  never cut at an English dash. What follows is the record of why the slice existed.
+ *  The engine's hint MINUS its surface-name prefix. `surfaceStyleHint` writes "Grass – suits her
  *  game"; the pill already says "grass", so only the tail belongs under it. Sliced off the engine's
  *  own string rather than re-written from the affinity, so the two can never word it differently. */
-function surfaceFit(surface: Surface): string | null {
-  const hint = surfaceVerdict(surface)
-  if (!hint) return null
-  const dash = hint.indexOf('– ')
-  return dash < 0 ? hint : hint.slice(dash + 2)
-}
 /** The engine's whole sentence, surface name included, for the mark's title. Falls back to the bare,
  *  capitalised surface id rather than to a second copy of the label table. */
 function surfaceTitle(surface: Surface): string {
-  return surfaceVerdict(surface) ?? surface.charAt(0).toUpperCase() + surface.slice(1)
+  return surfaceVerdict(surface) ?? surfaceWord(surface)
 }
 // --- THE SEASON CARD (wave 2, the owner's redesign) ---------------------------------------------
 // The export's big tournament card, one per upcoming event, scrolling. Three of its parts are ours
@@ -196,14 +192,14 @@ function surfaceTitle(surface: Surface): string {
 //
 // THE PHASE STRIP is the export's, driven by the real SURFACE_BLOCKS table the calendar generates
 // from - so the strip cannot promise a swing the season does not have.
-const PHASE_STRIP = SURFACE_BLOCKS.map((b) => ({
+const phaseStrip = computed(() => SURFACE_BLOCKS.map((b) => ({
   id: b.id,
   // The export's own five words: Hard / Clay / Grass / Hard / Off. Our block labels are prose
   // ("Summer hard swing"), and prose wraps to two lines in a fifth of 390px - which is exactly what
   // the owner saw. The DOMINANT SURFACE is the fact the strip carries, so it is what it prints.
-  short: b.id === 'off-season' ? 'Off' : dominantSurface(b).replace(/^./, (c) => c.toUpperCase()),
+  short: b.id === 'off-season' ? t('phase|Off') : surfaceWord(dominantSurface(b)),
   weeks: seasonWeekRange(b.from, b.to),
-}))
+})))
 const activePhaseId = computed(() => surfaceBlockFor(week.value).id)
 
 /** WHICH PAINTING OF HER the exam frame wears. The same one-line derivation `headerAvatar` makes off
@@ -274,9 +270,9 @@ function weekTitle(row: CalendarRow): string {
   // in the off-season cannot exist anyway (`chooseShootWeeks` filters those weeks out of every pool
   // by construction, «an off-season cost is free money wearing a cost's clothes»). Saying so here
   // rather than assuming it: if the pool rule ever changes, this stays right.
-  if (row.kind === 'off-season') return 'Off-season'
-  if (row.kind === 'exam') return 'Exams'
-  return row.shoot ? 'Shooting week' : 'Training week'
+  if (row.kind === 'off-season') return t('Off-season')
+  if (row.kind === 'exam') return t('Exams')
+  return row.shoot ? t('Shooting week') : t('Training week')
 }
 
 /** "W8" - the week number alone. The date beside it already names the year, and `weekLabel` would
@@ -314,24 +310,24 @@ const seasonYearLabel = computed(() => {
  *  Every wording says the same thing as its verdict. A coach who is cheerful about a field the ring
  *  reads at 30% is the diary's cardinal sin wearing a whistle. */
 const COACH_FIELD_LINES: Record<FieldStrength, readonly string[]> = {
-  strong: [
-    'This field is strong.',
-    'Tough draw. Plenty of good players here.',
-    'She will have to earn every game here.',
-    'This is a level up. Good practice either way.',
-  ],
-  even: [
-    'An even field.',
-    'Good field. Many solid players.',
-    'She belongs in this one.',
-    'Nothing here she has not seen before.',
-  ],
-  favourite: [
-    'She should be among the best here.',
-    'She is one of the strongest in this draw.',
-    'On paper this is hers to lose.',
-    'A field she should be beating.',
-  ],
+  strong: localizedList(
+    () => t('This field is strong.'),
+    () => t('Tough draw. Plenty of good players here.'),
+    () => t('She will have to earn every game here.'),
+    () => t('This is a level up. Good practice either way.'),
+  ),
+  even: localizedList(
+    () => t('An even field.'),
+    () => t('Good field. Many solid players.'),
+    () => t('She belongs in this one.'),
+    () => t('Nothing here she has not seen before.'),
+  ),
+  favourite: localizedList(
+    () => t('She should be among the best here.'),
+    () => t('She is one of the strongest in this draw.'),
+    () => t('On paper this is hers to lose.'),
+    () => t('A field she should be beating.'),
+  ),
 }
 
 // ⚠ THE COACH AND THE RING WERE ANSWERING DIFFERENT QUESTIONS, AND THE CARD PRINTED THEM AS ONE.
@@ -363,7 +359,9 @@ const RING_CERTAIN = 0.85
  *  It holds no SELF_FIELD_LINES member and that is a fact rather than an oversight: none of the
  *  parent wordings below hedges the RESULT. They hedge the READING, which stays honest at any ring
  *  because a parent squinting at a draw sheet really is unsure of the reading at 92 percent too. */
-const HEDGED_LINES = new Set(['On paper this is hers to lose.', 'A field she should be beating.'])
+const HEDGED_LINES = {
+  has: (line: string): boolean => line === t('On paper this is hers to lose.') || line === t('A field she should be beating.'),
+}
 
 // ⚠ AND WHEN NOBODY IS HIRED, NOBODY PROFESSIONAL IS SPEAKING (R15-18, owner 09.08: on the 8k
 // background with no coach, the season cards still say "coach says" and say it very professionally…
@@ -386,24 +384,24 @@ const HEDGED_LINES = new Set(['On paper this is hers to lose.', 'A field she sho
 // is the per-day training controls the owner ruled on in the same session, and this line must not
 // pre-empt them by inventing a difference in what the preview contains. `preview` is untouched.
 const SELF_FIELD_LINES: Record<FieldStrength, readonly string[]> = {
-  strong: [
-    'Reading down the list, most of these names are above her.',
-    'This one looks hard on paper.',
-    'A lot of good players in this draw. More than usual.',
-    'We do not recognise half of them, and that is usually the bad half.',
-  ],
-  even: [
-    'Names we half know, and some we do not.',
-    'Looks like the girls she usually plays.',
-    'Nothing on this sheet we have not seen before.',
-    'An ordinary week, as far as we can tell.',
-  ],
-  favourite: [
-    'Reading the sheet, she may be the best name on it.',
-    'We have watched her beat most of these.',
-    'Nobody on this list has frightened us before.',
-    'She is the one to beat here, unless we are reading it wrong.',
-  ],
+  strong: localizedList(
+    () => t('Reading down the list, most of these names are above her.'),
+    () => t('This one looks hard on paper.'),
+    () => t('A lot of good players in this draw. More than usual.'),
+    () => t('We do not recognise half of them, and that is usually the bad half.'),
+  ),
+  even: localizedList(
+    () => t('Names we half know, and some we do not.'),
+    () => t('Looks like the girls she usually plays.'),
+    () => t('Nothing on this sheet we have not seen before.'),
+    () => t('An ordinary week, as far as we can tell.'),
+  ),
+  favourite: localizedList(
+    () => t('Reading the sheet, she may be the best name on it.'),
+    () => t('We have watched her beat most of these.'),
+    () => t('Nobody on this list has frightened us before.'),
+    () => t('She is the one to beat here, unless we are reading it wrong.'),
+  ),
 }
 
 /** What the coach adds when the draw cuts against the field – three wordings each, off the event's
@@ -411,16 +409,16 @@ const SELF_FIELD_LINES: Record<FieldStrength, readonly string[]> = {
  *  screen together do not echo. Silent when the two agree, which is 77.5% of cards: a seam that
  *  fired every time would stop being information and become wallpaper. */
 const DRAW_CLAUSES: Record<'kind' | 'cruel', readonly string[]> = {
-  kind: [
-    'The draw has been kind, though.',
-    'Her first one is winnable, though.',
-    'She has a way in, though – look who she opens against.',
-  ],
-  cruel: [
-    'She has drawn the one who can stop her, though.',
-    'Of everyone here, she drew the wrong one first.',
-    'The first round is the hard part, though.',
-  ],
+  kind: localizedList(
+    () => t('The draw has been kind, though.'),
+    () => t('Her first one is winnable, though.'),
+    () => t('She has a way in, though – look who she opens against.'),
+  ),
+  cruel: localizedList(
+    () => t('She has drawn the one who can stop her, though.'),
+    () => t('Of everyone here, she drew the wrong one first.'),
+    () => t('The first round is the hard part, though.'),
+  ),
 }
 
 /** IS ANYBODY HIRED. `coachId` is null for the parent on the court and a roster id otherwise – the
@@ -429,7 +427,7 @@ const selfCoached = computed(() => !game.snapshot?.coachId)
 
 /** WHOSE PLAQUE THIS IS. The label has to move with the voice or the register change below is
  *  invisible: the whole complaint was that the words said "Coach says" to a family with no coach. */
-const readLabel = computed(() => (selfCoached.value ? 'Your read:' : 'Coach says:'))
+const readLabel = computed(() => (selfCoached.value ? t('Your read:') : t('Coach says:')))
 
 /** The plaque's sentence. It keeps the name `coachSays` because a hired coach is its author on most
  *  careers – and because three source pins use `function coachSays` as a slice marker, where a
@@ -438,7 +436,7 @@ const readLabel = computed(() => (selfCoached.value ? 'Your read:' : 'Coach says
 function coachSays(e: UpcomingEvent): string {
   // `surfaceFit` is the engine's own verdict with the surface name sliced off (R11-15) – the card
   // names the court once, beside its ring, so the coach must not name it a second time.
-  const fit = surfaceFit(e.surface)
+  const court = courtRead(e.surface)
   // ⭐⭐ ROUND 31 #4 – NULL UNTIL THE DRAW IS MADE, and every clause below that reads it has to say
   // so rather than assume a number. His ruling put the draw in THIS field: «прямо на карточке
   // турнира писать имя и ранг соперницы на 1й круг внизу возле этого круга с шансом, можно как раз
@@ -478,14 +476,15 @@ function coachSays(e: UpcomingEvent): string {
   // beside the draw: «At this age you choose your weeks» is advice about WHICH tournament to enter,
   // and the entry decision is made two weeks before there is an opponent to have a ring against.
   const declineSay = coachDeclineLine(game.snapshot?.physicalShare, game.snapshot?.seed ?? '', e.id, strength)
-  if (declineSay) parts.push(declineSay)
+  // ⭐ L3-6 (10.10): the pick is `coachDeclineLine`'s (the event's own `coachage` sub-stream, unmoved); the sentence is drawn from its ref when the locale has one.
+  if (declineSay) parts.push(eventText({ text: declineSay, c: declineRef(declineSay) }))
 
   // "suits her game" -> "The court suits her game." Capitalised into a sentence, because the coach
   // speaks in sentences and the engine's fragment does not.
-  if (fit) parts.unshift(`The court ${fit}.`)
+  if (court) parts.unshift(court)
   // ...and the draw LAST, at the foot of the plaque next to the ring – his placement. One sentence
   // either way: the state of the draw, or the person it produced with her rank beside her.
-  parts.push(e.preview.drawMade ? drawnLine(e) : DRAW_NOT_MADE_NOTE)
+  parts.push(e.preview.drawMade ? drawnLine(e) : t('The draw has not been made yet.'))
   return parts.join(' ')
 }
 
@@ -493,8 +492,8 @@ function coachSays(e: UpcomingEvent): string {
  *  rendered the way every other surface renders an opponent's: `#212`, or `Unranked` for a girl with
  *  no counted results, which is `rankLabel`'s own pair and not a second spelling of it. */
 function drawnLine(e: UpcomingEvent): string {
-  const rank = rankLabel(e.preview.opponentRank ?? 0, e.preview.opponentRank !== null)
-  return `First round: ${e.preview.opponentName}, ${rank}.`
+  const rank = e.preview.opponentRank !== null ? t('#{rank}', { rank: e.preview.opponentRank }) : t('Unranked')
+  return t('First round: {0}, {1}.', [e.preview.opponentName, rank])
 }
 
 // U0: the ring's geometry and the arithmetic that turns a chance into a dash offset left for
@@ -540,7 +539,7 @@ const wildCardSlots = WILD_CARD.slots
 function proEntriesFor(e: UpcomingEvent): string | null {
   const cap = e.proEntryCap
   if (!cap || cap.limit >= Number.MAX_SAFE_INTEGER) return null
-  return `pro entries ${cap.used} / ${cap.limit}`
+  return t('pro entries {used} / {limit}', { used: cap.used, limit: cap.limit })
 }
 /** WHICH CARDS CARRY IT – the rungs the tour's age rule actually counts (`ECONOMY.entryCap
  *  .cappedProTiers`, read through the engine's own predicate). That is every W and WTA rung and no
@@ -565,7 +564,7 @@ function showsProEntries(e: UpcomingEvent): boolean {
 function juniorEntriesFor(e: UpcomingEvent): string | null {
   const cap = e.entryCap
   if (!cap || cap.limit >= Number.MAX_SAFE_INTEGER) return null
-  return `junior entries ${cap.used} / ${cap.limit}`
+  return t('junior entries {used} / {limit}', { used: cap.used, limit: cap.limit })
 }
 /** WHICH CARDS CARRY IT – the junior rungs the allowance counts (`ECONOMY.entryCap.cappedTiers`,
  *  through the engine's own predicate). The two families are disjoint, so no card shows both. */
@@ -820,7 +819,7 @@ function defendingPts(e: UpcomingEvent): number | null {
 const proBudgetLine = computed<string | null>(() => {
   const cap = game.snapshot?.proEntryCap
   if (!cap || cap.limit >= Number.MAX_SAFE_INTEGER) return null
-  return `Pro entries, birthday to birthday: ${cap.used} of ${cap.limit}`
+  return t('Pro entries, birthday to birthday: {used} of {limit}', { used: cap.used, limit: cap.limit })
 })
 
 // THE PLANNING COUNTER (owner, 02.08: how many tournaments are available to us and at what level,
@@ -839,13 +838,13 @@ const supplyLine = computed<{ total: number; weeks: number; parts: string[] } | 
   // Strongest rung first: a planner reads down from the biggest week she could still have.
   const strongestFirst = [...supply.rows].reverse()
   const shown = strongestFirst.slice(0, SUPPLY_RUNGS_SHOWN)
-  const parts = shown.map((r) => `${TIER_SHORT[r.tier]} ${r.open}`)
+  const parts = shown.map((r) => t('supply|{code} {count}', { code: TIER_SHORT[r.tier], count: r.open }))
   // ⚠ THE TAIL IS SUMMARISED, NEVER DROPPED - the arithmetic has to close or the total becomes a
   // number the player cannot check. A career deep in the W era is technically still allowed into
   // J30 and National; naming every one of those rungs turned this line into two lines of things
   // nobody would enter, which is the opposite of a planning aid.
   const tail = strongestFirst.slice(SUPPLY_RUNGS_SHOWN).reduce((n, r) => n + r.open, 0)
-  if (tail > 0) parts.push(`+${tail} lower`)
+  if (tail > 0) parts.push(t('+{n} lower', { n: tail }))
   return { total, weeks: supply.weeksLeft, parts }
 })
 
@@ -908,7 +907,7 @@ function entriesClosed(e: UpcomingEvent): boolean {
  *  every other rung charges from $40 to $1,000 – so the card and the confirm both say so in words.
  *  ⚠ NOT "free": the trip is $3,000-$6,000 and is charged separately. */
 function feeSentence(cents: number): string {
-  return cents === 0 ? 'No entry fee – the trip is still yours to pay for.' : `Entry fee ${formatCents(cents)}.`
+  return cents === 0 ? t('No entry fee – the trip is still yours to pay for.') : t('Entry fee {fee}.', { fee: formatCents(cents) })
 }
 
 function lockLabel(e: UpcomingEvent): string {
@@ -920,12 +919,12 @@ function lockLabel(e: UpcomingEvent): string {
       // being a fourth copy of them. The FALLBACK is this arm's alone and stays: a card can be
       // ineligible-because-injured on a snapshot that carries no `injury` object, and there is no
       // return week to name.
-      return layoffNoteFor(game.snapshot) || 'Injured – rest up'
+      return layoffNoteFor(game.snapshot) || t('Injured – rest up')
     }
     // The doctor's veto (below ECONOMY.availability.medicalFloor): the one hard body-gate. The
     // card says WHY in three words; the confirm never appears, because there is nothing to confirm.
     case 'medical':
-      return 'Not cleared to play'
+      return t('Not cleared to play')
     // The annual entry cap: she has spent this AGE-YEAR's international allowance. The count comes
     // from the engine's verdict on THIS event (never the ladder's current-season read) for the same
     // reason `pointsToEnter` does – an event past her next birthday is judged against a different
@@ -946,8 +945,10 @@ function lockLabel(e: UpcomingEvent): string {
     // the label.
     case 'capped':
       return e.entryCap
-        ? `${isCappedProTier(e.tier) ? 'Tour age rule' : 'Year limit'} – ${e.entryCap.used} of ${e.entryCap.limit}`
-        : 'Year limit reached'
+        ? isCappedProTier(e.tier)
+          ? t('Tour age rule – {used} of {limit}', { used: e.entryCap.used, limit: e.entryCap.limit })
+          : t('Year limit – {used} of {limit}', { used: e.entryCap.used, limit: e.entryCap.limit })
+        : t('Year limit reached')
     // R12-1/14: worded to match the exam row's own label ("Exams") – ONE language for the block,
     // whether the parent reads the row or the card.
     // ⚠ FIVE REFUSALS WEAR THIS ONE CODE, AND THIS PILL USED TO GUESS WHICH (round-17 #19). A tour
@@ -962,10 +963,10 @@ function lockLabel(e: UpcomingEvent): string {
     // generic sentence. Everything else now prints the engine's own words rather than a guess.
     case 'unavailable': {
       const vacation = vacations.value.find((v) => v.week === e.week)
-      if (vacation) return `Family vacation – ${packageLabel(vacation.packageId)}`
+      if (vacation) return t('Family vacation – {package}', { package: packageLabel(vacation.packageId) })
       // ⚠ AND THE FALLBACK IS NOT A SECOND GUESS. An old fixture with no detail on the wire gets the
       // one word that is true of all five – it is unavailable – rather than a reason it invented.
-      return e.ineligibleDetail ?? 'Not available this week'
+      return e.ineligibleDetail ?? t('Not available this week')
     }
     default:
       // R11-5a: the WORDS come from the shared rule, the NUMBER stays the engine's own verdict for
@@ -1091,25 +1092,34 @@ function askEnter(e: UpcomingEvent): void {
   // words. Load slice: it is the one moment the advice can still change the decision, and a warning that
   // appears only on the card is a warning the player has already scrolled past by the time he taps.
   const said = e.coachCaution ? `${e.coachCaution} ` : ''
+  const where = { event: e.label, week: weekLabel(e.week, startYear.value), surface: surfaceName(e.surface), fee: feeSentence(e.entryFeeCents) }
   pendingConfirm.value = {
     message: fatigued
-      ? `${said}${e.cautionDetail ?? 'Exhausted – racing risks injury.'} ` +
-        `Enter ${e.label} (${weekLabel(e.week, startYear.value)}, ${e.surface}) anyway? ${feeSentence(e.entryFeeCents)}`
-      : `${said}Enter ${e.label} (${weekLabel(e.week, startYear.value)}, ${e.surface})? ${feeSentence(e.entryFeeCents)}`,
+      ? t('{caution} Enter {event} ({week}, {surface}) anyway? {fee}', {
+          ...where,
+          caution: `${said}${e.cautionDetail ?? t('Exhausted – racing risks injury.')}`,
+        })
+      : e.coachCaution
+        ? t('{caution} Enter {event} ({week}, {surface})? {fee}', { ...where, caution: e.coachCaution })
+        : t('Enter {event} ({week}, {surface})? {fee}', where),
     // ⚠ TWO VERBS FOR TWO KINDS OF ADVICE (08.08). "Push through" is a BODY word – it is what you do
     // to tiredness – and since the coach also has an opinion about the SCHEDULE now, it would have
     // been the wrong verb on half the cautions he raises: there is nothing to push through about a
     // club draw in a week when the W50 is the better tournament. Both keep the affordance the load
     // slice built (the button stops saying "Enter", so the player notices he is overruling somebody);
     // only the word matches what is being overruled.
-    confirmLabel: fatigued ? 'Push through' : e.coachCaution ? 'Enter anyway' : 'Enter',
+    confirmLabel: fatigued ? t('Push through') : e.coachCaution ? t('Enter anyway') : t('Enter'),
     onConfirm: () => game.enterEvent(e.id),
   }
 }
 function askWithdraw(e: UpcomingEvent): void {
   pendingConfirm.value = {
-    message: `Withdraw from ${e.label} (${weekLabel(e.week, startYear.value)})? Entry fee ${formatCents(e.entryFeeCents)} will be refunded.`,
-    confirmLabel: 'Withdraw',
+    message: t('Withdraw from {event} ({week})? Entry fee {fee} will be refunded.', {
+      event: e.label,
+      week: weekLabel(e.week, startYear.value),
+      fee: formatCents(e.entryFeeCents),
+    }),
+    confirmLabel: t('Withdraw'),
     onConfirm: () => game.withdrawEvent(e.id),
   }
 }
@@ -1119,11 +1129,16 @@ function askWithdraw(e: UpcomingEvent): void {
  *  escape from the R10-3 dead end, so it also names the two things the freed week can become. */
 function askCancelEntry(e: UpcomingEvent): void {
   pendingConfirm.value = {
-    message:
-      `Cancel her entry to ${e.label} (${weekLabel(e.week, startYear.value)})? Entries closed on ${weekLabel(e.deadlineWeek, startYear.value)}, so the ` +
-      `${formatCents(e.entryFeeCents)} entry fee is NOT refunded. The week frees up for a practice ` +
-      `match or a family week.`,
-    confirmLabel: 'Cancel the entry',
+    message: t(
+      'Cancel her entry to {event} ({week})? Entries closed on {deadline}, so the {fee} entry fee is NOT refunded. The week frees up for a practice match or a family week.',
+      {
+        event: e.label,
+        week: weekLabel(e.week, startYear.value),
+        deadline: weekLabel(e.deadlineWeek, startYear.value),
+        fee: formatCents(e.entryFeeCents),
+      },
+    ),
+    confirmLabel: t('Cancel the entry'),
     onConfirm: () => game.cancelEntry(e.id),
   }
 }
@@ -1150,12 +1165,14 @@ function openPlanner(row: CalendarRow): void {
  *  the owner's "She is already worn out – another match?" lands HERE, where the parent can still say
  *  yes; his words verbatim in docs/decisions.md). */
 function confirmPractice(p: { week: number; withCoach: boolean; feeCents: number; caution: PracticeCaution }): void {
-  const what = p.withCoach ? 'Practice match with the coach' : 'Practice match'
+  const booked = { week: weekLabel(p.week, startYear.value), fee: formatCents(p.feeCents) }
   pendingConfirm.value = {
     message:
       (p.caution.level === 'caution' ? `${p.caution.detail} ` : '') +
-      `${what} in ${weekLabel(p.week, startYear.value)} – ${formatCents(p.feeCents)}. No ranking points.`,
-    confirmLabel: p.caution.level === 'caution' ? 'Push through' : 'Book it',
+      (p.withCoach
+        ? t('Practice match with the coach in {week} – {fee}. No ranking points.', booked)
+        : t('Practice match in {week} – {fee}. No ranking points.', booked)),
+    confirmLabel: p.caution.level === 'caution' ? t('Push through') : t('Book it'),
     onConfirm: () => game.bookPractice(p.week, p.withCoach),
   }
   planSheet.value = null
@@ -1164,9 +1181,13 @@ function confirmPractice(p: { week: number; withCoach: boolean; feeCents: number
 function confirmVacation(v: { week: number; packageId: string; label: string; priceCents: number; gain: number }): void {
   pendingConfirm.value = {
     message:
-      `${v.label} in ${weekLabel(v.week, startYear.value)} – ${v.priceCents === 0 ? 'free' : formatCents(v.priceCents)}, ` +
-      `+${v.gain} condition. No tournaments that week.`,
-    confirmLabel: 'Book it',
+      t('{label} in {week} – {price}, +{gain} condition. No tournaments that week.', {
+        label: v.label,
+        week: weekLabel(v.week, startYear.value),
+        price: v.priceCents === 0 ? t('price|free') : formatCents(v.priceCents),
+        gain: v.gain,
+      }),
+    confirmLabel: t('Book it'),
     onConfirm: () => game.bookVacation(v.week, v.packageId),
   }
   planSheet.value = null
@@ -1178,10 +1199,18 @@ function confirmVacation(v: { week: number; packageId: string; label: string; pr
  *  sheet has no row. */
 function askCancelVacation(week: number, booking: VacationBooking): void {
   pendingConfirm.value = {
-    message: `Cancel ${packageLabel(booking.packageId)} in ${weekLabel(week, startYear.value)}? ${
-      booking.paidCents > 0 ? `${formatCents(booking.paidCents)} comes back in full.` : 'Nothing was paid for it.'
-    }`,
-    confirmLabel: 'Cancel the trip',
+    message:
+      booking.paidCents > 0
+        ? t('Cancel {package} in {week}? {fee} comes back in full.', {
+            package: packageLabel(booking.packageId),
+            week: weekLabel(week, startYear.value),
+            fee: formatCents(booking.paidCents),
+          })
+        : t('Cancel {package} in {week}? Nothing was paid for it.', {
+            package: packageLabel(booking.packageId),
+            week: weekLabel(week, startYear.value),
+          }),
+    confirmLabel: t('Cancel the trip'),
     onConfirm: () => game.cancelVacation(week),
   }
 }
@@ -1195,8 +1224,11 @@ function cancelVacationFromPlanner(v: { week: number; packageId: string; label: 
 function askCancelPractice(row: CalendarRow): void {
   const booking = row.practice!
   pendingConfirm.value = {
-    message: `Cancel the practice match in ${weekLabel(row.week, startYear.value)}? ${formatCents(booking.paidCents)} comes back in full.`,
-    confirmLabel: 'Cancel the match',
+    message: t('Cancel the practice match in {week}? {fee} comes back in full.', {
+      week: weekLabel(row.week, startYear.value),
+      fee: formatCents(booking.paidCents),
+    }),
+    confirmLabel: t('Cancel the match'),
     onConfirm: () => game.cancelPractice(row.week),
   }
 }
@@ -1254,8 +1286,8 @@ const showRescue = computed(
  *  lie at condition 78 – the headline follows the depth of the hole. */
 const rescueTitle = computed(() =>
   condition.value < ECONOMY.practice.cautionCondition
-    ? 'She is worn out – maybe a family week?'
-    : 'She could use a week off – maybe a family week?',
+    ? t('She is worn out – maybe a family week?')
+    : t('She could use a week off – maybe a family week?'),
 )
 function openRescue(): void {
   if (rescueWeek.value === null) return
@@ -1313,8 +1345,9 @@ interface PlaqueLines {
 function plaqueLines(e: WorldEvent): PlaqueLines {
   const m = e.match
   const score = m?.score ? (m.bId === KID_ID ? flipScore(m.score) : m.score) : null
-  if (!score || !e.text.endsWith(score)) return { title: e.text, score: null }
-  return { title: e.text.slice(0, e.text.length - score.length).trimEnd(), score }
+  const text = eventText(e)
+  if (!score || !text.endsWith(score)) return { title: text, score: null }
+  return { title: text.slice(0, text.length - score.length).trimEnd(), score }
 }
 
 // R10-15: the this-week list read identically for a win and a loss, so the parent had to parse
@@ -1394,15 +1427,15 @@ const exhibitionPlayerA = computed<MatchPlayer>(() =>
 // The fixed sparring block. Her groundstroke (v25) sits between her serve and her return, which is
 // what a strong all-round junior looks like off the ground - the point of this opponent is that she
 // is uniformly good rather than that she has a weakness to find.
-const exhibitionPlayerB: MatchPlayer = { id: 'top-seed', name: 'Top seed', serve: 63, ret: 60, composure: 70, stamina: 65, groundstrokes: 62 }
+const exhibitionPlayerB = computed<MatchPlayer>(() => ({ id: 'top-seed', name: t('Top seed'), serve: 63, ret: 60, composure: 70, stamina: 65, groundstrokes: 62 }))
 const exhibitionSeed = ref('')
 const exhibitionMatch = ref<AnnotatedMatch | null>(null)
 
 function playExhibition(): void {
   const seed = exhibitionSeed.value.trim() || `exhibition-${Date.now().toString(36)}`
   const opts: MatchOptions = { surface: exhibitionSurface, tour: 'wta', seed }
-  const result = simulateMatch(exhibitionPlayerA.value, exhibitionPlayerB, opts)
-  exhibitionMatch.value = annotateMatch(result, exhibitionPlayerA.value, exhibitionPlayerB, opts)
+  const result = simulateMatch(exhibitionPlayerA.value, exhibitionPlayerB.value, opts)
+  exhibitionMatch.value = annotateMatch(result, exhibitionPlayerA.value, exhibitionPlayerB.value, opts)
 }
 /** Dismiss the takeover. Nothing to commit: the hit-out costs nothing, decides nothing and is not
  *  written anywhere, so leaving it is the whole of leaving it. */
@@ -1433,7 +1466,7 @@ function closeExhibition(): void {
          one control this screen has, on the right. -->
     <div class="season-topbar">
       <div>
-        <h2 class="season-title">Season Planner</h2>
+        <h2 class="season-title">{{ t('Season Planner') }}</h2>
         <p class="season-year">
           {{ seasonYearLabel }}
           <!-- Owner, 29.07: the week she is actually IN, up here with the year, so it is on
@@ -1448,7 +1481,7 @@ function closeExhibition(): void {
              birthday to birthday - and it is the phrase the card pills below already carry
              (`:title` on `.pro-entries`). See `proBudgetLine` in the script for the measurement
              that moved it and for what did NOT move. -->
-        <p v-if="proBudgetLine" class="season-pro-budget" :title="'The tour\'s age rule limits how many professional (W) events she may enter in the year she is this age – counted from birthday to birthday. A fresh allowance arrives on her next birthday; junior and national events are not counted.'">
+        <p v-if="proBudgetLine" class="season-pro-budget" :title="t('The tour\'s age rule limits how many professional (W) events she may enter in the year she is this age – counted from birthday to birthday. A fresh allowance arrives on her next birthday; junior and national events are not counted.')">
           {{ proBudgetLine }}
         </p>
         <!-- THE PLANNING COUNTER: how much tennis is left in the season and on which rungs. It
@@ -1456,8 +1489,8 @@ function closeExhibition(): void {
              eight weeks and at most two rungs, so without this a sparse stretch reads as an empty
              career. Blank weeks are normal: a full season is roughly twenty events, one a
              fortnight, and there is always more on offer than she can take. -->
-        <p v-if="supplyLine" class="season-supply" :title="'Tournaments you can still enter this season, counted across every level open to her – including the rare ones the eight-week feed cannot show. She can play one event a week at most, so the supply is always larger than the schedule.'">
-          {{ supplyLine.total }} left to enter over {{ supplyLine.weeks }} weeks
+        <p v-if="supplyLine" class="season-supply" :title="t('Tournaments you can still enter this season, counted across every level open to her – including the rare ones the eight-week feed cannot show. She can play one event a week at most, so the supply is always larger than the schedule.')">
+          {{ t('{0} left to enter over {1} weeks', [supplyLine.total, supplyLine.weeks]) }}
           <span class="season-supply-tiers">{{ supplyLine.parts.join(' · ') }}</span>
           <!-- ⭐⭐ ROUND-21 #2b: the sentence that reconciles this count with the cards under it.
                The `title` above has always said the feed cannot show them all, and a title is a
@@ -1466,18 +1499,18 @@ function closeExhibition(): void {
                week where every counted event is on screen this line would be noise, and the point
                of it is to explain a gap rather than to narrate agreement. -->
           <span v-if="supplyOnScreen < supplyLine.total" class="season-supply-here">
-            {{ supplyOnScreen }} of them on the cards below
+            {{ t('{0} of them on the cards below', [supplyOnScreen]) }}
           </span>
         </p>
       </div>
-      <IconButton class="tier-guide-btn" label="Tour guide" title="Tour guide" @click="showTierGuide = true">?</IconButton>
+      <IconButton class="tier-guide-btn" :label="t('Tour guide')" :title="t('Tour guide')" @click="showTierGuide = true">?</IconButton>
     </div>
 
     <!-- THE PHASE STRIP. Driven by the engine's own SURFACE_BLOCKS, so it cannot promise a swing the
          calendar does not generate; the lime cell is the block this week falls in. -->
     <div class="phase-strip">
       <div
-        v-for="p in PHASE_STRIP"
+        v-for="p in phaseStrip"
         :key="p.id"
         class="phase-cell"
         :class="{ active: p.id === activePhaseId }"
@@ -1491,18 +1524,17 @@ function closeExhibition(): void {
     <div v-if="showRescue" class="rescue-card">
       <p class="rescue-title">{{ rescueTitle }}</p>
       <p class="hint" style="margin: 0">
-        Condition {{ condition }}/100. A week away in {{ rescueWeekLabel }} would bring her back
-        fresher – nothing is booked until you say so.
+        {{ t('Condition {0}/100. A week away in {1} would bring her back fresher – nothing is booked until you say so.', [condition, rescueWeekLabel]) }}
       </p>
       <div class="controls" style="margin-top: 10px">
-        <PrimaryPill @click="openRescue">See the options</PrimaryPill>
-        <button @click="rescueDismissed = true">Not now</button>
+        <PrimaryPill @click="openRescue">{{ t('See the options') }}</PrimaryPill>
+        <button @click="rescueDismissed = true">{{ t('Not now') }}</button>
       </div>
     </div>
 
     <section v-if="thisWeekMatches.length">
-      <h2>This week's tournament</h2>
-      <p v-if="thisWeekSummary" class="tournament-summary">{{ thisWeekSummary.text }}</p>
+      <h2>{{ t('This week\'s tournament') }}</h2>
+      <p v-if="thisWeekSummary" class="tournament-summary">{{ eventText(thisWeekSummary) }}</p>
       <ol class="bracket-list">
         <!-- R12-12: TWO lines – the sentence on top, the scoreline on its own line beneath. -->
         <li
@@ -1515,7 +1547,7 @@ function closeExhibition(): void {
             <span>{{ plaqueLines(m).title }}</span>
             <span v-if="plaqueLines(m).score" class="bracket-score">{{ plaqueLines(m).score }}</span>
           </span>
-          <button v-if="m.match" class="watch-play-btn sfx-watch" aria-label="Watch match" @click="watchMatch(m)">
+          <button v-if="m.match" class="watch-play-btn sfx-watch" :aria-label="t('Watch match')" @click="watchMatch(m)">
             <span class="watch-play-icon" :style="playIconStyle"></span>
           </button>
         </li>
@@ -1526,17 +1558,17 @@ function closeExhibition(): void {
          R10-12: the play button opens the LIVE flow (VS card -> the match -> a box score), not the
          "Watch again ↻" replay card – a friendly you paid for should play out, not read as history. -->
     <section v-if="thisWeekFriendly">
-      <h2>This week's practice match</h2>
+      <h2>{{ t('This week\'s practice match') }}</h2>
       <ol class="bracket-list">
         <li
           class="bracket-row"
           :class="{ won: kidWon(thisWeekFriendly) === true, lost: kidWon(thisWeekFriendly) === false }"
         >
-          <span>{{ thisWeekFriendly.text }}</span>
+          <span>{{ eventText(thisWeekFriendly) }}</span>
           <button
             v-if="thisWeekFriendly.match"
             class="watch-play-btn sfx-watch"
-            aria-label="Watch practice match"
+            :aria-label="t('Watch practice match')"
             @click="openPracticeLive(thisWeekFriendly.match, week)"
           >
             <span class="watch-play-icon" :style="playIconStyle"></span>
@@ -1548,7 +1580,7 @@ function closeExhibition(): void {
     <!-- Owner, 28.07: no panel behind this - just the heading and the chips, which reads lighter
          and gives the chips the full width. -->
     <section v-if="myEntries.length" class="bare">
-      <h2>My entries</h2>
+      <h2>{{ t('My entries') }}</h2>
       <div class="entries-strip">
         <span v-for="e in myEntries" :key="e.id" class="pill ok">{{ e.label }} · {{ weekLabel(e.week, startYear) }}</span>
       </div>
@@ -1558,7 +1590,7 @@ function closeExhibition(): void {
          to the screen's own gutter the way the export draws them. The panel's translucent top
          border went with it - that was the line running across above the first card. -->
     <section class="bare">
-      <h2>Calendar</h2>
+      <h2>{{ t('Calendar') }}</h2>
       <!-- ⭐⭐⭐ ROUND 27 #5 – THE REASON, BESIDE THE CONTROLS INSTEAD OF BEHIND THEM.
            The owner asked for a line beside or under the buttons, in the words the shell already
            puts up. ⚠ HIS WORDS ARE IN THE SCRIPT, AT `frozenForCollege`, AND THEY STAY THERE: no
@@ -1654,11 +1686,11 @@ function closeExhibition(): void {
             </div>
 
             <div class="event-money">
-              <p class="event-money-label">Travel budget</p>
+              <p class="event-money-label">{{ t('Travel budget') }}</p>
               <p class="event-money-figure">{{ formatCents(ev.travelCostCents) }}</p>
               <!-- v21: the figure above is already NET of the scholarship, so without this line the
                    player just sees a smaller number and no reason for it. -->
-              <p v-if="academyCoverPct > 0" class="event-money-sub">academy covers {{ academyCoverPct }}%</p>
+              <p v-if="academyCoverPct > 0" class="event-money-sub">{{ t('academy covers {0}%', [academyCoverPct]) }}</p>
             </div>
 
             <div class="controls">
@@ -1671,7 +1703,7 @@ function closeExhibition(): void {
               <!-- R12-8b: the layoff covers this WEEK, whatever the event's own lock says – a
                    points-locked card names the band first (lock precedence), so without the chip
                    the injury never appeared on it at all. -->
-              <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
+              <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">{{ t('injury') }}</span>
               <!-- ⭐⭐ ROUND 28 #4 – THE SHOOT PLATE, and it rides on EVERY row shape rather than on a
                    row kind of its own. The owner: shoot weeks for sponsors need their own plates, or
                    at least some mark that picks them out in the season calendar. A shoot week is not
@@ -1680,7 +1712,7 @@ function closeExhibition(): void {
                    displace one of those to appear would be a lie about the week on the four rows it
                    is not. Same shape and same slot as the injury chip beside it, for the same
                    reason: both are facts ABOUT the week rather than what the week IS. -->
-              <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
+              <span v-if="row.shoot" class="pill shoot-chip" :title="t('{0} shoot week – she keeps her sessions and gives up the rest', [row.shoot.brand])">{{ t('shoot') }}</span>
               <!-- Round-7 item 21: past tense once the window has shut. -->
               <!-- ⚠ E-P04 (26.09) – `entriesClosed(ev)`, twice, where this row spelled
                    `week > ev.deadlineWeek` inline. The screen already owns that question one
@@ -1688,9 +1720,9 @@ function closeExhibition(): void {
                    card is the kind of pair that drifts the day the rule grows an `!ev.entered` or a
                    freeze clause. Both words and both classes are byte-identical. -->
               <span class="pill" :class="{ negative: entriesClosed(ev) && !ev.entered }">
-                {{ entriesClosed(ev) ? 'Closed' : 'closes' }} {{ weekLabel(ev.deadlineWeek, startYear) }}
+                {{ entriesClosed(ev) ? t('Closed {week}', { week: weekLabel(ev.deadlineWeek, startYear) }) : t('closes {week}', { week: weekLabel(ev.deadlineWeek, startYear) }) }}
               </span>
-              <span v-if="ev.entered" class="pill ok">Entered</span>
+              <span v-if="ev.entered" class="pill ok">{{ t('Entered') }}</span>
               <!-- ⭐⭐ THE WILD CARD (round 21 #2b) – the half of the item the owner asked for by
                    name: the event row says the place was a wild card. The flag is the ENGINE's
                    (`UpcomingEvent.wildCard`), set only when the acceptance list would have refused
@@ -1701,9 +1733,9 @@ function closeExhibition(): void {
               <span
                 v-if="ev.wildCard"
                 class="pill wildcard-chip"
-                :title="`One of the ${wildCardSlots} places this tournament holds for players of the host nation – she is outside the acceptance list.`"
+                :title="t('One of the {0} places this tournament holds for players of the host nation – she is outside the acceptance list.', [wildCardSlots])"
               >
-                wild card
+                {{ t('wild card') }}
               </span>
               <!-- THE DEFENDING BADGE (W2-LADDER §3: the points window made visible - the
                    owner's phrase is quoted at `defendingPts` in the script). Last year's counted
@@ -1714,9 +1746,9 @@ function closeExhibition(): void {
               <span
                 v-if="defendingPts(ev) !== null"
                 class="pill defend-chip"
-                :title="`Her counted result from this week last year (${defendingPts(ev)} pts) leaves the 52-week professional window as this week arrives.`"
+                :title="t('Her counted result from this week last year ({0} pts) leaves the 52-week professional window as this week arrives.', [defendingPts(ev)])"
               >
-                defending {{ defendingPts(ev) }} pts
+                {{ t('defending {0} pts', [defendingPts(ev)]) }}
               </span>
               <!-- R10-5: an entry that survived the band crossing is COMMITTED, not illegal – but it
                    must SAY so. The owner played a Local at 122 points with nothing on screen to
@@ -1727,7 +1759,7 @@ function closeExhibition(): void {
                    choice she may still make – which is what «lead with the more relevant tournament»
                    needs the weaker card to look like. -->
               <span v-if="ev.outgrown" class="pill muted">
-                Outgrown – she is past this level
+                {{ t('Outgrown – she is past this level') }}
               </span>
             </div>
 
@@ -1810,7 +1842,7 @@ function closeExhibition(): void {
                 :disabled="game.busy || frozenForCollege"
                 @click="askWithdraw(ev)"
               >
-                Withdraw
+                {{ t('Withdraw') }}
               </button>
               <!-- R10-13: entered, list CLOSED. Not a "withdraw" any more – a CANCEL, with the fee
                    forfeited, which hands the week back to the planner. Plain secondary button, like
@@ -1818,11 +1850,11 @@ function closeExhibition(): void {
                    ⭐ ROUND 27 #5: `cancelEntry` is `guardNotEnded` too - it is a TOUR command about
                    an entry, not one of E2's two family-week cancels. -->
               <button v-else-if="ev.entered" :disabled="game.busy || frozenForCollege" @click="askCancelEntry(ev)">
-                Cancel entry
+                {{ t('Cancel entry') }}
               </button>
               <!-- Round-8 6b: `lock` brightens the label to soft amber (pill stays disabled). -->
               <span v-else-if="entriesClosed(ev)" class="pill muted lock">
-                Entries closed {{ weekLabel(ev.deadlineWeek, startYear) }}
+                {{ t('Entries closed {0}', [weekLabel(ev.deadlineWeek, startYear)]) }}
               </span>
               <!-- HARD locks: ranking gate ('locked') OR a hard availability block (injured /
                    school exams / a booked family vacation / the doctor's veto under the medical
@@ -1860,11 +1892,11 @@ function closeExhibition(): void {
                   :aria-label="enterActionName(ev, startYear)"
                   @click="askEnter(ev)"
                 >
-                  Enter
+                  {{ t('Enter') }}
                 </PrimaryPill>
-                <span v-if="fundsShort(ev)" class="hint" style="margin: 0">Not enough funds</span>
+                <span v-if="fundsShort(ev)" class="hint" style="margin: 0">{{ t('Not enough funds') }}</span>
                 <p v-else-if="ev.cautionReason === 'fatigued'" class="caution-note">
-                  Exhausted – race anyway? Rest would be wiser.
+                  {{ t('Exhausted – race anyway? Rest would be wiser.') }}
                 </p>
                 <!-- THE HIRED COACH'S OPINION (load slice). Its own line, below the engine's caution and
                      never instead of it: `cautionReason` is the RULE (she is under the tier's floor) and
@@ -1880,14 +1912,14 @@ function closeExhibition(): void {
                    is allowed and in a template it is not).
                    The sheet behind it books a practice or a family week, and `bookPractice` /
                    `bookVacation` are both `guardNotEnded`: refused for the whole freeze. -->
-              <button v-if="row.plannable && i === 0" :disabled="game.busy || frozenForCollege" @click="openPlanner(row)">+ Plan week</button>
+              <button v-if="row.plannable && i === 0" :disabled="game.busy || frozenForCollege" @click="openPlanner(row)">{{ t('+ Plan week') }}</button>
               <!-- R12-1/14: on an exam week the button does not vanish SILENTLY – the card says why
                    SHE cannot go (the tournament still runs; school owns her week).
                    ⚠ ROUND 34 #14 – THIS ONE KEEPS NO `i === 0` GUARD AND THE BUTTON ABOVE DOES, which
                    is the same split the injury and shoot chips already make: «school owns this week»
                    is a FACT about the week and is true of every card on it, while «+ Plan week» is an
                    ACTION and two of them would be one control drawn twice. -->
-              <span v-else-if="examReasonShows(row)" class="pill muted lock">Exams this week</span>
+              <span v-else-if="examReasonShows(row)" class="pill muted lock">{{ t('Exams this week') }}</span>
               <!-- ⚠ THE ALLOWANCE, BOTTOM RIGHT, ON EVERY W CARD (round-16 #7, the owner). LAST in
                    the row and pushed over by `margin-left: auto`, so it is the last thing read on the
                    card and never competes with the control beside it. `.controls` wraps, and the
@@ -1897,7 +1929,7 @@ function closeExhibition(): void {
               <span
                 v-if="showsProEntries(ev)"
                 class="pill muted pro-entries"
-                :title="`The tour's age rule caps how many professional tournaments she may enter in the year she is this age – counted from birthday to birthday. This is where she stands against it.`"
+                :title="t('The tour\'s age rule caps how many professional tournaments she may enter in the year she is this age – counted from birthday to birthday. This is where she stands against it.')"
               >
                 {{ proEntriesFor(ev) }}
               </span>
@@ -1906,7 +1938,7 @@ function closeExhibition(): void {
               <span
                 v-else-if="showsJuniorEntries(ev)"
                 class="pill muted junior-entries"
-                :title="`The junior tour caps how many international tournaments she may enter in the year she is this age – counted from birthday to birthday. This is where she stands against it.`"
+                :title="t('The junior tour caps how many international tournaments she may enter in the year she is this age – counted from birthday to birthday. This is where she stands against it.')"
               >
                 {{ juniorEntriesFor(ev) }}
               </span>
@@ -1937,7 +1969,7 @@ function closeExhibition(): void {
             <IconButton
               class="week-arrow back"
               icon="back"
-              label="Back"
+              :label="t('Back')"
               :icon-size="15"
               :disabled="pager.ends(row.week).atStart"
               @click="pager.page(row.week, -1)"
@@ -1945,7 +1977,7 @@ function closeExhibition(): void {
             <IconButton
               class="week-arrow next"
               icon="back"
-              label="Next"
+              :label="t('pager|Next')"
               :icon-size="15"
               :disabled="pager.ends(row.week).atEnd"
               @click="pager.page(row.week, 1)"
@@ -1983,7 +2015,7 @@ function closeExhibition(): void {
             class="week-card vacation"
             role="button"
             tabindex="0"
-            :aria-label="`${packageLabel(row.vacation.packageId)}, ${weekLabel(row.week, startYear)} - open the planner`"
+            :aria-label="t('{0}, {1} - open the planner', [packageLabel(row.vacation.packageId), weekLabel(row.week, startYear)])"
             :aria-describedby="vacationDescribedBy(row)"
             @click="openPlanner(row)"
             @keydown.enter.prevent="openPlanner(row)"
@@ -2000,12 +2032,12 @@ function closeExhibition(): void {
               </div>
               <div class="controls week-controls">
                 <!-- R12-8b: a kept booking inside the layoff still wears the week's truth. -->
-                <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
-                <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
+                <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">{{ t('injury') }}</span>
+                <span v-if="row.shoot" class="pill shoot-chip" :title="t('{0} shoot week – she keeps her sessions and gives up the rest', [row.shoot.brand])">{{ t('shoot') }}</span>
                 <!-- ⚠ E-P13: the two ids are what the card's `aria-describedby` points at. -->
-                <span v-if="vacationGain(row) > 0" :id="`vac-gain-w${row.week}`" class="pill">+{{ vacationGain(row) }} condition</span>
+                <span v-if="vacationGain(row) > 0" :id="`vac-gain-w${row.week}`" class="pill">{{ t('+{0} condition', [vacationGain(row)]) }}</span>
                 <span :id="`vac-paid-w${row.week}`" class="pill">{{ formatCents(row.vacation.paidCents) }}</span>
-                <span v-if="row.event" class="week-note">Skipping {{ row.event.label }}.</span>
+                <span v-if="row.event" class="week-note">{{ t('Skipping {0}.', [row.event.label]) }}</span>
               </div>
             </div>
           </Card>
@@ -2014,19 +2046,21 @@ function closeExhibition(): void {
             <span class="planned-lines">
               <span class="planned-when">
                 {{ weekLabel(row.week, startYear) }} · {{ row.dates }}
-                <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
-                <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
+                <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">{{ t('injury') }}</span>
+                <span v-if="row.shoot" class="pill shoot-chip" :title="t('{0} shoot week – she keeps her sessions and gives up the rest', [row.shoot.brand])">{{ t('shoot') }}</span>
               </span>
               <span class="planned-what">
                 🏖 {{ packageLabel(row.vacation.packageId) }}
-                <template v-if="row.event"> · skipping {{ row.event.label }}</template>
+                <template v-if="row.event"> · {{ t('skipping {0}', [row.event.label]) }}</template>
               </span>
             </span>
             <span class="planned-actions">
               <!-- ⚠⚠ LEFT LIVE INSIDE THE COLLEGE FREEZE, ON PURPOSE (round 24, E2). `cancelVacation`
                    takes `guardNotEndedForGood` – a booked family week is the family's own calendar,
                    and a trip booked before she left is really paid for inside the freeze. -->
-              <button :disabled="game.busy" @click="askCancelVacation(row.week, row.vacation)">Cancel</button>
+              <!-- `undo|` (owner 10.10): this Cancel UNDOES a booked week, so it carries the undoing
+                   word, split from the dialog-closing one that lives on the bare key. -->
+              <button :disabled="game.busy" @click="askCancelVacation(row.week, row.vacation)">{{ t('undo|Cancel') }}</button>
             </span>
           </div>
           <div v-else-if="row.kind === 'practice' && row.practice" class="calendar-row-muted planned">
@@ -2035,12 +2069,12 @@ function closeExhibition(): void {
                 {{ weekLabel(row.week, startYear) }} · {{ row.dates }}
                 <!-- R12-8b: the engine refunds these on injury, so the chip here is a belt-and-braces
                      read of the same window, never a promise the match survives the layoff. -->
-                <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
-                <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
+                <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">{{ t('injury') }}</span>
+                <span v-if="row.shoot" class="pill shoot-chip" :title="t('{0} shoot week – she keeps her sessions and gives up the rest', [row.shoot.brand])">{{ t('shoot') }}</span>
               </span>
               <span class="planned-what">
-                🎾 Practice match{{ row.practice.withCoach ? ' + coach' : '' }}
-                <template v-if="row.event"> · instead of {{ row.event.label }}</template>
+                🎾 {{ row.practice.withCoach ? t('Practice match + coach') : t('Practice match') }}
+                <template v-if="row.event"> · {{ t('instead of {0}', [row.event.label]) }}</template>
               </span>
             </span>
             <span class="planned-actions">
@@ -2061,12 +2095,13 @@ function closeExhibition(): void {
                    exactly this argument (see the note at `.next-week-bar`); this is the same command
                    on another screen, and it had not been told. -->
               <PrimaryPill v-if="row.week === week + 1" class="sfx-watch" :disabled="game.busy || frozenForCollege" @click="playPracticeWeek">
-                Play it and watch
+                {{ t('Play it and watch') }}
               </PrimaryPill>
               <!-- ⚠⚠ AND THE CANCEL BESIDE IT IS DELIBERATELY LEFT LIVE (round 24, E2).
                    `cancelPractice` takes `guardNotEndedForGood`, so the engine ALLOWS it through the
                    whole freeze – disabling it would be the same lie pointed the other way. -->
-              <button :disabled="game.busy" @click="askCancelPractice(row)">Cancel</button>
+              <!-- `undo|` as above: undoing a booked practice match. -->
+              <button :disabled="game.busy" @click="askCancelPractice(row)">{{ t('undo|Cancel') }}</button>
             </span>
           </div>
 
@@ -2091,12 +2126,12 @@ function closeExhibition(): void {
                 <p class="week-dates">{{ weekOnly(row.week) }} &middot; {{ row.dates }}</p>
               </div>
               <div class="controls week-controls">
-                <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
-                <span v-if="row.shoot" class="pill shoot-chip" :title="`${row.shoot.brand} shoot week – she keeps her sessions and gives up the rest`">shoot</span>
+                <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">{{ t('injury') }}</span>
+                <span v-if="row.shoot" class="pill shoot-chip" :title="t('{0} shoot week – she keeps her sessions and gives up the rest', [row.shoot.brand])">{{ t('shoot') }}</span>
                 <!-- ⭐ ROUND 27 #5 – the same button on the tournament-free week card, and the same
                      two refused commands behind it. -->
-                <button v-if="row.plannable" :disabled="game.busy || frozenForCollege" @click="openPlanner(row)">+ Plan week</button>
-                <span v-else-if="row.kind === 'exam'" class="week-note">School owns this week.</span>
+                <button v-if="row.plannable" :disabled="game.busy || frozenForCollege" @click="openPlanner(row)">{{ t('+ Plan week') }}</button>
+                <span v-else-if="row.kind === 'exam'" class="week-note">{{ t('School owns this week.') }}</span>
               </div>
             </div>
           </Card>
@@ -2106,11 +2141,10 @@ function closeExhibition(): void {
            on the calendar used to be indistinguishable from one she was locked out of – both were
            simply absent. Now it says so, and says it is not a lock. -->
       <p v-if="openButUnscheduled.length" class="hint open-tier-note">
-        Also open to her: {{ openButUnscheduled.join(', ') }} – none scheduled in the next
-        {{ UPCOMING_WEEKS }} weeks. Not locked, just rarer: keep watching the calendar.
+        {{ t('Also open to her: {0} – none scheduled in the next {1} weeks. Not locked, just rarer: keep watching the calendar.', [openButUnscheduled.join(', '), UPCOMING_WEEKS]) }}
       </p>
       <p class="hint">
-        Weeks can carry more than one event now – she can only play one, so the pick is yours.
+        {{ t('Weeks can carry more than one event now – she can only play one, so the pick is yours.') }}
       </p>
     </section>
 
@@ -2118,13 +2152,13 @@ function closeExhibition(): void {
          of the app uses, with the matchup as its subject rather than a row of controls. Its costed
          cousin - a BOOKED practice match - lives on the calendar above. -->
     <section class="bare">
-      <h2>Friendly match</h2>
+      <h2>{{ t('Friendly match') }}</h2>
       <!-- U0: the SAME Card as Home's notecards, and it always was – `.friendly-card`,
            `.diary-strip` and `.note-card` shared one rule in the sheet. The default `gradient`
            variant is that rule. -->
       <Card class="friendly-card">
         <div class="friendly-said">
-          <p class="friendly-vs">{{ kidName }} <span>vs</span> Top seed</p>
+          <p class="friendly-vs">{{ kidName }} <span>{{ t('vs') }}</span> {{ t('Top seed') }}</p>
           <p class="friendly-sub">
             <!-- ⚠ THE SURFACE WAS HARD-CODED TWICE HERE - once as the class `surf-clay` and once as
                  the literal word "clay" in the copy - so a friendly on any other court would have
@@ -2134,10 +2168,10 @@ function closeExhibition(): void {
                  descendant of `.friendly-sub`. -->
             <SurfaceMark :surface="exhibitionSurface" size="sm" />
             <span class="event-place-sep"></span>
-            <span>No points, no money – a hit-out</span>
+            <span>{{ t('No points, no money – a hit-out') }}</span>
           </p>
         </div>
-        <PrimaryPill class="friendly-go" @click="playExhibition">Play match</PrimaryPill>
+        <PrimaryPill class="friendly-go" @click="playExhibition">{{ t('Play match') }}</PrimaryPill>
       </Card>
       <!-- ⚠ IT HAS A LABEL NOW (defect D9, docs/specs/e2e-coverage.md §12: unlabelled text inputs,
            placeholder only). A placeholder is not a name - it is content that disappears the moment
@@ -2148,8 +2182,8 @@ function closeExhibition(): void {
            keystroke, which is exactly when the field is hardest to identify. The placeholder stays
            as the hint it always was, with the word the label now carries taken out of it. -->
       <div class="controls friendly-seed">
-        <label class="hint friendly-seed-label" for="friendly-seed">Seed</label>
-        <input id="friendly-seed" v-model="exhibitionSeed" type="text" placeholder="optional" />
+        <label class="hint friendly-seed-label" for="friendly-seed">{{ t('friendly|Seed') }}</label>
+        <input id="friendly-seed" v-model="exhibitionSeed" type="text" :placeholder="t('optional')" />
       </div>
       <!-- ⚠ THE VIEWER USED TO BE RIGHT HERE, INLINE, and that was the fourth-place bug the owner
            found on 30.07 - there is a fourth place the match viewer lives, and all four should open
@@ -2176,13 +2210,13 @@ function closeExhibition(): void {
          nowhere. So it is the only place `mode="live"` is true - the blinking badge, and the shout.
          The exit is a cross for the same reason MatchReplay's is: this screen decides nothing and
          there is no screen after it, so "out" is the only thing an exit could mean here. -->
-    <TakeoverShell v-if="exhibitionMatch" title="Friendly match">
+    <TakeoverShell v-if="exhibitionMatch" :title="t('Friendly match')">
       <template #sub>
         <SurfaceMark :surface="exhibitionSurface" size="sm" />
-        <span class="hint tf-week-dates">No points, no money – a hit-out</span>
+        <span class="hint tf-week-dates">{{ t('No points, no money – a hit-out') }}</span>
       </template>
       <template #exit>
-        <IconButton icon="close" label="Close the friendly" title="Close" @click="closeExhibition" />
+        <IconButton icon="close" :label="t('Close the friendly')" :title="t('Close')" @click="closeExhibition" />
       </template>
       <!-- ⭐ ROUND-23 #4: `preview-event` is bound to a LITERAL null here, and the literal is the
            point. Round 23 found that a re-watched tournament match narrated as a Sunday-morning local

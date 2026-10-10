@@ -8,6 +8,7 @@
 // meant for a dark background, not "the light theme").
 import { initSfx } from '../audio/sfx'
 import { start as startMusic } from '../audio/music'
+import { t } from '../i18n'
 
 const emit = defineEmits<{ done: [] }>()
 
@@ -27,16 +28,16 @@ function onTap(): void {
 </script>
 
 <template>
-  <div class="splash" role="button" tabindex="0" aria-label="Tap to start" @click="onTap" @keydown.enter="onTap" @keydown.space.prevent="onTap">
+  <div class="splash" role="button" tabindex="0" :aria-label="t('Tap to start')" @click="onTap" @keydown.enter="onTap" @keydown.space.prevent="onTap">
     <div class="splash-center">
       <!-- width/height are the intrinsic viewBox numbers (aspect ratio + no layout shift); the
            actual rendered size comes from CSS. These are VECTOR marks now, so the old
            "never upscale a raster" limit is gone and the wordmark can breathe on the splash. -->
-      <img class="splash-logo splash-logo-1" :src="LOGO_LINE" width="138" height="30" alt="Ties Break" />
-      <img class="splash-logo splash-logo-2" :src="LOGO_LINE_2" width="139" height="30" alt="Ace Parent" />
+      <img class="splash-logo splash-logo-1" :src="LOGO_LINE" width="138" height="30" :alt="t('Ties Break')" />
+      <img class="splash-logo splash-logo-2" :src="LOGO_LINE_2" width="139" height="30" :alt="t('Ace Parent')" />
     </div>
     <div class="splash-hint-wrap">
-      <span class="splash-hint">Tap to start</span>
+      <span class="splash-hint">{{ t('Tap to start') }}</span>
     </div>
   </div>
 </template>

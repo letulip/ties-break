@@ -69,6 +69,8 @@ import { TIER_SHORT } from '../../composables/weekAhead'
 // `feedContext` is the ONE reader of the engine's per-rung window (`Snapshot.tierOpen`); the season
 // strip is its third consumer, never a second derivation. See `stripExpanded` below.
 import { feedContext, isTierOpen, useTierStates } from '../../composables/tierState'
+// L2-3 (08.10): RU-03 – Home's frame, controls, cards, season strip and news shell call `t()`; the coach pools are `localizedList`s.
+import { eventText, localizedList, t } from '../../i18n'
 import MatchReplay from '../MatchReplay.vue'
 import RankHelpDialog from '../RankHelpDialog.vue'
 // v48: the podium's own paper, on the one week a year that is about her rather than about tennis.
@@ -202,7 +204,12 @@ const photoStyle = computed(() => {
 // The ONE phrase under her name (D2) – null on a deliberately quiet week. It appears exactly once
 // on this page, which is the rule the redesign is most careful about: the greeting above is a time
 // of day and never a second copy of it (engine/diary.ts greetingFor).
-const photoLine = computed(() => game.snapshot?.diary.photoLine ?? null)
+// ⭐ L3-4 (10.10): THE CAPTION IS DRAWN FROM ITS REF (the diary is class (b): assembled at snapshot time, `photoLineC` beside the English). The greeting's collision test below
+// reads the ENGLISH straight off the snapshot on purpose – it searches the caption for a time word ("morning", "evening"…), and a translated caption would not contain it.
+const photoLine = computed(() => {
+  const line = game.snapshot?.diary.photoLine ?? null
+  return line ? eventText({ text: line, c: game.snapshot?.diary.photoLineC }) : null
+})
 // v48: is this her birthday week? The SAME fact the diary's birthday lines license off
 // (`facts.birthdayAge`), so the confetti and the words can never disagree about whose week it is –
 // and it stays true for the whole week rather than only while the popup is up, because a birthday is
@@ -220,30 +227,44 @@ const birthdayWeek = computed(() => game.snapshot?.diary.facts.birthdayAge != nu
 // must not repeat the photo caption ("...a quiet morning" under a "Good morning"). When the clock's
 // answer would collide with the caption, we defer to the engine's - the caption is the writing, and
 // the greeting is the frame around it.
-const CLOCK_GREETINGS: [number, string][] = [
-  [5, 'Good morning'],
-  [12, 'Good afternoon'],
-  [18, 'Good evening'],
-  [22, 'Good night'],
+//
+// ⚠ L2-3 (08.10, RU-03 §2 / implementation note 3): THE GREETING CARRIES ITS TIME WORD AS DATA. The collision rule used to
+// slice `Good ` off the English greeting and search what was left in the caption – string surgery that cannot survive a
+// translated greeting. `word` is the semantic tag the caption is searched for (the caption is the engine's English until L3, so
+// the tag is the English word), `say` is what the player reads, and the locale only ever touches `say`.
+const CLOCK_GREETINGS: { from: number; word: string; say: () => string }[] = [
+  { from: 5, word: 'morning', say: () => t('Good morning') },
+  { from: 12, word: 'afternoon', say: () => t('Good afternoon') },
+  { from: 18, word: 'evening', say: () => t('Good evening') },
+  // ⚠ CTX TAG (L2-3): `Good night` is also the diary's own farewell (ru-diary-birthday – «Спокойной ночи»), a different phrase in Russian.
+  { from: 22, word: 'night', say: () => t('greeting|Good night') },
 ]
 
-function greetingForHour(hour: number): string {
-  let picked = 'Good night' // 22:00-04:59 wraps to the last band
-  for (const [from, text] of CLOCK_GREETINGS) if (hour >= from) picked = text
+function greetingForHour(hour: number): { word: string; say: () => string } {
+  let picked = CLOCK_GREETINGS[CLOCK_GREETINGS.length - 1] // 22:00-04:59 wraps to the last band
+  for (const band of CLOCK_GREETINGS) if (hour >= band.from) picked = band
   return picked
 }
 
 const greeting = computed(() => {
-  const fromEngine = game.snapshot?.diary.greeting ?? ''
+  // ⭐ L3-4: the engine's word is the FALLBACK of the collision rule; it is drawn from its ref like the caption it dodges.
+  const engineWord = game.snapshot?.diary.greeting ?? ''
+  const fromEngine = engineWord ? eventText({ text: engineWord, c: game.snapshot?.diary.greetingC }) : ''
   const byClock = greetingForHour(new Date().getHours())
   const caption = (game.snapshot?.diary.photoLine ?? '').toLowerCase()
-  const word = byClock.slice('Good '.length)
-  return caption.includes(word) ? fromEngine || byClock : byClock
+  return caption.includes(byClock.word) ? fromEngine || byClock.say() : byClock.say()
 })
 // The WHY line beside the condition bar (D1).
-const conditionNote = computed(() => game.snapshot?.diary.conditionNote ?? '')
+// ⭐ L3-4: drawn from its ref (`conditionNoteC`), English when the snapshot carries none.
+const conditionNote = computed(() => {
+  const note = game.snapshot?.diary.conditionNote ?? ''
+  return note ? eventText({ text: note, c: game.snapshot?.diary.conditionNoteC }) : ''
+})
 // The Memory card (D10): a past milestone + the painting from the band she was in THEN.
 const memory = computed(() => game.snapshot?.diary.memory ?? null)
+// ⭐ L3-4: the card's line and its date label, each drawn from its ref. The week label ("W14 '31") has none – it is a formatter's output – and prints as the text.
+const memoryLine = computed(() => (memory.value ? eventText({ text: memory.value.line, c: memory.value.lineC }) : ''))
+const memoryWhen = computed(() => (memory.value ? eventText({ text: memory.value.whenLabel, c: memory.value.whenLabelC }) : ''))
 const memoryArt = computed(() =>
   memory.value ? portraitArtUrl(memory.value.stage, memory.value.emotion) : '',
 )
@@ -391,13 +412,13 @@ const conditionStatus = computed<'red' | 'amber' | 'ok'>(() => {
 })
 /** The ring is a picture, so it says out loud what it draws – including WHY the number matters. */
 const conditionAria = computed(() => {
-  const band =
-    conditionStatus.value === 'red'
-      ? 'below the entry floor'
-      : conditionStatus.value === 'amber'
-        ? 'near the higher entry floors'
-        : 'fit'
-  return `Condition ${condition.value} percent, ${band}`
+  // L2-3 (RU03-C01..C03): three whole sentences, not a band word spliced into one – the Russian orders them differently.
+  const n = condition.value
+  return conditionStatus.value === 'red'
+    ? t('Condition {n} percent, below the entry floor', { n })
+    : conditionStatus.value === 'amber'
+      ? t('Condition {n} percent, near the higher entry floors', { n })
+      : t('Condition {n} percent, fit', { n })
 })
 
 // R13-3: the practice-strain warning, read off the same pure predicate the planner sheet asks
@@ -413,8 +434,8 @@ const strainNote = computed<string | null>(() => {
   })
   if (strain.level !== 'caution') return null
   return strain.reasons.includes('tired')
-    ? 'Worn out – she needs a rest week'
-    : `${strain.streakWeeks} match weeks in a row`
+    ? t('Worn out – she needs a rest week')
+    : t('{n} match weeks in a row', { n: strain.streakWeeks })
 })
 
 // --- NEXT TOURNAMENT card ----------------------------------------------------------------------
@@ -530,35 +551,37 @@ const coachSignature = computed(() =>
 // existing owner-approved line is #1 of each pool; the visible line rotates every 4 weeks by
 // `Math.floor(week / 4) % 5` – deterministic (same 4-week block -> same line) but no longer
 // churning weekly (owner: a coach's read on the kid should settle for a while, not flip). --
-const COACH_QUOTES: Record<PlayStyle, [string, string, string, string, string]> = {
-  aggressive: [
-    'She hits like it owes her money – now we build the legs to match.',
-    'First strike on every point – we just need the misses to come down.',
-    'When she is on, nobody lives with her. The job is the quiet days.',
-    'She wants the short ball so badly – let us make her earn it.',
-    'Big cuts, big heart – footwork turns that into wins.',
-  ],
-  counterpuncher: [
-    'She never gives you the same ball twice. Patience is her weapon.',
-    'She would rally till dark – now we teach her when to end it.',
-    'Nothing rushes her. Next she needs a way to hurt you.',
-    'Every ball comes back – opponents beat themselves against her.',
-    'Defense first, always – the finishing shot is next.',
-  ],
-  'serve-first': [
-    'That serve is ahead of her age – free points are a career.',
-    'She holds serve in her sleep – now we break the return open.',
-    'Big first ball, calm eyes. The second serve is the growth area.',
-    'On serve she fears no one. Rally tennis is the homework.',
-    'Aces buy her time – we spend it teaching the rest of the court.',
-  ],
-  'all-court': [
-    'No holes in her game. Now we find the weapon.',
-    'She can play every style – picking one under pressure is the skill.',
-    'Comfortable everywhere, dangerous nowhere yet. That changes this year.',
-    'She reads the game beautifully – now the hands must catch up.',
-    'Versatile and calm. We are hunting for the shot that ends points.',
-  ],
+// L2-3 (08.10): each line is read through t() at the moment it is indexed (localizedList – the prologue coach pools' shape), so the
+// rotation by week stays what it was and a locale flip reaches the card that is on screen.
+const COACH_QUOTES: Record<PlayStyle, readonly string[]> = {
+  aggressive: localizedList(
+    () => t('She hits like it owes her money – now we build the legs to match.'),
+    () => t('First strike on every point – we just need the misses to come down.'),
+    () => t('When she is on, nobody lives with her. The job is the quiet days.'),
+    () => t('She wants the short ball so badly – let us make her earn it.'),
+    () => t('Big cuts, big heart – footwork turns that into wins.'),
+  ),
+  counterpuncher: localizedList(
+    () => t('She never gives you the same ball twice. Patience is her weapon.'),
+    () => t('She would rally till dark – now we teach her when to end it.'),
+    () => t('Nothing rushes her. Next she needs a way to hurt you.'),
+    () => t('Every ball comes back – opponents beat themselves against her.'),
+    () => t('Defense first, always – the finishing shot is next.'),
+  ),
+  'serve-first': localizedList(
+    () => t('That serve is ahead of her age – free points are a career.'),
+    () => t('She holds serve in her sleep – now we break the return open.'),
+    () => t('Big first ball, calm eyes. The second serve is the growth area.'),
+    () => t('On serve she fears no one. Rally tennis is the homework.'),
+    () => t('Aces buy her time – we spend it teaching the rest of the court.'),
+  ),
+  'all-court': localizedList(
+    () => t('No holes in her game. Now we find the weapon.'),
+    () => t('She can play every style – picking one under pressure is the skill.'),
+    () => t('Comfortable everywhere, dangerous nowhere yet. That changes this year.'),
+    () => t('She reads the game beautifully – now the hands must catch up.'),
+    () => t('Versatile and calm. We are hunting for the shot that ends points.'),
+  ),
 }
 const coachQuote = computed(() =>
   game.snapshot ? COACH_QUOTES[game.snapshot.profile.playStyle][Math.floor(week.value / 4) % 5] : '',
@@ -760,7 +783,7 @@ const seasonChips = computed<TierChip[]>(() =>
               // the width, still prints it in full. What the strip loses is a repetition of the
               // rule's name in a five-chip row that already colours the state.
               state === 'waiting' && cappedSpend !== undefined
-              ? `Used ${cappedSpend.used} of ${cappedSpend.limit}`
+              ? t('Used {used} of {limit}', { used: cappedSpend.used, limit: cappedSpend.limit })
               : state === 'waiting'
                 ? avail.note
                 : // ⚠⚠ THE OWNER'S OWN STRING, ABBREVIATED ON THE STRIP ONLY, AND HE SHOULD BE TOLD
@@ -783,7 +806,7 @@ const seasonChips = computed<TierChip[]>(() =>
                   // "🔒 Opens at 16" and speaks its whole sentence, and `capped` was abbreviated the
                   // same way an hour ago. If he wants the full words back on the strip, the honest
                   // lever is the WINDOW rule rather than the copy - four chips fitted, five do not.
-                  'Enter your first!'
+                  t('Enter your first!')
     // ⚠⚠ THE ENGINE'S SENTENCE IS NOT THIS SCREEN'S TO REPLACE (25.09, docs/specs/
     // engine-ui-parity-2026-09.md §3's second bullet and §5's first live instance). `avail.title` IS
     // `tierState`'s `input.refusal.detail` – the sentence the ENGINE composed, which is the whole
@@ -811,10 +834,10 @@ const seasonChips = computed<TierChip[]>(() =>
     // is spoken; what is NEW to the ear is exactly the engine's own sentence.
     const title =
       state === 'reached'
-        ? `Best ${short} finish · ${avail.title}`
+        ? t('Best {0} finish · {1}', [short, avail.title])
         : state === 'outgrown'
           ? best !== undefined
-            ? `Outgrown – her best ${short} result stays on the books · ${avail.title}`
+            ? t('Outgrown – her best {0} result stays on the books · {1}', [short, avail.title])
             : avail.title
           : avail.title
     return {
@@ -827,7 +850,7 @@ const seasonChips = computed<TierChip[]>(() =>
       // The two arms whose visible label was abbreviated for the row's width keep the whole sentence
       // here; every other chip's visible label IS its name.
       ...(state === 'waiting' && cappedSpend !== undefined ? { spoken: avail.note } : {}),
-      ...(state === 'unlocked' ? { spoken: 'Unlocked – enter your first!' } : {}),
+      ...(state === 'unlocked' ? { spoken: t('Unlocked – enter your first!') } : {}),
       // ⚠ HIS RULING A ON THE RIG WAVE'S Q2 (25.09) – the `locked` arm's own idiom, letter first:
       // the reader hears the finish she earned (where one exists) and then the ENGINE's sentence,
       // never the screen-authored fragment. Composed HERE because this is the one site that knows
@@ -859,17 +882,17 @@ const seasonChips = computed<TierChip[]>(() =>
 function chipName(chip: TierChip): string {
   switch (chip.state) {
     case 'reached':
-      return `${chip.short}: reached, best finish ${chip.label}`
+      return t('{tier}: reached, best finish {finish}', { tier: chip.short, finish: chip.label })
     case 'outgrown':
       // ⚠ RE-AIMED 25.09 (his Q2-A): the engine's sentence reaches the ear, letter first – `spoken`
       // is composed at the chip's build site; the label fallback keeps the pure callers exact.
-      return `${chip.short}: outgrown – ${chip.spoken ?? chip.label}`
+      return t('{tier}: outgrown – {detail}', { tier: chip.short, detail: chip.spoken ?? chip.label })
     case 'locked':
-      return `${chip.short}: locked – ${chip.title}`
+      return t('{tier}: locked – {detail}', { tier: chip.short, detail: chip.title })
     case 'waiting':
       // `spoken` when the visible label was abbreviated for the strip's width - see the capped arm
       // in `seasonChips`. Everywhere else the label is the name, unchanged.
-      return `${chip.short}: open – ${chip.spoken ?? chip.label}`
+      return t('{tier}: open – {detail}', { tier: chip.short, detail: chip.spoken ?? chip.label })
     default:
       return `${chip.short}: ${chip.spoken ?? chip.label}`
   }
@@ -1124,17 +1147,22 @@ const stripCells = computed<StripCell[]>(() => {
   const last = SEASON_STRIP_TIERS.length - 1
   const gapFrom = (lo: number, hi: number): StripCell => {
     const hidden = hi - lo + 1
-    const noun = hidden === 1 ? 'level' : 'levels'
     // The RANGE in the tooltip, so the affordance says what is behind it rather than only how much:
     // "5 levels hidden (National to W15)" is a different offer from the same count at the top of the
     // ladder, and a player deciding whether to tap wants the names.
-    const span = hidden === 1 ? SEASON_STRIP_TIERS[lo].short : `${SEASON_STRIP_TIERS[lo].short} to ${SEASON_STRIP_TIERS[hi].short}`
+    // L2-3 (RU03-S09/S10): the English singular and plural are separate literals (spec §3.3), and the range is two parameters –
+    // the tier names are the engine's words (L3), the frame around them is the locale's.
+    const from = SEASON_STRIP_TIERS[lo].short
+    const to = SEASON_STRIP_TIERS[hi].short
     return {
       kind: 'gap',
       key: `gap-${lo}`,
       hidden,
-      label: `Show ${hidden} more ${noun}`,
-      title: `${hidden} ${noun} hidden (${span}) – tap to show the whole ladder`,
+      label: hidden === 1 ? t('Show 1 more level') : t('Show {n} more levels', { n: hidden }),
+      title:
+        hidden === 1
+          ? t('1 level hidden ({tier}) – tap to show the whole ladder', { tier: from })
+          : t('{n} levels hidden ({from} to {to}) – tap to show the whole ladder', { n: hidden, from, to }),
     }
   }
   let prev = -1
@@ -1314,15 +1342,15 @@ const collegeYearLabel = computed(() => {
   const c = collegeProgress.value
   // FIRST, because it is the only one of the five that names what the press DOES rather than how
   // much of the course is left – and it outranks «Finish the year» for that reason (round 27 #2).
-  if (c?.leagueIsNextStop) return `Play ${COLLEGE_LEAGUE.label}`
+  if (c?.leagueIsNextStop) return t('Play {fixture}', { fixture: COLLEGE_LEAGUE.label })
   // ⭐⭐⭐ ROUND 27 #6 – AND THE SECOND FIXTURE NAMES ITSELF TOO. The tie pauses the year since this
   // wave, so «Finish the year» over a press that plays the Nations Cup is round 27 #2's own defect
   // arriving from the other college fixture. Two engine facts, one scan behind them, so the button
   // cannot claim both – and the label is `NATIONAL_TEAM.label`, the one place its name is spelled.
-  if (c?.callUpIsNextStop) return `Play ${NATIONAL_TEAM.label}`
-  if (c?.yearInProgress) return 'Finish the year'
-  if ((c?.yearsDone ?? 0) === 0) return 'Play the first year'
-  return collegeYearsLeft.value <= 1 ? 'Play the final year' : 'Another year'
+  if (c?.callUpIsNextStop) return t('Play {fixture}', { fixture: NATIONAL_TEAM.label })
+  if (c?.yearInProgress) return t('Finish the year')
+  if ((c?.yearsDone ?? 0) === 0) return t('Play the first year')
+  return collegeYearsLeft.value <= 1 ? t('Play the final year') : t('Another year')
 })
 
 /** She may only leave a year she has actually spent. The engine refuses it too (`endCollegeEarly`
@@ -1412,7 +1440,7 @@ async function leaveCollege(): Promise<void> {
             class="diary-avatar-btn"
             :class="moodRing ? ['has-mood-ring', `mood-${moodRing}`] : null"
             data-tour="kid-avatar"
-            aria-label="Open her profile"
+            :aria-label="t('Open her profile')"
             @click="openKid"
           >
             <img class="diary-avatar" :src="headerAvatarUrl" alt="" />
@@ -1444,8 +1472,8 @@ async function leaveCollege(): Promise<void> {
             <button
               class="diary-tool"
               data-tour="home-news"
-              aria-label="Go to the news feed"
-              title="News"
+              :aria-label="t('Go to the news feed')"
+              :title="t('News')"
               :aria-describedby="newsUnseen ? 'diary-dot-news' : undefined"
               @click="jumpToNews"
             >
@@ -1460,7 +1488,7 @@ async function leaveCollege(): Promise<void> {
                 id="diary-dot-news"
                 class="diary-tool-dot"
                 role="img"
-                aria-label="Unread news"
+                :aria-label="t('bell|Unread news')"
               ></span>
             </button>
             <!-- THE INBOX. An envelope at the export's own 22px / 1.7 stroke, inline like the bell,
@@ -1469,8 +1497,8 @@ async function leaveCollege(): Promise<void> {
                  marker now answers two questions, and how each of them goes out. -->
             <button
               class="diary-tool"
-              aria-label="Open the inbox"
-              title="Inbox"
+              :aria-label="t('Open the inbox')"
+              :title="t('Inbox')"
               :aria-describedby="inboxDot ? 'diary-dot-inbox' : undefined"
               @click="openInbox"
             >
@@ -1485,10 +1513,10 @@ async function leaveCollege(): Promise<void> {
                 id="diary-dot-inbox"
                 class="diary-tool-dot"
                 role="img"
-                aria-label="A letter waiting on an answer"
+                :aria-label="t('A letter waiting on an answer')"
               ></span>
             </button>
-            <button class="diary-tool" data-tour="home-settings" aria-label="Settings" title="Settings" @click="emit('navigate', 'more')">
+            <button class="diary-tool" data-tour="home-settings" :aria-label="t('Settings')" :title="t('Settings')" @click="emit('navigate', 'more')">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="3.2"></circle>
                 <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"></path>
@@ -1500,7 +1528,7 @@ async function leaveCollege(): Promise<void> {
         <!-- R13-12's one-time callout, moved with the avatar it explains. Dismissed (and persisted
              per device, never in the save) by the first tap on either it or the avatar. -->
         <button v-if="showKidHint" class="diary-kid-hint" @click="openKid">
-          Tap the photo – her page lives here
+          {{ t('Tap the photo – her page lives here') }}
         </button>
 
         <div class="diary-id">
@@ -1508,7 +1536,7 @@ async function leaveCollege(): Promise<void> {
                tournament resolves) and it is never a second copy of the caption below. -->
           <p class="diary-greeting">{{ greeting }}</p>
           <p class="diary-name">{{ kidFirstName }}</p>
-          <p class="diary-age">{{ ageYears }} years old {{ flag }}</p>
+          <p class="diary-age">{{ t('{age} years old {flag}', { age: ageYears, flag }) }}</p>
           <!-- The chip is drawn only once something counts somewhere - rankChipTrack owns the rule
                (null = no counting result in any table yet, and nothing to read on a chip). -->
           <!-- ⭐⭐ E-03 / T4.6 (27.09) - THE CHIP DESCRIBES ITSELF, because its NAME could not.
@@ -1532,7 +1560,7 @@ async function leaveCollege(): Promise<void> {
           <button
             v-if="chipTrack !== null"
             class="diary-rank"
-            aria-label="How ranking points work"
+            :aria-label="t('How ranking points work')"
             aria-describedby="diary-rank-ladder diary-rank-value"
             :title="rankChipTitle"
             @click="openRankHelp"
@@ -1623,7 +1651,7 @@ async function leaveCollege(): Promise<void> {
            below the fold. It is a door, so it is a `button` and it lifts under the finger; the four
            cards below keep their own grid and their own geometry, untouched. -->
       <Card v-if="softBeat" as="button" class="soft-beat-card" @click="emit('softBeat')">
-        <p class="soft-beat-line">{{ softBeat.card }}</p>
+        <p class="soft-beat-line">{{ eventText({ text: softBeat.card, c: softBeat.cardC }) }}</p>
       </Card>
 
       <!-- 3. THE CARD GRID – the visual signature. Two of the four are doors, and they say so by
@@ -1642,8 +1670,8 @@ async function leaveCollege(): Promise<void> {
           data-tour="next-tournament"
           @click="emit('navigate', 'week:tournament')"
         >
-          <Eyebrow>Next tournament</Eyebrow>
-          <span v-if="recapFresh" class="note-dot" title="A new week recap is waiting"></span>
+          <Eyebrow>{{ t('Next tournament') }}</Eyebrow>
+          <span v-if="recapFresh" class="note-dot" :title="t('A new week recap is waiting')"></span>
           <template v-if="nearestEntered">
             <!-- The painted venue, bleeding off the corner under a diagonal dissolve. -->
             <div class="venue-art">
@@ -1657,7 +1685,7 @@ async function leaveCollege(): Promise<void> {
               <span>{{ nextDates }}</span>
             </p>
             <div class="note-foot">
-              <p class="note-foot-label">Travel budget</p>
+              <p class="note-foot-label">{{ t('Travel budget') }}</p>
               <p class="note-figure">{{ nextTravel }}</p>
             </div>
           </template>
@@ -1667,18 +1695,18 @@ async function leaveCollege(): Promise<void> {
                engine-refused while the latch is on. The card states the rule instead of inviting a
                dead click. -->
           <p v-else-if="collegeWeek" class="note-empty">
-            No tour entries while the scholarship runs – she plays for the programme.
+            {{ t('No tour entries while the scholarship runs – she plays for the programme.') }}
           </p>
-          <p v-else class="note-empty">Nothing entered yet – the calendar is on the Season tab.</p>
+          <p v-else class="note-empty">{{ t('Nothing entered yet – the calendar is on the Season tab.') }}</p>
         </Card>
 
         <!-- FAMILY BUDGET -> the wallet. OWNER'S RULING over the export, which shows this week's
              income/spent rows: the current TOTAL, plus income and spending over the last 12 weeks. -->
         <Card as="button" class="note-card" data-tour="family-budget" @click="emit('navigate', 'money')">
-          <Eyebrow>Family budget</Eyebrow>
+          <Eyebrow>{{ t('Family budget') }}</Eyebrow>
           <p class="budget-total" :class="{ negative: fundsCents < 0 }">{{ funds }}</p>
           <div class="budget-rule"></div>
-          <p class="budget-window">Last 12 weeks</p>
+          <p class="budget-window">{{ t('Last 12 weeks') }}</p>
           <!-- ONE BOX for the line and the dots. They must share geometry exactly, and the card is
                not that box: `.note-card` is padded 14px, so a dot layer positioned against the CARD
                is 28px wider than the chart and starts 14px to its left - which is precisely how the
@@ -1689,7 +1717,7 @@ async function leaveCollege(): Promise<void> {
             :viewBox="`0 0 ${CHART_W} ${CHART_H}`"
             preserveAspectRatio="none"
             role="img"
-            aria-label="The family balance over the last 12 weeks"
+            :aria-label="t('The family balance over the last 12 weeks')"
           >
             <defs>
               <linearGradient id="tb-spark" x1="0" y1="0" x2="0" y2="1">
@@ -1715,7 +1743,7 @@ async function leaveCollege(): Promise<void> {
             ></i>
           </span>
           </div>
-          <p v-else class="note-empty">Nothing has moved yet.</p>
+          <p v-else class="note-empty">{{ t('Nothing has moved yet.') }}</p>
         </Card>
 
         <!-- ⭐⭐⭐ ROUND 36 REVIEW #5 – THE BOTTOM PAIR IS A BLOCK OF ITS OWN, and this wrapper is
@@ -1737,7 +1765,7 @@ async function leaveCollege(): Promise<void> {
         <Card
           as="button"
           class="note-card card-short coach-card"
-          aria-label="Coach note – open the Coach Market"
+          :aria-label="t('Coach note – open the Coach Market')"
           @click="emit('navigate', 'market')"
         >
           <!-- ⭐⭐ ROUND 42 #28 – THE OFF-SEASON MARKER. The owner asked for a yellow dot on this
@@ -1759,7 +1787,7 @@ async function leaveCollege(): Promise<void> {
             <img :src="coachPhoto" alt="" />
           </div>
           <div class="coach-body">
-            <Eyebrow>Coach note</Eyebrow>
+            <Eyebrow>{{ t('Coach note') }}</Eyebrow>
             <p class="coach-line">{{ coachQuote }}</p>
             <!-- ⚠⚠ ROUND 34 #2a – THE CEILING BAND USED TO SIT HERE, under the quote and above his
                  name, from round 24 until 02.09. The owner sent it back to the coach card on the
@@ -1808,7 +1836,7 @@ async function leaveCollege(): Promise<void> {
           class="note-card card-short"
           @click="memory && emit('navigate', 'album')"
         >
-          <Eyebrow>Recent memory</Eyebrow>
+          <Eyebrow>{{ t('Recent memory') }}</Eyebrow>
           <template v-if="memory">
             <Polaroid
               class="memory-polaroid"
@@ -1818,10 +1846,10 @@ async function leaveCollege(): Promise<void> {
               tilt="var(--tilt-4)"
             />
             <span class="memory-tack"></span>
-            <p class="memory-line">{{ memory.line }}</p>
-            <p class="memory-when">{{ memory.whenLabel }}</p>
+            <p class="memory-line">{{ memoryLine }}</p>
+            <p class="memory-when">{{ memoryWhen }}</p>
           </template>
-          <p v-else class="note-empty">Too early for memories.</p>
+          <p v-else class="note-empty">{{ t('Too early for memories.') }}</p>
         </Card>
         </div>
       </div>
@@ -1843,13 +1871,13 @@ async function leaveCollege(): Promise<void> {
            reason the round's identity contract survives a new wrapper. -->
       <div class="strip-pair">
       <Card as="section" class="diary-strip">
-        <Eyebrow as="h2">Season</Eyebrow>
+        <Eyebrow as="h2">{{ t('Season') }}</Eyebrow>
         <!-- THE ROW IS THE ENGINE'S OPEN WINDOW PLUS ONE RUNG ABOVE IT; the rungs she has outgrown
              and the far top of the ladder are behind the ellipsis chips, which expand the row in
              place. Nothing is deleted - see the ruling quoted at `stripExpanded` in the script. -->
         <!-- D6: the row is a named group (a `list` would be a lie - the ellipsis affordances inside
              it are buttons, not list items) and every rung is a named image. See `chipName`. -->
-        <div class="season-strip" role="group" aria-label="Season ladder">
+        <div class="season-strip" role="group" :aria-label="t('Season ladder')">
           <template v-for="(cell, i) in stripCells" :key="cell.key">
             <button
               v-if="cell.kind === 'gap'"
@@ -1896,39 +1924,39 @@ async function leaveCollege(): Promise<void> {
             v-if="stripExpanded"
             class="pill tier-chip strip-more"
             :aria-expanded="stripExpanded"
-            aria-label="Show only her current levels"
-            title="Back to her current window"
+            :aria-label="t('Show only her current levels')"
+            :title="t('Back to her current window')"
             @click="stripExpanded = false"
           >&minus;</button>
         </div>
       </Card>
 
       <Card id="diary-news" as="section" class="diary-strip">
-        <Eyebrow as="h2">News</Eyebrow>
+        <Eyebrow as="h2">{{ t('News') }}</Eyebrow>
         <div class="log">
-          <p v-if="!newsGroups.length" class="hint" style="margin: 0">No news yet.</p>
+          <p v-if="!newsGroups.length" class="hint" style="margin: 0">{{ t('No news yet.') }}</p>
           <div v-for="group in newsGroups" :key="group.week" class="news-week">
             <p class="news-week-label">{{ weekLabel(group.week, startYear) }}</p>
             <!-- D8: one table PER WEEK, so an unnamed one is not merely anonymous - a reader landing
                  on it cannot tell which week's it is, and `getByRole('table', { name })` had a dozen
                  identical candidates. The name is the label already printed above it, plus the noun,
                  because "W12 2032" on its own does not say what the table holds. -->
-            <table :aria-label="`News – ${weekLabel(group.week, startYear)}`">
+            <table :aria-label="t('News – {week}', { week: weekLabel(group.week, startYear) })">
               <tbody>
                 <tr v-for="e in group.events" :key="e.id" :class="{ milestone: e.type === 'milestone' }">
                   <td v-if="e.type === 'match' && e.match" class="news-match-cell">
                     <button class="news-match-btn sfx-watch" @click="openReplay(e)">
                       <span class="nm-lines">
                         <span class="nm-players">
-                          {{ kidShort }} vs {{ oppShort(e.match) }}
-                          <span v-if="e.friendly" class="pill muted nm-friendly">practice</span>
+                          {{ kidShort }} {{ t('vs') }} {{ oppShort(e.match) }}
+                          <span v-if="e.friendly" class="pill muted nm-friendly">{{ t('practice') }}</span>
                         </span>
                         <span class="nm-score num">{{ kidScoreOf(e.match) }}</span>
                       </span>
-                      <span class="watch-cue">Watch</span>
+                      <span class="watch-cue">{{ t('Watch') }}</span>
                     </button>
                   </td>
-                  <td v-else>{{ eventPrefix(e) }}{{ e.text }}</td>
+                  <td v-else>{{ eventPrefix(e) }}{{ eventText(e) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -1980,7 +2008,7 @@ async function leaveCollege(): Promise<void> {
         :disabled="game.busy"
         @click="leaveCollege"
       >
-        Back on tour now
+        {{ t('Back on tour now') }}
       </button>
       <button class="college-answer" type="button" :disabled="game.busy" @click="resumeCollege">
         {{ collegeYearLabel }}

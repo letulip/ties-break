@@ -435,15 +435,19 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
     // every row, and this fixture carries six of them). The exception is MEASURED, never listed: the
     // same walk one rung up says which keys the tail of the ladder touches, so a v79 that moved
     // something it should not still reddens this loop, and nothing here needs editing when it lands.
+    // ⚠ RE-AIMED 09.10 BY v93 (the localization rig L3-0, `WorldEvent.c`): the head's step attaches a ref BESIDE each recognised ledger row's text, so `events` is compared
+    // without that one optional key (`bare`) – every other byte of every row, and every other key, is compared exactly as before.
+    const bare = (k: string, v: unknown): string =>
+      JSON.stringify(k === 'events' && Array.isArray(v) ? v.map(({ c: _c, ...row }: Record<string, unknown>) => row) : v)
     const movedAboveV76 = Object.keys(v76()).filter(
-      (k) => JSON.stringify((v76() as Record<string, unknown>)[k])
-        !== JSON.stringify((migrateSave(v76()) as unknown as Record<string, unknown>)[k]),
+      (k) => bare(k, (v76() as Record<string, unknown>)[k])
+        !== bare(k, (migrateSave(v76()) as unknown as Record<string, unknown>)[k]),
     )
     expect(movedAboveV76.sort(), 'and the only pre-existing key any rung above v76 moves is the asset list')
       .toEqual(['assets', 'schemaVersion'])
     for (const key of Object.keys(before)) {
       if (key === 'schemaVersion' || movedAboveV76.includes(key)) continue
-      expect(JSON.stringify(after[key]), `${key} survives the step untouched`).toBe(JSON.stringify(before[key]))
+      expect(bare(key, after[key]), `${key} survives the step untouched`).toBe(bare(key, before[key]))
     }
     expect(before.schemaVersion, 'the control really was a v75 payload').toBe(75)
     expect(after.schemaVersion, '...and the chain ran to the head').toBe(SAVE_SCHEMA_VERSION)

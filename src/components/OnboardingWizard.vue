@@ -44,7 +44,10 @@ import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../compo
 // composables/identityCopy.ts. The prologue's age-5 card asks the same three things (her name,
 // her birthday, her country) and invariant 4 says it must ask them in the same words, so there
 // is now ONE declaration and both surfaces read it. Not a string on this screen changed.
-import { DYNASTY_COPY, IDENTITY_COPY, MONTHS, WEIGHT_COPY } from '../composables/identityCopy'
+import { DYNASTY_COPY, IDENTITY_COPY, MONTHS, WEIGHT_COPY, monthDayLabel } from '../composables/identityCopy'
+// L2-1 (08.10): the wizard speaks through `t()`. Its consts below carry GETTERS, so the table keeps its shape and the
+// words are read when they are drawn – the cards follow the locale, and a string that is not on screen counts no miss.
+import { t } from '../i18n'
 // ⚠ AND NEITHER IS THE NAME POOL, SINCE 14.09 – see the header of composables/identityDice.ts. The
 // two dice below are the owner's «кубики», and the prologue's age-5 card grew a pair of its own
 // after creation moved there; a private `const NAMES` here would have made one label mean two
@@ -68,9 +71,9 @@ const SUMMARY_ART = portraitUrl('jun', 'norm')
 const HERO_ART = onboardingHeroUrl()
 
 const BACKGROUNDS: { id: FamilyBackground; label: string; budget: string; blurb: string }[] = [
-  { id: 'wealthy', label: 'Wealthy', budget: '$120,000', blurb: 'Top academies are within reach.' },
-  { id: 'middle', label: 'Middle class', budget: '$25,000', blurb: 'Smart choices, steady progress.' },
-  { id: 'working', label: 'Working class', budget: '$8,000', blurb: 'Big dreams, hard mode.' },
+  { id: 'wealthy', get label() { return t('Wealthy') }, budget: '$120,000', get blurb() { return t('Top academies are within reach.') } },
+  { id: 'middle', get label() { return t('Middle class') }, budget: '$25,000', get blurb() { return t('Smart choices, steady progress.') } },
+  { id: 'working', get label() { return t('Working class') }, budget: '$8,000', get blurb() { return t('Big dreams, hard mode.') } },
 ]
 
 // THE INTERIM CHOOSER. Onboarding still offers the two options it always did, mapped onto the two
@@ -97,8 +100,8 @@ const BACKGROUNDS: { id: FamilyBackground; label: string; budget: string; blurb:
 // player to make, and a card that only promises results is the one that walks a middle-class family
 // into the wall above.
 const COACH_OPTIONS: { id: CoachTier; label: string; blurb: string }[] = [
-  { id: 'self', label: 'Coach yourself', blurb: 'Cheaper now, training unlocks later.' },
-  { id: 'middle', label: 'Hire a coach', blurb: 'Pro guidance, and a real weekly bill.' },
+  { id: 'self', get label() { return t('Coach yourself') }, get blurb() { return t('Cheaper now, training unlocks later.') } },
+  { id: 'middle', get label() { return t('Hire a coach') }, get blurb() { return t('Pro guidance, and a real weekly bill.') } },
 ]
 
 // An inclination, not numbers: weights future skill growth (Phase 4).
@@ -133,30 +136,30 @@ const PLAY_STYLES: {
 }[] = [
   {
     id: 'aggressive',
-    label: 'Aggressive baseliner',
-    blurb: 'Dictate with heavy groundstrokes.',
-    chips: ['Power', 'Consistency'],
+    get label() { return t('Aggressive baseliner') },
+    get blurb() { return t('Dictate with heavy groundstrokes.') },
+    get chips(): [string, string] { return [t('Power'), t('Consistency')] },
     radar: '28,6 43.7,22.9 34.5,36.9 20.9,37.8 10.2,22.2',
   },
   {
     id: 'counterpuncher',
-    label: 'Counterpuncher',
-    blurb: 'Speed, defense, and endless patience.',
-    chips: ['Defense', 'Stamina'],
+    get label() { return t('Counterpuncher') },
+    get blurb() { return t('Speed, defense, and endless patience.') },
+    get chips(): [string, string] { return [t('Defense'), t('Stamina')] },
     radar: '28,15.9 40.5,23.9 40.3,44.9 15.1,45.8 11.3,22.6',
   },
   {
     id: 'serve-first',
-    label: 'Big serve',
-    blurb: 'Free points first.',
-    chips: ['Serve', 'Power'],
+    get label() { return t('Big serve') },
+    get blurb() { return t('Free points first.') },
+    get chips(): [string, string] { return [t('Serve'), t('Power')] },
     radar: '28,6 46.8,21.9 33.8,36 22.8,35.1 15.5,23.9',
   },
   {
     id: 'all-court',
-    label: 'All-court',
-    blurb: 'No weaknesses, no shortcuts.',
-    chips: ['Versatility', 'Balance'],
+    get label() { return t('All-court') },
+    get blurb() { return t('No weaknesses, no shortcuts.') },
+    get chips(): [string, string] { return [t('Versatility'), t('Balance')] },
     radar: '28,11.5 43.7,22.9 37.7,41.4 18.3,41.4 12.3,22.9',
   },
 ]
@@ -188,21 +191,42 @@ const RADAR_INNER = '28,17 38.5,24.6 34.5,36.9 21.6,36.9 17.6,24.6'
  *  #4 spent a wave removing from the tournament card - the player reads a sentence as a statement,
  *  not as a roll. There is no seed here (no world exists yet), so the pick is a `ref` set at setup
  *  and read for the life of the wizard. */
-const OPENING_PROMISE: readonly string[] = [
-  'The talent is hers. The bills, the drives and the decisions are yours.',
-  'Your kid can play. What happens next is mostly about you, and it will cost more than you think, sooner than you think.',
-  'She has something. Whether it becomes anything is a question about your time, your money and your nerve.',
+// ⚠ L2-1 (08.10): THE POOL IS THREE READERS AND THE DRAW IS STILL ONE `Math.random()`, once, on mount – the draw picks WHICH
+// sentence, and the sentence is looked up when it is drawn, so a language flip re-renders the SAME promise and a locale
+// choice can never cost a second roll (RU-02A §10 rule 4).
+const OPENING_PROMISE: readonly (() => string)[] = [
+  () => t('The talent is hers. The bills, the drives and the decisions are yours.'),
+  () => t('Your kid can play. What happens next is mostly about you, and it will cost more than you think, sooner than you think.'),
+  () => t('She has something. Whether it becomes anything is a question about your time, your money and your nerve.'),
 ]
 const openingPromise = ref(OPENING_PROMISE[Math.floor(Math.random() * OPENING_PROMISE.length)])
 
 const STEP_HEADS: { title: string; sub: string }[] = [
-  { title: 'Raise a Champion', sub: '' },
-  { title: 'Who Is Your Player?', sub: "Let's start with who she is." },
-  { title: 'Where Are You Starting?', sub: 'Select your country.' },
-  { title: 'Family Setup', sub: 'Your resources and support shape the path.' },
-  { title: 'Choose Play Style', sub: 'This shapes strengths and training focus.' },
-  { title: 'All Set!', sub: 'Here she is. The rest is the two of you.' },
+  { get title() { return t('Raise a Champion') }, sub: '' },
+  { get title() { return t('Who Is Your Player?') }, get sub() { return t("Let's start with who she is.") } },
+  { get title() { return t('Where Are You Starting?') }, get sub() { return t('Select your country.') } },
+  { get title() { return t('Family Setup') }, get sub() { return t('Your resources and support shape the path.') } },
+  { get title() { return t('Choose Play Style') }, get sub() { return t('This shapes strengths and training focus.') } },
+  { get title() { return t('All Set!') }, get sub() { return t('Here she is. The rest is the two of you.') } },
 ]
+
+/** ⭐ L2-1 (08.10) – THE HERO LINE HAS TWO BEATS (a break and a styled span between them), and the owner's row is ONE line
+ *  (RU-02A-H02), so it is one key, cut where the first sentence ends. English: `Raise a Champion.` / `Together.` – the
+ *  shipped markup, unchanged. A translation with no `. ` in it simply keeps everything in the first beat. */
+const heroBeats = computed<[string, string]>(() => {
+  const line = t('Raise a Champion. Together.')
+  const cut = line.indexOf('. ')
+  return cut < 0 ? [line, ''] : [line.slice(0, cut + 1), line.slice(cut + 2)]
+})
+
+/** ⭐ L2-1 – `{budget} starting budget` AROUND THE BOLD FIGURE. The figure keeps its own element (`<b>`), so the sentence is
+ *  cut at a marker and the figure goes between the halves – English: nothing before it, ` starting budget` after; a
+ *  sentence that wants the number LAST (RU-02A-F08) puts the words first. */
+const BUDGET_MARK = '\uE000'
+const budgetHalves = computed<[string, string]>(() => {
+  const [before = '', after = ''] = t('{budget} starting budget', { budget: BUDGET_MARK }).split(BUDGET_MARK)
+  return [before, after]
+})
 
 /** The pose art for a style, addressed BY ITS ID – see the ⚠ on PLAY_STYLES for why that is safe. */
 function poseUrl(id: PlayStyle): string {
@@ -211,6 +235,9 @@ function poseUrl(id: PlayStyle): string {
 
 const STEP_COUNT = 6
 const step = ref(1)
+/** L2-1 (08.10) – THE RAIL'S ACCESSIBLE PROGRESS LABEL (RU-02A-H01), declared here and not as a template expression: the census reads a
+ *  literal inside a template-expression `t()` a second time with its braces escaped, and the catalog would hold two keys for one string. */
+const stepLabel = computed(() => t('Step {step} of {count}', { step: step.value, count: STEP_COUNT }))
 
 /** ⭐⭐⭐ v87 (the weight, wave 11 T1) – THE ONE SWITCH IN THE GAME, AS THE LAST STEP ANSWERED IT.
  *  `false` is the RULED default (22.09: «absent means the ask's default, never silently on»), which
@@ -274,7 +301,7 @@ const nextDisabled = computed(
 )
 
 const head = computed(() => STEP_HEADS[step.value - 1])
-const birthMonthLabel = computed(() => `${MONTHS[profile.birthMonth - 1] ?? ''} ${profile.birthDay}`)
+const birthMonthLabel = computed(() => monthDayLabel(profile.birthMonth, profile.birthDay))
 const backgroundLabel = computed(() => BACKGROUNDS.find((b) => b.id === profile.background)?.label ?? '')
 const coachingLabel = computed(() => COACH_OPTIONS.find((c) => c.id === profile.coachTier)?.label ?? '')
 const playStyleLabel = computed(() => PLAY_STYLES.find((s) => s.id === profile.playStyle)?.label ?? '')
@@ -366,7 +393,7 @@ function start(): void {
         <!-- THE STEP RAIL. Six numbered circles joined by hairlines; the current one is the lime
              one and says which of six it is out loud, so the indicator is a progress READING and
              not decoration. -->
-        <ol class="ob-steps" :aria-label="`Step ${step} of ${STEP_COUNT}`">
+        <ol class="ob-steps" :aria-label="stepLabel">
           <li
             v-for="n in STEP_COUNT"
             :key="n"
@@ -381,7 +408,7 @@ function start(): void {
           <!-- U-11: the `id` the welcome section's `aria-labelledby` has always pointed at. It was a
                class and nothing else, so the reference resolved to nothing and the section had no
                accessible name at all. Not a wording change – see the note in the script. -->
-          <h1 id="ob-hero-title" class="ob-hero-title">Raise a Champion.<br /><span>Together.</span></h1>
+          <h1 id="ob-hero-title" class="ob-hero-title">{{ heroBeats[0] }}<br /><span>{{ heroBeats[1] }}</span></h1>
         </header>
         <header v-else class="ob-head">
           <h1 class="ob-title">{{ head.title }}</h1>
@@ -392,9 +419,9 @@ function start(): void {
       <!-- ══ N. Welcome ══ -->
       <section v-if="step === 1" class="ob-pane bare ob-welcome" aria-labelledby="ob-hero-title">
         <div class="ob-copy">
-          <p>You're the parent now – every choice, every dollar, every away tournament is yours to carry.</p>
-          <p>{{ openingPromise }}</p>
-          <p>Rackets, coaches, flights, hotels – the costs are honest, and they don't wait for a breakthrough.</p>
+          <p>{{ t("You're the parent now – every choice, every dollar, every away tournament is yours to carry.") }}</p>
+          <p>{{ openingPromise?.() }}</p>
+          <p>{{ t("Rackets, coaches, flights, hotels – the costs are honest, and they don't wait for a breakthrough.") }}</p>
         </div>
         <div class="ob-art ob-art--hero">
           <img :src="HERO_ART" alt="" />
@@ -411,7 +438,7 @@ function start(): void {
                  cleared, and then the placeholder is the only thing saying what Next is waiting
                  for. It costs nothing when the field is filled. -->
             <input id="ob-first" v-model="profile.kidName" class="ob-input" type="text" :maxlength="PROFILE_NAME_MAX_CHARS" :placeholder="IDENTITY_COPY.firstName" autocomplete="off" />
-            <button class="ob-dice" type="button" aria-label="Random first name" @click="reroll">
+            <button class="ob-dice" type="button" :aria-label="t('Random first name')" @click="reroll">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="4" y="4" width="16" height="16" rx="4" />
                 <circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none" />
@@ -430,7 +457,7 @@ function start(): void {
                all beside a field that cannot roll. -->
           <div class="ob-field-row">
             <input id="ob-last" v-model="profile.kidLastName" class="ob-input" :class="{ 'is-locked': Boolean(dynasty) }" type="text" :maxlength="PROFILE_NAME_MAX_CHARS" :placeholder="IDENTITY_COPY.lastName" :readonly="Boolean(dynasty)" autocomplete="off" />
-            <button v-if="!dynasty" class="ob-dice" type="button" aria-label="Random last name" @click="rerollLast">
+            <button v-if="!dynasty" class="ob-dice" type="button" :aria-label="t('Random last name')" @click="rerollLast">
               <!-- A different face on the second die, on purpose (the design draws three pips here). -->
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="4" y="4" width="16" height="16" rx="4" />
@@ -450,19 +477,19 @@ function start(): void {
              'girl' – the boys' tour is post-v1 content – so Boy renders in the design's unselected
              state and is genuinely disabled rather than merely styled that way. -->
         <div class="ob-field">
-          <span class="ob-label" id="ob-gender-label">Gender</span>
+          <span class="ob-label" id="ob-gender-label">{{ t('Gender') }}</span>
           <div class="ob-pair" role="group" aria-labelledby="ob-gender-label">
             <button class="ob-pick is-on" type="button" aria-pressed="true">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="8.5" r="4" /><path d="M12 12.5V21" /><path d="M8.5 17.5h7" />
               </svg>
-              <span>Girl</span>
+              <span>{{ t('Girl') }}</span>
             </button>
-            <button class="ob-pick" type="button" disabled aria-pressed="false" title="The boys' tour is coming later">
+            <button class="ob-pick" type="button" disabled aria-pressed="false" :title="t(`The boys' tour is coming later`)">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="10.5" cy="13.5" r="4.5" /><path d="M14 10l5.5-5.5" /><path d="M15 4.5h4.5V9" />
               </svg>
-              <span>Boy</span>
+              <span>{{ t('Boy') }}</span>
             </button>
           </div>
         </div>
@@ -510,7 +537,7 @@ function start(): void {
             </div>
           </div>
           <template v-else-if="recordedBirthdays.length === 1">
-            <input id="ob-month" class="ob-input is-locked" type="text" :value="`${MONTHS[recordedBirthdays[0].month - 1]} ${recordedBirthdays[0].day}`" readonly :aria-label="IDENTITY_COPY.birthday" />
+            <input id="ob-month" class="ob-input is-locked" type="text" :value="monthDayLabel(recordedBirthdays[0].month, recordedBirthdays[0].day)" readonly :aria-label="IDENTITY_COPY.birthday" />
             <p class="ob-line-note">{{ DYNASTY_COPY.birthdayNote }}</p>
           </template>
           <template v-else>
@@ -527,7 +554,7 @@ function start(): void {
                 :aria-checked="profile.birthMonth === b.month && profile.birthDay === b.day"
                 @click="profile.birthMonth = b.month; profile.birthDay = b.day"
               >
-                <span class="ob-row-title">{{ MONTHS[b.month - 1] }} {{ b.day }}</span>
+                <span class="ob-row-title">{{ monthDayLabel(b.month, b.day) }}</span>
               </Card>
             </div>
           </template>
@@ -543,10 +570,7 @@ function start(): void {
                screen C. It is load-bearing now (docs/specs/relative-age.md), so it says what it does -
                and it says BOTH sides, because January is not simply better. Measured: an older-in-band
                girl finishes ~6 rank places higher; a younger one loses ~5 fewer weeks to injury. -->
-          <span>
-            Age groups go by year, so an older girl is stronger now – and a younger one has more room
-            later, and loses fewer weeks. The day is for her birthday.
-          </span>
+          <span>{{ t('Age groups go by year, so an older girl is stronger now – and a younger one has more room later, and loses fewer weeks. The day is for her birthday.') }}</span>
         </Card>
       </section>
 
@@ -600,7 +624,7 @@ function start(): void {
 
       <!-- ══ Q. Family & Coaching ══ -->
       <section v-else-if="step === 4" class="ob-pane bare ob-family">
-        <Eyebrow as="h2" class="ob-eyebrow">Family background</Eyebrow>
+        <Eyebrow as="h2" class="ob-eyebrow">{{ t('Family background') }}</Eyebrow>
         <!-- ⭐⭐ v86 T10 – ON A DYNASTY RUN THE THREE BUTTONS ARE ABSENT, NOT DISABLED (§6.3, the
              prologue's own rule for the origins card): the band arrived on the block, so the card
              STATES the family she is born into instead of asking. One DRAFT sentence, and the band's
@@ -613,7 +637,7 @@ function start(): void {
             </Card>
           </div>
         </template>
-        <div v-else class="ob-stack" role="group" aria-label="Family background">
+        <div v-else class="ob-stack" role="group" :aria-label="t('Family background')">
           <Card
             v-for="b in BACKGROUNDS"
             :key="b.id"
@@ -640,7 +664,7 @@ function start(): void {
             </span>
             <span class="ob-row-text">
               <span class="ob-row-title">{{ b.label }}</span>
-              <span class="ob-row-money"><b>{{ b.budget }}</b> starting budget</span>
+              <span class="ob-row-money">{{ budgetHalves[0] }}<b>{{ b.budget }}</b>{{ budgetHalves[1] }}</span>
               <span class="ob-row-blurb">{{ b.blurb }}</span>
             </span>
             <svg v-if="profile.background === b.id" class="ob-check" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -649,8 +673,8 @@ function start(): void {
           </Card>
         </div>
 
-        <Eyebrow as="h2" class="ob-eyebrow">Coaching</Eyebrow>
-        <div class="ob-pair" role="group" aria-label="Coaching">
+        <Eyebrow as="h2" class="ob-eyebrow">{{ t('Coaching') }}</Eyebrow>
+        <div class="ob-pair" role="group" :aria-label="t('Coaching')">
           <Card
             v-for="c in COACH_OPTIONS"
             :key="c.id"
@@ -676,7 +700,7 @@ function start(): void {
       </section>
 
       <!-- ══ R. Play Style ══ -->
-      <section v-else-if="step === 5" class="ob-pane bare ob-styles" role="group" aria-label="Play style">
+      <section v-else-if="step === 5" class="ob-pane bare ob-styles" role="group" :aria-label="t('Play style')">
         <Card
           v-for="s in PLAY_STYLES"
           :key="s.id"
@@ -709,7 +733,7 @@ function start(): void {
       <!-- ══ S. Summary ══ -->
       <section v-else class="ob-pane bare ob-summary">
         <div class="ob-art ob-art--summary">
-          <img :src="SUMMARY_ART" alt="Your champion, on the day she first walks into the club" />
+          <img :src="SUMMARY_ART" :alt="t('Your champion, on the day she first walks into the club')" />
         </div>
 
         <Card class="ob-sheet" pad="0">
@@ -718,21 +742,21 @@ function start(): void {
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="8.5" r="3.6" /><path d="M5.5 20c0-3.6 3-5.6 6.5-5.6s6.5 2 6.5 5.6" />
               </svg>
-              <dt>Name</dt>
+              <dt>{{ t('Name') }}</dt>
               <dd>{{ profile.kidName }} {{ profile.kidLastName }}</dd>
             </div>
             <div class="ob-line">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="9" /><path d="M3.2 12h17.6" /><path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z" />
               </svg>
-              <dt>Country</dt>
+              <dt>{{ t('Country') }}</dt>
               <dd>{{ countryLabel }} <span class="ob-flag ob-flag--sm">{{ flagEmoji(profile.country) }}</span></dd>
             </div>
             <div class="ob-line">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="3.5" y="5" width="17" height="15.5" rx="3" /><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3" />
               </svg>
-              <dt>Birth month</dt>
+              <dt>{{ t('summary|Birth month') }}</dt>
               <dd>{{ birthMonthLabel }}</dd>
             </div>
             <div class="ob-line">
@@ -740,21 +764,21 @@ function start(): void {
                 <circle cx="8.5" cy="8" r="3.2" /><circle cx="16" cy="9" r="2.6" />
                 <path d="M3 19c0-2.8 2.5-4.6 5.5-4.6s5.5 1.8 5.5 4.6" /><path d="M15 14.6c3 0 5 1.6 5 4.4" />
               </svg>
-              <dt>Background</dt>
+              <dt>{{ t('Background') }}</dt>
               <dd>{{ backgroundLabel }}</dd>
             </div>
             <div class="ob-line">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M4 14.5a8 8 0 0 1 16 0" /><path d="M4 14.5h16.5a1.5 1.5 0 0 1 0 3H4z" />
               </svg>
-              <dt>Coaching</dt>
+              <dt>{{ t('Coaching') }}</dt>
               <dd>{{ coachingLabel }}</dd>
             </div>
             <div class="ob-line">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="16.5" cy="5.5" r="2.2" /><path d="M14.5 9l-3.5 3 2 3-1.5 5" /><path d="M11 12L7 13.5 5 18" /><path d="M14.5 9l3 2.5 2.5-.5" />
               </svg>
-              <dt>Play style</dt>
+              <dt>{{ t('Play style') }}</dt>
               <dd class="ob-accent">{{ playStyleLabel }}</dd>
             </div>
           </dl>
@@ -789,7 +813,7 @@ function start(): void {
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 20C8.5 17.4 3.5 14 3.5 9.6A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8.5 2.6c0 4.4-5 7.8-8.5 10.4z" />
           </svg>
-          <span>Every practice. Every match. Every choice. You've got this.</span>
+          <span>{{ t("Every practice. Every match. Every choice. You've got this.") }}</span>
         </p>
 
         <!-- ⚠⚠ E-09 / T4.8 (27.09) – `<StoreError />`. What stood here was a hand-rolled paragraph on
@@ -813,9 +837,9 @@ function start(): void {
              the splash's mark and belongs to nobody here. -->
         <div v-if="step === 1" class="ob-foot ob-foot--solo">
           <PrimaryPill variant="cta" class="ob-cta ob-cta--wide" @click="next">
-            <span>Begin</span>
+            <span>{{ t('Begin') }}</span>
           </PrimaryPill>
-          <button class="ob-quiet" type="button" @click="skipToDefaults">Skip for now</button>
+          <button class="ob-quiet" type="button" @click="skipToDefaults">{{ t('Skip for now') }}</button>
         </div>
 
         <!-- ⚠ S CARRIES THE SAME BACK / AFFIRMATIVE PAIR AS THE STEP BEFORE IT (owner, 29.07:
@@ -826,16 +850,16 @@ function start(): void {
              step before. Start career is the ONE button in the flow that begins a career rather
              than advancing a step, and `--start` is the size that says so. -->
         <div v-else-if="step === STEP_COUNT" class="ob-foot">
-          <button class="ob-back" type="button" @click="back">Back</button>
+          <button class="ob-back" type="button" @click="back">{{ t('Back') }}</button>
           <PrimaryPill variant="cta" class="ob-cta ob-cta--start" :disabled="game.busy" @click="start">
-            <span>Start career</span>
+            <span>{{ t('Start career') }}</span>
           </PrimaryPill>
         </div>
 
         <div v-else class="ob-foot">
-          <button class="ob-back" type="button" @click="back">Back</button>
+          <button class="ob-back" type="button" @click="back">{{ t('Back') }}</button>
           <PrimaryPill variant="cta" class="ob-cta" :disabled="nextDisabled" @click="next">
-            <span>Next</span>
+            <span>{{ t('Next') }}</span>
           </PrimaryPill>
         </div>
       </template>

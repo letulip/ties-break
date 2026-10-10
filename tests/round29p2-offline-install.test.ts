@@ -185,7 +185,11 @@ describe('round 29 part two #7 – the art is in the PWA install', () => {
     // wght 400-800 and 200-800 – so two files replaced three. ⭐ The count was never this test's
     // claim: the line below is, and it did not move. Every font file, however many there are, must
     // be in the install.
-    expect(fonts.length).toBe(3)
+    // ⚠ RE-AIMED 3 -> 5 BY L4-1's LANDING (10.10: the files landed). manrope-cyr.woff2 and caveat-cyr.woff2, the Cyrillic subsets of
+    // the two families the app already ships, joined the three Latin files. Same sentence as above: the count moves, the line below
+    // does not – and it is the line that proves the Russian type works offline (a Cyrillic file outside the precache would fall
+    // back to the system face on a phone that is not online).
+    expect(fonts.length).toBe(5)
     expect(fonts.every((f) => f.precached)).toBe(true)
   })
 

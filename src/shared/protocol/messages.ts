@@ -8,6 +8,8 @@
 // name below under the historical public path. Nothing here imports that barrel back.
 
 import type { SaveFileErrorCode } from '../../engine/saveGuard'
+// ⭐ L3-7 close-out (10.10) – the carrier of a sentence WITH holes, type-only and from the framework-free core both halves already share (`shared/i18n.ts` imports nothing).
+import type { CopyRef } from '../i18n'
 // v76 T3: the year-focus union, imported TYPE-ONLY from the engine leaf that declares it beside the
 // field it types – `./narrative`'s `Temperament` precedent, and the same one-way arrow.
 import type { PsyFocus } from '../../engine/world/state'
@@ -101,12 +103,44 @@ export interface SavePeek {
  *  then import it") from `corrupted` had nothing to branch on but English – the exact failure mode
  *  the code was added to prevent, with the header claiming it was prevented.
  *
+ *  ⭐⭐ AND SINCE THE L3-7 CLOSE-OUT (10.10) THE SENTENCE CROSSES TOO, BESIDE THE KIND. A kind does not name a sentence – `corrupted` is five of them, `invalid-shape` a frame over a closed set of clauses and
+ *  the spine's field names, `future-schema` and `oversized` carry numbers – so a UI holding only the kind could print the raw English or nothing, and the seven kinds were the named leftover of L3-7 (owner,
+ *  10.10, docs/decisions.md item 33: the seven player-facing refusals typify NOW). `ErrorReply.c` is the sentence as a `CopyRef`: `code` stays the kind, `error` stays the English, and `c` is what the UI
+ *  renders through the catalog (`composables/errorText.ts`). It is TRANSPORT – built per throw, never persisted, no schema moved.
+ *
  *  ⚠ `import type`, WHICH IS THE ONLY EDGE THIS DIRECTION IS ALLOWED. `shared/protocol/*` already
  *  reaches into `engine/*` for types this way (`competition.ts`, `events.ts`, `ladder.ts` and four
  *  more); the import is erased at compile time, so the runtime graph is unchanged and invariant 1
  *  holds – `saveGuard.ts` imports `SAVE_SCHEMA_VERSION` from the engine at RUNTIME, and a value
  *  import here would put the whole engine behind every protocol consumer. */
-export type WorkerErrorCode = 'STALE_REVISION' | 'SAVE_CONFLICT' | 'INVALID_COMMAND' | SaveFileErrorCode
+export type WorkerErrorCode = 'STALE_REVISION' | 'SAVE_CONFLICT' | 'INVALID_COMMAND' | SaveFileErrorCode | RefusalCode
+
+/**
+ * ⭐ L3-7 (10.10) – THE FOUR SENTENCES OF A LETTER THAT CANNOT BE ANSWERED, AND THE ONE OF A LAST OFFER THAT IS NOT A QUESTION, NOW HAVE A STABLE CODE.
+ * docs/specs/i18n-2026-10.md §8 row L3-7; the ask is RU-13A's and RU-15's («an English exception in the middle of a Russian row is not a completed translation»).
+ *
+ * ⚠ THE SENTENCE STAYS ON THE ERROR AND THE CODE IS BESIDE IT, never instead: `error` is still the English sentence (the raw `message` is the fallback for any code a build does not know, and what
+ * every older reader, log and test sees), and `code` is what the UI keys the translation by – `composables/errorText.ts` maps each code to a `t()` whose key is that very English sentence, byte for byte
+ * (`tests/i18n-l3-7-errors.test.ts` holds the two spellings equal). The codes are kebab-case, like `SaveFileErrorCode`'s seven; they name the REASON, not the screen.
+ *   offer-not-in-inbox         the letter is not on the paper any more (or never was)
+ *   offer-already-signed       the deal was signed already
+ *   offer-gone                 expired, refused, or past its deadline – ONE sentence for the three ways of being gone (C-P10)
+ *   offer-next-season-signed   a strictly weaker kit rung than the one she is already signed for
+ *   last-offer-not-a-question  a `retire: false` aimed at a final offer, which no card can produce
+ */
+export type RefusalCode = 'offer-not-in-inbox' | 'offer-already-signed' | 'offer-gone' | 'offer-next-season-signed' | 'last-offer-not-a-question'
+
+/** An engine refusal that carries its code across the worker boundary – `StaleRevisionError`'s and `CommandRefusedError`'s own shape: an Error holding the player's sentence, mapped to a machine-readable
+ *  code by the worker's `errorMsg`. `toThrow('…the sentence…')` still matches it, because the message is the sentence. */
+export class CodedRefusalError extends Error {
+  constructor(
+    readonly code: RefusalCode,
+    message: string,
+  ) {
+    super(message)
+    this.name = 'CodedRefusalError'
+  }
+}
 
 /**
  * ⭐⭐ E-06 (05.09 engine review) – A COMMAND WHOSE PAYLOAD THE ENGINE WILL NOT TAKE.
@@ -384,6 +418,9 @@ export type ToUI =
       code?: WorkerErrorCode
       /** on STALE_REVISION / SAVE_CONFLICT: the revision the conflict was measured against */
       revision?: number
+      /** ⭐ L3-7 close-out: the SENTENCE of a refused save file, as copy (key = the English template, params = its holes) – beside `code` (the kind) and `error` (the English). Absent on every other
+       *  refusal and on the one raw lower-layer message; a UI that does not know it prints `error`. */
+      c?: CopyRef
     }
 
 // =================================================================================================

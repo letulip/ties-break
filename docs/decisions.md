@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 164 dated entries, newest 2026-10-08. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 168 dated entries, newest 2026-10-10. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 7 | [FOURTH BATCH: THE SUPPORTS' REFUSALS BANK LIKE THE COACH'S, AT THEIR OWN SCALE](#02102026--fourth-batch-the-supports-refusals-bank-like-the-coachs-at-their-own-scale) | 2026-10-02 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 17 | [THE TARIFF IS HIS LEVER: J 1-2-3, W BY STAGE, THE SHOOT PAYS PER DAY](#02102026--the-tariff-is-his-lever-j-1-2-3-w-by-stage-the-shoot-pays-per-day) | 2026-10-02 |
-| general | 33 | [«ДИНАСТИЯ» БЕРЁМ: THE DOOR IS ONE WORD IN BOTH LANGUAGES](#08102026--династия-берём-the-door-is-one-word-in-both-languages) | 2026-10-08 |
+| general | 36 | [THE MORNING BATCH: THIRTEEN YELLOW WORDS WHOLESALE, FOUR RED RULINGS](#10102026--the-morning-batch-thirteen-yellow-words-wholesale-four-red-rulings) | 2026-10-10 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -45,7 +45,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
 | simulation-and-balance | 8 | [THE FEEDBACK CHANNEL BUILT, AND THE SHARE TYPE MEASURED RATHER THAN GUESSED](#30092026--the-feedback-channel-built-and-the-share-type-measured-rather-than-guessed) | 2026-09-30 |
-| ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
+| ui-and-copy | 6 | [THE SECOND MORNING BATCH: FONTS GO, COPY RULINGS, TWO EMBEDS](#10102026--the-second-morning-batch-fonts-go-copy-rulings-two-embeds) | 2026-10-10 |
 | world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
 
 <!-- END GENERATED: current-decision index -->
@@ -6024,3 +6024,66 @@ hour: `DYNASTY_AFTER` = `Dynasty`, the RU row = «Династия», both `APPR
 lived one message and is recorded in RU-18 as the superseded draft. Wired in the same intake
 branch: the code literal, the e2e click, four component pins re-aimed with the dated note, the
 wave-10 strings table's D2 row, RU-12A, README and the records.
+
+## 08.10.2026 – THE LOCALIZATION MERGES AS ONE
+
+«очень хорошо, но локализацию я буду мержить всю целиком, поэтому продолжай работу пожалуйста» –
+the per-wave PRs die: the L-waves STACK on the one branch (`loc/l1a`), each wave still its own
+commits, gates and body refresh, and the owner merges the whole rig once at the end. The spec's
+§8 per-wave-branch line is amended by this ruling.
+
+## 10.10.2026 – L4 JOINS THE SINGLE MERGE: THE NIGHT ORDER
+
+«очень хорошо, но L4 тоже надо в эту ветку на единый мерж, вся локализация идет одним куском,
+после LB-note бери в работу пожалуйста так же пошагово и до конца без остановок, все вопросы
+собирай, я утром разберу.» The L4 ladder runs overnight on `loc/l1a`: L4-1 fonts (the P3 spec
+executes – the cmap probe, the lang-scoped wiring, HIS T2 sample sheet for the morning pick),
+L4-2 the whole-app pseudo-locale sweep, L4-3 the LQA runner over RU-14's acceptance matrix plus
+the RU-13C technical half (lang tag, manifest, the policy route with its EN fallback until his
+rows approve). The honest frame stands in §8: the closure gates – 100% of his chosen batch set
+and the zero miss counter – WAIT on his читка by design; the night builds every machine that
+measures them. Questions pile for the morning, his word resumes the levers.
+
+## 10.10.2026 – THE MORNING BATCH: THIRTEEN YELLOW WORDS WHOLESALE, FOUR RED RULINGS
+
+«по желтым давай на все "ок", а я потом вживую посмотрю и тестерам скажу» – the reviewer-prefilled
+words are APPROVED as a batch, provisional on his live look: «Недостаточно средств»; «Отмена»
+(dialog close) / «Отменить» (undoing a booked action – the `undo|Cancel` split); «Удары навылет»
+(box score, over RU-04's «Виннеры»); «Уровень» / «Поездки» (TierGuide headers, over RU-07's
+«Турнир») / «Сняться» (the live Withdraw is the tournament one; the shop form waits for its own
+call site); «Домой» on every visible Back-to-Home (the long aria form waits on the unruled DOM
+question №15); «English / Русский» (the autonym is a script constant – it may never translate);
+«Пн Вт Ср Чт Пт Сб Вс»; «Посмотреть ещё раз» (+ the RU-04-side pairs); «км/ч», «КБ»; the seven
+reply labels in the reviewer's forms; «Потеря беременности и смерть близкого».
+
+And the red rulings of the same message: **38** LB-note lays the checklist UNDER the prose;
+**45** the store phrase is the reviewer's – «Теннисная карьера глазами семьи: матчи, взросление
+и цена мечты.» – «пока так»; **41** «гориз. скролл точно надо чинить, не должно быть» – the two
+320 px horizontal overflows (Stats +23 px, Family budget +12 px) are defects, fixed in this
+branch; **24** «впиши сам, жду на читку» – the architect writes the hint cells into the tables,
+his read follows. **40** re-confirmed №5/§9.5: tournament names are never translated – the
+«World Tour 15» tag question was only about layout next to Russian text, folded into his live QA.
+
+## 10.10.2026 – THE SECOND MORNING BATCH: FONTS GO, COPY RULINGS, TWO EMBEDS
+
+«докачать для существующих добро, ударение не нужно, новых шрифтов не нужно» – **39**: the Cyrillic
+subsets are authorised for the families the app ALREADY ships (no Onest, no new faces), the range
+drops U+0301. **40** «на твое усмотрение» – the five carpet surfaces' rows go as DRAFT scaffolds
+into their area tables. **6** «ок» – the tour-guide tail takes the architect's English mirror of
+his own §4 replacement. **7** – write it grammatically: «The court is not her surface.» (wrapping
+is prose's business). **9** «ок» – the seven word-form title-price messages stay; the translator
+writes seven rows; the generic `{n} wins` cell is historic. **16** «у тебя хорошо получается,
+сделай пожалуйста для остальных» – the architect DRAFTS the ICU plural rows for every counted
+phrase, preserving his lexical choices from the pre-declined cells; his читка approves. **17**
+«пусть останется просто "тренер" и его "говорил/не говорил" лингвистически» – grammatical
+agreement with the noun, no impersonal rewrite, the seven prologue rows approve as written.
+**18** «лечим» – the warm away rows that leaked the cold register take the family-voice fixes
+(«Мы его не открывали», «Проверили ещё до твоего вопроса»), cells fixed, pool stays DRAFT for his
+read. **26** cleared up: tier PROPER names were never to be translated and are not – the re-read
+is about the PROSE counts in RU-07 §11 («nine tiers / eighteen places» vs the live 16/32); the
+architect fixes the counts. **33** «если что-то критичное и можно сразу исправить – лучше так» –
+the seven player-facing SaveFileError refusals typify NOW; the ~100 dev-path plain Errors stay
+documented. **34** – the nine ENDING_BLURB sentences get a home on the ending screen («может быть
+нам это как-то в наш финальный экран можно гармонично встроить») – placement proposal with a
+screenshot, his live look before it stands. **14** – direction ruled: when the Russian prologue
+rows land, try spacing first («можно какими-то отступами исправить без вреда»).

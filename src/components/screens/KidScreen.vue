@@ -57,7 +57,6 @@ import { useKidEmotion } from '../../composables/kidEmotion'
 // will not let the two be confused.
 import { readingColor } from '../../composables/readingColor'
 import { birthDateLabel, weekLabel } from '../../shared/dates'
-import { rankLabel } from '../../shared/format'
 // ⚠ MERGE: `FamilyBackground` left with the Family tile (screen C now draws the export's six, and
 // family background lives on the Money screen where it prices things). `PortraitEmotion`, not
 // `AvatarEmotion` - `rehab` joined the faces with ui/art-rehab-sleepy and the Mood tile can wear it
@@ -66,7 +65,8 @@ import { LADDER_LABEL, type Milestone, type PlayStyle } from '../../shared/proto
 import { TIER_SHORT } from '../../engine/season/calendar'
 import { BEST_N_BY_TRACK } from '../../engine/season/ranking'
 import type { PortraitEmotion } from '../../shared/avatarEmotion'
-import { COACH_TIER_LABEL } from '../../engine/coach'
+import { COACH_TIER_WORD } from '../../composables/coachWords'
+import { t } from '../../i18n'
 // U0 - the shared components (docs/specs/ui-components.md).
 // ⭐⭐ ROUND 42 #10 – AND StatRow IS NOW ONE OF THEM. This line used to read «it is not used here: it
 // belongs to the Money screen, which is where it earned its shape», which was true until the owner
@@ -119,11 +119,22 @@ const { emotion, portraitUrl } = useKidEmotion()
 // It is deliberately HERE and not in the other two copies of this vocabulary (OnboardingWizard,
 // CoachMarketScreen): those render the label in a wide row where it never wraps, and a character
 // nobody can see should exist only where it does something.
+// ⚠ L2-5: THE SOFT HYPHEN IS PART OF THE KEY. The literal `Counter­puncher` below carries U+00AD exactly as the English did, so the English renders
+// byte-identical; it is therefore its OWN catalog key, distinct from onboarding's `Counterpuncher` (no hyphen, a wide row that never wraps). RU-05 says
+// this note «reuses RU-02A exactly» and asks for no soft hyphen in Russian – the owner decides whether the two keys share one Russian line.
 const PLAY_STYLE_LABEL: Record<PlayStyle, string> = {
-  aggressive: 'Aggressive baseliner',
-  counterpuncher: 'Counter­puncher',
-  'serve-first': 'Big serve',
-  'all-court': 'All-court',
+  get aggressive() {
+    return t('Aggressive baseliner')
+  },
+  get counterpuncher() {
+    return t('Counter­puncher')
+  },
+  get 'serve-first'() {
+    return t('Big serve')
+  },
+  get 'all-court'() {
+    return t('All-court')
+  },
 }
 // How her face reads as a WORD. The export's Mood tile is a word plus a picture, and both halves
 // here answer to the same engine decision (diary.facts.emotion) - so the word can never contradict
@@ -132,14 +143,30 @@ const PLAY_STYLE_LABEL: Record<PlayStyle, string> = {
 // is a face this tile can be showing for eleven weeks at a stretch, so it needs its own word.
 // "Hurt" is the moment she went down; the weeks after it are something else, and the word says so.
 const MOOD_LABEL: Record<PortraitEmotion, string> = {
-  norm: 'Steady',
-  happy: 'Happy',
-  sad: 'Low',
-  serious: 'Focused',
-  tired: 'Tired',
-  injury: 'Hurt',
-  rehab: 'On the mend',
-  angry: 'Angry',
+  get norm() {
+    return t('Steady')
+  },
+  get happy() {
+    return t('Happy')
+  },
+  get sad() {
+    return t('Low')
+  },
+  get serious() {
+    return t('Focused')
+  },
+  get tired() {
+    return t('Tired')
+  },
+  get injury() {
+    return t('Hurt')
+  },
+  get rehab() {
+    return t('On the mend')
+  },
+  get angry() {
+    return t('Angry')
+  },
 }
 const kidName = computed(() => game.snapshot?.profile.kidName ?? '')
 const kidFullName = computed(() => {
@@ -176,7 +203,7 @@ const playStyleLabel = computed(() => (game.snapshot ? PLAY_STYLE_LABEL[game.sna
 // screen says `Angry`, WeekRecapCard says `Frustrated`), both spellings are the owner's, and a
 // single engine word rendered unconditionally would have renamed one of them by accident.
 const moodLabel = computed(
-  () => game.snapshot?.diary.facts.moodWord ?? MOOD_LABEL[emotion.value] ?? 'Steady',
+  () => game.snapshot?.diary.facts.moodWord ?? MOOD_LABEL[emotion.value] ?? t('Steady'),
 )
 
 // --- THE PERSONALITY / SCHOOL / FRIENDS TILES ------------------------------------------------
@@ -208,10 +235,13 @@ const bestN = computed(() => BEST_N_BY_TRACK[activeLadder.value])
 // middle of an English sentence. Cheaper to keep than to re-discover.
 const BEST_N_WORDS: Record<number, string> = { 6: 'six', 16: 'sixteen', 18: 'eighteen' }
 const bestNWord = computed(() => BEST_N_WORDS[bestN.value] ?? String(bestN.value))
-const rankText = computed(() => rankLabel(ladder.value?.rank ?? 0, ladder.value?.rank != null))
+// ⭐ L4-2b (10.10): `rankLabel`'s two shapes (shared/format.ts, engine-importable, so it cannot call `t()`) read through the catalog at THIS call site, as Stats does.
+const rankText = computed(() =>
+  ladder.value?.rank != null ? t('#{rank}', { rank: ladder.value?.rank ?? 0 }) : t('Unranked'),
+)
 const pointsTotal = computed(() => ladder.value?.points ?? 0)
 const pointsText = computed(() =>
-  countingResults.value.length ? `${pointsTotal.value.toLocaleString('en-US')} pts` : 'No points yet',
+  countingResults.value.length ? t('{0} pts', [pointsTotal.value.toLocaleString('en-US')]) : t('No points yet'),
 )
 
 // --- THE CONDITION TILE --------------------------------------------------------------------
@@ -231,9 +261,9 @@ const conditionColor = computed(() => readingColor({ pct: condition.value }))
 // Who she trains with TODAY, which is `world.coachId` and not the rung chosen at onboarding - the
 // two part company the first time the market is used.
 const coachRow = computed(() => game.snapshot?.coachMarket.find((c) => c.current) ?? null)
-const coachName = computed(() => coachRow.value?.name ?? 'You')
+const coachName = computed(() => coachRow.value?.name ?? t('You'))
 const coachTierLabel = computed(() =>
-  coachRow.value ? `${COACH_TIER_LABEL[coachRow.value.tier]} tier` : COACH_TIER_LABEL['self'],
+  coachRow.value ? t('{0} tier', [COACH_TIER_WORD[coachRow.value.tier]]) : COACH_TIER_WORD.self,
 )
 
 /** WHO IS DOING THE READING, on the panel under the tile (R15-18, one screen over).
@@ -255,8 +285,8 @@ const coachTierLabel = computed(() =>
  *  whole rule: voice, not value. */
 const radarBlurb = computed(() =>
   coachRow.value
-    ? 'What her coach can tell so far. The dashed shape is where she started, the solid shape is where she is, and the haze around them is how far she might go. All three sharpen as the coach learns her.'
-    : 'What you can tell so far. The dashed shape is where she started, the solid shape is where she is, and the haze around them is how far she might go. All three sharpen as you learn her.',
+    ? t('What her coach can tell so far. The dashed shape is where she started, the solid shape is where she is, and the haze around them is how far she might go. All three sharpen as the coach learns her.')
+    : t('What you can tell so far. The dashed shape is where she started, the solid shape is where she is, and the haze around them is how far she might go. All three sharpen as you learn her.'),
 )
 
 // --- IMPORTANT MOMENTS ---------------------------------------------------------------------
@@ -295,11 +325,11 @@ interface Moment {
  *  so a title says WHICH title - "First J30 title" is a moment, "Milestone" is a shrug. */
 function momentLabel(m: Milestone): string | null {
   const at = m.tier ? TIER_SHORT[m.tier] : null
-  if (m.type === 'title') return at ? `First ${at} title` : 'First title'
-  if (m.type === 'final') return at ? `First ${at} final` : 'First final'
+  if (m.type === 'title') return at ? t('First {0} title', [at]) : t('First title')
+  if (m.type === 'final') return at ? t('First {0} final', [at]) : t('First final')
   // R15-5: the first cheque is one of the things she has DONE - the week the tennis first paid.
-  if (m.type === 'prize') return 'First prize money'
-  if (m.type === 'international') return 'First trip abroad'
+  if (m.type === 'prize') return t('First prize money')
+  if (m.type === 'international') return t('First trip abroad')
   // Deliberately not shown. An injury IS remembered by the ledger and the diary speaks about it, but
   // this strip is the four things she has DONE - a hurt ankle between two titles reads as an
   // achievement in a row of achievements. `season-rank` is excluded for a plainer reason: it fires
@@ -326,9 +356,9 @@ const moments = computed<Moment[]>(() => {
   // Four columns, as the export draws: her first week, the two most recent firsts, and today.
   const recent = fired.slice(-2)
   return [
-    { key: 'career-start', label: 'Career start', when: weekLabel(0, startYear.value), icon: 'start' as const },
+    { key: 'career-start', label: t('Career start'), when: weekLabel(0, startYear.value), icon: 'start' as const },
     ...recent,
-    { key: 'today', label: 'Today', when: weekLabel(snap.week, startYear.value), icon: 'today' as const, now: true },
+    { key: 'today', label: t('Today'), when: weekLabel(snap.week, startYear.value), icon: 'today' as const, now: true },
   ]
 })
 
@@ -376,7 +406,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
             class="back-link kid-back"
             variant="bare"
             icon="back"
-            label="Back to Home"
+            :label="t('screen|Back to Home')"
             @click="emit('navigate', 'home')"
           />
           <div class="kid-id">
@@ -388,7 +418,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
               <span class="kid-flag" role="img" :aria-label="countryName" :title="countryName">{{ countryFlag }}</span>
             </p>
           </div>
-          <button class="kid-tool" aria-label="Settings" title="Settings" @click="emit('navigate', 'more')">
+          <button class="kid-tool" :aria-label="t('Settings')" :title="t('Settings')" @click="emit('navigate', 'more')">
             <svg
               width="21"
               height="21"
@@ -416,7 +446,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              the line simply moved to the one strip of the picture that is already scrim. -->
         <!-- v48: ...and her birth date beside it, which is the one fact about her the game used to
              withhold entirely. Day and month, no week and no year – see `birthDate` on the script side. -->
-        <p class="kid-age">{{ ageYears }} years old · B-Day {{ birthDate }}</p>
+        <p class="kid-age">{{ t('{0} years old · B-Day {1}', [ageYears, birthDate]) }}</p>
       </div>
 
       <!-- ======================== 2. THE ATTRIBUTE GRID ========================
@@ -437,18 +467,18 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              own rule – see `.kid-tile-personality` in the style block, where the wrap is declared
              and the measurement that licenses it is written down. -->
         <Card class="kid-tile" pad="11px 9px">
-          <p class="kid-tile-label">Personality</p>
+          <p class="kid-tile-label">{{ t('Personality') }}</p>
           <p class="kid-tile-line kid-tile-personality">{{ life?.personality }}</p>
         </Card>
 
         <Card class="kid-tile kid-tile-ring" pad="11px 9px">
-          <p class="kid-tile-label">Condition</p>
+          <p class="kid-tile-label">{{ t('Condition') }}</p>
           <ProgressRing
             class="kid-ring"
             :value="condition / 100"
             :size="56"
             :color="conditionColor"
-            :label="`Condition: ${condition} percent`"
+            :label="t('Condition: {0} percent', [condition])"
           />
         </Card>
 
@@ -458,7 +488,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              decision at forty times the size, so the 36px crop was the emotion said twice, and the
              smaller saying carried less. The word stays; the picture is the picture above it. -->
         <Card class="kid-tile kid-tile-mood" pad="11px 9px">
-          <p class="kid-tile-label">Mood</p>
+          <p class="kid-tile-label">{{ t('Mood') }}</p>
           <p class="kid-tile-lead">{{ moodLabel }}</p>
         </Card>
 
@@ -481,13 +511,13 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              the same `kid-tile-line` pair, so the `nowrap` rule and the 16-character budget below hold for them
              unchanged. The owner's words are in that function's header: round13-nav bans Cyrillic in a template. -->
         <Card class="kid-tile" pad="11px 9px">
-          <p class="kid-tile-label">{{ life?.relationships?.label ?? life?.schoolLabel ?? 'School' }}</p>
+          <p class="kid-tile-label">{{ life?.relationships?.label ?? life?.schoolLabel ?? t('School') }}</p>
           <p class="kid-tile-line">{{ life?.relationships?.lead ?? life?.school.lead }}</p>
           <p class="kid-tile-line kid-tile-line-soft">{{ life?.relationships?.note ?? life?.school.note }}</p>
         </Card>
 
         <Card class="kid-tile" pad="11px 9px">
-          <p class="kid-tile-label">Friends</p>
+          <p class="kid-tile-label">{{ t('Friends') }}</p>
           <p class="kid-tile-line">{{ life?.friends.lead }}</p>
           <p class="kid-tile-line kid-tile-line-soft">{{ life?.friends.note }}</p>
         </Card>
@@ -498,10 +528,10 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
           as="button"
           class="kid-tile kid-tile-door"
           pad="11px 9px"
-          aria-label="Coach – open the Coach Market"
+          :aria-label="t('Coach – open the Coach Market')"
           @click="emit('navigate', 'market')"
         >
-          <p class="kid-tile-label">Coach</p>
+          <p class="kid-tile-label">{{ t('Coach') }}</p>
           <p class="kid-tile-line">{{ coachName }}</p>
           <p class="kid-tile-line kid-tile-line-soft">{{ coachTierLabel }}</p>
         </Card>
@@ -519,7 +549,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
            this is a sentence. It sits directly below the School tile, which is the first cell of the
            second row. Engine-composed (`kidLife.schoolCutOffNote`), empty for the eight birth months
            it would be false of and once she is out of school. -->
-      <p v-if="life?.schoolWhy" class="hint kid-grid-note kid-note-school">School – {{ life.schoolWhy }}</p>
+      <p v-if="life?.schoolWhy" class="hint kid-grid-note kid-note-school">{{ t('School – {0}', [life.schoolWhy]) }}</p>
 
       <!-- ⭐⭐ ROUND-23 #6b – THE COLLEGE SENTENCE, and it names the campus.
            He asked for something to say about college AND about finishing it - if she went and if
@@ -533,7 +563,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
            carries the place. Engine-composed (`kidLife.collegeNote`), empty for a career that never
            took a place - and it can never collide with the note above it, which is silent from the
            moment she is out of school. -->
-      <p v-if="life?.collegeNote" class="hint kid-grid-note kid-note-college">College – {{ life.collegeNote }}</p>
+      <p v-if="life?.collegeNote" class="hint kid-grid-note kid-note-college">{{ t('College – {0}', [life.collegeNote]) }}</p>
 
       <!-- ========================== 3. THE SKILLS RADAR ==========================
            decisions.md #11, finally built. No numbers anywhere on it, ever.
@@ -543,7 +573,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
            nothing else about it – its padding, its border, its place in a phone's column – differs
            from the other two. -->
       <Card class="kid-panel kid-panel-radar">
-        <Eyebrow as="h2">Skills</Eyebrow>
+        <Eyebrow as="h2">{{ t('Skills') }}</Eyebrow>
         <!-- R15-7: no pronoun names the coach - women are on every roster by construction. R15-15:
              this sentence names the two SHAPES; the key for the two LINES lives with the drawing, in
              SkillsRadar.vue, so it travels wherever the picture does. R15-18: and it names the right
@@ -554,9 +584,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              and the only description a screen reader ever hears still listed the original four. -->
         <SkillsRadar
           :axes="radarAxes"
-          title="Her skills: serve, return, composure, stamina and groundstrokes. The dashed contour
-                 is where she started, the solid one is where she is today, and the haze around them
-                 is how far she could go."
+          :title="t('Her skills: serve, return, composure, stamina and groundstrokes. The dashed contour is where she started, the solid one is where she is today, and the haze around them is how far she could go.')"
         />
       </Card>
 
@@ -565,7 +593,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
            open is the Moments feature (round-3 QA item 8, Phase 6) and does not exist, and a
            control that goes nowhere is worse than no control. -->
       <Card class="kid-panel">
-        <h3 class="kid-panel-title">Important moments</h3>
+        <h3 class="kid-panel-title">{{ t('Important moments') }}</h3>
         <div class="kid-timeline">
           <!-- The rule runs from the FIRST node's centre to the LAST one's, which in a
                `repeat(n, 1fr)` grid is 100/(2n)% in from each edge. The export hard-codes 12% for
@@ -640,7 +668,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
            (`accent`), the two rates are numbers with no direction (`plain`). Absent entirely before
            there is an account, which is the same gate the Money screen's sentence answers to. -->
       <Card v-if="life?.account" class="kid-panel kid-account">
-        <Eyebrow as="h2">Her own account</Eyebrow>
+        <Eyebrow as="h2">{{ t('Her own account') }}</Eyebrow>
         <StatRow
           v-for="(row, i) in life.account.rows"
           :key="row.key"
@@ -654,7 +682,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
       </Card>
 
       <Card class="kid-panel">
-        <Eyebrow as="h2">Counting results (best {{ bestN }})</Eyebrow>
+        <Eyebrow as="h2">{{ t('Counting results (best {0})', [bestN]) }}</Eyebrow>
         <!-- THE RANK ITSELF, which used to have a tile of its own. It reads better here than it
              did up there: this is the card that explains where the number comes from, so the
              number and its working now sit together instead of a screen apart. -->
@@ -663,8 +691,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
           <span class="kid-rank-points">{{ pointsText }}</span>
         </p>
         <p class="kid-panel-note">
-          Her {{ ladderLabel.toLowerCase() }} rank counts her {{ bestNWord }} best {{ ladderLabel.toLowerCase() }}
-          results from the last 52 weeks. Full tables are on the Stats tab.
+          {{ t('Her {0} rank counts her {1} best {2} results from the last 52 weeks. Full tables are on the Stats tab.', [ladderLabel.toLowerCase(), bestNWord, ladderLabel.toLowerCase()]) }}
         </p>
         <CountingResultsTable :results="countingResults" />
       </Card>

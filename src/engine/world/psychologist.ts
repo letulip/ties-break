@@ -61,6 +61,7 @@ import { bondBandOf } from '../spirit'
 import { isOffSeasonWeek } from '../season/calendar'
 import type { PsyFocus } from './state'
 import type { WorldState } from '../world'
+import { cp } from '../../shared/i18n'
 
 /** THE GATE, `masseurUnlocked`'s twin on the SAME one-way door (the travelling-team §2 ruled table:
  *  both seats unlock with the professional career). Her first counting W-series result makes the
@@ -123,6 +124,9 @@ export function hirePsychologist(world: WorldState, hire: boolean): void {
     text: hire
       ? 'A psychologist joins the team – one call a week, wherever she is.'
       : 'The psychologist leaves the team – the calls stop at the end of the week.',
+    c: hire
+      ? cp`A psychologist joins the team – one call a week, wherever she is.`
+      : cp`The psychologist leaves the team – the calls stop at the end of the week.`,
   })
 }
 
@@ -199,6 +203,7 @@ export function setPsychologistRung(world: WorldState, rung: number): void {
       // The label, not a number: the price change is on the next weekly bill, which is the row that
       // may carry figures (the masseur's re-cut line, same rule). DRAFT.
       text: `The weekly call changes hands – ${chosen.label.toLowerCase()} from the next bill.`,
+      c: cp`The weekly call changes hands – ${chosen.label.toLowerCase()} from the next bill.`,
     })
   }
 }
@@ -304,6 +309,7 @@ export function resolvePsychologist(world: WorldState): void {
     // The masseur's row one seat over says `sessions this week`, because #4 made THAT seat
     // per-session and a row calling it a salary was describing the wrong model.
     text: 'Psychologist – weekly salary',
+    c: cp`Psychologist – weekly salary`,
     amountCents: -cost,
   })
 }

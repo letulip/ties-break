@@ -53,6 +53,7 @@ import { adShootHolds, clashShootDays } from './medical'
 import { mandatoryBinds } from './mandatory'
 import { guardNotEnded, UNKNOWN_CHOICE_REFUSAL } from './constants'
 import type { WorldState } from '../world'
+import { cp } from '../../shared/i18n'
 
 /** THE WEEK THE QUESTION IS ABOUT – always the week ahead, or null when there is nothing to ask. */
 export function shootClashWeek(world: WorldState): number | null {
@@ -247,6 +248,7 @@ export function answerShootClash(world: WorldState, choice: ShootClashChoice): v
       week: world.week,
       type: 'info',
       text: `${terms.brand} shoot moved to ${weekLabel(to, world.startYear)} – the ${TIERS[event.tier].label} week stands.`,
+      c: cp`${terms.brand} shoot moved to ${weekLabel(to, world.startYear)} – the ${TIERS[event.tier].label} week stands.`,
     })
     return
   }
@@ -267,6 +269,7 @@ export function answerShootClash(world: WorldState, choice: ShootClashChoice): v
       type: 'expense',
       category: 'sponsor',
       text: `${terms.brand} shoot cancelled – the campaign takes its share back`,
+      c: cp`${terms.brand} shoot cancelled – the campaign takes its share back`,
       amountCents: -cents,
     })
     return
@@ -280,5 +283,6 @@ export function answerShootClash(world: WorldState, choice: ShootClashChoice): v
     week: world.week,
     type: 'info',
     text: `${terms.brand} shoot and the ${TIERS[event.tier].label} in one week – a heavy week ahead.`,
+    c: cp`${terms.brand} shoot and the ${TIERS[event.tier].label} in one week – a heavy week ahead.`,
   })
 }

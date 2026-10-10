@@ -66,7 +66,7 @@ import {
 } from '../src/composables/weekRecap'
 import type { DiaryFacts, TravelHomeScene, WeekScene, WorldEvent, WorldMatch } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
-import { region, regionToLast } from './helpers/source'
+import { region, regionToLast, tTransparent } from './helpers/source'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
@@ -625,7 +625,8 @@ describe('W5 — the handle in settings, and the thing it must not do', () => {
   })
 
   it('the switch is on the settings screen, in the shape the other three already have', () => {
-    const more = read('../src/components/screens/MoreScreen.vue')
+    // L2-11 (RU-13B): the heading and the hint are wrapped in `t()` now – read the screen the way this pin was written, wrapped or not.
+    const more = tTransparent(read('../src/components/screens/MoreScreen.vue'))
     expect(more).toContain("import { isWeekStoryAutoOpenOff, setWeekStoryAutoOpenOff } from '../../composables/weekRecap'")
     expect(more).toContain('<h2>Week story</h2>')
     expect(more).toContain('@click="toggleWeekStory"')

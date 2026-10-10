@@ -12,12 +12,19 @@
 // WHAT THIS FILE MAY NOT DO: choose. Every word on a page comes from the engine (`AlbumPage`), the
 // selection rule included, because §6 promises the game never grades her and a UI that picked the
 // adjectives would be the game grading her in a different font.
+// ⚙ L2-10 (08.10) – THE CHROME CALLS `t()`; THE ENGINE'S PAGE STAYS ITS OWN. Every label, heading, door and fixed sentence this file authors is a
+// catalog key now (docs/localization/ru-ending-screen-2026-10.md, RU-12A); `closing.caption` / `why` / `fact`, the record's `r.label` / `r.detail` and
+// the ending's title and lines are the engine's prose and are printed verbatim (L3). English renders itself, so not one word on this page moved.
+// ⚠ THE FOUR SENTENCES THAT CARRY A BOLD FIGURE ARE CUT AROUND THE MARKUP (L2-6's rule): a message cannot hold an element, so the one-more-year note, both
+// academy notes and the lifetime deal are text segments with the `<b>` kept as markup between them – the debt-line family of §3.3's open design.
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { portraitUrl } from '../art/preload'
 import { weekLabel, seasonYear } from '../shared/dates'
 import { formatCentsCompact } from '../shared/money'
+import { t, eventText } from '../i18n'
+import { ENDING_BLURB } from '../engine/ending'
 import type { AlbumBook, DynastyHandover } from '../shared/protocol'
 
 /* ⚠ SIX IMPORTS LEFT THIS FILE WITH THE COLLEGE BLOCK (round 24 #2b): `COLLEGE_TIER_NAME`,
@@ -128,6 +135,45 @@ const scrollOpen = ref(false)
  *  last of, and the «no pages» case above can no longer be built: `closing` is null here only while `view` is. */
 const closing = computed(() => view.value?.closing ?? null)
 
+// --- ⭐ 10.10 – THE NINE EPILOGUE SENTENCES FIND THEIR SCREEN: ONE PROSE LINE UNDER THE ENDING'S TITLE ---------
+//
+// THE OWNER, 10.10 (translated – a `.vue` file carries no Cyrillic): the nine `ENDING_BLURB` sentences have never
+// been drawn by anything – could they not be built into the final screen, harmoniously, since that is the situation?
+// (docs/decisions.md, 10.10, item 34. He gates the placement and the wording with his own live look, so both are a
+// proposal until he has seen them on a phone.)
+//
+// ⚠⚠ THE WORDS ARE HIS AND ARE NOT TOUCHED (invariant 4): `ENDING_BLURB[type]` goes through `t()` and is printed
+// as the engine wrote it, one paragraph per ending, never composed, trimmed or rephrased here. Three of the nine carry
+// a draft note in `engine/ending.ts` (`peak` and `fall`: round 45's «both of these are drafts»; `family`: wave 8 T5's,
+// its second sentence passed 21.09); they render exactly as they stand and their draft status stays the spec's note.
+// NO OTHER STRING ON THIS SCREEN MOVED.
+// ⚠ A SEAT, NOT A LITERAL: the sentences are a Record's values, which no census rule reads, so the call below is a
+// DECLARED CALL SEAT (`tools/i18n-seats.ts`, id `ending.blurb`) – nine catalog keys with nine DRAFT rows in
+// docs/localization/ru-ending-screen-2026-10.md, whose Russian column is his to fill. Until he does, a Russian
+// session draws the English sentence, exactly as every other unapproved row does.
+//
+// WHERE IT SITS AND WHY THERE: INSIDE `.album-page`, between the title (`album-why`) and the fact line (`album-fact`).
+// The title is the headline of the ending and the blurb is its standfirst, so the prose follows the headline and
+// the record's terse line (season, age, the detail) follows the prose as its receipt; the date stays last. The
+// hierarchy then steps down one rung at a time – title (Sora 17, `--ink`), blurb (14, `--ink-2`), fact (14,
+// `--ink-soft`), date (12, `--ink-dim`) – and the figures, the album door and the two doors below the page keep their
+// order, their styles and their gaps (the paragraph only pushes them down by its own height): the line is the one new
+// child of the page and the footer is not touched. The measure is the title's own (34ch) and the size is the page's
+// secondary size, the same 14px the notes use.
+// ⚠ IT DRAWS ON EVERY ENDING – `ENDING_BLURB` is total over `CareerEndingType` (four total records key on that
+// union), so there is no branch on the type here and a tenth ending needs no change in this file; a type the
+// record does not know (a hand-built snapshot) draws no line instead of throwing.
+const blurb = computed(() => {
+  const type = view.value?.ending.type
+  // ⚠ THE OWNER, 10.10 («при 0 надо починить»): the natural blurb claims «for years she said one
+  // more», and a career whose first off-season answer ended it has no such years – at
+  // `oneMoreYearCount === 0` the sentence is false, so the line is not drawn rather than reworded
+  // by an agent. The count>0 voice question (who SAID it – settled: the parents) is his wording
+  // call, tracked in his pile; the words themselves stay his.
+  if (type === 'natural' && (view.value?.oneMoreYearCount ?? 0) === 0) return ''
+  return type !== undefined && type in ENDING_BLURB ? t(ENDING_BLURB[type]) : ''
+})
+
 // --- ⭐⭐⭐ ROUND 46 #18 – THE ALBUM IS THE REAL ONE NOW, AND THE SEVEN-POLAROID REEL IS GONE ---------
 //
 // THE OWNER, 05.10 (translated; a `.vue` file carries no Cyrillic): «I pressed "that's enough" and again
@@ -234,7 +280,7 @@ const resumes = computed(() => view.value?.handoff.resumesWeek ?? null)
 const dynasty = computed(() => view.value?.dynasty ?? null)
 
 /** DRAFT · the lived variant: a daughter who was born while her mother was still on tour. */
-const DYNASTY_LIVED = 'Raise her daughter'
+const DYNASTY_LIVED = (): string => t('Raise her daughter')
 /** ⭐ RULED 07.10 (round 48 #6) · the epilogue variant: the birth came after the career did. It shipped as a draft
  *  reading «A daughter came later»; the owner's own ruling on it is that «child» is better (his words are in the
  *  round ledger and in docs/decisions.md under 07.10 – a `.vue` file carries no Cyrillic, comments included), so the
@@ -242,9 +288,11 @@ const DYNASTY_LIVED = 'Raise her daughter'
  *  «daughter», and nothing on this page names or ages her. */
 // ⭐⭐ 08.10 SECOND RULING ON THIS LABEL, same morning («Династия берём, меняй обе стороны»): his
 // «Ребёнок позже» stood one message with a stated dislike; the cross-language one-word option won.
-const DYNASTY_AFTER = 'Dynasty'
+// ⚙ L2-10: both labels are THUNKS over `t()` now (a module constant would freeze the language it was imported in); the names, the words and the
+// pick between them are exactly what they were.
+const DYNASTY_AFTER = (): string => t('Dynasty')
 
-const continueLabel = computed(() => (dynasty.value?.raisedOnTour ? DYNASTY_LIVED : DYNASTY_AFTER))
+const continueLabel = computed(() => (dynasty.value?.raisedOnTour ? DYNASTY_LIVED() : DYNASTY_AFTER()))
 
 function continueLine(): void {
   const block = dynasty.value
@@ -306,7 +354,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
     class="ending"
     role="dialog"
     aria-modal="true"
-    aria-label="Epilogue"
+    :aria-label="t('Epilogue')"
     tabindex="-1"
   >
     <!-- THE RECORD (section 9.3): every milestone in order, paged by season. The floor under the
@@ -326,22 +374,22 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
 
     <section v-else-if="scrollOpen" class="ending-scroll">
       <header class="ending-head">
-        <Eyebrow as="h2">The whole record</Eyebrow>
-        <button class="ending-link" type="button" @click="scrollOpen = false">Back to the album</button>
+        <Eyebrow as="h2">{{ t('The whole record') }}</Eyebrow>
+        <button class="ending-link" type="button" @click="scrollOpen = false">{{ t('Back to the album') }}</button>
       </header>
       <div class="ending-scroll-body">
         <section v-for="s in view.scroll" :key="s.seasonIndex" class="scroll-season">
-          <h3 class="scroll-year">{{ seasonYear(s.seasonIndex, startYear) }} <span>she was {{ s.ageYears }}</span></h3>
+          <h3 class="scroll-year">{{ seasonYear(s.seasonIndex, startYear) }} <span>{{ t('she was {0}', [s.ageYears]) }}</span></h3>
           <ul class="scroll-rows">
             <li v-for="r in s.rows" :key="`${r.week}-${r.label}`">
               <span class="scroll-week">{{ weekLabel(r.week, startYear) }}</span>
-              <span class="scroll-label">{{ r.label }}</span>
-              <span v-if="r.detail" class="scroll-detail">{{ r.detail }}</span>
+              <span class="scroll-label">{{ eventText({ text: r.label, c: r.labelC }) }}</span>
+              <span v-if="r.detail" class="scroll-detail">{{ eventText({ text: r.detail, c: r.detailC }) }}</span>
             </li>
           </ul>
         </section>
         <p v-if="view.scroll.length === 0" class="scroll-empty">
-          Nothing was ever written down. That happens.
+          {{ t('Nothing was ever written down. That happens.') }}
         </p>
       </div>
     </section>
@@ -356,7 +404,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
          overturned (round 48 #8, above: he asked about the album the next day); the record layer (`ending-scroll`) still keeps its panel – he did not ask about it. -->
     <section v-else class="ending-album bare">
       <header class="ending-head">
-        <Eyebrow as="h2">The last page</Eyebrow>
+        <Eyebrow as="h2">{{ t('The last page') }}</Eyebrow>
       </header>
 
       <div v-if="closing" class="album-page">
@@ -364,19 +412,24 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         <Polaroid
           class="album-photo"
           :src="portraitUrl(closing.stage, closing.emotion)"
-          :alt="`Aged ${closing.stage}`"
+          :alt="t('Aged {0}', [closing.stage])"
           tilt="var(--tilt-1)"
           :photo-height="228"
-          :caption="closing.caption"
+          :caption="eventText({ text: closing.caption, c: closing.captionC })"
           tape
         />
 
         <!-- POINT 4: WHY this week is in the album. Always visible, empty page or not - the owner's
              visible selection rule, and what keeps section 6's promise. -->
-        <p class="album-why">{{ closing.why }}</p>
+        <p class="album-why">{{ eventText({ text: closing.why, c: closing.whyC }) }}</p>
+
+        <!-- ⭐ 10.10 – THE ENDING'S OWN PARAGRAPH, the standfirst under its title (the script block above carries the
+             ask, the placement and the seat). One `<p>`, drawn on every ending, absent only for a type the record does
+             not know. The words are the engine's: this element owns no sentence. -->
+        <p v-if="blurb" class="album-blurb">{{ blurb }}</p>
 
         <!-- POINT 3: one hard fact off the milestone itself, never a computed summary. -->
-        <p v-if="closing.fact" class="album-fact">{{ closing.fact }}</p>
+        <p v-if="closing.fact" class="album-fact">{{ eventText({ text: closing.fact, c: closing.factC }) }}</p>
         <p v-if="closing.week !== null" class="album-when">{{ weekLabel(closing.week, startYear) }}</p>
       </div>
 
@@ -386,7 +439,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
              screen is for: the whole book, every sheet, before the figures and before the two doors.
              ⚠ THE LABEL IS A DRAFT (R46-S17) – invariant 4; an alternate is in the round ledger. -->
         <PrimaryPill class="ending-door-album" variant="cta" :disabled="game.busy" @click="openAlbum">
-          View the album
+          {{ t('View the album') }}
         </PrimaryPill>
 
         <!-- ⭐⭐⭐ ROUND 46 #9 – THE SAME FIVE LABELS, TWO OF THE FIGURES REPAIRED, AND TWO NEW ROWS
@@ -436,7 +489,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
              ⚠ HER ACCOUNT IS STILL CONDITIONAL (R46-1, below): «three numbers» is the career that has one. -->
         <div class="ending-totals">
           <dl class="ending-money">
-            <div><dt>Tennis & trips</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.outlayCents) }}</dd></div>
+            <div><dt>{{ t('Tennis & trips') }}</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.outlayCents) }}</dd></div>
             <!-- ⭐⭐⭐ RULING A, 18.09 – THE ONE LINE THE TWO FIGURES ABOVE IT CANNOT SAY. His ask is on
                  `careerMoney` in engine/world/reckoning.ts (no Cyrillic may appear in a template): the
                  reckoning stays TENNIS ONLY, and the family's whole portfolio – the wallet plus every
@@ -458,17 +511,17 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
                  ⭐⭐⭐ ROUND 48 #3 – THE ORDER IS HIS AGAIN, AND IT IS THE THIRD ONE: Tennis & trips is the one row
                  above this now (the old «Spent»; the share row left), and Her account stands UNDER it, last. -->
             <div>
-              <dt>Family's portfolio</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.portfolioCents) }}</dd>
+              <dt>{{ t("Family's portfolio") }}</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.portfolioCents) }}</dd>
             </div>
             <div v-if="view.money.herAccountCents > 0">
-              <dt>Her account</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.herAccountCents) }}</dd>
+              <dt>{{ t('Her account') }}</dt><dd class="ending-fig">{{ formatCentsCompact(view.money.herAccountCents) }}</dd>
             </div>
           </dl>
           <!-- ⭐⭐⭐ ROUND 47 B1 #5 – THE THREE CAREER FACTS ARE ONE ROW, in the order he named them. -->
           <dl class="ending-facts">
-            <div><dt>Best rank</dt><dd class="ending-fig">{{ view.bestRank === null ? '–' : `#${view.bestRank}` }}</dd></div>
-            <div><dt>Titles</dt><dd class="ending-fig">{{ view.titles }}</dd></div>
-            <div><dt>Seasons</dt><dd class="ending-fig">{{ view.seasonsPlayed }}</dd></div>
+            <div><dt>{{ t('Best rank') }}</dt><dd class="ending-fig">{{ view.bestRank === null ? '–' : t('#{rank}', { rank: view.bestRank }) }}</dd></div>
+            <div><dt>{{ t('Titles') }}</dt><dd class="ending-fig">{{ view.titles }}</dd></div>
+            <div><dt>{{ t('Seasons') }}</dt><dd class="ending-fig">{{ view.seasonsPlayed }}</dd></div>
           </dl>
         </div>
         <!-- ⭐⭐⭐ ROUND 48 #4 – THE VOICE FLIPPED TO THE PARENT, AND THIS IS THE LINE THAT WAS SHOWN TO HIM. It read
@@ -479,7 +532,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
              reading – verbatim, and the pluralisation is as it was. ⚠ THE FINAL OFFER IS NOT HERE: «Nobody asked
              her this time. She said it herself» lives in engine/ending.ts and is truly hers. -->
         <p v-if="view.oneMoreYearCount > 0" class="ending-note">
-          You said one more year <b class="ending-fig">{{ view.oneMoreYearCount }}</b> {{ view.oneMoreYearCount === 1 ? 'time' : 'times' }}.
+          {{ t('You said one more year') }} <b class="ending-fig">{{ view.oneMoreYearCount }}</b> {{ view.oneMoreYearCount === 1 ? t('time.') : t('times.') }}
         </p>
 
         <!-- ⭐ ROUND 29 PART TWO #10 – THE ACADEMY LINE, the-shop §10.4 settled by the owner (his
@@ -493,12 +546,12 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
              earn yet (only the land, a field). -->
         <p v-if="view.academy" class="ending-note">
           <template v-if="view.academy.weeklyIncomeCents > 0">
-            Her academy stands – <b class="ending-fig">{{ view.academy.stagesBuilt }}</b> of <b class="ending-fig">{{ view.academy.totalStages }}</b>
-            stages built – and it earns <b class="ending-fig">{{ formatCentsCompact(view.academy.weeklyIncomeCents) }}</b> a week.
+            {{ t('Her academy stands –') }} <b class="ending-fig">{{ view.academy.stagesBuilt }}</b> {{ t('of') }} <b class="ending-fig">{{ view.academy.totalStages }}</b>
+            {{ t('stages built – and it earns') }} <b class="ending-fig">{{ formatCentsCompact(view.academy.weeklyIncomeCents) }}</b> {{ t('a week.') }}
           </template>
           <template v-else>
-            Her academy is begun – <b class="ending-fig">{{ view.academy.stagesBuilt }}</b> of <b class="ending-fig">{{ view.academy.totalStages }}</b>
-            stages built.
+            {{ t('Her academy is begun –') }} <b class="ending-fig">{{ view.academy.stagesBuilt }}</b> {{ t('of') }} <b class="ending-fig">{{ view.academy.totalStages }}</b>
+            {{ t('stages built.') }}
           </template>
         </p>
 
@@ -514,8 +567,8 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
              WORDS, and `ending-fig` is the figure style (Sora, larger, tabular) for numbers. The sentence is
              byte-identical around it; only the weight moved. -->
         <p v-if="view.lifetimeDeal" class="ending-note">
-          The {{ view.lifetimeDeal.brand }} deal never ran out –
-          <b class="ending-fig">{{ formatCentsCompact(view.lifetimeDeal.cashCents) }}</b> a year, <b>for life</b>.
+          {{ t('The {0} deal never ran out –', [view.lifetimeDeal.brand]) }}
+          <b class="ending-fig">{{ formatCentsCompact(view.lifetimeDeal.cashCents) }}</b> {{ t('a year,') }} <b>{{ t('for life') }}</b>.
         </p>
 
         <!-- ⚠⚠ E-09 / T4.8 (27.09) – THE REFUSAL HAD NOWHERE TO GO ON A BLOCKING TAKEOVER. This screen
@@ -565,7 +618,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
              label is «Dynasty» (the script block above carries both rulings). Everything else is a box. -->
         <div class="ending-doors">
           <PrimaryPill v-if="resumes !== null" variant="cta" @click="resumeCollege">
-            Another year –
+            {{ t('Another year –') }}
           </PrimaryPill>
 
           <!-- ⭐⭐⭐ ROUND 47 #12 – ONE TAP, AND IT GOES TO THE BEGINNING. The lead sentence and the
@@ -580,7 +633,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
                below carries `cta`. The college branch above keeps its `cta`: it stands alone there and
                is the way forward. `ending-door-start` is a TEST HOOK, not a style. -->
           <PrimaryPill v-else class="ending-door-start" variant="ghost" :disabled="game.busy" @click="raiseAnother">
-            Raise another
+            {{ t('Raise another') }}
           </PrimaryPill>
 
           <!-- ⭐⭐⭐ v86 – THE SECOND AFFORDANCE, AND IT IS BESIDE «Raise another» RATHER THAN INSTEAD OF
@@ -605,13 +658,13 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         <!-- ⭐⭐⭐ ROUND 47 B1 #12 – «THE WHOLE RECORD» IS UNDER THE DOORS NOW, and only the service export is
              below it. It stood above the doors, between the notes and the pills; the owner asked for it at
              the very bottom (his words are on the script block, translated). The label is his and unmoved. -->
-        <button class="ending-link" type="button" @click="scrollOpen = true">The whole record</button>
+        <button class="ending-link" type="button" @click="scrollOpen = true">{{ t('The whole record') }}</button>
 
         <!-- ⭐⭐⭐ ROUND 46 #20 – THE SERVICE EXPORT (see the script block). Last, small, a link: it is a tool for
              the person testing the build, and it must be reachable BEFORE «Raise another» drops the career.
              ⚠ THE LABEL IS A DRAFT (R46-S18) – invariant 4. -->
         <button class="ending-link ending-dev" type="button" :disabled="game.busy" @click="exportSave">
-          Export save (dev)
+          {{ t('Export save (dev)') }}
         </button>
       </footer>
     </section>
@@ -697,6 +750,25 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
   font-size: 17px;
   line-height: 1.35;
   color: var(--ink);
+}
+
+/* ⭐ 10.10 – THE ENDING'S PARAGRAPH, one rung under the title and one above the fact. The page's secondary size
+   (14px, the notes' own) at the title's measure (34ch) in `--ink-2`, so the prose reads before the record's terse line
+   (`--ink-soft`) and the date (`--ink-dim`): ink, ink-2, ink-soft, ink-dim is the whole step-down of this page. It
+   inherits the page's centring and its 14px rhythm; nothing around it is re-spaced, and it sets no width a long
+   sentence could push past the column (the measure is a cap, the text wraps inside it).
+   ⚠ `text-wrap: pretty` (the house idiom for prose, as in the inbox and the wizard) IS HERE FOR A MEASURED REASON: in
+   Chromium 151 at 375 and at 320 the plain wrap left a ONE-WORD last line under two of the nine paragraphs
+   («remember.» under the college one, «not.» under the natural one) – on a centred block the widow reads as a typo.
+   With it on, the shortest last line of the nine is two words at both widths. A browser that does not know the
+   property wraps exactly as before. */
+.album-blurb {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  text-wrap: pretty;
 }
 
 .album-fact {

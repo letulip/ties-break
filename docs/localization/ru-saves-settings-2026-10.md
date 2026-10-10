@@ -23,7 +23,7 @@ destructive confirmations. All Russian copy is `DRAFT`; user-entered names remai
 | `Careers` | `Карьеры` |
 | `No careers yet.` | `Пока нет ни одной карьеры.` |
 | `Active` | `Текущая` |
-| `{week} · age {age} · last played {date}` | `{week} · возраст: {age} {год/года/лет} · последняя игра: {date}` |
+| `{week} · age {age} · last played {date}` | `{week} · возраст: {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}} · последняя игра: {date}` |
 | `Load` / `Load career – {kidName}` | `Загрузить` / `Загрузить карьеру – {kidName}` |
 | `Delete` / `Delete career – {kidName}` | `Удалить` / `Удалить карьеру – {kidName}` |
 
@@ -39,7 +39,7 @@ age anew. The accessible name begins with the visible verb for speech-input matc
 | `Autosave` | `Автосохранение` |
 | `none yet` | `пока нет` |
 | `Restore previous` | `Восстановить предыдущее` |
-| table name `Named saves` | `Именные сохранения` |
+| `Named saves` – table name | `Именные сохранения` |
 | columns `Name` / `Saved` / `Week` / `Size` | `Название` / `Сохранено` / `Неделя` / `Размер` |
 | `Load save {name}` | `Загрузить сохранение «{name}»` |
 | `Delete save {name}` | `Удалить сохранение «{name}»` |
@@ -50,9 +50,9 @@ age anew. The accessible name begins with the visible verb for speech-input matc
 | `storage: persistent` | `Хранилище: защищено от автоочистки` |
 | `storage: best-effort` | `Хранилище: браузер может очистить` |
 | `just now` | `только что` |
-| `{minutes} min ago` | `{minutes} {минуту/минуты/минут} назад` |
-| `{hours}h ago` | `{hours} {час/часа/часов} назад` |
-| `{days}d ago` | `{days} {день/дня/дней} назад` |
+| `{minutes} min ago` | `{minutes, plural, one {{minutes} минуту} few {{minutes} минуты} many {{minutes} минут} other {{minutes} минут}} назад` |
+| `{hours}h ago` | `{hours, plural, one {{hours} час} few {{hours} часа} many {{hours} часов} other {{hours} часов}} назад` |
+| `{days}d ago` | `{days, plural, one {{days} день} few {{days} дня} many {{days} дней} other {{days} дней}} назад` |
 
 `fmtDate` currently hard-codes `en-GB`. Use locale-aware day/month/time formatting and a
 Russian month form. Named save titles are user data; preserve them exactly. `Size` shows a
@@ -76,6 +76,90 @@ persistence, not a guarantee against device loss or manual deletion.
 typed error codes (or a classifier for known old errors); an English exception in the middle
 of a Russian row is not a completed translation. `Retry` must repeat exactly the operation
 that failed, as the current implementation intends.
+
+## Save-file refusals – the seven kinds, typed (10.10)
+
+Owner 10.10 («если что-то критичное и можно сразу исправить – лучше так, чтобы хвостов не
+висело»): the player-facing refusals of a save file ride the wire with their sentence, so the Saves
+strip, the error card and the recovery screen can show them in Russian. **Seven kinds, 31
+sentences** – a kind (`corrupted`, `invalid-shape` …) is several sentences, and some have holes. Every row
+below is `DRAFT` with the **Russian column left empty on purpose: the words are his**. The English is
+today's, character for character; nothing was reworded.
+
+A hole in `{braces}` is filled by the engine; the names are for reading, the key holds them by
+position. Where a sentence ends in a clause (`– {clause}` / `"{field}" {clause}`) the clause is a
+whole phrase with a row of its own, so the Russian frame and the Russian clause are written as a pair
+and no English fragment stays inside a Russian sentence. `{field}` is the name of a save field
+(`seasonHistory`, `rngMain` …) and stays as it is in every language; `{detail}` in the "could not be
+upgraded" sentence is a lower layer's own diagnostic and stays as written.
+
+Not a save, cut short, too large, unpacks too far (one sentence each):
+
+| English | Russian draft |
+| --- | --- |
+| `Not a Tennis Sim save file` | |
+| `This save file is cut short – it is smaller than its own header` | |
+| `This file is too large to be a save ({megabytes} MB – the limit is {limit} MB)` | |
+| `This save file expands far beyond any real career – refusing to unpack it` | |
+
+From a newer build (the file door, and the player's own database at boot):
+
+| English | Russian draft |
+| --- | --- |
+| `This save is from a newer version of the game (schema v{declaredVersion}, this build reads up to v{supportedVersion}) – update the app, then import it` | |
+| `Save schema {declaredVersion} is newer than supported {supportedVersion}` | |
+
+Damaged (`corrupted`):
+
+| English | Russian draft |
+| --- | --- |
+| `Save checksum mismatch: data is corrupted` | |
+| `This save file is damaged – its contents cannot be read` | |
+| `This save file is damaged – it declares an impossible save version` | |
+| `This save file is damaged – its header and its data disagree about the save version` | |
+| `This save file could not be upgraded – {detail}` | |
+
+Malformed (`invalid-shape`) – the three frames:
+
+| English | Russian draft |
+| --- | --- |
+| `This save file is malformed – it does not contain a career` | |
+| `This save file is malformed – {clause}` | |
+| `This save file is malformed – "{field}" {clause}` | |
+
+…and the clauses that finish the first of the two (a file that is too big or too deep):
+
+| English | Russian draft |
+| --- | --- |
+| `it contains more data points than any career can hold` | |
+| `its data nests deeper than any save the game writes` | |
+| `it contains a non-finite number` | |
+| `it contains an implausibly long text field` | |
+| `one of its lists is implausibly long` | |
+| `it contains an implausibly long field name` | |
+
+…and the clauses that finish the second (`"{field}" …` – a field that is missing or the wrong kind;
+these read after the word for a field, so they agree with it):
+
+| English | Russian draft |
+| --- | --- |
+| `must be a non-empty text` | |
+| `is longer than {max} characters` | |
+| `must be a whole number between {min} and {max}` | |
+| `is out of range` | |
+| `must be a list` | |
+| `must carry the player profile` | |
+| `must carry the weekly plan` | |
+| `must carry the career totals` | |
+| `must be the trophies ledger` | |
+| `must carry the on-ramp latches` | |
+| `must carry a valid RNG position` | |
+
+One refusal stays English by construction, and is named here so it is not a surprise: a record out of
+the player's own database that will not open (a torn file, JSON that does not parse) is reported with
+the lower layer's own message and falls back to the previous autosave before a player reads it – there
+is no fixed sentence of ours to translate. The engine's other plain refusals (about a hundred guard
+sentences) are a separate leftover, unchanged.
 
 ## Confirmations – semantic branches
 
@@ -103,8 +187,10 @@ here; the confirmation remains in the UI, translation does not weaken the warnin
 | `Danger zone` | `Опасные действия` |
 | `New career` | `Новая карьера` |
 | `Your current career stays saved – you can switch back anytime in Careers.` | `Текущая карьера останется сохранённой. К ней можно вернуться через раздел «Карьеры».` |
-| `Confirm` / `Cancel` | `Подтвердить` / `Отменить` |
+| `Confirm` | `Подтвердить` · `APPROVED` 10.10 – композитная ячейка разведена на два ряда по чат-ок |
+| `Cancel` (`ConfirmDialog.vue`) | `Отмена` · `APPROVED` 10.10 – диалоговый дефолт; «Отменить» ушло ключу `undo\|Cancel` |
 | `▶▶ 52 (dev)` | `▶▶ 52 недели (разработка)` |
+| `{n} KB` | `{n} КБ` · `APPROVED` 10.10 – чат-ок: слова единиц переводимы, цифры едины |
 
 The 52-week button is shipped in every build by owner ruling; therefore its visible text is
 within the localization scope even though it says `dev`. It must not skip authoritative stops

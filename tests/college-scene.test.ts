@@ -298,7 +298,7 @@ describe('college scene T4 B3 – the booth\'s third arm, INSIDE the shipped lic
     // The three rules the pool inherits, asserted rather than trusted. The win each line names is the
     // STUDENT one in as many words, which is why the register stays honest: a student title is not a
     // WTA title, and the booth may not blur them.
-    for (const line of boothLineageLines({ side: 0, proTitles: 0, collegeTitles: 1, slams: 0 }).map((f) => f('Nadia'))) {
+    for (const line of boothLineageLines({ side: 0, proTitles: 0, collegeTitles: 1, slams: 0 }).map((f) => f('Nadia').text)) {
       expect(line, `it says the win happened HERE: ${line}`).not.toMatch(/won here|won it here|won this|trophies with that name/i)
       expect(line, `it claims a tour cabinet: ${line}`).not.toMatch(/title with|tour title|trophy cabinet/i)
       expect(line, `it names the student register: ${line}`).toMatch(/student|college/i)

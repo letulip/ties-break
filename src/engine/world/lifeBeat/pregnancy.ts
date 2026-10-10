@@ -17,6 +17,8 @@ import { boostedChance } from '../lifeBoost'
 import { kidAgeNow, latchedEpisode, raiseLifeBeat } from '../lifeBeat'
 import { PREGNANT_LAST_WEEKS } from '../../../shared/avatarEmotion'
 import type { MotherhoodBand } from '../../../shared/protocol/narrative'
+import { PAUSE_EVENT } from './pregnancyCopy'
+import { cp } from '../../../shared/i18n'
 import type { ComebackState, PregnancyState, WorldState } from '../state'
 
 // 14. THE PREGNANCY – ⚠⚠ THE WEEK SHE SAYS SHE IS HAVING A CHILD (the pregnancy, wave 8: T2) –
@@ -213,17 +215,6 @@ export function landPregnancyAnnouncement(world: WorldState): void {
   raiseLifeBeat(world, 'expecting', pregnancy.episodeId)
 }
 
-/** ⭐⭐⭐ **HIS STRING, PASSED 21.09 IN SESSION** (wave 8b, C5) – the pause week's one feed row,
- *  and no longer a draft. Invariant 4 now binds the other way: nobody re-words it unasked.
- *
- *  ⚠ PAUSE_EVENT: IT MUST NOT SAY THE SEASON IS OVER, and that is the whole difficulty of writing…
- *  ⚠ PAUSE_EVENT: HUSBAND-AGNOSTIC (§0's decoupling ruling): it reads correctly for a career whose marriage ended the week before…
- *  ⚠ PAUSE_EVENT: AND IT NAMES NO RETURN.
- *  ⚠⚠ PAUSE_EVENT: THE FIRST DRAFT READ «entering nothing more», THE TAIL-LINT CAUGHT…
- *  ⚠ PAUSE_EVENT: THE EXEMPTION IS PER-ROW AND LIVES BESIDE THE BAN (`TAIL_EXEMPT_LINES`, `tests/helpers/bannedTails.ts`)
- *  → docs/notes/life-beats/pregnancy.md#pause_event--his-string-passed-2109-in-session-wave-8b-c5
- */
-const PAUSE_EVENT = 'She is entering nothing more before the birth. What she is already in, she will play.'
 
 /** ⭐⭐ THE WEEK THE ENTRIES CLOSE – the pause's ONLY tick step, and it writes ONE feed row.
  *
@@ -255,7 +246,8 @@ export function landPregnancyPause(world: WorldState): void {
   // ⚠ NO AMOUNT – a life row is never a purchase (rule 4 at the top of this file), and the absence of
   // the field is what keeps `accrueFinance` from ever seeing it. There is no price on this week:
   // §2 T4's «NO COST EVENT» read one task early, and the pause charges nothing either.
-  addEvent(world, { week: world.week, type: 'life', keep: true, lifeKind: 'expecting', text: PAUSE_EVENT })
+  // ⭐ L3-5 (10.10): `c` beside the text – the constant is its own key (the frozen v92 table holds the sentence)
+  addEvent(world, { week: world.week, type: 'life', keep: true, lifeKind: 'expecting', text: PAUSE_EVENT, c: { k: PAUSE_EVENT } })
 }
 
 /** ⚠⚠ **DRAFT – T8's TABLE, NOT SHIPPED COPY** (invariant 4). The birth week's one kept feed
@@ -300,7 +292,9 @@ export function landBirth(world: WorldState): void {
   // ⚠ THE KEY IS THE WEEK, `milestoneKey`'s own identity for this type and for its reason: a birth is
   // once per PREGNANCY, not once per marriage, so an episode-keyed receipt would swallow W5's second
   // child of the same marriage.
-  fireMilestone(world, `birth:${world.week}`, BIRTH_EVENT)
+  // ⭐ L3-5 (10.10): the ref is `BIRTH_EVENT`'s sentence spelt as a `cp` key (a whole sentence, no hole): a key of the frozen v92 table, and the call site makes the literal a catalog key. The constant stays where it
+  // is, with its note – the net (tests/i18n-l3-5-life-beats.test.ts §7) holds the two spellings equal
+  fireMilestone(world, `birth:${world.week}`, BIRTH_EVENT, cp`Her daughter was born this week. The family has somebody new in it.`)
   captureMilestone(world, { type: 'birth', week: world.week })
   // ⭐⭐⭐ AND THE MARK THE MONTHS AFTER LEAVE ON HER – the SECOND writer of `world.spiritShock` in
   // the engine (`rollEnds` is the first, `engine/spirit.ts`'s own banner carries the corrected

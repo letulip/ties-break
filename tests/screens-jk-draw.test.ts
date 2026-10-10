@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { after, before, region } from './helpers/source'
+import { after, before, region, tTransparent } from './helpers/source'
 
 // Screens J and K (docs/design/README.md §J/K) – the championship draw, and the Final as its own
 // moment rather than a list of one. Source-shaped pins in the house style: they protect the
 // DECISIONS, and in particular the two that a later pass would most easily undo.
-const bracket = readFileSync(new URL('../src/components/BracketTabs.vue', import.meta.url), 'utf8')
+// ⚠ L2-4 (08.10): READ THROUGH `tTransparent` – the screen's words are `t()` calls now and this pin asserts the words, not the wrapper.
+const bracket = tTransparent(readFileSync(new URL('../src/components/BracketTabs.vue', import.meta.url), 'utf8'))
 const sheet = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
 const template = region(bracket, '<template>', '</template>')
 

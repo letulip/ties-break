@@ -103,16 +103,17 @@ caller must not invent a synonym merely because it lives in another file.
 | id | English | Preferred Russian | use |
 | --- | --- | --- | --- |
 | RU01-C01 | `Back` | `Назад` | navigation history |
-| RU01-C02 | `Back to Home` | `Домой` | explicit return to the Home screen |
+| RU01-C02 | `Back to Home` (`ThisWeekScreen.vue`) | `Домой` · `APPROVED` 10.10 | explicit return to the Home screen – видимая короткая кнопка (чат-ок: aria-формы остаются длинными) |
 | RU01-C03 | `Close` | `Закрыть` | close sheet/dialog/replay |
 | RU01-C04 | `Dismiss` | `Закрыть` | notice dismissal; same visible verb is intentional |
-| RU01-C05 | `Cancel` | `Отменить` | cancel an action or booking |
+| RU01-C05 | `undo\|Cancel` | `Отменить` · `APPROVED` 10.10 | cancel an action or booking – с 10.10 это ключ `undo\|Cancel` (кнопки отмены брони на Сезоне); диалоговое «Отмена» живёт на голом `Cancel` |
 | RU01-C06 | `Confirm` | `Подтвердить` | confirm a consequential action |
 | RU01-C07 | `Continue` | `Продолжить` | move past a report/dialog |
 | RU01-C08 | `Done` | `Готово` | finish a flow whose work is complete |
 | RU01-C09 | `Retry` | `Повторить` | retry failed operation |
 | RU01-C10 | `Update` | `Обновить` | PWA update |
-| RU01-C11 | `Watch` / `Watch it` | `Смотреть` | open match playback |
+| RU01-C11 | `Watch` | `Смотреть` | open match playback – the college card (10.10 hint pass: the composite split; `Watch it` is its own key) |
+| RU01-C11a | `Watch it` | `Смотреть матч` | the practice flow – aligned to the APPROVED RU-08 value |
 | RU01-C12 | `Watch again` | `Посмотреть ещё раз` | replay from start |
 | RU01-C13 | `To result` | `К результату` | leave playback for box score |
 | RU01-C14 | `Skip to result` | `Сразу к результату` | skip unviewed play |
@@ -131,3 +132,33 @@ caller must not invent a synonym merely because it lives in another file.
    wrapper produces mixed-language buttons.
 5. Body-part names need grammatical forms if the localized copy is to keep naming the injured part.
    RU01-W12 is a truthful temporary sentence that avoids a bad declension, not the ideal final form.
+
+## 8. Language choice – the first-run prompt and the More switcher (L1a, 08.10)
+
+Two new surfaces, both ruled by the owner on 07.10 (spec `docs/specs/i18n-2026-10.md` §3.4, §9.4): the
+**first-run prompt** – shown once, before the splash, on a device that has never answered, and never
+again – and the **More switcher** on the Saves tab, beside the save controls. Both write the same
+device preference; neither touches a save. Every English line below is a new string written by the
+L1a builder as a **`DRAFT` for the owner's pass** (invariant 4), and the Russian column is **left
+empty on purpose** – the builder writes no Russian; the cells are his.
+
+The prompt shows *before* any answer exists, so it renders in English; a Russian cell for it is only
+ever drawn if he chooses to make the prompt carry a Russian line too (a player who cannot read the
+English one is exactly who the prompt is for). The two language names are the labels of both surfaces.
+
+| id | source | English | Russian | note | status |
+| --- | --- | --- | --- | --- | --- |
+| RU01-L01 | `src/components/LocalePrompt.vue:43` | `Choose your language` | | first-run prompt title, an `h2` on a 320 px dialog card; the card is the first thing a new device sees | `DRAFT` |
+| RU01-L02 | `src/components/LocalePrompt.vue:44` | `You can change this later in Settings.` | | one short sentence under the title; `Settings` is the existing label of the gear on Home and the Kid screen (its `aria-label`/`title`), which opens the More screen | `DRAFT` |
+| RU01-L03 | `src/components/LocalePrompt.vue:46`, `src/components/screens/MoreScreen.vue:747` | `English` | `English` | the language's own NAME, a button on the prompt and a pill on the switcher; 10.10 чат-ок: «English / Русский» – автоним не переводится, identity-ряд | `APPROVED` |
+| RU01-L04 | `src/components/screens/MoreScreen.vue:753` | `Russian` | `Русский` | 10.10 чат-ок: автоним; кнопка промпта с 10.10 – скриптовая константа «Русский» (не переводится по построению), этот ряд кормит пилюлю переключателя | `APPROVED` |
+| RU01-L05 | `src/components/screens/MoreScreen.vue:740` | `Language` | | switcher heading on the Saves tab (an `h2`, like `Saves` and `Danger zone`) and the accessible name of the two-pill group (`MoreScreen.vue:741`) | `DRAFT` |
+
+### ⚙ 10.10 добавка (№40, усмотрение архитектора): рейл-дашборд (RailDashboard) – русская колонка твоя (DRAFT); общие ключи (Close, Continue, #{rank}, Unranked) живут в своих таблицах
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU01-RD01 | `In the account` | |
+| RU01-RD03 | `{0} /wk` | |
+| RU01-RD04 | `{0} committed` | |
+| RU01-RD05 | `{0} weekly cap` | |

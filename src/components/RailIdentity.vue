@@ -36,6 +36,7 @@
 // a second source of truth about the breakpoint, and `display: none` removes the box AND the
 // accessibility node, so a phone is byte-for-box what it was.
 import { useKidIdentity } from '../composables/kidIdentity'
+import { t } from '../i18n'
 
 const emit = defineEmits<{ 'open-kid': []; 'rank-help': [] }>()
 
@@ -73,7 +74,7 @@ function openKid(): void {
       <button
         class="diary-avatar-btn rail-id-avatar"
         :class="moodRing ? ['has-mood-ring', `mood-${moodRing}`] : null"
-        aria-label="Open her profile"
+        :aria-label="t('Open her profile')"
         @click="openKid"
       >
         <img class="diary-avatar" :src="headerAvatarUrl" alt="" />
@@ -95,7 +96,7 @@ function openKid(): void {
          the avatar it explains», and a callout left on a photograph that no longer has a face to
          tap points at nothing. Same text, same dismissal, one shared ref. -->
     <button v-if="showKidHint" class="diary-kid-hint rail-id-hint" @click="openKid">
-      Tap the photo – her page lives here
+      {{ t('Tap the photo – her page lives here') }}
     </button>
     <!-- The chip is drawn only once something counts somewhere – `rankChipTrack` owns that rule
          (null = no counting result in any table yet, and nothing to read on a chip). -->
@@ -109,7 +110,7 @@ function openKid(): void {
     <button
       v-if="chipTrack !== null"
       class="diary-rank rail-id-rank"
-      aria-label="How ranking points work"
+      :aria-label="t('How ranking points work')"
       aria-describedby="rail-rank-ladder rail-rank-value"
       :title="rankChipTitle"
       @click="emit('rank-help')"

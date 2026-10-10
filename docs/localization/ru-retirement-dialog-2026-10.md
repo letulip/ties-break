@@ -17,7 +17,7 @@ are `DRAFT`.
 
 | Source state | English | Russian draft |
 | --- | --- | --- |
-| kicker | `Off-season – she is {age}` | `Межсезонье – ей {age} {год/года/лет}` |
+| kicker | `Off-season – she is {age}` | `Межсезонье – ей {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}` |
 | final title | `She told you at the end of the season.` | `В конце сезона она сказала сама.` |
 | plateau title | `She said it in the car.` | `Она сказала это в машине.` |
 | ordinary title | `Is there another year in this?` | `Будет ли ещё один год?` |
@@ -44,7 +44,7 @@ not a lowercased English label.
 | 0 / defensive fallback | `Three seasons on the {table} table and it has not moved. If she cannot reach the top, she would rather go now – that is how she put it. She will keep playing if you want her to.` | `Три сезона в рейтинге {table} без движения. Она говорит: если вершины не достичь, лучше уйти сейчас. Но если мы попросим, она сыграет ещё год.` |
 | 1 | `She brought it up before the airport this time. You have said one more year once already, and she has stopped pretending the next season is different. She would still play a year for you – she said that too.` | `На этот раз заговорила об этом перед аэропортом. Один раз мы уже согласились на «ещё один год», и она больше не делает вид, что следующий сезон всё изменит. Ради нас готова сыграть ещё год – это она тоже сказала.` |
 | 2 | `She did not argue and she did not ask. She put the season on the table – where it started, where it ended – and waited. If you want another year, she will give you one more.` | `Она не спорила и не просила. Показала, с какого места начала сезон и на каком закончила, и ждала. Если мы захотим, она даст ещё один год.` |
-| 3+ | `This time she said it looking out of the window. You have said one more year {count} times, and the {table} table has not moved. She will not fight you on one more – but you both know what she wants.` | `На этот раз сказала, глядя в окно. «Ещё один год» прозвучало уже {count} {раз/раза/раз}, а место в рейтинге {table} не сдвинулось. Если попросим ещё, спорить не станет. Но мы и так знаем, чего она хочет.` |
+| 3+ | `This time she said it looking out of the window. You have said one more year {count} times, and the {table} table has not moved. She will not fight you on one more – but you both know what she wants.` | `На этот раз сказала, глядя в окно. «Ещё один год» прозвучало уже {count, plural, one {{count} раз} few {{count} раза} many {{count} раз} other {{count} раз}}, а место в рейтинге {table} не сдвинулось. Если попросим ещё, спорить не станет. Но мы и так знаем, чего она хочет.` |
 
 These are her doubts and offers, **not forecasts** that the ranking will never improve. All
 four leave both answer buttons legal. The first line's “three seasons” is source-authored,
@@ -68,7 +68,7 @@ sayer and stands as drafted. What stays **hers**: `she said that too` (her offer
 | below her best season, her words | `«#{last} this winter. My best year finished #{best}, and I know the difference.»` | `«Этой зимой – №{last}. В мой лучший год было №{best}. Разницу я вижу».` |
 | hired coach after her line | `{coachShort} does not argue with her. The work holds what she has left; it stopped adding to it a while ago.` | `{coachShort} с ней не спорит. Тренировки помогают удержать достигнутое, но нового уже давно не добавляют.` |
 | next winter is final, her words | `«One more winter after this one, and it will not be a question. I will tell you myself.»` | `«После этого межсезонья будет ещё одно. Тогда это уже не будет вопросом. Я сама скажу тебе».` |
-| later final winter, her words | `«{count} more winters after this one, and the last of them is not a question. I will tell you myself.»` | `«После этого межсезонья будет ещё {count} {межсезонье/межсезонья/межсезоний}. В последнее спрашивать не придётся. Я сама скажу тебе».` |
+| later final winter, her words | `«{count} more winters after this one, and the last of them is not a question. I will tell you myself.»` | `«После этого межсезонья будет ещё {count, plural, one {{count} межсезонье} few {{count} межсезонья} many {{count} межсезоний} other {{count} межсезоний}}. В последнее спрашивать не придётся. Я сама скажу тебе».` |
 
 The coach line appears **only after** a supported line of hers, with a currently hired coach
 and only after her personal physical peak. Its short name stays nominative. The year-on-year
@@ -82,7 +82,7 @@ RU-12C maps `lastWordLine` as a kept feed row. The same localized semantic templ
 render here, **without** the feed's `Ей {age}` prefix because the card's kicker already gives
 her age. Zero previous answers: `На этот раз никто не спрашивал. Она сказала сама, спокойно:
 этот сезон был последним.` Prior answers: `На этот раз никто не спрашивал. Она сказала сама,
-спокойно: «Ещё один год» прозвучало уже {count} {раз/раза/раз}, но этот сезон был последним.`
+спокойно: «Ещё один год» прозвучало уже {count, plural, one {{count} раз} few {{count} раза} many {{count} раз} other {{count} раз}}, но этот сезон был последним.`
 No new random draw or re-opening variation is allowed. The English source of the prior-answers
 branch reads `You have said one more year {count} time/times, and this season was the last one.`
 since round 48 #4 (RU-18 D09); `прозвучало` names no sayer, so the Russian stands as drafted.

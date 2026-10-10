@@ -16,6 +16,7 @@ import { KID_ID } from '../engine/world'
 import type { AnnotatedMatch } from '../viz/types'
 import type { MatchPlayer, Side } from '../engine/match/types'
 import type { StruckServe } from '../engine/match/serveSpeed'
+import { t } from '../i18n'
 
 export interface SetCell {
   a: string
@@ -235,7 +236,7 @@ export function useMatchReadout(input: MatchReadoutInput) {
    *  written on this very flow one screen later («+130 pts» on the poster), and they are also
    *  three-digit. So a match statistic read as a ranking award, and a WTA 1000 first round appeared
    *  to pay 163. He filed it as an economy bug three times before it turned out to be a word. */
-  const scoreReadout = computed(() => (finished.value ? `${pointsPlayed.value} points played` : null))
+  const scoreReadout = computed(() => (finished.value ? t('{0} points played', [pointsPlayed.value]) : null))
 
   /**
    * WHICH END OF THE RUN-OFF BAND THE SPEED IS WRITTEN AT, or null when there is nothing to write.
@@ -284,15 +285,15 @@ export function useMatchReadout(input: MatchReadoutInput) {
   /** The export's "Slight edge" caption, as a band of the same probability the curve draws. Seven
    *  bands, symmetric, and never a claim about how she FEELS – only about where the match stands. */
   const momentumCaption = computed(() => {
-    if (displayedPointIndex.value < 0) return 'Not started'
+    if (displayedPointIndex.value < 0) return t('Not started')
     const p = heroProb.value
-    if (p >= 0.9) return 'Almost there'
-    if (p >= 0.7) return 'Well ahead'
-    if (p >= 0.57) return 'Slight edge'
-    if (p > 0.43) return 'Even'
-    if (p > 0.3) return 'Uphill'
-    if (p > 0.1) return 'Well behind'
-    return 'Hanging on'
+    if (p >= 0.9) return t('Almost there')
+    if (p >= 0.7) return t('Well ahead')
+    if (p >= 0.57) return t('Slight edge')
+    if (p > 0.43) return t('Even')
+    if (p > 0.3) return t('Uphill')
+    if (p > 0.1) return t('Well behind')
+    return t('Hanging on')
   })
 
   // --- design I §4b/c: 1st serve % and break points, both live ------------------------------

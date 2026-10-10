@@ -13,7 +13,17 @@
 import type { TierId } from '../season/types'
 import { TIER_SHORT } from '../season/calendar'
 import type { DiaryFacts, DiaryLifeStage } from '../../shared/protocol'
+import type { CopyRef } from '../../shared/i18n'
 import type { TravelHomeFacts } from './travelHome'
+
+/** ⭐ L3-4 (10.10): ONE LINE OF THE DIARY AND ITS KEY, from the one pick. `text` is the English exactly as the engine has always written it; `c` is the CopyRef the screen
+ *  renders under the current locale (`eventText({ text, c })`) – a function cell's own ref, or the seat `{ k: text }` for a static cell, where the string IS the key. `c` is
+ *  absent only for a cell that has no ref (a state `tests/i18n-l3-4-diary-corpora.test.ts` refuses), and then the screen prints `text`. Class (b): assembled at snapshot time,
+ *  never stored. */
+export interface DiaryLine {
+  text: string
+  c?: CopyRef
+}
 
 // ---- short + plural ----
 /** Short tier name for the diary's voice, total over null ("the J30 trip" / "the tournament trip"). */

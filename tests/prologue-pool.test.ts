@@ -330,10 +330,16 @@ describe('⚠⚠ the pool may never enter world.cohort or any table', () => {
     // what it buys is that the girl a Local Open meets is `childhoodArrival` over the years she has
     // lived instead of a bare band draw. The counter-claim moved to `tests/childhood.test.ts`, which
     // pins the whole of `src/` at exactly two importers and proves neither is on the tick path.
+    // ⚠ L2-2 (08.10) – RE-AIMED, AND THIS ONE IS A REAL PREMISE MOVING, NOT A SPELLING: `cards.ts` and `handover.ts` read their words
+    // through `t()` now, so each names ONE more module, `../i18n` (the UI layer's entry to localization – the first time a `src/prologue`
+    // file reaches it). It is not the engine and not the world, so the claim under this list is untouched and the loop below still
+    // refuses `/world` and `childhood`; `pool.ts` and `run.ts` carry no copy and name nothing new. `src/prologue` is UI-side
+    // (`tests/childhood.test.ts` proves no framework-free zone imports it, and `tests/i18n-purity.test.ts` that none imports `src/i18n`).
     expect(imports).toEqual({
-      'cards.ts': ['../shared/protocol'],
+      'cards.ts': ['../i18n', '../shared/protocol'],
       'handover.ts': [
         '../engine/rng',
+        '../i18n',
         '../shared/dates',
         '../shared/money',
         '../shared/protocol',

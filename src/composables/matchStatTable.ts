@@ -21,6 +21,7 @@
 // called `StatRow`, one import away from being confused with it.
 import type { MatchStats } from '../viz/match/matchStats'
 import type { Side } from '../engine/match/types'
+import { t } from '../i18n'
 
 /** One line of the box score, already turned round to her point of view. */
 export interface MatchStatRow {
@@ -48,11 +49,11 @@ export function matchStatRows(stats: MatchStats, kidSide: Side): MatchStatRow[] 
   const o: Side = k === 0 ? 1 : 0
   const pair = (v: [number, number]): { kid: string; opp: string } => ({ kid: String(v[k]), opp: String(v[o]) })
   return [
-    { label: 'Aces', ...pair(stats.aces) },
-    { label: 'Double faults', ...pair(stats.doubleFaults) },
-    { label: 'Winners', ...pair(stats.winners) },
-    { label: 'Unforced errors', ...pair(stats.unforcedErrors) },
-    { label: 'Max serve', kid: `${stats.serveSpeed.max[k]} km/h`, opp: `${stats.serveSpeed.max[o]} km/h` },
+    { label: t('Aces'), ...pair(stats.aces) },
+    { label: t('Double faults'), ...pair(stats.doubleFaults) },
+    { label: t('Winners'), ...pair(stats.winners) },
+    { label: t('Unforced errors'), ...pair(stats.unforcedErrors) },
+    { label: t('Max serve'), kid: t('{0} km/h', [stats.serveSpeed.max[k]]), opp: t('{0} km/h', [stats.serveSpeed.max[o]]) },
   ]
 }
 

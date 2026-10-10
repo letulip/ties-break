@@ -61,6 +61,7 @@ import {
   callUpPlayedThisWeek,
   callUpRevealOpen,
   collegeEpilogueLine,
+  collegeEpilogueRef,
   collegeLeaguePlayedThisWeek,
   collegeLeagueRevealOpen,
   leaveCollege as leaveCollegeState,
@@ -71,6 +72,7 @@ import { createWorld } from './create'
 // imports the values back and re-exports them under their historical names, and this import is erased
 // at compile time, so no runtime edge points from the package back at `world.ts`.
 import type { WorldState } from '../world'
+import { cp } from '../../shared/i18n'
 
 // --- v35: the ONE remaining replay, and the budget its verifier is bounded by --------------------
 
@@ -308,6 +310,7 @@ export function skipEvent(world: WorldState, eventId: string): void {
     type: 'income',
     category: 'travel',
     text: `Travel refunded: ${TIERS[event.tier].label}`,
+    c: cp`Travel refunded: ${TIERS[event.tier].label}`,
     amountCents: paid,
   })
   world.entries = world.entries.filter((id) => id !== eventId)
@@ -316,6 +319,7 @@ export function skipEvent(world: WorldState, eventId: string): void {
     week: world.week,
     type: 'info',
     text: `Skipped ${TIERS[event.tier].label} – entry fee forfeited.`,
+    c: cp`Skipped ${TIERS[event.tier].label} – entry fee forfeited.`,
   })
   // ⚠ THE NO-SHOW, AND IT IS THE DEAREST OF THE THREE SOURCES (W3-ACT2 §6, `noShowPoints` 4 against
   // a late withdrawal's 3 and a plain skip's 2). The ordering is about what the TOURNAMENT lost, not
@@ -908,6 +912,7 @@ export function endCollegeEarly(world: WorldState): void {
     type: 'milestone',
     keep: true,
     text: collegeEpilogueLine(world),
+    c: collegeEpilogueRef(world),
   })
 }
 
@@ -919,5 +924,6 @@ function finishCollege(world: WorldState): void {
     type: 'milestone',
     keep: true,
     text: collegeEpilogueLine(world),
+    c: collegeEpilogueRef(world),
   })
 }

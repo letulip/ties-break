@@ -1162,7 +1162,8 @@ export function growHabituation(world: WorldState, isNews: boolean, psychologist
   if (rung !== undefined) {
     const point = ECONOMY.psychologist.publicLifeReceiptAt
     if (habituationScale(held) > point && habituationScale(grown) <= point) {
-      addEvent(world, { week: world.week, type: 'info', text: PUBLIC_LIFE_RECEIPT })
+      // ⭐ v93 (L3-3): `c: { k }` – a sentence the program holds as a NAMED CONSTANT is its own key (a dynamic seat; the frozen table holds it, and the net's §1b proves it)
+      addEvent(world, { week: world.week, type: 'info', text: PUBLIC_LIFE_RECEIPT, c: { k: PUBLIC_LIFE_RECEIPT } })
     }
   }
 }
@@ -1419,7 +1420,7 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean, expo
     // zero draws, and the same `seasonIndexOf` spelling the wrap-up uses.
     const season = seasonIndexOf(world.week)
     const firstOfSeason = world.spotlightKeepSeason !== season
-    addEvent(world, { week: world.week, type: 'life', lifeKind: 'exposure', text: EXPOSURE_ROW, ...(firstOfSeason ? { keep: true } : {}) })
+    addEvent(world, { week: world.week, type: 'life', lifeKind: 'exposure', text: EXPOSURE_ROW, c: { k: EXPOSURE_ROW }, ...(firstOfSeason ? { keep: true } : {}) })
     if (firstOfSeason) world.spotlightKeepSeason = season
   }
 
@@ -1453,7 +1454,7 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean, expo
     //    TRUE – «sooner than last time» needs a last time, and `hadAnEarlierEnding` reads it off
     //    `loveEpisodes`' own dates. The predicate takes the world for that clause alone.
     if (recoveryReceiptEarned(world, shock, world.week)) {
-      addEvent(world, { week: world.week, type: 'info', text: RECOVERY_RECEIPT })
+      addEvent(world, { week: world.week, type: 'info', text: RECOVERY_RECEIPT, c: { k: RECOVERY_RECEIPT } })
     }
     world.spiritShock = null
   }

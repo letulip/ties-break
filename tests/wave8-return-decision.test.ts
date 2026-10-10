@@ -657,8 +657,10 @@ describe('wave 8 T5 D – the ninth ending latches through the ONE seam every ot
       ...world,
       ending: { ...world.ending!, type: 'stopped' },
     })
+    // ⭐ RE-AIMED 10.10 BY L3-6: the page carries refs beside its strings now (`whyC` is the title's KEY, `factC` nests the detail), and an ending read under another type's name rightly reads them differently.
+    // The claim here is about what the player SEES - the English page - so the refs are peeled before the comparison; tests/i18n-l3-6-endings-album.test.ts §5 renders every ref against its string.
     const swap = (pages: AlbumPage[], title: string) =>
-      pages.map((p) => (p.why === title ? { ...p, why: '<the title>' } : p))
+      pages.map(({ whyC: _whyC, captionC: _captionC, factC: _factC, ...p }) => (p.why === title ? { ...p, why: '<the title>' } : p))
     // ⭐ ROUND 46 · R6 (06.10): the wire carries ONE page now (`EndingView.closing`), the only page that ever named
     // the ending – pages 1–6 left it, so «page for page» is the last page; the engine's own album tests hold the six.
     expect(swap([view!.closing], ENDING_TITLE.family), 'the last page, the one page the view carries').toEqual(

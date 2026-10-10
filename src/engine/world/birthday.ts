@@ -66,6 +66,8 @@
 // has (`advanceWeeks` refuses to tick), and the dialog has four buttons and no other way out.
 import { rngFromSeed } from '../rng'
 import { ECONOMY } from '../economy'
+// ⭐ L3-4 (10.10): the prompt's words and the gift row ride the snapshot / the feed as CopyRefs BESIDE the English (docs/specs/i18n-2026-10.md §8, row L3-4).
+import { cp, type CopyRef } from '../../shared/i18n'
 // ⭐ v72: the consumer ruling 2 below was waiting for – see `chooseGift`. `applyBondDelta` is the one
 // writer of `world.bond`, so this file states WHICH row applies and never how the number is clamped.
 import { applyBondDelta, temperamentFor, type Temperament } from '../spirit'
@@ -1760,6 +1762,13 @@ export function pendingBirthday(world: WorldState): number | null {
  *  The voice grows up with her: close domestic observation while she lives at home, then the small
  *  negotiations of keeping family time once she has a place and calendar of her own. */
 export function birthdayHeading(seed: string, age: number): string {
+  return birthdayHeadingLine(seed, age).text
+}
+
+/** ⭐ L3-4 (10.10): THE HEADING AND ITS KEY FROM THE ONE PICK. Each of the eighteen lines is written twice on purpose – the `text` exactly as before, the `c` beside it as the
+ *  CopyRef the dialog renders (`{0}. Somehow already.` holds the spelled age as its one hole; the static lines are keys of their own) – and the pick is the same single draw on
+ *  `seed:birthday:<age>:heading`, so the line a given seed shows does not move. `birthdayHeading` is the old signature, kept for the callers that want the English alone. */
+export function birthdayHeadingLine(seed: string, age: number): { text: string; c: CopyRef } {
   // ⚠⚠ THE AGE IS SPELLED BY `ageInWords` AND NOWHERE ELSE (19.08). The first cut of this function
   // wrote `${age}` in five bands and the word "Eighteen" in one - so the popup disagreed with itself,
   // and both disagreed with the FEED LINE sitting under it, which has said "She is fourteen this
@@ -1770,18 +1779,34 @@ export function birthdayHeading(seed: string, age: number): string {
   // are both correct and both come from the same call - see engine/world/age.ts.
   const n = ageInWords(age)
   const N = n.charAt(0).toUpperCase() + n.slice(1)
-  const lines =
+  const lines: Array<{ text: string; c: CopyRef }> =
     age <= 14
-      ? [`${N}. Somehow already.`, 'Happy birthday, kiddo.', `${N} today. The candles made it official.`]
+      ? [
+        { text: `${N}. Somehow already.`, c: cp`${N}. Somehow already.` },
+        { text: 'Happy birthday, kiddo.', c: cp`Happy birthday, kiddo.` },
+        { text: `${N} today. The candles made it official.`, c: cp`${N} today. The candles made it official.` },
+      ]
       : age <= 17
-        ? [`${N}. That came round quickly.`, 'Happy birthday. She beat us to the candles.', `${N} today. Her plans started before breakfast.`]
+        ? [
+          { text: `${N}. That came round quickly.`, c: cp`${N}. That came round quickly.` },
+          { text: 'Happy birthday. She beat us to the candles.', c: cp`Happy birthday. She beat us to the candles.` },
+          { text: `${N} today. Her plans started before breakfast.`, c: cp`${N} today. Her plans started before breakfast.` },
+        ]
         : age === 18
           // ⚠ NO "that arrived quickly" HERE: the band above already says "that came round quickly",
           // and a player passes through both. Two near-identical lines a year apart read as one
           // template with the numbers swapped, which is the exact impression this wave exists to undo.
-          ? ['Eighteen. And allowed to sign things.', 'Happy birthday. An adult, apparently.', 'Eighteen candles and a very full calendar.']
+          ? [
+            { text: 'Eighteen. And allowed to sign things.', c: cp`Eighteen. And allowed to sign things.` },
+            { text: 'Happy birthday. An adult, apparently.', c: cp`Happy birthday. An adult, apparently.` },
+            { text: 'Eighteen candles and a very full calendar.', c: cp`Eighteen candles and a very full calendar.` },
+          ]
           : age <= 21
-            ? [`${N}. She brought her own plans.`, 'Happy birthday. Dinner fitted around practice.', `${N} today. The day already had opinions.`]
+            ? [
+              { text: `${N}. She brought her own plans.`, c: cp`${N}. She brought her own plans.` },
+              { text: 'Happy birthday. Dinner fitted around practice.', c: cp`Happy birthday. Dinner fitted around practice.` },
+              { text: `${N} today. The day already had opinions.`, c: cp`${N} today. The day already had opinions.` },
+            ]
             : age <= 28
               // ⚠ R2-18 / PROD-10 – «Her own keys» IS GONE, AND IT IS A FACT THE MODEL HAS NOT GOT.
               // It asserted a place of her own on every twenty-two-to-twenty-eight-year-old in the
@@ -1790,8 +1815,16 @@ export function birthdayHeading(seed: string, age: number): string {
               // no residence in `WorldState` – the review is explicit that copy must not assert one
               // until there is – and the line does not need it. What is TRUE of all three is that
               // the plates are ours and the day had to be found; that is what it says now.
-              ? [`${N}. We found a gap in her calendar.`, 'Happy birthday. She chose the time; we kept the cake ready.', `${N} today. Her own plans, our old birthday plates.`]
-              : [`${N}. The calendar argued with dinner. Dinner won.`, 'Happy birthday. Cake when she could make it.', `${N} today. Still no sensible number of candles.`]
+              ? [
+                { text: `${N}. We found a gap in her calendar.`, c: cp`${N}. We found a gap in her calendar.` },
+                { text: 'Happy birthday. She chose the time; we kept the cake ready.', c: cp`Happy birthday. She chose the time; we kept the cake ready.` },
+                { text: `${N} today. Her own plans, our old birthday plates.`, c: cp`${N} today. Her own plans, our old birthday plates.` },
+              ]
+              : [
+                { text: `${N}. The calendar argued with dinner. Dinner won.`, c: cp`${N}. The calendar argued with dinner. Dinner won.` },
+                { text: 'Happy birthday. Cake when she could make it.', c: cp`Happy birthday. Cake when she could make it.` },
+                { text: `${N} today. Still no sensible number of candles.`, c: cp`${N} today. Still no sensible number of candles.` },
+              ]
   const rng = rngFromSeed(`${seed}:birthday:${age}:heading`)
   return lines[Math.floor(rng() * lines.length)]
 }
@@ -1815,11 +1848,17 @@ export function buildBirthdayPrompt(world: WorldState): BirthdayPrompt | null {
   // `birthdayOffer` on purpose: the OFFER must stay means-blind (spec §0), so the means cannot reach
   // the function that chooses the four. It reaches only the strings.
   const means = familyMeans(world)
+  // ⭐ L3-4 (10.10): the heading, the ask and the four rows each carry their key beside the English. The ask's ref is the key of the sentence printed and NOTHING ELSE – it names no
+  // option and marks none (the owner's 11.08 rule: do not mark it, let the player read), and `askedId` is still not on the wire.
+  const heading = birthdayHeadingLine(world.seed, age)
+  const ask = birthdayWords(asked, means).ask
   return {
     week: world.week,
     age,
-    heading: birthdayHeading(world.seed, age),
-    ask: birthdayWords(asked, means).ask,
+    heading: heading.text,
+    headingC: heading.c,
+    ask,
+    askC: { k: ask },
     options: birthdayOptions(options, alreadyGiven, means),
   }
 }
@@ -1877,10 +1916,14 @@ export function birthdayOptions(
   const held = new Set(alreadyGiven)
   return gifts.map((gift): BirthdayOption => {
     const words = birthdayWords(gift, means)
+    const note = held.has(gift.id) ? words.again : words.note
+    // ⭐ L3-4 (10.10): THE ROW'S TWO SEATS. The label and the note are catalogue strings (09A) – each IS the key of itself, so the ref is `{ k: string }` beside the English.
     return {
       id: gift.id,
       label: gift.label,
-      note: held.has(gift.id) ? words.again : words.note,
+      note,
+      labelC: { k: gift.label },
+      noteC: { k: note },
     }
   })
 }
@@ -1968,6 +2011,12 @@ export function chooseGift(world: WorldState, giftId: string): void {
       given.id === DAY_TOGETHER.id
         ? 'Her birthday. No parcel – just the day, kept clear for each other.'
         : `Her birthday. ${given.label}, opened before the cake.`,
+    // ⭐ L3-4 (10.10): THE ROW'S KEY – the frozen v92 table's two sentences, so a row written today and a row migrated out of an old save are ONE translation. The gift's label rides
+    // as a nested ref (the renderer recurses): the label is the catalogue's own string, a key of its own, so a Russian row names the gift in Russian.
+    c:
+      given.id === DAY_TOGETHER.id
+        ? cp`Her birthday. No parcel – just the day, kept clear for each other.`
+        : cp`Her birthday. ${{ k: given.label }}, opened before the cake.`,
   })
 }
 

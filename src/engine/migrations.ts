@@ -75,6 +75,10 @@ import { nameSuggestionsFor, sanitiseAssetName } from './world/assets'
 // would hand a live save a different girl from the one the engine would have drawn. Same argument as
 // the v67 units and the v69 fame pin above, in the one domain where a copy would be unfalsifiable.
 import { temperamentFor } from './spirit'
+// ⭐ v93 (the localization rig, L3-0): pure string work against a FROZEN table – no RNG, no clock, no world import. The matcher's own header
+// says why it can be called from a migration; `tests/i18n-l3-0-legacy-match.test.ts` reads this import list and the matcher's, and refuses
+// a dice or a clock in either.
+import { attachCopyRefs } from './migrations/reverseMatch'
 
 /** The pre-v67 shape of an owned row, as the units back-fill has to read it: `basisCents`/`basisWeek`
  *  were OPTIONAL keys on v63-v66 saves (round 29 #11 and part two #4 wrote them without a version
@@ -3374,6 +3378,29 @@ export function migrateSave(raw: unknown): WorldState {
   if (v === 91) {
     save.startYear ??= 2031
     v = 92
+  }
+
+  // ⭐⭐⭐ v92 -> v93 – THE SENTENCE AS DATA (the localization rig, L3-0; docs/specs/i18n-2026-10.md §5). ONE OPTIONAL KEY ON EVERY
+  // `WorldEvent` ROW – `c?: CopyRef`, the sentence as `{ k, p }` – and THIS STEP IS WHAT FILLS IT for the rows an old save already holds.
+  //
+  // ⚠⚠ A RECOGNITION AND NEVER A RECONSTRUCTION. The set of sentences old code could store is closed, and `migrations/legacyTemplates.v92.ts`
+  // is its frozen snapshot; each row's `text` is matched against it and, when a template fits, the ref (template + the strings that sat in
+  // the holes) is attached BESIDE the text. `text` is left exactly as it was: the owner's ruling 4 lets legacy English be retained, and every
+  // reader that compares it (diary/facts' `tierFromLabel`, `phaseObligations`' opening test, `tabSeen`, `SeasonScreen`'s score tail) keeps
+  // working. A match is kept only if the ref renders back to the stored bytes in English, so a wrong table can cost coverage but never a
+  // sentence. A row nothing matches is untouched and COUNTED – the count is the measured distance from ruling 4 and is stored NOWHERE (no
+  // persisted field; `attachCopyRefs` returns it to whoever asks, and the L3-0 measurement did).
+  //
+  // ⚠ ONLY `world.events`. Letters, the diary and the album are separate prose classes with their own stored text; any move they need is a
+  // later wave's own and gets its own step. ⚠ IDEMPOTENT: a row that already carries `c` is skipped, so a second run changes nothing.
+  // ⚠ ZERO DRAWS, no sub-stream: pure string work (the frozen MAIN capture, 41550 / e6b0c709, is untouched by construction).
+  //
+  // Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, this step, tests/fixtures/saves/v93.json, its row in tests/fixtures/saves/README.md,
+  // the e2e fixtures (re-stamped), docs/context/saves-and-worker.md's mechanically-checked schema sentence, `tests/coachTravelEdgeFixtures.ts`'
+  // `PRE_V93` (no rung to peel: a frozen career's rows carry no `c`, nothing writes it yet) and the frozen template table itself.
+  if (v === 92) {
+    attachCopyRefs(save.events)
+    v = 93
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

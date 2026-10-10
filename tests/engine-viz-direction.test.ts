@@ -59,7 +59,9 @@ const PRESENTATION = [
   'src/stores',
   'src/audio',
   'src/art',
+  'src/i18n',
   'src/App.vue',
+  'src/AppRoot.vue',
   'src/main.ts',
   'src/pwa.ts',
 ]

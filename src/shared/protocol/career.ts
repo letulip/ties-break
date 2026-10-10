@@ -10,6 +10,7 @@ import type { LadderTrack } from '../../engine/season/types'
 import type { DynastyHandover } from './profile'
 import type { AvatarEmotion, PortraitStage } from '../avatarEmotion'
 import type { CareerMoney, CareerTotals, WorldMatch } from './events'
+import type { CopyRef } from '../i18n'
 
 // --- HOW A CAREER ENDS (schema v39, career-contract-v1.md §4) ----------------------------------
 
@@ -480,6 +481,12 @@ export interface AlbumPage {
    *  empty face was dropped: injury prevalence is ~51% a season and the slot's own fallback fills
    *  even for a career that never was, so it is never empty in practice. */
   empty: boolean
+  /** ⭐ L3-6 (10.10) – THE REFS BESIDE THE ENGLISH, the `LifeMoment.lineC` shape: the sentence the engine wrote, as the CopyRef a screen renders under the current locale (`eventText({ text, c })`).
+   *  Optional and wire-only (this page is built at snapshot time and never saved); a page that carries none draws its English as it always did. Today only the LAST page (slot 7, the one
+   *  `EndingView.closing` sends) carries them – the other six are built for the engine's own tests and probes and no screen reads them. */
+  whyC?: CopyRef
+  captionC?: CopyRef
+  factC?: CopyRef
 }
 
 /** §9.3 – UNDERNEATH THE ALBUM: the full scroll, every milestone in order, paged by season. §5.5's
@@ -488,7 +495,8 @@ export interface ScrollSeason {
   seasonIndex: number
   year: number
   ageYears: number
-  rows: { week: number; label: string; detail: string | null }[]
+  /** ⭐ L3-6 (10.10): `labelC` / `detailC` are the refs beside the two strings. A `detail` that is an engine-born word (a tier's label, an injury's kind) has no `detailC` – it prints as stored. */
+  rows: { week: number; label: string; detail: string | null; labelC?: CopyRef; detailC?: CopyRef }[]
 }
 
 /** THE HAND-OFF (§5.6): an OFFER, not a credits roll. One tap to a new career, the next daughter

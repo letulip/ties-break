@@ -368,7 +368,11 @@ function asItStood(world: WorldState, itemId: string, amountCents?: number): voi
 }
 
 /** The whole state a sale can touch, canonically serialised: wallet, every row, the whole ledger, the letters, the dice. */
-const image = (w: WorldState): string => canon({ funds: w.fundsCents, assets: w.assets, events: w.events, offers: w.offers, rng: w.rngMain })
+// ⭐ v93 / L3-1 (10.10): the ledger rows carry `c` beside `text` now, and the yardstick above is the pre-S4 body RE-TYPED ON PURPOSE – it predates the ref and
+// writes none. The ref is a second spelling of the row's sentence (tests/i18n-l3-1-ledger-writers.test.ts renders both shop sale rows against `text` for every tail),
+// so this twin compares the rest of the row: wallet, rows, the sentence, the cents, the dice – everything that was true before the ref existed.
+const image = (w: WorldState): string =>
+  canon({ funds: w.fundsCents, assets: w.assets, events: w.events.map(({ c: _c, ...row }) => row), offers: w.offers, rng: w.rngMain })
 
 describe('S4 · parked cash is BIT FOR BIT what it was (ruling §5.1: «parked cash keeps today\'s path»)', () => {
   it('⭐⭐ THE TWIN: part sales and whole sales of the fund and the deposit match the pre-S4 body after EVERY step – world and ledger canonically serialised', () => {

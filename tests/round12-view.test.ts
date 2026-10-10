@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { ECONOMY } from '../src/engine/economy'
 import { flipScore, isExamWeek } from '../src/engine/world'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { after, region, regions } from './helpers/source'
+import { after, region, regions, tTransparent } from './helpers/source'
 
 // ---------------------------------------------------------------------------
 // Round 12, wave B — PRESENTATION ONLY. No engine file is touched by any of these items;
@@ -22,8 +22,11 @@ import { after, region, regions } from './helpers/source'
 // and those are exactly the facts that silently rot. Same discipline as round10/round11-view.
 // ---------------------------------------------------------------------------
 
-const seasonScreen = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
-const planSheet = readFileSync(new URL('../src/components/PlanWeekSheet.vue', import.meta.url), 'utf8')
+// ⚠ L2-4 (08.10): READ THROUGH `tTransparent` – the screen's labels are `t()` calls now and these pins assert the words, not the wrapper.
+const seasonScreen = tTransparent(readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8'))
+// ⚠ L2-5 (08.10): READ THROUGH `tTransparent` too – the planner's labels are `t()` calls now. `planSheetRaw` is for the one pin whose premise moved.
+const planSheetRaw = readFileSync(new URL('../src/components/PlanWeekSheet.vue', import.meta.url), 'utf8')
+const planSheet = tTransparent(planSheetRaw)
 // world.ts AND every world/*.ts part (P4 split): kidMatchEvent lives in world/matchNews.ts now
 const worldSrc = worldSource()
 const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
@@ -243,7 +246,9 @@ describe('R12-8b — a red "injury" chip on every card the layoff covers', () =>
     const vacation = slice(planSheet, '<!-- ---------------- Vacation', '\n      </template>')
     // The fact is still on screen while the parent is choosing...
     expect(vacation).toContain('v-if="layoff"')
-    expect(vacation).toContain('{{ layoffNote }}')
+    // ⚠ L2-5 (08.10) – A GENUINE PREMISE MOVE, re-aimed: the engine's layoff head is the FIRST HOLE of the sentence's `t()` now
+    // (`{0} A week away is still hers to book – …`), so the note is looked for where it lives – as the argument of that message.
+    expect(slice(planSheetRaw, '<!-- ---------------- Vacation', '\n      </template>')).toContain('[layoffNote])')
     // ...and it is no longer a blocker on the one control this tab has. A Book that could only throw
     // would be the R10-16 dead control, which is why the ENGINE gate came off first.
     expect(vacation).toContain(':disabled="!row.affordable || game.busy"')
@@ -291,7 +296,10 @@ describe('R12-12 — the tournament plaque is two lines: sentence, then score', 
     const split = slice(seasonScreen, 'function plaqueLines', '// R10-15')
     expect(split).toContain('m.bId === KID_ID ? flipScore(m.score)')
     // and the graceful floor: no stored scoreline (or a reworded sentence) = one line, as before
-    expect(split).toContain('e.text.endsWith(score)')
+    // ⚠ RE-AIMED 09.10 BY v93 (the localization rig L3-0, `WorldEvent.c`): the plaque splits the sentence THE SCREEN SHOWS – `eventText(e)`, the ref rendered under the locale
+    // when the row has one, its stored text otherwise (the same bytes under English) – so the floor reads `text.endsWith(score)` where `text` is that. The claim is unchanged.
+    expect(split).toContain('const text = eventText(e)')
+    expect(split).toContain('text.endsWith(score)')
   })
 
   it('THE FACT THE SPLIT LEANS ON: the engine sentence ends with the kid-perspective score', () => {

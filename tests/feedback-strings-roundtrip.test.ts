@@ -70,6 +70,15 @@ function sourceOf(path: string): string {
   return src
 }
 
+/** ⚠ L2-11 (RU-15, 08.10) – PREMISE MOVE, COUNTED: TWO ROWS QUOTE THE PRE-WIRING SPELLING OF A HOLE. The owner's table writes the two builder
+ *  sentences as template literals (`${n} recent errors`, `Send it to ${FEEDBACK_ADDRESS}`); the code asks the catalog for them as `t()` keys, whose holes
+ *  are positional (`{0}`). The table is his and is not edited; this map says which spelling the SOURCE carries, and every other row maps to itself. */
+const WIRED_SPELLING: Record<string, string> = {
+  '${n} recent errors': '{0} recent errors',
+  'Send it to ${FEEDBACK_ADDRESS}': 'Send it to {0}',
+}
+const asWired = (text: string): string => WIRED_SPELLING[text] ?? text
+
 /** ⚠ THE ROW AS A WHOLE STRING LITERAL – found between its own quote marks, never as a bare substring: an `s` appended to a
  *  sentence in the source stayed green under a plain `includes` (measured 30.09, secondary market S2). The doc quotes the RUNTIME
  *  spelling and a single-quoted source literal escapes its apostrophes, so both spellings are tried. */
@@ -107,13 +116,13 @@ describe('the feedback channel – the strings table IS the corpus', () => {
   it('every row matches the shipped string character for character', () => {
     for (const row of rows) {
       const src = sourceOf(row.home)
-      expect(shipped(src, row.text), `${row.id}: ${row.home} does not ship the row's text as a whole string literal`).toBe(true)
+      expect(shipped(src, asWired(row.text)), `${row.id}: ${row.home} does not ship the row's text as a whole string literal`).toBe(true)
     }
   })
 
   it('every row is exactly ONE quoted literal in its home – a comment quoting it back cannot hold the pin up', () => {
     for (const row of rows) {
-      expect(literalCount(sourceOf(row.home), row.text), `${row.id}: ${row.home} quotes the row's text more than once (or not at all)`).toBe(1)
+      expect(literalCount(sourceOf(row.home), asWired(row.text)), `${row.id}: ${row.home} quotes the row's text more than once (or not at all)`).toBe(1)
     }
   })
 
@@ -140,7 +149,8 @@ describe('the feedback channel – the strings table IS the corpus', () => {
   it('⭐ every sentence constant the module exports is tabled, and the only other rows are the line builders\' three', () => {
     // `FEEDBACK_ADDRESS` is an address, not a sentence – the lookahead leaves it out; `MAILTO_BODY_MAX` is a number.
     const src = sourceOf(HOME)
-    const constants = [...src.matchAll(/export const (?:REPORT|FEEDBACK)_(?!ADDRESS\b)[A-Z_]+ = (['"])(.*?)\1/g)].map((m) => m[2])
+    // ⚠ L2-11 (RU-15, 08.10): the constants are thunks over `t()` now – `export const X = (): string => t('…')` – and the literal is read out of the call.
+    const constants = [...src.matchAll(/export const (?:REPORT|FEEDBACK)_(?!ADDRESS\b)[A-Z_]+ = \(\): string => t\((['"])(.*?)\1\)/g)].map((m) => m[2])
     expect(constants.length, 'the pattern found the module\'s sentence constants at all').toBeGreaterThan(0)
     const tabled = rows.map((r) => r.text)
     for (const text of constants) {

@@ -40,18 +40,18 @@ English fragment after an em dash.
 
 | Door / branch | English detail | Russian draft as a complete feed row |
 | --- | --- | --- |
-| bankruptcy | `{weeks} weeks below zero – there was no next entry fee` | `Деньги закончились: баланс оставался ниже нуля {weeks} {неделю/недели/недель}, и на следующий заявочный взнос уже не хватило.` |
-| career-ending injury | `{lost} weeks already lost, and then this one` | `Первым не выдержал организм: за карьеру травмы уже отняли {lost} {неделю/недели/недель}, а потом случилась эта.` |
-| college | `{years} years of student tennis – no ranking points, and the family pays its share of each year` | `Она поступила в университет: впереди {years} {год/года/лет} студенческого тенниса без рейтинговых очков; часть расходов за каждый год оплачивает семья.` |
-| stopped at school end | `she stopped when school ended, and nobody had to call it a failure` | `После школы она остановилась. Называть это неудачей не нужно.` |
-| plateau | `{seasons} seasons and the table would not move` | `Она решила закончить: за {seasons} {сезон/сезона/сезонов} её положение в рейтинге не сдвинулось.` |
-| natural, final word | `{age}, and nobody had to ask her` | `Она закончила в {age} {год/года/лет}. Спрашивать её уже не пришлось.` |
-| natural, one-more-year history | `{count} more year/years after the first time she was asked` | `После первого разговора она сыграла ещё {count} {год/года/лет}. Потом закончила.` |
+| bankruptcy | `{weeks} weeks below zero` | `{weeks, plural, one {{weeks} неделя} few {{weeks} недели} many {{weeks} недель} other {{weeks} недель}} ниже нуля` · `APPROVED` 10.10 – чат-ок «берём все четыре»: квитанция несёт число, историю говорит блёрб; старая полная форма живёт в старых сейвах |
+| career-ending injury | `{lost} weeks already lost, and then this one` | `Первым не выдержал организм: за карьеру травмы уже отняли {lost, plural, one {{lost} неделю} few {{lost} недели} many {{lost} недель} other {{lost} недель}}, а потом случилась эта.` |
+| college | `{years} years of student tennis – no ranking points, and the family pays its share of each year` | `Она поступила в университет: впереди {years, plural, one {{years} год} few {{years} года} many {{years} лет} other {{years} лет}} студенческого тенниса без рейтинговых очков; часть расходов за каждый год оплачивает семья.` |
+| stopped at school end | `she stopped when school ended` | `После школы она остановилась.` · `APPROVED` 10.10 – утешительная клауза ушла (и нарушала «не утешать») |
+| plateau | `{seasons} seasons, no step higher` | `{seasons, plural, one {{seasons} сезон} few {{seasons} сезона} many {{seasons} сезонов} other {{seasons} сезонов}} без шага вверх` · `APPROVED` 10.10 – метафора стола осталась блёрбу |
+| natural, final word | `{age}, and nobody had to ask her` | `Она закончила в {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}. Спрашивать её уже не пришлось.` |
+| natural, one-more-year history | `{count} more year/years after the first time she was asked` | `После первого разговора она сыграла ещё {count, plural, one {{count} год} few {{count} года} many {{count} лет} other {{count} лет}}. Потом закончила.` |
 | natural, accepted first offer | `the first time she was asked, she said yes` | `Она решила закончить после первого же разговора об этом.` |
 | peak, rank clause | `she was #{rank} the week she said it` | `Она ушла на вершине: в неделю своего решения занимала место №{rank}.` |
-| peak, title clause | `a title at the top of the sport, and she went the same season` | `Она ушла на вершине: взяла титул самого высокого уровня и закончила в том же сезоне.` |
+| peak, title clause | `a title in her last season` | `Титул – в её последний сезон.` · `APPROVED` 10.10 – «вершина» остаётся заголовку |
 | fall | `#{before} to #{after} in one season` | `После спада она остановилась: за сезон опустилась с места №{before} на №{after}.` |
-| family | `{weeksAway} weeks without a new entry` | `Она не вернулась в тур: {weeksAway} {неделю/недели/недель} без новой заявки.` |
+| family | `{weeksAway} weeks without a new entry` | `Она не вернулась в тур: {weeksAway, plural, one {{weeksAway} неделю} few {{weeksAway} недели} many {{weeksAway} недель} other {{weeksAway} недель}} без новой заявки.` |
 
 The current English `stopped` detail itself consoles (`nobody had to call it a failure`) despite
 the ending-copy rule against consolation; the Russian draft retains that source meaning for
@@ -93,8 +93,8 @@ does not claim she will keep playing tennis after the career ends.
 | school-end milestone | `School is over. The junior ladder closes at nineteen, and the next one has to be paid for.` | `Школа закончилась. Юниорский тур закроется для неё в девятнадцать; следующий уровень придётся оплачивать семье.` |
 | natural retirement offer, first ask | `Another off-season, and the same question: is there another year in this?` | `Снова межсезонье и тот же вопрос: будет ли ещё один год?` |
 | plateau retirement offer | `She said it out loud in the car – if she cannot reach the top, she would rather go.` | `Она сказала это в машине: если вершины не достичь, лучше уйти.` |
-| final offer, no prior year refrain | `She is {age}. Nobody asked her this time. She said it herself, and she said it steadily. This season was the last one.` | `Ей {age} {год/года/лет}. На этот раз никто не спрашивал. Она сказала сама, спокойно: этот сезон был последним.` |
-| final offer, prior refrains | `She is {age}. Nobody asked her this time. She said it herself, and she said it steadily. You have said one more year {count} time/times, and this season was the last one.` | `Ей {age} {год/года/лет}. На этот раз никто не спрашивал. Она сказала сама, спокойно: «Ещё один год» прозвучало уже {count} {раз/раза/раз}, но этот сезон был последним.` |
+| final offer, no prior year refrain | `She is {age}. Nobody asked her this time. She said it herself, and she said it steadily. This season was the last one.` | `Ей {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}. На этот раз никто не спрашивал. Она сказала сама, спокойно: этот сезон был последним.` |
+| final offer, prior refrains | `She is {age}. Nobody asked her this time. She said it herself, and she said it steadily. You have said one more year {count} time/times, and this season was the last one.` | `Ей {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}. На этот раз никто не спрашивал. Она сказала сама, спокойно: «Ещё один год» прозвучало уже {count, plural, one {{count} раз} few {{count} раза} many {{count} раз} other {{count} раз}}, но этот сезон был последним.` |
 
 Round 48 #4 (07.10, [RU-18](ru-main-delta-2-2026-10.md)): the one-more-year lines now credit the
 **parent** – `One more year, you said.` and `You have said one more year {count} time/times` –
@@ -123,3 +123,11 @@ epilogue wires it in, that change needs a separate nine-paragraph editorial pass
 Russian catalogue; English must not become the fallback. The source's comment saying the
 blurb is “live” conflicts with the usage search and with
 `tests/component/wave8-family-ending.test.ts`'s explicit unrendered finding.
+
+**Update 10.10 – this is no longer true.** On the owner's ask (item 34) the epilogue now draws all nine,
+one paragraph under the ending's title on the last page (`EndingScreen.vue`, read through the declared
+seat `ending.blurb`). Their nine rows, with the Russian column empty because the words are his, are in
+[RU-12A](ru-ending-screen-2026-10.md) under «The ending's own paragraph». The condition above is
+therefore not met yet: until a Russian cell is approved, a Russian session shows the English sentence
+on that line, like any other unapproved row. Whether to hold the line back in Russian until then is his
+call before a Russian release.

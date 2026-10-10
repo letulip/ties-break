@@ -1,3 +1,4 @@
+import { cp, renderCopyRef, SOURCE_LOCALE, type CopyRef } from '../shared/i18n'
 import { SAVE_SCHEMA_VERSION } from './world'
 
 // =================================================================================================
@@ -37,13 +38,36 @@ export type SaveFileErrorCode =
   | 'corrupted' // checksum mismatch, broken gzip, unparseable JSON, header/body disagreement
   | 'invalid-shape' // parsed fine but is not world-shaped (spine/bounds violations)
 
+/**
+ * ⭐ L3-7 CLOSE-OUT (10.10, docs/decisions.md item 33: «если что-то критичное и можно сразу исправить – лучше так, чтобы хвостов не висело») – THE SENTENCE RIDES BESIDE THE KIND.
+ *
+ * `code` is the KIND (seven of them) and has crossed the worker boundary since E-05 – but a kind does not name a sentence: `corrupted` is five of them, `invalid-shape` a frame over a closed set of clauses and
+ * the spine's field names, `future-schema` and `oversized` carry numbers. A UI that holds only the kind can print the raw English or nothing, which is why the seven kinds were the named leftover of L3-7.
+ *
+ * So the second argument is a `CopyRef` – the codebase's own «a sentence and its holes» (`shared/i18n.ts`): its key IS the English template, its params the holes (a clause is another ref). `message` is that
+ * ref rendered under the SOURCE locale, so the English a log, a test or an older reader sees and the key the translation is filed under share ONE source and cannot drift (the same arrangement `viz/lines.ts`
+ * and `engine/knock.ts` use). `c` is what the worker puts on the reply beside `code`, and what `composables/errorText.ts` renders.
+ *
+ * ⚠ A STRING IS STILL ACCEPTED, AND ONLY ONE CALLER PASSES ONE: `saveCodec.ts`'s `asCorrupted`, which wraps whatever a LOWER layer threw while reading a record out of the player's own database (a torn gzip, JSON that
+ * does not parse, a migration block tripping over data). Its message is that layer's own text – there is no fixed sentence to type – and the two-generation fallback absorbs it before a player reads it. It carries
+ * no `c`, the UI prints it raw, and `tests/i18n-l3-7-save-file-errors.test.ts` §3 names it as the only such site. Nothing is persisted: `c` is transport, built per throw.
+ */
 export class SaveFileError extends Error {
   readonly code: SaveFileErrorCode
-  constructor(code: SaveFileErrorCode, message: string) {
-    super(message)
+  /** the sentence as copy – absent only for a lower layer's raw message (see above) */
+  readonly c?: CopyRef
+  constructor(code: SaveFileErrorCode, sentence: CopyRef | string) {
+    super(typeof sentence === 'string' ? sentence : renderCopyRef(sentence, { locale: SOURCE_LOCALE }))
     this.name = 'SaveFileError'
     this.code = code
+    if (typeof sentence !== 'string') this.c = sentence
   }
+}
+
+/** ⭐ «THE CONTENTS CANNOT BE READ» – one sentence, three doors: `decodeExportFile` when the gzip or the JSON will not open, and the worker's two nets (`ensureMainState`, `importDryRun`) when a file that parsed and passed
+ *  the spine then throws inside the engine. Built here so the three can only ever say the same thing, with the same key. The sentence is `decodeExportFile`'s own, byte for byte (D-04). */
+export function unreadableSaveFile(): SaveFileError {
+  return new SaveFileError('corrupted', cp`This save file is damaged – its contents cannot be read`)
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -95,25 +119,27 @@ const MAX_ID_CHARS = 200 // seed / careerId; generated ones are < 30 chars
  * Infinity, and one Infinity in fundsCents would ride a migration all the way into the ledger.
  */
 export function guardPayloadBounds(root: unknown): void {
-  const fail = (detail: string): never => {
-    throw new SaveFileError('invalid-shape', `This save file is malformed – ${detail}`)
+  // ⭐ L3-7 CLOSE-OUT: the frame is one key and each clause is a key of its own, nested as a param – a clause is a WHOLE phrase, so the Russian frame and the Russian clause are written by the
+  // owner as a pair and no English fragment is left inside a Russian sentence. `cp` is evaluated only when a limit is hit, so the walk itself pays nothing for it.
+  const fail = (detail: CopyRef): never => {
+    throw new SaveFileError('invalid-shape', cp`This save file is malformed – ${detail}`)
   }
   let nodes = 0
   const stack: Array<{ value: unknown; depth: number }> = [{ value: root, depth: 0 }]
   while (stack.length > 0) {
     const { value, depth } = stack.pop()!
-    if (++nodes > MAX_TOTAL_NODES) fail('it contains more data points than any career can hold')
-    if (depth > MAX_JSON_DEPTH) fail('its data nests deeper than any save the game writes')
+    if (++nodes > MAX_TOTAL_NODES) fail(cp`it contains more data points than any career can hold`)
+    if (depth > MAX_JSON_DEPTH) fail(cp`its data nests deeper than any save the game writes`)
     if (typeof value === 'number') {
-      if (!Number.isFinite(value)) fail('it contains a non-finite number')
+      if (!Number.isFinite(value)) fail(cp`it contains a non-finite number`)
     } else if (typeof value === 'string') {
-      if (value.length > MAX_STRING_CHARS) fail('it contains an implausibly long text field')
+      if (value.length > MAX_STRING_CHARS) fail(cp`it contains an implausibly long text field`)
     } else if (Array.isArray(value)) {
-      if (value.length > MAX_ARRAY_ITEMS) fail('one of its lists is implausibly long')
+      if (value.length > MAX_ARRAY_ITEMS) fail(cp`one of its lists is implausibly long`)
       for (const item of value) stack.push({ value: item, depth: depth + 1 })
     } else if (value !== null && typeof value === 'object') {
       for (const key of Object.keys(value)) {
-        if (key.length > MAX_STRING_CHARS) fail('it contains an implausibly long field name')
+        if (key.length > MAX_STRING_CHARS) fail(cp`it contains an implausibly long field name`)
         stack.push({ value: (value as Record<string, unknown>)[key], depth: depth + 1 })
       }
     }
@@ -144,8 +170,8 @@ interface SpineRule {
   field: string
   /** first schema version whose saves must carry the field */
   since: number
-  /** returns an error detail, or null when the value is acceptable */
-  check: (value: unknown) => string | null
+  /** returns the CLAUSE that finishes «This save file is malformed – "field" …» (a ref – a whole phrase with its own key), or null when the value is acceptable */
+  check: (value: unknown) => CopyRef | null
 }
 
 const isObject = (v: unknown): v is Record<string, unknown> =>
@@ -153,25 +179,25 @@ const isObject = (v: unknown): v is Record<string, unknown> =>
 
 const boundedString =
   (max: number) =>
-  (v: unknown): string | null => {
-    if (typeof v !== 'string' || v.length === 0) return 'must be a non-empty text'
-    if (v.length > max) return `is longer than ${max} characters`
+  (v: unknown): CopyRef | null => {
+    if (typeof v !== 'string' || v.length === 0) return cp`must be a non-empty text`
+    if (v.length > max) return cp`is longer than ${max} characters`
     return null
   }
 
 const intInRange =
   (min: number, max: number) =>
-  (v: unknown): string | null =>
+  (v: unknown): CopyRef | null =>
     typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max
       ? null
-      : `must be a whole number between ${min} and ${max}`
+      : cp`must be a whole number between ${min} and ${max}`
 
 const finiteAbsMax =
   (max: number) =>
-  (v: unknown): string | null =>
-    typeof v === 'number' && Number.isFinite(v) && Math.abs(v) <= max ? null : 'is out of range'
+  (v: unknown): CopyRef | null =>
+    typeof v === 'number' && Number.isFinite(v) && Math.abs(v) <= max ? null : cp`is out of range`
 
-const anArray = (v: unknown): string | null => (Array.isArray(v) ? null : 'must be a list')
+const anArray = (v: unknown): CopyRef | null => (Array.isArray(v) ? null : cp`must be a list`)
 
 const SPINE: SpineRule[] = [
   // The two fields every version has carried – migrateSave's own final invariant demands them.
@@ -193,7 +219,7 @@ const SPINE: SpineRule[] = [
       // the engine will open can still be read back.
       isObject(v) && typeof v.kidName === 'string' && v.kidName.length > 0 && v.kidName.length <= MAX_ID_CHARS
         ? null
-        : 'must carry the player profile',
+        : cp`must carry the player profile`,
   },
   {
     field: 'plan',
@@ -201,7 +227,7 @@ const SPINE: SpineRule[] = [
     check: (v) =>
       isObject(v) && typeof v.train === 'number' && typeof v.rest === 'number'
         ? null
-        : 'must carry the weekly plan',
+        : cp`must carry the weekly plan`,
   },
   { field: 'careerId', since: 5, check: boundedString(MAX_ID_CHARS) },
   // The living world (v6): the engine dereferences these on the very first tick after load.
@@ -251,7 +277,7 @@ const SPINE: SpineRule[] = [
       typeof v.spentCents === 'number' &&
       typeof v.prizeCents === 'number'
         ? null
-        : 'must carry the career totals',
+        : cp`must carry the career totals`,
   },
   { field: 'birthdays', since: 48, check: anArray },
   // ⭐⭐ D-04 (principles review, 26.09) – THE THREE ARRAY FIELDS THE SWEEP FOUND, and only those
@@ -268,7 +294,7 @@ const SPINE: SpineRule[] = [
   { field: 'knockHistory', since: 26, check: anArray },
   { field: 'children', since: 85, check: anArray },
   { field: 'bereavementWeeks', since: 87, check: anArray },
-  { field: 'trophiesByTier', since: 31, check: (v) => (isObject(v) ? null : 'must be the trophies ledger') },
+  { field: 'trophiesByTier', since: 31, check: (v) => (isObject(v) ? null : cp`must be the trophies ledger`) },
   { field: 'offers', since: 32, check: anArray },
   {
     field: 'onRampCleared',
@@ -276,7 +302,7 @@ const SPINE: SpineRule[] = [
     check: (v) =>
       isObject(v) && typeof v.itf === 'boolean' && typeof v.wta === 'boolean'
         ? null
-        : 'must carry the on-ramp latches',
+        : cp`must carry the on-ramp latches`,
   },
   // The pro AER ledger (v36, W2-LADDER §5): dereferenced by `proEntryCapUsage` on the first
   // availability read after load, so a v36 file without it is a crash wearing a valid header.
@@ -305,7 +331,7 @@ const SPINE: SpineRule[] = [
       v.n >= 0 &&
       v.n <= Number.MAX_SAFE_INTEGER
         ? null
-        : 'must carry a valid RNG position',
+        : cp`must carry a valid RNG position`,
   },
 ]
 
@@ -317,20 +343,22 @@ const SPINE: SpineRule[] = [
  */
 export function guardDeclaredShape(payload: unknown, declaredVersion: number): Payload {
   if (!isObject(payload)) {
-    throw new SaveFileError('invalid-shape', 'This save file is malformed – it does not contain a career')
+    throw new SaveFileError('invalid-shape', cp`This save file is malformed – it does not contain a career`)
   }
   const bodyVersion = payload.schemaVersion ?? 0
   if (bodyVersion !== declaredVersion) {
     throw new SaveFileError(
       'corrupted',
-      'This save file is damaged – its header and its data disagree about the save version',
+      cp`This save file is damaged – its header and its data disagree about the save version`,
     )
   }
   for (const rule of SPINE) {
     if (declaredVersion < rule.since) continue
-    const detail = rule.check(payload[rule.field])
+    const { field } = rule
+    const detail = rule.check(payload[field])
     if (detail !== null) {
-      throw new SaveFileError('invalid-shape', `This save file is malformed – "${rule.field}" ${detail}`)
+      // ⭐ L3-7 CLOSE-OUT: the frame holds the field's name (an identifier – it stays as it is in every language) and the clause (a ref of its own), so a Russian sentence is built from two keys the owner writes as a pair
+      throw new SaveFileError('invalid-shape', cp`This save file is malformed – "${field}" ${detail}`)
     }
   }
   return payload
@@ -339,12 +367,12 @@ export function guardDeclaredShape(payload: unknown, declaredVersion: number): P
 /** Reject a declared schema this build cannot read – BEFORE any decompression happens. */
 export function guardDeclaredVersion(declaredVersion: number): void {
   if (!Number.isInteger(declaredVersion) || declaredVersion < 0) {
-    throw new SaveFileError('corrupted', 'This save file is damaged – it declares an impossible save version')
+    throw new SaveFileError('corrupted', cp`This save file is damaged – it declares an impossible save version`)
   }
   if (declaredVersion > SAVE_SCHEMA_VERSION) {
     throw new SaveFileError(
       'future-schema',
-      `This save is from a newer version of the game (schema v${declaredVersion}, this build reads up to v${SAVE_SCHEMA_VERSION}) – update the app, then import it`,
+      cp`This save is from a newer version of the game (schema v${declaredVersion}, this build reads up to v${SAVE_SCHEMA_VERSION}) – update the app, then import it`,
     )
   }
 }
@@ -352,9 +380,12 @@ export function guardDeclaredVersion(declaredVersion: number): void {
 /** The compressed-bytes cap, shared by the import gate and the DB read path. */
 export function guardCompressedSize(byteLength: number): void {
   if (byteLength > MAX_COMPRESSED_BYTES) {
+    // the megabytes print to ONE decimal as a string (the sentence has always said «16.0 MB» for a file one byte over), the limit as the whole number it is
+    const megabytes = (byteLength / (1024 * 1024)).toFixed(1)
+    const limit = MAX_COMPRESSED_BYTES / (1024 * 1024)
     throw new SaveFileError(
       'oversized',
-      `This file is too large to be a save (${(byteLength / (1024 * 1024)).toFixed(1)} MB – the limit is ${MAX_COMPRESSED_BYTES / (1024 * 1024)} MB)`,
+      cp`This file is too large to be a save (${megabytes} MB – the limit is ${limit} MB)`,
     )
   }
 }

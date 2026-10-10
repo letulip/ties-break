@@ -20,7 +20,7 @@ RU-07A/RU-16 corpus.
 | Field / branch | English | Russian draft |
 | --- | --- | --- |
 | why | `Where it started – every album opens on the same page` | `С чего всё началось – первая страница любого альбома` |
-| caption | `{age} years old, and we said yes` | `Ей было {age} {год/года/лет}, а мы сказали «да»` |
+| caption | `{age} years old, and we said yes` | `Ей было {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}, а мы сказали «да»` |
 | fact, first international entry exists | `Her first trip abroad came in {week}, at the {tier}` | `Первая поездка за границу – {week}, турнир «{tier}»` |
 | fact, no international entry | `{outlay} went out before anybody knew the answer` | `Семья потратила {outlay}, ещё не зная, чем всё обернётся` |
 
@@ -80,10 +80,10 @@ claim a transient mid-season rank. `Номер {rank}` should be phone-checked a
 
 | Branch / field | English | Russian draft |
 | --- | --- | --- |
-| longest injury why | `The one that took {weeks} weeks` | `Травма, которая забрала {weeks} {неделю/недели/недель}` |
+| longest injury why | `The one that took {weeks} weeks` | `Травма, которая забрала {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недель}}` |
 | longest injury caption | `We stopped counting the appointments` | `Мы перестали считать приёмы` |
-| longest injury fact | `{kind} – {week}, {weeks} weeks out` | `{localizedDiagnosis} – {week}; вне корта {weeks} {неделю/недели/недель}` |
-| rank fall why | `The season the table took {fall} places off her` | `Сезон, за который она потеряла {fall} {место/места/мест} в рейтинге` |
+| longest injury fact | `{kind} – {week}, {weeks} weeks out` | `{localizedDiagnosis} – {week}; вне корта {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недель}}` |
+| rank fall why | `The season the table took {fall} places off her` | `Сезон, за который она потеряла {fall, plural, one {{fall} место} few {{fall} места} many {{fall} мест} other {{fall} мест}} в рейтинге` |
 | rank fall caption | `Nobody said much that winter` | `Той зимой мы говорили мало` |
 | rank fall fact | `Closed {year} at #{endRank}` | `Закончила сезон {year} на месте №{endRank}` |
 | empty why | `She was never seriously hurt` | `Серьёзных травм у неё не было` |
@@ -123,7 +123,7 @@ holdings. The one-week branch is not the same as career break-even; no consoling
 | ended why | `ENDING_TITLE[ending.type]` | `{localizedEndingTitle}` – RU-12C |
 | college caption | `See you in four years` | `Увидимся через четыре года` |
 | other ending caption | `The last week` | `Последняя неделя` |
-| ended fact | `{week}, aged {age} – {ending.detail}` | `{week}; ей было {age} {год/года/лет}. {localizedEndingDetail}` |
+| ended fact | `{week}, aged {age} – {ending.detail}` | `{week}; ей было {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}. {localizedEndingDetail}` |
 
 The college caption promises four years because that is the current scholarship programme, not
 because all players necessarily remain four years. If early leaving is possible, this is a

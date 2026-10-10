@@ -27,9 +27,9 @@
 // and all.
 import { computed, ref, type ComputedRef, type Ref } from 'vue'
 import { useGameStore } from '../stores/game'
-import { LADDER_LABEL, rankChipTrack } from '../shared/protocol'
+import { rankChipTrack } from '../shared/protocol'
 import type { LadderTrack } from '../engine/season/types'
-import { rankLabel } from '../shared/format'
+import { t } from '../i18n'
 import { weekDateLine, weekSpan, weekYearLabel } from '../shared/dates'
 import { useHeaderAvatar } from './headerAvatar'
 import { readLocal, writeLocal } from './localStore'
@@ -40,11 +40,25 @@ import type { SpiritBand } from '../engine/spirit'
 /** The long form, where a chip has no room: which table, and the one fact about it that matters.
  *  A TOTAL Record over LadderTrack (the LADDER_TIP discipline from Stats): a fourth table cannot
  *  ship until somebody writes this chip's sentence for it. */
-const RANK_CHIP_TITLE: Record<LadderTrack, string> = {
-  domestic:
-    'Her national ranking – Local, Regional and National results. These are the points that open her next tier. Tap to see how they add up.',
-  itf: 'Her international ranking – Junior Tour results only. National results do not count towards it. Tap to see how it adds up.',
-  wta: 'Her professional ranking – W15 and up, the paid tour. Junior points never cross over. Tap to see how it adds up.',
+// L2-3 (08.10, RU-03 §4): THE CHIP'S THREE LABELS AND THREE TITLES READ THROUGH `t()` AT THE MOMENT THEY ARE ASKED FOR (thunks, so a
+// locale flip reaches a chip that is already on screen). The labels are `LADDER_LABEL`'s three words, spelled at their call sites
+// because `shared/` cannot import the UI layer; `tests/component/i18n-l2-3-home-weekly.test.ts` holds them equal to it.
+const LADDER_NAME: Record<LadderTrack, () => string> = {
+  domestic: () => t('National'),
+  itf: () => t('International'),
+  wta: () => t('Professional'),
+}
+
+/** The table's name in the player's words – the chip's label, and (L2-3) the weekly recap's rank-movement line. */
+export function ladderName(track: LadderTrack): string {
+  return LADDER_NAME[track]()
+}
+
+const RANK_CHIP_TITLE: Record<LadderTrack, () => string> = {
+  domestic: () =>
+    t('Her national ranking – Local, Regional and National results. These are the points that open her next tier. Tap to see how they add up.'),
+  itf: () => t('Her international ranking – Junior Tour results only. National results do not count towards it. Tap to see how it adds up.'),
+  wta: () => t('Her professional ranking – W15 and up, the paid tour. Junior points never cross over. Tap to see how it adds up.'),
 }
 
 // R13-12's discoverability callout: shown once ever per device, dismissed by the first tap on
@@ -113,14 +127,15 @@ export function useKidIdentity(): KidIdentity {
   const chipTrack = computed(() => rankChipTrack(game.snapshot))
   const activeLadder = computed(() => game.snapshot?.activeLadder ?? 'domestic')
   const ladder = computed(() => game.snapshot?.ladders[activeLadder.value])
-  const ladderLabel = computed(() => LADDER_LABEL[activeLadder.value])
+  const ladderLabel = computed(() => LADDER_NAME[activeLadder.value]())
   const kidRank = computed(() => ladder.value?.rank ?? null)
   // 'Unranked' until she's earned a counting result (see rankLabel): a point-less kid isn't really
   // ranked, so we don't flash a misleading '#1' on a brand-new career. `rank: null` is now the
   // engine's own way of saying exactly that, so this stops counting results to find out for itself.
   const ranked = computed(() => kidRank.value !== null)
-  const rankText = computed(() => rankLabel(kidRank.value ?? 0, ranked.value))
-  const rankChipTitle = computed(() => RANK_CHIP_TITLE[activeLadder.value])
+  // `rankLabel` (shared/format.ts) is the same two shapes – `#42` and `Unranked` – and stays for the surfaces still on it.
+  const rankText = computed(() => (ranked.value ? t('#{rank}', { rank: kidRank.value ?? 0 }) : t('Unranked')))
+  const rankChipTitle = computed(() => RANK_CHIP_TITLE[activeLadder.value]())
   // FROM THE SAME TABLE as `kidRank` above. Reading `snapshot.prevKidRank` here would diff her
   // national place against last week's international one; `ladders[t].prevRank` is per-ladder for
   // that reason.

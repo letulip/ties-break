@@ -155,11 +155,12 @@ import { activeLadderOfSnapshot } from '../shared/protocol'
 // ⚠ THE SAME ONE SPELLING OF HIS NAME the coach note on Home signs itself with – «M. Ricci», not the
 // roster's full string. Two surfaces naming the same person must name him identically.
 import { formatShortName } from '../shared/format'
-import { lastWordLine, plateauLede } from '../engine/ending'
-import { declineRung, herLastWinterLine, pastHerPeak } from '../composables/declineVoice'
+import { lastWordLine, lastWordRef, plateauLede, plateauLedeRef } from '../engine/ending'
+import { declineRef, declineRung, herLastWinterLine, herLastWinterRef, pastHerPeak } from '../composables/declineVoice'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { bandFacePoint } from '../art/faceRects'
+import { t, eventText } from '../i18n'
 
 const game = useGameStore()
 const offer = computed(() => game.snapshot?.retirementOffer ?? null)
@@ -169,20 +170,28 @@ const tableName = computed(() => activeLadderOfSnapshot(game.snapshot).label.toL
 // ⭐⭐ HER LAST WORD. The kicker one line up already carries her age, which is why the card renders
 // the line ALONE while the feed prints `She is 41.` in front of it - the same sentence, and neither
 // surface repeats the other's furniture.
-const lastWord = computed(() => lastWordLine(game.snapshot?.oneMoreYearCount ?? 0))
+// ⭐ L3-6 (10.10): THE ENGINE'S SENTENCE STILL COMES FROM THE ENGINE, now with its ref beside it – `eventText` draws the ref under the locale and the English as it was when there is none.
+const lastWord = computed(() => {
+  const n = game.snapshot?.oneMoreYearCount ?? 0
+  return eventText({ text: lastWordLine(n), c: lastWordRef(n) })
+})
 
 // ⭐⭐⭐ ROUND 39 #14a – AND THE PLATEAU LEDE IS FOUR SENTENCES NOW, PICKED BY THE SAME FIELD. See
 // `plateauLede` in src/engine/ending.ts for the owner's ask, the measurement that shapes the copy
 // and the rule about numbers. Imported as a symbol and not retyped here, exactly as her last word
 // above is: band 0 is his shipped sentence and must stay byte-identical, and a copy of it living in
 // this template is how that quietly stops being true.
-const plateauLine = computed(() =>
-  plateauLede(game.snapshot?.oneMoreYearCount ?? 0, tableName.value),
-)
+const plateauLine = computed(() => {
+  const n = game.snapshot?.oneMoreYearCount ?? 0
+  return eventText({ text: plateauLede(n, tableName.value), c: plateauLedeRef(n, tableName.value) })
+})
 
 // ⭐⭐ WHICH YEAR IT IS, off the share alone – null at her peak and on any snapshot that carries no
 // share, which is what keeps this paragraph off the card until there is something true to put in it.
-const rung = computed(() => declineRung(game.snapshot?.physicalShare))
+const rung = computed(() => {
+  const line = declineRung(game.snapshot?.physicalShare)
+  return line === null ? null : eventText({ text: line, c: declineRef(line) })
+})
 
 // ⭐⭐⭐ ROUND 38 #6d – HER PERFORMANCE, IN HER VOICE. See the header for the ask and for every rule
 // these three lines obey. The seasons she actually banked a professional result in, oldest first.
@@ -206,10 +215,10 @@ const herSeasonWord = computed<string | null>(() => {
   const prev = rows.length > 1 ? rows[rows.length - 2] : null
   const best = rows.reduce((a, b) => (b.rank < a.rank ? b : a))
   if (prev && last.seasonIndex - prev.seasonIndex === 1 && last.rank > prev.rank) {
-    return `«#${prev.rank} last winter, #${last.rank} this one. I can read a table as well as you can.»`
+    return t('«#{0} last winter, #{1} this one. I can read a table as well as you can.»', [prev.rank, last.rank])
   }
   if (last.rank > best.rank) {
-    return `«#${last.rank} this winter. My best year finished #${best.rank}, and I know the difference.»`
+    return t('«#{0} this winter. My best year finished #{1}, and I know the difference.»', [last.rank, best.rank])
   }
   return null
 })
@@ -227,7 +236,9 @@ const coachSeasonWord = computed<string | null>(() => {
   if (!pastHerPeak(game.snapshot?.physicalShare)) return null
   const coach = game.snapshot?.coachMarket.find((c) => c.current)
   if (!coach) return null
-  return `${formatShortName(coach.name)} does not argue with her. The work holds what she has left; it stopped adding to it a while ago.`
+  return t('{0} does not argue with her. The work holds what she has left; it stopped adding to it a while ago.', [
+    formatShortName(coach.name),
+  ])
 })
 
 /** ⭐⭐⭐ ROUND 40 #14b – HER OWN WARNING, AND IT IS THE ONLY THING ON THIS CARD ABOUT A WINTER THAT
@@ -239,7 +250,11 @@ const coachSeasonWord = computed<string | null>(() => {
  *  on the last winter itself – where `lastWordLine` above is the only voice that should speak – so
  *  the silence is the engine's, not this template's. A `v-if` on the age or the share would be a
  *  second gate that could disagree with the first. */
-const lastWinterWord = computed(() => herLastWinterLine(game.snapshot?.lastWinterIn))
+const lastWinterWord = computed(() => {
+  const winters = game.snapshot?.lastWinterIn
+  const line = herLastWinterLine(winters)
+  return line === null ? null : eventText({ text: line, c: herLastWinterRef(winters) ?? undefined })
+})
 
 const stage = computed(() => portraitStage(age.value))
 const artUrl = computed(() => portraitUrl(stage.value, 'serious'))
@@ -261,9 +276,9 @@ const artStyle = computed(() => {
 // render byte-identically to what shipped, and a duplicated control is how that quietly stops being
 // true. `answer(true)` is what both file, because acknowledging her line and taking the offer are
 // the same transition - what differs is who decided, and she did.
-const answerLabel = computed(() => (offer.value?.final ? 'All right' : 'That is enough'))
+const answerLabel = computed(() => (offer.value?.final ? t('All right') : t('That is enough')))
 const answerNote = computed(() =>
-  offer.value?.final ? 'Nothing to answer here. She has told you what happens next.' : 'She stops here, on her own terms.',
+  offer.value?.final ? t('Nothing to answer here. She has told you what happens next.') : t('She stops here, on her own terms.'),
 )
 
 async function answer(retire: boolean): Promise<void> {
@@ -307,17 +322,17 @@ useDialogFocus(card)
            she is, then which of the three questions this winter is. ⚠ THE THREE HEADINGS SHARE ONE
            id AND THAT IS SAFE – they are `v-if`/`v-else-if`/`v-else`, so exactly one is ever in the
            document, and a per-branch id would make the name depend on which question was asked. -->
-      <p id="retire-dialog-kicker" class="retire-kicker dialog-kicker">Off-season – she is {{ age }}</p>
+      <p id="retire-dialog-kicker" class="retire-kicker dialog-kicker">{{ t('Off-season – she is {0}', [age]) }}</p>
 
       <!-- ⭐⭐⭐ THE LAST ONE IS HERS. The heading reports her, the lede IS her - `lastWordLine`,
            the engine's own sentence, rendered rather than retyped. It read «Nobody is going to ask
            her again», which is the game announcing that it has stopped asking; she was not in it. -->
       <template v-if="offer.final">
-        <h2 id="retire-dialog-title" class="retire-title dialog-title">She told you at the end of the season.</h2>
+        <h2 id="retire-dialog-title" class="retire-title dialog-title">{{ t('She told you at the end of the season.') }}</h2>
         <p class="retire-lede">{{ lastWord }}</p>
       </template>
       <template v-else-if="offer.reason === 'plateau'">
-        <h2 id="retire-dialog-title" class="retire-title dialog-title">She said it in the car.</h2>
+        <h2 id="retire-dialog-title" class="retire-title dialog-title">{{ t('She said it in the car.') }}</h2>
         <!-- RE-WORDED 12.08. This used to end "- her words, not the game's", an aside meant to say
              "this is HER wish, nothing is being forced" - but it names THE GAME, which is a wall no
              line of copy here is allowed to break, and the owner read it as noise (round-17, his
@@ -332,10 +347,9 @@ useDialogFocus(card)
       <!-- ⭐⭐⭐ ROUND 30 #7 – RE-WORDED, AND THE LEDE ONLY. See the note at the top of this file for
            what the mechanic actually promises and why the old sentence was not the whole of it. -->
       <template v-else>
-        <h2 id="retire-dialog-title" class="retire-title dialog-title">Is there another year in this?</h2>
+        <h2 id="retire-dialog-title" class="retire-title dialog-title">{{ t('Is there another year in this?') }}</h2>
         <p class="retire-lede">
-          Twenty-nine is when the question starts being asked, not a countdown to anything. There is
-          no wrong answer, and she can say no for as many winters as her body gives her.
+          {{ t('Twenty-nine is when the question starts being asked, not a countdown to anything. There is no wrong answer, and she can say no for as many winters as her body gives her.') }}
         </p>
         <!-- ⭐⭐⭐ ROUND 31 #9 – HOW FAR GONE SHE IS, which the lede above deliberately does not say.
              Its own paragraph so the sentence he approved in round 30 stays byte-identical; absent
@@ -390,8 +404,8 @@ useDialogFocus(card)
                answer last winter was the parent's too. The label above it is his and is untouched; the final card
                has no such control at all, which is exactly why «Nobody asked her this time. She said it herself»
                (engine/ending.ts) stays hers. -->
-          <strong>One more year</strong>
-          <span>The same answer you gave last winter.</span>
+          <strong>{{ t('One more year') }}</strong>
+          <span>{{ t('The same answer you gave last winter.') }}</span>
         </button>
       </div>
     </div>

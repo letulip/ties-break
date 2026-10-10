@@ -57,6 +57,10 @@
 // the age her body was dealt. Worth saying out loud because the two are about the same subject.
 import { rngFromSeed } from '../engine/rng'
 import type { FieldStrength } from '../engine/season/preview'
+// ⭐ L3-6 (10.10): the owner's sentences also leave this file as CopyRefs, beside the English (the block at the foot). A template tag and a type from the shared zone – no `t()`, no catalog, no locale:
+// the screen that prints a line asks `eventText({ text, c })`.
+import { cp } from '../shared/i18n'
+import type { CopyRef } from '../shared/i18n'
 
 /** ⭐⭐ PAST HER PEAK, AND THE ONLY GATE ANY OF THIS HAS. `Snapshot.physicalShare` is exactly 1
  *  until she is past her OWN `declineStart` (see `physicalShareOf`, engine/world/endings.ts), so
@@ -265,3 +269,51 @@ export const ALL_DECLINE_LINES: readonly string[] = [
   ...HER_DECLINE_LINES,
   ...LAST_WINTER_LINES,
 ]
+
+// =================================================================================================
+// ⭐ L3-6 (10.10) – THE SAME SENTENCES AS COPYREFS, BESIDE THE ENGLISH ABOVE (docs/specs/i18n-2026-10.md §8, row L3-6)
+// =================================================================================================
+//
+// Not a character of the lines above moved, and the PICKS stay where they were: `declineRung`, `coachDeclineLine` and `herDeclineLine` still choose the sentence, on the sub-streams they always
+// used (`:coachage:` and `:decline:`), so a flip of the locale can never re-roll which one she says. What is new is the LOOK-UP: a picked line is mapped back to its ref by its own text (the pool
+// lines are unique), so the key a screen renders is the sentence the pick returned – the same string, whatever pool it came from – and there is exactly one place a draw happens.
+//
+// ⚠ EVERY POOL LINE HAS A SIBLING HERE, AND `tests/i18n-l3-6-endings-album.test.ts` HOLDS THE TWO TOGETHER: each ref renders to its twin, and the set of refs is exactly the set of lines.
+// ⚠ THE COUNT WORDS ARE PARAMS OF THEIR SENTENCE, not words in a hole of a longer one: `One more winter …` and `{0} more winters …` are two sentences (the house rule for a counted form), and the spelled
+// number is the English word until the shared spelled-number formatter of the editorial note (§15) exists – the same arrangement L3-2 and L3-3 made.
+
+const DECLINE_REFS: readonly CopyRef[] = [
+  // the three rungs of one decline (`DECLINE_RUNGS`)
+  cp`She is not slower than last year by much – a step, maybe two, over a long match. It is the third set where the year shows.`,
+  cp`Nothing has fallen off a cliff. It is just that the season costs her more than it used to, and pays the same.`,
+  cp`Her best tennis was three years ago. She knows the number as well as you do, and she has not brought it up once.`,
+  // what the coach says (`COACH_DECLINE_LINES`, `COACH_WEEK_CHOICE`)
+  cp`Her legs are a year older than this draw thinks.`,
+  cp`She will want the first set. The third one is not hers the way it was.`,
+  cp`At this age you choose your weeks. This is one to choose.`,
+  cp`At this age you choose your weeks. This is not one of them.`,
+  // her own three (`HER_DECLINE_LINES`)
+  cp`«I can still play. I just cannot play three of them back to back any more.»`,
+  cp`«Ask me again next winter. You will get the same answer, and one year it will not be true.»`,
+  cp`«I am not finished. I am just not twenty-six.»`,
+]
+const DECLINE_REF_BY_LINE: ReadonlyMap<string, CopyRef> = new Map(DECLINE_REFS.map((ref) => [ref.k, ref]))
+
+/** The ref of a picked pool line (a rung, the coach's line, her season line), or undefined when the line is none of the ten – a screen then draws the English it was handed. */
+export function declineRef(line: string | null | undefined): CopyRef | undefined {
+  return line === null || line === undefined ? undefined : DECLINE_REF_BY_LINE.get(line)
+}
+
+/** (d) her warning on the winter card as a ref – one sentence for one winter, one for the rest (the count is the spelled English word, a param). Null where `herLastWinterLine` is null. */
+export function herLastWinterRef(winters: number | null | undefined): CopyRef | null {
+  if (typeof winters !== 'number' || !Number.isFinite(winters) || winters < 1) return null
+  if (winters === 1) return cp`«One more winter after this one, and it will not be a question. I will tell you myself.»`
+  return cp`«${spelledCount(winters)} more winters after this one, and the last of them is not a question. I will tell you myself.»`
+}
+
+/** (e) the season card's warning as a ref – the same split. Null where `seasonLastWinterLine` is null. */
+export function seasonLastWinterRef(winters: number | null | undefined): CopyRef | null {
+  if (typeof winters !== 'number' || !Number.isFinite(winters) || winters < 1) return null
+  if (winters === 1) return cp`One more winter after this one, and then nobody asks her again.`
+  return cp`${spelledCount(winters)} more winters after this one, and then nobody asks her again.`
+}

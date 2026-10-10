@@ -290,7 +290,10 @@ describe('S2 · schema v90 – the migration writes nothing (spec §2i)', () => 
     expect(SAVE_SCHEMA_VERSION).toBeGreaterThanOrEqual(90)
     // ⚠ RE-AIMED AGAIN AT v92 (06.10, succession S1): the v92 step writes `startYear: 2031` on every
     // older save, so the carried-recipe expectation names it beside the moved head number.
-    expect(migrateSave(read(89)), 'the recipe every fixture since v25 uses').toEqual({ ...(read(90) as object), schemaVersion: SAVE_SCHEMA_VERSION, startYear: 2031 })
+    // ⚠ RE-AIMED AGAIN AT v93 (09.10, the localization rig L3-0): the head's step attaches a ref BESIDE each recognised row's text, so the migrated rows are compared
+    // without `c` – the recipe is otherwise unchanged.
+    const migrated89 = migrateSave(read(89)) as unknown as { events: Record<string, unknown>[] }
+    expect({ ...migrated89, events: migrated89.events.map(({ c: _c, ...row }) => row) }, 'the recipe every fixture since v25 uses').toEqual({ ...(read(90) as object), schemaVersion: SAVE_SCHEMA_VERSION, startYear: 2031 })
   })
 
   it('a v89 save loads with BOTH fields absent and nothing invented on any row', () => {

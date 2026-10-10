@@ -74,6 +74,18 @@
 
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { tTransparent } from './helpers/source'
+
+/** ⚠ L2-3 (08.10) – RE-AIMED, AND THIS ONE IS A REAL PREMISE MOVING, NOT A SPELLING: AS19 was tabled as the TEMPLATE LITERAL Home held
+ *  (`${hidden} ${noun} hidden (${span}) – tap to show the whole ladder`). RU-03 §8 (S09/S10) wires that sentence as two whole `t()`
+ *  literals – the English singular and plural are separate keys (spec §3.3) and the range is two named holes – so the old spelling is
+ *  GONE from the source by design. The sentence the player reads is unchanged character for character, and
+ *  `tests/component/i18n-l2-3-home-weekly.test.ts` renders both spellings for one, two and five hidden rungs and holds them equal.
+ *  What this map says is only where the row's text lives now. Every other row is read as written (through `tTransparent`, which forgives
+ *  the `t()` call and never a changed word). */
+const WIRED_SPELLING: Record<string, string> = {
+  AS19: '{n} levels hidden ({from} to {to}) – tap to show the whole ladder',
+}
 
 interface Row {
   id: string
@@ -115,7 +127,10 @@ function codeOnly(text: string, path: string): string {
  *  a substring of the longer sentence (S2's arm A13, 30.09: an `s` appended in the source stayed green) – so growth, shrinkage and substitution now fail the same row.
  *  ⚠ THE ESCAPED SPELLING IS LOAD-BEARING, exactly as it was: the doc quotes the RUNTIME spelling, and a single-quoted source literal escapes its apostrophes. */
 function shipped(src: string, text: string): boolean {
-  const spellings = [text, text.replaceAll("'", "\\'")]
+  // ⚠ 08.10 (L2-4): A WIRED KEY NAMES ITS HOLES. PF4 is tabled as `${cap.used}`; the `t()` literal that ships it spells the same hole `{used}` (the
+  // last property of the expression). The third spelling is that – the whole literal is still demanded, only the hole's spelling is allowed to be the key's.
+  const wired = text.replace(/\$\{(?:[\w$]+\.)*([\w$]+)\}/g, '{$1}')
+  const spellings = [text, text.replaceAll("'", "\\'"), wired]
   return spellings.some((t) => ["'", '"', '`'].some((q) => src.includes(q + t + q)))
 }
 
@@ -352,8 +367,8 @@ describe('the principles fix – existing title sentences on a spoken surface (�
     // Every §1-§4 row, PF4's `${cap.used}` line included, is a whole string literal in its home on the real tree (the three concatenated §4 rows once
     // `joinedSource` has closed the seam), so §1-§4 use `shipped` as well: one matcher for all three blocks, and this one is where it was first written inline.
     for (const row of rows) {
-      const src = joinedSource(row.home)
-      expect(shipped(src, row.text), `${row.id}: ${row.home} does not hold the row's text as a whole literal`).toBe(true)
+      const src = tTransparent(joinedSource(row.home))
+      expect(shipped(src, WIRED_SPELLING[row.id] ?? row.text), `${row.id}: ${row.home} does not hold the row's text as a whole literal`).toBe(true)
     }
   })
 

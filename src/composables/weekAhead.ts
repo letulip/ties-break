@@ -26,6 +26,7 @@
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { isExamWeek, isOffSeasonWeek, TIER_SHORT } from '../engine/season/calendar'
+import { t } from '../i18n'
 
 /** Short tier names for width-starved UI (this button, the Home season strip). THE TABLE MOVED to
  *  engine/season/calendar.ts (Diary-1): the diary's copy system speaks the same short names, and
@@ -55,7 +56,8 @@ export interface WeekAhead {
   label: string
 }
 
-const TRAINING: WeekAhead = { kind: 'training', label: 'Training week' }
+// L2-1 (08.10): a function, not a constant – the label is read through `t()` on every evaluation, so it follows the locale.
+const trainingWeek = (): WeekAhead => ({ kind: 'training', label: t('Training week') })
 
 /**
  * IS THE WEEK AHEAD ONE THE CALENDAR IS ABOUT? (owner, 30.07: the Calendar tab is «активной при
@@ -79,7 +81,7 @@ export function useWeekAhead(): ComputedRef<WeekAhead> {
   const game = useGameStore()
   return computed<WeekAhead>(() => {
     const snap = game.snapshot
-    if (!snap) return TRAINING
+    if (!snap) return trainingWeek()
     // R13-8 – A PAUSED TOURNAMENT OWNS THE BUTTON, first and before every week-ahead lookup. While
     // a reveal is pending (the player backed out of the overlay), THIS week is not resolved: the
     // label must keep saying what the click will do – play the championship – instead of moving on
@@ -94,7 +96,9 @@ export function useWeekAhead(): ComputedRef<WeekAhead> {
     if (snap.pending) {
       return {
         kind: 'tournament',
-        label: snap.pending.tier ? `Play ${TIER_SHORT[snap.pending.tier]}` : `Watch ${snap.pending.tierLabel}`,
+        label: snap.pending.tier
+          ? t('Play {tier}', { tier: TIER_SHORT[snap.pending.tier] })
+          : t('Watch {tierLabel}', { tierLabel: snap.pending.tierLabel }),
       }
     }
     const next = snap.week + 1
@@ -109,15 +113,15 @@ export function useWeekAhead(): ComputedRef<WeekAhead> {
       // sending her to a tournament that does not happen. The TIER is dropped from this label and
       // the one below on purpose – .next-week-btn ellipsises at 375px and the labels here have to
       // stay inside the ~22-character budget the vacation label already proves fits (style.css).
-      if (arrival.verdict === 'injured') return { kind: 'walkover', label: 'Injured – walkover' }
+      if (arrival.verdict === 'injured') return { kind: 'walkover', label: t('Injured – walkover') }
       // A committed entry to a tier she has since outgrown still PLAYS (R10-3: the list closed with
       // her on it). It is not a block and the button is not disabled – but the parent should know
       // which week she is spending.
-      if (arrival.outgrown) return { kind: 'tournament', label: `${tier} (outgrown)` }
-      return { kind: 'tournament', label: `Play ${tier}` }
+      if (arrival.outgrown) return { kind: 'tournament', label: t('{tier} (outgrown)', { tier }) }
+      return { kind: 'tournament', label: t('Play {tier}', { tier }) }
     }
-    if (snap.vacations.some((v) => v.week === next)) return { kind: 'vacation', label: 'Leave on vacation' }
-    if (snap.practices.some((p) => p.week === next)) return { kind: 'practice', label: 'Practice match' }
+    if (snap.vacations.some((v) => v.week === next)) return { kind: 'vacation', label: t('Leave on vacation') }
+    if (snap.practices.some((p) => p.week === next)) return { kind: 'practice', label: t('Practice match') }
     // ⭐⭐ ROUND 28 #6 – THE SHOOT WEEK NAMES ITSELF ON THE BUTTON. The owner asked for the words:
     // the button before a shoot week should say «Shooting week». It was one of the two halves of his
     // ask – the other is that the week itself mixes training days with the shoot's slots
@@ -138,12 +142,12 @@ export function useWeekAhead(): ComputedRef<WeekAhead> {
     // be opened during the hold – see its own note.
     // ⚠ 'Shooting week' is 13 characters, inside the ~22 the button's ellipsis budget allows.
     // Any live deal of the portfolio can own the week (P6 – `adShoots` is one row per deal).
-    if (snap.adShoots?.some((d) => d.weeks.includes(next))) return { kind: 'shoot', label: 'Shooting week' }
+    if (snap.adShoots?.some((d) => d.weeks.includes(next))) return { kind: 'shoot', label: t('Shooting week') }
     // W4-SCHOOL: the NEXT week's own answer – she may leave school between this week and it.
     if (isExamWeek(next, snap.schoolEndsWeek !== undefined && next >= snap.schoolEndsWeek)) {
-      return { kind: 'exam', label: 'Exam week' }
+      return { kind: 'exam', label: t('Exam week') }
     }
-    if (isOffSeasonWeek(next)) return { kind: 'off-season', label: 'Off-season week' }
-    return TRAINING
+    if (isOffSeasonWeek(next)) return { kind: 'off-season', label: t('Off-season week') }
+    return trainingWeek()
   })
 }

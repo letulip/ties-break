@@ -3,6 +3,12 @@
 Playwright over a **real production build** in **real Chromium**. S0–S2 of
 `docs/plans/playwright.md` – the harness, the state-seeding fixture and the journeys.
 
+⚠ SINCE L1a (08.10) EVERY FRESH CONTEXT MUST CARRY `tb-locale`, or the first-run language prompt
+stands in front of the splash and every journey stops at it. `playwright.config.ts` seeds it via
+`use.storageState` for both origins and `careerAt.ts` re-seeds after its `localStorage.clear()`;
+a spec that asserts an EMPTY localStorage will see the key. Any out-of-repo Playwright config
+(the devlog tooling among them) must seed the same key itself.
+
 **👉 What is covered, at which layer, and what is deliberately not:
 [`docs/specs/e2e-coverage.md`](../docs/specs/e2e-coverage.md).** That document is the map, and
 `coverage-map.spec.ts` in this directory keeps it honest against the repo.
@@ -262,6 +268,17 @@ green and says nothing.
 **Before adding a spec, answer the question in the table above.** If it does not name a seam, it
 belongs in `tests/component/`. And add its row to `docs/specs/e2e-coverage.md` §2 – `coverage-map.spec.ts`
 fails if you do not.
+
+- **The LQA runner lives beside the suite, not in it.** `e2e/lqa/` holds the Russian acceptance routes
+  (`npm run lqa:ru`, its own `playwright.lqa.config.ts`, files suffixed `.lqa.ts` so this config's
+  default `testMatch` never sees them). It rides this harness – the production build, `careerAt`,
+  the typed locators – but drives it under `tb-locale=ru` and READS THE MISS COUNTER after every screen
+  through `window.__tbLqa`, a read-only hook that exists only in a build made with `VITE_TB_LQA=on`
+  (the sibling of `VITE_TB_SW=off`; a player's bundle contains neither the hook nor the import that
+  loads it). Its product is a report (`lqa-out/lqa-ru-report.md/.json`), not a verdict, so it is not in
+  `test:e2e` and not in `npm run check`. Its walk addresses controls by the app's own structural hooks
+  or by a matcher that follows `ru.json` – the opposite of this suite's name-first rule, on purpose: the
+  names are what it measures. Spec: `docs/specs/i18n-2026-10.md` §8 (L4-3).
 
 ## Not here yet
 

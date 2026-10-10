@@ -60,6 +60,7 @@
 import type { MatchPlayer } from './match/types'
 import { FIRST_NAMES, NATION_POOL, SURNAMES } from './season/names'
 import { pickInt, type Rng } from './rng'
+import { cp, type CopyRef } from '../shared/i18n'
 
 /** ⚠ EVERY NUMBER THE RESEARCH GIVES IS MARKED `[R]` AND CARRIES ITS SECTION. Everything else is
  *  OURS and says so – the failure `acceptance-cuts-2026-08.md` §0 was written about is a number
@@ -372,6 +373,18 @@ export function callUpLine(call: CallUp, label: string = NATIONAL_TEAM.label): s
       ? 'She was named in the squad and never took the court'
       : `She played ${call.rubbersPlayed} ${call.rubbersPlayed === 1 ? 'rubber' : 'rubbers'} and won ${call.rubbersWon}`
   return `${label}: her country called and there was no declining it. ${bench}; the nation finished ${ordinal(call.nationFinish)} of ${NATIONAL_TEAM.nationsAtHerLevel}. No prize money and no ranking points – there are none to award.`
+}
+
+/** ⭐ L3-7 (10.10): THE REF OF `callUpLine`, beside it – the three sentences the frozen v92 table keeps for this row (the label is a hole there too: `callUpLine` takes it as a parameter, so the
+ *  table could not inline it). The English is `callUpLine`'s, character for character; `tests/i18n-l3-7-feeds.test.ts` proves it for every combination of rubbers and finish. */
+export function callUpRef(call: CallUp, label: string = NATIONAL_TEAM.label): CopyRef {
+  const place = ordinal(call.nationFinish)
+  if (call.rubbersPlayed === 0) {
+    return cp`${label}: her country called and there was no declining it. She was named in the squad and never took the court; the nation finished ${place} of ${NATIONAL_TEAM.nationsAtHerLevel}. No prize money and no ranking points – there are none to award.`
+  }
+  return call.rubbersPlayed === 1
+    ? cp`${label}: her country called and there was no declining it. She played ${call.rubbersPlayed} rubber and won ${call.rubbersWon}; the nation finished ${place} of ${NATIONAL_TEAM.nationsAtHerLevel}. No prize money and no ranking points – there are none to award.`
+    : cp`${label}: her country called and there was no declining it. She played ${call.rubbersPlayed} rubbers and won ${call.rubbersWon}; the nation finished ${place} of ${NATIONAL_TEAM.nationsAtHerLevel}. No prize money and no ranking points – there are none to award.`
 }
 
 /** ⭐⭐⭐ ROUND 27 #6 – WHAT THIS WEEK AWARDS, IN THE SCREEN'S OWN VOICE, and it is the tie's SENTENCE

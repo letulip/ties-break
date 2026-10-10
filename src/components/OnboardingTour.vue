@@ -10,6 +10,7 @@
 // of a 667px phone with it, and the tour has no other exit.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { TOOLTIP_FALLBACK_HEIGHT, tooltipBox, type Placement } from '../composables/coachTour'
+import { t } from '../i18n'
 
 const emit = defineEmits<{ done: [] }>()
 
@@ -91,73 +92,76 @@ interface Step {
 // `document.querySelector` against the screen that is up, and App.vue only ever opens it on the Home
 // tab. So a step may point at the bottom bar (always rendered) or at something in HomeScreen, and at
 // nothing else. tests/round13-nav.test.ts enforces exactly that, per anchor.
+// L2-1 (08.10): the title and the text are GETTERS over `t()` – the table keeps its shape (selectors, placements,
+// `STEPS.length`) and the card re-reads the words when the locale flips. The eighth mark teaches the NAV tab, so its
+// title is the nav key (`nav|Stats`), the same word the bar underneath it shows.
 const STEPS: Step[] = [
   {
     selector: '[data-tour="home-header"]',
-    title: 'You are the parent',
-    text: "You do not play the matches – you raise the player. This is Home: her diary for the week, her photo and how she is doing.",
+    get title() { return t('You are the parent') },
+    get text() { return t("You do not play the matches – you raise the player. This is Home: her diary for the week, her photo and how she is doing.") },
     placement: 'below',
   },
   {
     selector: '[data-tour="kid-avatar"]',
-    title: 'Her page',
-    text: 'Tap her photo any time – her full profile lives behind it: skills, body, school and her coach.',
+    get title() { return t('Her page') },
+    get text() { return t('Tap her photo any time – her full profile lives behind it: skills, body, school and her coach.') },
     placement: 'below',
   },
   {
     selector: '[data-tour="home-news"]',
-    title: 'News and letters',
-    text: 'The bell is the week just gone. The envelope beside it holds offers and letters – a dot means one is waiting on you.',
+    get title() { return t('News and letters') },
+    get text() { return t('The bell is the week just gone. The envelope beside it holds offers and letters – a dot means one is waiting on you.') },
     placement: 'below',
   },
   {
     selector: '[data-tour="family-budget"]',
-    title: 'The money is yours',
-    text: 'Entry fees, travel, coaching and kit all come out of the family budget. Tap the card to see where it went.',
+    get title() { return t('The money is yours') },
+    get text() { return t('Entry fees, travel, coaching and kit all come out of the family budget. Tap the card to see where it went.') },
     placement: 'above',
   },
   {
     selector: '[data-tour="next-tournament"]',
-    title: 'This week',
-    text: 'Tap the tournament card to set the training plan for the week ahead and to read the last week recap.',
+    get title() { return t('This week') },
+    get text() { return t('Tap the tournament card to set the training plan for the week ahead and to read the last week recap.') },
     placement: 'above',
   },
   {
     selector: '[data-tour="tab-play"]',
-    title: 'Season – where you enter',
-    text: 'The Season tab lists the tournaments open to her rank, what each one costs, and how the standings look.',
+    get title() { return t('Season – where you enter') },
+    get text() { return t('The Season tab lists the tournaments open to her rank, what each one costs, and how the standings look.') },
     placement: 'above',
   },
   {
     selector: '[data-tour="tab-calendar"]',
-    title: 'Calendar',
-    text: 'Her year, week by week: what she is entered for, school exams, holidays and the weeks she is resting.',
+    get title() { return t('Calendar') },
+    get text() { return t('Her year, week by week: what she is entered for, school exams, holidays and the weeks she is resting.') },
     placement: 'above',
   },
   {
     selector: '[data-tour="tab-stats"]',
-    title: 'Stats',
-    text: 'The long view – her ranking, her skills, and how both have moved since she started.',
+    get title() { return t('nav|Stats') },
+    get text() { return t('The long view – her ranking, her skills, and how both have moved since she started.') },
     placement: 'above',
   },
   {
     selector: '[data-tour="tab-trophies"]',
-    title: 'Trophies',
-    text: 'Every title she wins is kept here, with the season it came from.',
+    get title() { return t('Trophies') },
+    get text() { return t('Every title she wins is kept here, with the season it came from.') },
     placement: 'above',
   },
   {
     selector: '[data-tour="home-settings"]',
-    title: 'Settings',
-    text: 'Sound, animations, saves and your careers live behind the gear – and so does this tour, if you want it again.',
+    get title() { return t('Settings') },
+    get text() { return t('Sound, animations, saves and your careers live behind the gear – and so does this tour, if you want it again.') },
     placement: 'below',
   },
   {
     selector: '[data-tour="next-week"]',
-    title: 'Now play a week',
+    get title() { return t('Now play a week') },
     // R10-7: the button no longer says a literal "Next week" – it names the week's plan – so the
     // coach-mark points at the button instead of quoting a label that changes.
-    text: 'This plays one week and tells you what that week holds. Plan, enter, play, repeat – that is the whole game.',
+    get text() { return t('This plays one week and tells you what that week holds. Plan, enter, play, repeat – that is the whole game.') },
     placement: 'above',
   },
 ]
@@ -259,8 +263,8 @@ const tooltipStyle = computed(() => {
       <p class="coach-tooltip-title">{{ step.title }}</p>
       <p class="coach-tooltip-text">{{ step.text }}</p>
       <div class="coach-tooltip-actions">
-        <button class="link" @click="skip">Skip tour</button>
-        <button class="primary" @click="next">{{ isLast ? 'Got it' : 'Next' }}</button>
+        <button class="link" @click="skip">{{ t('Skip tour') }}</button>
+        <button class="primary" @click="next">{{ isLast ? t('Got it') : t('Next') }}</button>
       </div>
       <div class="coach-dots">
         <span v-for="(_, i) in STEPS" :key="i" class="dot" :class="{ active: i === stepIndex }"></span>

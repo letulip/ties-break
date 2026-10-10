@@ -252,6 +252,11 @@ import { matchWinProbability } from '../engine/match/liveProb'
 // ⚠ THE OCCASION LADDER, IMPORTED RATHER THAN RESTATED - see ROUND 21 ITEM 3 above. Both are viz
 // modules and `preview.ts` imports nothing from here, so there is no cycle to create.
 import { rungOf, storeyOf, remainingIn, type PreviewEvent, type Rung, type Storey } from './preview'
+// ⭐ L3-7 (10.10) – EVERY SENTENCE THIS FILE COMPOSES IS NOW A `Line`: the English it always returned AND the `CopyRef` that translates it, made from ONE `cp` template (see `./lines`).
+// The file still calls no `t()` and imports nothing from the UI layer – the viewer renders the refs, and the choice of WHICH line, WHICH clause is kept and WHERE the row is cut
+// are the same code on the same English as before (the pick keys – `variant`, `rotor` – and the budgets are untouched; `tests/i18n-l3-7-twin.test.ts` holds the pre-wave digests).
+import { cp, type CopyRef } from '../shared/i18n'
+import { line, joinLines, type Line } from './lines'
 
 export type BeatKind =
   | 'open'
@@ -283,6 +288,10 @@ export interface Beat {
   lead: string | null
   /** the sentence(s) after the lead */
   text: string
+  /** ⭐ L3-7: the ref of `lead`, beside the English – the viewer draws it under the locale and the English above stays what the budget, the key cut and the tests read. */
+  leadC?: CopyRef
+  /** ⭐ L3-7: the ref of `text` (clauses join as `{0} {1}`, each carried as a nested ref). It renders to `text` under the source locale – proven for every row of the grid. */
+  textC?: CopyRef
   /** right column: games in this beat's set (A-B), or the full scoreline on the match beat */
   score: string
   /** 1-based set the beat belongs to - the log's left rail label */
@@ -315,19 +324,20 @@ const BEAT_MAX_CHARS = 120
  *  tail, and the beats are all written with the same ordering discipline for exactly that reason:
  *  the CLAIM first, then what the score means next, and the rally's COLOUR last. Colour is what a
  *  human editor would cut too. */
-function clausesUpTo(max: number, ...parts: (string | null | undefined)[]): string {
-  const kept: string[] = []
+function clausesUpTo(max: number, ...parts: (Line | null | undefined)[]): Line {
+  const kept: Line[] = []
   for (const part of parts) {
-    const p = part?.trim()
-    if (!p) continue
-    const next = kept.length === 0 ? p : `${kept.join(' ')} ${p}`
+    const p = part?.text.trim()
+    if (!part || !p) continue
+    const next = kept.length === 0 ? p : `${kept.map((k) => k.text).join(' ')} ${p}`
     if (kept.length > 0 && next.length > max) continue
-    kept.push(p)
+    // ⭐ L3-7: the budget is counted on the ENGLISH, exactly as before – a clause is kept or dropped on its English length, and the ref follows the decision (`joinLines`).
+    kept.push({ text: p, c: part.c })
   }
-  return kept.join(' ')
+  return joinLines(kept)
 }
 
-function clauses(...parts: (string | null | undefined)[]): string {
+function clauses(...parts: (Line | null | undefined)[]): Line {
   return clausesUpTo(BEAT_MAX_CHARS, ...parts)
 }
 
@@ -502,6 +512,23 @@ const PRIORITY: Record<BeatKind, number> = {
   booth: 9,
 }
 
+/** ⭐ L3-7: THE TWELVE LEADS, the short tag at the head of a row. Each is a ref of its own – a seat, the English IS the key – so the viewer's bold head follows the locale
+ *  with the rest of the row. (`'Retired.'` and `'Match.'` are the two faces of the match beat's.) */
+const LEAD = {
+  retired: line(cp`Retired.`),
+  match: line(cp`Match.`),
+  set: line(cp`Set.`),
+  tiebreak: line(cp`Tiebreak.`),
+  break: line(cp`Break!`),
+  held: line(cp`Held.`),
+  run: line(cp`Run.`),
+  deuce: line(cp`Deuce.`),
+  streak: line(cp`Streak.`),
+  rally: line(cp`Rally.`),
+  corner: line(cp`Corner.`),
+  booth: line(cp`Off court.`),
+} as const
+
 const ORDINAL = ['first', 'second', 'third', 'fourth', 'fifth'] as const
 // Up to twenty because that is the ceiling of everything this file counts out loud: the longest
 // rally the generator can produce is 18 shots + clay + the parity fix-up, and a streak past twenty
@@ -526,30 +553,30 @@ function Num(n: number): string {
   return w.charAt(0).toUpperCase() + w.slice(1)
 }
 
-/** Any phrase, opening a sentence. Used by the occasion's extra moulds, which put a counted thing
- *  ("two break points") in the subject slot where the base mould puts a name. */
-function Cap(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1)
+// ⭐ L3-7 (10.10) – A COUNTED THING IS A WHOLE SENTENCE PER FORM (the house rule; `nPoints` and `Cap` are gone). "a set point" / "two set points" used to be assembled in English
+// and handed to a sentence as one phrase – which a Russian sentence cannot inflect. Each form is now its own sentence with the spelled number as a param (the English count word is
+// an engine-born param until the shared spelled-number formatter, RU-08 §15), and the byte-for-byte English is what `nPoints`/`Cap` made: «saves a match point.» / «saves two match
+// points.», «A break point saved» / «Two break points saved» (the mould that opens on the count keeps the capital the old `Cap` gave it – `Num` is that word, opened).
+function savesMatchPoint(who: string, n: number): Line {
+  return n === 1 ? line(cp`${who} saves a match point.`) : line(cp`${who} saves ${numberWord(n)} match points.`)
 }
-
-/** "a set point" / "two set points" - a counted thing said the way a person says it. */
-function nPoints(n: number, kind: string): string {
-  return n === 1 ? `a ${kind}` : `${numberWord(n)} ${kind}s`
+function savesSetPoint(who: string, n: number): Line {
+  return n === 1 ? line(cp`${who} saves a set point and holds.`) : line(cp`${who} saves ${numberWord(n)} set points and holds.`)
 }
 
 /** The three ways of saying a break that had no story of its own in the score. Three, because a
  *  match has 4-8 breaks and two framings put the same sentence back to back too often. */
-const BREAK_LINES: readonly ((who: string) => string)[] = [
-  (who) => `${who} breaks.`,
-  (who) => `The break goes to ${who}.`,
-  (who) => `${who} breaks serve.`,
+const BREAK_LINES: readonly ((who: string) => Line)[] = [
+  (who) => line(cp`${who} breaks.`),
+  (who) => line(cp`The break goes to ${who}.`),
+  (who) => line(cp`${who} breaks serve.`),
 ]
 
 /** A break that pulls the set back level. In a break-heavy set this fires four or five times, so
  *  it gets its own pair rather than saying the identical sentence down the whole log. */
-const LEVEL_LINES: readonly ((who: string) => string)[] = [
-  (who) => `${who} breaks back. Level again.`,
-  (who) => `${who} breaks back, and the set is level.`,
+const LEVEL_LINES: readonly ((who: string) => Line)[] = [
+  (who) => line(cp`${who} breaks back. Level again.`),
+  (who) => line(cp`${who} breaks back, and the set is level.`),
 ]
 
 // --- the occasion: which rung, which round (round 21 item 3) -------------------------------------
@@ -591,44 +618,44 @@ function pool<T>(storey: Storey, base: readonly T[], from3: readonly T[], from4:
 }
 
 /** Break framings the professional rungs add: a copula-drop and a result expression. */
-const BREAK_LINES_FROM_3: readonly ((who: string) => string)[] = [
-  (who) => `The break, and it belongs to ${who}.`,
-  (who) => `That game is gone, and ${who} has it.`,
+const BREAK_LINES_FROM_3: readonly ((who: string) => Line)[] = [
+  (who) => line(cp`The break, and it belongs to ${who}.`),
+  (who) => line(cp`That game is gone, and ${who} has it.`),
 ]
 /** ...and two more at the top of the tour, still plain and still concrete. */
-const BREAK_LINES_FROM_4: readonly ((who: string) => string)[] = [
-  (who) => `${who} finds a way through the serve.`,
+const BREAK_LINES_FROM_4: readonly ((who: string) => Line)[] = [
+  (who) => line(cp`${who} finds a way through the serve.`),
   // ⚠ NOT "and it was coming", WHICH IS WHAT THIS SLOT SAID FOR ONE DRAFT. Read back off real output:
   // it asserts that pressure had been building, and the point log carries no such fact. Every line in
   // this file has to be true of the game it just described and of nothing else.
-  (who) => `Serve broken, and ${who} has it.`,
+  (who) => line(cp`Serve broken, and ${who} has it.`),
 ]
 
-const LEVEL_LINES_FROM_3: readonly ((who: string) => string)[] = [(who) => `${who} answers. Level again.`]
-const LEVEL_LINES_FROM_4: readonly ((who: string) => string)[] = [(who) => `Straight back from ${who}, and it is level.`]
+const LEVEL_LINES_FROM_3: readonly ((who: string) => Line)[] = [(who) => line(cp`${who} answers. Level again.`)]
+const LEVEL_LINES_FROM_4: readonly ((who: string) => Line)[] = [(who) => line(cp`Straight back from ${who}, and it is level.`)]
 
 /** The "saved N break points and held" claim, in three moulds. The count is the fact; the shape is
  *  what the occasion picks. `n` arrives already worded (`nPoints`), so the number is spelled the way
  *  a person says it at every storey. */
-const HOLD_SAVE_LINES: readonly ((who: string, n: string) => string)[] = [
-  (who, n) => `${who} saves ${n} and holds.`,
+const HOLD_SAVE_LINES: readonly ((who: string, n: number) => Line)[] = [
+  (who, n) => (n === 1 ? line(cp`${who} saves a break point and holds.`) : line(cp`${who} saves ${numberWord(n)} break points and holds.`)),
 ]
-const HOLD_SAVE_FROM_3: readonly ((who: string, n: string) => string)[] = [
-  // ⚠ `Cap`, BECAUSE THE COUNT IS IN THE SUBJECT SLOT HERE. Found by the copy-rule test rather than
-  // by reading: `nPoints` returns "two break points" for use mid-sentence, and this mould opens on
-  // it, so without the capital the row started lower case.
-  (who, n) => `${Cap(n)} saved, and ${who} holds on.`,
+const HOLD_SAVE_FROM_3: readonly ((who: string, n: number) => Line)[] = [
+  // ⚠ THE COUNT IS IN THE SUBJECT SLOT HERE, SO IT OPENS THE SENTENCE WITH A CAPITAL. Found by the copy-rule test rather than
+  // by reading: the phrase «two break points» is for use mid-sentence, and this mould opens on
+  // it, so without the capital the row started lower case. (L3-7: `Num` is the capitalised word, the old `Cap(nPoints(..))` exactly.)
+  (who, n) => (n === 1 ? line(cp`A break point saved, and ${who} holds on.`) : line(cp`${Num(n)} break points saved, and ${who} holds on.`)),
 ]
-const HOLD_SAVE_FROM_4: readonly ((who: string, n: string) => string)[] = [
-  (who, n) => `${who} holds, ${n} down.`,
+const HOLD_SAVE_FROM_4: readonly ((who: string, n: number) => Line)[] = [
+  (who, n) => (n === 1 ? line(cp`${who} holds, a break point down.`) : line(cp`${who} holds, ${numberWord(n)} break points down.`)),
 ]
 
 /** ⚠ EVERY RUN LINE OPENS ON ITS NUMBER, AT EVERY STOREY. The honesty tests read the first word of a
  *  `streak` and a `games` beat back as the count they claim, and that check is worth more than a
  *  sentence that starts somewhere else. */
-const STREAK_LINES: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} points in a row for ${who}.`]
-const STREAK_FROM_3: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} points without reply for ${who}.`]
-const STREAK_FROM_4: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} points in a row, all of them ${who}'s.`]
+const STREAK_LINES: readonly ((n: string, who: string) => Line)[] = [(n, who) => line(cp`${n} points in a row for ${who}.`)]
+const STREAK_FROM_3: readonly ((n: string, who: string) => Line)[] = [(n, who) => line(cp`${n} points without reply for ${who}.`)]
+const STREAK_FROM_4: readonly ((n: string, who: string) => Line)[] = [(n, who) => line(cp`${n} points in a row, all of them ${who}'s.`)]
 
 /**
  * ⭐ ROUND 23 #4 - THE LONG GAME, and it is the only genuinely NEW fact this file has gained since it
@@ -661,15 +688,15 @@ const STREAK_FROM_4: readonly ((n: string, who: string) => string)[] = [(n, who)
  * naturally as two short sentences, which is this file's own register anyway; written as one they
  * would have made the 250 step invisible on the number it is graded by.
  */
-const DEUCE_LINES: readonly ((n: string, server: string) => string)[] = [
-  (n, who) => `${n} deuces in this game. ${who} is still serving.`,
-  (n, who) => `${n} times to deuce, and it is not over. ${who} goes again.`,
-  (n, who) => `${n} deuces. ${who} has still not held it.`,
+const DEUCE_LINES: readonly ((n: string, server: string) => Line)[] = [
+  (n, who) => line(cp`${n} deuces in this game. ${who} is still serving.`),
+  (n, who) => line(cp`${n} times to deuce, and it is not over. ${who} goes again.`),
+  (n, who) => line(cp`${n} deuces. ${who} has still not held it.`),
 ]
 
-const GAMES_LINES: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} games in a row for ${who}.`]
-const GAMES_FROM_3: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} games without reply for ${who}.`]
-const GAMES_FROM_4: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} games on the trot for ${who}.`]
+const GAMES_LINES: readonly ((n: string, who: string) => Line)[] = [(n, who) => line(cp`${n} games in a row for ${who}.`)]
+const GAMES_FROM_3: readonly ((n: string, who: string) => Line)[] = [(n, who) => line(cp`${n} games without reply for ${who}.`)]
+const GAMES_FROM_4: readonly ((n: string, who: string) => Line)[] = [(n, who) => line(cp`${n} games on the trot for ${who}.`)]
 
 /**
  * WHAT THE WIN WAS FOR, in the draw sheet's own words - the "stakes named" half of the ladder
@@ -683,14 +710,14 @@ const GAMES_FROM_4: readonly ((n: string, who: string) => string)[] = [(n, who) 
  *
  * Null when the label is not one this game produces (a friendly, the sandbox hit-out).
  */
-function stakeWon(roundLabel: string): string | null {
+function stakeWon(roundLabel: string): Line | null {
   const remaining = remainingIn(roundLabel)
   if (remaining === null || remaining < 2) return null
-  if (remaining === 2) return 'and the title with it'
-  if (remaining === 4) return 'and a place in the final'
-  if (remaining === 8) return 'and a place in the semifinals'
-  if (remaining === 16) return 'and a place in the quarterfinals'
-  return `and a place in the round of ${remaining / 2}`
+  if (remaining === 2) return line(cp`and the title with it`)
+  if (remaining === 4) return line(cp`and a place in the final`)
+  if (remaining === 8) return line(cp`and a place in the semifinals`)
+  if (remaining === 16) return line(cp`and a place in the quarterfinals`)
+  return line(cp`and a place in the round of ${remaining / 2}`)
 }
 
 /**
@@ -706,12 +733,12 @@ function stakeWon(roundLabel: string): string | null {
  * one of these is the LAST clause of its row, so `clausesUpTo` drops it before it drops the claim -
  * at the peak of a match the room is exactly what a human editor cuts.
  */
-const ROOM_MATCH_FROM_3: readonly string[] = ['The crowd is on its feet.', 'A hand for both of them at the net.']
-const ROOM_MATCH_FROM_4: readonly string[] = ['The stadium is up, and it takes a while to settle.']
-const ROOM_SET_FROM_3: readonly string[] = ['Applause all round the court.', 'The applause goes on a while.']
-const ROOM_SET_FROM_4: readonly string[] = ['A roar off the far side of the stadium.']
-const ROOM_TIEBREAK_FROM_3: readonly string[] = ['The court goes quiet for it.', 'Nobody is leaving their seat now.']
-const ROOM_TIEBREAK_FROM_4: readonly string[] = ['The whole stadium is standing for it.']
+const ROOM_MATCH_FROM_3: readonly Line[] = [line(cp`The crowd is on its feet.`), line(cp`A hand for both of them at the net.`)]
+const ROOM_MATCH_FROM_4: readonly Line[] = [line(cp`The stadium is up, and it takes a while to settle.`)]
+const ROOM_SET_FROM_3: readonly Line[] = [line(cp`Applause all round the court.`), line(cp`The applause goes on a while.`)]
+const ROOM_SET_FROM_4: readonly Line[] = [line(cp`A roar off the far side of the stadium.`)]
+const ROOM_TIEBREAK_FROM_3: readonly Line[] = [line(cp`The court goes quiet for it.`), line(cp`Nobody is leaving their seat now.`)]
+const ROOM_TIEBREAK_FROM_4: readonly Line[] = [line(cp`The whole stadium is standing for it.`)]
 
 // =================================================================================================
 // ⭐ ROUND-21 #2 – THE COACH IS IN THE CORNER, AND THE LOG SAYS SO
@@ -750,14 +777,14 @@ export interface CommentaryCoach {
 }
 
 /** The word in the corner after a set she LOST – the changeover the rules exist for. */
-const COACH_AFTER_LOSS: readonly ((who: string) => string)[] = [
-  (who) => `${who} takes the chair, and her coach is down there with her.`,
-  (who) => `Her coach is in beside ${who} before the next one starts.`,
+const COACH_AFTER_LOSS: readonly ((who: string) => Line)[] = [
+  (who) => line(cp`${who} takes the chair, and her coach is down there with her.`),
+  (who) => line(cp`Her coach is in beside ${who} before the next one starts.`),
 ]
 /** ...and after a set she WON. Same fact, and the sentence does not pretend it is the same moment. */
-const COACH_AFTER_WIN: readonly ((who: string) => string)[] = [
-  (who) => `${who} sits with her coach, a set to the good.`,
-  (who) => `Her coach has a word with ${who} at the change of ends.`,
+const COACH_AFTER_WIN: readonly ((who: string) => Line)[] = [
+  (who) => line(cp`${who} sits with her coach, a set to the good.`),
+  (who) => line(cp`Her coach has a word with ${who} at the change of ends.`),
 ]
 
 // =================================================================================================
@@ -827,25 +854,25 @@ export interface CommentaryPrivateLife {
 }
 
 /** «There is somebody», as the world has it RIGHT – the box read, C4's own register for this fact. */
-const BOOTH_MET_TRUE: readonly ((who: string) => string)[] = [
-  (who) => `${who} has somebody in the box this week, and the papers had it before the draw did.`,
-  (who) => `A new face in ${who}'s box, and it has been on the front pages all week.`,
+const BOOTH_MET_TRUE: readonly ((who: string) => Line)[] = [
+  (who) => line(cp`${who} has somebody in the box this week, and the papers had it before the draw did.`),
+  (who) => line(cp`A new face in ${who}'s box, and it has been on the front pages all week.`),
 ]
 /** ...and as the world has it WRONG. The booth repeats the story it was given; «a mystery man» is
  *  the tabloid's invention and the only place in the game a partner may be described at all. */
-const BOOTH_MET_WRONG: readonly ((who: string) => string)[] = [
-  (who) => `The papers have ${who} with a mystery man this week, all of them running the same photograph.`,
-  (who) => `A mystery man on every front page beside ${who}, and no two of them tell it the same way.`,
+const BOOTH_MET_WRONG: readonly ((who: string) => Line)[] = [
+  (who) => line(cp`The papers have ${who} with a mystery man this week, all of them running the same photograph.`),
+  (who) => line(cp`A mystery man on every front page beside ${who}, and no two of them tell it the same way.`),
 ]
 /** «It is over», true – the end-titles read. */
-const BOOTH_ENDED_TRUE: readonly ((who: string) => string)[] = [
-  (who) => `The papers say that is over now, and ${who} walks out for this one on her own.`,
-  (who) => `${who}'s box is a seat lighter this week, and the front pages have already explained it.`,
+const BOOTH_ENDED_TRUE: readonly ((who: string) => Line)[] = [
+  (who) => line(cp`The papers say that is over now, and ${who} walks out for this one on her own.`),
+  (who) => line(cp`${who}'s box is a seat lighter this week, and the front pages have already explained it.`),
 ]
 /** ...and «it is over» as the world got it wrong. */
-const BOOTH_ENDED_WRONG: readonly ((who: string) => string)[] = [
-  (who) => `The papers have ended it for ${who} this week, and no two of them tell it the same way.`,
-  (who) => `A break-up on every front page beside ${who}, and not one of them has the same story.`,
+const BOOTH_ENDED_WRONG: readonly ((who: string) => Line)[] = [
+  (who) => line(cp`The papers have ended it for ${who} this week, and no two of them tell it the same way.`),
+  (who) => line(cp`A break-up on every front page beside ${who}, and not one of them has the same story.`),
 ]
 /** ⭐⭐⭐ v88 (the parting, wave 12 – T5) – «THE MARRIAGE IS OVER», true. ⚠ ⚠ DRAFT, and it is the
  *  booth's register rather than the family's: what a commentator can see from their own seat and
@@ -854,23 +881,23 @@ const BOOTH_ENDED_WRONG: readonly ((who: string) => string)[] = [
  *  him, because the schema's name is the owner's to release to a surface. ⚠ AND IT IS SEPARATE FROM
  *  `BOOTH_ENDED_TRUE` rather than a wording of it: «a seat lighter» is a box with somebody missing
  *  from it and reads as a break-up; a marriage ending is a thing the papers have a word for. */
-const BOOTH_DIVORCED_TRUE: readonly ((who: string) => string)[] = [
+const BOOTH_DIVORCED_TRUE: readonly ((who: string) => Line)[] = [
   // ⚠ HIS REVIEW APPLIED 23.09: «came out for this one on her own» read as a claim about her box,
   // which the booth does not know, and «serving at two in the afternoon» invented a match time.
   // Both lines now state only what the packet holds: the papers have it, and she is playing.
-  (who) => `The papers say the marriage is over. ${who} is here to play.`,
-  (who) => `Every front page has the divorce. ${who} still has a match to play.`,
+  (who) => line(cp`The papers say the marriage is over. ${who} is here to play.`),
+  (who) => line(cp`Every front page has the divorce. ${who} still has a match to play.`),
 ]
 /** ...and as the world got it WRONG. ⚠ A VARIANT EXISTS BECAUSE `'ended'` HAS ONE, which is the
  *  spec's own condition (§6: «with the wrong-story variant iff the `'ended'` sentence has one») and
  *  not a choice made here. The booth repeats the story it was given, mistake and all – that sting is
  *  the mechanic working, and nothing here hedges or apologises for it. */
-const BOOTH_DIVORCED_WRONG: readonly ((who: string) => string)[] = [
+const BOOTH_DIVORCED_WRONG: readonly ((who: string) => Line)[] = [
   // ⚠ HIS REVIEW APPLIED 23.09 – the same fact, tighter.
-  (who) => `The papers have ${who} getting divorced. No two versions quite agree.`,
+  (who) => line(cp`The papers have ${who} getting divorced. No two versions quite agree.`),
   // ⚠ The second variant deliberately names nobody – the story, not the player, is the subject –
   // so it takes no parameter at all: a `(who) =>` with an unused name is what vue-tsc refused.
-  () => `Every front page has the divorce. The story changes from one to the next.`,
+  () => line(cp`Every front page has the divorce. The story changes from one to the next.`),
 ]
 
 /** The pool for one packet – the two facts crossed, and nothing else decides it. */
@@ -905,15 +932,15 @@ export interface CommentaryLineage {
  *  ⚠ NOT ONE OF THEM NAMES THE MOTHER. The booth is looking at the girl on the court and the family
  *  name is already on the board in front of it; reaching for a first name would be inventing a fact
  *  the packet does not carry. */
-const BOOTH_LINEAGE_TITLED: readonly ((who: string) => string)[] = [
-  (who) => `The name on the board has been on it before. ${who} is her mother's daughter, and her mother won here.`,
-  (who) => `${who} grew up in these corridors. The trophies with that name on them are her mother's.`,
+const BOOTH_LINEAGE_TITLED: readonly ((who: string) => Line)[] = [
+  (who) => line(cp`The name on the board has been on it before. ${who} is her mother's daughter, and her mother won here.`),
+  (who) => line(cp`${who} grew up in these corridors. The trophies with that name on them are her mother's.`),
 ]
 
 /** ...and when there is no cabinet, only a mother the tour knew. Same fact, one claim smaller. */
-const BOOTH_LINEAGE_KNOWN: readonly ((who: string) => string)[] = [
-  (who) => `That surname used to be on the entry lists. ${who} is the second of them to play this stage.`,
-  (who) => `${who} is not the first in her family to walk out here. Her mother did it first.`,
+const BOOTH_LINEAGE_KNOWN: readonly ((who: string) => Line)[] = [
+  (who) => line(cp`That surname used to be on the entry lists. ${who} is the second of them to play this stage.`),
+  (who) => line(cp`${who} is not the first in her family to walk out here. Her mother did it first.`),
 ]
 
 /** ...and when the cabinet she has is a STUDENT one. DRAFTS for his pass – new strings, written once.
@@ -931,9 +958,9 @@ const BOOTH_LINEAGE_KNOWN: readonly ((who: string) => string)[] = [
  *  as many words – a student title is not a WTA title, and the whole reason the count crossed as its
  *  own field was so that the booth could not blur them. ⚠ Nor does either name the mother: the TITLED
  *  pool's own rule, for the same reason (the packet carries no first name and none is invented). */
-const BOOTH_LINEAGE_COLLEGE: readonly ((who: string) => string)[] = [
-  (who) => `That surname won a student championship before it ever reached this stage. ${who} is the second of them out here.`,
-  (who) => `${who} is not the first in her family to walk out here. Her mother came through the college game, and won it on the way.`,
+const BOOTH_LINEAGE_COLLEGE: readonly ((who: string) => Line)[] = [
+  (who) => line(cp`That surname won a student championship before it ever reached this stage. ${who} is the second of them out here.`),
+  (who) => line(cp`${who} is not the first in her family to walk out here. Her mother came through the college game, and won it on the way.`),
 ]
 
 /** Which of the THREE the facts license – the fork the packet exists for.
@@ -943,13 +970,13 @@ const BOOTH_LINEAGE_COLLEGE: readonly ((who: string) => string)[] = [
  *  and would be the smaller claim winning – which is the same honesty rule that split TITLED from
  *  KNOWN in the first place, applied to a third case rather than re-argued. ⚠ AND THE LAST ARM IS
  *  UNCHANGED: `collegeTitles === 0` with no pro cabinet is KNOWN, exactly as it shipped. */
-export function boothLineageLines(ctx: CommentaryLineage): readonly ((who: string) => string)[] {
+export function boothLineageLines(ctx: CommentaryLineage): readonly ((who: string) => Line)[] {
   if (ctx.proTitles > 0) return BOOTH_LINEAGE_TITLED
   if (ctx.collegeTitles > 0) return BOOTH_LINEAGE_COLLEGE
   return BOOTH_LINEAGE_KNOWN
 }
 
-function boothLines(ctx: CommentaryPrivateLife): readonly ((who: string) => string)[] {
+function boothLines(ctx: CommentaryPrivateLife): readonly ((who: string) => Line)[] {
   if (ctx.kind === 'met') return ctx.wrong ? BOOTH_MET_WRONG : BOOTH_MET_TRUE
   // ⭐ v88 (wave 12 – T5): the third fact, and the chain stays a chain because the `wrong` axis
   // crosses every kind – a record keyed by kind alone would have to hold pairs.
@@ -1216,23 +1243,23 @@ function mannerOf(p: AnnotatedPoint): Manner | null {
 }
 
 /** Serve placement, in words. The design's own log copy is "Ace! Clean serve down the T." */
-function servePhrase(direction: string): string {
-  if (direction === 'T') return 'down the T'
-  if (direction === 'wide') return 'out wide'
-  return 'into the body'
+function servePhrase(direction: string): CopyRef {
+  if (direction === 'T') return cp`down the T`
+  if (direction === 'wide') return cp`out wide`
+  return cp`into the body`
 }
 
 /** Rally-shot placement, in words. */
-function rallyPhrase(direction: string): string {
-  if (direction === 'line') return 'down the line'
-  if (direction === 'middle') return 'through the middle'
-  return 'cross-court'
+function rallyPhrase(direction: string): CopyRef {
+  if (direction === 'line') return cp`down the line`
+  if (direction === 'middle') return cp`through the middle`
+  return cp`cross-court`
 }
 
-function missPhrase(how: 'net' | 'long' | 'wide'): string {
-  if (how === 'net') return 'nets it'
-  if (how === 'long') return 'sends it long'
-  return 'sends it wide'
+function missPhrase(how: 'net' | 'long' | 'wide'): CopyRef {
+  if (how === 'net') return cp`nets it`
+  if (how === 'long') return cp`sends it long`
+  return cp`sends it wide`
 }
 
 /** One short sentence saying how the deciding point ended, or '' when it adds nothing.
@@ -1241,29 +1268,29 @@ function missPhrase(how: 'net' | 'long' | 'wide'): string {
  *  THEIRS the sentence drops the name: "Bianca breaks. Fourteen shots, and it ends with a winner
  *  down the line." - a second "Bianca" in a two-sentence row reads like a robot. When the shot is
  *  the other player's the name is essential, because that is the whole point of the clause. */
-function mannerLine(m: Manner | null, names: [string, string], hero: Side | null, closing: boolean): string {
-  if (!m) return ''
+function mannerLine(m: Manner | null, names: [string, string], hero: Side | null, closing: boolean): Line | null {
+  if (!m) return null
   const who = names[m.by]
   switch (m.kind) {
     case 'ace':
-      return closing ? `An ace ${servePhrase(m.direction)} to finish.` : `An ace ${servePhrase(m.direction)} to seal it.`
+      return closing ? line(cp`An ace ${servePhrase(m.direction)} to finish.`) : line(cp`An ace ${servePhrase(m.direction)} to seal it.`)
     case 'df':
-      return 'It ends on a double fault.'
+      return line(cp`It ends on a double fault.`)
     case 'winner': {
       const dir = rallyPhrase(m.direction)
       if (m.by === hero) {
         return m.shots >= 8
-          ? `${Num(m.shots)} shots, and it ends with a winner ${dir}.`
-          : `A winner ${dir} to end it.`
+          ? line(cp`${Num(m.shots)} shots, and it ends with a winner ${dir}.`)
+          : line(cp`A winner ${dir} to end it.`)
       }
       return m.shots >= 8
-        ? `${Num(m.shots)} shots, and ${who} ends it ${dir}.`
-        : `${who} ends it with a winner ${dir}.`
+        ? line(cp`${Num(m.shots)} shots, and ${who} ends it ${dir}.`)
+        : line(cp`${who} ends it with a winner ${dir}.`)
     }
     case 'error':
       return m.shots >= 8
-        ? `A long exchange, and ${who} ${missPhrase(m.how)}.`
-        : `${who} ${missPhrase(m.how)}.`
+        ? line(cp`A long exchange, and ${who} ${missPhrase(m.how)}.`)
+        : line(cp`${who} ${missPhrase(m.how)}.`)
   }
 }
 
@@ -1283,21 +1310,8 @@ function mannerLine(m: Manner | null, names: [string, string], hero: Side | null
 /** The `[shot] [outcome]` half. ⚠ NARROWER THAN THE REAL FEEDS' `[wing] [shotType] [outcome]`, on
  *  purpose: we model no forehand/backhand and no volley, and the honesty rule at the head of this
  *  file forbids asserting either. What is left is true of every ball this engine hits. */
-function descriptorOf(m: Manner): string {
-  switch (m.kind) {
-    case 'ace':
-      return `${m.second ? 'a second-serve ace' : 'an ace'} ${servePhrase(m.direction)}`
-    case 'df':
-      return 'a double fault'
-    case 'winner':
-      return `a winner ${rallyPhrase(m.direction)}`
-    case 'error': {
-      const shot = m.onReturn ? 'return' : 'groundstroke'
-      if (m.how === 'net') return `a netted ${shot}`
-      return `a ${m.how} ${shot}`
-    }
-  }
-}
+// ⭐ L3-7 (10.10): `descriptorOf` is gone – it was the English fragment «a second-serve ace down the T» / «a netted return», and a Russian sentence cannot be built by slotting a fragment
+// (RU-08 §16.3: «one semantic renderer … not translated fragments»). `outcomeLine` below spells each sentence whole, with only the placement (a seat of its own) and the unit as params.
 
 /** What the point that ended decided, in the feeds' own vocabulary. */
 type Unit = 'game' | 'set'
@@ -1320,14 +1334,39 @@ type Unit = 'game' | 'set'
  * then the hero could not have won the game on it - so a ball hit by the loser of a game is always
  * a miss, and the verb is always `loses`.)
  */
-function outcomeLine(m: Manner | null, names: [string, string], unit: Unit, hero: Side | null): string {
-  if (!m) return ''
+function outcomeLine(m: Manner | null, names: [string, string], unit: Unit, hero: Side | null): Line | null {
+  if (!m) return null
   // The verb is the whole rule: a winner or an ace WINS it for the player who struck it, an error or
   // a double fault LOSES it for them. No third case exists in the observed inventory.
-  const won = m.kind === 'ace' || m.kind === 'winner'
-  const verb = won ? 'wins' : 'loses'
-  if (m.by === hero) return `She ${verb} the point with ${descriptorOf(m)}.`
-  return `${names[m.by]} ${verb} the ${unit} with ${descriptorOf(m)}.`
+  // ⭐ L3-7: each of the ten ways a point ends is a whole sentence, once for «She … the point» (the hero's own ball) and once for «{who} … the {unit}» (the other player's).
+  if (m.by === hero) {
+    switch (m.kind) {
+      case 'ace':
+        return m.second ? line(cp`She wins the point with a second-serve ace ${servePhrase(m.direction)}.`) : line(cp`She wins the point with an ace ${servePhrase(m.direction)}.`)
+      case 'df':
+        return line(cp`She loses the point with a double fault.`)
+      case 'winner':
+        return line(cp`She wins the point with a winner ${rallyPhrase(m.direction)}.`)
+      case 'error':
+        if (m.how === 'net') return m.onReturn ? line(cp`She loses the point with a netted return.`) : line(cp`She loses the point with a netted groundstroke.`)
+        if (m.how === 'long') return m.onReturn ? line(cp`She loses the point with a long return.`) : line(cp`She loses the point with a long groundstroke.`)
+        return m.onReturn ? line(cp`She loses the point with a wide return.`) : line(cp`She loses the point with a wide groundstroke.`)
+    }
+  }
+  const who = names[m.by]
+  const u = unit === 'game' ? cp`game` : cp`set`
+  switch (m.kind) {
+    case 'ace':
+      return m.second ? line(cp`${who} wins the ${u} with a second-serve ace ${servePhrase(m.direction)}.`) : line(cp`${who} wins the ${u} with an ace ${servePhrase(m.direction)}.`)
+    case 'df':
+      return line(cp`${who} loses the ${u} with a double fault.`)
+    case 'winner':
+      return line(cp`${who} wins the ${u} with a winner ${rallyPhrase(m.direction)}.`)
+    case 'error':
+      if (m.how === 'net') return m.onReturn ? line(cp`${who} loses the ${u} with a netted return.`) : line(cp`${who} loses the ${u} with a netted groundstroke.`)
+      if (m.how === 'long') return m.onReturn ? line(cp`${who} loses the ${u} with a long return.`) : line(cp`${who} loses the ${u} with a long groundstroke.`)
+      return m.onReturn ? line(cp`${who} loses the ${u} with a wide return.`) : line(cp`${who} loses the ${u} with a wide groundstroke.`)
+  }
 }
 
 // --- streak scan ----------------------------------------------------------------------------
@@ -1556,21 +1595,21 @@ export function buildCommentary(
   // storey decides WHICH WORDS; the rung decides HOW MUCH OF THE MATCH gets a row at all.
   const bars = BARS[rungFor(event)]
 
-  /** The room's line for a beat, or '' below storey 3 where there is no room to speak of.
+  /** The room's line for a beat, or null (nothing to add) below storey 3 where there is no room to speak of.
    *
    *  ⚠ IT USES THE BARE HASH, NOT THE ROTOR. `rotor` is only correct when it is fed in the order the
    *  reader will read (see its own note), and two of the three callers here sit outside the
    *  chronological per-game loop. The pools are two or three deep and a match has at most a handful
    *  of these rows, so the hash alone spreads them. */
-  const room = (kind: 'match' | 'set' | 'tiebreak', at: number): string => {
-    if (storey < 3) return ''
+  const room = (kind: 'match' | 'set' | 'tiebreak', at: number): Line | null => {
+    if (storey < 3) return null
     const lines =
       kind === 'match'
         ? pool(storey, [], ROOM_MATCH_FROM_3, ROOM_MATCH_FROM_4)
         : kind === 'set'
           ? pool(storey, [], ROOM_SET_FROM_3, ROOM_SET_FROM_4)
           : pool(storey, [], ROOM_TIEBREAK_FROM_3, ROOM_TIEBREAK_FROM_4)
-    return lines.length === 0 ? '' : lines[variant(at, lines.length)]
+    return lines.length === 0 ? null : lines[variant(at, lines.length)]
   }
 
   /** What winning this match was worth, glued to the claim it qualifies. Storey 2 and up: below that
@@ -1619,8 +1658,8 @@ export function buildCommentary(
     unit: Unit,
     closing: boolean,
     at: number,
-  ): string => {
-    if (!m) return ''
+  ): Line | null => {
+    if (!m) return null
     // ⚠ AT THE PEAK THERE IS NO CHOICE TO MAKE. The escalation ladder wants the top of a match said
     // plainly and short, and the feed mould IS the plain one - subject, verb, what the ball did, no
     // shot count and no "a long exchange, and". The rotor is not consulted, so a match point never
@@ -1636,16 +1675,18 @@ export function buildCommentary(
   const push = (
     pointIndex: number,
     kind: BeatKind,
-    lead: string | null,
-    text: string,
+    lead: Line | null,
+    body: Line,
     score?: string,
     keyMoment = true,
   ): void => {
     cands.push({
       pointIndex,
       kind,
-      lead,
-      text,
+      lead: lead ? lead.text : null,
+      ...(lead ? { leadC: lead.c } : {}),
+      text: body.text,
+      textC: body.c,
       score: score ?? s.gamesAt[pointIndex] ?? '0-0',
       set: (s.setOf[pointIndex] ?? 0) + 1,
       keyMoment,
@@ -1654,7 +1695,7 @@ export function buildCommentary(
   }
 
   // --- open ---------------------------------------------------------------------------------
-  push(0, 'open', null, `${names[points[0].entry.server]} serves first.`, '0-0')
+  push(0, 'open', null, line(cp`${names[points[0].entry.server]} serves first.`), '0-0')
 
   // --- match --------------------------------------------------------------------------------
   const winner = match.result.winner
@@ -1707,26 +1748,32 @@ export function buildCommentary(
   // picture for a match that stopped because somebody's body did, so the retirement branch takes the
   // stake (she really does advance into that round) and no occasion clause at all.
   const retired = match.result.retired
-  const stakeTail = stake ? `, ${stake}` : ''
+  // ⭐ L3-7: the stake is a clause that exists only sometimes, so the sentence has two forms – with the clause as a param of its own (it is a seat: «and the title with it») and without.
   push(
     lastIndex,
     'match',
-    retired ? 'Retired.' : 'Match.',
+    retired ? LEAD.retired : LEAD.match,
     retired
       ? clauses(
-          `${names[retired.side]} cannot go on. ${names[winner]} advances${stakeTail}.`,
-          'A long match on tired legs.',
+          stake
+            ? line(cp`${names[retired.side]} cannot go on. ${names[winner]} advances, ${stake.c}.`)
+            : line(cp`${names[retired.side]} cannot go on. ${names[winner]} advances.`),
+          line(cp`A long match on tired legs.`),
           // ⚠ THE CLAUSES ARE SPLIT RATHER THAN JOINED, and it is `clauses()`'s degradation order
           // doing real work: two players who share a first name both fall back to full names (see
           // `speakingNames`), which costs this row eleven characters. Written as one long colour
           // sentence the whole explanation fell off that case; written as two, the CAUSE survives
           // and only the flourish goes.
-          'It ends with a handshake, not a winner.',
+          line(cp`It ends with a handshake, not a winner.`),
         )
       : clauses(
           match.result.sets.length === 3
-            ? `${names[winner]} takes it in three${stakeTail}.`
-            : `${names[winner]} takes it in straight sets${stakeTail}.`,
+            ? stake
+              ? line(cp`${names[winner]} takes it in three, ${stake.c}.`)
+              : line(cp`${names[winner]} takes it in three.`)
+            : stake
+              ? line(cp`${names[winner]} takes it in straight sets, ${stake.c}.`)
+              : line(cp`${names[winner]} takes it in straight sets.`),
           mannerLine(mannerOf(points[lastIndex]), names, winner, true),
           room('match', lastIndex),
         ),
@@ -1757,7 +1804,7 @@ export function buildCommentary(
     // wins the game with a winner cross-court." twice in one set, two rows apart, with the rotor
     // having "alternated" across a game that printed nothing in between. "What was just said" has to
     // mean what was just PRINTED, so nothing may touch the rotor until a row is going in.
-    const manner = (): string => mannerFor(mannerOf(p), w, g.setEnd ? 'set' : 'game', g.setEnd, g.last)
+    const manner = (): Line | null => mannerFor(mannerOf(p), w, g.setEnd ? 'set' : 'game', g.setEnd, g.last)
     // The row's budget shrinks at the top of a match, so the colour clause is cut where a human
     // editor would cut it. Read once per game, beside the manner it governs.
     const budget = registerAt(g.last) === 'peak' ? PEAK_MAX_CHARS : BEAT_MAX_CHARS
@@ -1768,18 +1815,18 @@ export function buildCommentary(
     if (g.setEnd) {
       // The LAST set is told by the match beat, which says it better (and outranks this anyway).
       const how = g.tiebreak
-        ? `${names[w]} takes the ${ordinal(g.set + 1)} set in a tiebreak.`
+        ? line(cp`${names[w]} takes the ${ordinal(g.set + 1)} set in a tiebreak.`)
         : w !== g.server
-          ? `${names[w]} breaks to take the ${ordinal(g.set + 1)} set.`
-          : `${names[w]} serves out the ${ordinal(g.set + 1)} set.`
+          ? line(cp`${names[w]} breaks to take the ${ordinal(g.set + 1)} set.`)
+          : line(cp`${names[w]} serves out the ${ordinal(g.set + 1)} set.`)
       // A non-final second set can only ever have been won by whoever lost the first, so it is
       // always the leveller. The first set needs no standing - it IS the standing.
-      const standing = g.set === 0 ? '' : ' One set each.'
+      const standing = g.set === 0 ? null : line(cp`One set each.`)
       push(
         g.last,
         'set',
-        'Set.',
-        clausesUpTo(budget, `${how}${standing}`, manner(), room('set', g.last)),
+        LEAD.set,
+        clausesUpTo(budget, joinLines(standing ? [how, standing] : [how]), manner(), room('set', g.last)),
         `${g.gamesAfter[0]}-${g.gamesAfter[1]}`,
       )
       continue
@@ -1791,13 +1838,13 @@ export function buildCommentary(
     if (g.gamesAfter[0] === 6 && g.gamesAfter[1] === 6) {
       const got =
         w !== g.server
-          ? `${names[w]} breaks back for six games all.`
-          : `${names[w]} holds for six games all.`
+          ? line(cp`${names[w]} breaks back for six games all.`)
+          : line(cp`${names[w]} holds for six games all.`)
       push(
         g.last,
         'tiebreak',
-        'Tiebreak.',
-        clausesUpTo(budget, `${got} A breaker decides the set.`, room('tiebreak', g.last)),
+        LEAD.tiebreak,
+        clausesUpTo(budget, joinLines([got, line(cp`A breaker decides the set.`)]), room('tiebreak', g.last)),
         '6-6',
       )
       continue
@@ -1808,12 +1855,12 @@ export function buildCommentary(
       // chosen: breaking a player who was serving for the set (so the breaker had been facing
       // set/match points) is a different event from breaking at 2-1, and it says so.
       const level = g.gamesBefore[w] < g.gamesBefore[loser] && g.gamesAfter[w] === g.gamesAfter[loser]
-      const base = g.mpFaced[w]
-        ? `${names[w]} breaks back from match point down.`
+      const base: Line = g.mpFaced[w]
+        ? line(cp`${names[w]} breaks back from match point down.`)
         : g.spFaced[w]
-          ? `${names[w]} breaks back from set point down.`
+          ? line(cp`${names[w]} breaks back from set point down.`)
           : g.loveForty[w]
-            ? `${names[w]} breaks from love-forty down.`
+            ? line(cp`${names[w]} breaks from love-forty down.`)
             : level
               ? // ⚠ THE ROTOR, NOT THE BARE HASH (round 16 item 11). Same pools, same starting
                 // position - what changed is that the pool now knows what it just said, so a
@@ -1835,8 +1882,8 @@ export function buildCommentary(
       // (commentary-lexicon.md §5.3: tier 4 "slows down. Shorter sentences."). It is glued to the
       // claim rather than passed as its own clause, so the budget alone could never cut it.
       const forward = g.gamesAfter[w] === 5 && g.gamesAfter[loser] <= 4
-      const tail = forward && budget !== PEAK_MAX_CHARS ? ' She serves for the set next.' : ''
-      push(g.last, 'break', 'Break!', clausesUpTo(budget, `${base}${tail}`, manner()), undefined, gameMoved)
+      const tail = forward && budget !== PEAK_MAX_CHARS ? line(cp`She serves for the set next.`) : null
+      push(g.last, 'break', LEAD.break, clausesUpTo(budget, tail ? joinLines([base, tail]) : base, manner()), undefined, gameMoved)
       continue
     }
 
@@ -1844,27 +1891,24 @@ export function buildCommentary(
     // "serving to stay in the set" is NOT one of them: it fires 2-3 times in any set that reaches
     // 5-4, which turned the log into a drum. Facing an actual set or match point and surviving it
     // is the same drama, one third as often, and it is the thing a person actually retells.
-    const base = g.mpFaced[w]
-      ? `${names[w]} saves ${nPoints(g.mpFaced[w], 'match point')}.`
+    const base: Line | null = g.mpFaced[w]
+      ? savesMatchPoint(names[w], g.mpFaced[w])
       : g.spFaced[w]
-        ? `${names[w]} saves ${nPoints(g.spFaced[w], 'set point')} and holds.`
+        ? savesSetPoint(names[w], g.spFaced[w])
         : // Love-forty down and held = exactly three break points and five straight points; a
           // longer deuce war saved MORE than three, and then the count is the better line.
           g.loveForty[w] && g.bpFaced === 3
-          ? `${names[w]} holds from love-forty down.`
+          ? line(cp`${names[w]} holds from love-forty down.`)
           : g.bpFaced >= bars.saves
             ? // The one repeated hold framing, so it is the one that gets the occasion's extra
               // moulds. The other three are earned by a specific score and say the specific thing.
               // ⭐ ROUND-23 #4: `bars.saves` is 2 up to the WTA 250 - `SAVES_MIN`, exactly as before -
               // and 1 from the 500 up, which is the single largest source of new rows at the top of
               // the tour (measured: 1.40 more holds a match).
-              pooledHoldSave[pick('hold', g.last, pooledHoldSave.length)](
-                names[w],
-                nPoints(g.bpFaced, 'break point'),
-              )
-            : ''
+              pooledHoldSave[pick('hold', g.last, pooledHoldSave.length)](names[w], g.bpFaced)
+            : null
     if (!base) continue
-    push(g.last, 'hold', 'Held.', clausesUpTo(budget, base, manner()), undefined, gameMoved)
+    push(g.last, 'hold', LEAD.held, clausesUpTo(budget, base, manner()), undefined, gameMoved)
   }
 
   // --- game runs: the longest run of >= GAMES_MIN consecutive games in each set ---------------
@@ -1901,7 +1945,7 @@ export function buildCommentary(
       push(
         r.last,
         'games',
-        'Run.',
+        LEAD.run,
         pooledGames[variant(r.last, pooledGames.length)](Num(r.len), names[r.side]),
         undefined,
         swing(r.from, r.last) >= KEY_SWING,
@@ -1939,7 +1983,7 @@ export function buildCommentary(
       push(
         d.at,
         'deuce',
-        'Deuce.',
+        LEAD.deuce,
         // The bare hash rather than the rotor, for the reason `room` gives: these are pushed outside
         // the chronological per-game loop, so "what was just said" would be the wrong neighbour.
         DEUCE_LINES[variant(d.at, DEUCE_LINES.length)](Num(d.deuces), names[d.server]),
@@ -1966,7 +2010,7 @@ export function buildCommentary(
       push(
         r.end,
         'streak',
-        'Streak.',
+        LEAD.streak,
         pooledStreak[variant(r.end, pooledStreak.length)](Num(r.len), names[r.side]),
         undefined,
         swing(r.end - r.len, r.end) >= KEY_SWING,
@@ -1997,8 +2041,8 @@ export function buildCommentary(
       push(
         r.index,
         'rally',
-        'Rally.',
-        `${Num(r.shots)} shots, and ${names[last.by]} puts it away ${rallyPhrase(String(last.direction))}.`,
+        LEAD.rally,
+        line(cp`${Num(r.shots)} shots, and ${names[last.by]} puts it away ${rallyPhrase(String(last.direction))}.`),
         undefined,
         swing(r.index - 1, r.index) >= KEY_SWING,
       )
@@ -2021,7 +2065,7 @@ export function buildCommentary(
       push(
         next,
         'coach',
-        'Corner.',
+        LEAD.corner,
         // The bare hash rather than the rotor, for the reason `room` gives: these are pushed outside
         // the chronological per-game loop, so "what was just said" would be the wrong neighbour.
         lines[variant(next, lines.length)](names[coach.side]),
@@ -2058,7 +2102,7 @@ export function buildCommentary(
       push(
         next,
         'booth',
-        'Off court.',
+        LEAD.booth,
         // The bare hash rather than the rotor, for the reason `room` and the coach's beat both give:
         // this is pushed outside the chronological per-game loop, so "what was just said" would be
         // the wrong neighbour.
@@ -2091,7 +2135,7 @@ export function buildCommentary(
       if (next > lastIndex) continue
       if (taken.has(next)) continue
       const lines = boothLineageLines(lineage)
-      push(next, 'booth', 'Off court.', lines[variant(next, lines.length)](names[lineage.side]), undefined, false)
+      push(next, 'booth', LEAD.booth, lines[variant(next, lines.length)](names[lineage.side]), undefined, false)
       break
     }
   }

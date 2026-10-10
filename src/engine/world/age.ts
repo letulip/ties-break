@@ -6,6 +6,7 @@
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import { DEFAULT_START_YEAR, daysInBirthMonth, weekMonth, weekOfDate, weekStartDay, weekYear } from '../../shared/dates'
 import { addEvent } from './ledger'
+import { cp } from '../../shared/i18n'
 import type { WorldState } from '../world'
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
@@ -388,5 +389,8 @@ export function markBirthday(world: WorldState): void {
     week: world.week,
     type: 'info',
     text: `She is ${words} this week.`,
+    // ⚠ `words` is the ENGLISH cardinal (`ageInWords`) passed as the param it is – the shared spelled-number formatter the editorial note asks for (RU-11K) is a later wave's;
+    // under another locale the sentence translates and the number word stays English until it exists.
+    c: cp`She is ${words} this week.`,
   })
 }

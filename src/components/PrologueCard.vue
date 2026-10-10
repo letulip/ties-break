@@ -67,7 +67,10 @@ import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../compo
 // screen-reader name below is written here: they all come from `composables/identityCopy.ts`, which
 // the wizard reads too, because CLAUDE.md's invariant 4 says a label is the owner's and a string
 // declared twice is a string that can drift in one copy. See that module's header.
-import { DYNASTY_COPY, IDENTITY_COPY, MONTHS, WEIGHT_COPY } from '../composables/identityCopy'
+import { DYNASTY_COPY, IDENTITY_COPY, MONTHS, WEIGHT_COPY, monthDayLabel } from '../composables/identityCopy'
+// L2-2 (08.10): the three words this component still writes itself – the two dice names and the way back – go through `t()`; every
+// other word on the card arrives from the table (`prologue/cards.ts`) or from `identityCopy.ts`, both of which already do.
+import { t } from '../i18n'
 import { daysInBirthMonth } from '../shared/dates'
 // ⚠ THE WIZARD'S OWN CAP, ON THE WIZARD'S OWN IDIOM. This card asks for her name too and reaches
 // `newCareer` on exactly the same path, so `profileShapeError`'s name refusal is as reachable from
@@ -261,7 +264,9 @@ const birthDays = computed(() =>
 // spelling – and the chooser reuses the card's own radiogroup idiom rather than inventing a fourth
 // control. Picking writes through the ordinary `identity` event, so the container stays the owner.
 const recordedBirthdays = computed(() => props.line?.birthdays ?? [])
-const birthdayText = (b: { month: number; day: number }): string => `${MONTHS[b.month - 1]} ${b.day}`
+// L2-2 (08.10): the date is the SHARED `monthDayLabel` (RU-02A «Months and dates» – the wizard's own composition), not the picker list
+// plus a day: Russian puts the day first and declines the month. English is the same `January 15`, byte for byte.
+const birthdayText = (b: { month: number; day: number }): string => monthDayLabel(b.month, b.day)
 const birthdayTaken = (b: { month: number; day: number }): boolean =>
   props.identity?.birthMonth === b.month && props.identity?.birthDay === b.day
 function pickBirthday(b: { month: number; day: number }): void {
@@ -528,7 +533,7 @@ useDialogFocus(cardEl)
                 autocomplete="off"
                 @input="setField('kidName', ($event.target as HTMLInputElement).value)"
               />
-              <button class="prologue-dice" type="button" aria-label="Random first name" @click="rollFirstName">
+              <button class="prologue-dice" type="button" :aria-label="t('Random first name')" @click="rollFirstName">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <rect x="4" y="4" width="16" height="16" rx="4" />
                   <circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none" />
@@ -560,7 +565,7 @@ useDialogFocus(cardEl)
                 autocomplete="off"
                 @input="setField('kidLastName', ($event.target as HTMLInputElement).value)"
               />
-              <button v-if="!line" class="prologue-dice" type="button" aria-label="Random last name" @click="rollLastName">
+              <button v-if="!line" class="prologue-dice" type="button" :aria-label="t('Random last name')" @click="rollLastName">
                 <!-- A different face on the second die, on purpose (the design draws three pips here). -->
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <rect x="4" y="4" width="16" height="16" rx="4" />
@@ -874,7 +879,7 @@ useDialogFocus(cardEl)
           class="prologue-back"
           variant="bare"
           icon="back"
-          label="Back"
+          :label="t('Back')"
           :disabled="busy"
           @click="emit('back')"
         />

@@ -24,7 +24,7 @@ compiles nowhere.
 | dialog accessible name | `Epilogue` | `Эпилог карьеры` |
 | record heading and link | `The whole record` | `Вся история` |
 | record return | `Back to the album` | `Вернуться к альбому` |
-| record season age | `she was {ageYears}` | `ей было {ageYears} {год/года/лет}` |
+| record season age | `she was {ageYears}` | `ей было {ageYears, plural, one {{ageYears} год} few {{ageYears} года} many {{ageYears} лет} other {{ageYears} лет}}` |
 | empty record | `Nothing was ever written down. That happens.` | `Здесь не осталось записей. Бывает и так.` |
 | final page heading | `The last page` | `Последняя страница` |
 | portrait alt | `Aged {stage}` | `Портрет: возрастной этап «{stageLocalized}»` |
@@ -38,7 +38,7 @@ compiles nowhere.
 | seasons | `Seasons` | `Сезонов` |
 | best rank | `Best rank` | `Высшее место в рейтинге` |
 | titles | `Titles` | `Титулов` |
-| one-more-year refrain | `You said one more year {count} time/times.` | `«Ещё один год», – говорили мы. Так было {count} {раз/раза/раз}.` |
+| one-more-year refrain | `You said one more year {count} time/times.` | `«Ещё один год», – говорили мы. Так было {count, plural, one {{count} раз} few {{count} раза} many {{count} раз} other {{count} раз}}.` |
 | resume college fallback | `Another year –` | `Ещё один год –` |
 | new unrelated childhood | `Raise another` | `Новая история` · `APPROVED` 07.10 (his own wording, spec §9.9a) |
 | dynasty, daughter lived during tour | `Raise her daughter` | `Вырастить её дочь` |
@@ -83,6 +83,62 @@ unranked fallback.
 The academy note has two fact shapes. Do not imply an unbuilt academy already earns money. The
 lifetime deal's annual amount belongs to that signed deal; the ended career does not continue to
 tick weekly payments. Both amount formatters must use shared money presentation over integer cents.
+
+## The ending's own paragraph – the nine `ENDING_BLURB` sentences (10.10)
+
+Owner 10.10, item 34: the nine sentences of `ENDING_BLURB` were written for the epilogue and drawn by
+nothing, and he asked whether they could be built into the final screen. They are now: one paragraph
+on the last page, directly under the ending's title (`She stopped after school`, and so on) and above
+the line with the season and her age, at the notes' own size (14px). It is drawn for every ending, and
+nothing else on the page changed. The placement and the wording both wait for his live look.
+
+These are engine sentences read through a declared dynamic seat (`ending.blurb` in
+`tools/i18n-seats.ts`), so each one is a catalog key by its English text. Every row below is `DRAFT`
+and the **Russian column is empty on purpose: the words are his**. The English is the engine's,
+character for character; nothing was reworded. Until a Russian cell is approved, a Russian session
+shows the English sentence on that line, as it does for every unapproved row.
+
+| Surface | English | Russian draft |
+| --- | --- | --- |
+| epilogue paragraph, `stopped` | `School ended and the next ladder wanted more than the family had. She put the racket down there, and that is an ending, not a loss.` | |
+| epilogue paragraph, `college` | `A scholarship, a closed league that pays no ranking points, and a stretch of years in which the money finally goes the other way. The tour does not wait, and it does not remember.` | |
+| epilogue paragraph, `bankruptcy` | `Week after week below zero, and then a week with no entry fee in it. Nobody chose this one – the arithmetic did.` | |
+| epilogue paragraph, `injury` | `The body had been telling the same story for years. This time it was not a layoff, it was the end of the sentence.` | |
+| epilogue paragraph, `natural` | `She was asked every off-season and for years she said one more. This year she did not.` | |
+| epilogue paragraph, `plateau` | `The rung above stayed where it was and so did she. Her own words for it were the plainest ones – she could not reach the top, so she went.` | |
+| epilogue paragraph, `peak` | `She was at the top of the sport the season she stopped. Nobody put the question to her and nobody had to – it was decided before anybody else heard about it.` | |
+| epilogue paragraph, `fall` | `One season took most of what the season before it had built. Nobody asked her to stop and nobody talked her out of it.` | |
+| epilogue paragraph, `family` | `She had a child, and the months after it went by without an entry in them. No one asked her to choose – by spring the choice had long been made.` | |
+
+The paragraph is centred, in a column about as wide as the title above it, so a Russian sentence that
+runs longer than the English takes a line or two more on the page and nothing else moves (the page
+scrolls). Three of the nine are drafts in the source – `peak` and `fall` (round 45) and `family`
+(wave 8) – and are shown as they stand.
+
+**Where a paragraph says again what the page already says** (for his live look; no sentence was changed
+to answer any of this):
+
+- `bankruptcy` – the fact line already reads «… weeks below zero – there was no next entry fee»; the
+  paragraph's first sentence is the same two facts in prose.
+- `peak` – the title is «She left at the top», and on a title-only exit the fact line reads «a title at
+  the top of the sport, and she went the same season»; the paragraph opens «She was at the top of the
+  sport the season she stopped».
+- `plateau` – the fact line reads «… seasons and the table would not move»; the paragraph opens «The
+  rung above stayed where it was and so did she».
+- `stopped` – the fact line reads «she stopped when school ended, and nobody had to call it a failure»
+  and the paragraph says it ended with school and is «an ending, not a loss», so the consolation that
+  RU-12C already flags in the fact line is now said twice.
+- `family`, `fall`, `injury` – the same fact in prose beside the same fact in numbers («51 weeks
+  without a new entry», «#13 to #59 in one season», «N weeks already lost, and then this one»); mild.
+
+Two are not repetition but disagreement with a line on the same page:
+
+- `natural` – the page's own note (round 48, his voice change) reads «You said one more year N
+  times.», and the paragraph says «she said one more». A career that said yes at the first asking
+  (fact line: «the first time she was asked, she said yes») is also told «for years she said one more».
+- `college` – the paragraph says «the money finally goes the other way», and the fact line under it
+  says «the family pays its share of each year»; «the money goes the other way» is a claim the fork
+  card dropped as one the engine did not honour (the note in `ForkDialog.vue` says so).
 
 ## Integration cautions
 

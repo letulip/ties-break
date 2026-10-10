@@ -3,6 +3,7 @@
 // ⚠ weddingCopy: THE THREE NAMES ARE `export`ed HERE AND NOT RE-EXPORTED BY THE HUB, on purpose
 // ⚠ weddingCopy: THE WEDDING'S OTHER HALF
 // → docs/notes/life-beats/wedding.md#weddingcopyts-header
+import { cp, type CopyRef } from '../../../shared/i18n'
 import type { Temperament } from '../../spirit'
 
 // 3g. `'engaged'` – THE WEEK SHE SAYS SHE IS GETTING MARRIED (the wedding, wave 7: T2). ⚠ ⚠
@@ -86,4 +87,29 @@ export function togetherSpanShort(weeks: number): string {
  *  always did. */
 export function engagedWithTogether(said: string, weeks: number | null): string {
   return weeks === null ? said : `${said} They have been together for ${togetherSpan(weeks)}.`
+}
+
+/** ⭐ L3-5 (10.10) – THE REF BESIDE THE SPAN'S SENTENCE, `togetherSpan`'s nine shapes as nine WHOLE sentences (the house rule for a counted phrase: a form is a sentence, never a
+ *  fragment a translator has to reassemble). It reads `spanParts` – the one arithmetic the words, the compact form and this share – and spells each shape out; the net renders the ref
+ *  against `engagedWithTogether`'s own text for every week from 0 to 5,200. A number prints as `String(n)`, exactly as the template beside it does. Class (b): derived at snapshot time
+ *  off the episode's weeks, never stored, so no old save holds these sentences and the frozen table has no entry for them (the net lists the nine as NEW keys). */
+function togetherSentenceRef(weeks: number): CopyRef {
+  const { years, months } = spanParts(weeks)
+  const m = String(months)
+  const y = String(years)
+  if (years === 0) {
+    if (months === 0) return cp`They have been together for less than a month.`
+    return months === 1 ? cp`They have been together for 1 month.` : cp`They have been together for ${m} months.`
+  }
+  if (years === 1) {
+    if (months === 0) return cp`They have been together for 1 year.`
+    return months === 1 ? cp`They have been together for 1 year and 1 month.` : cp`They have been together for 1 year and ${m} months.`
+  }
+  if (months === 0) return cp`They have been together for ${y} years.`
+  return months === 1 ? cp`They have been together for ${y} years and 1 month.` : cp`They have been together for ${y} years and ${m} months.`
+}
+
+/** The pool line's ref, then the span's: `{0} {1}` over the two, or the pool line's own ref when there is nothing to add (`weeks === null`) – `engagedWithTogether`'s twin. */
+export function engagedWithTogetherRef(said: CopyRef, weeks: number | null): CopyRef {
+  return weeks === null ? said : cp`${said} ${togetherSentenceRef(weeks)}`
 }

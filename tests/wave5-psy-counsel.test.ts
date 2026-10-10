@@ -646,12 +646,15 @@ describe('wave 5 T8 E – one `info` row, no life row, no glyph forced', () => {
     // so it borrowed `'expecting'`; a divorce is its own beat with its own card, so the row carries
     // the beat's own kind. ⚠ STILL NO GLYPH (§5a) – the roster gained a member and `KIND_PICKS` did
     // not, which is the split the case above pins.
-    const sites = [...code.matchAll(/\{[^{}]*type:\s*'life'[^{}]*\}/g)].map((m) => m[0])
-    expect(sites.length, 'the sweep really found the life-row write sites').toBe(8)
+    // ⭐ RE-AIMED 10.10 BY L3-5 (docs/specs/i18n-2026-10.md §8): a life row now writes `c: { k: <its sentence> }` beside its `text` – an object literal with ONE nested brace level – so the
+    // sweep reads a literal that may hold one `{ … }` inside it. The sites are the same eight (the wave adds no row), and an unstamped site still reddens the second assertion alone.
+    const sites = [...code.matchAll(/\{(?:[^{}]|\{[^{}]*\})*type:\s*'life'(?:[^{}]|\{[^{}]*\})*\}/g)].map((m) => m[0])
+    // (8 -> 9, the same re-aim: the one-level reading also sees the spirit feed's exposure row, whose `...(firstOfSeason ? { keep: true } : {})` hid it from the old pattern – it stamps `lifeKind: 'exposure'`)
+    expect(sites.length, 'the sweep really found the life-row write sites').toBe(9)
     const spotlight = sites.filter((s) => s.includes('LEAK_EVENT['))
     expect(spotlight, '⚠ the leak row is still one of them – D3 stamped it, it did not remove it').toHaveLength(1)
     expect(sites.filter((s) => /lifeKind:\s*'/.test(s)), '⚠⚠ and after D3 every one of them stamps a kind')
-      .toHaveLength(8)
+      .toHaveLength(9)
   })
 })
 

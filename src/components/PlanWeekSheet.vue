@@ -33,6 +33,7 @@ import {
 } from '../engine/economy'
 import { practiceCoachRateCents } from '../engine/coach'
 import { formatCents } from '../shared/money'
+import { t } from '../i18n'
 import { ageAtWeek } from '../engine/world'
 import { layoffBlock, medicalBlock, practiceCaution, type PracticeCaution } from '../engine/world'
 import { isOffSeasonWeek } from '../engine/season/calendar'
@@ -69,7 +70,7 @@ const game = useGameStore()
 
 // 'free' for a zero fee is THIS SHEET'S copy, not a money contract - the shared formatter would
 // print "$0", and a court that costs nothing to book reads better as a word than as a zero.
-const feeLabel = (cents: number): string => (cents === 0 ? 'free' : formatCents(cents))
+const feeLabel = (cents: number): string => (cents === 0 ? t('price|free') : formatCents(cents))
 
 const seed = computed(() => game.snapshot?.seed ?? '')
 const background = computed(() => game.snapshot?.profile.background ?? 'middle')
@@ -301,13 +302,13 @@ function askVacation(row: PackageRow): void {
        ⚠ `:screen` IS THE SCROLL RESET, and the tabs are exactly what it is for: Practice and
        Vacation are two screens in one scroller, so switching to Vacation from the bottom of the
        Practice tab used to arrive already scrolled past the first package. -->
-  <TakeoverShell :title="`Plan ${weekLabel(week, startYear)}`" :screen="tab">
+  <TakeoverShell :title="t('Plan {0}', [weekLabel(week, startYear)])" :screen="tab">
     <template #exit>
-      <IconButton icon="close" label="Close planner" title="Close" @click="emit('close')" />
+      <IconButton icon="close" :label="t('Close planner')" :title="t('Close')" @click="emit('close')" />
     </template>
     <!-- The week's dates and where her condition stands - the two facts every tab is chosen
          against, so they belong to the header rather than to either tab. -->
-    <template #sub>{{ dates }} · condition {{ condition }}/100</template>
+    <template #sub>{{ t('{0} · condition {1}/100', [dates, condition]) }}</template>
 
     <!-- ⚠ ONE WRAPPER, for the reason InboxSheet's has one: `.tf-body` is a flex column with a 16px
          gap, and without a wrapper every paragraph, hint and tab strip becomes a gap-separated band
@@ -329,72 +330,66 @@ function askVacation(row: PackageRow): void {
              sheet is about a FUTURE week and the title above already names it, so "this week" read
              as the one the player is standing in. -->
         <p class="plan-lead">
-          {{ bookedLabel }} – booked, {{ feeLabel(booked!.paidCents) }}. She plays no tournament
-          while she is away.
+          {{ t('{0} – booked, {1}. She plays no tournament while she is away.', [bookedLabel, feeLabel(booked!.paidCents)]) }}
         </p>
         <p class="hint">
-          Cancel any time before the week starts and
-          {{ booked!.paidCents > 0 ? 'the money comes back in full' : 'nothing is owed either way' }}.
+          {{ booked!.paidCents > 0 ? t('Cancel any time before the week starts and the money comes back in full.') : t('Cancel any time before the week starts and nothing is owed either way.') }}
         </p>
         <div class="dialog-actions" style="margin-top: 12px">
-          <button @click="emit('close')">Keep it</button>
-          <button class="danger" :disabled="game.busy" @click="askCancelVacation">Cancel the trip</button>
+          <button @click="emit('close')">{{ t('Keep it') }}</button>
+          <button class="danger" :disabled="game.busy" @click="askCancelVacation">{{ t('Cancel the trip') }}</button>
         </div>
       </template>
 
       <div v-if="tab !== 'booked'" class="plan-tabs">
         <button class="option-pill" :class="{ selected: tab === 'practice' }" @click="tab = 'practice'">
-          Practice
+          {{ t('Practice') }}
         </button>
         <button class="option-pill" :class="{ selected: tab === 'vacation' }" @click="tab = 'vacation'">
-          Vacation
+          {{ t('Vacation') }}
         </button>
       </div>
 
       <!-- ---------------- Practice ---------------- -->
       <template v-if="tab === 'practice'">
-        <p v-if="offSeason" class="hint">Off-season – family time, no matches. Try the Vacation tab.</p>
+        <p v-if="offSeason" class="hint">{{ t('Off-season – family time, no matches. Try the Vacation tab.') }}</p>
         <template v-else>
           <p class="plan-lead">
-            A friendly at the club – watchable, no ranking points. One notch of fatigue, and she
-            keeps her base recovery but loses the rest bonus for the week.
+            {{ t('A friendly at the club – watchable, no ranking points. One notch of fatigue, and she keeps her base recovery but loses the rest bonus for the week.') }}
           </p>
           <div class="plan-line">
-            <span>Court rental</span>
+            <span>{{ t('Court rental') }}</span>
             <span class="num negative">{{ feeLabel(courtCents) }}</span>
           </div>
           <label class="physio-toggle">
             <input v-model="withCoach" type="checkbox" />
-            + coach for the match ({{ feeLabel(coachExtraCents) }} – the other half is on the
-            opponent's family)
+            {{ t("+ coach for the match ({0} – the other half is on the opponent's family)", [feeLabel(coachExtraCents)]) }}
           </label>
           <div class="plan-line plan-total">
-            <span>Total</span>
+            <span>{{ t('plan|Total') }}</span>
             <span class="num negative">{{ feeLabel(practiceFee) }}</span>
           </div>
           <!-- R12-5b: the LAYOFF outranks even the doctor – availabilityStatus ranks injured above
                medical, and the sheet keeps that order. One hard block renders at a time. -->
           <p v-if="layoff" class="caution-note">
-            {{ layoffNote }} A friendly is still a match, so the week books nothing until she is
-            back – leave it to rest.
+            {{ t('{0} A friendly is still a match, so the week books nothing until she is back – leave it to rest.', [layoffNote]) }}
           </p>
           <p v-else-if="medical" class="caution-note">
-            {{ medical.detail }} A friendly is still a match, so it is out too at condition
-            {{ condition }} – try the Vacation tab, or leave the week to training.
+            {{ t('{0} A friendly is still a match, so it is out too at condition {1} – try the Vacation tab, or leave the week to training.', [medical.detail, condition]) }}
           </p>
           <p v-else-if="caution.level === 'caution'" class="caution-note">{{ caution.detail }}</p>
           <div class="dialog-actions" style="margin-top: 12px">
-            <button @click="emit('close')">Cancel</button>
+            <button @click="emit('close')">{{ t('plan|Cancel') }}</button>
             <button
               class="primary"
               :class="{ risky: !layoff && !medical && caution.level === 'caution' }"
               :disabled="!!layoff || !!medical || !practiceAffordable || game.busy"
               @click="askPractice"
             >
-              {{ layoff ? 'Injured' : medical ? 'Not cleared to play' : caution.level === 'caution' ? 'Book anyway' : 'Book the match' }}
+              {{ layoff ? t('Injured') : medical ? t('Not cleared to play') : caution.level === 'caution' ? t('Book anyway') : t('Book the match') }}
             </button>
           </div>
-          <p v-if="!layoff && !medical && !practiceAffordable" class="hint" style="margin: 6px 0 0">Not enough funds</p>
+          <p v-if="!layoff && !medical && !practiceAffordable" class="hint" style="margin: 6px 0 0">{{ t('plan|Not enough funds') }}</p>
         </template>
       </template>
 
@@ -403,8 +398,7 @@ function askVacation(row: PackageRow): void {
            `v-else` would have drawn the package picker underneath it. -->
       <template v-else-if="tab === 'vacation'">
         <p class="plan-lead">
-          A week away – no tournaments that week, and she comes back fresher. Cancel any time
-          before the week starts for a full refund.
+          {{ t('A week away – no tournaments that week, and she comes back fresher. Cancel any time before the week starts for a full refund.') }}
         </p>
         <!-- ⭐ ROUND-17 #11: THE LAYOFF NO LONGER REFUSES A HOLIDAY, and the refusal that used to
              live here is gone rather than restyled. It read "The layoff covers this week, so a
@@ -413,7 +407,7 @@ function askVacation(row: PackageRow): void {
              The layoff is still SAID, because it is a fact about the week worth knowing while
              choosing – it is simply not a block any more. -->
         <p v-if="layoff" class="hint">
-          {{ layoffNote }} A week away is still hers to book – the trip is rest, not tennis.
+          {{ t('{0} A week away is still hers to book – the trip is rest, not tennis.', [layoffNote]) }}
         </p>
         <!-- ⭐⭐ ROUND 29 #1 – WHAT THE WEEK OFF COSTS HER RANKING, BEFORE IT IS BOOKED.
              The owner rested a tired girl and came back to a feed with no Slam in it. The measurement
@@ -444,13 +438,11 @@ function askVacation(row: PackageRow): void {
             </div>
             <p class="hint pkg-blurb">{{ row.blurb }}</p>
             <p class="hint pkg-effect">
-              +{{ row.gain }} condition → {{ row.returnsTo }}/100<template v-if="row.buffFactor < 1">
-                · injury risk −{{ Math.round((1 - row.buffFactor) * 100) }}% for
-                {{ ECONOMY.vacation.buffWeeks }} weeks</template>
+              {{ t('+{0} condition → {1}/100', [row.gain, row.returnsTo]) }}<template v-if="row.buffFactor < 1">{{ ` ${t('· injury risk −{0}% for {1} weeks', [Math.round((1 - row.buffFactor) * 100), ECONOMY.vacation.buffWeeks])}` }}</template>
             </p>
             <div class="pkg-actions">
-              <span v-if="row.recommended" class="pill ok">Recommended</span>
-              <span v-if="!row.affordable" class="hint pkg-unaffordable">Out of reach</span>
+              <span v-if="row.recommended" class="pill ok">{{ t('Recommended') }}</span>
+              <span v-if="!row.affordable" class="hint pkg-unaffordable">{{ t('Out of reach') }}</span>
               <!-- ⚠ THE PRICE IS NOT A PILL ANY MORE (owner, 30.07 – his words are on `packageRows`
                    in the script). `.pill` is this app's CHIP: a 12px capsule in muted ink with a
                    hairline round it, which is a LABEL treatment, and it was wrong twice over on the
@@ -459,13 +451,13 @@ function askVacation(row: PackageRow): void {
               <!-- #8: a week made free by the shelf says WHY – their own boat – so the owner sees
                    the purchase paying off, not a price rounding to nothing. -->
               <span class="num pkg-price" :class="{ ok: row.recommended }">{{
-                row.grantedFree ? 'free – their own boat' : feeLabel(row.priceCents)
+                row.grantedFree ? t('free – their own boat') : feeLabel(row.priceCents)
               }}</span>
               <!-- ⭐ #11: the layoff no longer disables Book. It still must not become a control that
                    can only throw (R10-16), which is why the ENGINE gate came off first – the button
                    is live here exactly because `assertPlannable` will now accept it. -->
               <button class="primary" :disabled="!row.affordable || game.busy" @click="askVacation(row)">
-                Book
+                {{ t('Book') }}
               </button>
             </div>
           </div>

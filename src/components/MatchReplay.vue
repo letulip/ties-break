@@ -5,6 +5,7 @@
 // SAME stored seed reproduces the exact match (winner/sets/log) byte for byte;
 // annotateMatch then layers the rally/probability presentation on top.
 import { computed } from 'vue'
+import { t } from '../i18n'
 import type { WorldMatch } from '../shared/protocol'
 import { replayMatch } from '../composables/annotatedMatch'
 import { occasionOf } from '../viz/preview'
@@ -12,24 +13,27 @@ import MatchViewer from './MatchViewer.vue'
 import IconButton from './ui/IconButton.vue'
 import TakeoverShell from './ui/TakeoverShell.vue'
 
-const props = withDefaults(
-  defineProps<{
-    match: WorldMatch
-    /** ⭐⭐ WHAT THIS MATCH WAS – the college wave, and it is the owner's "only the tournament names
-     *  differing" taken literally (19.08, quoted verbatim in `docs/plans/college-as-a-place.md` §3).
-     *  A tour re-watch is headed "Match replay" because the occasion line under the
-     *  viewer already names the rung; a national-team rubber has NO rung (`occasionOf` correctly
-     *  returns null on an id that names no tier), so without this the one screen that could say which
-     *  competition she was playing in would say nothing at all.
-     *
-     *  ⚠ DEFAULTED, NOT REQUIRED, so both existing call sites (the Home feed and the Season bracket)
-     *  are byte-identical. `TakeoverShell.title` is deliberately required-and-nullable one layer
-     *  down; that rule is about "no header versus a header", which is not the question here. */
-    title?: string
-  }>(),
-  { title: 'Match replay' },
-)
+const props = defineProps<{
+  match: WorldMatch
+  /** ⭐⭐ WHAT THIS MATCH WAS – the college wave, and it is the owner's "only the tournament names
+   *  differing" taken literally (19.08, quoted verbatim in `docs/plans/college-as-a-place.md` §3).
+   *  A tour re-watch is headed "Match replay" because the occasion line under the
+   *  viewer already names the rung; a national-team rubber has NO rung (`occasionOf` correctly
+   *  returns null on an id that names no tier), so without this the one screen that could say which
+   *  competition she was playing in would say nothing at all.
+   *
+   *  ⚠ DEFAULTED, NOT REQUIRED, so both existing call sites (the Home feed and the Season bracket)
+   *  are byte-identical. `TakeoverShell.title` is deliberately required-and-nullable one layer
+   *  down; that rule is about "no header versus a header", which is not the question here. */
+  title?: string
+}>()
 defineEmits<{ close: [] }>()
+
+// ⚙ L2-8 (08.10): THE DEFAULT TITLE IS A KEY, SO IT CANNOT LIVE IN `withDefaults` (a prop default is evaluated when the props resolve and
+// never again – a flip would not reach a mounted replay). The caller's own title still wins, exactly as the default always yielded to it;
+// "no title" is `undefined`, the same thing `withDefaults` replaced. RU-08 §9: a caller-provided competition title (the college league)
+// is localized by that competition's catalogue before it reaches this shell – this file never translates one.
+const shellTitle = computed(() => props.title ?? t('Match replay'))
 
 // ⚠ THE RECIPE IS `composables/annotatedMatch.ts`' AND THE OPTIONS ARE THE ENGINE'S (F-08, 27.09).
 // The three lines that stood here – the `{ surface, tour, seed }` literal, `simulateMatch`, then
@@ -69,9 +73,9 @@ const previewEvent = computed(() => occasionOf(props.match.eventId, props.match.
        fourth copy drift into a real bug. All four surfaces now draw the layer, the header and the
        scroller through `ui/TakeoverShell.vue`; the classes are unchanged, they just have one author.
        (`.tf-card` was in that list until 30.07 took the outer frame off all three - see below.) -->
-  <TakeoverShell :title="title">
+  <TakeoverShell :title="shellTitle">
     <template #sub>
-      <span class="pill">{{ match.a.name }} vs {{ match.b.name }}</span>
+      <span class="pill">{{ t('{0} vs {1}', [match.a.name, match.b.name]) }}</span>
     </template>
     <!-- THE CROSS, and it is one of only two in the match flow: a replay has nowhere to go but out.
          It does exactly what it says - dismisses the overlay - and it cannot lose anything, because a
@@ -84,7 +88,7 @@ const previewEvent = computed(() => occasionOf(props.match.eventId, props.match.
          stood here asked for exactly this. A glyph in a text run became a named control with a
          real asset - the last bare ✕ in the match flow is gone. -->
     <template #exit>
-      <IconButton icon="close" label="Close replay" title="Close" @click="$emit('close')" />
+      <IconButton icon="close" :label="t('Close replay')" :title="t('Close')" @click="$emit('close')" />
     </template>
     <!-- ⚠ NO PANEL AROUND THE VIEWER, and that is the 30.07 correction - the owner's words are on
          the script side; in short, the match screen had a double frame eating space, so the outer

@@ -806,7 +806,10 @@ describe('the marker opens ONE event, with enter-or-close', () => {
     // fee - the real rule, and the one genuinely-zero fee in the tier table - and `formatCents(0)`
     // rendered it as "$0", which reads as a number nobody filled in rather than as a fact. The claim
     // is unchanged: this card prints all three facts, so it can be its own confirmation.
-    for (const fact of ['{{ entryFeeLabel(marker.entryFeeCents) }}', 'Travel budget', 'closes {{ weekLabel(marker.deadlineWeek, startYear) }}']) {
+    for (const fact of ['{{ entryFeeLabel(marker.entryFeeCents) }}', 'Travel budget', // ⚠ L2-3 (08.10) – RE-AIMED, A REAL PREMISE MOVING (RU03-M05): the chip is `{{ t('closes {week}', { week: weekLabel(…) }) }}` now – the
+      // deadline still prints through `weekLabel(marker.deadlineWeek, startYear)`, but the literal text `closes {{ … }}` is gone from the template
+      // by design (the word and its hole are one message the Russian orders itself). The claim kept: same word, same formatter, same week.
+      "{{ t('closes {week}', { week: weekLabel(marker.deadlineWeek, startYear) }) }}"]) {
       expect(template, `the card must print ${fact}`).toContain(fact)
     }
     // ...and both cautions are the ENGINE's own sentences, never re-worded here
@@ -820,7 +823,11 @@ describe('the marker opens ONE event, with enter-or-close', () => {
     // (the SFC PLUS its composables) because the claim is POSITIVE - `screen`, the .vue alone, is
     // the right corpus for the negative claims below and stays bound to it (CLAUDE.md pin hygiene,
     // enforced by tests/pin-hygiene.test.ts).
-    expect(screenLogic).toContain('surfaceStyleHint(game.snapshot.profile.playStyle, surface)')
+    // ⚠ RE-AIMED 08.10 (L2-4, a genuine premise move): the composable no longer hands over the engine's FINISHED sentence (three screens sliced it
+    // at an English «– »); it asks the engine's own pure verdict, `surfaceStyleAffinity`, and words the same two sentences through the catalog
+    // (`surfaceHint`, RU-04 §2). The protected fact – the verdict is the ENGINE's, this card does not decide it – is unchanged.
+    expect(screenLogic).toContain('surfaceHint(game.snapshot.profile.playStyle, surface)')
+    expect(screenLogic, "the verdict is the engine's affinity").toContain('surfaceStyleAffinity(style, surface)')
     expect(screen, 'the card must consume the verdict, not re-word it').toContain('surfaceVerdict(marker.surface)')
   })
 

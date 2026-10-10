@@ -7,13 +7,18 @@
 // ⚠ EVERY WORD IS A DRAFT: tabled as SM18 and SM19 in docs/plans/secondary-market-strings-2026-09.md and pinned there letter for letter by
 // tests/secondary-market-strings-roundtrip.test.ts.
 import type { ShopRowView } from '../shared/protocol'
+import { t } from '../i18n'
 
 /** Who writes: a buyer, for a proposal; the market itself, for the notice that an ad has gone quiet (spec §2i). Senders in this inbox are what
  *  the letter IS rather than a name – `Order desk`, `The academy` – so neither is invented a person. */
 export const SALE_SENDER = {
-  buyer: 'A buyer',
-  market: 'The market',
-} as const
+  get buyer() {
+    return t('A buyer')
+  },
+  get market() {
+    return t('The market')
+  },
+}
 
 /** WHAT THE LOT IS CALLED ON A LETTER: the engine's own name for it while the family still holds it (`ShopRowView.fire.label` – the name the ledger
  *  row carries, the academy's family-given name included), the shelf's label once it does not (a lot that has since been sold or withdrawn keeps its

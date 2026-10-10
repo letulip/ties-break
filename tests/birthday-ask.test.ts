@@ -346,8 +346,10 @@ describe('a repeat is played, not silent – round-18 #10c', () => {
       if (i === 1) continue
       expect(second[i], `row ${i} is untouched`).toEqual(fresh[i])
     }
-    // ...and the wire still carries an id, a label and a note. No new field, nothing that marks.
-    for (const o of second) expect(Object.keys(o).sort()).toEqual(['id', 'label', 'note'])
+    // ...and the wire still carries an id, a label and a note. Nothing that marks.
+    // ⭐ L3-4 (10.10) RE-AIMED: the row also carries the CopyRef of each string it prints (`labelC`, `noteC` – the key of the very sentence beside it). Still no `ask`, `short` or
+    // answer marker: a ref is the sentence's own key and nothing else.
+    for (const o of second) expect(Object.keys(o).sort()).toEqual(['id', 'label', 'labelC', 'note', 'noteC'])
   })
 
   it('⭐ ON A REAL CAREER: the car, once given, never comes back – and the card stays four rows', () => {

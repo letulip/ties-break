@@ -129,12 +129,13 @@
 // on the first-round plate.
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
-import { DRAW_NOT_MADE_NOTE, FIELD_FIGURE_NOTE, fieldChanceLabel, fieldChanceTitle, fieldRingShown, firstMatchLabel, firstMatchTitle, useEventCard } from '../composables/eventCard'
+import { fieldChanceLabel, fieldChanceTitle, fieldRingShown, firstMatchLabel, firstMatchTitle, rankText, surfaceName, useEventCard } from '../composables/eventCard'
+import { t } from '../i18n'
 import { readingColor } from '../composables/readingColor'
 import { flagEmoji } from '../composables/countries'
 import { TIERS } from '../engine/season/calendar'
 import { prizeCentsFor } from '../engine/world'
-import { formatShortName, rankLabel } from '../shared/format'
+import { formatShortName } from '../shared/format'
 import { formatCents } from '../shared/money'
 import { weekRange } from '../shared/dates'
 import type { FieldStrength } from '../engine/season/preview'
@@ -151,7 +152,7 @@ const startYear = useStartYear()
 const props = defineProps<{ event: UpcomingEvent }>()
 
 const game = useGameStore()
-const { venueUrl, surfaceVerdict } = useEventCard()
+const { courtRead: courtReadFor, venueUrl } = useEventCard()
 
 const spec = computed(() => TIERS[props.event.tier])
 const dates = computed(() => weekRange(props.event.week, startYear.value))
@@ -165,32 +166,32 @@ const crowdFigure = computed(() => props.event.preview.crowd.toLocaleString('en-
 // reason that rule exists: a bare "#118" beside a bare "#4" is a comparison, and a comparison across
 // two tables with no exchange rate is a lie (docs/specs/two-ladders.md).
 const herRank = computed(() => game.snapshot?.ladders[spec.value.track].rank ?? null)
-const herRankText = computed(() => rankLabel(herRank.value ?? 0, herRank.value !== null))
+const herRankText = computed(() => rankText(herRank.value))
 const herName = computed(() => {
   const p = game.snapshot?.profile
   return p ? formatShortName(`${p.kidName} ${p.kidLastName}`) : ''
 })
 const herFlag = computed(() => flagEmoji(game.snapshot?.profile.country ?? ''))
-const oppRankText = computed(() =>
-  props.event.preview.opponentRank === null ? 'Unranked' : `#${props.event.preview.opponentRank}`,
-)
+const oppRankText = computed(() => rankText(props.event.preview.opponentRank))
 
 /** THE FIELD'S OWN READING, one plain sentence per verdict. Descriptive on purpose - see the note at
  *  the top about why the coach's four-wordings-per-verdict voice is not copied here. */
 const FIELD_READ: Record<FieldStrength, string> = {
-  strong: 'Most of this field is ranked above her.',
-  even: 'A field of about her own level.',
-  favourite: 'She is among the strongest entered.',
+  get strong() {
+    return t('Most of this field is ranked above her.')
+  },
+  get even() {
+    return t('A field of about her own level.')
+  },
+  get favourite() {
+    return t('She is among the strongest entered.')
+  },
 }
 const fieldRead = computed(() => FIELD_READ[props.event.preview.fieldStrength])
 /** The court's verdict for her build, with the surface name sliced off – the panel names the court
  *  once, in the facts row, so the sentence must not name it a second time (R11-15's slice, the same
  *  one the Season card and the splash both make). */
-const courtRead = computed(() => {
-  const hint = surfaceVerdict(props.event.surface)
-  const dash = hint?.indexOf('– ') ?? -1
-  return hint && dash >= 0 ? `The court ${hint.slice(dash + 2)}.` : hint
-})
+const courtRead = computed(() => courtReadFor(props.event.surface))
 </script>
 
 <template>
@@ -214,15 +215,15 @@ const courtRead = computed(() => {
            of the frame because the caption owns the bottom of it. -->
       <div class="nt-money">
         <div class="nt-money-row">
-          <span class="hint">Entry fee</span>
+          <span class="hint">{{ t('Entry fee') }}</span>
           <span class="num negative">{{ formatCents(Math.abs(event.entryFeeCents)) }}</span>
         </div>
         <div class="nt-money-row">
-          <span class="hint">Travel budget</span>
+          <span class="hint">{{ t('Travel budget') }}</span>
           <span class="num negative">{{ formatCents(Math.abs(event.travelCostCents)) }}</span>
         </div>
         <div class="nt-money-row">
-          <span class="hint">Conditions</span>
+          <span class="hint">{{ t('Conditions') }}</span>
           <WeatherPlate :temperature-c="event.preview.temperatureC" :size="13" on-art />
         </div>
       </div>
@@ -230,14 +231,14 @@ const courtRead = computed(() => {
       <div class="nt-hero-foot">
         <div class="nt-hero-caption">
           <h3 class="nt-hero-title">{{ event.label }}</h3>
-          <p class="nt-hero-meta">{{ event.surface }} &middot; {{ dates }}</p>
+          <p class="nt-hero-meta">{{ surfaceName(event.surface) }} &middot; {{ dates }}</p>
         </div>
 
         <!-- THE READ + THE FORECAST, ON THE PICTURE. Same block, same ring, same ramp, same two
              engine-authored sentences - it simply lost the card it used to sit in. -->
         <div class="nt-read">
           <div class="nt-read-said">
-            <p class="nt-read-label">The read</p>
+            <p class="nt-read-label">{{ t('The read') }}</p>
             <p class="nt-read-line">{{ fieldRead }}</p>
             <p v-if="courtRead" class="nt-read-line">{{ courtRead }}</p>
             <p v-if="event.coachCaution" class="coach-note">{{ event.coachCaution }}</p>
@@ -258,7 +259,7 @@ const courtRead = computed(() => {
                  too – that mutation is in tests/component/round31-draw-reveal.test.ts.
                  ⚠ VISIBLE, not an accessible name: the jump he is being warned about is visible, so
                  the warning has to be. -->
-            <p v-if="fieldRingShown(event.preview)" class="field-note">{{ FIELD_FIGURE_NOTE }}</p>
+            <p v-if="fieldRingShown(event.preview)" class="field-note">{{ t('A typical figure for this level – it sharpens when the draw is made.') }}</p>
           </div>
           <!-- ⭐⭐ ROUND 31 #4 – the ring is her odds against ONE named girl, so it waits for the
                draw exactly as the feed's does. `The read` above it is the FIELD's reading and needs
@@ -300,28 +301,28 @@ const courtRead = computed(() => {
         <span class="nt-fact-tile" aria-hidden="true">
           <SurfaceMark :surface="event.surface" :show-name="false" />
         </span>
-        <span class="nt-fact-label">Surface</span>
-        <span class="nt-fact-value surface">{{ event.surface }}</span>
+        <span class="nt-fact-label">{{ t('Surface') }}</span>
+        <span class="nt-fact-value surface">{{ surfaceName(event.surface) }}</span>
       </div>
       <div class="nt-fact">
         <span class="nt-fact-tile" aria-hidden="true"><AppIcon name="dollar" :size="19" /></span>
-        <span class="nt-fact-label">Prize money</span>
-        <span v-if="winnerPrizeCents > 0" class="nt-fact-value" title="The winner's cheque at this tier">
+        <span class="nt-fact-label">{{ t('Prize money') }}</span>
+        <span v-if="winnerPrizeCents > 0" class="nt-fact-value" :title="t('The winner\'s cheque at this tier')">
           {{ formatCents(winnerPrizeCents) }}
         </span>
-        <span v-else class="nt-fact-value" title="The junior tour pays no prize money at any level">–</span>
+        <span v-else class="nt-fact-value" :title="t('The junior tour pays no prize money at any level')">–</span>
       </div>
       <div class="nt-fact">
         <span class="nt-fact-tile" aria-hidden="true"><AppIcon name="trophy" :size="19" /></span>
-        <span class="nt-fact-label">Winner</span>
-        <span class="nt-fact-value">{{ winnerPoints }} pts</span>
+        <span class="nt-fact-label">{{ t('Winner') }}</span>
+        <span class="nt-fact-value">{{ t('{0} pts', [winnerPoints]) }}</span>
       </div>
       <div class="nt-fact">
         <span class="nt-fact-tile" aria-hidden="true"><AppIcon name="spectators" :size="19" /></span>
-        <span class="nt-fact-label">Spectators</span>
+        <span class="nt-fact-label">{{ t('Spectators') }}</span>
         <span
           class="nt-fact-value"
-          :title="`About ${crowdFigure} people around the courts – atmosphere, not a factor in play`"
+          :title="t('About {0} people around the courts – atmosphere, not a factor in play', [crowdFigure])"
           >{{ crowdFigure }}</span
         >
       </div>
@@ -334,8 +335,8 @@ const courtRead = computed(() => {
          gutter, which is where the side padding comes from once the hosting section is bare. -->
     <Card class="nt-first">
       <div class="nt-round-row">
-        <p class="nt-round">First round</p>
-        <p class="nt-draw">{{ spec.drawSize }}-player draw</p>
+        <p class="nt-round">{{ t('First round') }}</p>
+        <p class="nt-draw">{{ t('{0}-player draw', [spec.drawSize]) }}</p>
       </div>
       <!-- ⭐⭐ ROUND 31 #4 – AND NOW THERE ARE TWO STATES, because for seven of its eight weeks on
            screen this card has no opponent to mirror. A VS row with a blank on one side is the same
@@ -348,7 +349,7 @@ const courtRead = computed(() => {
           <div class="nt-first-name">{{ herName }}</div>
           <div class="nt-first-rank">{{ herRankText }}</div>
         </div>
-        <div class="nt-first-vs">VS</div>
+        <div class="nt-first-vs">{{ t('VS') }}</div>
         <div class="nt-first-side mirrored">
           <!-- ⚠ NO FLAG ON THIS SIDE, AND IT IS ABSENT RATHER THAN BLANK. `EventPreview` carries the
                opponent's NAME and RANK and no nation; the flag would have to be invented, and an
@@ -362,10 +363,9 @@ const courtRead = computed(() => {
            exists before the week; the rest of the bracket is built by `runTournament` on the tick.
            His own words are on the script side, where this file's header rule allows them. -->
       <p v-if="event.preview.drawMade" class="hint nt-first-note">
-        Only the first round is drawn before the week starts – the rest of the bracket is made when
-        she gets there.
+        {{ t('Only the first round is drawn before the week starts – the rest of the bracket is made when she gets there.') }}
       </p>
-      <p v-else class="hint nt-first-note">{{ DRAW_NOT_MADE_NOTE }}</p>
+      <p v-else class="hint nt-first-note">{{ t('The draw has not been made yet.') }}</p>
     </Card>
 
   </div>

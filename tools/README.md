@@ -11,8 +11,8 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-275 TRACKED TypeScript files: **58 live**, **217 archival**
-(of which **113 frozen** out of `check:tools` and **104 still swept**).
+289 TRACKED TypeScript files: **71 live**, **218 archival**
+(of which **113 frozen** out of `check:tools` and **105 still swept**).
 
 ## Why the split exists
 
@@ -49,6 +49,8 @@ gate's verdict is a function of the commit, never of whatever else a checkout ha
 | `chemistry-bench.ts` | `npm run bench:chemistry` |
 | `childhood-bench.ts` | `npm run bench:childhood` |
 | `coach-raise-bench.ts` | `npm run bench:coachraise` |
+| `copy-census-walk.ts` | imported by the test suite |
+| `copy-text.ts` | imported by the test suite |
 | `dead-week-probe.ts` | `npm run bench:deadweek` |
 | `demo-save.ts` | writes the demo career used for screenshots and manual playtests |
 | `dual-universe-bench.ts` | `npm run bench:dual` |
@@ -58,14 +60,25 @@ gate's verdict is a function of the commit, never of whatever else a checkout ha
 | `econ-bench.ts` | `npm run bench:econ` |
 | `endings-bench.ts` | `npm run bench:endings` |
 | `fatigue-bench.ts` | `npm run bench:fatigue` |
+| `font-cmap-probe.ts` | `npm run fonts:probe` |
 | `form-bench.ts` | `npm run bench:form` |
 | `form-g-sweep.ts` | `npm run bench:gsweep` |
 | `frozen-key-diff.ts` | diffs a frozen RNG capture against a live run – the instrument for "which draw moved?" when the pinned hash changes |
+| `i18n-check.ts` | imported by the test suite |
+| `i18n-cli.ts` | `npm run i18n:extract` |
+| `i18n-extract.ts` | imported by the test suite |
+| `i18n-formats.ts` | imported by the test suite |
+| `i18n-import.ts` | imported by the test suite |
+| `i18n-pseudoloc.ts` | imported by the test suite |
+| `i18n-seats.ts` | imported by the test suite |
 | `injury-landscape.ts` | the whole-career injury census behind docs/specs/the-injury-landscape-2026-08.md; re-run whenever injury rates are touched |
 | `knock-rate.ts` | `npm run bench:knock` |
 | `ladder-floor.ts` | `npm run bench:floor` |
 | `life-arrival.ts` | `npm run bench:life-arrival` |
 | `load-bench.ts` | `npm run bench:load` |
+| `lqa-ru-batches.ts` | imported by the test suite |
+| `lqa-ru-report.ts` | imported by the test suite |
+| `lqa-ru.ts` | `npm run lqa:ru` |
 | `masseur-raise-bench.ts` | `npm run bench:masseurraise` |
 | `money-decomposition.ts` | `npm run bench:money` |
 | `outgrown-entry-probe.ts` | `npm run bench:outgrown` |
@@ -110,23 +123,24 @@ compiling reddens a pull request instead of rotting.
 - `copy-census.ts` · `domestic-season-to-date.ts` · `drought-probe.ts` · `empty-week-census.ts`
 - `fade-read.ts` · `feed-audit.ts` · `first-number-one-probe.ts` · `first-pair-replay.ts`
 - `fork-birthday-probe.ts` · `growth-age-sweep.ts` · `growth-pace-probe.ts` · `his-careers-dose.ts`
-- `injury-audit.ts` · `kid-share-audit.ts` · `ladder-vs-targets.ts` · `load-and-injury.ts`
-- `motherhood-bench.ts` · `one-clock.ts` · `pause-brand-probe.ts` · `potential-band-sweep.ts`
-- `pressure-set-census.ts` · `probe-favorite-curve.ts` · `r34-calendar-tiers.ts` · `r34-domestic-reset.ts`
-- `r34-field-chance.ts` · `r34-zero-lock.ts` · `r38-academy-worth.ts` · `r38-ceiling-dials.ts`
-- `r38-closed-form-residual.ts` · `r38-decline-cliff.ts` · `r38-decline-read.ts` · `r38-decline-shape.ts`
-- `r38-fame-presence-sweep.ts` · `r38-field-read.ts` · `r38-save-read.ts` · `r39-apparel-bond.ts`
-- `r39-body-seasons.ts` · `r39-brand-loop.ts` · `r39-decline-rotation.ts` · `r39-save-read.ts`
-- `r39-tenure-reach.ts` · `r39-terms-walk.ts` · `r40-age-branch.ts` · `r40-childhood-career-blast.ts`
-- `r40-childhood-compounding.ts` · `r40-handover-realisation-cuts.ts` · `r40-last-winter.ts` · `r40-retire-trigger.ts`
-- `r40-span-and-realisation.ts` · `r41-ad-gate-16.ts` · `r41-alice-save.ts` · `r41-brand-history.ts`
-- `r41-brand-ramp.ts` · `r41-kid-share-early.ts` · `r41-one-market.ts` · `r41-winrate-2036.ts`
-- `r42-cameo-gap-closer.ts` · `r42-ceiling-clock.ts` · `r42-coach-every-cheque.ts` · `r42-composure-bonus.ts`
-- `r42-elite-retainer.ts` · `r42-junior-coverage.ts` · `r42-kid-share-ramp.ts` · `r42-personality-read.ts`
-- `r42-sparring-price.ts` · `r42-team-budget-cap.ts` · `real-vs-bench.ts` · `runway-probe.ts`
-- `sale-probe.ts` · `school-bench.ts` · `seed-vs-model.ts` · `sponsor-cadence.ts`
-- `sponsor-ladder-reach.ts` · `sponsor-silence-probe.ts` · `summer-bench.ts` · `top50-season-probe.ts`
-- `wall-l1-bench.ts` · `week-story-trace.ts` · `what-money-buys.ts` · `winrate-read.ts`
+- `injury-audit.ts` · `kid-share-audit.ts` · `ladder-vs-targets.ts` · `legacy-templates-sweep.ts`
+- `load-and-injury.ts` · `motherhood-bench.ts` · `one-clock.ts` · `pause-brand-probe.ts`
+- `potential-band-sweep.ts` · `pressure-set-census.ts` · `probe-favorite-curve.ts` · `r34-calendar-tiers.ts`
+- `r34-domestic-reset.ts` · `r34-field-chance.ts` · `r34-zero-lock.ts` · `r38-academy-worth.ts`
+- `r38-ceiling-dials.ts` · `r38-closed-form-residual.ts` · `r38-decline-cliff.ts` · `r38-decline-read.ts`
+- `r38-decline-shape.ts` · `r38-fame-presence-sweep.ts` · `r38-field-read.ts` · `r38-save-read.ts`
+- `r39-apparel-bond.ts` · `r39-body-seasons.ts` · `r39-brand-loop.ts` · `r39-decline-rotation.ts`
+- `r39-save-read.ts` · `r39-tenure-reach.ts` · `r39-terms-walk.ts` · `r40-age-branch.ts`
+- `r40-childhood-career-blast.ts` · `r40-childhood-compounding.ts` · `r40-handover-realisation-cuts.ts` · `r40-last-winter.ts`
+- `r40-retire-trigger.ts` · `r40-span-and-realisation.ts` · `r41-ad-gate-16.ts` · `r41-alice-save.ts`
+- `r41-brand-history.ts` · `r41-brand-ramp.ts` · `r41-kid-share-early.ts` · `r41-one-market.ts`
+- `r41-winrate-2036.ts` · `r42-cameo-gap-closer.ts` · `r42-ceiling-clock.ts` · `r42-coach-every-cheque.ts`
+- `r42-composure-bonus.ts` · `r42-elite-retainer.ts` · `r42-junior-coverage.ts` · `r42-kid-share-ramp.ts`
+- `r42-personality-read.ts` · `r42-sparring-price.ts` · `r42-team-budget-cap.ts` · `real-vs-bench.ts`
+- `runway-probe.ts` · `sale-probe.ts` · `school-bench.ts` · `seed-vs-model.ts`
+- `sponsor-cadence.ts` · `sponsor-ladder-reach.ts` · `sponsor-silence-probe.ts` · `summer-bench.ts`
+- `top50-season-probe.ts` · `wall-l1-bench.ts` · `week-story-trace.ts` · `what-money-buys.ts`
+- `winrate-read.ts`
 
 ## Archival – frozen at their blob id
 

@@ -12,12 +12,14 @@
 // the block is 83px tall (it was 96, measured in Chromium). ⚠ THE HEIGHT IS A NUMBER THE PAGE SHARES: layout C hangs its hero a few pixels under
 // it and `albumPlacement.ts` reserves it (`HEAD_H`). The old 96px block reached 22px INTO the hero on every C sheet – the years line lay under the
 // photograph. Both halves are held by `tests/r47-b3-album-headings.test.ts`; no word changed, only sizes.
+import { t } from '../../i18n'
+
 defineProps<{ index: number; title: string; ageLabel: string }>()
 </script>
 
 <template>
   <header class="album-title">
-    <p class="album-title-no">&ndash; Chapter {{ index }}</p>
+    <p class="album-title-no">{{ t('– Chapter {0}', [index]) }}</p>
     <h2 class="album-title-name">{{ title }}</h2>
     <p class="album-title-age">{{ ageLabel }}</p>
   </header>

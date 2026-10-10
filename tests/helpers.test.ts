@@ -14,7 +14,8 @@
 // A comment saying "do not merge these" would not have held – tests/pin-hygiene.test.ts exists for
 // exactly that reason. This file makes the wrong merge FAIL.
 import { describe, it, expect } from 'vitest'
-import { after, at, before, codeOf, lastAt, lineAt, region, regionToLast, regions, scriptCodeOf, stripComments } from './helpers/source'
+import { readFileSync } from 'node:fs'
+import { after, at, before, codeOf, lastAt, lineAt, region, regionToLast, regions, scriptCodeOf, stripComments, tTransparent, withoutCpTwins } from './helpers/source'
 import { fnv1a, fnv1aHex } from './helpers/hash'
 
 describe('codeOf and scriptCodeOf are two helpers on purpose', () => {
@@ -281,5 +282,146 @@ describe('fnv1a is one hash with two spellings', () => {
 
   it('is not a constant function – the vectors above are not vacuous', () => {
     expect(fnv1a('a')).not.toBe(fnv1a('b'))
+  })
+})
+
+// =================================================================================================
+// ⭐ L2-2 (08.10) – `tTransparent`: THE READER THAT ENDS THE RE-AIM CHURN (L2-1 finding 7)
+// =================================================================================================
+// A source-shape pin is written against the wording, and the wording does not change when a site is
+// wrapped in `t()`. These arms hold three things: (1) a wrapped site and its unwrapped twin read
+// IDENTICALLY, across every seat a wrapped string sits in; (2) a CHANGED WORD never reads the same
+// (the reader forgives the spelling of the call, not the words); (3) it throws on nothing and leaves
+// alone whatever it cannot read as a plain literal. And the mutation: a reader that does nothing
+// reddens the wrapped-fixture arm, so the arm is not green by construction.
+describe('tTransparent – a pin reads the same whether or not the site is wrapped', () => {
+  // [seat, the site wrapped in t(), the same site as it was written before the wrap]
+  const TWINS: [string, string, string][] = [
+    ['a bare call', "label = t('Coach yourself')", "label = 'Coach yourself'"],
+    ['a call with params (nested parens, braces, strings)', "t('Week {week} of {total}', { week, total: fmt(2, [1], ')') })", "'Week {week} of {total}'"],
+    ['double quotes', `t("Don't stop")`, `"Don't stop"`],
+    ['a backtick literal with no substitution', 'x = t(`Back`)', 'x = `Back`'],
+    ['an escaped quote', String.raw`t('She is born into her mother\'s family')`, String.raw`'She is born into her mother\'s family'`],
+    ['a call split over lines', "t(\n    'Skip the childhood',\n    { a }\n  )", "'Skip the childhood'"],
+    ['an object getter (the table shape)', "{ id: 'a', get label() { return t('Coach yourself') }, cost: 1 }", "{ id: 'a', label: 'Coach yourself', cost: 1 }"],
+    ['a multi-line getter with a quoted name', "{ get 'Huge potential'() {\n    return t('Huge')\n  } }", "{ 'Huge potential': 'Huge' }"],
+    ['an arrow reader', "{ walkover: () => t('Stopped: too injured.') }", "{ walkover: 'Stopped: too injured.' }"],
+    ['a list of readers, one per line (the localizedList shape – L2-3)', "pool: localizedList(\n    () => t('She hits like it owes her money'),\n    () => t('First strike'),\n  ),", "pool: localizedList(\n    'She hits like it owes her money',\n    'First strike',\n  ),"],
+    ['template text', "<button>{{ t('Back') }}</button>", '<button>Back</button>'],
+    ['a bound attribute', `<button :aria-label="t('Random first name')" />`, '<button aria-label="Random first name" />'],
+    ['a bound prop with an apostrophe', String.raw`<IconButton :label="t('Don\'t')" />`, `<IconButton label="Don't" />`],
+    // ⭐ L3-T (10.10): a context tag is the call site's business, not part of the words a pin asserts
+    ['a tagged key (the nav label)', "{ id: 'stats', get label() { return t('nav|Stats') } }", "{ id: 'stats', label: 'Stats' }"],
+    ['a tagged key in a template', "<dt>{{ t('total|Banked') }}</dt>", '<dt>Banked</dt>'],
+    ['a tagged key with params (a stage with a hole)', "return t('stage|R{0}', [remaining])", "return 'R{0}'"],
+    ['a tagged key in a bound attribute', `<button :aria-label="t('bell|Unread news')" />`, '<button aria-label="Unread news" />'],
+    ['a tagged key in a double-quoted call and in a backtick one', `a = t("op|Save") + t(\`op|Load\`)`, 'a = "Save" + `Load`'],
+  ]
+
+  it.each(TWINS)('%s: wrapped and unwrapped read identically', (_seat, wrapped, bare) => {
+    expect(tTransparent(wrapped)).toBe(tTransparent(bare))
+    expect(tTransparent(wrapped)).toBe(bare)
+  })
+
+  it('⭐ a CHANGED WORD never reads the same – the reader forgives the call, not the wording', () => {
+    expect(tTransparent("label: t('Coach yourselfX')")).not.toBe(tTransparent("label: 'Coach yourself'"))
+    expect(tTransparent("get label() { return t('Coach yourselfX') }")).toContain("label: 'Coach yourselfX'")
+    expect(tTransparent("get label() { return t('Coach yourselfX') }")).not.toContain("label: 'Coach yourself'")
+    expect(tTransparent("<b>{{ t('Back up') }}</b>")).not.toBe('<b>Back</b>')
+    // L2-3: the list seat forgives the thunk, never the word – and never a lambda in running code.
+    expect(tTransparent("pool: localizedList(\n    () => t('First strikeX'),\n  )")).not.toContain("'First strike',")
+    expect(tTransparent("const n = computed(() => 'x')")).toBe("const n = computed(() => 'x')")
+    expect(tTransparent("xs.map(() => 'y')\n  ys.map(\n    () => 'z')")).toBe("xs.map(() => 'y')\n  ys.map(\n    () => 'z')")
+  })
+
+  it('⭐ L3-T: only the tag SHAPE folds – text with a pipe in it is plain text, and a changed word behind a tag never reads the same', () => {
+    // the shape `splitContext` reads: a short lowercase word, then `|` – anything else is the words
+    for (const plain of ["t('Win | Lose')", "t('Draw|Seed')", "t('A|B')", "t('1st|2nd')", "t('Stats|')", `t('${'x'.repeat(25)}|Y')`]) {
+      expect(tTransparent(plain), plain).toBe(plain.slice(2, -1)) // the call unwrapped, the words untouched
+    }
+    expect(tTransparent("t('Win | Lose')")).toBe("'Win | Lose'")
+    expect(tTransparent("t('Draw|Seed')")).toBe("'Draw|Seed'")
+    expect(tTransparent("t('nav|')")).toBe("''")
+    // the tag folds, the words do not: a reworded label behind a tag still fails the pin written against the old one
+    expect(tTransparent("label: t('nav|StatsX')")).not.toBe(tTransparent("label: 'Stats'"))
+    expect(tTransparent("label: t('nav|StatsX')")).toBe("label: 'StatsX'")
+    // a tag folds ONLY at the head of a call's literal – a pipe inside a bare literal is never touched
+    expect(tTransparent("const bare = 'nav|Stats'")).toBe("const bare = 'nav|Stats'")
+    expect(tTransparent("emit('nav|Stats')")).toBe("emit('nav|Stats')")
+  })
+
+  it('leaves alone what it cannot read as one plain literal – a pin over those says so itself', () => {
+    const alone = [
+      "format('x')", "emit('x')", "x.t('y')", "$t('z')", "split('a')", 't(variable)', "t('a' + 'b')", 't(`a${b}`)', 't()', 't( )',
+      "t('never closes", "t('open'", "t('x', { a: 1 ", 't("a\nb")', 'const t = 1', "get label() { return compute('x') }",
+    ]
+    for (const src of alone) expect(tTransparent(src), src).toBe(src)
+  })
+
+  it('⚠ throws on nothing: every prefix of a real wrapped file reads without an exception, and the reader is idempotent', () => {
+    const real = readFileSync(new URL('../src/composables/identityCopy.ts', import.meta.url), 'utf8').slice(0, 4000)
+    for (let n = 0; n <= real.length; n += 7) expect(() => tTransparent(real.slice(0, n))).not.toThrow()
+    for (const junk of ['', ' ', '\\', "t('", 't(`', "'''", '{{', "{{ 'x", ':a="\'x', 'get x() { return', "get x() { return t('y') ", '))))((((']) {
+      expect(() => tTransparent(junk), junk).not.toThrow()
+    }
+    const once = tTransparent(real)
+    expect(tTransparent(once)).toBe(once)
+  })
+
+  it('reads the real L2-1 wrapping: the getters in identityCopy.ts come back as the properties they replaced', () => {
+    const real = readFileSync(new URL('../src/composables/identityCopy.ts', import.meta.url), 'utf8')
+    expect(real).toContain("get firstName() { return t('First name') }")
+    const bare = tTransparent(real)
+    expect(bare).toContain("firstName: 'First name'")
+    expect(bare).toContain("searchPlaceholder: 'Search countries...'")
+    expect(bare).not.toContain('get firstName()')
+  })
+
+  it('⭐⭐ MUTATION: a reader that does nothing reddens the wrapped-fixture arm – the arm is not green by construction', () => {
+    const identity = (s: string): string => s
+    // the pin, written once, against the UNWRAPPED spelling
+    const pin = (read: (s: string) => string, src: string): boolean => read(src).includes("label: 'Coach yourself'")
+    const wrapped = "{ id: 'self', get label() { return t('Coach yourself') } }"
+    const unwrapped = "{ id: 'self', label: 'Coach yourself' }"
+    expect(pin(tTransparent, wrapped)).toBe(true)
+    expect(pin(tTransparent, unwrapped)).toBe(true)
+    expect(pin(identity, unwrapped)).toBe(true)
+    expect(pin(identity, wrapped), 'with the reader mutated to identity the wrapped site is invisible to the pin').toBe(false)
+  })
+
+  it('⭐⭐ MUTATION (L3-T): the tag fold is load-bearing – a reader that strips the call but not the tag reads `nav|Stats`, and the real nav pin goes red', () => {
+    // the reader as it stood before L3-T: the call is unwrapped, the tag stays in the literal
+    const untaggedReader = (s: string): string => tTransparent(s).replace(/'Stats'/g, "'nav|Stats'")
+    const src = "{ id: 'stats', icon: 'stats', get label() { return t('nav|Stats') } }"
+    const pin = (read: (s: string) => string): boolean => read(src).includes("label: 'Stats'")
+    expect(pin(tTransparent)).toBe(true)
+    expect(pin(untaggedReader), 'without the fold the nav label reads «nav|Stats» and the pin written against the English cannot see it').toBe(false)
+  })
+})
+
+// ⭐ L3-1 (10.10) – `withoutCpTwins`: A LEDGER ROW'S `c: cp\`…\`` IS THE SAME SENTENCE WRITTEN FOR A SECOND READER, NOT A SECOND QUOTATION OF IT
+describe('withoutCpTwins – a pin that counts quotations reads the row once', () => {
+  it('removes the tagged template and nothing else: the `text:` literal beside it is untouched', () => {
+    const src = "addEvent(world, { text: `Sold: ${label} – exactly what it cost`, c: cp`Sold: ${label} – exactly what it cost`, amountCents })"
+    expect(withoutCpTwins(src)).toBe("addEvent(world, { text: `Sold: ${label} – exactly what it cost`, c: , amountCents })")
+  })
+
+  it('walks a hole with nested braces, quotes and a nested template to the closing backtick', () => {
+    const src = "c: cp`a ${fn({ k: '}' })} b ${x ? `y ${z}` : \"}\"} c`, text: 'kept'"
+    expect(withoutCpTwins(src)).toBe("c: , text: 'kept'")
+  })
+
+  it('leaves a name that merely ends in cp alone, and a `cp` that is not a tag', () => {
+    expect(withoutCpTwins('abccp`x` and cp(1)')).toBe('abccp`x` and cp(1)')
+  })
+
+  it('an unterminated template is left as it is rather than eating the file', () => {
+    expect(withoutCpTwins('c: cp`never closed')).toBe('c: cp`never closed')
+  })
+
+  it('a wording change in the text literal is still visible through it (it can never hide one)', () => {
+    const was = withoutCpTwins("text: `Sold: ${a}`, c: cp`Sold: ${a}`")
+    const now = withoutCpTwins("text: `Sold!: ${a}`, c: cp`Sold: ${a}`")
+    expect(now).not.toBe(was)
   })
 })

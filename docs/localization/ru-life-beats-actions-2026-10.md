@@ -23,9 +23,10 @@ infinitives, not gendered past tense. All lines remain `DRAFT` pending owner rea
 | `met.wary` | `Ask the coach to watch her schedule` | `Попросить тренера присмотреть за её расписанием` |
 | `met.meet` | `Say we want to meet them, now` | `Попросить познакомить нас – прямо сейчас` |
 | `met.silent` | `Say nothing about it` | `Ничего об этом не говорить` |
-| `small-talk.more` | `Ask her to say more` | `Попросить её рассказать подробнее` |
-| `small-talk.view` | `Tell her what we think` | `Сказать, что мы об этом думаем` |
-| `small-talk.easy` | `Tell her it can keep` | `Сказать, что с этим можно не спешить` |
+| `small-talk.more` | `Ask her to say more` | `Попросить рассказать подробнее` · `APPROVED` 10.10 |
+| `small-talk.view` | `Tell her what we think` | `Сказать, что мы думаем` · `APPROVED` 10.10 |
+| `small-talk.easy` | `Tell her it can keep` | `Сказать, что можно не спешить` · `APPROVED` 10.10 |
+| `small-talk.look` | `Ask how bad it looks` | `Спросить, сильно ли это бросается в глаза` · `APPROVED` 10.10 – ряд добавлен по чат-ок: ключ жил только в корпусе (две ситуации, форма выдерживает обе) |
 | `fork-counsel.heard` | `Thank the coach for saying it plainly` | `Поблагодарить тренера за прямой разговор` |
 | `fork-counsel.weigh` | `Say we will sit with it` | `Сказать, что нам нужно это обдумать` |
 | `fork-psy.straight` | `Thank the psychologist for the straight read` | `Поблагодарить психолога за честный взгляд` |

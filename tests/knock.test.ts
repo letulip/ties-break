@@ -72,7 +72,7 @@ import { migrateSave } from '../src/engine/migrations'
 import { ECONOMY } from '../src/engine/economy'
 import { restRecoveryBonus, SAVE_SCHEMA_VERSION } from '../src/engine/world'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type Knock, type PlayerProfile, type WeekPlan } from '../src/shared/protocol'
-import { region, scriptCodeOf } from './helpers/source'
+import { region, scriptCodeOf, withoutCpTwins } from './helpers/source'
 import { fnv1a } from './helpers/hash'
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
@@ -1059,7 +1059,9 @@ describe('W4 — the schema (v26)', () => {
   it('the knock ARRIVAL line reports, it never asks - the dialog is what asks', () => {
     // world.ts AND every world/*.ts part: rollKnock moved to world/knock.ts with the P4 split
     const src = worldSource()
-    const block = region(src, 'const knock = drawKnock(view)', 'coachManagesLoad(tierOf(')
+    // ⭐ L3-7 (10.10) RE-AIM, NOT RELAXED: the two arrival rows now write their `cp` twin beside the `text` (same sentence, the ref a translator's catalog is keyed by), so the pin reads the block
+    // WITHOUT the twins – it still counts the quoted `text` literals, and the twin's wording is held from the other side (tests/i18n-l3-1-ledger-writers.test.ts: the key law and the pair scan).
+    const block = withoutCpTwins(region(src, 'const knock = drawKnock(view)', 'coachManagesLoad(tierOf('))
     const lines = [...block.matchAll(/`([^`]*\$\{knock\.part\}[^`]*)`/g)].map((m) => m[1])
     expect(lines.length, 'the two arrival lines should still be here').toBe(2)
     for (const line of lines) {

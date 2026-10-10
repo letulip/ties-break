@@ -46,6 +46,7 @@ import { KID_ID } from './constants'
 import type { PenaltyReason, PenaltyRow, TourBriefing, TourBriefingRow } from '../../shared/protocol'
 import type { SeasonEvent, TierId } from '../season/types'
 import type { WorldState } from '../world'
+import { cp, type CopyRef } from '../../shared/i18n'
 
 /** Is this rung one the tour obliges a top-50 player to turn up at, event by event? The Slams and
  *  the 1000s (ECONOMY.mandatory.perEventTiers). The 500s are a QUOTA and are handled separately —
@@ -156,7 +157,12 @@ function briefingRequirements(): TourBriefingRow[] {
       tier,
       label,
       ask: `All ${count} ${label}${plural(count, '', 's')}`,
+      // ⭐ v93 (L3-3): the same phrase as a CopyRef BESIDE the English – the briefing is assembled at SNAPSHOT time, never stored, and the worker does not know the
+      // locale, so the dialog renders these (spec i18n-2026-10 §3.2). The singular and the plural are separate messages (the house rule for a counted phrase) and
+      // they are the SAME keys `composables/letterCopy.ts` gives the season notice's stored phrases, so the popup and the letter read as one translation.
+      askC: count === 1 ? cp`All ${count} ${label}` : cp`All ${count} ${label}s`,
       detail: 'Required one at a time – each is its own entry, and its own decision.',
+      detailC: cp`Required one at a time – each is its own entry, and its own decision.`,
     })
   }
   const quotaTier = ECONOMY.mandatory.quotaTier
@@ -166,7 +172,9 @@ function briefingRequirements(): TourBriefingRow[] {
     tier: quotaTier,
     label: quotaLabel,
     ask: `${ECONOMY.mandatory.quota} of the ${offered} ${quotaLabel}s`,
+    askC: cp`${ECONOMY.mandatory.quota} of the ${offered} ${quotaLabel}s`,
     detail: 'Her pick of them, counted once when the season closes.',
+    detailC: cp`Her pick of them, counted once when the season closes.`,
   })
   return rows
 }
@@ -183,24 +191,55 @@ function briefingRequirements(): TourBriefingRow[] {
  *  ⚠ AND THE LAST LINE IS «AN OBLIGATION SHE COULD NOT MEET IS NOT AN OBLIGATION» – the same clause
  *  `mandatoryBinds` enforces, said to the player. It belongs in a price list precisely because it is
  *  the half nobody would assume. */
-function briefingCosts(): string[] {
+function briefingCosts(): Array<{ text: string; c: CopyRef }> {
   const m = ECONOMY.mandatory
   const slots = BEST_N_BY_TRACK.wta
   const quotaLabel = TIERS[m.quotaTier].label
+  // the economy's own literals are typed as their values (`skipPoints: 2`), so a form test against 1 needs the plain number type – a retune to 1 must still compile
+  const skipPoints: number = m.skipPoints
+  const shortfallPoints: number = m.quotaShortfallPoints
+  // ⭐ v93 (L3-3): each line is its English sentence AND the same sentence as a CopyRef – the text templates are the ones that stood here, character for character; a counted
+  // phrase ("1 penalty point" / "2 penalty points") is a whole sentence per form, never a suffix on a shared one.
   return [
-    `A required event she does not enter takes one of her ${slots} counting results and puts a zero ` +
-      `in it. That is the real price, and it is not a fine: it is a result she can no longer replace ` +
-      `with a better one.`,
-    `The tour also books ${m.skipPoints} penalty ${plural(m.skipPoints, 'point', 'points')} for not ` +
-      `entering, ${m.lateWithdrawalPoints} for withdrawing after the list has closed and ` +
-      `${m.noShowPoints} for not appearing on the day.`,
-    `${m.suspensionAt} penalty points inside ${m.windowWeeks} weeks suspends her entries for ` +
-      `${m.suspensionWeeks} weeks. Points leave that window on their own as the year moves – nothing ` +
-      `is carried forward.`,
-    `The ${quotaLabel}s are settled once, at the end of the season: ${m.quotaShortfallPoints} penalty ` +
-      `${plural(m.quotaShortfallPoints, 'point', 'points')} for each one she finished short of ${m.quota}.`,
-    `Nothing at all is owed for a week she could not play – injured, suspended, too young for the ` +
-      `rung, refused by the entry list, or already committed to another tournament that week.`,
+    {
+      text:
+        `A required event she does not enter takes one of her ${slots} counting results and puts a zero ` +
+        `in it. That is the real price, and it is not a fine: it is a result she can no longer replace ` +
+        `with a better one.`,
+      c: cp`A required event she does not enter takes one of her ${slots} counting results and puts a zero in it. That is the real price, and it is not a fine: it is a result she can no longer replace with a better one.`,
+    },
+    {
+      text:
+        `The tour also books ${m.skipPoints} penalty ${plural(m.skipPoints, 'point', 'points')} for not ` +
+        `entering, ${m.lateWithdrawalPoints} for withdrawing after the list has closed and ` +
+        `${m.noShowPoints} for not appearing on the day.`,
+      c:
+        skipPoints === 1
+          ? cp`The tour also books ${m.skipPoints} penalty point for not entering, ${m.lateWithdrawalPoints} for withdrawing after the list has closed and ${m.noShowPoints} for not appearing on the day.`
+          : cp`The tour also books ${m.skipPoints} penalty points for not entering, ${m.lateWithdrawalPoints} for withdrawing after the list has closed and ${m.noShowPoints} for not appearing on the day.`,
+    },
+    {
+      text:
+        `${m.suspensionAt} penalty points inside ${m.windowWeeks} weeks suspends her entries for ` +
+        `${m.suspensionWeeks} weeks. Points leave that window on their own as the year moves – nothing ` +
+        `is carried forward.`,
+      c: cp`${m.suspensionAt} penalty points inside ${m.windowWeeks} weeks suspends her entries for ${m.suspensionWeeks} weeks. Points leave that window on their own as the year moves – nothing is carried forward.`,
+    },
+    {
+      text:
+        `The ${quotaLabel}s are settled once, at the end of the season: ${m.quotaShortfallPoints} penalty ` +
+        `${plural(m.quotaShortfallPoints, 'point', 'points')} for each one she finished short of ${m.quota}.`,
+      c:
+        shortfallPoints === 1
+          ? cp`The ${quotaLabel}s are settled once, at the end of the season: ${m.quotaShortfallPoints} penalty point for each one she finished short of ${m.quota}.`
+          : cp`The ${quotaLabel}s are settled once, at the end of the season: ${m.quotaShortfallPoints} penalty points for each one she finished short of ${m.quota}.`,
+    },
+    {
+      text:
+        `Nothing at all is owed for a week she could not play – injured, suspended, too young for the ` +
+        `rung, refused by the entry list, or already committed to another tournament that week.`,
+      c: cp`Nothing at all is owed for a week she could not play – injured, suspended, too young for the rung, refused by the entry list, or already committed to another tournament that week.`,
+    },
   ]
 }
 
@@ -221,6 +260,7 @@ export function buildTourBriefing(world: WorldState): TourBriefing | null {
   if (!mandatoryBindsRank(world)) return null
   const maxRank = ECONOMY.mandatory.maxRank
   const rank = world.kidRankWta ?? maxRank
+  const costs = briefingCosts()
   return {
     week: world.week,
     maxRank,
@@ -228,14 +268,17 @@ export function buildTourBriefing(world: WorldState): TourBriefing | null {
     lead:
       `She is ranked ${rank} in the world. Inside the top ${maxRank} the tour's commitment rules ` +
       `apply, and from here on part of her calendar is written by them rather than by us.`,
+    leadC: cp`She is ranked ${rank} in the world. Inside the top ${maxRank} the tour's commitment rules apply, and from here on part of her calendar is written by them rather than by us.`,
     requirements: briefingRequirements(),
-    costs: briefingCosts(),
+    costs: costs.map((x) => x.text),
+    costsC: costs.map((x) => x.c),
     // ⚠ THE RULING, AS THE LAST THING SHE READS. «Мы ни за что не наказываем» – the tour has rules and
     // the game has none, so the briefing ends by saying that none of it is advice. Nothing above
     // leans on the player and nothing anywhere in this family ever says she should have gone.
     closing:
       'Every line above is a price, and none of it is an instruction. Which of them she pays is ' +
       'still a decision, and it stays yours.',
+    closingC: cp`Every line above is a price, and none of it is an instruction. Which of them she pays is still a decision, and it stays yours.`,
   }
 }
 
@@ -430,6 +473,15 @@ export function chargeMandatoryPenalty(
       `Tour penalty: ${points} ${points === 1 ? 'point' : 'points'}` +
       `${label ? ` – ${label}` : ' – season commitment'}. ` +
       `${running} of ${ECONOMY.mandatory.suspensionAt} in the last 52 weeks.`,
+    // one key per branch: the point/points fork × the label / 'season commitment' fork (the frozen table's four spellings)
+    c:
+      points === 1
+        ? label
+          ? cp`Tour penalty: ${points} point – ${label}. ${running} of ${ECONOMY.mandatory.suspensionAt} in the last 52 weeks.`
+          : cp`Tour penalty: ${points} point – season commitment. ${running} of ${ECONOMY.mandatory.suspensionAt} in the last 52 weeks.`
+        : label
+          ? cp`Tour penalty: ${points} points – ${label}. ${running} of ${ECONOMY.mandatory.suspensionAt} in the last 52 weeks.`
+          : cp`Tour penalty: ${points} points – season commitment. ${running} of ${ECONOMY.mandatory.suspensionAt} in the last 52 weeks.`,
   })
   if (charged.suspended && world.suspendedUntilWeek !== null) {
     raiseSuspensionLetter(
@@ -443,6 +495,7 @@ export function chargeMandatoryPenalty(
       week,
       type: 'info',
       text: `Tour suspension – ${ECONOMY.mandatory.suspensionWeeks} weeks, through week ${world.suspendedUntilWeek}.`,
+      c: cp`Tour suspension – ${ECONOMY.mandatory.suspensionWeeks} weeks, through week ${world.suspendedUntilWeek}.`,
     })
   }
   return points
