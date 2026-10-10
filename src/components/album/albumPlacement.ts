@@ -158,9 +158,16 @@ export const NOTE_STEPS: readonly NoteStep[] = [
   { upTo: Infinity, step: 0.82 },
 ]
 
-/** The characters a note carries – its sentence, or the checklist's lines read as one. */
+/** The characters a note carries – its sentence AND the checklist under it, read as one run.
+ *
+ *  ⭐ LB-note (owner 10.10, decisions.md №38): THE JOINT LENGTH PICKS THE HAND, AND THE HAND IS THE SMALLER ONE.
+ *  The checklist lies under the prose in the SAME scrap, so the scrap has one size and the length that earns it is
+ *  both blocks together – a sentence that fits at full size, plus three league rows, is a long note and is written
+ *  at the step a long note earns (`NOTE_STEPS`). That is the night recommendation's default for the sub-question
+ *  («the lesser hand», not the «+16–44px of prose» variant it named beside it): №38 ruled the layout and this
+ *  sub-question rides that default. A note with only one of the two reads exactly as it always did. */
 export function noteLength(note: AlbumNote): number {
-  return note.text ? note.text.length : note.lines.join(' ').length
+  return [note.text, note.lines.join(' ')].filter((block) => block.length > 0).join(' ').length
 }
 
 /** The hand a note is written in, as a fraction of 17px. */
@@ -237,7 +244,8 @@ export function wrapLines(text: string, width: number, fontPx: number): number {
 }
 
 /** The height of a pasted note `w` wide: padding, the date row (one row, or two when the two labels
- *  do not fit side by side – measured wrapping at 125px and 130px of content), and the ruled text.
+ *  do not fit side by side – measured wrapping at 125px and 130px of content), and the ruled text –
+ *  the sentence, then the checklist's rows under it, each line wrapped on its own (one `<li>` each).
  *  ⭐ `step` is the size it is drawn at (`noteStep`): the scrap is laid out at its full size in a box
  *  `w / step` wide – so the wrap is the CALIBRATED one, nothing is re-measured – and every pixel of it is
  *  scaled by `step`, rounded UP. */
@@ -252,9 +260,10 @@ export function noteHeight(sheet: AlbumSheetModel, w: number, step = 1): number 
     const gap = a > 0 && b > 0 ? NOTE.whenGap : 0
     rows += (a + b) * NOTE.whenFont * HAND_EM + gap <= inner ? 1 : 2
   }
-  rows += note.text
-    ? wrapLines(note.text, inner, NOTE.font)
-    : note.lines.reduce((n, l) => n + wrapLines(l, inner, NOTE.font), 0)
+  // ⭐ LB-note: BOTH BLOCKS, the sentence and the checklist under it – the card draws both (`AlbumNoteCard.vue`), so a height that
+  // counted only the sentence would reserve a box shorter than the scrap and the list's last rows would hang over whatever lies below it.
+  rows += note.text ? wrapLines(note.text, inner, NOTE.font) : 0
+  rows += note.lines.reduce((n, l) => n + wrapLines(l, inner, NOTE.font), 0)
   return Math.ceil((NOTE.padTop + NOTE.padBottom + rows * NOTE.rule) * step)
 }
 

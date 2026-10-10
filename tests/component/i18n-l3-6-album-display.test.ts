@@ -167,9 +167,9 @@ describe('L3-6 – the album draws the refs the engine sends', () => {
   }
 
   it('the checklists: the heirloom\'s numbers and the graduate\'s league rows follow the catalog through the mapping; the mother\'s name does not', async () => {
-    // ⚠ A FINDING, NOT FIXED HERE (the report names it): `AlbumNoteCard.vue` draws the list only when the note has NO prose (`v-else-if="note.lines.length"`) and `noteOf` never leaves the prose empty
-    // (every corpus note is a sentence), so these lines are on the wire and in the heirloom but on no screen today. The refs are ready for the day a card draws them; until then the mapping is
-    // what can be proven, and it is proven here.
+    // ⚠ THIS WAS A FINDING, NOT FIXED IN L3-6: `AlbumNoteCard.vue` drew the list only when the note had NO prose (`v-else-if`) and `noteOf` never leaves the prose empty (every corpus note is a
+    // sentence), so these lines were on the wire and in the heirloom but on no screen. CLOSED 10.10 by LB-note (decisions.md №38): the card draws the sentence and the list under it, and
+    // `tests/component/lb-note-checklist-under.test.ts` holds that. What THIS case proves is still the mapping through the catalog.
     const heir = posedBooks().find((b) => b.label === 'dynasty: rich')!.book.sheets.find((s) => (s.note?.lines.length ?? 0) > 0)!
     expect(shownSheet(heir).note!.lines).toEqual(['Vera Kowalski', 'Best ranking: #4', 'Titles: 5', 'Slams: 1', 'Generation 2'])
     installCatalog('ru', { 'Best ranking: #{0}': 'BEST<{0}>', 'Titles: {0}': 'TITLES<{0}>', 'Slams: {0}': 'SLAMS<{0}>', 'Generation {0}': 'GEN<{0}>' })

@@ -1095,12 +1095,17 @@ function spreadFrames(frames: number, caps: readonly number[]): number[] {
   return take
 }
 
-/** The sheets one chapter earns: the FEWEST of the rotation's next layouts that can hold its
- *  frames, and how many frames sit on each. Returns the cursor the next chapter starts from. */
-function chapterSheetPlan(
-  cursor: number,
-  frames: number,
-): { layouts: AlbumLayout[]; takes: number[]; next: number } {
+/** One chapter's sheets: the layout each is drawn on and how many frames sit on it. */
+export interface SheetPlan {
+  layouts: AlbumLayout[]
+  takes: number[]
+}
+
+/** The sheets one chapter earns by the rotation alone: the FEWEST of the rotation's next layouts
+ *  that can hold its frames, and how many frames sit on each. The walk starts at `cursor`, which is
+ *  `cursorAfter` the layout the book drew last (`planBook` derives it – this used to hand back the
+ *  next cursor itself, which is the same number only while every chapter takes the rotation's own run). */
+function chapterSheetPlan(cursor: number, frames: number): SheetPlan {
   let at = cursor
   if (!opensAChapter(LAYOUT_ROTATION[at % LAYOUT_ROTATION.length])) at += 1
   const offered: AlbumLayout[] = []
@@ -1114,7 +1119,98 @@ function chapterSheetPlan(
     }
   }
   const layouts = offered.slice(0, count)
-  return { layouts, takes: spreadFrames(frames, layouts.map((l) => FRAME_CAPACITY[l])), next: at + count }
+  return { layouts, takes: spreadFrames(frames, layouts.map((l) => FRAME_CAPACITY[l])) }
+}
+
+// =================================================================================================
+// ⭐⭐ LB-note (owner 10.10, decisions.md №38) – THE SHEET THAT CARRIES A CHECKLIST IS LAYOUT A
+// =================================================================================================
+//
+// WHY: the checklist lies UNDER the prose now (`AlbumNoteCard.vue`), so the graduate's and the heirloom's note is the tallest scrap in the book – a date row, a sentence and three
+// to five facts, at the floor hand. Layout A is the one layout with no ticket and no tag for that scrap to land on (its furniture is a heading, a patch and a doodle). MEASURED on
+// 768 posed graduate books (the 48 posed careers x 4 voices x graduation at 20 / 21 / 22 / 23, the rotation as it stood): the checklist sheet fell on A 172 times, on B 384 and on C 212;
+// and on the 292 B sheets that drew a pass and the 56 C sheets that drew a tag the resolved note touched it EVERY time. The heirloom never had the problem: it leads the book's first sheet,
+// which the rotation already makes A (24 of 24 clear). So the cheap lever is the engine's – the sheet takes its layout before any pixel does.
+//
+// ⚠⚠ A CHOICE, NEVER A DRAW. Nothing here reads a stream: the layouts are picked by a depth-first search over a handful of lawful runs (at most ten a chapter, five chapters), in a fixed order,
+// from facts the assembly already holds. No MAIN draw and no sub-stream is added; the same world assembles the same book.
+//
+// ⚠⚠ THE PIN IS INSIDE HIS 20.09 LAW AND NEVER OVER IT. A plain «this sheet is A» breaks three things the rotation exists to keep: two sheets in a row on one layout (the sheet before it can
+// be A as well), a chapter opening on B, and a sheet holding more frames than its layout draws (a three-frame B sheet turned A silently loses its third picture). So an option is lawful only
+// when no two neighbours share a layout ACROSS a chapter break too, the opener is not B, a chapter of three shows all three, and the capacities hold. The rotation's own answer is ALWAYS
+// tried first, so a book with no checklist is byte-identical to what it was (the 335-sheet sweeps and every other book are untouched), and a chapter takes another run only when
+// its own sheet would not be A. When no run exists for it (a one-sheet chapter straight after another pinned A), the LATER pin yields and the rotation stands – the law outranks the lever,
+// and the resolver still places that note as it places any other.
+//
+// WHICH SHEET: the one that holds the candidate carrying `lines` – `noteOf` hands the sheet the checklist of the first candidate on it that has one, so this asks the same question.
+
+/** The rotation's cursor after `layout` was drawn: where the NEXT chapter's walk begins (`null` = the book's start). */
+function cursorAfter(layout: AlbumLayout | null): number {
+  return layout === null ? 0 : (LAYOUT_ROTATION.indexOf(layout) + 1) % LAYOUT_ROTATION.length
+}
+
+/** Which sheet of a plan holds the chapter's frame number `index` – frames are dealt in order, `takes[i]` to sheet i. */
+function sheetHolding(takes: readonly number[], index: number): number {
+  let edge = 0
+  for (const [sheet, take] of takes.entries()) {
+    edge += take
+    if (index < edge) return sheet
+  }
+  return takes.length - 1
+}
+
+/** EVERY run of layouts a chapter of `frames` frames may take after a sheet drawn on `prev`: 1 to 3 sheets, no two neighbours alike (the first against `prev`), no opener on B, three
+ *  sheets showing all three, the frames fitting the capacities, and a frame for every sheet. Fewer sheets first, then in the rotation's own order. */
+function lawfulRuns(prev: AlbumLayout | null, frames: number): SheetPlan[] {
+  const out: SheetPlan[] = []
+  const grow = (run: AlbumLayout[], sheets: number): void => {
+    if (run.length === sheets) {
+      if (sheets === MAX_CHAPTER_SHEETS && new Set(run).size !== sheets) return
+      const caps = run.map((layout) => FRAME_CAPACITY[layout])
+      if (caps.reduce((n, cap) => n + cap, 0) >= frames) out.push({ layouts: run, takes: spreadFrames(frames, caps) })
+      return
+    }
+    const before = run.length === 0 ? prev : (run[run.length - 1] as AlbumLayout)
+    for (const layout of LAYOUT_ROTATION) {
+      if (layout === before || (run.length === 0 && !opensAChapter(layout))) continue
+      grow([...run, layout], sheets)
+    }
+  }
+  for (let sheets = 1; sheets <= Math.min(MAX_CHAPTER_SHEETS, frames); sheets++) grow([], sheets)
+  return out
+}
+
+/** ⭐ THE BOOK'S LAYOUT PLAN: for every chapter the layouts of its sheets and the frames on each, with every sheet that carries a checklist drawn on A wherever the laws above allow it.
+ *  A chapter's options are the rotation's own run first and then every other lawful run; the search keeps the first option of each chapter that lets the rest of the book be planned.
+ *
+ *  ⚠ ONE SHAPE NO RUN CAN SEAT, AND IT IS FRAME ARITHMETIC AND NOT A CHOICE: the FIFTH frame (index 4) of a FULL seven-frame chapter. Seven frames fill 2 + 3 + 2 exactly, so every
+ *  arrangement of the three layouts deals frames 2-4 or 4-6 to the three-frame B sheet; no lawful run puts index 4 on an A. MEASURED on the 768 posed graduate books: 68 of them (17 of the
+ *  192 career-and-graduation-age pairs, four voices each) are that shape and keep the rotation's B; every graduate who is the LAST frame of her chapter is seated. The pin yields there
+ *  (it is a pin, not a reason to drop a moment from a chapter) and the resolver places that note as it places any other.
+ *
+ *  `pinChecklists` is the BEFORE-ARM and nothing else reads it: `false` is the rotation alone, the layout of every book until 10.10 – `tests/lb-note-layout-pin.test.ts` plans with and without
+ *  it, so the arm that says the pin matters cannot go idle (the way `Tuning.headAir` keeps round 48's «before» alive). The chapters need only what the search reads: how many candidates, and which carry lines. */
+export function planBook(chapters: readonly { candidates: readonly { lines?: readonly string[] }[] }[], pinChecklists = true): SheetPlan[] {
+  const pins = chapters.map((chapter) => chapter.candidates.flatMap((c, k) => ((c.lines?.length ?? 0) > 0 ? [k] : [])))
+  const solve = (at: number, prev: AlbumLayout | null, active: ReadonlySet<number>): SheetPlan[] | null => {
+    if (at === chapters.length) return []
+    const frames = chapters[at].candidates.length
+    const own = chapterSheetPlan(cursorAfter(prev), frames)
+    const options = [own, ...lawfulRuns(prev, frames).filter((run) => run.layouts.join() !== own.layouts.join())]
+    for (const option of options) {
+      if (active.has(at) && !pins[at].every((k) => option.layouts[sheetHolding(option.takes, k)] === 'A')) continue
+      const rest = solve(at + 1, option.layouts[option.layouts.length - 1], active)
+      if (rest) return [option, ...rest]
+    }
+    return null
+  }
+  const pinned = pinChecklists ? pins.flatMap((chapterPins, at) => (chapterPins.length > 0 ? [at] : [])) : []
+  // every pin if the laws allow; else the LATEST yields first (the heirloom, on the first sheet, is A by the rotation itself)
+  for (let keep = pinned.length; keep > 0; keep--) {
+    const plan = solve(0, null, new Set(pinned.slice(0, keep)))
+    if (plan) return plan
+  }
+  return solve(0, null, new Set()) ?? []
 }
 
 /** The §5 thirds rule over the chapter's selection: with n frames picked, no corpus KIND may hold
@@ -1833,16 +1929,15 @@ export function assembleAlbum(world: WorldState): AlbumBook {
 
   const sheets: AlbumSheetModel[] = []
   const chapterRows: AlbumChapter[] = []
-  // the rotation's cursor runs over the WHOLE book, not over a chapter: that is what keeps two
-  // sheets either side of a chapter break from sharing a layout (his «одинаковых подряд просто не
-  // было»), and it is the one piece of state the assembly carries between chapters.
-  let cursor = 0
+  // the rotation runs over the WHOLE book, not over a chapter: that is what keeps two sheets either
+  // side of a chapter break from sharing a layout (his «одинаковых подряд просто не было»).
+  // ⭐ LB-note: it is planned for the whole book at once (`planBook`) – the rotation's own run for
+  // every chapter, except that a sheet carrying a checklist is drawn on A where his laws allow it.
+  const plans = planBook(chapters)
   // ⭐ ROUND 47 #14 – the small snapshots walk their pools from the career's one flavour draw, across the whole book (`takeFiller`)
   const fillers: FillerWalk = { start: flavourStartOf(world.seed), used: new Map() }
   for (const [i, chapter] of chapters.entries()) {
-    const plan = chapterSheetPlan(cursor, chapter.candidates.length)
-    cursor = plan.next
-    const own = sheetsOf(world, chapter, i + 1, voice, plan, fillers)
+    const own = sheetsOf(world, chapter, i + 1, voice, plans[i], fillers)
     chapterRows.push({
       index: i + 1,
       title: ALBUM_CHAPTER_TITLES[chapter.band],

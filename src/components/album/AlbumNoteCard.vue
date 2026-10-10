@@ -11,6 +11,16 @@
 // says so: «no string here writes either, because a corpus cannot know them». They arrive already
 // formatted from the engine, off the frame's own week, and this component only places them – above
 // the writing, the way the mockup has them.
+//
+// ⭐⭐ THE CHECKLIST LIES UNDER THE PROSE – the owner's 10.10 ruling, decisions.md «THE MORNING BATCH»
+// №38 («LB-note»). Until then this card drew the list only when the note had NO prose
+// (`v-else-if`), and `noteOf` never leaves the prose empty, so the graduate's championship rows and
+// the heirloom's cabinet were built, banked and carried on the wire and drawn on NO screen
+// (`tests/component/i18n-l3-6-album-display.test.ts` named it as a finding). Both blocks are drawn now,
+// the sentence first and the facts under it, in ONE scrap and ONE hand: the resolver reads the joint
+// length of the two to pick that hand (`noteLength`) and counts both blocks' rows (`noteHeight`).
+// ⚠ THE LIST SITS ON THE SAME 26px RULING AS THE PROSE, with no gap of its own: any extra space
+// between the blocks would knock every following row off the lines.
 import PaperNote from '../ui/PaperNote.vue'
 import type { AlbumNote } from '../../shared/protocol'
 
@@ -32,11 +42,10 @@ withDefaults(
       <span v-if="note.dateLabel">{{ note.dateLabel }}</span>
       <span v-if="note.ageLabel">{{ note.ageLabel }}</span>
     </p>
-    <!-- Prose, or the checklist form the mockups use when the note is three short facts rather
-         than a sentence. One or the other, never both: the engine decides which shape the
-         occasion earned. -->
+    <!-- The prose, and UNDER it the checklist when the engine built one (a few short facts the
+         corpus may not carry): both in this one scrap, the sentence first. Either may stand alone. -->
     <p v-if="note.text" class="album-note-text">{{ note.text }}</p>
-    <ul v-else-if="note.lines.length" class="album-note-list">
+    <ul v-if="note.lines.length" class="album-note-list">
       <li v-for="(l, i) in note.lines" :key="i">{{ l }}</li>
     </ul>
   </PaperNote>

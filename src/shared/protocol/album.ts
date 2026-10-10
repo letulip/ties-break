@@ -65,8 +65,11 @@ export interface AlbumNote {
   text: string
   dateLabel: string | null
   ageLabel: string | null
-  /** The checklist form: short ruled lines instead of a paragraph (mockup AZ-B, AZ-C). Empty when
-   *  the note is prose – which is every corpus note today. */
+  /** The checklist form: a few short ruled lines drawn UNDER the sentence in the same scrap (mockups
+   *  AZ-B, AZ-C drew the form; the owner ruled the placement 10.10, decisions.md №38). Empty on every
+   *  note whose occasion has no facts to list – which is almost all of them: the heirloom's and the
+   *  graduate's carry one, and the sheet that does is drawn on layout A wherever the book's own laws
+   *  allow it (`albumBook.ts`, `planBook`). */
   lines: readonly string[]
   /** ⭐ L3-6 – the refs beside `text`, `ageLabel` and the checklist; `linesC` is index-aligned with `lines`, `null` where a line is a proper name. */
   textC?: CopyRef
