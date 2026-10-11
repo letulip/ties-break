@@ -15,7 +15,7 @@ import { describe, expect, it } from 'vitest'
 import ts from 'typescript'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { renderCopyRef, SOURCE_LOCALE, splitContext, type CopyRef } from '../src/shared/i18n'
+import { renderCopyRef, SOURCE_LOCALE, splitContext, type CopyRef, type MissReason } from '../src/shared/i18n'
 import { boothLineageLines, buildCommentary } from '../src/viz/commentary'
 import { simulateMatch } from '../src/engine/match/engine'
 import { annotateMatch } from '../src/engine/match/rally'
@@ -97,6 +97,7 @@ describe('§2 refs render === strings – the grid, the preview and the booth po
   it('every beat of every build: the lead and the text render to the English the beat carries; the refs are JSON-safe', () => {
     let beats = 0
     const reached = new Set<string>()
+    const refs = new Set<string>()
     const bad: string[] = []
     eachCommentary((label, list) => {
       for (const b of list) {
@@ -114,28 +115,34 @@ describe('§2 refs render === strings – the grid, the preview and the booth po
         }
         keysOf(b.leadC, reached)
         keysOf(b.textC, reached)
+        if (b.leadC) refs.add(JSON.stringify(b.leadC))
+        if (b.textC) refs.add(JSON.stringify(b.textC))
       }
     })
     expect(beats, 'a non-empty denominator').toBeGreaterThan(50_000)
     expect(bad.slice(0, 8)).toEqual([])
     GRID_REACHED = reached
+    GRID_REFS = refs
   })
 
   it('every preview line of every build: `c` renders to the text', () => {
     let lines = 0
     const bad: string[] = []
     const reached = new Set<string>()
+    const refs = new Set<string>()
     for (const { label, input } of previewInputs()) {
       for (const l of buildPreview(input)) {
         lines++
         if (!l.c) bad.push(`${label} ${l.key}: no ref`)
         else if (renderCopyRef(l.c, EN) !== l.text) bad.push(`${label} ${l.key}: «${l.text}» renders «${renderCopyRef(l.c, EN)}»`)
         keysOf(l.c, reached)
+        if (l.c) refs.add(JSON.stringify(l.c))
       }
     }
     expect(lines, 'a non-empty denominator').toBeGreaterThan(40_000)
     expect(bad.slice(0, 8)).toEqual([])
     PREVIEW_REACHED = reached
+    PREVIEW_REFS = refs
   })
 
   it('the booth pools: every cell of the three lineage pools returns a Line whose ref renders to its text, for names with awkward characters too', () => {
@@ -155,6 +162,9 @@ describe('§2 refs render === strings – the grid, the preview and the booth po
 
 let GRID_REACHED = new Set<string>()
 let PREVIEW_REACHED = new Set<string>()
+/** the DISTINCT refs (as JSON) the two grids built – §6 renders each of them under the compiled Russian */
+let GRID_REFS = new Set<string>()
+let PREVIEW_REFS = new Set<string>()
 
 describe('§3 completeness – the keys the grid reaches', () => {
   it('every key of the three files is reached by the commentary grid, the preview grid or the lead table – bar the named few', () => {
@@ -226,5 +236,47 @@ describe('§4 the pick keys are immovable – no draw, no new family, the hash a
     }
     expect(SRC('src/viz/commentary.ts')).toMatch(/import \{ cp, type CopyRef \} from '..\/shared\/i18n'/)
     expect(SRC('src/viz/preview.ts')).toMatch(/import \{ cp, type CopyRef \} from '..\/shared\/i18n'/)
+  })
+})
+
+// ⭐ 11.10 (THE BLANKET) – §6: THE COMPILED RUSSIAN, RENDERED ON THE PARAMS THE ENGINE REALLY PASSES. docs/localization/ru-match-viewer-commentary-2026-10.md §26.
+// `i18n:check` lints a Russian VALUE – it parses, it reads the key's holes, a plural carries its four categories – but never against the TYPE of the param that arrives. A `{1, plural, …}` over the
+// engine's spelled count word ("four") parses, passes the gate, and at render time THROWS: the formatter falls back to the WHOLE English sentence and counts the key invalid. That is the one way an
+// edit to a booth row goes wrong silently, and the owner edits these rows live. So every DISTINCT ref the two grids built (§2) is rendered here under the REAL ru.json: nothing may be invalid, and no
+// key may lack a row bar the named joins. ⚠ NO CYRILLIC IS TYPED HERE – every expectation is read from ru.json by key, and the two mutation arms use ASCII stand-ins.
+describe('§6 the compiled ru.json renders every ref of the grids – no fallback to English, no key without a row', () => {
+  const RU = JSON.parse(readFileSync(resolve(ROOT, 'src/i18n/ru.json'), 'utf8')) as Record<string, string>
+  /** The clause joins are ALL HOLES, so there is nothing to translate: the catalogue keys them (§1) and ru.json has no row, which counts one miss per join in a Russian log. Named, and held both
+   *  ways below – a join that gains a row is a stale exemption. */
+  const JOINS = ['{0} {1}', '{0} {1} {2}']
+  function render(catalog: Readonly<Record<string, string>>): { missing: string[]; invalid: string[]; refs: number } {
+    const missing = new Set<string>()
+    const invalid = new Set<string>()
+    const ctx = { locale: 'ru', lookup: (k: string) => catalog[k], onMiss: (k: string, why: MissReason) => (why === 'missing' ? missing : invalid).add(k) }
+    const all = [...GRID_REFS, ...PREVIEW_REFS]
+    for (const json of all) renderCopyRef(JSON.parse(json) as CopyRef, ctx)
+    return { missing: [...missing].sort(), invalid: [...invalid].sort(), refs: all.length }
+  }
+
+  it('the REAL ru.json: not one distinct ref of the grids falls back to English, and the only keys without a row are the clause joins', () => {
+    const got = render(RU)
+    expect(got.refs, 'a non-empty denominator – §2 fills the grids').toBeGreaterThan(1000)
+    expect(got.invalid, 'a Russian value the formatter cannot render for the params the engine passes (a plural over a spelled count word or a name, a hole the ref does not carry)').toEqual([])
+    expect(got.missing.filter((k) => !JOINS.includes(k)), 'a key the grids ask for and ru.json does not carry').toEqual([])
+    for (const join of JOINS) expect(RU[join], `«${join}» has a row now – delete it from JOINS`).toBeUndefined()
+  })
+
+  it('the keys no seeded match can reach (§3\'s named few) carry a row too – a branch that cannot be said today and can tomorrow must not fall back', () => {
+    expect(UNREACHED.filter((k) => RU[k] === undefined)).toEqual([])
+  })
+
+  it('it bites: a plural over the engine\'s spelled count word, or over a name, renders the English and is counted invalid', () => {
+    const countWord = '{0} saves {1} match points.'
+    const overAName = 'Across the net: {0}, {1}.'
+    expect(RU[countWord], 'the rows the mutations edit exist').toBeDefined()
+    expect(RU[overAName]).toBeDefined()
+    const plural = (n: number): string => `{${n}, plural, one {x} few {x} many {x} other {x}}`
+    const broken = { ...RU, [countWord]: `{0} ${plural(1)}`, [overAName]: `${plural(0)} {1}` }
+    expect(render(broken).invalid).toEqual([overAName, countWord].sort())
   })
 })
