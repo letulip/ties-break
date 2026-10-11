@@ -270,9 +270,19 @@ describe('§4 the English – a line is returned as written', () => {
     expect(life.personality).toBe('Impatient and easy-going')
   })
 
-  it('a line that matches no shape comes back as written under Russian too (the relationships tile\'s, until its own wave)', () => {
+  it('a line that matches no shape comes back as written under Russian too', () => {
     const { tile } = rig()
-    for (const line of ['On her own', 'it seems', 'Married', 'Engaged', 'Together for', 'together 4m', '1y 6m', 'Balance']) expect(tile(line), line).toBe(line)
+    // ⚠ RE-AIMED 11.10: the relationships tile GOT its wave («1 г 6 м – да, всё так, докинь»), so its
+    // pieces left this list; `Balance` stays the named leftover (his QUESTION row).
+    for (const line of ['Balance']) expect(tile(line), line).toBe(line)
+  })
+
+  it('⚠ 11.10 – the relationships tile reads Russian: his parked RU-17 forms on the leads, his «1 г 6 м» typography on the span', () => {
+    const { tile } = rig()
+    for (const [en, want] of [
+      ['On her own', 'Сейчас одна'], ['it seems', 'похоже'], ['Married', 'В браке'], ['Engaged', 'Помолвлена'],
+      ['Together for', 'Вместе'], ['together 4m', 'вместе 4 м'], ['1y 6m', '1 г 6 м'], ['3y', '3 г'], ['<1m', '<1 м'],
+    ] as const) expect(tile(en), en).toBe(want)
   })
 })
 

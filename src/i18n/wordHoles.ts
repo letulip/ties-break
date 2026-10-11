@@ -43,6 +43,7 @@ export type WordClass =
   | 'ecoLower' // …lowercased by the code before it was handed in
   // ⭐ RU-23 – the Kid screen's tile vocabularies: words the TILE MATCHER reads (`tile` in `words.ts`), not holes of a message – so no row of the table below names them, and the carpet's ru arm hunts them raw
   | 'trait' // the eight words of the personality line (`COMPOSURE_BANDS`, `TEMPERAMENT_WORD`)
+  | 'relLead' // ⚠ 11.10 – the relationships tile's leads (Married, Engaged, Together for, On her own, it seems)
   | 'schoolNote' // the school tile's second line: the exam fortnight, the summer, the four standings in the class (`lifeStageTile`)
   | 'stageLine' // the lines after the last grade and the college lines with no number in them (`afterSchoolTile`)
 
@@ -370,6 +371,7 @@ export const HOLE_TABLE: Readonly<Record<WordClass, readonly HoleRow[]>> = {
   ],
   // ⭐ RU-23 – the tile vocabularies are read by the tile matcher, which holds its own shapes; there is no message with a hole of these classes
   trait: [],
+  relLead: [],
   schoolNote: [],
   stageLine: [],
 }

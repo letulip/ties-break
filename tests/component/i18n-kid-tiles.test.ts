@@ -195,15 +195,15 @@ describe('§2 English – the control: not a character of the engine\'s English 
   })
 })
 
-describe('§3 the named leftovers – the relationships tile is returned as the engine wrote it, until its own wave', () => {
-  it('«On her own / it seems» and «Together for / 1y 6m» are English on a Russian screen – the only English the tiles still print, and the tile\'s label is already «Отношения»', async () => {
+describe('§3 the relationships tile – Russian since 11.10 («1 г 6 м – да, всё так, докинь»)', () => {
+  it('«Сейчас одна / похоже» and «Вместе / 1 г 6 м» on a Russian screen – the leads are his parked RU-17 forms, the span is his typography', async () => {
     await ru()
     const alone = mountKid({ week: 700, ageYears: 23 })
-    expect(tile(alone.w, 'Отношения')).toEqual(['On her own', 'it seems'])
+    expect(tile(alone.w, 'Отношения')).toEqual(['Сейчас одна', 'похоже'])
     alone.w.unmount()
     document.body.innerHTML = ''
     const together = mountKid({ week: 700, ageYears: 23, together: { weeks: 78, married: false, engaged: false } })
-    expect(tile(together.w, 'Отношения')).toEqual(['Together for', '1y 6m'])
+    expect(tile(together.w, 'Отношения')).toEqual(['Вместе', '1 г 6 м'])
     together.w.unmount()
   })
 })

@@ -291,3 +291,19 @@ The week recap prints one line a week for a coached career: where the coach has 
 5. **The legacy count-word ledger texts** (`point` / `points`, `match` / `matches`, `wk` / `wks`, `time.` / `times.`) – no code asks for them; their count is a number and the plural is the Russian row's. The one pair that needed a third Russian form, `week below zero`, is done (`one|` / `few|` / `many|`).
 
 **How the nets hold it.** `tests/i18n-display-words.test.ts` (111 tests: the table against the catalogue, the vocabulary against the real constants, the screens' messages with the params they pass, English never reaching the hook, a played-career sweep, the mutation arms, this document's rows and counts); `tests/component/i18n-display-boundary.test.ts` and `…-booth.test.ts` (the real components, English and Russian, with the hook switched off as the control: `…-boundary-off.test.ts`, and the gate inside the booth file); the carpet's ru arm (`xxCarpet.ts`, the ledger `ruRawFindings.ts`); `tests/i18n-engine-tails.test.ts` and `tests/i18n-l3-7-viz.test.ts` render the engine producers and the booth's refs under the production context. A word the readers do not know comes back as written; a new hole that names an engine word and is not in `wordHoles.ts` is red in §1.
+
+## Плитка отношений – ⚙ 11.10 по слову владельца («1 г 6 м – да, всё так, докинь»)
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU22-REL-01 | `tile\|Married` | `В браке` |
+| RU22-REL-02 | `tile\|Engaged` | `Помолвлена` |
+| RU22-REL-03 | `tile\|Together for` | `Вместе` |
+| RU22-REL-04 | `tile\|On her own` | `Сейчас одна` |
+| RU22-REL-05 | `tile\|it seems` | `похоже` |
+| RU22-REL-06 | `tile\|together {0}` | `вместе {0}` |
+| RU22-REL-07 | `span\|y` | `г` |
+| RU22-REL-08 | `span\|m` | `м` |
+| RU22-REL-09 | `span\|<1m` | `<1 м` |
+
+Русские значения лидов – его же припаркованные формы RU-17 R02–R05 (их ряды помечены решёнными).

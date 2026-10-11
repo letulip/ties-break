@@ -338,7 +338,31 @@ export function createWordReaders(t: Translate, tables: WordTables = { holes: HO
     Hana: () => t('with|Hana'),
     Aida: () => t('with|Aida'),
   })
+  // ⚠ 11.10 (owner: «„1y 6m" → „1 г 6 м" – да, всё так, докинь») – the relationships tile. The
+  // leads are a lexicon; the compact span re-composes with Russian unit letters and SPACES (his
+  // typography); `together {span}` wraps the span. English never reaches here (engineTile's gate).
+  const relLead = lex('relLead', {
+    'Married': () => t('tile|Married'),
+    'Engaged': () => t('tile|Engaged'),
+    'Together for': () => t('tile|Together for'),
+    'On her own': () => t('tile|On her own'),
+    'it seems': () => t('tile|it seems'),
+  })
+  const spanRu = (english: string): string => {
+    if (english === '<1m') return t('span|<1m')
+    const m = /^(?:(\d+)y)?(?: ?(\d+)m)?$/.exec(english)
+    if (!m || (m[1] === undefined && m[2] === undefined)) return english
+    const parts: string[] = []
+    if (m[1] !== undefined) parts.push(`${Number(m[1])} ${t('span|y')}`)
+    if (m[2] !== undefined) parts.push(`${Number(m[2])} ${t('span|m')}`)
+    return parts.join(' ')
+  }
   const tile = (english: string, lead?: string): string => {
+    const rel = relLead(english)
+    if (rel !== english) return rel
+    if (/^(?:<1m|\d+y(?: \d+m)?|\d+m)$/.test(english)) return spanRu(english)
+    let tog = /^together (.+)$/.exec(english)
+    if (tog) return t('tile|together {0}', [spanRu(tog[1] as string)])
     let m = /^(\S+) and (\S+)$/.exec(english)
     if (m) {
       const a = trait(m[1] as string)
@@ -476,6 +500,7 @@ export function createWordReaders(t: Translate, tables: WordTables = { holes: HO
     trait,
     schoolNote,
     stageLine,
+    relLead, // ⚠ 11.10 – the relationships tile's leads
   }
 
   const positional = new Map<string, Map<string, WordReader>>()
