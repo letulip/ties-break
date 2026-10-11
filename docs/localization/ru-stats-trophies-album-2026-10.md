@@ -116,11 +116,11 @@ Heading and table aria use the selected track's full display name.
 
 | source | Russian |
 | --- | --- |
-| rank column | `№` |
-| player | `Игрок` |
-| age | `Возраст` |
-| points | `Очки` |
-| own-rank foot | `Её место: {rank}` |
+| `#` · rank column | `№` |
+| `Player` | `Игрок` |
+| `Age` | `Возраст` |
+| `Points` | `Очки` |
+| `Her rank: {rank}` · own-rank foot | `Её место: {rank}` |
 
 An entirely scoreless table displays `–` in every rank cell and `Без рейтинга` in her summary. A
 missing age is also `–`; neither absence becomes zero.
@@ -157,10 +157,10 @@ Accessible name: **`Зачётные результаты · {fullTrack}`**.
 | English | Russian |
 | --- | --- |
 | `Week` | `Неделя` |
-| `Tier` | `Турнир` – SUPERSEDED 10.10: чат-ок отдал ключ `Tier` форме RU-04 G04 «Уровень»; эта ячейка историческая |
+| `Tier` | `Турнир` – SUPERSEDED 10.10: чат-ок отдал ключ `Tier` форме RU-04 G04 «Уровень»; эта ячейка историческая · ⚙ 11.10 ряд исторический: колонка таблицы зачётных результатов – ключ с тегом counting, ему уже отдано «Уровень» (ряд ниже по файлу) `QUESTION` |
 | `Pts` | `Очки` |
-| `Total` | `Всего` |
-| generic empty state | `Зачётных результатов пока нет: они появятся после турнира с рейтинговыми очками.` |
+| `Total` (`CountingResultsTable.vue`) | `Всего` |
+| generic empty state | `Зачётных результатов пока нет: они появятся после турнира с рейтинговыми очками.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
 
 Tier labels use RU-04's localized tournament catalogue. `–` remains the honest value for a legacy
 row without a tier id.
@@ -392,7 +392,7 @@ Russian book.
 | `Gate {n}` | `Вход {n}` |
 | `Seat {n}{letter}` | `Место {n}{letter}` |
 | `Row {n}` | `Ряд {n}` |
-| `Age {n}` | use counted age, for example `21 год` |
+| `Age {n}` – ⚙ 11.10 в русской ячейке указание, а не перевод: ряд ждёт самого русского `QUESTION` | use counted age, for example `21 год` |
 
 Seat letters `A–F` remain Latin because they are an invented ticket coordinate, not prose.
 
@@ -491,14 +491,106 @@ The parent-written `note`, `caption` and loose `line` corpus is drafted separate
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU07-RH01 | `A new result only raises the total if it beats the weakest counted one.` | |
-| RU07-RH02 | `Her best 18 results from the last 52 weeks. She appears on it after 3 scoring tournaments, or 10 points.` | |
-| RU07-RH03 | `Her best 6 Junior Tour results from the last 52 weeks.` | |
-| RU07-RH04 | `Her best 6 results from the last 52 weeks.` | |
-| RU07-RH06 | `National points are what open her next tier. The Junior Tour reads her international rank.` | |
-| RU07-RH07 | `Nothing here until she plays a Junior Tour event – national results do not count towards this ranking.` | |
-| RU07-RH08 | `Nothing here until she plays a W-series event – junior points do not cross over.` | |
-| RU07-RH09 | `Nothing here until she plays her first Local Open.` | |
-| RU07-RH10 | `On every table, results older than 52 weeks drop out – points must be defended.` | |
-| RU07-RH11 | `She has three rankings and they are counted separately – a result pays into one table only, and the totals never add up together.` | |
-| RU07-RH12 | `{0} – {1} · {2} pts` | |
+| RU07-RH01 | `A new result only raises the total if it beats the weakest counted one.` | `Новый результат повышает сумму, только если он лучше самого слабого из зачётных.` |
+| RU07-RH02 | `Her best 18 results from the last 52 weeks. She appears on it after 3 scoring tournaments, or 10 points.` | `Её 18 лучших результатов за последние 52 недели. В таблице она появляется после 3 турниров с очками или 10 очков.` |
+| RU07-RH03 | `Her best 6 Junior Tour results from the last 52 weeks.` | `Её 6 лучших результатов юниорского тура за последние 52 недели.` |
+| RU07-RH04 | `Her best 6 results from the last 52 weeks.` | `Её 6 лучших результатов за последние 52 недели.` |
+| RU07-RH06 | `National points are what open her next tier. The Junior Tour reads her international rank.` | `Национальные очки открывают ей следующий уровень. Юниорский тур смотрит на её международный рейтинг.` |
+| RU07-RH07 | `Nothing here until she plays a Junior Tour event – national results do not count towards this ranking.` | `Здесь пусто, пока она не сыграет на юниорском туре: национальные результаты в этот рейтинг не входят.` |
+| RU07-RH08 | `Nothing here until she plays a W-series event – junior points do not cross over.` | `Здесь пусто, пока она не сыграет на турнире серии W: юниорские очки сюда не переходят.` |
+| RU07-RH09 | `Nothing here until she plays her first Local Open.` | `Здесь пусто, пока она не сыграет свой первый местный турнир.` |
+| RU07-RH10 | `On every table, results older than 52 weeks drop out – points must be defended.` | `В каждой таблице результаты старше 52 недель выпадают – очки нужно защищать.` |
+| RU07-RH11 | `She has three rankings and they are counted separately – a result pays into one table only, and the totals never add up together.` | `У неё три рейтинга, и считаются они отдельно: результат идёт только в одну таблицу, а суммы никогда не складываются.` |
+| RU07-RH12 | `{a} – {b} · {c} pts` | `{a} – {b} · {c, plural, one {{c} очко} few {{c} очка} many {{c} очков} other {{c} очка}}` |
+
+## ⚙ 11.10 agent-authored (бланкет) – the Stats, Trophies and Season-history screens, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+59 keys of `StatsScreen.vue`, `TrophiesScreen.vue`, `SeasonHistoryTable.vue` and `CountingResultsTable.vue`. The 11 scaffold cells of the 10.10 №40 addition (`RankHelpDialog`) are filled in place above. **RU-07's own prose is the source of almost every row** – its §2 picker/tile words (`Юниоры` / `Страна` / `Профи`, `юниоры` / `страна` / `профи`), §3 strip (`Разделы рейтинга`), §4 archive, §5.2 banked-points line, §7 window lines, §8 counting-results aria and §9 season-by-season lines were drafted as quoted blocks and bullet cells, not table rows, so none of it compiled; here each is cut to the live key's shape (the three `pts banked` keys differ only by the table they name, which the Russian now says: `в международном рейтинге`, `в национальном`, `в профессиональном`). Counted nouns are whole ICU messages (`1 титул` / `3 титула` / `5 титулов`, `проигранных финала`). The `Stats` heading is the plain half of a same-file twin (`strip|Stats`) and stays parked below.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-STA-01 | `No counted results yet – enter a tournament to earn ranking points.` | `Зачётных результатов пока нет: они появятся после турнира с рейтинговыми очками.` |
+| RU21-STA-02 | `Counting results` | `Зачётные результаты` |
+| RU21-STA-03 | `Counting {0} of a best-{1} window.` | `В зачёте {0} из {1} лучших результатов.` |
+| RU21-STA-04 | `Junior Tour points only. National results do not count here.` | `Здесь учитываются только очки юниорского тура. Национальные результаты сюда не переходят.` |
+| RU21-STA-05 | `Junior Tour results only. A national title is worth nothing here – the two tables never meet.` | `Только результаты юниорского тура. Национальный титул здесь не даёт очков: таблицы не пересекаются.` |
+| RU21-STA-06 | `Junior career – closed at {0}` | `Юниорская карьера завершена в {0, plural, one {{0} год} few {{0} года} many {{0} лет} other {{0} года}}.` |
+| RU21-STA-07 | `Local, Regional and National results. These are the points that open her next tier.` | `Результаты местных, региональных и национальных турниров. Эти очки открывают следующий уровень.` |
+| RU21-STA-08 | `National points open her next tier. They do not count towards her international ranking.` | `Национальные очки открывают следующий уровень, но не переходят в международный рейтинг.` |
+| RU21-STA-09 | `Next drop: {0}, {1} pts – leaves the window in 1 week.` | `Следующим выпадет: {0}, {1, plural, one {{1} очко} few {{1} очка} many {{1} очков} other {{1} очка}} – через 1 неделю.` |
+| RU21-STA-10 | `Next drop: {0}, {1} pts – leaves the window in {2} weeks.` | `Следующим выпадет: {0}, {1, plural, one {{1} очко} few {{1} очка} many {{1} очков} other {{1} очка}} – через {2, plural, one {{2} неделю} few {{2} недели} many {{2} недель} other {{2} недели}}.` |
+| RU21-STA-11 | `No national results yet – her first Local Open will put her on this table.` | `В национальном рейтинге пока нет результатов. Первый местный турнир поставит её в эту таблицу.` |
+| RU21-STA-12 | `Oldest result` | `Самый старый результат` |
+| RU21-STA-13 | `Peaked #{0} at year-end` | `Лучшее место на конец года – №{0}` |
+| RU21-STA-14 | `Professional points only. Junior and national results do not count here.` | `Здесь учитываются только профессиональные очки. Юниорские и национальные результаты сюда не переходят.` |
+| RU21-STA-15 | `She has not played a Junior Tour event yet, so she has no international ranking. Her national standing is on the other tab.` | `Она ещё не играла в юниорском туре, поэтому международного рейтинга пока нет. Национальное место – на соседней вкладке.` |
+| RU21-STA-16 | `She has not played a professional event yet. The paid tour starts at the World Tour 15, from age 16.` | `Она ещё не играла профессиональные турниры. Профессиональный тур с призовыми начинается с World Tour 15 и доступен с 16 лет.` |
+| RU21-STA-17 | `heading\|Stats` | `Статистика` – ⚙ 11.10 заголовок экрана получил свой тег; «Рейтинг» остаётся словом вкладки (nav\|Stats), сам экран – статистика (его же давний интент в докблоке импортёра) |
+| RU21-STA-18 | `The Junior Tour is under-{0}, so this table is hers for good – it cannot move again. Her live career is on the Pro tab.` | `Юниорский тур – для игроков младше {0, plural, one {{0} года} few {{0} лет} many {{0} лет} other {{0} года}}, поэтому эта таблица остаётся её итогом и больше не изменится. Текущая карьера – на вкладке «Профи».` |
+| RU21-STA-19 | `The window has room – any scoring result counts in full.` | `В окне ещё есть место: любой результат с очками войдёт полностью.` |
+| RU21-STA-20 | `W15 and up – the paid tour. Junior points never cross over.` | `Турниры W15 и выше – профессиональный тур с призовыми. Юниорские очки сюда не переходят.` |
+| RU21-STA-21 | `Weakest counted: {0} pts – a new result must beat it to raise the total.` | `Самый слабый зачётный результат – {0, plural, one {{0} очко} few {{0} очка} many {{0} очков} other {{0} очка}}. Новый результат повысит сумму, только если окажется выше.` |
+| RU21-STA-22 | `Which ranking table` | `Таблица рейтинга` |
+| RU21-STA-23 | `picker\|International` | `Юниоры` |
+| RU21-STA-24 | `picker\|National` | `Страна` |
+| RU21-STA-25 | `picker\|Professional` | `Профи` |
+| RU21-STA-26 | `strip\|Stats` | `Разделы рейтинга` |
+| RU21-STA-27 | `tile\|International` | `юниоры` |
+| RU21-STA-28 | `tile\|National` | `страна` |
+| RU21-STA-29 | `tile\|Professional` | `профи` |
+| RU21-STA-30 | `{0} W–L` | `В–П · {0}` |
+| RU21-STA-31 | `{0} counting results` | `Зачётные результаты · {0}` |
+| RU21-STA-32 | `{0} pts banked. A international ranking needs {1} events with points, or {2} points – until then the table shows nothing, and every result below still counts towards it.` | `Уже набрано: {0, plural, one {{0} очко} few {{0} очка} many {{0} очков} other {{0} очка}}. Чтобы появиться в международном рейтинге, нужны очки как минимум в {1, plural, one {{1} турнире} few {{1} турнирах} many {{1} турнирах} other {{1} турнира}} или {2, plural, one {{2} очко} few {{2} очка} many {{2} очков} other {{2} очка}} всего. До этого место не показывается, но каждый результат ниже уже учитывается.` |
+| RU21-STA-33 | `{0} pts banked. A national ranking needs {1} events with points, or {2} points – until then the table shows nothing, and every result below still counts towards it.` | `Уже набрано: {0, plural, one {{0} очко} few {{0} очка} many {{0} очков} other {{0} очка}}. Чтобы появиться в национальном рейтинге, нужны очки как минимум в {1, plural, one {{1} турнире} few {{1} турнирах} many {{1} турнирах} other {{1} турнира}} или {2, plural, one {{2} очко} few {{2} очка} many {{2} очков} other {{2} очка}} всего. До этого место не показывается, но каждый результат ниже уже учитывается.` |
+| RU21-STA-34 | `{0} pts banked. A professional ranking needs {1} events with points, or {2} points – until then the table shows nothing, and every result below still counts towards it.` | `Уже набрано: {0, plural, one {{0} очко} few {{0} очка} many {{0} очков} other {{0} очка}}. Чтобы появиться в профессиональном рейтинге, нужны очки как минимум в {1, plural, one {{1} турнире} few {{1} турнирах} many {{1} турнирах} other {{1} турнира}} или {2, plural, one {{2} очко} few {{2} очка} many {{2} очков} other {{2} очка}} всего. До этого место не показывается, но каждый результат ниже уже учитывается.` |
+| RU21-STA-35 | `{0} rank` | `Место · {0}` |
+| RU21-STA-36 | `1 lost final` | `1 проигранный финал` |
+| RU21-STA-37 | `1 title` | `1 титул` |
+| RU21-STA-38 | `Empty for now – her first final puts something in it.` | `Пока пусто. Первый же финал это изменит.` |
+| RU21-STA-39 | `Trophy cabinet` | `Витрина трофеев` |
+| RU21-STA-40 | `x{0}` | `×{0}` |
+| RU21-STA-41 | `{0} lost finals` | `{0, plural, one {{0} проигранный финал} few {{0} проигранных финала} many {{0} проигранных финалов} other {{0} проигранного финала}}` |
+| RU21-STA-42 | `{0} titles` | `{0, plural, one {{0} титул} few {{0} титула} many {{0} титулов} other {{0} титула}}` |
+| RU21-STA-43 | `{0}, {1}: 1 time – {2}` | `{0}, {1}: 1 раз – {2}` |
+| RU21-STA-44 | `{0}, {1}: not won yet` | `{0}, {1}: пока не выиграно` |
+| RU21-STA-45 | `{0}, {1}: {2} times – {3}` | `{0}, {1}: {2, plural, one {{2} раз} few {{2} раза} many {{2} раз} other {{2} раза}} – {3}` |
+| RU21-STA-46 | `{0}x'{1}` | `{0}×’{1}` |
+| RU21-STA-47 | `Funds` | `Финансы` |
+| RU21-STA-48 | `Funds is the season's net – the family's whole year, not this table's.` | `Финансы – чистый итог всего семейного сезона, а не только этой рейтинговой таблицы.` |
+| RU21-STA-49 | `Her first season is still running – it lands here at the year's wrap-up, and every season after it stacks on top.` | `Первый сезон ещё идёт. После подведения итогов он появится здесь, а следующие сезоны будут добавляться сверху.` |
+| RU21-STA-50 | `Int. rank` | `Юн. место` |
+| RU21-STA-51 | `Nat. rank` | `Нац. место` |
+| RU21-STA-52 | `Nothing on this table yet – her finished seasons were played on another one.` | `В этой таблице пока пусто: завершённые сезоны относятся к другому рейтингу.` |
+| RU21-STA-53 | `Pro rank` | `Проф. место` |
+| RU21-STA-54 | `Season by season, international figures` | `По сезонам · Международный рейтинг` |
+| RU21-STA-55 | `Season by season, national figures` | `По сезонам · Национальный рейтинг` |
+| RU21-STA-56 | `Season by season, professional figures` | `По сезонам · Профессиональный рейтинг` |
+| RU21-STA-57 | `Season by season, scrollable` | `По сезонам · таблица с горизонтальной прокруткой` |
+| RU21-STA-58 | `W–L` | `В–П` |
+| RU21-STA-59 | `Season by season` | `По сезонам` |
+
+## ⚙ 11.10 agent-authored (бланкет) – the album pages built in the engine: ticket labels, ages and the break-even details
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+15 keys of `engine/world/album.ts` and `albumBook.ts`: the seven alternative page captions, the age labels, the break-even and school milestone details and the two college-league lines. `#{0}` is the rank of the season-close detail (`№{0}`; it shares its English with `#{rank}`, so the row names `album.ts`). The two league lines receive the competition label (`the College League`) and the exit stage (`semifinal`) in English from the code; both sit in a bracket / after a dash and are not inflected.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ALB-01 | `#{0}` | `№{0}` – ⚙ same English as `#{rank}`; the hint `src/engine/world/album.ts` picks this key |
+| RU21-ALB-02 | `one week of it` | `за одну неделю` |
+| RU21-ALB-03 | `the last school year is over` | `последний школьный год закончился` |
+| RU21-ALB-04 | `the whole of it` | `за всю карьеру` |
+| RU21-ALB-05 | `Age {0} – {1}` | `{0}–{1, plural, one {{1} год} few {{1} года} many {{1} лет} other {{1} года}}` |
+| RU21-ALB-06 | `Graduation day` | `День выпуска` |
+| RU21-ALB-07 | `Her farewell match` | `Её прощальный матч` |
+| RU21-ALB-08 | `Her first days on a court` | `Её первые дни на корте` |
+| RU21-ALB-09 | `Her wedding day` | `День её свадьбы` |
+| RU21-ALB-10 | `Her, that week` | `Она в ту неделю` |
+| RU21-ALB-11 | `The day after the last match` | `День после последнего матча` |
+| RU21-ALB-12 | `The journey home` | `Дорога домой` |
+| RU21-ALB-13 | `The week the baby came home` | `Неделя, когда малыш приехал домой` |
+| RU21-ALB-14 | `Year {0}, {1}: Went out in the {2}` | `Год {0}, {1}: выбыла (стадия – {2})` |
+| RU21-ALB-15 | `Year {0}, {1}: Won it` | `Год {0}, {1}: победа` |

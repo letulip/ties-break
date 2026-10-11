@@ -37,7 +37,7 @@ not money still held in assets.
 | title fact | `{tier} – champion, {week}` | `Турнир «{tier}» – чемпионка, {week}` |
 | final why | `She never won one – this is the first final she reached` | `Титула не было; это её первый финал` |
 | final caption | `So close, and she knew it` | `Совсем рядом. Она это знала` |
-| final fact | `{tier} – {finish}, {week}` | `Турнир «{tier}» – {localizedFinish}, {week}` |
+| final fact | `{tier} – {finish}, {week}` | `Турнир «{tier}» – {localizedFinish}, {week}` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
 | empty why | `She never reached a final` | `Она ни разу не дошла до финала` |
 | empty caption | `The draw sheets, all of them` | `Все турнирные сетки` |
 
@@ -49,7 +49,7 @@ shared localized finish catalogue, never a raw English phrase.
 
 | Branch / field | English | Russian draft |
 | --- | --- | --- |
-| prize why | `The first time the tennis paid her` | `Первый раз, когда теннис принёс ей деньги` |
+| prize why | `The first time the tennis paid her` | `Первый раз, когда теннис принёс ей деньги` – ⚙ 11.10 ключ умер, ряд исторический – живой ключ переписан («first week»), русское «первый раз» ему не равно `QUESTION` |
 | prize caption | `The first one we did not pay for` | `Первый турнир, за который заплатили ей` |
 | prize fact | `{tier}, {week} – {careerPrizeTotal} in the end` | `Турнир «{tier}», {week}. Всего за карьеру – {careerPrizeTotal} призовых` |
 | empty why | `The first cheque – there was never one` | `Первого чека так и не было` |
@@ -120,10 +120,10 @@ holdings. The one-week branch is not the same as career break-even; no consoling
 | --- | --- | --- |
 | no ending (defensive) why | `The story has not stopped yet` | `История ещё продолжается` |
 | no ending caption | `Still going` | `Она всё ещё играет` |
-| ended why | `ENDING_TITLE[ending.type]` | `{localizedEndingTitle}` – RU-12C |
+| ended why | `ENDING_TITLE[ending.type]` | `{localizedEndingTitle}` – RU-12C · ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 | college caption | `See you in four years` | `Увидимся через четыре года` |
 | other ending caption | `The last week` | `Последняя неделя` |
-| ended fact | `{week}, aged {age} – {ending.detail}` | `{week}; ей было {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}. {localizedEndingDetail}` |
+| ended fact | `{week}, aged {age} – {ending.detail}` | `{week}; ей было {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}. {ending.detail}` |
 
 The college caption promises four years because that is the current scholarship programme, not
 because all players necessarily remain four years. If early leaving is possible, this is a

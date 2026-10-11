@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-289 TRACKED TypeScript files: **71 live**, **218 archival**
+290 TRACKED TypeScript files: **72 live**, **218 archival**
 (of which **113 frozen** out of `check:tools` and **105 still swept**).
 
 ## Why the split exists
@@ -66,6 +66,7 @@ gate's verdict is a function of the commit, never of whatever else a checkout ha
 | `frozen-key-diff.ts` | diffs a frozen RNG capture against a live run – the instrument for "which draw moved?" when the pinned hash changes |
 | `i18n-check.ts` | imported by the test suite |
 | `i18n-cli.ts` | `npm run i18n:extract` |
+| `i18n-corpus-join.ts` | imported by the test suite |
 | `i18n-extract.ts` | imported by the test suite |
 | `i18n-formats.ts` | imported by the test suite |
 | `i18n-import.ts` | imported by the test suite |

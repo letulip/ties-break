@@ -76,7 +76,7 @@ a private duplicate.
 | RU02A-I09 | `identityCopy.ts:48` | `Birthday` | `Дата рождения` | one label for month and day |
 | RU02A-I10 | `identityCopy.ts:50` | `Birth month` | `Месяц рождения` | accessible select name |
 | RU02A-I11 | `identityCopy.ts:51` | `Birth day` | `День месяца` | avoids colliding with the whole `день рождения` concept |
-| RU02A-I12 | `OnboardingWizard.vue:541` | relative-age explanation | `Возрастные группы считают по году рождения. Старшие в группе сильнее сейчас; у младших больше времени для роста и меньше пропусков из-за травм. День нужен, чтобы поздравлять её вовремя.` | preserves both mechanical sides; phone-height LQA required |
+| RU02A-I12 | `OnboardingWizard.vue:541` | `Age groups go by year, so an older girl is stronger now – and a younger one has more room later, and loses fewer weeks. The day is for her birthday.` · relative-age explanation | `Возрастные группы считают по году рождения. Старшие в группе сильнее сейчас; у младших больше времени для роста и меньше пропусков из-за травм. День нужен, чтобы поздравлять её вовремя.` | preserves both mechanical sides; phone-height LQA required |
 | RU02A-I13 | `identityCopy.ts:53` | `Search countries...` | `Поиск страны…` | real ellipsis character |
 | RU02A-I14 | `identityCopy.ts:54` | `Search countries` | `Искать страну` | accessible input name |
 | RU02A-I15 | `identityCopy.ts:55` | `Popular` | `Популярные` | agrees with omitted `страны` |
@@ -159,16 +159,20 @@ class names literally. The IDs and budgets do not change.
 | RU02A-T01 | `OnboardingWizard.vue:674` | `Play style` | `Стиль игры` |
 | RU02A-T02 | `OnboardingWizard.vue:135` | `Aggressive baseliner` | `Атакующая игра с задней линии` |
 | RU02A-T03 | `OnboardingWizard.vue:136` | `Dictate with heavy groundstrokes.` | `Диктует игру мощными ударами с отскока.` |
-| RU02A-T04 | `OnboardingWizard.vue:137` | `Power` / `Consistency` | `Мощь` / `Стабильность` |
+| RU02A-T04 | `OnboardingWizard.vue:137` | `Power` | `Мощь` |
+| RU02A-T04b | `OnboardingWizard.vue:137` | `Consistency` | `Стабильность` |
 | RU02A-T05 | `OnboardingWizard.vue:142` | `Counterpuncher` | `Контратакующая игра` |
 | RU02A-T06 | `OnboardingWizard.vue:143` | `Speed, defense, and endless patience.` | `Скорость, защита и бесконечное терпение.` |
-| RU02A-T07 | `OnboardingWizard.vue:144` | `Defense` / `Stamina` | `Защита` / `Выносливость` |
+| RU02A-T07 | `OnboardingWizard.vue:144` | `Defense` | `Защита` |
+| RU02A-T07b | `OnboardingWizard.vue:144` | `Stamina` | `Выносливость` |
 | RU02A-T08 | `OnboardingWizard.vue:149` | `Big serve` | `Мощная подача` |
 | RU02A-T09 | `OnboardingWizard.vue:150` | `Free points first.` | `Сначала – лёгкие очки на подаче.` |
-| RU02A-T10 | `OnboardingWizard.vue:151` | `Serve` / `Power` | `Подача` / `Мощь` |
+| RU02A-T10 | `OnboardingWizard.vue:151` | `Serve` | `Подача` |
+| RU02A-T10b | `OnboardingWizard.vue:151` | `Power` | `Мощь` |
 | RU02A-T11 | `OnboardingWizard.vue:156` | `All-court` | `Игра по всему корту` |
 | RU02A-T12 | `OnboardingWizard.vue:157` | `No weaknesses, no shortcuts.` | `Без явных слабостей, но и без коротких путей.` |
-| RU02A-T13 | `OnboardingWizard.vue:158` | `Versatility` / `Balance` | `Универсальность` / `Баланс` |
+| RU02A-T13 | `OnboardingWizard.vue:158` | `Versatility` | `Универсальность` |
+| RU02A-T13b | `OnboardingWizard.vue:158` | `Balance` | `Баланс` |
 
 ## 7. Summary and the weight switch
 
@@ -188,12 +192,12 @@ The weight copy is shared by the wizard, prologue and settings. Its localization
 | id | source | English | Russian | note |
 | --- | --- | --- | --- | --- |
 | RU02A-W01 | `identityCopy.ts:104` | `The weight` | `Тяжёлые темы` | describes the setting rather than translating the metaphor mechanically |
-| RU02A-W02 | `identityCopy.ts:107` | pregnancy and bereavement lead | `В некоторых историях встречаются прервавшаяся беременность или смерть в семье. Мы пишем об этом бережно, но эти события можно исключить.` | names both themes without previewing scenes or frequency |
+| RU02A-W02 | `identityCopy.ts:107` | pregnancy and bereavement lead | `В некоторых историях встречаются прервавшаяся беременность или смерть в семье. Мы пишем об этом бережно, но эти события можно исключить.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` | names both themes without previewing scenes or frequency |
 | RU02A-W03 | `identityCopy.ts:111` | `Include them` | `Включить` | no option is framed as correct |
 | RU02A-W04 | `identityCopy.ts:112` | `Leave them out` | `Не включать` | neutral counterpart |
-| RU02A-W05 | `identityCopy.ts:115` | change-later note | `Этот выбор можно изменить позже в разделе «Ещё». Отключение остановит только будущие события и не сотрёт уже случившееся.` | `Ещё` is still a draft navigation term |
+| RU02A-W05 | `identityCopy.ts:115` | `You can change this later in More. Turning it off stops what has not happened yet – it never erases what a career has already lived.` · change-later note | `Этот выбор можно изменить позже в разделе «Ещё». Отключение остановит только будущие события и не сотрёт уже случившееся.` | `Ещё` is still a draft navigation term |
 | RU02A-W06 | `identityCopy.ts:117` | `The weight` | `Тяжёлые темы` | accessible group name |
-| RU02A-W07 | `identityCopy.ts:121` | settings hint | `Выключено: новых сюжетов о прервавшейся беременности или смерти в семье не будет. Уже случившееся останется в истории.` | settings surface; included here because the source is shared |
+| RU02A-W07 | `identityCopy.ts:121` | `Off: no new loss or bereavement arrives. What a career has already lived stays.` · settings hint | `Выключено: новых сюжетов о прервавшейся беременности или смерти в семье не будет. Уже случившееся останется в истории.` | settings surface; included here because the source is shared |
 
 ## 8. Wizard controls
 
@@ -254,3 +258,13 @@ owner-approved and therefore appear here as settled terminology.
 
 Read the three economic labels together: `Обеспеченная семья` / `Средний достаток` / `Скромный
    бюджет`. They are intentionally about playable means, not a literal Russian class taxonomy.
+
+## ⚙ 11.10 agent-authored (бланкет) – the content-notice blurb
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+1 key of `identityCopy.ts`: the line under the wizard's content-notice toggle. RU-18 already carries the toggle's label (`Потеря беременности и смерть близкого`); the blurb says what the notice covers and that it can be left out.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ONB-01 | `Some careers meet a pregnancy that ends, or a death in the family. They are written carefully and they are part of the story this game tells. You can leave them out.` | `В некоторых карьерах случается потеря беременности или смерть в семье. Эти события написаны бережно и составляют часть истории, которую рассказывает игра. Их можно отключить.` |

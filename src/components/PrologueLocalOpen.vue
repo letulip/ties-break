@@ -135,7 +135,7 @@
 // the round twice inside 60px of each other. No word changed; one already-drawn word changed seat on
 // one beat. The splash and the match keep the header exactly as they had it.
 import { computed, ref } from 'vue'
-import { t } from '../i18n'
+import { engineWord, t } from '../i18n'
 import MatchScene from './MatchScene.vue'
 import MatchViewer from './MatchViewer.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
@@ -199,7 +199,7 @@ const annotated = computed(() => {
 
 /** The round, in the draw sheet's own words – the engine's namer, so there is no second idea here of
  *  what a Semifinal is called. */
-const stage = computed(() => stageLabel(record.value?.round ?? 0, LOCAL_POOL.size))
+const stage = computed(() => engineWord('round', stageLabel(record.value?.round ?? 0, LOCAL_POOL.size)))
 
 /** ⚠ THE FINAL'S OWN CUE, on the one match that is one. `MatchViewer.finalMatch` swaps the applause
  *  clip; a weekend whose last match is a first-round exit is not a final and does not get it. */

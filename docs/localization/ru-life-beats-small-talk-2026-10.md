@@ -761,3 +761,39 @@ dismissive; the daughter is allowed to disagree without a bond penalty.
 
 The remaining situation rows continue in [RU-10A](ru-small-talk-situations-2026-10.md). This
 volume stops here to keep the editorial review slice bounded.
+
+## ⚙ 11.10 agent-authored (бланкет) – the 23 legacy openers, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+§3 above drafted the 23 save-compatible openers in **three columns** – the roof lead, the away lead and the daughter's shared quote – and the importer cannot join a lead and a quote to a key. The code's key is the **whole string** (`SMALL_TALK_LINE[voice][subject].roof` / `.away`); the 23 rows are the same Russian, lead and quote joined by one space, each under the English string the code carries. Nothing was reworded: every lead is §3's lead and every quote §3's quote. `DRAFT`, his live edit follows.
+
+The quote is the same in the roof and the away row of a cell; the one missing cell (sunny joy, away) is the source's own ruling and has no row. The daughter's `ты` appears only inside a quote where the English addresses the parent. Typography is §3's: her words in `«…»`, the full stop after the closing guillemet.
+
+### The 23 cells, voice by voice
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-STK-01 | `She came and sat down without being asked to. "Something's been on my mind all week. I think I need to say it out loud."` | `Пришла и без приглашения села. «У меня всю неделю кое-что из головы не выходит. Кажется, надо сказать вслух».` |
+| RU21-STK-02 | `She stayed on the line past the point of the call. "Something's been on my mind all week. I think I need to say it out loud."` | `Не повесила трубку, когда разговор уже закончился. «У меня всю неделю кое-что из головы не выходит. Кажется, надо сказать вслух».` |
+| RU21-STK-03 | `She said it before anyone had asked how the week went. "Something went right this week. I'm still smiling about it."` | `Сказала раньше, чем кто-то успел спросить, как прошла неделя. «На этой неделе кое-что получилось. До сих пор улыбаюсь».` |
+| RU21-STK-04 | `She asked it over dinner, with the context first. "Can I ask you something? It's not urgent, I just want to know."` | `За ужином сначала рассказала всё вокруг, потом спросила. «Можно тебя кое о чём спросить? Не срочно, просто хочу знать».` |
+| RU21-STK-05 | `She saved it for the end of the call, with the context first. "Can I ask you something? It's not urgent, I just want to know."` | `Оставила вопрос на конец звонка, сначала рассказав всё вокруг. «Можно тебя кое о чём спросить? Не срочно, просто хочу знать».` |
+| RU21-STK-06 | `She was through the door and straight into it. "Something's bothering me, and I can't leave it alone."` | `Вошла и сразу начала. «Меня кое-что не отпускает. И я не могу оставить это в покое».` |
+| RU21-STK-07 | `She rang out of turn and went straight in. "Something's bothering me, and I can't leave it alone."` | `Позвонила не в обычное время и сразу начала. «Меня кое-что не отпускает. И я не могу оставить это в покое».` |
+| RU21-STK-08 | `She was talking before she had put anything down. "Good day. Really good. I needed one."` | `Заговорила, ещё ничего не положив на место. «Хороший день. Правда хороший. Мне такой был нужен».` |
+| RU21-STK-09 | `Her voice note skipped hello entirely. "Good day. Really good. I needed one."` | `В голосовом не было даже „привет“. «Хороший день. Правда хороший. Мне такой был нужен».` |
+| RU21-STK-10 | `She asked it the second she sat down. "I want to ask you something. And I want a straight answer."` | `Спросила, едва сев. «Хочу тебя кое о чём спросить. И хочу прямой ответ».` |
+| RU21-STK-11 | `She rang and asked before hello was done. "I want to ask you something. And I want a straight answer."` | `Позвонила и спросила, не дожидаясь конца приветствия. «Хочу тебя кое о чём спросить. И хочу прямой ответ».` |
+| RU21-STK-12 | `She stayed in the kitchen after the plates were done. "There's something I keep going back over."` | `Осталась на кухне после того, как убрали тарелки. «Я всё возвращаюсь к одной вещи».` |
+| RU21-STK-13 | `She put it at the bottom of an ordinary message. "There's something I keep going back over."` | `Добавила это в самый конец обычного сообщения. «Я всё возвращаюсь к одной вещи».` |
+| RU21-STK-14 | `She put the kettle on and mentioned it while it filled. "Today went well."` | `Поставила чайник и сказала между делом. «Сегодня всё прошло хорошо».` |
+| RU21-STK-15 | `She mentioned it in the middle of a call about other things. "Today went well."` | `Упомянула посреди разговора о другом. «Сегодня всё прошло хорошо».` |
+| RU21-STK-16 | `She asked it while she was stacking the shelf, without looking round. "Can I ask you about something?"` | `Спросила, расставляя вещи на полке и не оборачиваясь. «Можно тебя кое о чём спросить?»` |
+| RU21-STK-17 | `She asked it right before hanging up. "Can I ask you about something?"` | `Спросила перед самым прощанием. «Можно тебя кое о чём спросить?»` |
+| RU21-STK-18 | `She waited until the room was quiet. "Something's wrong. I don't know what yet. That's as far as I've got."` | `Дождалась, пока в комнате станет тихо. «Что-то не так. Пока не знаю, что. Дальше я ещё не разобралась».` |
+| RU21-STK-19 | `She called late, and took a while getting to it. "Something's wrong. I don't know what yet. That's as far as I've got."` | `Позвонила поздно и долго подходила к этому. «Что-то не так. Пока не знаю, что. Дальше я ещё не разобралась».` |
+| RU21-STK-20 | `She said it on her way past, and did not stop. "Good week. I needed that."` | `Сказала на ходу и не остановилась. «Хорошая неделя. Она была мне нужна».` |
+| RU21-STK-21 | `Her message came and did not ask for a reply. "Good week. I needed that."` | `Сообщение пришло без просьбы ответить. «Хорошая неделя. Она была мне нужна».` |
+| RU21-STK-22 | `She waited for the room to empty first. "I want to ask you something."` | `Сначала дождалась, пока комната опустеет. «Хочу тебя кое о чём спросить».` |
+| RU21-STK-23 | `She waited until the call was nearly over. "I want to ask you something."` | `Дождалась почти самого конца звонка. «Хочу тебя кое о чём спросить».` |

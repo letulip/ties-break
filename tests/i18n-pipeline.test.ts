@@ -16,6 +16,10 @@
 //   5. the `few` branch missing from a plural             -> `plural` goes red.
 //   6. a dead APPROVED row                                -> `unmatched` (drift), never compiled.
 //   7. `foreign-surface` check removed                    -> «Stats» joins the screen heading and the trap test goes red.
+//   8. `normKey` back to the consumed-leader regexp       -> `{n}{letter}` stays a leftover and `{0}` stays text: 11.10 arms 1 and 2 go red.
+//   9. the pending class off / its DRAFT test dropped / «blank» widened to any null cell -> 11.10 arm 3 goes red (three separate mutations, each watched).
+//  10. (11.10, the corpus joiner) the album voice looked up by POSITION instead of by name / a gift resolved by id alone, across bands / a missing coordinate answered with its
+//      neighbour instead of an orphan -> the coordinate, orphan and independent-oracle arms of «the corpus joiner» go red (each watched; the three outputs are in the commit's report).
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -25,7 +29,7 @@ import { analyzeMessage, splitContext } from '../src/shared/i18n'
 import { normKey } from '../tools/copy-text'
 import { callKeys, callStats, certain, dynamicSites, likely, scanTs, scanVue } from '../tools/copy-census-walk'
 import { catalogImportsInSrc, lintCatalogKeys, lintRu, requiredPluralCategories, runGate } from '../tools/i18n-check'
-import { buildCatalog, CATALOG_PATH, diffCatalogs, keyFromCensusText, parseCatalog, readCatalogText, serializeCatalog } from '../tools/i18n-extract'
+import { buildCatalog, CATALOG_PATH, diffCatalogs, keyFromCensusText, parseCatalog, readCatalogText, seenLiterals, serializeCatalog } from '../tools/i18n-extract'
 import type { Catalog } from '../tools/i18n-extract'
 import {
   adaptPlaceholders,
@@ -41,9 +45,29 @@ import {
   RECORD_FILES,
   serializeRu,
   splitRow,
+  TABLES_DIR as TABLES_DIR_REAL,
 } from '../tools/i18n-import'
 import type { Live } from '../tools/i18n-import'
 import { buildPseudoCatalog, expandText, pseudoLocalize } from '../tools/i18n-pseudoloc'
+import { ALBUM_ARC, ALBUM_CORPUS } from '../src/engine/world/albumCorpus'
+import { BIRTHDAY_BANDS } from '../src/engine/world/birthday'
+import { MOTHERHOOD_WORDS, VOICE_LINES } from '../src/engine/diary/weekNotes'
+import {
+  bandOfHeading,
+  CORPUS_DOCS,
+  englishFor,
+  HOMES,
+  joinCorpora,
+  liveCorpora,
+  liveStrings,
+  numberWord,
+  parseAlbumDoc,
+  parseGiftsDoc,
+  parseWeekNotesDoc,
+  readAllRows,
+  renderCorpusReport,
+} from '../tools/i18n-corpus-join'
+import type { Corpora } from '../tools/i18n-corpus-join'
 
 const scratch: string[] = []
 function tmp(): string {
@@ -142,8 +166,8 @@ describe('the table parser reads cells conservatively', () => {
 // THE JOIN AND THE DISPOSITIONS
 // =================================================================================================
 
-describe('compile – English joins, the location breaks ties, and only APPROVED/LANDED ever compiles', () => {
-  it('an APPROVED row on a live key compiles; DRAFT and QUESTION never do', () => {
+describe('compile – English joins, the location breaks ties, and APPROVED/LANDED always compile (DRAFT only under the 11.10 blanket, QUESTION never)', () => {
+  it('an APPROVED row on a live key compiles; DRAFT and QUESTION never do (the per-row читка regime – `--approved-only`)', () => {
     const rows = rowsOf(
       TABLE(
         '| R1 | | `Tennis & trips` | `Теннис и поездки` | `APPROVED` 08.10 |',
@@ -151,9 +175,22 @@ describe('compile – English joins, the location breaks ties, and only APPROVED
         '| R3 | | `Tennis & trips` | `ещё` | `QUESTION` |',
       ),
     )
-    const out = compile(rows, live())
+    // ⭐ RE-AIMED 11.10 (the blanket ruling): the law below is the читка regime, so the arm names it – the default compile now takes DRAFT rows too (next arm)
+    const out = compile(rows, live(), { includeDrafts: false })
     expect([...out.entries]).toEqual([['Tennis & trips', 'Теннис и поездки']])
     expect(out.outcomes.map((o) => o.disposition)).toEqual(['compiled', 'pending', 'pending'])
+  })
+
+  it('⭐ THE BLANKET (owner 11.10, «всё должно быть переведено, кроме имён и названий»): by default a DRAFT row compiles as written, a QUESTION row still never does, and two rows that disagree are a conflict', () => {
+    const draft = rowsOf(TABLE('| R2 | | `Tennis & trips` | `другое` | |', '| R3 | | `Tennis & trips` | `ещё` | `QUESTION` |'))
+    const out = compile(draft, live())
+    expect([...out.entries]).toEqual([['Tennis & trips', 'другое']])
+    expect(out.outcomes.map((o) => o.disposition)).toEqual(['compiled', 'pending'])
+    // an APPROVED row and a DRAFT row on one key that disagree compile NOTHING and say so (neither is more right) – the same law as before, now reachable by a DRAFT
+    const clash = rowsOf(TABLE('| R1 | | `Tennis & trips` | `Теннис и поездки` | `APPROVED` 08.10 |', '| R2 | | `Tennis & trips` | `другое` | |'))
+    const c = compile(clash, live())
+    expect([...c.entries]).toEqual([])
+    expect(c.outcomes.map((o) => o.disposition)).toEqual(['conflict', 'conflict'])
   })
 
   it('⚠ THE TRAP: «Stats» is live only as a screen heading, so the nav row (App.vue) is foreign-surface, not joined', () => {
@@ -416,6 +453,372 @@ describe('the gate, end to end on scratch copies of the shipped files', () => {
 })
 
 // =================================================================================================
+// ⭐ THE CORPUS JOINER (11.10) – his COORDINATE tables (album, gifts, the week-note grid) carry no English column; the live corpus answers
+// with the English at each coordinate, and the pair rides the importer's own compile.
+// =================================================================================================
+//
+// ⚠ THE FIXTURES ARE MINIATURES. The corpora below are four-line stand-ins with the REAL shapes (voices, bands, stages, an `unlicensed` arm), the documents are the
+// real documents' tables in miniature, and the Russian is bracketed stand-ins – no product copy is written here. What is read from the real tree (last arm) is read back from
+// the real documents by an ORACLE THAT IS NOT THE JOINER (a plain line split), so «the joiner agrees with itself» cannot pass for «it joined the right cell».
+// ⚠ THIS BLOCK SITS BEFORE «THE CATALOG» ON PURPOSE. The 08.10 twin-key case further down scans a fake `fixtures/twin.vue` into the walker's process-wide state, and any gate run on the
+// shipped catalog AFTER it reads `Step {step} of {count}` as drifted (a second home) – measured 11.10 when this block first sat at the foot of the file. Order is the whole fix.
+describe('the corpus joiner – coordinates join by position, orphans are named, conflicts refuse, empty cells wait', () => {
+  const MINI: Corpora = {
+    album: {
+      occasions: [
+        {
+          id: 'first-court',
+          // ⚠ the live order is the REVERSE of the document's (deep, sunny against his sunny, deep) on purpose: a join by position would cross them, a join by name cannot
+          voices: {
+            deep: { note: 'She stood at the fence.', caption: 'She watched.', line: 'She watched first.' },
+            sunny: { note: 'First day on court.', caption: 'She asked.', line: 'Can I?' },
+          },
+        },
+      ],
+      arc: { open: { sunny: { note: 'Easy to talk to.', line: 'Not all of her.' } } },
+    },
+    gifts: {
+      day: { id: 'day', label: 'Just the day', note: 'No present.', again: 'Same again.', ask: 'One day only.', short: 'the day' },
+      bands: [
+        { from: 0, to: 14, gifts: [{ id: 'bicycle', label: 'A bicycle', note: 'For school.', again: 'We gave one.', ask: 'On her list.', short: 'the bicycle' }] },
+        {
+          from: 22,
+          to: 28,
+          gifts: [{ id: 'neverbuy', label: 'A painting', note: 'She has the money.', again: 'One already hangs.', ask: 'A photo at midnight.', short: 'the painting', unlicensed: { note: 'She stands at that window.' } }],
+        },
+      ],
+      college: { from: 0, to: 99, gifts: [] },
+    },
+    weekNotes: {
+      staged: { sunny: { grind: { school: 'Hard week.', college: 'Called between lectures.' }, freshBody: { school: 'I feel good.' } } },
+      exams: { sunny: 'Papers first.' },
+      birthday: { sunny: { school: '{0} today. Save me the corner piece.' } },
+      offSeason: { sunny: { college: 'No matches for a while.' } },
+      motherhood: { sunny: { announced: 'Still in her coat.', birth: 'We are all here.' } },
+      bereaved: { sunny: 'She rang more often.' },
+      divorced: { sunny: 'She rang about the court.' },
+      fork: { sunny: { with: 'She thanked us.', against: 'She said fine.' } },
+    },
+  }
+
+  const miniCatalog = (): Catalog => {
+    const keys: Record<string, { home: string[]; wrapped?: true }> = {}
+    const ls = liveStrings(MINI)
+    for (const k of ls.album) keys[k] = { home: [HOMES.album], wrapped: true }
+    for (const k of ls.gifts) keys[k] = { home: [HOMES.gifts], wrapped: true }
+    for (const k of ls['week-notes']) keys[k] = { home: [HOMES.weekNotes], wrapped: true }
+    keys['Best ranking: #{0}'] = { home: [HOMES.albumFacts], wrapped: true }
+    return catalogOf(keys)
+  }
+  const miniLive = (extraCatalog: Catalog = miniCatalog()): Live => ({ catalog: extraCatalog, seen: new Set(['the day', 'the bicycle', 'the painting'].map(normKey)) })
+
+  const T = (header: string, ...rows: string[]): string[] => [header, header.replace(/[^|]+/g, ' --- '), ...rows, '']
+  const ALBUM_DOC = [
+    '# fixture album', '',
+    '### A1 · `first-court` · first time on court', '',
+    ...T('| voice | note | caption | line |', '| `sunny` | `[ru] sunny note` | `[ru] sunny caption` | `[ru] sunny line` |', '| `deep` | `[ru] deep note` | `[ru] deep caption` | |'),
+    '### A9 · `ghost` · an occasion the live corpus does not have', '',
+    ...T('| voice | note | caption | line |', '| `sunny` | `[ru] ghost note` | `[ru] ghost caption` | `[ru] ghost line` |'),
+    '### Arc towards `open`', '',
+    ...T('| birth voice | note | line |', '| `sunny` | `[ru] arc note` | `[ru] arc line` |'),
+    '### A34 · `the-line` · facts', '',
+    ...T('| source fact | Russian line |', "| mother's full name | localized name display order; never parse the finished English name |", '| `Best ranking: #{rank}` | `[ru] Best №{rank}` |'),
+    '## 3. Voice key', '',
+    ...T('| runtime voice | Russian editorial cue |', '| `sunny` | movement |'),
+  ].join('\n')
+
+  const GIFTS_DOC = [
+    '## 2. Shared non-object option', '', '### `day` – from age sixteen', '',
+    ...T('| field | Russian draft |', '| label | `[ru] day label` |', '| short | `[ru] day short` |', '| event | `[ru] day event` |'),
+    '## 3. Through fourteen', '', '### `bicycle`', '',
+    ...T('| field | Russian draft |', '| label | `[ru] bike label` |', '| note | `[ru] bike note` |', '| event | `[ru] bike event` |'),
+    '## 10. Ages twenty-two to twenty-eight', '', '### `neverbuy`', '',
+    ...T('| field | licensed/plenty | unlicensed means |', '| label | `[ru] nb label` | same |', '| note | `[ru] nb note` | `[ru] nb note unlicensed` |', '| ask | `[ru] nb ask` | `[ru] nb ask unlicensed` |'),
+    '## 7. Age eighteen – the threshold', '', '### `bankcard`', '',
+    ...T('| field | Russian draft |', '| label | `[ru] bank label` |'),
+  ].join('\n')
+
+  const WEEKS_DOC = [
+    '## 2. Sunny voice – rectangular moments', '',
+    ...T('| moment | school | college |', '| grind | `[ru] grind school` | `[ru] grind college` |', '| fresh body | `[ru] fresh school` | `[ru] fresh college` |'),
+    '## 3. Sunny voice – scoped moments', '',
+    ...T('| moment/stage | Russian draft |', '| exams, school | `[ru] exams` |', '| birthday, school | `[ru] {N} today, save me a piece` |', '| off-season, college | `[ru] off-season` |'),
+    '## 12. Motherhood voice layer', '',
+    ...T('| voice | announced | birth |', '| sunny | `[ru] announced` | `[ru] birth` |'),
+    '## 13. Bereavement and divorce', '',
+    ...T('| state | sunny |', '| bereaved | `[ru] bereaved` |', '| divorced | `[ru] divorced` |'),
+    '## 14. Fork aftermath', '',
+    ...T('| voice | parent went with her want | parent went against her want |', '| sunny | `[ru] with` | `[ru] against` |'),
+    '## 11. Core-matrix completion ledger', '',
+    ...T('| voice | rectangular cells | total |', '| sunny | 32 | 37 |'),
+  ].join('\n')
+
+  /** A scratch tables directory holding the given corpus documents under their real names. */
+  function docsDir(docs: Partial<Record<'album' | 'gifts' | 'week-notes', string>> = { album: ALBUM_DOC, gifts: GIFTS_DOC, 'week-notes': WEEKS_DOC }): string {
+    const dir = tmp()
+    for (const [family, text] of Object.entries(docs)) writeFileSync(join(dir, CORPUS_DOCS[family as keyof typeof CORPUS_DOCS]), `${text}\n`)
+    return dir
+  }
+  const joined = (corpora: Corpora = MINI, docs?: Partial<Record<'album' | 'gifts' | 'week-notes', string>>) => {
+    const dir = docsDir(docs)
+    const j = joinCorpora(listDocs(dir), dir, corpora)
+    return { j, c: compile(j.rows, miniLive()) }
+  }
+
+  it('the parser reads a coordinate from the heading, the row label and the column header – nothing is counted by position in the file', () => {
+    const album = parseAlbumDoc('a.md', ALBUM_DOC)
+    expect(album.cells.map((c) => c.coord)).toContain('A1 first-court · deep · caption')
+    expect(album.cells.map((c) => c.coord)).toContain('arc open · sunny · line')
+    expect(album.tables, 'two voice tables + the arc table + the fact table are read; the voice key is left alone').toBe(4)
+    expect(album.ignored).toBe(1)
+    const gifts = parseGiftsDoc('g.md', GIFTS_DOC)
+    expect(gifts.cells.map((c) => c.coord)).toContain('gift neverbuy [Ages twenty-two to twenty-eight] · unlicensed note')
+    const weeks = parseWeekNotesDoc('w.md', WEEKS_DOC, MINI)
+    expect(weeks.cells.map((c) => c.coord)).toEqual(expect.arrayContaining(['sunny · fresh body · college', 'sunny · exams · school', 'motherhood sunny · birth', 'bereaved · sunny', 'fork sunny · against']))
+    expect(weeks.ignored, 'the completion ledger shares a header cell with the motherhood table and is NOT one').toBe(1)
+    expect(numberWord('twenty-two')).toBe(22)
+    expect(numberWord('fourteen')).toBe(14)
+    expect(numberWord('purple')).toBeNull()
+    expect(bandOfHeading('9. Ages nineteen to twenty-one')).toEqual({ kind: 'range', from: 19, to: 21 })
+    expect(bandOfHeading('11. Age twenty-nine and later')).toEqual({ kind: 'range', from: 29, to: 'open' })
+    expect(bandOfHeading('3. Through fourteen')).toEqual({ kind: 'range', from: 0, to: 14 })
+    expect(bandOfHeading('12. College birthday band')).toEqual({ kind: 'college' })
+    expect(bandOfHeading('8. Verification through eighteen')).toBeNull()
+  })
+
+  it('each cell joins to the English AT ITS COORDINATE, and compile writes his words verbatim – by voice NAME, not by the order of his rows', () => {
+    const { j, c } = joined()
+    // the doc lists sunny before deep; the live corpus is keyed by name, so a reordering on either side cannot cross them
+    expect(c.entries.get('First day on court.')).toBe('[ru] sunny note')
+    expect(c.entries.get('She stood at the fence.')).toBe('[ru] deep note')
+    expect(c.entries.get('She watched.')).toBe('[ru] deep caption')
+    expect(c.entries.get('Easy to talk to.')).toBe('[ru] arc note')
+    expect(c.entries.get('Not all of her.')).toBe('[ru] arc line')
+    expect(c.entries.get('A bicycle')).toBe('[ru] bike label')
+    expect(c.entries.get('A painting')).toBe('[ru] nb label')
+    expect(c.entries.get('She stands at that window.'), 'the unlicensed arm is its own key').toBe('[ru] nb note unlicensed')
+    expect(c.entries.get('She has the money.'), 'and the base note is its own').toBe('[ru] nb note')
+    expect(c.entries.get('Hard week.')).toBe('[ru] grind school')
+    expect(c.entries.get('I feel good.'), '«fresh body» is the code\'s `freshBody`').toBe('[ru] fresh school')
+    expect(c.entries.get('Papers first.')).toBe('[ru] exams')
+    expect(c.entries.get('No matches for a while.')).toBe('[ru] off-season')
+    expect(c.entries.get('Still in her coat.')).toBe('[ru] announced')
+    expect(c.entries.get('We are all here.')).toBe('[ru] birth')
+    expect(c.entries.get('She rang more often.')).toBe('[ru] bereaved')
+    expect(c.entries.get('She rang about the court.')).toBe('[ru] divorced')
+    expect(c.entries.get('She thanked us.')).toBe('[ru] with')
+    expect(c.entries.get('She said fine.')).toBe('[ru] against')
+    expect(c.entries.get('Best ranking: #{0}'), 'the source-fact table: an ordinary pair; his named hole becomes the key\'s').toBe('[ru] Best №{0}')
+    expect(j.cells['album-facts'], 'the fact «mother\'s full name» is a note about a display, not a sentence').toBe(1)
+  })
+
+  it('⭐ MUTATION ARM – a coordinate the live corpus no longer has is a NAMED corpus-orphan and no entry: an id that died, a voice that went, a band that moved (never the neighbour)', () => {
+    const control = joined()
+    // the control: the occasion «ghost» and the 18-band are not in the miniature, so they are the two orphans of the unmutated fixture
+    expect(control.j.orphans.filter((o) => o.kind === 'moved').map((o) => o.coord)).toEqual(expect.arrayContaining(['A9 ghost · sunny · note', 'gift bankcard [Age eighteen – the threshold] · label']))
+    expect(control.c.entries.has('First day on court.')).toBe(true)
+    // the id dies: the whole occasion's cells become orphans, and ONLY orphans – the neighbouring (live) occasion is untouched
+    const noOccasion = joined({ ...MINI, album: { ...MINI.album, occasions: [{ id: 'renamed-court', voices: MINI.album.occasions[0]!.voices }] } })
+    expect(noOccasion.c.entries.has('First day on court.'), 'a renamed id must not keep its old words').toBe(false)
+    expect(noOccasion.j.orphans.some((o) => o.coord === 'A1 first-court · sunny · note' && /not in ALBUM_CORPUS/.test(o.why)), 'named, with the reason').toBe(true)
+    // the voice goes: only that voice's cells orphan; the other voice still joins
+    const noDeep = joined({ ...MINI, album: { ...MINI.album, occasions: [{ id: 'first-court', voices: { sunny: MINI.album.occasions[0]!.voices.sunny! } }] } })
+    expect(noDeep.c.entries.has('She stood at the fence.')).toBe(false)
+    expect(noDeep.c.entries.get('First day on court.')).toBe('[ru] sunny note')
+    expect(noDeep.j.orphans.filter((o) => o.coord.startsWith('A1 first-court · deep')).map((o) => o.kind), 'all three registers of the vanished voice – the empty one too: there is nothing left to wait for').toEqual(['moved', 'moved', 'moved'])
+    // the band moves (0-14 becomes 0-13): the section «Through fourteen» finds no band and its gift is an orphan, not the college's or the next band's
+    const movedBand = joined({ ...MINI, gifts: { ...MINI.gifts, bands: [{ ...MINI.gifts.bands[0]!, to: 13 }, MINI.gifts.bands[1]!] } })
+    expect(movedBand.c.entries.has('A bicycle')).toBe(false)
+    expect(movedBand.j.orphans.some((o) => o.coord.startsWith('gift bicycle') && /no live birthday band/.test(o.why))).toBe(true)
+    // the stage goes: a rectangular week-note cell whose stage the live moment lacks is an orphan
+    const noCollege = joined({ ...MINI, weekNotes: { ...MINI.weekNotes, staged: { sunny: { grind: { school: 'Hard week.' }, freshBody: MINI.weekNotes.staged.sunny!.freshBody! } } } })
+    expect(noCollege.c.entries.has('Called between lectures.')).toBe(false)
+    expect(noCollege.j.orphans.some((o) => o.coord === 'sunny · grind · college')).toBe(true)
+    // and an orphan never reaches ru.json's serialisation
+    expect(serializeRu(noOccasion.c.entries)).not.toContain('sunny note')
+  })
+
+  it('a Russian-only field (the gift `event`) is a russian-only orphan; a live field no key asks for (the gift `short`) is `waiting`; neither compiles', () => {
+    const { j, c } = joined()
+    const events = j.orphans.filter((o) => o.kind === 'russian-only' && /«event»/.test(o.why))
+    expect(events.map((o) => o.coord)).toEqual(['gift day [Shared non-object option] · event', 'gift bicycle [Through fourteen] · event'])
+    const shorts = c.outcomes.filter((o) => o.row.coord?.endsWith('· short'))
+    expect(shorts.map((o) => o.disposition), 'the English is live in source, no call site asks for it – the importer\'s own `waiting`').toEqual(['waiting'])
+    expect(c.entries.has('the day')).toBe(false)
+  })
+
+  it('the three-column gift tables: `same` keeps the base words (no cell), a cell is the live `unlicensed` arm, and an arm the live gift lacks is an orphan', () => {
+    const cells = parseGiftsDoc('g.md', GIFTS_DOC).cells.map((c) => c.coord)
+    expect(cells, '`same` says the arm keeps the base words: it produces no cell').not.toContain('gift neverbuy [Ages twenty-two to twenty-eight] · unlicensed label')
+    expect(cells).toContain('gift neverbuy [Ages twenty-two to twenty-eight] · unlicensed note')
+    const { j, c } = joined()
+    expect(c.entries.get('She stands at that window.')).toBe('[ru] nb note unlicensed')
+    expect(c.entries.get('A photo at midnight.'), 'the base ask is its own cell and its own key').toBe('[ru] nb ask')
+    const arm = j.orphans.find((o) => o.coord.endsWith('unlicensed ask'))
+    expect(arm, 'the doc gives an unlicensed ask the miniature gift does not have: named, never attached to the base ask').toMatchObject({ kind: 'russian-only' })
+    expect(arm?.why).toMatch(/no unlicensed «ask» arm/)
+    expect(c.entries.get('One already hangs.'), 'no «again» row in the doc: the live string simply waits, it is not invented').toBeUndefined()
+  })
+
+  it('an EMPTY Russian cell is `pending` – his column waiting – and neither an orphan nor an entry', () => {
+    const { j, c } = joined()
+    const blank = c.outcomes.find((o) => o.row.coord === 'A1 first-court · deep · line')
+    expect(blank).toMatchObject({ disposition: 'pending' })
+    expect(c.entries.has('She watched first.')).toBe(false)
+    expect(j.orphans.some((o) => o.coord === 'A1 first-court · deep · line')).toBe(false)
+  })
+
+  it('his `{N}` hole becomes the key\'s `{0}` – the spelling of a hole moves, no word does – and a second hole is never guessed', () => {
+    const { c } = joined()
+    expect(c.entries.get('{0} today. Save me the corner piece.')).toBe('[ru] {0} today, save me a piece')
+    expect(englishFor('{0} today.', '[ru] {N} сегодня')).toBe('{N} today.')
+    expect(englishFor('{0} today.', '[ru] {0} сегодня'), 'his Russian already spells the key\'s own hole').toBe('{0} today.')
+    expect(englishFor('{0} of {1}', '[ru] {a} из {b}'), 'two holes: the position is not guessed – the importer will name what it cannot map').toBe('{0} of {1}')
+    expect(englishFor('plain', '[ru] plain')).toBe('plain')
+    expect(englishFor('plain', null)).toBe('plain')
+  })
+
+  it('⚠ A CORPUS CELL NEVER OVERWRITES: against another row for the same key it is a CONFLICT on both, and the key compiles nowhere', () => {
+    const dir = docsDir({ album: ALBUM_DOC })
+    writeFileSync(join(dir, 'ru-fixture-2026-10.md'), `${TABLE(`| R1 | | \`First day on court.\` | \`[ru] another hand\` | |`)}\n`)
+    const rows = readAllRows(listDocs(dir), dir, MINI).rows
+    const c = compile(rows, miniLive())
+    const mine = c.outcomes.filter((o) => o.key === 'First day on court.')
+    expect(mine.map((o) => [o.row.doc, o.disposition])).toEqual([['ru-fixture-2026-10.md', 'conflict'], [CORPUS_DOCS.album, 'conflict']])
+    expect(c.entries.has('First day on court.'), 'neither is more right: the key compiles nowhere').toBe(false)
+    // the same cell, agreeing, is not a conflict
+    const agree = compile(readAllRows(listDocs(dir), dir, MINI).rows.filter((r) => r.doc !== 'ru-fixture-2026-10.md'), miniLive())
+    expect(agree.entries.get('First day on court.')).toBe('[ru] sunny note')
+  })
+
+  it('⚠ THE GATE ITSELF: a corpus cell against a table row for the same live string is `conflict` red, both rows named – through the real catalog and the real corpora', () => {
+    const dir = docsDir({ album: ALBUM_DOC })
+    const real = ALBUM_CORPUS[1]! // first-court (the-line is first)
+    expect(real.id).toBe('first-court')
+    const realDoc = ALBUM_DOC.replace('`[ru] sunny note`', '`[ru] cell`')
+    writeFileSync(join(dir, CORPUS_DOCS.album), `${realDoc}\n`)
+    writeFileSync(join(dir, 'ru-fixture-2026-10.md'), `${TABLE(`| R1 | | \`${real.voices.sunny.note}\` | \`[ru] table\` | |`)}\n`)
+    const rules = runGate({ tablesDir: dir, ruPath: join(dir, 'ru.json') }).problems.filter((p) => p.rule === 'conflict')
+    expect(rules.map((p) => p.where).sort()).toEqual([`${CORPUS_DOCS.album}:${realDoc.split('\n').findIndex((l) => l.includes('[ru] cell')) + 1}`, 'ru-fixture-2026-10.md:3'].sort())
+  })
+
+  it('the hint guards the surface: the same text on ANOTHER surface\'s key is `foreign-surface`, reported and not attached', () => {
+    const cat = catalogOf({ 'First day on court.': { home: ['src/components/OtherScreen.vue'] } })
+    const dir = docsDir({ album: ALBUM_DOC })
+    const j = joinCorpora(listDocs(dir), dir, MINI)
+    const c = compile(j.rows, { catalog: cat, seen: new Set() })
+    const o = c.outcomes.find((x) => x.row.coord === 'A1 first-court · sunny · note')
+    expect(o?.disposition).toBe('foreign-surface')
+    expect(c.entries.has('First day on court.')).toBe(false)
+  })
+
+  it('a recognised table whose row does not match its header is an `unreadable` orphan; the rest of the table still joins', () => {
+    const doc = ['### A1 · `first-court`', '', ...T('| voice | note | caption | line |', '| `sunny` | `[ru] n` | `[ru] c` |', '| `deep` | `[ru] dn` | `[ru] dc` | `[ru] dl` |')].join('\n')
+    const { j, c } = joined(MINI, { album: doc })
+    expect(j.orphans.map((o) => [o.kind, o.line])).toEqual([['unreadable', 5]])
+    expect(c.entries.get('She stood at the fence.')).toBe('[ru] dn')
+    expect(c.entries.has('First day on court.')).toBe(false)
+  })
+
+  it('⚠ A HEADING THAT DRIFTED IS LOUD: a recognised table whose address is gone (no occasion id, no gift id, no voice) is `unreadable` orphans row by row – never a family gone quiet', () => {
+    const album = joined(MINI, { album: ['### First court (no id any more)', '', ...T('| voice | note | caption | line |', '| `sunny` | `[ru] a` | `[ru] b` | `[ru] c` |')].join('\n') })
+    expect(album.j.orphans.map((o) => [o.kind, o.why])).toEqual([['unreadable', expect.stringMatching(/names no occasion/)]])
+    expect(album.c.entries.size).toBe(0)
+    const gifts = joined(MINI, { gifts: ['## 3. Through fourteen', '', '### bicycle', '', ...T('| field | Russian draft |', '| label | `[ru] a` |', '| note | `[ru] b` |')].join('\n') })
+    expect(gifts.j.orphans.map((o) => o.kind)).toEqual(['unreadable', 'unreadable'])
+    expect(gifts.j.orphans[0]?.why).toMatch(/names no gift/)
+    const weeks = joined(MINI, { 'week-notes': ['## 2. Sunny – rectangular moments', '', ...T('| moment | school | college |', '| grind | `[ru] a` | `[ru] b` |')].join('\n') })
+    expect(weeks.j.orphans.map((o) => o.kind)).toEqual(['unreadable'])
+    expect(weeks.j.orphans[0]?.why).toMatch(/names no voice/)
+    expect(weeks.c.entries.size, 'nothing was joined by guessing a voice').toBe(0)
+  })
+
+  it('the report: a line per family, identical reasons grouped, every orphan NAMED, his Russian shown on --verbose, and the words «the gate does not fail on it» in the open', () => {
+    const { j, c } = joined()
+    const text = renderCorpusReport(j, c, MINI).join('\n')
+    expect(text).toMatch(/corpus-orphan: \d+ \(moved \d+, russian-only \d+, unreadable 0\) – REPORTED ONLY, the gate does not fail on it/)
+    expect(text).toContain('2 × gifts · russian-only · the live gift has no «event» field')
+    expect(text).toContain('3 × album · moved · occasion «ghost» is not in ALBUM_CORPUS')
+    expect(text).toContain('A9 ghost · sunny · caption')
+    for (const family of ['album', 'album-facts', 'gifts', 'week-notes']) expect(text, family).toMatch(new RegExp(`^  ${family}\\s+\\d+\\s+\\d+`, 'm'))
+    expect(text).not.toContain('his Russian for')
+    expect(renderCorpusReport(j, c, MINI, { verbose: true }).join('\n')).toContain('his Russian for ru-album-corpus-2026-10.md:')
+  })
+
+  it('readAllRows reads his tables FIRST and the joiner after; a document the joiner names but the list omits is not read; a record file still throws', () => {
+    const dir = docsDir({ album: ALBUM_DOC })
+    writeFileSync(join(dir, 'ru-fixture-2026-10.md'), `${TABLE('| R1 | | `Stats` | `[ru] Stats` | |')}\n`)
+    const all = readAllRows(listDocs(dir), dir, MINI)
+    expect(all.rows[0]?.doc).toBe('ru-fixture-2026-10.md')
+    expect(all.rows.some((r) => r.doc === CORPUS_DOCS.album)).toBe(true)
+    expect(readAllRows(['ru-fixture-2026-10.md'], dir, MINI).rows.every((r) => r.doc === 'ru-fixture-2026-10.md'), 'a corpus doc absent from the list is not read').toBe(true)
+    expect(() => readAllRows([RECORD_FILES[0]!], dir, MINI)).toThrow(/record file/)
+  })
+
+  it('THE GATE: a corpus document gone from the tables directory is `corpus-file` red; the corpus-orphan count is PRINTED and does not fail the gate', () => {
+    const empty = tmp()
+    const bare = runGate({ tablesDir: empty }).problems.filter((p) => p.rule === 'corpus-file').map((p) => p.where)
+    expect(bare.sort()).toEqual(Object.values(CORPUS_DOCS).sort())
+    const dir = tmp()
+    writeFileSync(join(dir, 'catalog.en.json'), readCatalogText()!)
+    writeFileSync(join(dir, 'ru.json'), readFileSync('src/i18n/ru.json', 'utf8'))
+    const gate = runGate({ catalogPath: join(dir, 'catalog.en.json'), ruPath: join(dir, 'ru.json') })
+    expect(gate.problems, 'the shipped tree, orphans and all, is green').toEqual([])
+    const text = gate.lines.join('\n')
+    expect(text).toMatch(/corpus-orphan: \d+ \(moved \d+, russian-only \d+, unreadable \d+\) – REPORTED ONLY, the gate does not fail on it/)
+    expect(text).toMatch(/corpus joiner – his coordinate tables/)
+  })
+
+  it('⭐ THE REAL TREE: every cell of his three documents is accounted for, only the gift `event` is russian-only, and four independently-read coordinates carry exactly his words', () => {
+    const corpora = liveCorpora()
+    const { rows, corpus } = readAllRows(listDocs(), TABLES_DIR_REAL, corpora)
+    const compiled = compile(rows, { catalog: parseCatalog(readCatalogText()!), seen: seenLiterals })
+    // the accounting identity: a cell is joined, waiting for his column, waiting for a call site, refused by a guard, or NAMED as an orphan – none is dropped
+    for (const f of ['album', 'album-facts', 'gifts', 'week-notes'] as const) {
+      const mine = compiled.outcomes.filter((o) => o.row.corpus === f)
+      expect(mine.length + corpus.orphans.filter((o) => o.family === f).length, `${f}: cells = rows + orphans`).toBe(corpus.cells[f])
+    }
+    expect(compiled.outcomes.filter((o) => o.row.corpus !== undefined && o.disposition === 'conflict')).toEqual([])
+    expect(corpus.orphans.filter((o) => o.kind === 'russian-only').every((o) => o.family === 'gifts' && /«event»/.test(o.why))).toBe(true)
+    // a FLOOR, not today's number (the English walks; the gate prints the rest): the joiner has not gone quiet on a family
+    const joinedBy = (f: string): number => compiled.outcomes.filter((o) => o.row.corpus === f && o.disposition === 'compiled').length
+    expect(joinedBy('album')).toBeGreaterThanOrEqual(400)
+    expect(joinedBy('gifts')).toBeGreaterThanOrEqual(150)
+    expect(joinedBy('week-notes')).toBeGreaterThanOrEqual(180)
+    expect(joinedBy('album-facts')).toBeGreaterThanOrEqual(1)
+
+    // THE ORACLE: a plain line split over the real documents, never the joiner's parser
+    const ru = JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string, string>
+    const cellsOf = (doc: string, heading: RegExp, row: RegExp): string[] => {
+      const lines = readFileSync(join(TABLES_DIR_REAL, doc), 'utf8').split('\n')
+      const at = lines.findIndex((l) => heading.test(l))
+      expect(at, `${doc}: ${heading}`).toBeGreaterThanOrEqual(0)
+      const line = lines.slice(at + 1).find((l) => row.test(l))
+      expect(line, `${doc}: ${heading} -> ${row}`).toBeDefined()
+      return (line ?? '').replace(/^\|\s*/, '').replace(/\s*\|\s*$/, '').split(/\s+\|\s+/).map((c) => c.trim().replace(/^`|`$/g, ''))
+    }
+    // album: first-court · sunny · note/caption/line and deep · note
+    const court = ALBUM_CORPUS.find((o) => o.id === 'first-court')!
+    const sunny = cellsOf(CORPUS_DOCS.album, /^### A1 · `first-court`/, /^\| `sunny` \|/)
+    expect([ru[court.voices.sunny.note], ru[court.voices.sunny.caption], ru[court.voices.sunny.line]]).toEqual([sunny[1], sunny[2], sunny[3]])
+    expect(ru[court.voices.deep.note]).toBe(cellsOf(CORPUS_DOCS.album, /^### A1 · `first-court`/, /^\| `deep` \|/)[1])
+    // the arc: open · deep
+    const arc = cellsOf(CORPUS_DOCS.album, /^### Arc towards `open`/, /^\| `deep` \|/)
+    expect([ru[ALBUM_ARC.open.deep.note], ru[ALBUM_ARC.open.deep.line]]).toEqual([arc[1], arc[2]])
+    // gifts: the 0-14 band's bicycle label/ask, and neverbuy's unlicensed note (the third column)
+    const bike = BIRTHDAY_BANDS.find((b) => b.from === 0 && b.to === 14)!.gifts.find((g) => g.id === 'bicycle')!
+    expect(ru[bike.label]).toBe(cellsOf(CORPUS_DOCS.gifts, /^### `bicycle`/, /^\| label \|/)[1])
+    expect(ru[bike.ask]).toBe(cellsOf(CORPUS_DOCS.gifts, /^### `bicycle`/, /^\| ask \|/)[1])
+    const never = BIRTHDAY_BANDS.find((b) => b.from === 22 && b.to === 28)!.gifts.find((g) => g.id === 'neverbuy')!
+    expect(ru[never.unlicensed!.note!]).toBe(cellsOf(CORPUS_DOCS.gifts, /^### `neverbuy`/, /^\| note \|/)[2])
+    // the week-note grid: sunny · grind · every stage, and the motherhood table's sunny · announced, and the fork's quiet arm
+    const grind = cellsOf(CORPUS_DOCS['week-notes'], /^## \d+\. Sunny voice – rectangular moments/, /^\| grind \|/)
+    expect(['school', 'after-school', 'college', 'independent'].map((st) => ru[VOICE_LINES.sunny.grind[st as 'school'] as string])).toEqual(grind.slice(1))
+    expect(ru[MOTHERHOOD_WORDS.sunny.announced]).toBe(cellsOf(CORPUS_DOCS['week-notes'], /^## \d+\. Motherhood voice layer/, /^\| sunny \|/)[1])
+  })
+})
+
+// =================================================================================================
 // THE CATALOG
 // =================================================================================================
 
@@ -590,5 +993,81 @@ describe('08.10 – the twin-key bug and the header classifier', () => {
     expect(rows[0].english, 'the English comes from the English-titled column, not from `source`').toBe(
       'You are the parent',
     )
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ 11.10 – THE normKey BUG AND THE EMPTY RUSSIAN CELL – the regression arms.
+// Fixture Russian is a bracketed stand-in (`[ru] …`): these arms are about the JOIN and the CLASS, never about wording.
+// =================================================================================================
+describe('11.10 – normKey meets every hole of a run, and an empty Russian DRAFT cell is pending', () => {
+  const holes = catalogOf({
+    'Seat {0}{1}': { home: ['src/engine/world/albumBook.ts'] },
+    '🩹 {0} retired hurt at the {1}{2}.': { home: ['src/engine/world/worldNews.ts'] },
+    'Won {0} of {1}': { home: ['src/components/HerWeekTab.vue'] },
+    'Aged {0}': { home: ['src/components/screens/ProfileScreen.vue'] },
+    'Tennis & trips': { home: ['src/components/EndingScreen.vue'] },
+    Stats: { home: ['src/components/screens/StatsScreen.vue'] },
+    'Centre Court': { home: ['src/engine/world/venues.ts'] },
+  })
+  const lv: Live = { catalog: holes, seen: new Set() }
+
+  it('⭐ ARM 1 – TWO HOLES IN A ROW: `{n}{letter}` and `{tier}{when}` are two holes each, not one hole and a leftover (the old regexp swallowed the second hole\'s leader) – and each row joins its key', () => {
+    expect(normKey('Seat {n}{letter}')).toBe('Seat ¤¤')
+    expect(normKey('{tier}{when}')).toBe('¤¤')
+    expect(normKey('a {x}{y}{z} b')).toBe('a ¤¤¤ b')
+    expect(normKey('{{ a }}{{ b }}')).toBe('¤¤')
+    // the thing the leader character was FOR: a source `${…}` run is still one hole each, never two-and-a-half
+    expect(normKey('Won ${a}${b}')).toBe('Won ¤¤')
+    expect(normKey('Won ${a}{b}')).toBe('Won ¤¤')
+    // through the importer's own index, to the key the code asks for
+    const index = indexCatalog(holes)
+    expect(index.get(normKey('Seat {n}{letter}'))).toEqual(['Seat {0}{1}'])
+    expect(index.get(normKey('🩹 {rivalName} retired hurt at the {tier}{when}.'))).toEqual(['🩹 {0} retired hurt at the {1}{2}.'])
+    // …and the whole row compiles, his holes re-pointed by position (the second row names them in another order on purpose)
+    const out = compile(rowsOf(TABLE('| R1 | | `Seat {n}{letter}` | `[ru] Seat {n}{letter}` | |', '| R2 | | `🩹 {rivalName} retired hurt at the {tier}{when}.` | `[ru] {when}{tier}{rivalName}` | |')), lv)
+    expect(out.outcomes.map((o) => o.disposition)).toEqual(['compiled', 'compiled'])
+    expect([...out.entries]).toEqual([['Seat {0}{1}', '[ru] Seat {0}{1}'], ['🩹 {0} retired hurt at the {1}{2}.', '[ru] {2}{1}{0}']])
+  })
+
+  it('⭐ ARM 2 – A NUMBERED HOLE (`{0}`) IN HIS ENGLISH CELL normalises too: it met no key at all before, whatever the catalog held', () => {
+    expect(normKey('Aged {0}')).toBe('Aged ¤')
+    expect(normKey('Won {0} of {1}')).toBe('Won ¤ of ¤')
+    expect(normKey('{12} left')).toBe('¤ left')
+    // the two spellings of one sentence meet, and a brace that is not a whole hole stays text
+    expect(normKey('Aged {n}')).toBe(normKey('Aged {0}'))
+    expect(normKey('Aged {0.5x}')).toBe('Aged {0.5x}')
+    const index = indexCatalog(holes)
+    expect(index.get(normKey('Won {0} of {1}'))).toEqual(['Won {0} of {1}'])
+    const out = compile(rowsOf(TABLE('| R1 | | `Aged {0}` | `[ru] Aged {0}` | |')), lv)
+    expect(out.outcomes[0]).toMatchObject({ disposition: 'compiled', key: 'Aged {0}' })
+    expect(out.entries.get('Aged {0}')).toBe('[ru] Aged {0}')
+  })
+
+  it('⭐ ARM 3 – AN EMPTY RUSSIAN CELL: on a DRAFT it is `pending` (his column is waiting, not a defect); on an APPROVED / LANDED row it stays `ambiguous-cell` (a status with no translation); a cell with something unclean in it is still `ambiguous-cell`', () => {
+    const rows = rowsOf(
+      TABLE(
+        '| R1 | | `Tennis & trips` | | |',
+        '| R2 | | `Tennis & trips` | | `APPROVED` |',
+        '| R3 | | `Stats` | | `LANDED` |',
+        '| R4 | | `Centre Court` | `[a]` / `[b]` | |',
+        '| R5 | | `Stats` | | `QUESTION` |',
+      ),
+    )
+    expect(rows.map((r) => r.russianBlank), 'empty is not the same as unclean – the parser tells them apart').toEqual([true, true, true, false, true])
+    const out = compile(rows, lv)
+    expect(out.outcomes.map((o) => o.disposition)).toEqual(['pending', 'ambiguous-cell', 'ambiguous-cell', 'ambiguous-cell', 'pending'])
+    expect(out.outcomes[0]).toMatchObject({ disposition: 'pending', key: 'Tennis & trips' })
+    expect(out.outcomes[1]?.why, 'the reason names the empty cell and the status that contradicts it').toMatch(/empty .*APPROVED/)
+    expect(out.outcomes[2]?.why).toMatch(/empty .*LANDED/)
+    expect(out.outcomes[3]?.why, 'an unclean cell keeps the old reason').toContain('not one clean literal')
+    expect(out.entries.size, 'a waiting column compiles nothing').toBe(0)
+    // a formatter row (`W14 '31`) takes the same road: DRAFT + empty -> pending (with its format), APPROVED + empty -> ambiguous-cell
+    const fmt = compile(rowsOf(TABLE("| R1 | | `W14 '31` | | |", "| R2 | | `W14 '31` | | `APPROVED` |")), lv)
+    expect(fmt.outcomes.map((o) => [o.disposition, o.format])).toEqual([['pending', 'dates.weekLabel'], ['ambiguous-cell', 'dates.weekLabel']])
+    expect(fmt.formats.size).toBe(0)
+    // the join's own verdicts still come first: an empty cell does not hide a dead English (drift), and the читка regime reads the DRAFT as pending exactly as before
+    expect(compile(rowsOf(TABLE('| R1 | | `This sentence is nowhere` | | |')), lv).outcomes[0]?.disposition).toBe('unmatched')
+    expect(compile(rowsOf(TABLE('| R1 | | `Tennis & trips` | | |')), lv, { includeDrafts: false }).outcomes[0]?.disposition).toBe('pending')
   })
 })

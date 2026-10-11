@@ -26,7 +26,8 @@
 import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
-import { LADDER_LABEL, LADDER_TRACKS } from '../shared/protocol'
+import { LADDER_TRACKS } from '../shared/protocol'
+import { ladderName } from '../composables/kidIdentity'
 // ⭐ L4-2b (10.10): `rankLabel`'s two shapes (shared/format.ts, engine-importable, so it cannot call `t()`) read through the catalog at THIS call site, as the Stats tile does.
 import { t } from '../i18n'
 import type { LadderTrack } from '../engine/season/types'
@@ -117,7 +118,7 @@ const blocks = computed(() =>
     const l = game.snapshot?.ladders[track]
     return {
       track,
-      label: LADDER_LABEL[track],
+      label: ladderName(track),
       rank: l?.rank !== null && l?.rank !== undefined ? t('#{rank}', { rank: l?.rank ?? 0 }) : t('Unranked'),
       points: l?.points ?? 0,
       results: l?.countingResults ?? [],

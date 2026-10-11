@@ -78,7 +78,7 @@ import {
   PSY_FOCUS_LABEL,
   PSY_FOCUS_LINE,
 } from '../engine/world/psychologist'
-import { t } from '../i18n'
+import { engineText, t } from '../i18n'
 // ⭐⭐⭐ v80, WAVE F2 – the third seat's refusal, from the engine that throws it (the R10-16 doctrine,
 // asked of one more seat). Nothing else of his is imported: his rung catalogue is `ECONOMY.sparring`
 // below, and every live fact is the snapshot's.
@@ -771,11 +771,11 @@ async function doSetFocus(): Promise<void> {
         :disabled="game.busy"
         @click="pressRung(m, r.value)"
       >
-        <span class="rung-label">{{ r.label }}</span>
+        <span class="rung-label">{{ engineText(r.label) }}</span>
         <!-- 17.09: the rung's own sentence, under the name it captions and above the price, and it
              is rendered ONLY where the catalogue supplies one - a seat whose ladder has no approved
              sentences shows no empty line where one would be. -->
-        <span v-if="r.note" class="rung-note">{{ r.note }}</span>
+        <span v-if="r.note" class="rung-note">{{ engineText(r.note) }}</span>
         <span class="rung-price">{{ t('{0}/wk', [r.priceLabel]) }}</span>
       </button>
     </div>
@@ -811,8 +811,8 @@ async function doSetFocus(): Promise<void> {
         :disabled="game.busy || !f.open"
         @click="pressFocus(m, f.value)"
       >
-        <span class="staff-focus-name">{{ f.label }}</span>
-        <span class="staff-focus-blurb">{{ f.line }}</span>
+        <span class="staff-focus-name">{{ engineText(f.label) }}</span>
+        <span class="staff-focus-blurb">{{ engineText(f.line) }}</span>
       </button>
     </div>
     <p v-if="m.focus && m.hired && m.focus.note" class="cm-load staff-focus-note">{{ m.focus.note }}</p>

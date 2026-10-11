@@ -18,10 +18,10 @@ Russian mode. All Russian lines are `DRAFT`.
 | source symbol / file | English source | Russian draft |
 | --- | --- | --- |
 | divorce milestone · `ended.ts` | `The marriage ended. We had no say in it, only in what we said next.` | `Их брак закончился. Мы не могли решить за них – только выбрать, что сказать после.` |
-| `LEAK_EVENT.true` · `leak.ts` | `It is in the papers – there is someone in her life, and they have it right.` | `Об этом написали в прессе: в её жизни кое-кто есть, и на этот раз они не ошиблись.` |
-| `LEAK_EVENT.wrong` · `leak.ts` | `It is in the papers – a mystery man, and none of it is what happened.` | `В прессе пишут о «таинственном мужчине». Но это совсем не то, что произошло.` |
+| `LEAK_EVENT.true` · `leakCopy.ts` | `It is in the papers – there is someone in her life, and they have it right.` | `Об этом написали в прессе: в её жизни кое-кто есть, и на этот раз они не ошиблись.` |
+| `LEAK_EVENT.wrong` · `leakCopy.ts` | `It is in the papers – a mystery man, and none of it is what happened.` | `В прессе пишут о «таинственном мужчине». Но это совсем не то, что произошло.` |
 | wedding milestone · `wedding.ts` | `Her wedding day. The family was there, whatever had been said about it.` | `День её свадьбы. Семья была рядом, что бы ни говорили до этого.` |
-| `PAUSE_EVENT` · `pregnancy.ts` | `She is entering nothing more before the birth. What she is already in, she will play.` | `До рождения ребёнка она больше не подаёт заявок. Уже заявленные турниры доиграет.` |
+| `PAUSE_EVENT` · `pregnancyCopy.ts` | `She is entering nothing more before the birth. What she is already in, she will play.` | `До рождения ребёнка она больше не подаёт заявок. Уже заявленные турниры доиграет.` |
 | `BIRTH_EVENT` · `pregnancy.ts` | `Her daughter was born this week. The family has somebody new in it.` | `На этой неделе у неё родилась дочь. В семье появился ещё один человек.` |
 
 The `wrong` press row is a **false public claim**, not a statement that her real partner is male;

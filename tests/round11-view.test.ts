@@ -115,7 +115,9 @@ describe('the surface mark on the Season card (R11-15, reversed by the owner in 
     // ...and the component is still the export's ring with the name beside it
     expect(surfaceMark).toContain('class="surface-mark"')
     expect(surfaceMark).toContain('class="surface-ring"')
-    expect(surfaceMark).toContain('{{ surface }}')
+    // ⭐ RE-AIMED 11.10 (RU-22): the mark still prints the engine's surface id once, now THROUGH THE SURFACE READER – `engineWord('surface', surface)` returns the id as written under English (the bytes did not move)
+    // and the court's own Russian word under ru.json. The claim is the same: the name is in the mark, beside the ring.
+    expect(surfaceMark).toContain("{{ engineWord('surface', surface) }}")
     // the name is a SIBLING of the ring inside one mark, which is what "beside it" means
     expect(surfaceMark).toMatch(/<span class="surface-ring"[^>]*><i><\/i><\/span>\s*<template v-if="showName">/)
   })
@@ -126,7 +128,7 @@ describe('the surface mark on the Season card (R11-15, reversed by the owner in 
   it('the surface name is printed EXACTLY ONCE on the card – R11-15\'s actual complaint', () => {
     const card = region(seasonScreen, '<div class="event-place">', '</div>')
     expect(card.split('<SurfaceMark').length - 1).toBe(1)
-    expect(surfaceMark.split('{{ surface }}').length - 1).toBe(1)
+    expect(surfaceMark.split("{{ engineWord('surface', surface) }}").length - 1).toBe(1) // RE-AIMED 11.10 (RU-22), see above
     // and the screen prints the raw name nowhere else on the card
     expect(card).not.toContain('{{ ev.surface }}')
   })

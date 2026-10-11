@@ -21,7 +21,8 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { CATALOG_PATH, parseCatalog, seenLiterals } from './i18n-extract'
-import { compile, listDocs, readRows, readRu, TABLES_DIR } from './i18n-import'
+import { readAllRows } from './i18n-corpus-join'
+import { compile, listDocs, readRu, TABLES_DIR } from './i18n-import'
 import { knownBatches } from './lqa-ru-batches'
 import { buildReport, DISARMED, evaluateGate, renderConsole, renderMarkdown, type GateVerdict, type RouteRecord } from './lqa-ru-report'
 
@@ -73,7 +74,8 @@ function main(): number {
   }
   const catalog = parseCatalog(readFileSync(CATALOG_PATH, 'utf8'))
   const ru = readRu() ?? {}
-  const { rows } = readRows(listDocs(TABLES_DIR), TABLES_DIR)
+  // ⭐ 11.10: the corpus joiner's rows ride along, so the album / birthday / week-note documents are batches the zero-gate can name like any other
+  const { rows } = readAllRows(listDocs(TABLES_DIR), TABLES_DIR)
   const compiled = compile(rows, { catalog, seen: seenLiterals })
   let gate: GateVerdict = DISARMED
   if (flag('--gate')) gate = evaluateGate(gateBatches(), knownBatches(compiled), records)

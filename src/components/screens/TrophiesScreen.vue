@@ -85,7 +85,7 @@ import Card from '../ui/Card.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
 import { useStartYear } from '../../composables/startYear'
-import { t } from '../../i18n'
+import { engineWord, t } from '../../i18n'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
 
@@ -282,7 +282,7 @@ function cellLabel(cell: Cell, shelf: Shelf): string {
 
     <div class="trophy-shelves">
       <Card v-for="shelf in shelves" :key="shelf.tier" as="section" class="trophy-shelf">
-        <Eyebrow as="h2">{{ shelf.short }}</Eyebrow>
+        <Eyebrow as="h2">{{ engineWord('tier', shelf.short) }}</Eyebrow>
         <div class="trophy-pair">
           <component
             :is="foldable(cell) ? 'button' : 'div'"

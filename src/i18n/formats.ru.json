@@ -1,3 +1,4 @@
 {
-  "dates.weekLabel": "Нед. {week} · ’{yy}"
+  "dates.weekLabel": "Нед. {week} · ’{yy}",
+  "dates.weekYearLabel": "Неделя {week} · {year}"
 }

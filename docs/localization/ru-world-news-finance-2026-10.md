@@ -23,7 +23,7 @@ contract and ledger facts stay with the existing engine.
 | champion, professional debut season | `🏆 {name} won the {tier}, at {age} – a first season on tour.` | `🏆 Победа на турнире «{tier}»: {name}, {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}. Первый сезон в профессиональном туре.` |
 | champion, final tour season | `🏆 {name} won the {tier}, at {age} – in a last season on tour.` | `🏆 Победа на турнире «{tier}»: {name}, {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}. Последний сезон в профессиональном туре.` |
 | junior-cohort turnover | `A new intake: {left} players have left the tour and {joined} thirteen-year-olds have taken their places.` | `Новый набор юниорского тура: ушедшие – {left}; тринадцатилетние новички – {joined}.` |
-| notable departure suffix | `{name} (#{rank}) is among those who stopped.` | `Среди завершивших выступления – {name} (№{rank}).` |
+| notable departure suffix | `{name} (#{rank}) is among those who stopped.` | `Среди завершивших выступления – {name} (№{rank}).` – ⚙ 11.10 у ключа есть префиксная дыра {0} (предыдущая фраза), русский её не читает: паритет не сходится, ряд не компилится `QUESTION` |
 
 Dynamic names stay in nominative slots after colons. The champion's first/last-season note is
 derived from the same career chair as the English news; do not infer it from age. The cohort
@@ -40,7 +40,7 @@ line uses a compact bulletin construction so `1` does not create broken verb agr
 | reviewed: cover rises | `Academy review: her scholarship rises to {pct}% of her travel.` | `Пересмотр стипендии: академия теперь покрывает больше дорожных расходов – {pct}%.` |
 | reviewed: cover falls | `Academy review: her scholarship falls to {pct}% of her travel.` | `Пересмотр стипендии: академия теперь покрывает меньше дорожных расходов – {pct}%.` |
 | all kit already covered | `No academy kit grant this year – {brand} already kits her out.` | `В этом году гранта академии на экипировку нет: бренд «{brand}» уже обеспечивает её всем необходимым.` |
-| kit grant, partial brand cover | `Academy kit grant – {uncovered}; {brand} covers her {covered}.` | `Грант академии на экипировку – расходы на {непокрытый список}; бренд «{brand}» оплачивает {покрытый список}.` |
+| kit grant, partial brand cover | `Academy kit grant – {uncovered}; {brand} covers her {covered}.` | `Грант академии на экипировку – расходы на {uncovered}; бренд «{brand}» оплачивает {covered}.` |
 | kit grant, no brand | `Academy kit grant – rackets, strings and shoes for the season` | `Грант академии на сезон: ракетки, струны и обувь.` |
 
 `ACADEMY_NOTICE` is currently used as an **English text-prefix signal** by
@@ -66,3 +66,20 @@ new fee invented by Russian. The merch row with a daughter's share is the family
 income; her separate info row goes to her account. Neither should be counted twice in a
 localized Money view. `kidName` is again a nominative label before a colon, so a saved name
 needs no declension.
+
+## ⚙ 11.10 agent-authored (бланкет) – the intake notice, the review's stored form and the champion line, as four keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+§1 and §2 above drafted the junior-cohort turnover row and parked its notable-departure suffix as `QUESTION`, because the live key carries the whole sentence in front of the suffix. The code spells the notice as one key with the notable name in it; the other three are the **English `text` the writer stores beside the ref** (the academy review with `rises` / `falls` and `Academy review:` in holes, the suffix after the stored base sentence, the champion line with its optional clause). No code asks for those three; the rows are the table's Russian re-cut to their shape. `DRAFT`, his live edit follows.
+
+The review reads its direction through a `select` on the two words the code writes (`rises`, `falls`) – a closed pair, the one place where an English word carries a fact the Russian needs; `{0}` (`ACADEMY_NOTICE.reviewed`) and the champion clause `{2}` are printed as given.
+
+### The four keys
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-WNF-01 | `A new intake: {0} players have left the tour and {1} thirteen-year-olds have taken their places. {2} (#{3}) is among those who stopped.` | `Новый набор юниорского тура: ушедшие – {0}; тринадцатилетние новички – {1}. Среди завершивших выступления – {2} (№{3}).` |
+| RU21-WNF-02 | `{0} her scholarship {1} to {2}% of her travel.` | `{0} академия теперь покрывает {1, select, rises {больше} falls {меньше} other {другую долю}} дорожных расходов – {2}%.` – ⚙ the stored English `text`; `{0}` is the English opening `Academy review:` |
+| RU21-WNF-03 | `{0} {1} (#{2}) is among those who stopped.` | `{0} Среди завершивших выступления – {1} (№{2}).` – ⚙ the stored English `text`; `{0}` is the stored base sentence |
+| RU21-WNF-04 | `🏆 {0} won the {1}{2}.` | `🏆 Победа на турнире «{1}»: {0}{2}.` – ⚙ the stored English `text`; `{2}` is the English clause `, at 17 – a first season on tour` |

@@ -11,6 +11,7 @@
 //   5. THE RUSSIAN SMOKE. The REAL `src/i18n/ru.json` is installed and the locale flipped. ⚠ NO CYRILLIC LITERAL LIVES IN THIS FILE – every
 //      expectation is READ from ru.json by key. ⚠ THIS FAMILY HOLDS THE FIRST VISIBLE RUSSIAN OF THE PRODUCT: three APPROVED rows
 //      (`Tennis & trips`, `Raise another`, `Dynasty`) are wired on the last page, and the smoke proves they render.
+//      ⚠ RE-AIMED 11.10 (бланкет): the blanket compiled his DRAFT rows (ru.json 56 -> 3 310), so the sentence above is the pre-blanket world. The smoke now reads «compiled» for «approved» – see tests/component/ruCompiled.ts for the law and why it is measured on the keys the mounts ASKED for.
 //   6. THE `xx` SWEEP, AT 375x667: the ending's money block and the retirement card (a BLOCKING overlay whose answers are the only way out).
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
@@ -48,6 +49,7 @@ import { installCatalog, missCount, missedKeys, resetI18nForTests, resetMisses, 
 import { installMemoryStorage } from './setup'
 import { NARROW_PHONE, PHONE, assertDismissReachable, assertInlineRowFits, availableWidth, demandedWidth, setViewport, type Viewport } from './fits'
 import { DEFAULT_ALLOW, expandRendered, hardcodeLeaks, installPseudoLocale } from './pseudoloc'
+import { compiledArm, expectCounterIsExact, expectLabelsFollowTheCatalog, recordingCatalog } from './ruCompiled'
 import type { AlbumPage, CareerEndingType, CareerMoney, CollegeProgressView, CollegeYear, EndingView, RetirementOffer, Snapshot, WorldMatch } from '../../src/shared/protocol'
 
 /** His approved Russian, as the importer compiled it. Every Russian expectation below is read from here by key. */
@@ -342,26 +344,32 @@ describe('L2-10a context tags – none, each measured against every batch table 
 })
 
 describe('L2-10a Russian smoke – ru.json read by key, no Cyrillic typed here', () => {
-  it('⭐ THE WAKES: three APPROVED rows are wired on the last page and RENDER – the first visible Russian of the product; every unapproved word renders English and is counted', async () => {
-    installCatalog('ru', RU)
+  it('⭐ THE WAKES: the compiled rows are wired on the last page and RENDER – his Russian on the last page; a word with no row renders English and is counted', async () => {
+    const rec = recordingCatalog(RU)
+    const asked = rec.asked
+    installCatalog('ru', rec.catalog)
     await setLocale('ru')
+    await rec.begin() // let anything an earlier test left mounted settle first, then record
     resetMisses()
     const w = mountEnding()
     const wired = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.includes('src/components/EndingScreen.vue')).sort()
-    expect(wired, 'exactly the three approved rows homed on the ending').toEqual(['Dynasty', 'Raise another', 'Tennis & trips'])
+    // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED. "exactly the three approved rows homed on the ending" was a CONSTANT that could be true only while the blanket was not in force; the set is READ from ru.json now
+    // (`wired`), every key of it that the page asked for must render (tests/component/ruCompiled.ts), and the three words this test always named are still pinned to the elements that show them.
+    for (const key of ['Dynasty', 'Raise another', 'Tennis & trips']) expect(wired, `${key} is a compiled row wired on the last page`).toContain(key)
     // the money label (the CSS uppercases it; the DOM text is his word as written)
     expect(textsOf(w, '.ending-money dt')[0]).toBe(RU['Tennis & trips'])
     expect(flat(w.get('.ending-door-start').text())).toBe(RU['Raise another'])
     expect(flat(w.get('.ending-line').text())).toBe(RU.Dynasty)
-    // …and a word with no approved row stays English, counted
-    expect(textsOf(w, '.ending-money dt')[1]).toBe("Family's portfolio")
-    expect(missedKeys()).toEqual(expect.arrayContaining(["Family's portfolio", 'Her account', 'View the album', 'The last page']))
-    expect(missedKeys()).not.toEqual(expect.arrayContaining(wired))
-    expect(missCount()).toBeGreaterThan(10)
+    // …and the words the page showed English before the blanket still say which way they fall: his row when ru.json has one, English and counted when it has none
+    const everything = seen(w.element)
+    expect(textsOf(w, '.ending-money dt')[1]).toBe(RU["Family's portfolio"] ?? "Family's portfolio")
+    expectLabelsFollowTheCatalog(["Family's portfolio", 'Her account', 'View the album', 'The last page'], missedKeys(), RU, everything)
+    expectCounterIsExact(asked, missedKeys(), RU)
+    const arm = compiledArm({ what: 'L2-10a ending', ru: RU, asked, screen: everything, wiredHere: wired, coverageFloor: 0.7 })
     console.log(
-      `[L2-10a smoke] ru.json: ${Object.keys(RU).length} keys; approved AND wired on the last page: ${wired.length} -> ` +
+      `[L2-10a smoke] ru.json: ${Object.keys(RU).length} keys; compiled AND wired on the last page: ${wired.length} (reached ${arm.observed.length}, asked ${arm.askedCompiled.length}) -> ` +
         `«${textsOf(w, '.ending-money dt')[0]}» (Tennis & trips), «${flat(w.get('.ending-door-start').text())}» (Raise another), «${flat(w.get('.ending-line').text())}» (Dynasty); ` +
-        `distinct misses on the page: ${missedKeys().length}`,
+        `distinct misses on the page: ${missedKeys().length} (${missCount()} counted)`,
     )
     w.unmount()
   })
@@ -528,17 +536,24 @@ describe('L2-10a context tags – none for the retirement card', () => {
   })
 })
 
-describe('L2-10a Russian smoke – the retirement card has no approved row yet: English, counted', () => {
-  it('under the REAL ru.json every word of the shell renders as written and each is a counted miss', async () => {
-    installCatalog('ru', RU)
+describe('L2-10a Russian smoke – the retirement card under the compiled ru.json: his Russian where a row exists, English and counted where none', () => {
+  it('under the REAL ru.json every word of the shell renders as his row says, or as written and counted when it has none', async () => {
+    const rec = recordingCatalog(RU)
+    const asked = rec.asked
+    installCatalog('ru', rec.catalog)
     await setLocale('ru')
+    await rec.begin() // let anything an earlier test left mounted settle first, then record
     resetMisses()
     const w = mountRetire(AGE, { seasonHistory: ADJACENT, physicalShare: 0.9, coachMarket: COACH })
     const wiredHere = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.includes('src/components/RetirementDialog.vue'))
-    for (const key of wiredHere) expect(seen(w.element), `${key} is approved and wired`).toContain(RU[key]!)
-    expect(flat(w.get('.retire-title').text())).toBe('Is there another year in this?')
-    for (const key of ['Off-season – she is {0}', 'Is there another year in this?', 'That is enough', 'One more year']) expect(missedKeys(), key).toContain(key)
-    console.log(`[L2-10a smoke] retirement card: approved AND wired: ${wiredHere.length}; distinct misses: ${missedKeys().length}`)
+    const everything = seen(w.element)
+    // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED: «the retirement card has no approved row yet» was true while the blanket was not in force. The same two claims, read from the catalog – a compiled row
+    // renders his Russian (every key the card asked for, across holes and plurals), a word with no row is English and counted – and the title's element is still pinned.
+    expect(flat(w.get('.retire-title').text())).toBe(RU['Is there another year in this?'] ?? 'Is there another year in this?')
+    expectLabelsFollowTheCatalog(['Off-season – she is {0}', 'Is there another year in this?', 'That is enough', 'One more year'], missedKeys(), RU, everything)
+    expectCounterIsExact(asked, missedKeys(), RU)
+    const arm = compiledArm({ what: 'L2-10a retirement card', ru: RU, asked, screen: everything, wiredHere, coverageFloor: 0.6 })
+    console.log(`[L2-10a smoke] retirement card: compiled AND wired: ${wiredHere.length} (reached ${arm.observed.length}, asked ${arm.askedCompiled.length}); distinct misses: ${missedKeys().length} (${missCount()} counted)`)
     w.unmount()
   })
 })
@@ -925,7 +940,10 @@ describe('L2-10b completeness – the college cards are wired; the engine\'s wor
     }
     // the engine's words are holes, never keys of this card
     for (const hole of ['COLLEGE_PLACE[c.tier]', 'NATIONAL_TEAM.label', 'leagueExitLabel(run)', 'formatShortName(match.oppName)']) expect(source, hole).toContain(hole)
-    for (const bare of ['{{ COLLEGE_LEAGUE.label }}', '{{ row.label }}', '{{ weekLabel(row.week, startYear) }}']) expect(source, bare).toContain(bare)
+    // ⭐ RE-AIMED 11.10 (RU-22): the league's label is still the ENGINE's (`COLLEGE_LEAGUE.label` – the card imports it and compares nothing against it), but it is DRAWN through the league reader (`leagueName`,
+    // `engineWord('league', …)`), which returns the label as written under English and the competition's Russian name under ru.json; the week plan's row label rides the same computed.
+    for (const bare of ['{{ leagueName }}', '{{ row.label }}', '{{ weekLabel(row.week, startYear) }}']) expect(source, bare).toContain(bare)
+    expect(source, 'the league label is drawn through the reader').toContain("const leagueName = computed(() => engineWord('league', COLLEGE_LEAGUE.label))")
   })
 
   it('`engine/collegeLeague.ts`, `engine/nationalTeam.ts` and `engine/collegeOffer.ts` still do not call `t()` (invariant 1)', () => {
@@ -1089,7 +1107,8 @@ describe('L2-10b completeness – the fork\'s own words are wired; the engine\'s
     ]) {
       expect(source, call).toContain(call)
     }
-    expect(source, 'the place names are the engine\'s').toContain('name: TIER_LABEL[q.tier]')
+    // ⭐ RE-AIMED 11.10 (RU-22): still the engine's names (`COLLEGE_TIER_NAME`), now read through `engineText` – the seat `engine.text` names the three, and the Russian rows that waited for them wake
+    expect(source, 'the place names are the engine\'s').toContain('name: engineText(TIER_LABEL[q.tier])')
   })
 
   it('the ladder\'s name for the rank head is the chip\'s own word, lowercased where English lowercased it: the three tracks agree with the protocol label', () => {
@@ -1167,7 +1186,8 @@ describe('L2-10b dynamic seat – LifeMomentOverlay reads the engine\'s one cont
     // ⭐ L3-5 (10.10): 4 -> 5 – the fridge note's picked line is read through `t(fridgeNote)` in CalendarScreen (a dynamic seat, the engine's own literal looked up as a key, L2-9b's shape)
     // ⭐ RE-AIMED 10.10 (owner item 34): 5 -> 6 – the last page draws `ENDING_BLURB[type]` through `t()` in EndingScreen (the declared seat `ending.blurb`, the sixth, same shape; its nets are
     // tests/component/ending-blurb.test.ts and the L3-T registry). One more call and one more declared seat – `dynamicUndeclared` stays 0 in tests/i18n-l3-t-tooling.test.ts.
-    expect(stats.dynamicCalls, 'the gate\'s «dynamic t() calls unreadable»: 3 (L2-9b) + L2-10 + the fridge seat (L3-5) + the epilogue paragraph (10.10)').toBe(6)
+    // ⭐ RE-AIMED 11.10 (RU-22): 6 -> 7 – `t(english)` in `src/i18n/words.ts`, the display boundary's one look-up of an engine label (the declared seat `engine.text`).
+    expect(stats.dynamicCalls, 'the gate\'s «dynamic t() calls unreadable»: 3 (L2-9b) + L2-10 + the fridge seat (L3-5) + the epilogue paragraph (10.10) + the display boundary (11.10)').toBe(7)
   })
 
   it('seams: the label follows the locale, the line does not; a label with no row falls back to the engine\'s English and is COUNTED', async () => {
@@ -1188,14 +1208,15 @@ describe('L2-10b dynamic seat – LifeMomentOverlay reads the engine\'s one cont
     bare.unmount()
   })
 
-  it('smoke and sweep: under the REAL ru.json «Continue» is not approved (English, counted); under xx it is bracketed, and the one control stays inside a 375x667 phone', async () => {
+  it('smoke and sweep: under the REAL ru.json «Continue» follows the catalog (his Russian when a row exists, English and counted when none); under xx it is bracketed, and the one control stays inside a 375x667 phone', async () => {
     installCatalog('ru', RU)
     await setLocale('ru')
     resetMisses()
     const w = mountMoment()
-    expect(RU.Continue, 'no approved row for «Continue» yet – the day one is, this arm wakes').toBeUndefined()
-    expect(flat(w.get('.life-moment-go').text())).toBe('Continue')
-    expect(missedKeys()).toContain('Continue')
+    // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED: «no approved row for Continue yet – the day one is, this arm wakes» – it woke: the blanket compiled the row. The arm is the same seat, read from the catalog in both of its
+    // worlds (a row: his Russian on the control and not counted; no row: the engine's English, counted) instead of asserting that the row is absent.
+    expect(flat(w.get('.life-moment-go').text())).toBe(RU.Continue ?? 'Continue')
+    expect(missedKeys().includes('Continue'), RU.Continue === undefined ? 'no row compiled, so the label is a counted miss' : 'his row compiled, so it is not one').toBe(RU.Continue === undefined)
     w.unmount()
     resetI18nForTests(null)
     await installPseudoLocale()
@@ -1216,7 +1237,8 @@ describe('L2-10b dynamic seat – LifeMomentOverlay reads the engine\'s one cont
 
 describe('L2-10b context tags – `Spent` and `Banked`, measured with the importer\'s own row reader', () => {
   it('⚠ THE SPENT TRAP: two rows carry the English «Spent» with two Russians – the year card\'s (RU-12D) and the weekly recap\'s (RU-03, already `recap|Spent`) – and the ending screen\'s row is gone; the card keeps the BARE key because the other live surface already took its tag', () => {
-    const rows = rowsFor('Spent')
+    // ⭐ RE-AIMED 11.10 (row hygiene, not relaxed): the weekly recap's row now NAMES its tag in the English cell (`recap|Spent`) – the importer joins it to the tagged key outright – so the two rows are read under their two spellings
+    const rows = [...rowsFor('Spent'), ...rowsFor('recap|Spent')]
     expect(rows.map((r) => r.doc.replace(/^ru-|-2026-\d\d\.md$/g, '')).sort()).toEqual(['college-year', 'home-weekly'])
     expect(new Set(rows.map((r) => r.russian)).size, 'two surfaces, two Russians').toBe(2)
     expect(CATALOG.keys['recap|Spent'], 'the recap\'s side took its tag in L2-3').toBeTruthy()
@@ -1228,7 +1250,8 @@ describe('L2-10b context tags – `Spent` and `Banked`, measured with the import
   })
 
   it('«Banked» has two rows with two Russians inside ONE table (the year card\'s balance ROSE; the graduation card\'s SIGNED total): the card keeps the bare key, the graduation card takes `total|Banked`', () => {
-    const rows = rowsFor('Banked')
+    // ⭐ RE-AIMED 11.10 (row hygiene, not relaxed): the graduation card's row now NAMES its tag (`total|Banked`) – the two rows are read under their two spellings
+    const rows = [...rowsFor('Banked'), ...rowsFor('total|Banked')]
     expect(rows).toHaveLength(2)
     expect(new Set(rows.map((r) => r.russian)).size).toBe(2)
     expect(CATALOG.keys.Banked?.home).toEqual(['src/components/CollegeYearCard.vue'])
@@ -1255,19 +1278,33 @@ describe('L2-10b context tags – `Spent` and `Banked`, measured with the import
 })
 
 describe('L2-10b Russian smoke – ru.json read by key, no Cyrillic typed here', () => {
-  it('no row of these cards is approved yet: English on screen, each word a counted miss', async () => {
-    installCatalog('ru', RU)
+  it('every compiled row these cards ask for renders his Russian; a word with no row renders English and is counted', async () => {
+    const rec = recordingCatalog(RU)
+    const asked = rec.asked
+    installCatalog('ru', rec.catalog)
     await setLocale('ru')
+    await rec.begin() // let anything an earlier test left mounted settle first, then record
     resetMisses()
     const card = mountCard(CARD_STATES[3]!.view)
     const fork = mountFork(atTheFork('l210-fork-smoke', 'US'))
     const homes = ['src/components/CollegeYearCard.vue', 'src/components/CollegeDoneDialog.vue', 'src/components/ForkDialog.vue']
     const wiredHere = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.some((h) => homes.includes(h)))
-    for (const key of wiredHere) expect(seen(card.element) + seen(fork.w.element), `${key} is approved and wired`).toContain(RU[key]!)
-    expect(flat(card.get('.college-card h2').text())).toBe('College')
-    for (const key of ['College', 'Spent', 'Rank', 'Tuition', 'Watch', 'The year ahead']) expect(missedKeys(), key).toContain(key)
-    for (const key of ['School is over.', 'Turn professional', 'Stop here', 'The family has']) expect(missedKeys(), key).toContain(key)
-    console.log(`[L2-10b smoke] ru.json: ${Object.keys(RU).length} keys; approved AND wired on the college cards and the fork: ${wiredHere.length}; distinct misses on two mounted surfaces: ${missedKeys().length}`)
+    const everything = seen(card.element) + seen(fork.w.element)
+    // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED: «no row of these cards is approved yet» was true while the blanket was not in force. Same two claims, read from the catalog: every compiled key the cards asked for
+    // renders (across holes and plurals – tests/component/ruCompiled.ts), and each word this test always named falls the way ru.json says, on the screen the mounts drew.
+    // asked, compiled, and not drawn as written – each with its reason (held both ways)
+    const NOT_DRAWN: Record<string, string> = {
+      National: 'the fork draws the ladder\'s name inside a sentence, LOWERCASED (`t(\'Her {0} rank\', [ladderName(track).toLowerCase()])`, ForkDialog.vue:87) – the screen holds the lowercased form of his word',
+    }
+    // ⭐ FLOOR MOVED ON PURPOSE, DOWN (11.10, the screens-and-scripts wave, RU-21): the wave compiled 17 rows of `CollegeYearCard.vue` and `CollegeDoneDialog.vue` (the singular and mixed `1 match, 2 wins` cuts, the two
+    // `Year N of M` lines, the Nations Cup call-up) – the vocabulary grew from 72 to 89 and the pose reaches 48 of it (0.539; the floor was 0.55). The unreached are card states one pose cannot hold (a year not yet started, a squad call with no rubber, a
+    // league won in one match). Measured share less 0.03, rounded down to 0.05 = 0.5.
+    const arm = compiledArm({ what: 'L2-10b', ru: RU, asked, screen: everything, wiredHere, notDrawn: NOT_DRAWN, coverageFloor: 0.5 })
+    expect(flat(card.get('.college-card h2').text())).toBe(RU.College ?? 'College')
+    expectCounterIsExact(asked, missedKeys(), RU)
+    expectLabelsFollowTheCatalog(['College', 'Spent', 'Rank', 'Tuition', 'Watch', 'The year ahead'], missedKeys(), RU, everything)
+    expectLabelsFollowTheCatalog(['School is over.', 'Turn professional', 'Stop here', 'The family has'], missedKeys(), RU, everything)
+    console.log(`[L2-10b smoke] ru.json: ${Object.keys(RU).length} keys; compiled AND wired on the college cards and the fork: ${wiredHere.length} (reached ${arm.observed.length}, asked ${arm.askedCompiled.length}); distinct misses on two mounted surfaces: ${missedKeys().length} (${missCount()} counted)`)
     card.unmount()
     fork.w.unmount()
   })

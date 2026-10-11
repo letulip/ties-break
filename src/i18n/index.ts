@@ -15,6 +15,7 @@
 // (capped) so a nonzero number can be chased.
 import { locale, resetLocaleForTests, type Locale } from './locale'
 import { catalogFor, resetCatalogsForTests } from './catalog'
+import { createWordReaders } from './words'
 import {
   renderCopyRef,
   translate,
@@ -54,11 +55,39 @@ export function resetMisses(): void {
   missed.clear()
 }
 
-function context(): RenderContext {
+function plainContext(): RenderContext {
   // Both reads are reactive: a screen that calls `t` re-renders when the locale flips or a catalog arrives.
   const active = locale.value
   const catalog = catalogFor(active)
   return { locale: active, lookup: catalog ? (key) => catalog[key] : undefined, onMiss: countMiss }
+}
+
+// ⭐ RU-22 (11.10) – THE DISPLAY BOUNDARY'S WORDS (`./words.ts`). The readers speak through the SAME catalog and the same miss counter, but through the context WITHOUT the hook (a word is never
+// itself the subject of a word reader), and the hook reaches the formatter only on the path that renders a Russian row – English renders itself and never asks.
+const readers = createWordReaders((key, params) => translate(key, params, plainContext()))
+
+function context(): RenderContext {
+  return { ...plainContext(), words: readers.holes }
+}
+
+/** ⭐ RU-22 – A LABEL THE ENGINE OWNS, SHOWN IN THE PLAYER'S WORDS: the shop's assets, a vacation package, a kit grade, a staff rung, a radar note. They are catalog keys (their English text IS the key),
+ *  the snapshot hands the English to the screen, and the screen reads it here. English returns the text as written (no lookup, no parse – a label with a brace in it cannot change a byte); a
+ *  label the catalog does not know under another locale renders as written and counts as a miss. Only for a CLOSED set of engine strings – an open one (a name, a free sentence) would fill the
+ *  miss counter with things that were never meant to be translated; the seat `engine.text` names the set. */
+export function engineText(english: string): string {
+  // an empty string is no label (the plaque of a career with no coach, the travel line of a family that sends nobody): it is not looked up and cannot be a miss
+  return locale.value === 'en' || english === '' ? english : readers.text(english)
+}
+
+/** ⭐ RU-23 – A LINE OF THE KID SCREEN'S TILES, shown in the player's words: the personality line, the school and college tile, the friends tile's lead (`words.ts`, `tile`). English returns the line as written; a
+ *  line that matches no shape comes back as written too. `lead` is the tile's first line when `english` is its second – one English shape («12 years done») is two Russian sentences under two leads. */
+export function engineTile(english: string, lead?: string): string {
+  return locale.value === 'en' || english === '' ? english : readers.tile(english, lead)
+}
+
+/** One engine word through its class (`words.ts`): the few screens that hold a word and no message. English returns the word as written. */
+export function engineWord(cls: Parameters<typeof readers.word>[0], english: string): string {
+  return locale.value === 'en' ? english : readers.word(cls, english)
 }
 
 export function t(key: string, params?: MessageParams): string {

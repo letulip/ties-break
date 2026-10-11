@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: localization
 canonical: false
-last-reviewed: 2026-10-07
+last-reviewed: 2026-10-11
 ---
 
 # RU-08 – Match viewer and commentary
@@ -53,7 +53,7 @@ Segmented-group accessible name: **`Скорость воспроизведен�
 | --- | --- |
 | `Skip to the result` | `Сразу к результату` |
 | `Watch again ↻` | `Посмотреть ещё раз ↻` · `APPROVED` 10.10 |
-| shout picker aria | `Выберите реплику` |
+| shout picker aria | `Выберите реплику` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 | `Shout 📣` | `Крикнуть 📣` |
 
 The skip remains a link-like action outside the viewing-mode switch. It ends viewing; it is not a
@@ -80,7 +80,7 @@ not imply a tactical instruction or a guaranteed effect on the already-resolved 
 | source | Russian |
 | --- | --- |
 | `Live` – live badge | `Идёт` |
-| elapsed-clock aria | `Время матча: {clock}` |
+| `Elapsed match time {clock}` · elapsed-clock aria | `Время матча: {clock}` |
 | `km/h` – speed unit | `км/ч` · `APPROVED` 10.10 – чат-ок: цифры едины, слова единиц переводимы |
 | `TB` – tiebreak marker | `ТБ` |
 | `· serving` – player suffix | `· подаёт` |
@@ -107,8 +107,8 @@ shout control.
 | `Hanging on` | `Ещё держится` |
 | `1st serve %` | `Первая подача` |
 | `Break points` | `Брейк-пойнты` |
-| momentum chart aria | `Ход матча: {caption}` |
-| empty log | `Разминка. Первый мяч уже летит.` |
+| `Momentum: {caption}` · momentum chart aria | `Ход матча: {caption}` |
+| `Warming up. The first ball is on its way.` · empty log | `Разминка. Первый мяч уже летит.` |
 
 The seven momentum phrases describe the match probability from her side, not confidence or mood.
 `Почти выиграла` may appear only for the same `p >= 0.9` band as English; it is not a final score.
@@ -122,7 +122,7 @@ Percent values remain locale-formatted integers. Break-point pairs keep tennis o
 | source | Russian |
 | --- | --- |
 | `{name} could not continue.` | `{name} не смогла продолжить.` |
-| `She retired hurt at {score}.` | `Она снялась при счёте {score}.` |
+| `She retired hurt at {score}.` | `Она снялась при счёте {score}.` – ⚙ 11.10 дыра {score} русского не из ключа: ключ – голый префикс, счёт дописывается отдельно `QUESTION` |
 | `A long match on tired legs.` | `Долгий матч на уставших ногах.` |
 | `Stay with her` | `Остаться с ней` |
 
@@ -140,7 +140,7 @@ retirement stays in commentary and does not open this family alert.
 | `Unforced errors` | `Невынужденные ошибки` |
 | `Max serve` | `Макс. скорость подачи` |
 | `{speed} km/h` | `{speed} км/ч` · `APPROVED` 10.10 |
-| `Avg rally {rally} shots · ~{duration}` | `В среднем {rally} удара за розыгрыш · около {duration}` |
+| `Avg rally {rally} shots · ~{duration}` | `В среднем {rally} за розыгрыш · около {duration}` – ⚙ 11.10 выровнено на APPROVED T46 («удара» не согласуется с 5+) |
 
 `{rally}` uses a Russian decimal comma and counted form: `1,0 удара`, `2,4 удара`, `5,0 удара`.
 The value is an average, so plural-category agreement on the decimal is not copied from integer
@@ -154,7 +154,7 @@ duration string.
 | `Practice match` | `Тренировочный матч` |
 | `To result` – header | `К результату` |
 | `Friendly at the club` | `Тренировочный матч в клубе` |
-| `vs` – compact | `против` |
+| `practice\|vs` – compact | `против` |
 | `sparring partner` | `спарринг-партнёр` |
 | `No ranking points` | `Без рейтинговых очков` |
 | `Skip to result` | `Сразу к результату` |
@@ -468,13 +468,13 @@ log deliberately makes between a break and a meaningful hold.
 | source | Russian draft |
 | --- | --- |
 | `{name} serves first.` | `Первой подаёт {name}.` |
-| tiebreak set | `{who} берёт {ordinal} сет на тай-брейке.` |
-| break to take set | `{who} делает брейк и берёт {ordinal} сет.` |
-| serve out set | `{who} подаёт на {ordinal} сет и берёт его.` |
-| second set levels match | `Счёт по сетам равный.` |
-| breaks back at 6-all | `{who} возвращает брейк – 6:6.` |
-| holds at 6-all | `{who} берёт свою подачу – 6:6.` |
-| tiebreak follows | `Сет решит тай-брейк.` |
+| `{who} takes the {ordinal} set in a tiebreak.` · tiebreak set | `{who} берёт {ordinal} сет на тай-брейке.` |
+| `{who} breaks to take the {ordinal} set.` · break to take set | `{who} делает брейк и берёт {ordinal} сет.` |
+| `{who} serves out the {ordinal} set.` · serve out set | `{who} подаёт на {ordinal} сет и берёт его.` |
+| `One set each.` · second set levels match | `Счёт по сетам равный.` |
+| `{who} breaks back for six games all.` · breaks back at 6-all | `{who} возвращает брейк – 6:6.` |
+| `{who} holds for six games all.` · holds at 6-all | `{who} берёт свою подачу – 6:6.` |
+| `A breaker decides the set.` · tiebreak follows | `Сет решит тай-брейк.` |
 
 `{ordinal}` is generated as an agreeing Russian ordinal (`первый`, `второй`), never by translating
 an English suffix. The corresponding leads are `Сет.` and `Тай-брейк.`.
@@ -499,8 +499,8 @@ round label inside commentary.
 
 | source | Russian draft |
 | --- | --- |
-| `takes it in three` | `{winner} побеждает в трёх сетах.` |
-| `takes it in straight sets` | `{winner} побеждает в двух сетах.` |
+| `{winner} takes it in three.` | `{winner} побеждает в трёх сетах.` |
+| `{winner} takes it in straight sets.` | `{winner} побеждает в двух сетах.` |
 | `Match.` – lead | `Матч.` |
 
 Append the licensed stake sentence, then a point-ending sentence from §16 and the room line from
@@ -690,7 +690,7 @@ does not turn a college title into a professional one. No line invents the mothe
 
 | source | Russian |
 | --- | --- |
-| compact rail `S{set}` | visible `1-й`, `2-й`, `3-й`; accessible `{ordinal} сет` |
+| compact rail `S{set}` | `visible `1-й`, `2-й`, `3-й`; accessible `{ordinal} сет`` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 | `Corner.` | `У скамейки.` |
 | `Off court.` | `Вне корта.` |
 
@@ -740,3 +740,301 @@ snapshot:
 
 With §§1–25, RU-08 now covers the match viewer, practice/replay shell, preview and every current
 commentary family. All wording remains `DRAFT` pending the owner's read.
+
+## 26. Booth and preview corpus – ⚙ 11.10 agent-authored (бланкет); владелец правит вживую
+
+Source: `src/viz/commentary.ts` and `src/viz/preview.ts` – every sentence the booth says during a match and every line of the pre-match intro. These are the catalogue keys of the two files that had no Russian on 11.10 (126 of 140 and 41 of 43; the rest are the rows §§11–24 already compiled – the set and tiebreak rows, `Match.`, `Corner.`, `Off court.`, `A long match on tired legs.` and the two surfaces the event card shares). §§11–23 drafted these lines as moulds and prose blocks against the 07.10 source; this section is the per-key rendering of the live source, and where a mould above says the same thing its wording is kept, so the booth does not carry two Russian voices for one sentence. Every place a row leaves a mould is named below and again in a note on the row.
+
+### How the rows work
+
+Each row is one catalogue key. The English cell is the key **verbatim** – a literal pipe is written `\|`, the holes are the key's own `{0}`, `{1}` – and the Russian reads the same numbered holes. There is no status column, so every row is a `DRAFT` and the blanket compile (the owner's 11.10 ruling) takes it as written. Where a hole is a number (a rank, an age, a count of places or points) the counted noun is a whole ICU message with the four branches (`one`, `few`, `many`, `other`); a number is never printed bare next to a noun. Where a hole is the engine's own English count word, the noun is not inflected – see the seams below.
+
+### Laws applied
+
+1. **The voice.** A neutral commentator in the present tense of the rally: short phrases, concrete nouns, nothing graded and nothing felt (§1, §20–§22). The only exclamation is RU-08's own lead `Брейк!`. The players are women (`она`, `не взяла`); the commentator has no gender (R15-7) – no first-person past anywhere.
+2. **The lexicon is RU-04's and RU-08's.** `Удары навылет`, `эйс`, `двойная ошибка`, `брейк`, `брейк-пойнт`, `сетбол`, `матчбол`, `тай-брейк`, `ровно`; the surfaces `Хард` / `Грунт` / `Трава`; the rounds `Финал`, `Полуфинал`, `Четвертьфинал`, `1/8 финала` (RU-04 §12). Tournament and tier labels are the engine's own words and enter as holes (§9.5).
+3. **Names are data.** Every player slot is the nominative and sits where Russian needs no ending: as the subject (`Победа – и {0} выходит в финал.`), or after a dash or a colon. A sentence that wanted `у {0}`, `шанс {0}` or `{0} предстоит` is built another way.
+4. **The booth states, it does not grade.** Private-life and lineage rows say what the public packet holds and what the English pool already licenses (RU-08 §22–§23): no blame, no cost, no feeling, no name for the partner or the mother.
+5. **Typography.** The short dash `–`, never the long one; `ё` wherever it belongs; `«…»` for the quoted `«ровно»` and `«таинственный мужчина»`; `·` between the round and the tier; `№` for a rank and `°C` for the day's temperature.
+
+### Where the rows leave the moulds
+
+- **A name where Russian needs a case.** §12.1 `Победа принесёт {firstName} титул`, §12.2 `Шанс {firstName} выиграть матч`, §12.3 `у {opponent} рейтинга пока нет` and §22.5 `{who} всё равно предстоит матч` put the name in the dative or the genitive. The rows build the sentence round a nominative subject instead (`Победа – и {0} выходит в финал.`, `{0} выходит на матч с шансом {1} на победу.`, `{2} выходит на корт совсем без рейтинга.`, `{0} всё равно играет этот матч.`).
+- **The return and the groundstroke.** §16.3 gave both one sentence; the English tells them apart (`a netted return` / `a netted groundstroke`), so the rows keep it – `: приём в сетку.` against `, отправив мяч в сетку.`.
+- **The clay note.** §13 says the surface notes do not name the surface and then opens the clay line with `Грунт`; the row does not.
+- **A saved match point.** §17.3 adds `и берёт свою подачу`; the English `saves a match point.` says nothing of the hold, so the row does not either (the set-point and break-point rows do, as their English does).
+- **The stake.** The English glues the stake to the finish with a comma; the Russian stake rows are §18.2's own sentences, each with its full stop, and the three finish frames end on that hole.
+- **§23.3, first line.** §23.3 swaps the surname for the mother and drops `the second of them`; the row says what the English line says.
+
+### Seams that are code, not translation
+
+- **`numberWord()` and `Num()`** (`src/viz/commentary.ts`) hand the *English count word* in as the hole – `four`, `Four`, digits past twenty – to `{0} saves {1} match points.`, `{0} saves {1} set points and holds.`, `{0} saves {1} break points and holds.`, `{0} holds, {1} break points down.`, `{0} break points saved, and {1} holds on.`, the three `{0} points …` rows, the three `{0} games …` rows, the three deuce rows and the three `{0} shots, and …` rows. Russian mode prints that word inside the Russian sentence until the shared spelled-number formatter (§15) lands. A plural over such a hole cannot render – the formatter throws on a non-number, falls back to the whole English sentence and counts a miss – so these rows never inflect a noun after the count: the noun stands in the plural and the count follows it (`отыгрывает матчболы – их {1}`, `Брейк-пойнтов отыграно: {0}.`), or the count is elliptical (`{0} подряд`), or the noun does not change over the values the beat can reach (`очков` from six, `ударов` from eight). The sentences read the same when the hole becomes a Russian numeral.
+- **`ordinal()`** hands `first` / `second` / `third` into the compiled rows `{0} takes the {1} set in a tiebreak.`, `{0} breaks to take the {1} set.` and `{0} serves out the {1} set.` – outside this section, the same family.
+- **The occasion line** `{0} · {1}. {2}.` takes `event.roundLabel` (`stageLabel`) and `TIERS[tier].label` as strings: Russian mode prints `Semifinal · Junior Tour 300. Грунт, 18 °C.` until the two come from RU-04's catalogues (§11.1, §14); `remainingIn()` still reads the English labels back.
+- **The round of {n}.** The stake rows receive `remaining / 2`, not the stage, so the fraction (`1/8`, `1/16`, `1/32`) is chosen by a `select` on the number 16 / 32 / 64 (RU-04 §12); any other value reads `следующий круг`.
+
+### 26.1 The leads
+
+The short tag at the head of a booth row. `Match.`, `Corner.` and `Off court.` already stand in the compiled rows; these nine are the rest. RU-08 §17–§19 chose every word (`Брейк!` and `Подача взята.` are the break and the meaningful hold, `Серия.` is both the point streak and the run of games).
+
+| English | Russian |
+| --- | --- |
+| `Break!` | `Брейк!` |
+| `Held.` | `Подача взята.` |
+| `Set.` | `Сет.` |
+| `Tiebreak.` | `Тай-брейк.` |
+| `Retired.` | `Снялась.` |
+| `Run.` | `Серия.` – ⚙ 11.10 тот же русский, что у очковой серии: RU-08 §19.2 называет обе «Серия.» |
+| `Streak.` | `Серия.` |
+| `Deuce.` | `Ровно.` |
+| `Rally.` | `Розыгрыш.` |
+
+### 26.2 The unit and where the ball goes
+
+The nested words the point-ending sentences take in their holes: the unit of the point (`game`, `set`), the three serve placements, the three rally placements and the three ways a ball is missed. RU-08 §16.1 chose them; each stands where the sentence needs no case (`эйсом {placement}`, `{who} {miss}`).
+
+| English | Russian |
+| --- | --- |
+| `game` | `гейм` |
+| `set` | `сет` |
+| `down the T` | `по центру` |
+| `out wide` | `по диагонали` |
+| `into the body` | `в корпус` |
+| `down the line` | `по линии` |
+| `through the middle` | `по центру` |
+| `cross-court` | `кроссом` |
+| `nets it` | `отправляет мяч в сетку` |
+| `sends it long` | `бьёт за заднюю линию` |
+| `sends it wide` | `бьёт в аут по ширине` |
+
+### 26.3 How the deciding point ended
+
+The compact manner mould (RU-08 §16.2): the second sentence of a break, hold or set row. `{0} ударов` opens a long rally and the count is never below eight, so the plural noun holds for every value the beat can reach. ⚙ RU-22 (11.10): the count reaches the row as the code's English word (`Num`), so the three `{0} shots` rows read it as digits and put their own plural over it – right for a rally past twenty too, which the code prints in digits already.
+
+| English | Russian |
+| --- | --- |
+| `An ace {0} to finish.` | `Эйс {0} ставит точку.` |
+| `An ace {0} to seal it.` | `Эйс {0} решает гейм.` |
+| `It ends on a double fault.` | `Всё заканчивается двойной ошибкой.` |
+| `{0} shots, and it ends with a winner {1}.` | `{0, plural, one {{0} удар} few {{0} удара} many {{0} ударов} other {{0} удара}} – и в конце удар навылет {1}.` – ⚙ 11.10 RU-22: счёт приходит из кода английским словом (Num) и читается цифрами; существительное согласует множественное число самой строки |
+| `A winner {0} to end it.` | `Удар навылет {0} ставит точку.` |
+| `{0} shots, and {1} ends it {2}.` | `{0, plural, one {{0} удар} few {{0} удара} many {{0} ударов} other {{0} удара}}, и {1} завершает розыгрыш {2}.` – ⚙ 11.10 RU-22: счёт приходит из кода английским словом (Num) и читается цифрами; существительное согласует множественное число самой строки |
+| `{0} ends it with a winner {1}.` | `{0} завершает всё ударом навылет {1}.` |
+| `A long exchange, and {0} {1}.` | `Долгий обмен, и {0} {1}.` |
+| `{0} {1}.` | `{0} {1}.` – ⚙ 11.10 слоты – имя и готовая фраза из 26.2; русская строка совпадает с ключом |
+
+### 26.4 The same point in the feed mould
+
+RU-08 §16.3: one sentence for the ball the row's own hero struck (`Она …`, the name was said one sentence earlier) and one for the other player's (`{0} … {1}`, `{1}` is the unit from 26.2). RU-08 left the return and the groundstroke as one sentence; the rows keep the distinction the English makes, as `приём` after a colon.
+
+| English | Russian |
+| --- | --- |
+| `She wins the point with an ace {0}.` | `Она выигрывает этот розыгрыш эйсом {0}.` |
+| `She wins the point with a second-serve ace {0}.` | `Она выигрывает этот розыгрыш эйсом со второй подачи {0}.` |
+| `She loses the point with a double fault.` | `Она проигрывает этот розыгрыш двойной ошибкой.` |
+| `She wins the point with a winner {0}.` | `Она выигрывает этот розыгрыш ударом навылет {0}.` |
+| `She loses the point with a netted groundstroke.` | `Она проигрывает этот розыгрыш, отправив мяч в сетку.` |
+| `She loses the point with a netted return.` | `Она проигрывает этот розыгрыш: приём в сетку.` |
+| `She loses the point with a long groundstroke.` | `Она проигрывает этот розыгрыш ударом за заднюю линию.` |
+| `She loses the point with a long return.` | `Она проигрывает этот розыгрыш: приём за заднюю линию.` |
+| `She loses the point with a wide groundstroke.` | `Она проигрывает этот розыгрыш ударом в аут по ширине.` |
+| `She loses the point with a wide return.` | `Она проигрывает этот розыгрыш: приём в аут по ширине.` |
+| `{0} wins the {1} with an ace {2}.` | `{0} выигрывает {1} эйсом {2}.` |
+| `{0} wins the {1} with a second-serve ace {2}.` | `{0} выигрывает {1} эйсом со второй подачи {2}.` |
+| `{0} loses the {1} with a double fault.` | `{0} проигрывает {1} двойной ошибкой.` |
+| `{0} wins the {1} with a winner {2}.` | `{0} выигрывает {1} ударом навылет {2}.` |
+| `{0} loses the {1} with a netted groundstroke.` | `{0} проигрывает {1}, отправив мяч в сетку.` |
+| `{0} loses the {1} with a netted return.` | `{0} проигрывает {1}: приём в сетку.` |
+| `{0} loses the {1} with a long groundstroke.` | `{0} проигрывает {1} ударом за заднюю линию.` |
+| `{0} loses the {1} with a long return.` | `{0} проигрывает {1}: приём за заднюю линию.` |
+| `{0} loses the {1} with a wide groundstroke.` | `{0} проигрывает {1} ударом в аут по ширине.` |
+| `{0} loses the {1} with a wide return.` | `{0} проигрывает {1}: приём в аут по ширине.` |
+
+### 26.5 Breaks
+
+RU-08 §17.1–§17.2: the routine pool, the break back to level, and the score-earned branches. The pool grows with the storey exactly as the English does (base, from storey 3, from storey 4).
+
+| English | Russian |
+| --- | --- |
+| `{0} breaks.` | `{0} делает брейк.` |
+| `{0} breaks serve.` | `{0} берёт чужую подачу.` |
+| `The break goes to {0}.` | `Подача соперницы проиграна. Брейк делает {0}.` |
+| `The break, and it belongs to {0}.` | `Брейк – и его делает {0}.` |
+| `That game is gone, and {0} has it.` | `Этот гейм на приёме берёт {0}.` |
+| `{0} finds a way through the serve.` | `{0} всё-таки находит путь к брейку.` |
+| `Serve broken, and {0} has it.` | `Подача проиграна. Брейк делает {0}.` |
+| `{0} breaks back. Level again.` | `{0} делает обратный брейк. Снова ровно.` |
+| `{0} breaks back, and the set is level.` | `{0} возвращает брейк, и счёт в сете снова равный.` |
+| `{0} answers. Level again.` | `{0} отвечает обратным брейком. Снова ровно.` |
+| `Straight back from {0}, and it is level.` | `{0} сразу возвращает брейк – счёт равный.` |
+| `{0} breaks back from match point down.` | `{0} отыгрывает матчбол и возвращает брейк.` |
+| `{0} breaks back from set point down.` | `{0} отыгрывает сетбол и возвращает брейк.` |
+| `{0} breaks from love-forty down.` | `{0} делает брейк со счёта 0:40 на приёме.` |
+| `She serves for the set next.` | `Теперь она подаёт на сет.` |
+
+### 26.6 Holds that deserve a row
+
+RU-08 §17.3. The counted forms (`saves {1} …`) take the engine's English count word as a hole (see the seams above), so the noun stands in the plural and the count follows it.
+
+| English | Russian |
+| --- | --- |
+| `{0} holds from love-forty down.` | `{0} выбирается с 0:40 и берёт свою подачу.` |
+| `{0} saves a match point.` | `{0} отыгрывает матчбол.` – ⚙ 11.10 RU-08 §17.3 добавляет «и берёт свою подачу»; английская строка этого не говорит |
+| `{0} saves {1} match points.` | `{0} отыгрывает матчболы – их {1}.` – ⚙ 11.10 счёт – английское слово (шов кода): существительное не склоняется, счёт стоит после него |
+| `{0} saves a set point and holds.` | `{0} отыгрывает сетбол и берёт свою подачу.` |
+| `{0} saves {1} set points and holds.` | `{0} отыгрывает сетболы – их {1} – и берёт свою подачу.` – ⚙ 11.10 то же: счёт – английское слово, он стоит после существительного |
+| `{0} saves a break point and holds.` | `{0} отыгрывает брейк-пойнт и удерживает подачу.` |
+| `{0} saves {1} break points and holds.` | `{0} отыгрывает брейк-пойнты – их {1} – и удерживает подачу.` – ⚙ 11.10 то же: счёт – английское слово, он стоит после существительного |
+| `A break point saved, and {0} holds on.` | `Отыгран брейк-пойнт. {0} всё-таки берёт свою подачу.` |
+| `{0} break points saved, and {1} holds on.` | `Брейк-пойнтов отыграно: {0}. {1} всё-таки берёт свою подачу.` – ⚙ 11.10 слово-число открывает английскую строку с заглавной – шов кода |
+| `{0} holds, a break point down.` | `{0} удерживает подачу, отыграв брейк-пойнт.` |
+| `{0} holds, {1} break points down.` | `{0} удерживает подачу, отыграв брейк-пойнты – их {1}.` – ⚙ 11.10 то же: счёт – английское слово, он стоит после существительного |
+
+### 26.7 Runs, long games and long rallies
+
+RU-08 §19. A point streak is five points or longer (six below the WTA 1000) and a long rally ten shots or more, so `очков` and `ударов` are right for every value; a run of games starts at four and a long game at three deuces (four below the WTA 1000), where «гейма / геймов» and «раза / раз» would split, so those rows carry the count without a noun after it. ⚙ RU-22 (11.10): the count is the code's English word (`Num`); the game and deuce rows read it as the spelled Russian word (it opens the sentence on the game rows, so its capital stays), and the three point rows read it as digits under their own plural – `очков` is wrong for 21 or 22, and a streak of 24 points is a 6-0 set.
+
+| English | Russian |
+| --- | --- |
+| `{0} points in a row for {1}.` | `{0, plural, one {{0} очко} few {{0} очка} many {{0} очков} other {{0} очка}} подряд выигрывает {1}.` – ⚙ 11.10 RU-22: счёт приходит из кода английским словом (Num) и читается цифрами; существительное согласует множественное число самой строки |
+| `{0} points without reply for {1}.` | `{0, plural, one {{0} очко} few {{0} очка} many {{0} очков} other {{0} очка}} без ответа берёт {1}.` – ⚙ 11.10 RU-22: счёт приходит из кода английским словом (Num) и читается цифрами; существительное согласует множественное число самой строки |
+| `{0} points in a row, all of them {1}'s.` | `{0, plural, one {{0} очко} few {{0} очка} many {{0} очков} other {{0} очка}} подряд. Их все выигрывает {1}.` – ⚙ 11.10 RU-22: счёт приходит из кода английским словом (Num) и читается цифрами; существительное согласует множественное число самой строки |
+| `{0} games in a row for {1}.` | `{0} подряд – {1} берёт гейм за геймом.` – ⚙ 11.10 RU-08 §19.2 пишет «{N} гейма» с существительным; слово-число (шов кода) не даёт согласовать «гейма / геймов», счёт стоит без существительного |
+| `{0} games without reply for {1}.` | `{0} без ответа – {1} забирает геймы один за другим.` – ⚙ 11.10 то же: существительного после счёта нет |
+| `{0} games on the trot for {1}.` | `{0} подряд, и каждый гейм выигрывает {1}.` – ⚙ 11.10 то же; RU-08 §19.2 «Каждый из них выигрывает» – здесь «каждый гейм» |
+| `{0} deuces in this game. {1} is still serving.` | `«Ровно» в этом гейме – {0}. {1} всё ещё подаёт.` – ⚙ 11.10 RU-08 §19.3 пишет «{N} раз»; «раза / раз» не согласовать со словом-числом, счёт стоит после тире |
+| `{0} times to deuce, and it is not over. {1} goes again.` | `Гейм не окончен: «ровно» было {0}. {1} подаёт снова.` – ⚙ 11.10 то же |
+| `{0} deuces. {1} has still not held it.` | `«Ровно» – {0}. {1} всё ещё не взяла свою подачу.` – ⚙ 11.10 то же |
+| `{0} shots, and {1} puts it away {2}.` | `{0, plural, one {{0} удар} few {{0} удара} many {{0} ударов} other {{0} удара}}, и {1} завершает розыгрыш {2}.` – ⚙ 11.10 RU-22: счёт приходит из кода английским словом (Num) и читается цифрами; существительное согласует множественное число самой строки |
+
+### 26.8 The match beat: what it was for, and how it ended
+
+RU-08 §18.2–§18.4. The English glues the stake to the finish with a comma and the stake is its own seat (`and a place in the final`); the Russian stake rows are RU-08's stake sentences, each with its own full stop, and the three finish frames end on that hole.
+
+| English | Russian |
+| --- | --- |
+| `and the title with it` | `А вместе с матчем – и титул.` |
+| `and a place in the final` | `И место в финале.` |
+| `and a place in the semifinals` | `И место в полуфинале.` |
+| `and a place in the quarterfinals` | `И место в четвертьфинале.` |
+| `and a place in the round of {0}` | `И место в {0, select, 16 {1/8 финала} 32 {1/16 финала} 64 {1/32 финала} other {следующем круге}}.` |
+| `{0} takes it in three, {1}.` | `{0} побеждает в трёх сетах. {1}` – ⚙ 11.10 условие (RU-08 §18.2) – отдельное предложение со своей точкой, на нём рамка и кончается |
+| `{0} takes it in straight sets, {1}.` | `{0} побеждает в двух сетах. {1}` – ⚙ 11.10 то же |
+| `{0} cannot go on. {1} advances, {2}.` | `{0} не может продолжать. В следующий круг выходит {1}. {2}` – ⚙ 11.10 то же |
+| `{0} cannot go on. {1} advances.` | `{0} не может продолжать. В следующий круг выходит {1}.` |
+| `It ends with a handshake, not a winner.` | `Вместо удара навылет – рукопожатие.` |
+
+### 26.9 The room
+
+RU-08 §20. It appears from storey 3 and is the first clause cut under pressure. `Перед ним` and `его` refer to the masculine `тай-брейк` and belong to those two rows only.
+
+| English | Russian |
+| --- | --- |
+| `The crowd is on its feet.` | `Трибуны встают.` |
+| `A hand for both of them at the net.` | `У сетки аплодируют обеим.` |
+| `The stadium is up, and it takes a while to settle.` | `Стадион встаёт и ещё долго не стихает.` |
+| `Applause all round the court.` | `Аплодируют со всех сторон корта.` |
+| `The applause goes on a while.` | `Аплодисменты ещё не стихают.` |
+| `A roar off the far side of the stadium.` | `С дальней трибуны накатывает гул.` |
+| `The court goes quiet for it.` | `Перед ним корт затихает.` |
+| `Nobody is leaving their seat now.` | `Теперь никто не встаёт со своего места.` |
+| `The whole stadium is standing for it.` | `Весь стадион встречает его стоя.` |
+
+### 26.10 The coach at the changeover
+
+RU-08 §21. Presence only; the role noun is masculine but asserts nothing about the person (R15-7).
+
+| English | Russian |
+| --- | --- |
+| `{0} takes the chair, and her coach is down there with her.` | `{0} садится на скамейку, и тренер рядом с ней.` |
+| `Her coach is in beside {0} before the next one starts.` | `{0} в кресле. Перед следующим сетом тренер рядом.` |
+| `{0} sits with her coach, a set to the good.` | `{0} садится рядом с тренером, ведя по сетам.` |
+| `Her coach has a word with {0} at the change of ends.` | `На смене сторон {0} перекидывается парой слов с тренером.` |
+
+### 26.11 The booth: public private life and family line
+
+RU-08 §22–§23. Broadcast lines, not the family's diary: only the public packet and what the English pool licenses, no blame, no cost, no feeling. The wrong-story rows repeat the story as a statement – that sting is the mechanic. Every `{0}` is the daughter's name in the nominative.
+
+| English | Russian |
+| --- | --- |
+| `{0} has somebody in the box this week, and the papers had it before the draw did.` | `{0} вышла на этот матч, а в её ложе – новое лицо. Газеты написали об этом раньше жеребьёвки.` |
+| `A new face in {0}'s box, and it has been on the front pages all week.` | `{0} снова на корте. В её ложе – новое лицо, которое всю неделю было на первых полосах.` |
+| `The papers have {0} with a mystery man this week, all of them running the same photograph.` | `{0} и «таинственный мужчина» – одна и та же фотография во всех газетах этой недели.` |
+| `A mystery man on every front page beside {0}, and no two of them tell it the same way.` | `На каждой первой полосе – {0} рядом с «таинственным мужчиной». Версии ни у кого не сходятся.` |
+| `The papers say that is over now, and {0} walks out for this one on her own.` | `Газеты пишут, что всё закончилось. {0} выходит на этот матч одна.` |
+| `{0}'s box is a seat lighter this week, and the front pages have already explained it.` | `В ложе на одно место меньше. {0} снова на первых полосах – газеты уже объяснили почему.` |
+| `The papers have ended it for {0} this week, and no two of them tell it the same way.` | `Газеты пишут о расставании. {0} – в центре истории, но версии не сходятся.` |
+| `A break-up on every front page beside {0}, and not one of them has the same story.` | `На каждой первой полосе – история о расставании и {0}. Ни одна версия не похожа на другую.` |
+| `The papers say the marriage is over. {0} is here to play.` | `Газеты пишут: брак распался. {0} здесь, чтобы играть.` |
+| `Every front page has the divorce. {0} still has a match to play.` | `На каждой первой полосе – развод. {0} всё равно играет этот матч.` – ⚙ 11.10 RU-08 §22.5 «{who} всё равно предстоит матч» требует дательного имени; здесь имя – подлежащее |
+| `The papers have {0} getting divorced. No two versions quite agree.` | `Газеты пишут о разводе. {0} – в центре истории, но версии не сходятся.` |
+| `Every front page has the divorce. The story changes from one to the next.` | `На первых полосах – развод. От газеты к газете история меняется.` |
+| `The name on the board has been on it before. {0} is her mother's daughter, and her mother won here.` | `Эта фамилия уже была на табло. {0} продолжает семейную линию: её мать здесь побеждала.` |
+| `{0} grew up in these corridors. The trophies with that name on them are her mother's.` | `{0} знает эти коридоры с детства. Трофеи с той же фамилией принадлежат её матери.` |
+| `That surname used to be on the entry lists. {0} is the second of them to play this stage.` | `Эта фамилия уже была в заявочных листах. {0} – вторая в семье, кто вышла на этот уровень.` |
+| `{0} is not the first in her family to walk out here. Her mother did it first.` | `{0} не первая в семье на этом корте: сначала сюда вышла её мать.` |
+| `That surname won a student championship before it ever reached this stage. {0} is the second of them out here.` | `Эта фамилия выиграла студенческий чемпионат прежде, чем добралась до этой стадии. {0} – вторая в семье, кто вышла сюда.` – ⚙ 11.10 RU-08 §23.3 заменяет «фамилию» матерью и теряет «вторая из них»; здесь сказано то, что в английской строке |
+| `{0} is not the first in her family to walk out here. Her mother came through the college game, and won it on the way.` | `{0} не первая в семье на этом корте. Её мать пришла через студенческий теннис и по пути стала чемпионкой.` |
+
+### 26.12 The pre-match preview
+
+RU-08 §11–§13, the ladder of four storeys. Ranks print as `№{n}`, the degree as `°C` (no plural), ages, places and points as whole ICU messages over a number hole.
+
+| English | Russian |
+| --- | --- |
+| `{0} at the {1}. {2}.` | `{0} · {1}. {2}.` – ⚙ 11.10 {0} и {1} – слова движка (название раунда и уровня) – шов кода |
+| `{0} at the {1}. {2}, {3} degrees.` | `{0} · {1}. {2}, {3} °C.` – ⚙ 11.10 то же |
+| `A hit-out, nothing on it. {0}.` | `Тренировочный матч, ничего не разыгрывается. {0}.` |
+| `A hit-out, nothing on it. {0}, {1} degrees.` | `Тренировочный матч, ничего не разыгрывается. {0}, {1} °C.` |
+| `Hard court` | `Хард` |
+| `Cold enough that the ball will not fly, and cold hands on the racket all afternoon.` | `Холодно: мяч почти не летит, а руки на ракетке будут мёрзнуть весь матч.` |
+| `Cool, and it will take a while for either of them to feel the ball.` | `Прохладно. Обеим понадобится время, чтобы почувствовать мяч.` |
+| `A comfortable day for it, and no excuses in the air.` | `Комфортная погода для матча – на воздух сослаться не получится.` |
+| `Warm work out there, and the towel comes out between points.` | `На корте тепло; полотенце понадобится между розыгрышами.` |
+| `Hot, and everybody is sweating before the end of the first game.` | `Жарко: все вспотеют ещё до конца первого гейма.` |
+| `Across the net: {0}.` | `На другой стороне корта – {0}.` |
+| `Across the net: {0}, {1}.` | `На другой стороне корта – {0}, {1, plural, one {{1} год} few {{1} года} many {{1} лет} other {{1} года}}.` |
+| `Across the net: {0}, ranked #{1}.` | `На другой стороне корта – {0}, №{1} в рейтинге.` |
+| `Across the net: {0}, {1}, ranked #{2}.` | `На другой стороне корта – {0}, {1, plural, one {{1} год} few {{1} года} many {{1} лет} other {{1} года}}, №{2} в рейтинге.` |
+| `Nobody in the chair. They call their own lines, and the mark on the court settles it.` | `Судьи на вышке нет. Линии определяют сами, а спор решает след на грунте.` |
+| `Nobody in the chair. They call their own lines, and a bad call is part of the day.` | `Судьи на вышке нет. Линии определяют сами, и ошибка на линии – часть такого дня.` |
+| `A chair umpire in the seat for this one, and a live score going out.` | `На этом матче есть судья на вышке, счёт обновляется в реальном времени.` |
+| `No chair umpire until the final. Today they call their own lines.` | `До финала судьи на вышке не будет. Сегодня линии определяют сами.` |
+| `No chair umpire until the semifinals. Today they call their own lines.` | `До полуфинала судьи на вышке не будет. Сегодня линии определяют сами.` |
+| `Chair umpire, and the match stats go on the record afterwards.` | `Судья на вышке; после матча статистика войдёт в протокол.` |
+| `Chair, review, and every point of it published as it happens.` | `Судья на вышке, видеопросмотр, каждый розыгрыш публикуется в реальном времени.` |
+| `Win it and {0} has the title.` | `Победа – и {0} выигрывает титул.` – ⚙ 11.10 RU-08 §12.1 «Победа принесёт {firstName} титул» требует падежа имени; здесь имя – подлежащее |
+| `Win it and {0} has the title – and the round pays {1} points.` | `Победа – и {0} выигрывает титул. За победу в этом матче – {1, plural, one {{1} очко} few {{1} очка} many {{1} очков} other {{1} очка}}.` |
+| `Win it and {0} is into the final.` | `Победа – и {0} выходит в финал.` |
+| `Win it and {0} is into the final – and the round pays {1} points.` | `Победа – и {0} выходит в финал. За победу в этом матче – {1, plural, one {{1} очко} few {{1} очка} many {{1} очков} other {{1} очка}}.` |
+| `Win it and {0} is into the semifinals.` | `Победа – и {0} выходит в полуфинал.` |
+| `Win it and {0} is into the semifinals – and the round pays {1} points.` | `Победа – и {0} выходит в полуфинал. За победу в этом матче – {1, plural, one {{1} очко} few {{1} очка} many {{1} очков} other {{1} очка}}.` |
+| `Win it and {0} is into the quarterfinals.` | `Победа – и {0} выходит в четвертьфинал.` |
+| `Win it and {0} is into the quarterfinals – and the round pays {1} points.` | `Победа – и {0} выходит в четвертьфинал. За победу в этом матче – {1, plural, one {{1} очко} few {{1} очка} many {{1} очков} other {{1} очка}}.` |
+| `Win it and {0} is into the round of {1}.` | `Победа – и {0} выходит в {1, select, 16 {1/8 финала} 32 {1/16 финала} 64 {1/32 финала} other {следующий круг}}.` – ⚙ 11.10 дробь считается по числу игроков следующего круга: 16 – 1/8, 32 – 1/16, 64 – 1/32 (RU-04 §12) |
+| `Win it and {0} is into the round of {1} – and the round pays {2} points.` | `Победа – и {0} выходит в {1, select, 16 {1/8 финала} 32 {1/16 финала} 64 {1/32 финала} other {следующий круг}}. За победу в этом матче – {2, plural, one {{2} очко} few {{2} очка} many {{2} очков} other {{2} очка}}.` – ⚙ 11.10 то же |
+| `{0} goes in with a {1} chance of winning it.` | `{0} выходит на матч с шансом {1} на победу.` – ⚙ 11.10 RU-08 §12.2 «Шанс {firstName} выиграть матч» требует родительного имени; здесь имя – подлежащее |
+| `Neither {0} nor {1} has a ranking to defend here.` | `И {0}, и {1} подходят к матчу без рейтинга на этом уровне.` |
+| `{0} is unranked at this level; {1} is #{2}.` | `{0} здесь без рейтинга; {1} – №{2}.` |
+| `{0} is #{1}; {2} arrives with no ranking at all.` | `{0} – №{1}; {2} выходит на корт совсем без рейтинга.` – ⚙ 11.10 RU-08 §12.3 «у {opponent} рейтинга пока нет» требует родительного имени; здесь имя – подлежащее |
+| `{0} and {1} are level on the table at #{2}.` | `{0} и {1} занимают одно место – №{2}.` |
+| `#{0} against #{1}: one place between them, and it is {2}'s.` | `№{0} против №{1}: между ними одно место, а выше – {2}.` |
+| `#{0} against #{1}, and {2} is {3} places ahead.` | `№{0} против №{1}: {2} выше на {3, plural, one {{3} место} few {{3} места} many {{3} мест} other {{3} места}}.` |
+| `A true bounce all day, and no surprises off it.` | `Отскок будет ровным весь день – без сюрпризов.` |
+| `Slow and high, and the ball will bite.` | `Медленно и высоко – мяч будет цепляться за покрытие.` – ⚙ 11.10 RU-08 §13 называет «Грунт» в строке, хотя сам пишет, что заметки о покрытии его не повторяют; здесь покрытие не названо |
+| `It will stay low and skid through, so the points will be short.` | `Мяч пойдёт низко и проскользит; розыгрыши будут короткими.` |
+
+## ⚙ 11.10 agent-authored (бланкет) – the match controls and the score readout
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+6 keys: the three group labels of `MatchControls.vue`, the retired-hurt prefix and the set tag of `MatchViewer.vue`, and the points-played readout of `matchReadout.ts`. `She retired hurt at` is a bare prefix – the score and the reason are written by the template after it (RU-08's `QUESTION` row had the score inside the sentence); `S{0}` is `{0}-й`, the visible form RU-08 chose.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-MTV-01 | `How much of the match to watch` | `Сколько матча смотреть` |
+| RU21-MTV-02 | `Playback speed` | `Скорость воспроизведения` |
+| RU21-MTV-03 | `What to shout` | `Что крикнуть` |
+| RU21-MTV-04 | `She retired hurt at` | `Она снялась из-за травмы при счёте` |
+| RU21-MTV-05 | `S{0}` | `{0}-й` |
+| RU21-MTV-06 | `{0} points played` | `Сыграно {0, plural, one {{0} розыгрыш} few {{0} розыгрыша} many {{0} розыгрышей} other {{0} розыгрыша}}` |

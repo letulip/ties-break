@@ -88,7 +88,7 @@ inputs.
 | RU06-M06 | bills tab aria | `The recurring costs the family has signed up to` | `Регулярные расходы семьи` |
 | RU06-M07 | history tab aria | `Every season, and every transaction` | `Все завершённые сезоны и операции` |
 | RU06-M08 | shop tab aria | `What the family can buy with what is left` | `Что семья может купить на оставшиеся деньги` |
-| RU06-M09 | tabs | `Spending / Bills / History / Shop` | `Расходы / Обязательства / История / Магазин` |
+| RU06-M09 | tabs | `Spending / Bills / History / Shop` | `Расходы / Обязательства / История / Магазин` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
 
 Debt warning:
 
@@ -108,9 +108,9 @@ The last sentence preserves the real reset rule and must not become the vaguer `
 | `Budget period` | `Период бюджета` |
 | `Total income` | `Доходы` |
 | `Total spent` | `Расходы` |
-| `Balance` | `Итого` |
+| `spend\|Balance` | `Итого` |
 | `No spending in this window yet.` | `За этот период расходов пока нет.` |
-| `Income` | `Доходы` |
+| `Income` (`MoneyScreen.vue`) | `Доходы` |
 | `spent` – donut | `потрачено` |
 | `View all transactions` | `Все операции` |
 
@@ -123,12 +123,12 @@ balance. Calling both figures `Баланс` would hide that difference.
 | --- | --- | --- |
 | coaching | `Coaching` | `Тренер` |
 | facility | `Courts & facility` | `Корты и база` |
-| travel | `Travel` | `Поездки` |
+| travel | `spend\|Travel` | `Поездки` |
 | entry | `Entry fees` | `Заявочные взносы` |
 | gear | `Gear` | `Экипировка` |
 | stringing | `Stringing` | `Натяжка струн` |
 | physio | `Fitness & medical` | `Подготовка и медицина` |
-| staff | `Support staff` | `Команда` |
+| staff | `Support staff` (`MoneyScreen.vue`) | `Команда` |
 | vacation | `Vacations` | `Отпуск` |
 | practice | `Practice matches` | `Тренировочные матчи` |
 | tuition | `College tuition` | `Учёба в университете` |
@@ -161,8 +161,8 @@ must not be produced by lowercasing the tab label.
 | source meaning | English | Russian |
 | --- | --- | --- |
 | heading | `Household, every week` | `Семья за неделю` |
-| figures | `{in} in – {out} out – {net} short` | `доход {in} – расход {out} – не хватает {net}` |
-| positive figures | `{in} in – {out} out – {net} left over` | `доход {in} – расход {out} – остаётся {net}` |
+| figures | `{in} in – {out} out – {net} short` | `доход {in} – расход {out} – не хватает {net}` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
+| positive figures | `{in} in – {out} out – {net} left over` | `доход {in} – расход {out} – остаётся {net}` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
 | positive shelf | `The shelf is in that – it adds {money} a week at today's rates.` | `Имущество уже учтено: по текущим ставкам оно приносит {money} в неделю.` |
 | negative shelf | `The shelf is in that – it costs {money} a week at today's rates.` | `Имущество уже учтено: по текущим ставкам оно обходится в {money} в неделю.` |
 | upkeep | `Keeping what you own is {money} a week of that, and it is real money.` | `Содержание имущества уже стоит семье {money} в неделю – это реальные расходы.` |
@@ -178,13 +178,13 @@ order.
 
 | English | Russian |
 | --- | --- |
-| `Budget` – heading | `Регулярные расходы` |
+| `Budget` – heading · (`MoneyScreen.vue`) | `Регулярные расходы` |
 | `Physio recovery` | `Физиотерапия` |
-| weekly retainer note | `Абонемент снижает риск травмы, ускоряет восстановление и понемногу поддерживает форму. Оплата списывается только за недели без травмы.` |
-| hurt now | `Она травмирована, поэтому на этой неделе оплачивается восстановление: {band} – независимо от абонемента выше.` |
-| healthy comparison | `Неделя с травмой вместо этого оплачивается по тарифу восстановления: {band} – независимо от абонемента выше.` |
-| starting funds | `На старте карьеры у семьи было {money}.` |
-| bills subgroup aria | `Раздел обязательств` |
+| `Weekly retainer - lowers injury risk, shortens recoveries and adds a little condition each week. Charged on the weeks she is fit.` · weekly retainer note | `Абонемент снижает риск травмы, ускоряет восстановление и понемногу поддерживает форму. Оплата списывается только за недели без травмы.` |
+| hurt now | `Она травмирована, поэтому на этой неделе оплачивается восстановление: {band} – независимо от абонемента выше.` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
+| healthy comparison | `Неделя с травмой вместо этого оплачивается по тарифу восстановления: {band} – независимо от абонемента выше.` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
+| `Started this career with {money}.` · starting funds | `На старте карьеры у семьи было {money}.` |
+| `Which bills` · bills subgroup aria | `Раздел обязательств` |
 
 `Физиотерапия` is the service on this card; the person remains `физиотерапевт` elsewhere. The two
 rates remain separate messages so Russian syntax does not depend on injecting half a sentence from
@@ -296,7 +296,7 @@ The event count expands to `не менее чем на 1 турнире / 2 т�
 | --- | --- |
 | `Allowance left this season` | `Остаток лимита на сезон` |
 | `{spent} of {allowance} used` | `Использовано {spent} из {allowance}` |
-| projection | `При таком темпе лимит закончится примерно к {week}.` |
+| `At this pace it runs out around {week}.` · projection | `При таком темпе лимит закончится примерно к {week}.` |
 
 Allowance spent:
 
@@ -339,10 +339,10 @@ States and gates:
 | `{held} of {needed} top-10 seasons` | `Сезонов в топ-10: {held} из {needed}` |
 | `{held} of {needed} Slams` | `Титулов Большого шлема: {held} из {needed}` |
 | `{money} a year · for life` | `{money} в год · пожизненно` |
-| `{money} a year · one year · runs to {week}` | `{money} в год · 1 год · до {week}` |
-| `{money} a year · {n} years · runs to {week}` | `{money} в год · {years} · до {week}` |
-| open cash note | `Следующее письмо в этой категории предложит около {money} в год при её нынешнем положении.` |
-| empty below age gate | `Показывать пока нечего. Категории открываются с {age}, а затем заполняются письмами по мере её роста.` |
+| `{money} a year · one year · runs to {week}` | `{money} в год · 1 год · до {week}` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
+| `{money} a year · {n} years · runs to {week}` | `{money} в год · {years} · до {week}` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
+| `A letter here writes about {money} a year at her standing.` · open cash note | `Следующее письмо в этой категории предложит около {money} в год при её нынешнем положении.` |
+| `Nothing to show yet – the categories open at {age}, and they fill one letter at a time as she climbs.` · empty below age gate | `Показывать пока нечего. Категории открываются с {age}, а затем заполняются письмами по мере её роста.` |
 
 Use `топ-10` consistently, not a mixture of `Top 10`, `ТОП-10` and `первая десятка`. `WTA` remains
 the tennis mark. `С {age}` requires the age formatter (`с 16 лет`), not a bare interpolated number.
@@ -352,7 +352,7 @@ the tennis mark. `С {age}` requires the age formatter (`с 16 лет`), not a b
 | English | Russian |
 | --- | --- |
 | `Her academy` | `Её академия` |
-| support note | `Академия оплачивает {pct}% каждой поездки, на которую она заявлена. Суммы поездок в календаре и истории уже показаны за вычетом этой поддержки. Условия пересматриваются раз в год.` |
+| `They take {pct}% off every trip she enters – the travel figures on the calendar and in the ledger are already net of it, and it is reviewed once a year.` · support note | `Академия оплачивает {pct}% каждой поездки, на которую она заявлена. Суммы поездок в календаре и истории уже показаны за вычетом этой поддержки. Условия пересматриваются раз в год.` |
 | `Travel they have paid` | `Оплачено академией` |
 | `since the last review` | `с последнего пересмотра` |
 | `With them since {week}.` | `В академии с {week}.` |
@@ -369,7 +369,7 @@ must still clarify whether the displayed trip is gross or net.
 | `Season {n} – {year}` | `Сезон {n} · {year}` |
 | `{money} in` | `доход {money}` |
 | `not recorded` | `нет данных` |
-| legacy note | `В сезонах, сыгранных до этой версии, сохранялся только итоговый остаток, поэтому точные расходы неизвестны. Все следующие сезоны записываются полностью.` |
+| `Seasons played before this version kept only the year's balance, so what they cost is not on file. Every season from here on records it.` · legacy note | `В сезонах, сыгранных до этой версии, сохранялся только итоговый остаток, поэтому точные расходы неизвестны. Все следующие сезоны записываются полностью.` |
 | `All transactions` | `Все операции` |
 | `No transactions yet.` | `Операций пока нет.` |
 
@@ -489,7 +489,7 @@ Schedule control:
 | `Twice a week` | `Дважды в неделю` |
 | `Every other day` | `Через день` |
 | `Daily` | `Каждый день` |
-| invalid choice | `Такого расписания нет: доступны сеансы дважды в неделю, через день или каждый день.` |
+| invalid choice | `Такого расписания нет: доступны сеансы дважды в неделю, через день или каждый день.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
 
 Hire confirmation:
 
@@ -506,13 +506,13 @@ never lowercase or inflect a display label mechanically.
 
 | English | Russian |
 | --- | --- |
-| heading | `Массажист ездит на турниры` |
-| no booked trips | `Массаж между матчами. Каждая поездка добавляет ещё один билет, а турнирная неделя оплачивается по числу сыгранных матчей – {sessionPrice} за сеанс – вместо обычной недельной ставки.` |
-| booked trips suffix | `По {trips} заявленным поездкам дополнительные билеты стоят {fare}.` |
-| travel on aria | `Поездки массажиста включены. Нажмите, чтобы массажист оставался дома.` |
-| travel off aria | `Поездки массажиста выключены. Нажмите, чтобы добавить массаж между матчами; каждая поездка потребует ещё одного билета.` |
-| on benefit | `Ездит с ней: массаж между матчами. Чем дальше она проходит, тем больше пользы; после поражения в первом круге дополнительных сеансов нет.` |
-| off benefit | `Остаётся дома в турнирные недели. На каждой поездке семья экономит один билет.` |
+| `Masseur travels to tournaments` · heading | `Массажист ездит на турниры` |
+| `Table work between rounds – one additional fare per trip to a paying event, and the week is billed per match there ({sessionPrice} each) instead of the weekly rate.` · no booked trips | `Массаж между матчами. Каждая поездка добавляет ещё один билет, а турнирная неделя оплачивается по числу сыгранных матчей – {sessionPrice} за сеанс – вместо обычной недельной ставки.` |
+| `{fare} over the {trips} trips booked.` · booked trips suffix | `По {trips} заявленным поездкам дополнительные билеты стоят {fare}.` |
+| `Masseur travels to tournaments – on. Press to keep the table work at home.` · travel on aria | `Поездки массажиста включены. Нажмите, чтобы массажист оставался дома.` |
+| `Masseur travels to tournaments – off. Press to buy one additional fare per trip, for table work between rounds.` · travel off aria | `Поездки массажиста выключены. Нажмите, чтобы добавить массаж между матчами; каждая поездка потребует ещё одного билета.` |
+| `Travels with her: table work between rounds. The deeper the run, the more it buys – a first-round exit buys nothing.` · on benefit | `Ездит с ней: массаж между матчами. Чем дальше она проходит, тем больше пользы; после поражения в первом круге дополнительных сеансов нет.` |
+| `Stays home on tournament weeks. One fare saved on every trip.` · off benefit | `Остаётся дома в турнирные недели. На каждой поездке семья экономит один билет.` |
 
 `{trips}` is a complete counted form (`1 заявленной поездке`, `2 заявленным поездкам`). The fare is
 the total over those trips, not a per-trip value.
@@ -546,10 +546,10 @@ single English lead and appending conditional prose would again encourage invali
 | `Counsellor` | `Консультант` |
 | `Sport psychologist` | `Спортивный психолог` |
 | `Tour-grade specialist` | `Специалист уровня тура` |
-| not hired | `Еженедельная сессия для психологической подготовки. Направление работы выбирается на год.` |
-| hired, no focus | `На контракте – одна дистанционная сессия в неделю, где бы она ни находилась.` |
-| no travel fare | `Дополнительный билет не нужен: сессии проходят дистанционно – дома, в поездках и во время восстановления.` |
-| invalid roster choice | `Такого варианта нет: доступны консультант, спортивный психолог и специалист уровня тура.` |
+| `A call a week for her head – the year's work is chosen one year at a time.` · not hired | `Еженедельная сессия для психологической подготовки. Направление работы выбирается на год.` |
+| `On retainer – one call a week, wherever she is.` · hired, no focus | `На контракте – одна дистанционная сессия в неделю, где бы она ни находилась.` |
+| `No fare to pay: the sessions follow her as calls – at home, on the road, and through a layoff.` · no travel fare | `Дополнительный билет не нужен: сессии проходят дистанционно – дома, в поездках и во время восстановления.` |
+| invalid roster choice | `Такого варианта нет: доступны консультант, спортивный психолог и специалист уровня тура.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
 
 Hire confirmation:
 
@@ -614,16 +614,16 @@ their semantic ids must still reference the focus ids above rather than duplicat
 
 | English | Russian |
 | --- | --- |
-| active | `Помогает сохранять чувство мяча в недели без матчей.` |
-| available, not hired | `Постоянный соперник для игровых тренировок в недели без турниров.` |
-| stood down | `Спарринг-партнёр остаётся в команде, но на этой неделе не работает. Оплата не списывается.` |
-| group aria | `Уровень спарринг-партнёра` |
+| `Helps her keep her timing during weeks without a match.` · active | `Помогает сохранять чувство мяча в недели без матчей.` |
+| `A regular practice opponent for weeks when she is not competing.` · available, not hired | `Постоянный соперник для игровых тренировок в недели без турниров.` |
+| `The hitting partner remains with the team, but is not working this week. No salary is charged.` · stood down | `Спарринг-партнёр остаётся в команде, но на этой неделе не работает. Оплата не списывается.` |
+| `Hitting partner – experience level` · group aria | `Уровень спарринг-партнёра` |
 | `A college hitter` | `Игрок студенческой лиги` |
 | `A journeyman pro` | `Опытный профессионал` |
 | `A top-100 partner` | `Партнёр из топ-100` |
-| first rung note | `На четверть сокращает потерю игрового ритма за неделю без матча.` |
-| second rung note | `Вдвое сокращает потерю игрового ритма за неделю без матча.` |
-| third rung note | `На три четверти сокращает потерю игрового ритма за неделю без матча.` |
+| first rung note | `На четверть сокращает потерю игрового ритма за неделю без матча.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
+| second rung note | `Вдвое сокращает потерю игрового ритма за неделю без матча.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
+| third rung note | `На три четверти сокращает потерю игрового ритма за неделю без матча.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
 
 `Чувство мяча` is natural tennis speech for timing in the compact card. The rung explanations use
 the more explicit `игровой ритм`, because they describe a measured mechanic and must distinguish a
@@ -641,11 +641,11 @@ Release confirmation:
 
 | English | Russian |
 | --- | --- |
-| heading | `Поездки на турниры` |
-| base rule | `Взять спарринг-партнёра в тур – ещё один билет на каждую поездку. Домашние тренировки уже включены; эта настройка добавляет работу в турнирные недели.` |
-| booked suffix | `По {trips} заявленным поездкам дополнительные билеты стоят {fare}.` |
-| on aria | `Поездки спарринг-партнёра включены. Нажмите, чтобы спарринг-партнёр оставался в домашнем клубе.` |
-| off aria | `Поездки спарринг-партнёра выключены. Нажмите, чтобы брать спарринг-партнёра в тур; каждая поездка добавит один билет.` |
+| `Tournament travel` · heading | `Поездки на турниры` |
+| `Bring the hitting partner on tour for one additional fare per trip. Home practice is already covered; this extends the arrangement to travel weeks.` · base rule | `Взять спарринг-партнёра в тур – ещё один билет на каждую поездку. Домашние тренировки уже включены; эта настройка добавляет работу в турнирные недели.` |
+| `{fare} over the {trips} trips booked.` · booked suffix | `По {trips} заявленным поездкам дополнительные билеты стоят {fare}.` |
+| `Hitting partner travel is on. Press to keep the hitting partner at the home club.` · on aria | `Поездки спарринг-партнёра включены. Нажмите, чтобы спарринг-партнёр оставался в домашнем клубе.` |
+| `Hitting partner travel is off. Press to bring the hitting partner on tour; each trip adds one fare.` · off aria | `Поездки спарринг-партнёра выключены. Нажмите, чтобы брать спарринг-партнёра в тур; каждая поездка добавит один билет.` |
 
 RU-19 staff flag – нужна форма по полу говорящего (select): `on aria` of this table (the unnamed hitting partner is masculine in `оставался`; the hitting partner's gender is not stored, unlike the masseur's).
 
@@ -695,7 +695,7 @@ jargon.
 | RU06-S01 | shop home heading | `The shelf` | `Семейные активы` |
 | RU06-S02 | category group aria | `Which part of the shelf` | `Раздел семейных активов` |
 | RU06-S03 | owned summary label | `What you own` | `В собственности` |
-| RU06-S04 | owned count | `{count} thing / things` | `{count, plural, one {# актив} few {# актива} many {# активов} other {# актива}}` |
+| RU06-S04 | owned count | `{count} things` | `{count, plural, one {# актив} few {# актива} many {# активов} other {# актива}}` |
 
 Intro:
 
@@ -912,15 +912,15 @@ absolute cent difference are separate typed arguments.
 | SM7 | `List` | `Выставить` |
 | SM8 | `Sell now` | `Продать сейчас` |
 | SM9 | `Keep it` | `Оставить` |
-| SM10 | `Withdraw` | `Снять с продажи` |
-| SM11 | `On the market · {weeks} ...` | `В продаже · {weeks, plural, one {# неделя} few {# недели} many {# недель} other {# недели}}` |
-| SM12 | `Interest has gone quiet · {weeks} ...` | `Интерес угас · в продаже {weeks, plural, one {# неделя} few {# недели} many {# недель} other {# недели}}` |
-| SM13 | bounded wait | `Продажа может занять от {weeksLo} до {weeksHi} недель.` |
-| SM14 | offer corridor | `Предложения могут быть от {priceLo} до {priceHi}.` |
-| SM15 | immediate exit | `Продать сразу можно за {fire}.` |
-| SM16 | thin-market warning | `Покупателей с такой суммой мало – актив может не продаться.` |
-| SM17 | academy lot warning | `Академия продаётся единым активом: все завершённые этапы уходят вместе, не только корты.` |
-| SM27 | open-ended wait | `Продажа займёт не меньше {weeksLo} недель; покупатель может так и не найтись.` |
+| SM10 | `listing\|Withdraw` | `Снять с продажи` |
+| SM11 | `On the market · {weeks} weeks` | `В продаже · {weeks, plural, one {# неделя} few {# недели} many {# недель} other {# недели}}` |
+| SM12 | `Interest has gone quiet · {weeks} weeks on the market` | `Интерес угас · в продаже {weeks, plural, one {# неделя} few {# недели} many {# недель} other {# недели}}` |
+| SM13 | `It may take {weeksLo} to {weeksHi} weeks to sell.` · bounded wait | `Продажа может занять от {weeksLo} до {weeksHi} недель.` |
+| SM14 | `Offers may range from {priceLo} to {priceHi}.` · offer corridor | `Предложения могут быть от {priceLo} до {priceHi}.` |
+| SM15 | `Selling now pays {fire}, at once.` · immediate exit | `Продать сразу можно за {fire}.` |
+| SM16 | `Few buyers can pay this much – it may not sell at all.` · thin-market warning | `Покупателей с такой суммой мало – актив может не продаться.` |
+| SM17 | `The academy sells as one lot – every stage goes together, not the courts alone.` · academy lot warning | `Академия продаётся единым активом: все завершённые этапы уходят вместе, не только корты.` |
+| SM27 | `It may take {weeksLo} weeks or more to sell – there may be no buyer at all.` · open-ended wait | `Продажа займёт не меньше {weeksLo} недель; покупатель может так и не найтись.` |
 
 `Оставить` means close the quote without selling or listing; it does not withdraw an existing ad.
 The separate `Снять с продажи` action keeps those two decisions distinct.
@@ -972,17 +972,17 @@ top-up late in the season from being mistaken for the family's personal return.
 
 | English meaning | Russian |
 | --- | --- |
-| no catalogue item | `Такого объекта нет в каталоге.` |
-| retired item | `Этот объект больше не продаётся.` |
-| fixed item already held | `Семья уже владеет этим активом.` |
-| prerequisite | `Сначала нужен предыдущий этап: {prior}.` |
-| below minimum | `Минимальная сумма – {money}.` |
-| insufficient funds | `На счёте недостаточно денег.` |
-| not owned | `Этого актива нет в собственности семьи.` |
-| temporarily unsellable | `Сейчас этот актив продать нельзя.` |
-| whole only | `{label} можно продать только целиком.` |
-| invalid sale amount | `Укажите сумму больше нуля.` |
-| exceeds holding | `В этом активе у семьи только {money}.` |
+| no catalogue item | `Такого объекта нет в каталоге.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
+| retired item | `Этот объект больше не продаётся.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
+| fixed item already held | `Семья уже владеет этим активом.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
+| prerequisite | `Сначала нужен предыдущий этап: {prior}.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
+| below minimum | `Минимальная сумма – {money}.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
+| insufficient funds | `На счёте недостаточно денег.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
+| not owned | `Этого актива нет в собственности семьи.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
+| temporarily unsellable | `Сейчас этот актив продать нельзя.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
+| whole only | `{label} можно продать только целиком.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
+| invalid sale amount | `Укажите сумму больше нуля.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
+| exceeds holding | `В этом активе у семьи только {money}.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
 
 These are semantic errors returned through the command boundary. Do not translate thrown English
 text in the UI and do not use the English message as a catalogue key.
@@ -1022,8 +1022,8 @@ text in the UI and do not use the English message as a catalogue key.
 | RU06-I02 | close | `Close` | `Закрыть` |
 | RU06-I03 | return from letter | `Back to all letters` | `Ко всем письмам` |
 | RU06-I04 | live badge | `Needs an answer` | `Нужен ответ` |
-| RU06-I05 | no post | `Nothing yet...` | `Пока писем нет. Спонсоры пишут игрокам, за которыми следили хотя бы сезон.` |
-| RU06-I06 | all rows hidden locally | `Your inbox is clear...` | `Во входящих пусто. Все убранные письма по-прежнему хранятся в истории карьеры.` |
+| RU06-I05 | no post | `Nothing yet. Sponsors write to players they have been watching for a season.` | `Пока писем нет. Спонсоры пишут игрокам, за которыми следили хотя бы сезон.` |
+| RU06-I06 | all rows hidden locally | `Your inbox is clear. Everything you took off the list is still in her history.` | `Во входящих пусто. Все убранные письма по-прежнему хранятся в истории карьеры.` |
 | RU06-I07 | no live decisions | `Nothing waiting on an answer.` | `Ни одно письмо не ждёт ответа.` |
 | RU06-I08 | refuse | `Refuse` | `Отказаться` |
 | RU06-I09 | sign | `Sign` | `Подписать` |
@@ -1689,3 +1689,306 @@ The notice has no signature decision; it signs `– {brand}` and closes with `П
 RU-06 is now drafted end to end: family budget, equipment, sponsorship surfaces, specialists,
 assets, the inbox shell and all nine current letter families. Every Russian line remains `DRAFT`
 until owner read-through and in-game LQA.
+
+## ⚙ 11.10 agent-authored (бланкет) – the economy's labels and blurbs, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+These are the 81 catalogue keys of `src/engine/economy/shop.ts`, `equipment.ts` and `vacation.ts` (the catalogue reads their home as `src/engine/economy.ts`) that had no Russian on 11.10: the shop's 22 assets (a label and a one-line blurb each), the twelve rungs of kit (a label and a blurb each), the seven vacation blurbs and the six advertising trades. One row per key; the English cell is the key verbatim. `DRAFT`, his live edit follows.
+
+**Nothing here is a new voice.** §7.3 (kit), §9 (trades) and §23 (assets) of this document and RU-05 §18 (vacations) already drafted each of these as a display resource keyed by an item id, in the register the shop speaks: a short, literal label and a blurb that may sound knowingly warm (`Флайбридж`, `до девяти`). The rows below are that same Russian re-keyed to the English text the catalogue actually carries, so the stack does not hold two Russian voices for one shelf; where the earlier draft renders an image a little differently from the English (§23 gives «water that belongs to the family» as `собственный бассейн`) the earlier wording stands and nothing is added.
+
+**Marks stay Latin.** `Ashline`, `Kestra`, `Multifil Standard`, `Court Basics` and `Baseline Trainer` are fictional catalogue marks (§7.3, §9.5): their rows are identity rows (`Latin`). The one generic rung name, `Club synthetic`, is translated, as §7.3 already did. Every row is a plain string with no hole, so there is no count to inflect and no English word to leak.
+
+**Seam that is code, not translation.** Nearly none of these strings is read through `t()` yet – the shop and the kit card print `item.label` / `blurb` off the snapshot, the vacation card its package blurb – so a Russian build keeps printing them in English until a wave wraps those sites (§28 above names the arrangement: label and blurb become locale resources selected at the presentation edge). `Cars` is the exception (`composables/shop.ts` asks for it). The rows are ready the day the sites are.
+
+### The shop's twenty-two assets – labels
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ECO-01 | `A savings deposit` | `Сберегательный вклад` |
+| RU21-ECO-02 | `An index fund` | `Индексный фонд` |
+| RU21-ECO-03 | `The sensible estate` | `Практичный универсал` |
+| RU21-ECO-04 | `The luxury four-by-four` | `Роскошный внедорожник` |
+| RU21-ECO-05 | `The one from the poster` | `Тот самый с плаката` |
+| RU21-ECO-06 | `The unreasonable one` | `Совершенно неразумный` |
+| RU21-ECO-07 | `A place of their own` | `Своё жильё` |
+| RU21-ECO-08 | `The house with the garden` | `Дом с садом` |
+| RU21-ECO-09 | `The villa with the pool` | `Вилла с бассейном` |
+| RU21-ECO-10 | `The house on the headland` | `Дом на мысе` |
+| RU21-ECO-11 | `The merch brand` | `Собственный бренд` |
+| RU21-ECO-12 | `The sailing boat` | `Парусная лодка` |
+| RU21-ECO-13 | `The small yacht` | `Небольшая яхта` |
+| RU21-ECO-14 | `The yacht` | `Яхта` |
+| RU21-ECO-15 | `The big yacht` | `Большая яхта` |
+| RU21-ECO-16 | `The small plane` | `Небольшой самолёт` |
+| RU21-ECO-17 | `The plane` | `Самолёт` |
+| RU21-ECO-18 | `The long-range plane` | `Дальнемагистральный самолёт` |
+| RU21-ECO-19 | `The land` | `Земля` |
+| RU21-ECO-20 | `The courts` | `Корты` |
+| RU21-ECO-21 | `The clubhouse` | `Клубный дом` |
+| RU21-ECO-22 | `The staff` | `Команда академии` |
+
+### The shop's twenty-two assets – blurbs
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ECO-23 | `The dull one – it will not lose money and it will not make much.` | `Самый спокойный вариант: деньги не пропадут, но и большого дохода не принесут.` |
+| RU21-ECO-24 | `A slice of the whole market. It will have bad years – it has never had a bad decade.` | `Доля всего рынка. Плохие годы у него бывают; плохого десятилетия ещё не было.` |
+| RU21-ECO-25 | `Five doors and a boot that takes the kit bags. Nobody looks at it twice.` | `Пять дверей и багажник для сумок с экипировкой. Никто не обернётся вслед.` |
+| RU21-ECO-26 | `Tall, quiet, and it will never once see a field.` | `Высокий, тихий – и ни разу не съедет с асфальта.` |
+| RU21-ECO-27 | `Two seats, no boot, and the one that was on the bedroom wall.` | `Два места, никакого багажника – тот самый, что висел на стене.` |
+| RU21-ECO-28 | `Four seats, no roof, and no defence for any of it.` | `Четыре места, никакой крыши и ни одного разумного оправдания.` |
+| RU21-ECO-29 | `The end of renting. Small, theirs on paper, and hers to paint.` | `Больше никакой аренды. Небольшое, их по документам, и стены можно красить как хочется.` |
+| RU21-ECO-30 | `Room for all of them, and a garden nobody has to share.` | `Места хватит всем, а сад больше не нужно ни с кем делить.` |
+| RU21-ECO-31 | `Glass, warm stone, and water that belongs to the family.` | `Стекло, тёплый камень и собственный бассейн.` |
+| RU21-ECO-32 | `Above the sea, with a pool that looks as though it falls into it.` | `Над морем, с бассейном, который будто переливается прямо в него.` |
+| RU21-ECO-33 | `Her name on shirts and bags. It sells while she is talked about.` | `Её имя на футболках и сумках. Пока о ней говорят, всё это продаётся.` |
+| RU21-ECO-34 | `Two cabins, a mast, and weekends that answer to the wind.` | `Две каюты, мачта и выходные, которыми распоряжается ветер.` |
+| RU21-ECO-35 | `A flybridge, four berths, and a bay to be at anchor in.` | `Флайбридж, четыре спальных места и бухта, где можно встать на якорь.` |
+| RU21-ECO-36 | `Crew of six, and a week of it is a week nobody can reach them.` | `Команда из шести человек и неделя, за которую до них никто не доберётся.` |
+| RU21-ECO-37 | `The one the harbour has to make room for.` | `Та самая, ради которой в гавани освобождают место.` |
+| RU21-ECO-38 | `Seven seats, short runways, and home the same night.` | `Семь мест, короткие полосы и возможность вернуться домой в тот же день.` |
+| RU21-ECO-39 | `Ten seats and no airport that keeps them waiting.` | `Десять мест и ни одного аэропорта, который заставит их ждать.` |
+| RU21-ECO-40 | `Melbourne without stopping, and a bed on the way back.` | `До Мельбурна без посадки и с кроватью на обратном пути.` |
+| RU21-ECO-41 | `Twelve hectares outside town, and a name on the deeds.` | `Двенадцать гектаров за городом и имя в документах на собственность.` |
+| RU21-ECO-42 | `Sixteen of them, and the lights that keep them open till nine.` | `Шестнадцать кортов и освещение, с которым можно играть до девяти.` |
+| RU21-ECO-43 | `Gym, kitchen, forty beds and somewhere to do the homework.` | `Зал, кухня, сорок мест и комната для домашних заданий.` |
+| RU21-ECO-44 | `Coaches, physios and the person who answers the telephone.` | `Тренеры, физиотерапевты и человек, который отвечает на звонки.` |
+
+### The twelve rungs of kit – labels
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ECO-45 | `Club synthetic` | `Клубная синтетика` |
+| RU21-ECO-46 | `Ashline Alloy` | `Ashline Alloy` – ⚙ Latin (§9.5) |
+| RU21-ECO-47 | `Court Basics` | `Court Basics` – ⚙ Latin (§9.5) |
+| RU21-ECO-48 | `Multifil Standard` | `Multifil Standard` – ⚙ Latin (§9.5) |
+| RU21-ECO-49 | `Ashline Composite` | `Ashline Composite` – ⚙ Latin (§9.5) |
+| RU21-ECO-50 | `Baseline Trainer` | `Baseline Trainer` – ⚙ Latin (§9.5) |
+| RU21-ECO-51 | `Kestra Control` | `Kestra Control` – ⚙ Latin (§9.5) |
+| RU21-ECO-52 | `Kestra Team 98` | `Kestra Team 98` – ⚙ Latin (§9.5) |
+| RU21-ECO-53 | `Kestra Grip` | `Kestra Grip` – ⚙ Latin (§9.5) |
+| RU21-ECO-54 | `Kestra Tour Gut` | `Kestra Tour Gut` – ⚙ Latin (§9.5) |
+| RU21-ECO-55 | `Kestra Pro Stock` | `Kestra Pro Stock` – ⚙ Latin (§9.5) |
+| RU21-ECO-56 | `Kestra Tour` | `Kestra Tour` – ⚙ Latin (§9.5) |
+
+### The twelve rungs of kit – blurbs
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ECO-57 | `Cheap nylon – it goes dead in a fortnight.` | `Недорогой нейлон – через пару недель теряет упругость.` |
+| RU21-ECO-58 | `Heavy aluminium starter – slow, stiff, hard on the arm.` | `Тяжёлая стартовая алюминиевая ракетка – медленная, жёсткая и сильно нагружает руку.` |
+| RU21-ECO-59 | `Flat soles, no support – she slides when she should grip.` | `Плоская подошва без поддержки – скользит там, где должна держать корт.` |
+| RU21-ECO-60 | `The usual bed – fine until it is not.` | `Обычная натяжка – служит нормально, пока вдруг не перестаёт.` |
+| RU21-ECO-61 | `The frame most juniors own. Nothing wrong with it.` | `Такая ракетка есть у большинства юниорок. В ней нет ничего плохого.` |
+| RU21-ECO-62 | `Proper court shoes, mid-range.` | `Полноценная теннисная обувь среднего уровня.` |
+| RU21-ECO-63 | `Holds tension – the bed is still alive in week four.` | `Хорошо держит натяжение – даже на четвёртой неделе струны ещё живые.` |
+| RU21-ECO-64 | `A current retail frame, and it stays sound far longer.` | `Современная серийная ракетка, которая гораздо дольше остаётся в порядке.` |
+| RU21-ECO-65 | `Real support underfoot. Fewer rolled ankles.` | `Надёжная поддержка стопы. Меньше подвернутых голеностопов.` |
+| RU21-ECO-66 | `What the tour restrings with. Fresh, always.` | `Такими струнами пользуются в туре. Всегда свежая натяжка.` |
+| RU21-ECO-67 | `Custom-weighted. She will never out-grow it.` | `Индивидуальный вес. Она уже не перерастёт эту ракетку.` |
+| RU21-ECO-68 | `Fitted, cushioned, replaced before they wear.` | `Подогнаны по ноге, хорошо амортизируют и меняются до износа.` |
+
+### The seven vacation blurbs
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ECO-69 | `No travel, no drills – her own bed and her own people.` | `Никуда не ехать, никаких тренировок – своя кровать и свои люди.` |
+| RU21-ECO-70 | `Two trains and a bus – slow food, slow days.` | `Два поезда и автобус – неспешная еда, неспешные дни.` |
+| RU21-ECO-71 | `Tent, lake, no racket in the car.` | `Палатка, озеро, а ракетка остаётся дома.` |
+| RU21-ECO-72 | `A real holiday – sea, sleep, sun.` | `Настоящий отпуск – море, сон и солнце.` |
+| RU21-ECO-73 | `Pool, physio, massage – rest with a programme.` | `Бассейн, физиотерапия и массаж – отдых по программе.` |
+| RU21-ECO-74 | `The clinic the pros use – she comes back new.` | `Клиника, которой пользуются профессионалы: вернётся как новая.` |
+| RU21-ECO-75 | `Nowhere to be, and the sea to be nowhere on.` | `Никуда не нужно спешить – только море и целая неделя.` |
+
+### The advertising trades
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ECO-76 | `Watches` | `Часы` |
+| RU21-ECO-77 | `Cars` | `Автомобили` |
+| RU21-ECO-78 | `Drinks` | `Напитки` |
+| RU21-ECO-79 | `Clothing` | `Одежда` |
+| RU21-ECO-80 | `Airline` | `Авиакомпания` |
+| RU21-ECO-81 | `Fragrance` | `Парфюмерия` |
+
+## ⚙ 11.10 agent-authored (бланкет) – the shop's events, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+`src/engine/world/shop.ts` writes the asset events: the order, the delivery, the listing, the sale and the market report. §26–§27 of this document drafted all of them as semantic events with a `{tail}` / `{label}` slot; the 20 rows below are the live keys, one sentence per form, with RU-06's wording kept (`Заказано`, `Готово`, `Выставлено на продажу`, `по цене покупки`). `DRAFT`, his live edit follows.
+
+**A tail is a whole sentence per form.** The code never joins a clause to a stem any more: «exactly what it cost», «{n} less than it cost» and «{n} more than it cost» are three keys per sale, so each Russian row says its own tail and nothing is assembled. The part-sale rows read the money first and the asset second, as the English does (`Sold {0} of: {1}`), so the Russian re-orders the holes (`Из актива «{1}» выведено {0}`); the asset is a nominative label inside quotes and never takes a case. The market rows keep §27.1's numerical form (`+12%`, `−12%`) so a grammatical gender is never inferred from a translated label.
+
+**Seams that are code, not translation.** The asset's label (`{0}` of the market rows, `{1}` of the part-sale rows, `{0}` of the order rows) is still the English catalogue label in the snapshot (see the economy section below), so a Russian sentence prints it as the engine gives it. Four rows are the stored English `text` the writer keeps beside the ref (`saleTail(...)`, `MARKET_SEASON_OPENING`, `said`); no code asks for them, they read the English clause the writer composes, and the market pair prints the English opening `A season of the market` as `{0}`. Nothing in them is inflected.
+
+### Orders, deliveries, listings
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-SHP-01 | `Added to: {0}` | `Пополнено: {0}` |
+| RU21-SHP-02 | `Ordered: {0}` | `Заказано: {0}` |
+| RU21-SHP-03 | `Delivered: {0}` | `Готово: {0}` |
+| RU21-SHP-04 | `Put on the market: {0}` | `Выставлено на продажу: {0}` |
+| RU21-SHP-05 | `Taken off the market: {0}` | `Снято с продажи: {0}` |
+| RU21-SHP-06 | `{0} is on order – due {1}` | `{0} в заказе · готово: {1}` |
+
+### A whole holding sold
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-SHP-07 | `Sold: {0} – exactly what it cost` | `Продано: {0} – по цене покупки.` |
+| RU21-SHP-08 | `Sold: {0} – {1} less than it cost` | `Продано: {0} – на {1} дешевле цены покупки.` |
+| RU21-SHP-09 | `Sold: {0} – {1} more than it cost` | `Продано: {0} – на {1} дороже цены покупки.` |
+| RU21-SHP-10 | `Sold: {0} – {1}` | `Продано: {0} – {1}.` – ⚙ the stored English `text`: `{1}` is the clause `saleTail(...)` composes, in English |
+
+### A part of a holding sold
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-SHP-11 | `Sold {0} of: {1} – exactly what it cost` | `Из актива «{1}» выведено {0} – по цене покупки.` |
+| RU21-SHP-12 | `Sold {0} of: {1} – {2} less than it cost` | `Из актива «{1}» выведено {0} – на {2} дешевле цены покупки.` |
+| RU21-SHP-13 | `Sold {0} of: {1} – {2} more than it cost` | `Из актива «{1}» выведено {0} – на {2} дороже цены покупки.` |
+| RU21-SHP-14 | `Sold {0} of: {1} – {2}` | `Из актива «{1}» выведено {0} – {2}.` – ⚙ the stored English `text`: `{2}` is the clause `saleTail(...)` composes, in English |
+
+### The market's season report
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-SHP-15 | `A season of the market – {0} is level over the season.` | `Рынок за сезон – {0}: без изменений.` |
+| RU21-SHP-16 | `A season of the market – {0} is up {1}% over the season.` | `Рынок за сезон – {0}: +{1}%.` |
+| RU21-SHP-17 | `A season of the market – {0} is down {1}% over the season.` | `Рынок за сезон – {0}: −{1}%.` |
+| RU21-SHP-18 | `A season of the market – a crash year: {0} is down {1}% over the season.` | `Рынок за сезон – год обвала: {0}, −{1}%.` |
+| RU21-SHP-19 | `{0} – {1} {2} over the season.` | `{0} – {1}: {2} за сезон.` – ⚙ the stored English `text`: `{0}` is the English opening `A season of the market`, `{2}` the English clause `is up 12%` |
+| RU21-SHP-20 | `{0} – a crash year: {1} {2} over the season.` | `{0} – год обвала: {1}: {2} за сезон.` – ⚙ the stored English `text`, as above |
+
+## ⚙ 11.10 agent-authored (бланкет) – the Money screen, the shelf and the support staff, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+121 keys of `MoneyScreen.vue`, `ShopPanel.vue`, `shop.ts`, `HouseholdStrip.vue` and `SupportStaffTab.vue`. RU-06's drafts are kept where they say the same thing (`Сейчас приносит {money} в неделю`, `Содержание – {money} в неделю`, the rate and worth lines, `Около {money}` for estimates, the `{money} в год · 1 год · до {week}` chain cut into its three fragments). The shelf's vocabulary is the family-assets one (`Семейные активы`, `актив`, `единица`). The ad-slot, kit and shelf sentences print the engine's labels in `«…»` (the fictional kit brands are names). Where a hole is a pre-formatted string (`formatUnits`, a money figure, a week label) no plural is built over it; `{0} units` therefore reads `{0} ед.`. The weeks-below-zero pair (`week below zero` / `weeks below zero`) follows a bare figure and picks between exactly two keys, so both read `нед. ниже нуля`. `free` shares its English with `price|free`; the hint names `MoneyScreen.vue`.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-MON-01 | `in` | `доход` |
+| RU21-MON-02 | `left over` | `остаётся` |
+| RU21-MON-03 | `out` | `расход` |
+| RU21-MON-04 | `short` | `не хватает` |
+| RU21-MON-05 | `({0} left)` | `(осталось {0})` |
+| RU21-MON-06 | `, with or without the retainer above.` | `, независимо от абонемента выше.` |
+| RU21-MON-07 | `An injured week bills rehab instead:` | `В неделю с травмой вместо этого выставляется счёт за восстановление:` |
+| RU21-MON-08 | `Around` | `Около` |
+| RU21-MON-09 | `Buy the {0} for {1}? Her sponsor covers {2} of the {3}. She plays with it from this week, and every replacement is billed at this level.` | `Купить «{0}» за {1}? Спонсор покрывает {2} из {3}. Играть с этим она начнёт с этой недели, а каждая замена будет оплачиваться по этой цене.` |
+| RU21-MON-10 | `Buy the {0} for {1}? She plays with it from this week, and every replacement is billed at this level.` | `Купить «{0}» за {1}? Играть с этим она начнёт с этой недели, а каждая замена будет оплачиваться по этой цене.` |
+| RU21-MON-11 | `Buy the {0}? Her sponsor covers it in full – {1} off her allowance. She plays with it from this week, and every replacement is billed at this level.` | `Купить «{0}»? Спонсор покрывает всю сумму – {1} спишется с её лимита. Играть с этим она начнёт с этой недели, а каждая замена будет оплачиваться по этой цене.` |
+| RU21-MON-12 | `Coach's results share – {0} {1}, already inside Coaching above: {2}% of every prize cheque.` | `Доля тренера от призовых – {0} {1}, уже входит в строку «Тренер» выше: {2}% от каждого призового чека.` |
+| RU21-MON-13 | `Court time quotes at {0} a week – you coach her, so there is no coaching line. No week bills exactly that: a session moves, a court books at a busier hour. Yours runs {1}–{2}.` | `Время на корте оценивается в {0} в неделю – вы тренируете её самостоятельно, поэтому строки «Тренер» нет. Ни одна неделя не выставляется точно на эту сумму: тренировка сдвигается, корт бронируется на более загруженный час. У вас выходит {1}–{2}.` |
+| RU21-MON-14 | `Every prize cheque is split before it reaches this account: her part goes to her, the family banks the rest. The prize rows above are what the family kept, and each one names the share that left.` | `Каждый призовой чек делится ещё до поступления на этот счёт: её часть уходит ей, остальное зачисляется семье. Строки призовых выше – то, что осталось семье; в каждой названа доля, которая ушла.` |
+| RU21-MON-15 | `Her sponsor keeps this line fresh, but the season's allowance is gone – this one is the family's to buy until next season.` | `Спонсор обновляет эту линейку, но лимит на сезон исчерпан – до следующего сезона её покупает семья.` |
+| RU21-MON-16 | `Her sponsor supplies this line and keeps it fresh. Only {0} of the allowance is left, so a dearer rung is part-paid – the struck price is the sticker and the price beside it is the family's share.` | `Спонсор поставляет эту линейку и обновляет её. От лимита осталось только {0}, поэтому более высокий уровень оплачивается частично: зачёркнутая цена – по ценнику, а цена рядом – доля семьи.` |
+| RU21-MON-17 | `Her sponsor supplies this line – they keep it fresh whatever she plays, and they pay for what she buys while {0} of this season's allowance is left.` | `Спонсор поставляет эту линейку и обновляет её, независимо от того, как она играет; всё, что она покупает, он оплачивает, пока от сезонного лимита осталось {0}.` |
+| RU21-MON-18 | `How known she is – {0} of 100. The court sets that floor, and the shoots she has done multiply it; the merch brand sells on it.` | `Известность – {0} из 100. Корт задаёт нижнюю планку, а съёмки, в которых она участвовала, её умножают; на ней держатся продажи мерча.` |
+| RU21-MON-19 | `New kit plays the same whatever it cost – what a better rung buys is TIME before it goes off, and it is billed every time the family replaces it, not once. The shop's price moves a little between replacements, so the figures below are what a rung costs about.` | `Новая экипировка играет одинаково, сколько бы ни стоила: более высокий уровень покупает ВРЕМЯ до износа, причём оплачивается при каждой замене, а не один раз. Цена в магазине немного меняется от замены к замене, поэтому суммы ниже – примерная стоимость уровня.` |
+| RU21-MON-20 | `One deal per category – the cheque grows with her standing, the shelf itself does not. Every fee is written to her at its full value, and the family banks the manager's {0}% of it.` | `Один контракт на категорию: гонорар растёт вместе с её положением, а число категорий – нет. Каждый гонорар записывается ей полностью, а семья получает {0}% от него – комиссию менеджера.` |
+| RU21-MON-21 | `She is hurt, so this week bills rehab:` | `Она получила травму, поэтому на этой неделе выставляется счёт за восстановление:` |
+| RU21-MON-22 | `The advertising categories, filled and open` | `Рекламные категории – занятые и свободные` |
+| RU21-MON-23 | `The advertising portfolio` | `Рекламный портфель` |
+| RU21-MON-24 | `The season's allowance is spent. Her {0} are billed to the family at full price until the new season starts – the deal still keeps them fresh, and it still pays again from the first week of next season.` | `Лимит сезона исчерпан. Пока не начнётся новый сезон, семья платит за {0} полную цену – контракт по-прежнему поддерживает их в новом состоянии и снова оплачивает покупки с первой недели следующего сезона.` |
+| RU21-MON-25 | `They supply her {0}, and she enters at least {1} tournaments a season.` | `Они поставляют ей {0}, а она заявляется минимум на {1, plural, one {{1} турнир} few {{1} турнира} many {{1} турниров} other {{1} турнира}} за сезон.` |
+| RU21-MON-26 | `Training quotes at {0} a week – {1} coaching, {2} courts. No week bills exactly that: a session moves, a court books at a busier hour. Yours runs {3}–{4}.` | `Тренировки оцениваются в {0} в неделю – {1} на тренера, {2} на корты. Ни одна неделя не выставляется точно на эту сумму: тренировка сдвигается, корт бронируется на более загруженный час. У вас выходит {3}–{4}.` |
+| RU21-MON-27 | `What she plays with, and what replacing it costs` | `Чем она играет и сколько стоит замена` |
+| RU21-MON-28 | `before the money runs out for good. One week back in the black clears it.` | `нед. до того, как деньги закончатся насовсем. Одна неделя в плюсе всё исправит.` |
+| RU21-MON-29 | `free` | `бесплатно` – ⚙ same English as `price\|free`; the hint `src/components/screens/MoneyScreen.vue` picks this plain key |
+| RU21-MON-30 | `in the last 12 weeks` | `за последние 12 недель` |
+| RU21-MON-31 | `one year` | `1 год` |
+| RU21-MON-32 | `runs to` | `до` |
+| RU21-MON-33 | `this season` | `за этот сезон` |
+| RU21-MON-34 | `one\|week below zero` | `неделя ниже нуля` – ⚙ 11.10 (RU-22): the figure stands in its own element, so the noun is three tagged messages (`one\|`, `few\|` in RU22-WRD-96, `many\|` in the next row) instead of two bare ones |
+| RU21-MON-35 | `many\|weeks below zero` | `недель ниже нуля` |
+| RU21-MON-36 | `{0} a year ·` | `{0} в год ·` |
+| RU21-MON-37 | `{0} good weeks` | `{0, plural, one {{0} неделя} few {{0} недели} many {{0} недель} other {{0} недели}} службы` |
+| RU21-MON-38 | `1 thing` | `1 актив` |
+| RU21-MON-39 | `Add more` | `Добавить ещё` |
+| RU21-MON-40 | `Brings in {0} a week right now` | `Сейчас приносит {0} в неделю` |
+| RU21-MON-41 | `How far back the chart goes` | `За какой период показывать график` |
+| RU21-MON-42 | `How much, from {0}` | `Сколько вложить, от {0}` |
+| RU21-MON-43 | `It cannot be sold before it is delivered, and it costs nothing to keep until then.` | `Продать это до поставки нельзя, а до тех пор содержание ничего не стоит.` |
+| RU21-MON-44 | `On order` | `В заказе` |
+| RU21-MON-45 | `One month of prices so far – the chart starts next month.` | `Пока есть цены за один месяц – график появится со следующего месяца.` |
+| RU21-MON-46 | `One unit is {0} this week` | `На этой неделе одна единица стоит {0}` |
+| RU21-MON-47 | `Put it in` | `Вложить` |
+| RU21-MON-48 | `Sell` | `Продать` |
+| RU21-MON-49 | `She takes {0}% of what these earn; the figures below are the family's {1}%. A holding's worth is the whole business.` | `Она получает {0}% того, что приносят эти вложения; цифры ниже – доля семьи, {1}%. Стоимость пакета – это стоимость всего бизнеса.` |
+| RU21-MON-50 | `This is the family's own money, and none of it is hers. Nothing here makes her better, faster or fitter - it is what the money becomes once the tennis has stopped needing it.` | `Это деньги семьи, и ни одна их часть ей не принадлежит. Ничто здесь не сделает её лучше, быстрее или выносливее: это то, во что превращаются деньги, когда теннису они уже не нужны.` |
+| RU21-MON-51 | `Trading as {0}` | `Работает как «{0}»` |
+| RU21-MON-52 | `What is it called` | `Как это назвать` |
+| RU21-MON-53 | `What it is called` | `Название` |
+| RU21-MON-54 | `Worth now` | `Сейчас стоит` |
+| RU21-MON-55 | `You own nothing yet. The cheapest thing here is {0}, from {1}.` | `У вас пока ничего нет. Самое доступное здесь – {0}, от {1}.` |
+| RU21-MON-56 | `or type your own` | `или введите своё` |
+| RU21-MON-57 | `since you bought it` | `с момента покупки` |
+| RU21-MON-58 | `since you bought it ({0}%)` | `с момента покупки ({0}%)` |
+| RU21-MON-59 | `{0} a week to keep` | `Содержание – {0} в неделю` |
+| RU21-MON-60 | `{0} has to come first.` | `Сначала нужен предыдущий этап: {0}.` |
+| RU21-MON-61 | `{0} units at {1} each` | `{0} ед. по {1}` |
+| RU21-MON-62 | `{0} units – bought at {1} each, {2} now` | `{0} ед. – куплено по {1}, сейчас {2}` |
+| RU21-MON-63 | `Hire a hitting partner for {0} a week ({1})? You can end the arrangement any week, like the coach.` | `Нанять спарринг-партнёра за {0} в неделю ({1})? Сотрудничество можно прекратить в любую неделю – как и с тренером.` |
+| RU21-MON-64 | `Hire a masseur for {0} a week ({1})? You can end the arrangement any week, like the coach.` | `Нанять массажиста за {0} в неделю ({1})? Сотрудничество можно прекратить в любую неделю – как и с тренером.` |
+| RU21-MON-65 | `Hire a psychologist for {0} a week ({1})? You can end the arrangement any week, like the coach.` | `Нанять психолога за {0} в неделю ({1})? Сотрудничество можно прекратить в любую неделю – как и с тренером.` |
+| RU21-MON-66 | `Let the hitting partner go? The weekly salary stops, and regular match-style practice between events ends.` | `Уволить спарринг-партнёра? Недельная зарплата прекратится, а регулярные игровые тренировки между турнирами закончатся.` |
+| RU21-MON-67 | `Let the masseur go? The weekly salary stops, and rehab goes back to the clinic alone.` | `Уволить массажиста? Недельная зарплата прекратится, а восстановление снова будет только в клинике.` |
+| RU21-MON-68 | `Let the psychologist go? The weekly salary stops, and the calls end with the week.` | `Уволить психолога? Недельная зарплата прекратится, а созвоны закончатся вместе с неделей.` |
+| RU21-MON-69 | `On retainer – {0}` | `На контракте – {0}` |
+| RU21-MON-70 | `Psychologist – the year's work` | `Психолог – работа на год` |
+| RU21-MON-71 | `Set the psychologist's work for this season to {0}? The year's work is chosen once a season, and the next choice comes in the next off-season.` | `Выбрать для работы психолога в этом сезоне направление «{0}»? Направление года выбирается один раз за сезон, следующий выбор будет в следующее межсезонье.` |
+| RU21-MON-72 | `{0} over the 1 trip booked.` | `По 1 заявленной поездке дополнительный билет стоит {0}.` |
+| RU21-MON-73 | `{0}/wk` | `{0}/нед.` |
+| RU21-MON-74 | `Air` | `Воздух` |
+| RU21-MON-75 | `Amount, from {0}` | `Сумма, от {0}` |
+| RU21-MON-76 | `Amount, from {0} – leave it blank to sell all {1}` | `Сумма, от {0} – оставьте пустым, чтобы продать всё ({1})` |
+| RU21-MON-77 | `Boats, ordered rather than bought` | `Лодки: их заказывают, а не покупают` |
+| RU21-MON-78 | `Bought in {0}, {1}` | `Куплено: {0}, {1}` |
+| RU21-MON-79 | `Built to order – about 1 week from the week it is ordered.` | `Изготовление на заказ – примерно 1 неделя с недели заказа.` |
+| RU21-MON-80 | `Built to order – about {0} months from the week it is ordered.` | `Изготовление на заказ – примерно {0, plural, one {{0} месяц} few {{0} месяца} many {{0} месяцев} other {{0} месяца}} с недели заказа.` |
+| RU21-MON-81 | `Built to order – about {0} weeks from the week it is ordered.` | `Изготовление на заказ – примерно {0, plural, one {{0} неделя} few {{0} недели} many {{0} недель} other {{0} недели}} с недели заказа.` |
+| RU21-MON-82 | `Built to order – about {0} years from the week it is ordered.` | `Изготовление на заказ – примерно {0, plural, one {{0} год} few {{0} года} many {{0} лет} other {{0} года}} с недели заказа.` |
+| RU21-MON-83 | `Business` | `Бизнес` |
+| RU21-MON-84 | `Buy {0} for {1}? It comes out of the family's money this week.` | `Купить «{0}» за {1}? Деньги будут списаны из средств семьи на этой неделе.` |
+| RU21-MON-85 | `Every one of these is worth less next season than it is today. That is what a car is.` | `Всё это через сезон будет стоить меньше, чем сегодня. Такова природа автомобиля.` |
+| RU21-MON-86 | `Four stages, in order, and each one is a decision. Every stage earns once it is built – the higher and longer she placed, the more it brings in – and it outlives the career.` | `Четыре этапа по порядку, и каждый – решение. Каждый этап приносит доход, как только построен: чем выше и дольше она выступала, тем больше он приносит. И он переживёт её карьеру.` |
+| RU21-MON-87 | `Gains about {0}% a season` | `Растёт примерно на {0}% за сезон` |
+| RU21-MON-88 | `In the air` | `В воздухе` |
+| RU21-MON-89 | `Interest has gone quiet · 1 week on the market` | `Интерес угас · в продаже 1 неделя` |
+| RU21-MON-90 | `Invest` | `Вложения` |
+| RU21-MON-91 | `Investments` | `Вложения` |
+| RU21-MON-92 | `It then costs {0} a week to keep.` | `Потом на содержание уйдёт {0} в неделю.` |
+| RU21-MON-93 | `Loses {0}% a season` | `Теряет {0}% за сезон` |
+| RU21-MON-94 | `Money that stays money` | `Деньги, которые остаются деньгами` |
+| RU21-MON-95 | `Money that stays money. Each one names a minimum, not a price – put in what you like above it.` | `Деньги, которые остаются деньгами. У каждого вложения есть минимум, а не цена: вкладывайте сколько захотите сверх него.` |
+| RU21-MON-96 | `Neither gains nor loses` | `Стоимость не меняется` |
+| RU21-MON-97 | `Not enough months to draw yet` | `Пока слишком мало месяцев для графика` |
+| RU21-MON-98 | `On the market · 1 week` | `В продаже · 1 неделя` |
+| RU21-MON-99 | `On the water` | `На воде` |
+| RU21-MON-100 | `One unit, monthly, from {0} to {1}: {2} to {3}` | `Одна единица, по месяцам, с {0} по {1}: от {2} до {3}` |
+| RU21-MON-101 | `Order {0} for {1}? The money goes this week and it arrives in {2} weeks.` | `Заказать «{0}» за {1}? Деньги уйдут на этой неделе, а получить это можно будет через {2, plural, one {{2} неделю} few {{2} недели} many {{2} недель} other {{2} недели}}.` |
+| RU21-MON-102 | `Ordered, not bought – the money goes now and the boat comes years later. Every one of them costs a wage a week to keep.` | `Лодку заказывают, а не покупают: деньги уходят сейчас, а лодка приходит через годы. На содержание каждой уходит недельная зарплата.` |
+| RU21-MON-103 | `Property` | `Недвижимость` |
+| RU21-MON-104 | `Put a further {0} into {1}? It comes out of the family's money this week.` | `Добавить ещё {0} в «{1}»? Деньги будут списаны из средств семьи на этой неделе.` |
+| RU21-MON-105 | `Sell {0} for {1}? That is {2}.` | `Продать «{0}» за {1}? Это {2}.` |
+| RU21-MON-106 | `Slow, large, and the end of paying somebody else rent.` | `Медленно, дорого – и больше не нужно платить аренду другим.` |
+| RU21-MON-107 | `Somewhere to live` | `Где жить` |
+| RU21-MON-108 | `Take {0} out of {1}? That part is {2}, and the rest stays invested.` | `Забрать {0} из «{1}»? Это {2}, а остальное останется вложенным.` |
+| RU21-MON-109 | `The business` | `Бизнес` |
+| RU21-MON-110 | `The family aeroplane` | `Семейный самолёт` |
+| RU21-MON-111 | `The family aeroplane. It takes half the fare off every trip to a tournament, and it is kept the way an aeroplane is kept.` | `Семейный самолёт. Он вдвое снижает стоимость билета на каждую поездку на турнир, а содержат его так, как содержат самолёты.` |
+| RU21-MON-112 | `The first thing on this shelf that earns. What it brings in follows how known she is – the shoots and the titles – not her ranking.` | `Первое, что в этом разделе приносит доход. Доход зависит от её известности – съёмок и титулов, а не от рейтинга.` |
+| RU21-MON-113 | `The garage` | `Гараж` |
+| RU21-MON-114 | `Water` | `Вода` |
+| RU21-MON-115 | `What the family owns that earns – the academy included` | `Всё, что принадлежит семье и приносит доход, включая академию` |
+| RU21-MON-116 | `Worth {0} years of what it sells` | `Стоит как {0, plural, one {{0} год} few {{0} года} many {{0} лет} other {{0} года}} выручки` |
+| RU21-MON-117 | `exactly what it cost` | `по цене покупки` |
+| RU21-MON-118 | `paid {0}` | `заплачено {0}` |
+| RU21-MON-119 | `{0} less than it cost` | `на {0} дешевле цены покупки` |
+| RU21-MON-120 | `{0} more than it cost` | `на {0} дороже цены покупки` |
+| RU21-MON-121 | `{0}% built – ready {1}` | `Построено на {0}%, готово: {1}` |

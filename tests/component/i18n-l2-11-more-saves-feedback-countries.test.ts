@@ -63,11 +63,12 @@ import { isCopyRef, type CopyRef } from '../../src/shared/i18n'
 import { careerSnapshot } from '../helpers/career'
 import { buildCatalog } from '../../tools/i18n-extract'
 import { listDocs, readRows, splitRow } from '../../tools/i18n-import'
-import { installCatalog, missCount, missedKeys, resetI18nForTests, resetMisses, setLocale } from '../../src/i18n'
+import { installCatalog, missedKeys, resetI18nForTests, resetMisses, setLocale } from '../../src/i18n'
 import { privacyUrl } from '../../src/composables/privacyRoute'
 import { installMemoryStorage } from './setup'
 import { NARROW_PHONE, PHONE, assertDismissReachable, availableWidth, demandedWidth, setViewport, type Viewport } from './fits'
 import { DEFAULT_ALLOW, expandRendered, hardcodeLeaks, installPseudoLocale } from './pseudoloc'
+import { compiledArm, expectCounterIsExact, expectLabelsFollowTheCatalog, recordingCatalog } from './ruCompiled'
 import type { CareerMeta, SavePeek, SlotMeta } from '../../src/shared/protocol'
 
 vi.mock('../../src/worker/client', async (importOriginal) => {
@@ -90,7 +91,6 @@ function cellsOf(doc: string, needle: string): string[] {
   if (line === undefined) throw new Error(`${doc}: no line carries «${needle}»`)
   return splitRow(line).map((c) => c.replace(/`/g, '').trim())
 }
-const parts = (cell: string): string[] => cell.split(' / ').map((p) => p.trim())
 
 beforeEach(() => {
   installMemoryStorage()
@@ -118,6 +118,17 @@ function words(el: Element): string {
   return out.join(' ')
 }
 const pct = (r: number): string => `${(r * 100).toFixed(0)}%`
+/** Every player-visible string under `root`: text nodes and the four copy attributes, in one string – for "is this word on screen" (the L2-3 instrument). */
+function seen(root: Element): string {
+  const parts: string[] = [root.textContent ?? '']
+  for (const el of [root, ...Array.from(root.querySelectorAll('*'))]) {
+    for (const a of ['title', 'aria-label', 'placeholder', 'alt']) {
+      const v = el.getAttribute(a)
+      if (v) parts.push(v)
+    }
+  }
+  return parts.join('\n')
+}
 // ===================================================================================================================
 // THE FIXTURE – a real career through the real protocol, two careers on the device, an autosave pair and two named saves
 // ===================================================================================================================
@@ -576,7 +587,7 @@ describe('L2-11 seams – a flip re-labels a mounted More and a blocking confirm
       '{0} KB': '{0} KB-X',
       '{0} min ago': '{0} MIN-AGO',
       Active: 'ACTIVE-PILL',
-      Load: 'LOAD-B',
+      'btn|Load': 'LOAD-B', // ⚠ RE-AIMED 11.10: the button took its own btn| tag (the five bare twins)
       Delete: 'DELETE-B',
       Cancel: 'CANCEL-B',
       'Load career – {0}': 'LOAD-CAREER<{0}>',
@@ -748,13 +759,17 @@ describe('L2-11 seams – a flip re-labels a mounted More and a blocking confirm
 
 describe('L2-11 context tags – four decisions, nine tagged keys, and the bare ones, each measured against every batch table', () => {
   it('⚠ THE OPERATION NOUNS: RU-13A\'s status row writes six NOUNS in one cell; two of them collide with a VERB on the same screen, so the family takes one tag', () => {
-    const [english, russian] = cellsOf('ru-saves-settings-2026-10.md', '(`OP_LABEL`)')
-    const en = parts(english!.replace(' (OP_LABEL)', ''))
-    const ru = parts(russian!)
-    expect(en).toEqual(['Save', 'Load', 'Delete save', 'Delete career', 'Export', 'Import'])
+    // ⭐ RE-AIMED 11.10 (row hygiene, not relaxed): RU-13A's one-cell list of six nouns was split into one row per tagged key – each row NAMES its `op|` key in the English cell – so the six are read under their tagged spellings, in the list's own order
+    const tagged = ['op|Save', 'op|Load', 'op|Delete save', 'op|Delete career', 'op|Export', 'op|Import']
+    const nouns = tagged.map((k) => {
+      const hit = rowsFor(k).filter((r) => r.doc.includes('saves-settings'))
+      expect(hit, k).toHaveLength(1)
+      return hit[0]!
+    })
+    const ru = nouns.map((r) => r.russian)
     expect(ru).toHaveLength(6)
     // `Load` the button has a clean row and a Russian; the noun in the status row is a DIFFERENT Russian
-    const verb = rowsFor('Load')
+    const verb = rowsFor('btn|Load') // ⚠ RE-AIMED 11.10: the verb row lives on the btn| tag now
     expect(verb.length).toBeGreaterThanOrEqual(1)
     expect(new Set(verb.map((r) => r.russian)).size).toBe(1)
     expect(ru[1]).not.toBe(verb[0]!.russian)
@@ -762,17 +777,20 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
     const importFile = rowsFor('Import a save file')
     expect(importFile).toHaveLength(1)
     expect(importFile[0]!.russian).not.toBe(ru[5])
-    // the tagged keys exist; the bare `Load` and `Import` stay the buttons'
-    for (const k of ['op|Save', 'op|Load', 'op|Delete save', 'op|Delete career', 'op|Export', 'op|Import']) expect(CATALOG.keys[k]?.home, k).toEqual(['src/components/screens/MoreScreen.vue'])
-    expect(CATALOG.keys.Load?.home).toEqual(['src/components/screens/MoreScreen.vue'])
-    expect(CATALOG.keys.Import?.home).toEqual(['src/components/screens/MoreScreen.vue'])
+    // ⚠ RE-AIMED 11.10: the buttons took their own btn| tags (the five bare twins died with their last callers)
+    for (const k of ['op|Save', 'op|Load', 'op|Delete save', 'op|Delete career', 'op|Export', 'op|Import', 'btn|Load', 'btn|Import']) expect(CATALOG.keys[k]?.home, k).toEqual(['src/components/screens/MoreScreen.vue'])
+    expect(CATALOG.keys.Load, 'the bare key died with its last caller').toBeUndefined()
+    expect(CATALOG.keys.Import, 'the bare Import died with its last caller too').toBeUndefined()
   })
 
   it('⚠ THE NAME TRAP: the saves table\'s column `Name` and the wizard\'s summary term `Name` are two Russians – the column takes `saves|Name`', () => {
-    const [columnsEn, columnsRu] = cellsOf('ru-saves-settings-2026-10.md', 'columns `Name`')
-    const columns = parts(columnsEn!.replace('columns ', ''))
-    const russianColumns = parts(columnsRu!)
-    expect(columns).toEqual(['Name', 'Saved', 'Week', 'Size'])
+    // ⭐ RE-AIMED 11.10 (row hygiene, not relaxed): the columns row («`Name` / `Saved` / `Week` / `Size`») was split into one row per column and the Name column NAMES its tag (`saves|Name`) – read in the table's own order
+    const columns = ['saves|Name', 'Saved', 'Week', 'Size'].map((e) => {
+      const hit = rowsFor(e).filter((r) => r.doc.includes('saves-settings'))
+      expect(hit, e).toHaveLength(1)
+      return hit[0]!
+    })
+    const russianColumns = columns.map((c) => c.russian)
     const wizard = rowsFor('Name')
     expect(wizard).toHaveLength(1)
     expect(wizard[0]!.doc).toContain('onboarding')
@@ -780,8 +798,9 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
     expect(CATALOG.keys.Name?.home).toContain('src/components/OnboardingWizard.vue')
     expect(CATALOG.keys.Name?.home).not.toContain('src/components/screens/MoreScreen.vue')
     expect(CATALOG.keys['saves|Name']?.home).toEqual(['src/components/screens/MoreScreen.vue'])
-    // …while `Week` agrees across the two tables, so the column header stays on the bare key
-    expect(rowsFor('Week')).toHaveLength(1)
+    // …while `Week` agrees across the tables, so the column header stays on the bare key (⭐ RE-AIMED 11.10: the column is a row of its own now, so two rows, one Russian)
+    expect(rowsFor('Week').length).toBeGreaterThanOrEqual(2)
+    expect(new Set(rowsFor('Week').map((r) => r.russian)).size).toBe(1)
     expect(russianColumns[2]).toBe(rowsFor('Week')[0]!.russian)
     expect(CATALOG.keys.Week?.home).toContain('src/components/screens/MoreScreen.vue')
   })
@@ -791,7 +810,8 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
     expect(about, 'RU-13B\'s is the only clean row for the word').toHaveLength(1)
     expect(about[0]!.doc).toContain('play-about-settings')
     const friendly = cellsOf('ru-season-tournaments-2026-10.md', 'RU04-F06')
-    expect(friendly[1], 'the field\'s row is DESCRIBED, not quoted: its English cell can never join a key').toBe('seed field label')
+    // ⭐ RE-AIMED 11.10 (row hygiene, not relaxed): the field's row used to be DESCRIBED, not quoted («seed field label»), so its English cell could never join a key; it now NAMES its tag and keeps the description as its annotation
+    expect(friendly[1], 'the field\'s row names its tagged key, the description rides as the annotation').toBe('friendly\\|Seed · seed field label')
     expect(friendly[2]).not.toBe(about[0]!.russian)
     // the importer joins a clean row to the bare key – so the bare key must be About\'s, or the About Russian would land on the field silently
     expect(CATALOG.keys.Seed?.home).toEqual(['src/components/screens/MoreScreen.vue'])
@@ -800,7 +820,13 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
   })
 
   it('⚠ THE SKIP TRAP: the settings pill `Skip` (its compact word) and the tournament flow\'s `Skip` button are two Russians – the pill takes `view|Skip`', () => {
-    const pills = parts(cellsOf('ru-play-about-settings-2026-10.md', 'amount pills')[2]!)
+    // ⭐ RE-AIMED 11.10 (row hygiene, not relaxed): the amount, title and speed pills were composite rows; each is one row per pill now (the amount pill `Skip` names its `view|` tag) – read by its English from the settings doc
+    const play = (english: string): string => {
+      const hit = rowsFor(english).filter((r) => r.doc.includes('play-about-settings'))
+      expect(hit, english).toHaveLength(1)
+      return hit[0]!.russian!
+    }
+    const pills = ['Full', 'Key', 'view|Skip'].map(play)
     expect(pills).toHaveLength(3)
     const tournament = rowsFor('Skip')
     expect(tournament).toHaveLength(1)
@@ -817,13 +843,13 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
     const viewerKey = cellsOf('ru-match-viewer-commentary-2026-10.md', 'Key` – compact toggle')
     expect(pills[1]).toBe(viewerKey[1])
     // …and the three FULL titles on the settings pills are RU-08's own words (the settings row's cell says so: «(RU-08)») – read from the split FULL-word rows since 10.10
-    const titles = parts(cellsOf('ru-play-about-settings-2026-10.md', 'pill titles')[2]!.replace(' (RU-08)', ''))
+    const titles = ['Every point', 'Key points only', 'Skip to the result'].map(play)
     const viewerFull = cellsOf('ru-match-viewer-commentary-2026-10.md', 'Every point` – full word')
     const viewerKeyFull = cellsOf('ru-match-viewer-commentary-2026-10.md', 'Key points only` – full word')
     expect(titles.slice(0, 2)).toEqual([viewerFull[1], viewerKeyFull[1]])
     expect(titles[2]).toBe(rowsFor('Skip to the result')[0]!.russian)
     // the speed words are the same compact forms in both tables
-    const speeds = parts(cellsOf('ru-play-about-settings-2026-10.md', 'speed pills')[2]!)
+    const speeds = ['1×', '2×', '4×'].map(play)
     expect(speeds).toEqual(['Normal speed', 'Double speed', 'Quadruple speed'].map((row) => cellsOf('ru-match-viewer-commentary-2026-10.md', row)[2]))
   })
 
@@ -866,48 +892,64 @@ describe('L2-11 Russian smoke – ru.json read by key, no Cyrillic typed here', 
     f.w.unmount()
   })
 
-  it('⭐ no RU-13A / RU-13B / RU-15 row is approved yet: the product mark (an identity row) is the only approved word wired on More, and every other word renders English and is counted', async () => {
-    installCatalog('ru', RU)
+  it('⭐ the compiled rows wired on More render: the product mark is an identity row, every other word renders his Russian where a row exists and English – counted – where none', async () => {
+    const rec = recordingCatalog(RU)
+    const asked = rec.asked
+    installCatalog('ru', rec.catalog)
     await setLocale('ru')
+    await rec.begin() // let anything an earlier test left mounted settle first, then record
     resetMisses()
     const wired = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.includes('src/components/screens/MoreScreen.vue')).sort()
-    // ⚠ 10.10 RE-AIMED, NOT RELAXED: the chat-ok batch approved four more words that live on More –
-    // the dialog defaults («Отмена»/«Подтвердить») and the language pair (the autonym convention).
-    expect(wired, 'exactly the approved rows wired on More – the two identity rows plus the 10.10 batch').toEqual(['Ace Parent', 'Cancel', 'Confirm', 'English', 'Russian', 'Ties Break', '{0} KB'])
+    // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED. «exactly the approved rows wired on More» was a CONSTANT list – the two identity rows plus the 10.10 batch – true only while the blanket was not in force. The set is
+    // READ from ru.json now (`wired`), the seven words the list always named are still asserted to be in it, and the screens are held to the compiled-era law (tests/component/ruCompiled.ts): every compiled key
+    // the three tabs asked for renders, the labels this test always named fall the way the catalog says, and the counter never counts a compiled key. The three miss COUNTS (> 5, > 30, > 20) were how many rows
+    // were still waiting – the numbers print below instead.
+    for (const key of ['Ace Parent', 'Cancel', 'Confirm', 'English', 'Russian', 'Ties Break', '{0} KB']) expect(wired, key).toContain(key)
+    const counted = new Set<string>() // the counter is reset between the tabs (the log below prints per tab), so what each tab counted is collected here
     const f = await mountMore('about')
-    expect(words(f.w.findAll('table tr')[0]!.element)).toBe(`App ${RU['Ties Break']} ${RU['Ace Parent']}`) // identity: the brand is itself in both languages
-    expect(texts(f.w, 'h2')).toEqual(['About']) // no approved row → English, counted
-    expect(missedKeys()).toEqual(expect.arrayContaining(['About', 'About this app', 'Privacy', 'Save schema', 'Build {0} · {1} · save schema v{2}']))
+    const aboutScreen = seen(f.w.element)
+    expect(words(f.w.findAll('table tr')[0]!.element)).toBe(`${RU.App ?? 'App'} ${RU['Ties Break']} ${RU['Ace Parent']}`) // identity: the brand is itself in both languages
+    expect(texts(f.w, 'h2')).toEqual([RU.About ?? 'About'])
+    expectLabelsFollowTheCatalog(['About', 'About this app', 'Privacy', 'Save schema', 'Build {0} · {1} · save schema v{2}'], missedKeys(), RU, aboutScreen)
     expect(missedKeys()).not.toEqual(expect.arrayContaining(['Ties Break', 'Ace Parent']))
     const aboutMisses = missedKeys().length
+    missedKeys().forEach((k) => counted.add(k))
     f.w.unmount()
     resetMisses()
     const saves = await mountMore('saves')
+    const savesScreen = seen(saves.w.element)
     const playOnSaves = missedKeys().length
+    missedKeys().forEach((k) => counted.add(k))
     saves.w.unmount()
     resetMisses()
     const play = await mountMore('play')
+    const playScreen = seen(play.w.element)
     const playMisses = missedKeys().length
+    missedKeys().forEach((k) => counted.add(k))
     play.w.unmount()
+    expectCounterIsExact(asked, [...counted], RU)
+    const arm = compiledArm({ what: 'L2-11 More', ru: RU, asked, screen: [aboutScreen, savesScreen, playScreen].join('\n'), wiredHere: wired, coverageFloor: 0.65 })
     console.log(
-      `[L2-11 smoke] ru.json: ${Object.keys(RU).length} keys; approved AND wired on More: ${wired.length} -> «${RU['Ties Break']}» «${RU['Ace Parent']}» (identity rows); ` +
-        `distinct misses: About ${aboutMisses}, Saves ${playOnSaves}, Play ${playMisses}; none of RU-13A / RU-13B / RU-15 is approved`,
+      `[L2-11 smoke] ru.json: ${Object.keys(RU).length} keys; compiled AND wired on More: ${wired.length} (reached ${arm.observed.length}, asked ${arm.askedCompiled.length}; «${RU['Ties Break']}» «${RU['Ace Parent']}» are the identity rows); ` +
+        `distinct misses: About ${aboutMisses}, Saves ${playOnSaves}, Play ${playMisses}`,
     )
-    expect(aboutMisses).toBeGreaterThan(5)
-    expect(playOnSaves).toBeGreaterThan(30)
-    expect(playMisses).toBeGreaterThan(20)
-    expect(missCount()).toBeGreaterThan(0)
   })
 
-  it('the feedback card and an open confirmation, under the real ru.json: English as written, each word a counted miss', async () => {
-    installCatalog('ru', RU)
+  it('the feedback card and an open confirmation, under the real ru.json: his Russian where a row exists, English and counted where none', async () => {
+    const rec = recordingCatalog(RU)
+    const asked = rec.asked
+    installCatalog('ru', rec.catalog)
     await setLocale('ru')
+    await rec.begin() // let anything an earlier test left mounted settle first, then record
     resetMisses()
     const f = await mountMore('saves')
     await f.w.get('button.primary').trigger('click')
     await flushPromises()
-    expect(flat(dialogEl()!.querySelector('.dialog-title')!.textContent)).toBe('Send feedback')
-    expect(missedKeys()).toEqual(expect.arrayContaining(['Send feedback', 'The report contains:', 'Nothing is sent until you choose where to send it.', 'Send it to {0}']))
+    // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED: «English as written, each word a counted miss» held while none of these rows was approved. Each word still says which way it falls – his Russian on the dialog when ru.json
+    // has a row (and not counted), English and counted when it has none – read from the catalog.
+    expect(flat(dialogEl()!.querySelector('.dialog-title')!.textContent)).toBe(RU['Send feedback'] ?? 'Send feedback')
+    expectLabelsFollowTheCatalog(['Send feedback', 'The report contains:', 'Nothing is sent until you choose where to send it.', 'Send it to {0}'], missedKeys(), RU, seen(document.body))
+    expectCounterIsExact(asked, missedKeys(), RU)
     f.w.unmount()
   })
 })
@@ -1186,24 +1228,26 @@ describe('L2-11b seams – a flip re-labels the mounted picker and the search fo
   })
 })
 
-describe('L2-11b context tags – none: each of the 24 has two rows in two tables and ONE Russian, all DRAFT, and nothing wakes', () => {
-  it('24 names, 48 rows (RU-13D and RU-02A), one Russian each; none APPROVED, so ru.json holds none and every name renders English and is counted', async () => {
+describe('L2-11b context tags – none: each of the 24 has two rows in two tables and ONE Russian, and the blanket compiles it', () => {
+  it('24 names, 48 rows (RU-13D and RU-02A), one Russian each; ru.json holds that one Russian for every name and the nine popular tiles render it, uncounted', async () => {
     for (const [, name] of OLD_NAMES) {
       // two tables write each name – RU-13D's list and RU-02A's country tiles – and they agree on ONE Russian, so no tag is needed
       const rows = rowsFor(name)
       expect(rows, name).toHaveLength(2)
       expect(rows.map((r) => r.doc).sort().map((d) => d.replace(/-2026-\d\d\.md$/, ''))).toEqual(['ru-formatters-countries', 'ru-onboarding'])
       expect(new Set(rows.map((r) => r.russian)).size, `${name}: one Russian in both tables`).toBe(1)
-      expect(rows.map((r) => r.status), name).toEqual(['DRAFT', 'DRAFT'])
-      expect(RU[name], `${name} is not in ru.json`).toBeUndefined()
+      // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED: «all DRAFT, so ru.json holds none and every name renders English» was the читка regime. The blanket compiles a DRAFT row as written, so the claim is the one it
+      // always protected – no tag is needed because the two tables agree – read from the catalog: ru.json carries exactly that one Russian (no QUESTION row ever compiles, so none may sit here).
+      expect(rows.map((r) => r.status), name).not.toContain('QUESTION')
+      expect(RU[name], `${name}: ru.json carries the one Russian both tables give it`).toBe(rows[0]!.russian)
     }
     installCatalog('ru', RU)
     await setLocale('ru')
     resetMisses()
     const w = await mountPicker()
-    expect(tileNames(w)).toEqual(POPULAR_NAMES)
-    expect(missedKeys()).toEqual(expect.arrayContaining(POPULAR_NAMES))
-    console.log(`[L2-11b smoke] 24 country keys wired, 24 DRAFT rows joined, 0 in ru.json (${Object.keys(RU).length} keys); the nine popular tiles render English and are ${POPULAR_NAMES.length} counted misses`)
+    expect(tileNames(w)).toEqual(POPULAR_NAMES.map((name) => RU[name]!))
+    expect(missedKeys().filter((key) => POPULAR_NAMES.includes(key)), 'a compiled name is never a counted miss').toEqual([])
+    console.log(`[L2-11b smoke] 24 country keys wired, 24 rows compiled to ONE Russian each (${Object.keys(RU).length} keys in ru.json); the nine popular tiles render it, ${missedKeys().length} distinct misses elsewhere on the step`)
     w.unmount()
   })
 })

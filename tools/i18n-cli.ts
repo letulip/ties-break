@@ -1,7 +1,7 @@
 // THE I18N COMMAND LINE – one entry for the three commands (wave L1b).
 //
 //   npm run i18n:extract [-- --dry]                regenerate src/i18n/catalog.en.json
-//   npm run i18n:import  [-- --dry] [-- --verbose]   compile the owner's tables into src/i18n/ru.json + src/i18n/formats.ru.json (L3-T) + the report
+//   npm run i18n:import  [-- --dry] [-- --verbose]   compile the owner's tables (and the corpus joiner's coordinate tables, 11.10) into src/i18n/ru.json + src/i18n/formats.ru.json (L3-T) + the report
 //   npm run i18n:import  -- --mark-landed [doc.md …] [--dry]   HIS write-back: APPROVED -> LANDED for rows proven live
 //   npm run i18n:check                             the gate that runs inside `npm run check`
 //
@@ -12,9 +12,10 @@
 // side effects beyond the walker's scan, and this file is the only place a command line is read.
 import { readFileSync, writeFileSync } from 'node:fs'
 import { runGate } from './i18n-check'
+import { liveCorpora, readAllRows, renderCorpusReport } from './i18n-corpus-join'
 import { buildCatalog, CATALOG_PATH, parseCatalog, seenLiterals, writeCatalog } from './i18n-extract'
 import { FORMATS_PATH, serializeFormats } from './i18n-formats'
-import { applyLanded, compile, listDocs, planLanded, readRows, readRu, renderReport, RU_PATH, TABLES_DIR, writeRu } from './i18n-import'
+import { applyLanded, compile, listDocs, planLanded, readRu, renderReport, RU_PATH, TABLES_DIR, writeRu } from './i18n-import'
 
 const args = process.argv.slice(2)
 const cmd = args[0]
@@ -36,9 +37,11 @@ if (cmd === 'extract') {
   const catalog = parseCatalog(readFileSync(value('--catalog') ?? CATALOG_PATH, 'utf8'))
   const ruPath = value('--ru') ?? RU_PATH
   const explicit = args.filter((a) => a.endsWith('.md')).map((a) => a.split('/').pop() ?? a)
-  const { rows, stats } = readRows(listDocs(dir), dir)
+  // ⭐ 11.10: his tables, then the corpus joiner's rows (the coordinate tables that carry no English column) – one reader, so the CLI and the gate cannot disagree about what ru.json is
+  const corpora = liveCorpora()
+  const { rows, stats, corpus } = readAllRows(listDocs(dir), dir, corpora)
   const live = { catalog, seen: seenLiterals }
-  const compiled = compile(rows, live)
+  const compiled = compile(rows, live, flag('--approved-only') ? { includeDrafts: false } : {})
   if (flag('--mark-landed')) {
     const ru = readRu(ruPath) ?? {}
     const plan = planLanded(compiled, live, ru, dir, explicit.length > 0 ? explicit : undefined)
@@ -48,6 +51,7 @@ if (cmd === 'extract') {
     console.log(`${flag('--dry') ? 'would flip' : 'flipped'} ${plan.changes.length} row(s) APPROVED -> LANDED, ${plan.skipped.length} skipped`)
   } else {
     for (const l of renderReport(compiled, stats, live, { verbose: flag('--verbose') })) console.log(l)
+    for (const l of renderCorpusReport(corpus, compiled, corpora, { verbose: flag('--verbose') })) console.log(l)
     const formatsPath = value('--formats') ?? FORMATS_PATH
     if (!flag('--dry')) {
       writeRu(compiled.entries, ruPath)

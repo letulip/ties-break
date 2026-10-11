@@ -68,7 +68,7 @@ reads as the parent and game pausing together while remaining concise.
 | RU01-R06 | `src/App.vue:1013` | `Stopped: a new offer is in her inbox, on Home – answer it before its deadline or it lapses.` | `Во входящих на экране «Дом» новое предложение. Нужно ответить до срока, иначе оно станет недоступно.` | avoids formal address | `DRAFT` |
 | RU01-R07 | `src/App.vue:1039` | `She played the college championship – the matches are in the news feed, and they can be watched.` | `Она сыграла студенческий чемпионат. Матчи можно посмотреть в новостях.` | | `DRAFT` |
 | RU01-R08 | `src/App.vue:1058` | `Stopped: below zero, and out of time.` | `Остановились: бюджет в минусе, отсрочка закончилась.` | terminal countdown arm | `DRAFT` |
-| RU01-R09 | `src/App.vue:1059` | `Stopped: {debtWeeks} week(s) below zero – {left} before the money runs out for good.` | `Остановились: бюджет в минусе уже {debtDuration}. До окончательной остановки осталось {remainingDuration}.` | both placeholders are localized durations, never raw number + noun | `DRAFT` |
+| RU01-R09 | `src/App.vue:1059` | `Stopped: {debtWeeks} week(s) below zero – {left} before the money runs out for good.` | `Остановились: бюджет в минусе уже {debtDuration}. До окончательной остановки осталось {remainingDuration}.` – ⚙ 11.10 дыра русского ждёт готовую фразу со словом, а ключ отдаёт голое число: ряд ждёт локализованный аргумент | both placeholders are localized durations, never raw number + noun | `QUESTION` |
 
 RU01-R09 requires a duration formatter that returns accusative duration (`1 неделю`, `2 недели`,
 `5 недель`) for `debtDuration` and nominative duration (`1 неделя`, `2 недели`, `5 недель`) after
@@ -90,9 +90,9 @@ it accepts a grammatical-form parameter.
 | RU01-W09 | `src/composables/weekAhead.ts:141` | `Shooting week` | `Неделя съёмок` | advertising shoot, not tennis hitting | `DRAFT` |
 | RU01-W10 | `src/composables/weekAhead.ts:144` | `Exam week` | `Неделя экзаменов` | | `DRAFT` |
 | RU01-W11 | `src/composables/weekAhead.ts:146` | `Off-season week` | `Межсезонье` | shorter and idiomatic | `DRAFT` |
-| RU01-W12 | `src/composables/weekAction.ts:137` | `Her {part} is waiting on your call – nothing moves until you answer.` | `Нужно решить, что делать с травмой: пока нет ответа, время не пойдёт дальше.` | temporary case-safe form; a body-part-aware catalogue may restore specificity | `DRAFT` |
+| RU01-W12 | `src/composables/weekAction.ts:137` | `Her {part} is waiting on your call – nothing moves until you answer.` | `Нужно решить, что делать с травмой ({part}): пока нет ответа, время не пойдёт дальше.` – ⚙ 11.10 дыра возвращена (бланкет) | temporary case-safe form; a body-part-aware catalogue may restore specificity | `DRAFT` |
 | RU01-W13 | `src/composables/weekAction.ts:157` | `She has something to say – nothing moves until you hear her out.` | `Она хочет поговорить – сначала нужно её выслушать.` | shorter; exact blocking consequence remains | `DRAFT` |
-| RU01-W14 | `src/composables/weekAction.ts:181` | `Next {weeks} weeks` | `Вперёд на {duration}` | duration is accusative: `4 недели`, `6 недель` | `DRAFT` |
+| RU01-W14 | `src/composables/weekAction.ts:181` | `Next {weeks} weeks` | `Вперёд на {duration}` – ⚙ 11.10 дыра {duration} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент | duration is accusative: `4 недели`, `6 недель` | `QUESTION` |
 | RU01-W15 | `src/composables/softLeave.ts:36` | `She wanted a minute – leave anyway?` | `Она хотела поговорить. Всё равно перейти к следующей неделе?` | names what the press actually spends | `DRAFT` |
 
 ## 6. Shared control vocabulary
@@ -117,7 +117,7 @@ caller must not invent a synonym merely because it lives in another file.
 | RU01-C12 | `Watch again` | `Посмотреть ещё раз` | replay from start |
 | RU01-C13 | `To result` | `К результату` | leave playback for box score |
 | RU01-C14 | `Skip to result` | `Сразу к результату` | skip unviewed play |
-| RU01-C15 | `Load` | `Загрузить` | save/career load |
+| RU01-C15 | `btn\|Load` | `Загрузить` – ⚙ 11.10 вызов затегирован `btn\|`; дубль ряда в saves-таблице несёт то же значение | save/career load |
 | RU01-C16 | `Delete` | `Удалить` | destructive; confirmation remains separate |
 | RU01-C17 | `Save as…` | `Сохранить как…` | named save |
 
@@ -148,17 +148,29 @@ English one is exactly who the prompt is for). The two language names are the la
 
 | id | source | English | Russian | note | status |
 | --- | --- | --- | --- | --- | --- |
-| RU01-L01 | `src/components/LocalePrompt.vue:43` | `Choose your language` | | first-run prompt title, an `h2` on a 320 px dialog card; the card is the first thing a new device sees | `DRAFT` |
-| RU01-L02 | `src/components/LocalePrompt.vue:44` | `You can change this later in Settings.` | | one short sentence under the title; `Settings` is the existing label of the gear on Home and the Kid screen (its `aria-label`/`title`), which opens the More screen | `DRAFT` |
+| RU01-L01 | `src/components/LocalePrompt.vue:43` | `Choose your language` | `Выберите язык` | first-run prompt title, an `h2` on a 320 px dialog card; the card is the first thing a new device sees | `DRAFT` |
+| RU01-L02 | `src/components/LocalePrompt.vue:44` | `You can change this later in Settings.` | `Это можно изменить позже в настройках.` | one short sentence under the title; `Settings` is the existing label of the gear on Home and the Kid screen (its `aria-label`/`title`), which opens the More screen | `DRAFT` |
 | RU01-L03 | `src/components/LocalePrompt.vue:46`, `src/components/screens/MoreScreen.vue:747` | `English` | `English` | the language's own NAME, a button on the prompt and a pill on the switcher; 10.10 чат-ок: «English / Русский» – автоним не переводится, identity-ряд | `APPROVED` |
 | RU01-L04 | `src/components/screens/MoreScreen.vue:753` | `Russian` | `Русский` | 10.10 чат-ок: автоним; кнопка промпта с 10.10 – скриптовая константа «Русский» (не переводится по построению), этот ряд кормит пилюлю переключателя | `APPROVED` |
-| RU01-L05 | `src/components/screens/MoreScreen.vue:740` | `Language` | | switcher heading on the Saves tab (an `h2`, like `Saves` and `Danger zone`) and the accessible name of the two-pill group (`MoreScreen.vue:741`) | `DRAFT` |
+| RU01-L05 | `src/components/screens/MoreScreen.vue:740` | `Language` | `Язык` | switcher heading on the Saves tab (an `h2`, like `Saves` and `Danger zone`) and the accessible name of the two-pill group (`MoreScreen.vue:741`) | `DRAFT` |
 
 ### ⚙ 10.10 добавка (№40, усмотрение архитектора): рейл-дашборд (RailDashboard) – русская колонка твоя (DRAFT); общие ключи (Close, Continue, #{rank}, Unranked) живут в своих таблицах
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU01-RD01 | `In the account` | |
-| RU01-RD03 | `{0} /wk` | |
-| RU01-RD04 | `{0} committed` | |
-| RU01-RD05 | `{0} weekly cap` | |
+| RU01-RD01 | `In the account` | `На счёте` |
+| RU01-RD03 | `{0} /wk` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом, этот ряд – пустой сид `QUESTION` | |
+| RU01-RD04 | `{0} committed` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом, этот ряд – пустой сид `QUESTION` | |
+| RU01-RD05 | `{0} weekly cap` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом, этот ряд – пустой сид `QUESTION` | |
+
+## ⚙ 11.10 agent-authored (бланкет) – the debt toast and the multi-week button, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+3 keys. The stop toast of `App.vue` and the multi-week button of `weekAction.ts` were parked above as `QUESTION` (RU01-R09, RU01-W14) because their Russian was drafted over a localized duration (`{debtDuration}`, `{duration}`) that the key never carries – the keys hand in plain numbers. The plural therefore lives in the value (`уже 3 недели`, `осталось 2 недели`, `Вперёд на 4 недели`) and the owner's `Остановились:` prefix and moulds are kept. The four scaffold cells of the 10.10 №40 addition (`LocalePrompt` ×2, `RailDashboard`, the `Language` heading) are filled in place above.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-SHL-01 | `Stopped: {weeks} week below zero – {left} before the money runs out for good.` | `Остановились: бюджет в минусе уже {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недели}}. До окончательной остановки {left, plural, one {осталась {left} неделя} few {осталось {left} недели} many {осталось {left} недель} other {осталось {left} недели}}.` |
+| RU21-SHL-02 | `Stopped: {weeks} weeks below zero – {left} before the money runs out for good.` | `Остановились: бюджет в минусе уже {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недели}}. До окончательной остановки {left, plural, one {осталась {left} неделя} few {осталось {left} недели} many {осталось {left} недель} other {осталось {left} недели}}.` |
+| RU21-SHL-03 | `Next {weeks} weeks` | `Вперёд на {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недели}}` |

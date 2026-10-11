@@ -43,17 +43,15 @@ export const SHAPES: readonly RegExp[] = [
   new RegExp(`^${MONTH}[a-z]* \\d+(?: ?[–-] ?(?:[A-Za-z]+ )?\\d+)?(?:, \\d{4})?$`),
   new RegExp(`^${MONTH} ['’]\\d\\d$`),
   /^\d{2} [A-Z][a-z]{2},? \d{2}:\d{2}$/,
-  // money and its compact form, the physio band, a price span: L2-3, L2-6, L2-10 (`formatCentsCompact`)
+  // money and its compact form, a price span: L2-3, L2-6, L2-10 (`formatCentsCompact`). ⭐ RU-22 (11.10): the physio band (`$54-91/wk`) and the fee pill (`entry $40`, `no entry fee`) left this list when their
+  // unit words went through the catalogue (`{0}/wk`, `entryFeeText`) – a raw one on a surface is a leak again.
   /^[−+-]?\$[\d,.]+[KMB]?$/,
-  /^\$\d+-\d+\/wk$/,
   /^\$[\d,.]+ – \$[\d,.]+$/,
   // ranks, counts, ranges, percentages, degrees, the dashes and glue a table prints: L2-4, L2-6, L2-7
   /^#\d+$/, /^\d+°?$/, /^\d+(?:\.\d+)?%$/, /^\d+(?:-\d+)+$/, /^\d+–\d+$/, /^\d{4}$/, /^[\d,.]+$/,
   /^[—–-]$/, /^\?$/, /^%$/, /^·$/, /^…$/, /^\+\d+$/, /^x\d+$/, /^\d+x'\d\d$/,
   // a version tag on a save row: L2-11
   /^v\d+$/,
-  // the fee pill – `entryFeeLabel` (shared/money.ts): an English formatter with no catalog row, ruled once for Season and Calendar at L2-4
-  /^(?:entry \$[\d,.]+|no entry fee)$/,
   // the court-surface chip the formatters print as a bare id is a WORD (below), not a shape
 ]
 

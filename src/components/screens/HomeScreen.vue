@@ -70,7 +70,7 @@ import { TIER_SHORT } from '../../composables/weekAhead'
 // strip is its third consumer, never a second derivation. See `stripExpanded` below.
 import { feedContext, isTierOpen, useTierStates } from '../../composables/tierState'
 // L2-3 (08.10): RU-03 – Home's frame, controls, cards, season strip and news shell call `t()`; the coach pools are `localizedList`s.
-import { eventText, localizedList, t } from '../../i18n'
+import { engineWord, eventText, localizedList, t } from '../../i18n'
 import MatchReplay from '../MatchReplay.vue'
 import RankHelpDialog from '../RankHelpDialog.vue'
 // v48: the podium's own paper, on the one week a year that is about her rather than about tennis.
@@ -614,7 +614,11 @@ const coachQuote = computed(() =>
  *  rotation is the ENGINE's (`declinePhaseOf`, off the ledger's season clock – deterministic and
  *  drawless): this screen still prints one field and adds no condition of its own, so which
  *  sentence appears is not a thing the template can get wrong. */
-const coachRoomShort = computed(() => game.snapshot?.coachRoomShort ?? '')
+// ⭐ RU-23 (11.10): shown through its ref (`eventText`) – the rotation's pick or the band's short, as the sentence the engine wrote; English renders the string beside it byte for byte.
+const coachRoomShort = computed(() => {
+  const snap = game.snapshot
+  return snap ? eventText({ text: snap.coachRoomShort, c: snap.coachNotesC?.short ?? undefined }) : ''
+})
 
 // ⚠⚠ ROUND 34 #2a – THE CEILING READ IS NO LONGER ON THIS SCREEN, and the `roomBand` computed that
 // fed it is gone with it. It lived here from round 24 to round 34: round 23 asked for «подсказки про
@@ -894,7 +898,7 @@ function chipName(chip: TierChip): string {
       // in `seasonChips`. Everywhere else the label is the name, unchanged.
       return t('{tier}: open – {detail}', { tier: chip.short, detail: chip.spoken ?? chip.label })
     default:
-      return `${chip.short}: ${chip.spoken ?? chip.label}`
+      return `${engineWord('tier', chip.short)}: ${chip.spoken ?? chip.label}`
   }
 }
 
@@ -1916,7 +1920,7 @@ async function leaveCollege(): Promise<void> {
               role="img"
               :aria-label="chipName(cell.chip)"
               :title="cell.chip.title"
-            >{{ cell.chip.short }} &middot; {{ cell.chip.label }}</span>
+            >{{ engineWord('tier', cell.chip.short) }} &middot; {{ cell.chip.label }}</span>
             <!-- Decoration: the arrows say "and then", which the reading order already says. -->
             <span v-if="i < stripCells.length - 1" class="strip-arrow" aria-hidden="true">&#8594;</span>
           </template>

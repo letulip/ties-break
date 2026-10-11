@@ -20,6 +20,7 @@
 // than in four unrelated darks. Contrast is measured per step in
 // `tests/component/album-rank-ink.test.ts`, which also re-derives the four inks from `--tier-*`.
 import type { AlbumTag } from '../../shared/protocol'
+import { engineWord } from '../../i18n'
 
 defineProps<{ tag: AlbumTag }>()
 </script>
@@ -31,7 +32,7 @@ defineProps<{ tag: AlbumTag }>()
     </svg>
     <div class="album-tag-card">
       <span class="album-tag-hole" aria-hidden="true"></span>
-      <p class="album-tag-stage">{{ tag.stage }}</p>
+      <p class="album-tag-stage">{{ engineWord('round', tag.stage) }}</p>
       <p class="album-tag-tier">{{ tag.tier }}</p>
       <p class="album-tag-place">
         <span>{{ tag.place }}</span>

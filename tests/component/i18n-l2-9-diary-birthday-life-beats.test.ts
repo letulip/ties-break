@@ -53,6 +53,7 @@ import { installCatalog, missCount, missedKeys, resetI18nForTests, resetMisses, 
 import { installMemoryStorage } from './setup'
 import { NARROW_PHONE, PHONE, assertDismissReachable, setViewport, type Viewport } from './fits'
 import { DEFAULT_ALLOW, expandRendered, hardcodeLeaks, installPseudoLocale } from './pseudoloc'
+import { compiledArm, expectCounterIsExact, expectLabelsFollowTheCatalog, recordingCatalog } from './ruCompiled'
 
 /** His approved Russian, as the importer compiled it. Every Russian expectation below is read from here by key. */
 const RU = JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string, string>
@@ -208,22 +209,30 @@ describe('L2-9a context tags – none, each measured against every batch table w
 })
 
 describe('L2-9a Russian smoke – ru.json read by key, no Cyrillic typed here', () => {
-  it('the REAL ru.json: every approved row on this card renders his Russian; the unapproved ones render English and are counted', async () => {
-    installCatalog('ru', RU)
+  it('the REAL ru.json: every compiled row this card asks for renders his Russian; what ru.json does not carry renders English and is counted', async () => {
+    const rec = recordingCatalog(RU)
+    const asked = rec.asked
+    installCatalog('ru', rec.catalog)
     await setLocale('ru')
+    await rec.begin() // let anything an earlier test left mounted settle first, then record
     resetMisses()
     const snap = birthdaySnapshot()
     const w = mountBirthday(snap)
     await selectFirst(w)
     const everything = seen(w.element)
     const wiredHere = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.includes('src/components/BirthdayDialog.vue'))
-    // the approved arm: today `wiredHere` is empty (no RU-09 row is APPROVED) and the loop wakes by itself the day one is
-    for (const key of wiredHere) expect(everything, `${key} is approved and wired, so his Russian must render`).toContain(RU[key]!)
-    // the unapproved arm: English on screen, and the miss counter says so (ruling 4 as a number)
-    expect(everything).toContain('Proceed')
-    for (const key of ['Her birthday – {0}', 'Proceed']) expect(missedKeys(), key).toContain(key)
-    expect(missCount()).toBeGreaterThanOrEqual(2)
-    console.log(`[L2-9a smoke] ru.json: ${Object.keys(RU).length} keys; approved AND wired on the birthday card: ${wiredHere.length}; distinct misses: ${missedKeys().length}`)
+    // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED. The blanket compiled his DRAFT rows (ru.json 56 -> 3 310): «approved» is «compiled» below and both claims stand – his Russian reaches the screen, and what ru.json
+    // lacks is English and counted. The compiled arm reads every key the mounts ASKED for, across named holes and ICU plurals (tests/component/ruCompiled.ts says why that, and not a named-gap walk over
+    // `wiredHere`); `wiredHere` is the vocabulary its coverage floor is taken of. The old `NOT_IN_POSE` set is gone with the walk: a key the pose never asks for is not a claim, it is coverage.
+    // ⭐ 11.10, RU-22 (the display boundary): the age is an engine word (`ageInWords`) and the card reads it through the numeral reader of src/i18n/words.ts. The row `num|fourteen` is asked and compiled, and the
+    // line opens with the number, so the reader returns it with the capital the English had – the lower-case value is not on the screen as written. Held both ways like every name here.
+    const NOT_DRAWN: Record<string, string> = {
+      'num|fourteen': 'the birthday heading opens with the age, so the numeral reader (src/i18n/words.ts `age`) draws it with a capital – the value is on the screen, in its sentence-initial case',
+    }
+    const arm = compiledArm({ what: 'L2-9a', ru: RU, asked, screen: everything, wiredHere, notDrawn: NOT_DRAWN, coverageFloor: 0.95 })
+    expectCounterIsExact(asked, missedKeys(), RU)
+    expectLabelsFollowTheCatalog(['Her birthday – {0}', 'Proceed'], missedKeys(), RU, everything)
+    console.log(`[L2-9a smoke] ru.json: ${Object.keys(RU).length} keys; asked AND compiled on these screens: ${arm.askedCompiled.length}; reached ${arm.observed.length} of ${arm.observed.length + arm.unreached.length} compiled, wired keys; distinct misses on the birthday card: ${missedKeys().length} (${missCount()} counted)`)
     w.unmount()
   })
 })
@@ -520,9 +529,12 @@ describe('L2-9b context tags – none, each measured against every batch table w
 })
 
 describe('L2-9b Russian smoke – ru.json read by key, no Cyrillic typed here', () => {
-  it('the REAL ru.json: an approved answer renders his Russian, an unapproved one renders English and is counted (small-talk card, reply, and an announcement)', async () => {
-    installCatalog('ru', RU)
+  it('the REAL ru.json: a compiled answer renders his Russian, one with no row renders English and is counted (small-talk card, reply, and an announcement)', async () => {
+    const rec = recordingCatalog(RU)
+    const asked = rec.asked
+    installCatalog('ru', rec.catalog)
     await setLocale('ru')
+    await rec.begin() // let anything an earlier test left mounted settle first, then record
     resetMisses()
     const prompt = cardFor(worstAsking)
     const w = mountBeat(prompt)
@@ -538,15 +550,13 @@ describe('L2-9b Russian smoke – ru.json read by key, no Cyrillic typed here', 
     x.unmount()
     const everything = [asking, replying, announcing].join('\n')
     const shown = [...prompt.options.map((o) => o.label), ...EXPECTING.options.map((o) => o.label), EXPECTING.confirm, prompt.followUps[0]!.done]
-    let approved = 0
-    for (const label of shown) {
-      if (RU[label] !== undefined) {
-        approved++
-        expect(everything, `${label} is approved, so his Russian must render`).toContain(RU[label]!)
-      } else expect(missedKeys(), `${label} has no row yet – English, and counted`).toContain(label)
-    }
-    console.log(`[L2-9b smoke] ru.json: ${Object.keys(RU).length} keys; approved among the ${shown.length} labels on three mounted surfaces: ${approved}; distinct misses: ${missedKeys().length}`)
-    expect(missCount()).toBeGreaterThan(5)
+    // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED. The loop already had the compiled-era shape (a label with a row renders it, one without is English and counted) – what moved is its universe and its tail:
+    // «approved» is «compiled», each label's value is read ACROSS its holes and plurals (tests/component/ruCompiled.ts) instead of as one raw string, every key the three mounts asked for is held to the same
+    // law, and the closing `missCount() > 5` – a count of how many rows were still waiting, true only while the blanket was not in force – is the exactness of the counter: a compiled key is never one.
+    expectLabelsFollowTheCatalog(shown, missedKeys(), RU, everything)
+    const arm = compiledArm({ what: 'L2-9b', ru: RU, asked, screen: everything, wiredHere: shown, coverageFloor: 1 })
+    expectCounterIsExact(asked, missedKeys(), RU)
+    console.log(`[L2-9b smoke] ru.json: ${Object.keys(RU).length} keys; compiled among the ${shown.length} labels on three mounted surfaces: ${shown.filter((l) => RU[l] !== undefined).length}; asked AND compiled: ${arm.askedCompiled.length}; distinct misses: ${missedKeys().length} (${missCount()} counted)`)
   })
 
   it('a stand-in catalog proves each seat asks the catalog (latin markers, one per seat)', async () => {

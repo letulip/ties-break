@@ -13,6 +13,7 @@
 //      every expectation is READ from ru.json by key: a row he has approved must render his Russian, a row he has not must render the
 //      English and be COUNTED as a miss. As of this wave no childhood-prologue row is APPROVED, so the second arm is the one that
 //      bites today and the first wakes up on its own the day he approves one.
+//      ⚠ RE-AIMED 11.10 (бланкет): the blanket compiled his DRAFT rows (ru.json 56 -> 3 310), so the sentence above is the pre-blanket world. The smoke now reads «compiled» for «approved» – see tests/component/ruCompiled.ts for the law and why it is measured on the keys the mounts ASKED for.
 //   5. THE `xx` SWEEP. No unbracketed text where a string is wired, and the tightest cards still hold a 375x667 phone with every word
 //      longer. The numbers print.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -364,6 +365,7 @@ describe('L2-2 Russian smoke – an approved row renders his Russian, an unappro
   it('⭐ the day he approves a row: a compiled value reaches the screen through the getters, holes filled – borrowed values, no Cyrillic typed', async () => {
     // No childhood-prologue row is APPROVED yet, so the "approved" branch is exercised with values BORROWED from ru.json (his own words for
     // other keys): the path under test is key -> catalog -> getter -> mounted text, and that path does not care whose word travels on it.
+    // ⚠ RE-AIMED 11.10 (бланкет): the blanket compiled these rows too, but the borrowing stays on purpose – a value that is NOT the key's own proves the path (a pass cannot be an accident of the key's real row).
     const wealthy = RU['Wealthy']!
     installCatalog('ru', {
       ...RU,
@@ -378,6 +380,9 @@ describe('L2-2 Russian smoke – an approved row renders his Russian, an unappro
     five.unmount()
     const six = mountCard(PROLOGUE_CARDS[1]!)
     expect(six.get('.prologue-back').attributes('aria-label'), 'a template attribute reads it too').toBe(RU['nav|Stats'])
+    // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED: «a neighbour he did not approve is still counted» – the blanket compiled 'She is six' as well. What the line protected is that a BORROWED value stays on its own key,
+    // so the neighbour reads its OWN row (or the English, counted, if it has none) and never the word lent to 'She is five'.
+    expect(six.get('#prologue-kicker').text(), 'the neighbour reads its own row, not the borrowed one').toBe(underRu('She is six'))
     six.unmount()
     const handover = mountHandover()
     expect(handover.get('.handover-spent').text().startsWith(`${wealthy} $`), 'a formatter fills its {amount} hole with the money string').toBe(true)
@@ -385,7 +390,7 @@ describe('L2-2 Russian smoke – an approved row renders his Russian, an unappro
     expect(missedKeys(), 'the keys he "approved" are not misses').not.toContain('She is five')
     expect(missedKeys()).not.toContain('Back')
     expect(missedKeys()).not.toContain('Nine years of it cost you {amount}.')
-    expect(missedKeys(), 'and a neighbour he did not is still counted').toContain('She is six')
+    expect(missedKeys().includes('She is six'), 'and the neighbour is counted exactly when ru.json has no row for it').toBe(RU['She is six'] === undefined)
   })
 
   it('⭐ a MOUNTED card follows the flip – the table is getters, and Vue must be tracking them: English, another language, English again', async () => {

@@ -68,7 +68,7 @@ import { planWeek, presetOf } from '../../engine/plan'
 // in it and no draw behind it. It is imported rather than composed here for `coachRoomBand`'s own
 // reason – the sentence is the engine's, this file prints it – and it is SPLIT with the same splitter,
 // so the card grows no second `indexOf` on a string it does not own.
-import { coachBlurb, coachProfileNote, coachRoomBand } from '../../engine/world/coachMarket'
+import { ROOM_NOTE_SEP, coachBlurb, coachProfileNote, coachReadParts, coachRoomArgument, coachRoomBand } from '../../engine/world/coachMarket'
 // ⭐ ROUND 29 #13 – the ONE function that answers "what does a finish pay the staff", imported for the
 // same reason `coachBlurb` above is: it is a pure read of `ECONOMY` with no world in it, and the
 // alternative is typing two percentages into a template where nothing could ever check them against
@@ -83,7 +83,7 @@ import { formatCents } from '../../shared/money'
 // See the note at its call site below for why it left this file.
 import { teamBudgetLabel, useCoachingBudget } from '../../composables/coachingBudget'
 import { COACH_TIER_WORD } from '../../composables/coachWords'
-import { t } from '../../i18n'
+import { engineText, eventText, renderCopy, t } from '../../i18n'
 
 const game = useGameStore()
 const emit = defineEmits<{ back: [] }>()
@@ -466,10 +466,17 @@ async function doSendToJuniors() {
 // twice on one screen is the kind of thing rounds are made of, so while a hired coach's card carries
 // it, the hint above the list stands down. Self-coached careers keep the fallthrough: there is no
 // card to carry the sentence, and the read must not vanish with the coach.
-const declineNote = computed(() => game.snapshot?.coachDeclineNote ?? '')
+// ⭐ RU-23 (11.10) – BOTH NOTES ARE SHOWN THROUGH THEIR REF (`eventText`): the engine writes the sentence as a CopyRef beside the string, and English renders itself byte for byte. The bold label is cut
+// BEFORE the language has its say, never after: a read is a label and an argument, each a ref of its own (`coachReadParts`), and each is shown in the player's words. Cutting a sentence that was already
+// translated would cut it wherever its translator put a dash – and a pseudo-locale bracket, which is one pair around the whole.
+const declineNote = computed(() => {
+  const snap = game.snapshot
+  return snap ? eventText({ text: snap.coachDeclineNote, c: snap.coachNotesC?.decline ?? undefined }) : ''
+})
 const roomNote = computed(() => {
   if (declineNote.value && current.value) return ''
-  return game.snapshot?.coachRoomNote ?? ''
+  const snap = game.snapshot
+  return snap ? eventText({ text: snap.coachRoomNote, c: snap.coachNotesC?.room ?? undefined }) : ''
 })
 // ⚠ THE SPLIT MOVED TO THE ENGINE (`coachRoomBand`, 20.08) because Home's coach card needs the same
 // clause, and two screens each running their own `indexOf` on one string is how the two drift apart.
@@ -479,12 +486,22 @@ const roomNote = computed(() => {
 // там и так уже много букв.» What he wanted was the PLAQUE'S OWN SENTENCE made readable - he had
 // misread "that band" himself - so `PLACEMENT_PHRASE` and both null arms were rewritten in
 // `world/coachMarket.ts` instead, and this card gained no new line at all.
-const roomBand = computed(() => coachRoomBand(roomNote.value))
+// ⭐ RU-23: the band and the tail of the note SHOWN – from the engine's two parts when it joined them, else from the string by the one splitter.
+const roomRead = computed<{ band: string; tail: string }>(() => {
+  const snap = game.snapshot
+  if (!snap || roomNote.value === '') return { band: '', tail: '' }
+  const parts = coachReadParts(snap.coachNotesC?.room ?? undefined)
+  if (parts !== null) return { band: renderCopy(parts.label), tail: `${ROOM_NOTE_SEP}${renderCopy(parts.tail)}` }
+  // no ref (a worker that predates it): the engine's own string, cut by the one splitter
+  const band = coachRoomBand(roomNote.value)
+  return { band, tail: roomNote.value.slice(band.length) }
+})
+const roomBand = computed(() => roomRead.value.band)
 // ⚠ THE TAIL IS THE REST OF THE ENGINE'S OWN STRING, separator and all, rather than a body re-joined
 // to a separator this file also knows. `band + tail === note` for every possible note, so the line on
 // screen is the sentence the engine wrote to the character and a test can assert exactly that - which
 // is the check that would catch a screen quietly editing copy it does not own.
-const roomTail = computed(() => roomNote.value.slice(roomBand.value.length))
+const roomTail = computed(() => roomRead.value.tail)
 
 // --- THE PLAQUE: WHAT THE COACH SHE ACTUALLY HAS TURNED OUT TO BE WORTH ------------------------
 //
@@ -525,7 +542,8 @@ const roomTail = computed(() => roomNote.value.slice(roomBand.value.length))
 // number at all, which is what makes "no figure for him on any screen" structural rather than a
 // habit.
 const edge = computed(() => game.snapshot?.coachEdge ?? null)
-const plaqueLine = computed<string>(() => edge.value?.plaqueLine ?? '')
+// ⭐ RU-23: both are closed sets of engine sentences (the seat `engine.text` walks `coachPlaqueLine` over every state), shown through the catalog; English returns them as written.
+const plaqueLine = computed<string>(() => engineText(edge.value?.plaqueLine ?? ''))
 
 // ⭐⭐ ROUND-21 #2, THE LAST OPEN ITEM – AND ONE SENTENCE THAT KEEPS THE SECOND FIGURE HONEST.
 //
@@ -539,7 +557,7 @@ const plaqueLine = computed<string>(() => edge.value?.plaqueLine ?? '')
 // corridor rather than shifting it, so the upper third of 0.5-0.9 is the upper third of 1.0-1.8 and
 // "the upper end of that band" is true of both bands at once. The placement stays a fact about the
 // man, which is what §7 protects; this is a fact about the trip.
-const travelLine = computed<string>(() => edge.value?.travelLine ?? '')
+const travelLine = computed<string>(() => engineText(edge.value?.travelLine ?? ''))
 
 type SortMode = 'fit' | 'price'
 const sort = ref<SortMode>('fit')
@@ -568,9 +586,12 @@ const rows = computed<Row[]>(() =>
     // ⚠ THE SPLIT IS `roomBand` / `roomTail`'s, to the character: the label is the engine's own first
     // clause and the tail is the REST OF THE ENGINE'S STRING, separator and all, so `band + tail`
     // is the note the engine wrote and a test can assert exactly that.
+    // ⭐ RU-23: the engine's lookup is CUT FIRST, by the one splitter, and each half is read through the catalog (the seat `engine.text` names the four labels and the four arguments): the bold label is the Russian
+    // label and the tail is the separator and the Russian argument – `band + tail === note` holds for what is shown, in English to the character.
     const note = coachProfileNote(r.tier, fitNow)
-    const profileBand = coachRoomBand(note)
-    return { ...r, fitNow, profileBand, profileTail: note.slice(profileBand.length) }
+    const band = coachRoomBand(note)
+    if (band === '') return { ...r, fitNow, profileBand: '', profileTail: note }
+    return { ...r, fitNow, profileBand: engineText(band), profileTail: `${ROOM_NOTE_SEP}${engineText(coachRoomArgument(note))}` }
   }),
 )
 
@@ -1289,7 +1310,7 @@ function scrollToTier(tier: CoachTier): void {
                DIRECTLY UNDER THE NAME AND THE PILL, above the figures: it is identity, and identity is
                read before argument. It takes the load note's own treatment rather than a louder one -
                the uplift is still the card's headline and a description must not compete with it. -->
-          <span v-if="coachBlurb(r.id)" class="cm-blurb">{{ coachBlurb(r.id) }}</span>
+          <span v-if="coachBlurb(r.id)" class="cm-blurb">{{ engineText(coachBlurb(r.id)) }}</span>
           <!-- WHAT THE RUNG IS WORTH TO HER, computed from her own headroom. Its own line, because
                it is the number the owner asked for and it must never be the thing that truncates.
 
@@ -1354,7 +1375,7 @@ function scrollToTier(tier: CoachTier): void {
                screen to explain it. Prose, not a second number: the measured spread is a few injury
                weeks over four years and printing a figure would promise precision the run cannot back.
                Below the uplift, quieter than it, because the uplift is still the card's headline. -->
-          <span class="cm-load">{{ r.loadNote }}</span>
+          <span class="cm-load">{{ engineText(r.loadNote) }}</span>
         </span>
         <!-- ⭐⭐⭐ ROUND 42 #42 - THE WEEK'S COST, THEN THE WAY IN. The price line has carried what
              the rung costs since the market shipped; what changed is the line under it. It used to

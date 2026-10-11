@@ -42,7 +42,7 @@ import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { declineRef, herDeclineLine, seasonLastWinterLine, seasonLastWinterRef } from '../composables/declineVoice'
 // ⭐ L3-6 (10.10): her line and the winter warning are drawn from their refs when the locale has them – the PICKS (which sentence, which count) are the composable's and did not move.
-import { eventText, t } from '../i18n'
+import { engineWord, eventText, t } from '../i18n'
 import { formatCentsCompact, formatCentsSignedCompact } from '../shared/money'
 import { LADDER_LABEL } from '../shared/protocol'
 import Card from './ui/Card.vue'
@@ -255,7 +255,7 @@ const lastWinterNote = computed(() => {
             </div>
             <div class="season-row">
               <span class="season-key">{{ t('Best result') }}</span>
-              <span class="season-val">{{ summary.bestResultText }}</span>
+              <span class="season-val">{{ engineWord('round', summary.bestResultText) }}</span>
             </div>
             <div class="season-row">
               <span class="season-key">{{ t('Lost to injury') }}</span>

@@ -376,9 +376,9 @@ an exhibition or ranking match.
 
 | id | English source | Russian draft |
 | --- | --- | --- |
-| RU09D-F047 | `A week off the {knockPart}. She was bored by Tuesday and said so by Wednesday.` | `Неделя отдыха для {knockPart.gen}. Во вторник заскучала, в среду сказала.` |
+| RU09D-F047 | `A week off the {knockPart}. She was bored by Tuesday and said so by Wednesday.` | `Неделя отдыха для {knockPart.gen}. Во вторник заскучала, в среду сказала.` – ⚙ 11.10 дыра {knockPart.gen} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU09D-F048 | `Rest week – doctor's orders, and ours. She watched the others hit.` | `Врач велел отдыхать, мы тоже. Она смотрела, как играют другие.` |
-| RU09D-F049 | `Ice, stretching, no court. The {knockPart} is quieter than it was.` | `Лёд, растяжка, без корта. {knockPart.nomCap} беспокоит меньше.` |
+| RU09D-F049 | `Ice, stretching, no court. The {knockPart} is quieter than it was.` | `Лёд, растяжка, без корта. {knockPart.nomCap} беспокоит меньше.` – ⚙ 11.10 дыра {knockPart.nomCap} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU09D-F050 | `She asked twice if she could go in for an hour. Twice we said no.` | `Дважды просила час на корте. Дважды мы отказали.` |
 | RU09D-F051 | `Rest week. She asked the physio twice. The answer stayed no.` | `Неделя отдыха. Дважды спросила физиотерапевта. Ответ – нет.` |
 
@@ -388,9 +388,9 @@ RU-19 staff flag – нужна форма по полу говорящего (s
 
 | id | English source | Russian draft |
 | --- | --- | --- |
-| RU09D-F052 | `She trained on the {knockPart} all week and did not mention it once.` | `Всю неделю тренировалась с повреждением {knockPart.gen}. Ни слова.` |
+| RU09D-F052 | `She trained on the {knockPart} all week and did not mention it once.` | `Всю неделю тренировалась с повреждением {knockPart.gen}. Ни слова.` – ⚙ 11.10 дыра {knockPart.gen} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU09D-F053 | `Full week on court. She strapped it up herself before every session.` | `Полная неделя на корте. Перед каждым занятием сама накладывала тейп.` |
-| RU09D-F054 | `The {knockPart} held. We watched her serve more closely than usual.` | `С {knockPart.ins} всё обошлось. За подачей следили внимательнее.` |
+| RU09D-F054 | `The {knockPart} held. We watched her serve more closely than usual.` | `С {knockPart.ins} всё обошлось. За подачей следили внимательнее.` – ⚙ 11.10 дыра {knockPart.ins} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU09D-F055 | `She trained through it. The coach said nothing and watched everything.` | `Тренировалась через боль. Тренер молчал и следил за всем.` |
 
 RU-19 staff flag – нужна форма по полу говорящего (select): `RU09D-F055` (the unnamed coach is masculine in `молчал`, `следил`).
@@ -408,9 +408,9 @@ row selection.
 
 | id | English source | Russian draft |
 | --- | --- | --- |
-| RU09D-F056 | `{AgeWord} today. She cut the first slice too large.` | `{ageWord} сегодня. Первый кусок отрезала слишком большим.` |
-| RU09D-F057 | `{AgeWord} today. She says nothing feels different.` | `{ageWord} сегодня. Говорит, ничего не изменилось.` |
-| RU09D-F058 | `{AgeWord} today. We worked around her calendar for once.` | `{ageWord} сегодня. На этот раз мы подстроились под её календарь.` |
+| RU09D-F056 | `{AgeWord} today. She cut the first slice too large.` | `{AgeWord} сегодня. Первый кусок отрезала слишком большим.` |
+| RU09D-F057 | `{AgeWord} today. She says nothing feels different.` | `{AgeWord} сегодня. Говорит, ничего не изменилось.` |
+| RU09D-F058 | `{AgeWord} today. We worked around her calendar for once.` | `{AgeWord} сегодня. На этот раз мы подстроились под её календарь.` |
 | RU09D-F059 | `Her birthday. She chose the time; we kept the cake ready.` | `Её день рождения. Время выбрала она; мы приготовили торт.` |
 
 `{ageWord}` uses the same standalone Russian age form as RU-09's diary headings. F056–F057 are
@@ -421,10 +421,10 @@ parent's roof.
 
 | id | English source | Russian draft |
 | --- | --- | --- |
-| RU09D-F060 | `{AgeWord}. {Gift}, and a smile she tried to hide.` | `{ageWord}. {birthdayGift.nomCap} – и улыбка, которую пыталась спрятать.` |
-| RU09D-F061 | `{AgeWord}. {Gift}. A pause, then a very good thank-you.` | `{ageWord}. {birthdayGift.nomCap}. Пауза, потом старательное «спасибо».` |
-| RU09D-F062 | `{AgeWord} today. She left the day blank, so we took it slowly.` | `{ageWord} сегодня. Оставила день пустым, и мы никуда не спешили.` |
-| RU09D-F063 | `{AgeWord}. {Gift} again – a tradition since {repeatAge}.` | `{ageWord}. Снова {birthdayGift.nom} – традиция с {repeatAge}-летия.` |
+| RU09D-F060 | `{AgeWord}. {Gift}, and a smile she tried to hide.` | `{AgeWord}. {Gift} – и улыбка, которую пыталась спрятать.` |
+| RU09D-F061 | `{AgeWord}. {Gift}. A pause, then a very good thank-you.` | `{AgeWord}. {Gift}. Пауза, потом старательное «спасибо».` |
+| RU09D-F062 | `{AgeWord} today. She left the day blank, so we took it slowly.` | `{AgeWord} сегодня. Оставила день пустым, и мы никуда не спешили.` |
+| RU09D-F063 | `{AgeWord}. {Gift} again – a tradition since {repeatAge}.` | `{ageWord}. Снова {birthdayGift.nom} – традиция с {repeatAge}-летия.` – ⚙ 11.10 дыра {birthdayGift.nom} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 
 `birthdayGift.nom` comes from the localized short/history noun catalogue, never the English saved
 noun. `.nomCap` is its sentence-initial form. `{repeatAge}-летия` expects the persisted numeric age;
@@ -435,8 +435,8 @@ and repeat age, so old careers localize at read time.
 
 | id | English source | Russian draft |
 | --- | --- | --- |
-| RU09D-F064 | `{AgeWord} today. Candles, a brace, and very bad timing.` | `{ageWord} сегодня. Свечи, фиксатор и ужасный выбор времени.` |
-| RU09D-F065 | `{AgeWord} today. The physio got the first call; we got the second.` | `{ageWord} сегодня. Сначала позвонила физиотерапевту, потом нам.` |
+| RU09D-F064 | `{AgeWord} today. Candles, a brace, and very bad timing.` | `{AgeWord} сегодня. Свечи, фиксатор и ужасный выбор времени.` |
+| RU09D-F065 | `{AgeWord} today. The physio got the first call; we got the second.` | `{AgeWord} сегодня. Сначала позвонила физиотерапевту, потом нам.` |
 | RU09D-F066 | `Her birthday. She blew out the candles and asked the physio how long.` | `Её день рождения. Задула свечи и спросила физиотерапевта: «Надолго?»` |
 
 All three retain both `birthday` and `injured` claims. `Фиксатор` matches the journey-home injury
@@ -465,7 +465,7 @@ away-stage photo. Russian must preserve those licences even where a sentence cou
 | RU09D-F073 | `Exams, and rehab between the papers. She said the timing was almost funny.` | `Экзамены, между ними – восстановление. По её словам, почти смешно.` |
 | RU09D-F074 | `A week of papers and physio. The one fortnight she is not missing anything.` | `Экзамены и физиотерапия. Те самые две недели, когда ничего не упускает.` |
 | RU09D-F075 | `She revised with her leg up on a chair. Nobody had to tell her to sit still.` | `Готовилась, положив ногу на стул. Просить посидеть спокойно не пришлось.` |
-| RU09D-F076 | `She revised one-handed, the {injuredPart} strapped up beside her on the table.` | `Готовилась одной рукой; {injuredPart.acc} в фиксаторе держала на столе.` |
+| RU09D-F076 | `She revised one-handed, the {injuredPart} strapped up beside her on the table.` | `Готовилась одной рукой; {injuredPart.acc} в фиксаторе держала на столе.` – ⚙ 11.10 дыра {injuredPart.acc} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU09D-F077 | `She revised standing up half the time. Sitting is what it likes least.` | `Половину времени готовилась стоя: сидя повреждение беспокоило сильнее.` |
 
 F075 is leg-only, F076 arm-only and F077 trunk-only. The Russian wording must remain keyed to that
@@ -477,7 +477,7 @@ body group; a generic injury fallback would recreate the source bug these rows w
 
 | id | English source | Russian draft |
 | --- | --- | --- |
-| RU09D-F078 | `Ice on the {injuredPart}, twice a day. She times it herself.` | `Лёд {injuredPart.loc} дважды в день. Время засекает сама.` |
+| RU09D-F078 | `Ice on the {injuredPart}, twice a day. She times it herself.` | `Лёд {injuredPart.loc} дважды в день. Время засекает сама.` – ⚙ 11.10 дыра {injuredPart.loc} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU09D-F079 | `She is walking almost normally now. The limp only shows when she is tired.` | `Ходит уже почти нормально. Хромота заметна, только когда устаёт.` |
 | RU09D-F080 | `Stairs, then flat ground, then corners. The order is not negotiable.` | `Ступени, ровная земля, повороты. Порядок обсуждению не подлежит.` |
 
@@ -485,9 +485,9 @@ body group; a generic injury fallback would recreate the source bug these rows w
 
 | id | English source | Russian draft |
 | --- | --- | --- |
-| RU09D-F081 | `Band exercises for the {injuredPart}, in front of the hall mirror.` | `Упражнения с эспандером для {injuredPart.gen} у зеркала в прихожей.` |
+| RU09D-F081 | `Band exercises for the {injuredPart}, in front of the hall mirror.` | `Упражнения с эспандером для {injuredPart.gen} у зеркала в прихожей.` – ⚙ 11.10 дыра {injuredPart.gen} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU09D-F082 | `She has been doing everything one-handed and finding it funnier than we do.` | `Всё делает одной рукой, и её это смешит сильнее, чем нас.` |
-| RU09D-F083 | `Everything is one-handed for now. The {injuredPart} sets the terms.` | `Пока всё одной рукой. Условия задаёт {injuredPart.nom}.` |
+| RU09D-F083 | `Everything is one-handed for now. The {injuredPart} sets the terms.` | `Пока всё одной рукой. Условия задаёт {injuredPart.nom}.` – ⚙ 11.10 дыра {injuredPart.nom} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU09D-F084 | `She has learned which everyday things need two hands. There are many.` | `Узнала, для скольких обычных дел нужны две руки. Таких много.` |
 
 ### 22.3 Trunk group – four
@@ -497,7 +497,7 @@ body group; a generic injury fallback would recreate the source bug these rows w
 | RU09D-F085 | `Ten minutes of core work on a mat in the hall, three times a day.` | `Трижды в день по десять минут укрепляет корпус на коврике в прихожей.` |
 | RU09D-F086 | `She has stopped picking things up off the floor without thinking about it first.` | `Теперь думает, прежде чем поднять что-то с пола.` |
 | RU09D-F087 | `Nothing heavy, nothing twisted, nothing sudden. Three rules, all week.` | `Ничего тяжёлого, никаких скручиваний и резких движений. Три правила.` |
-| RU09D-F088 | `The {injuredPart} decides how she sits, stands and sleeps this week.` | `{injuredPart.nomCap} решает, как она сидит, стоит и спит на этой неделе.` |
+| RU09D-F088 | `The {injuredPart} decides how she sits, stands and sleeps this week.` | `{injuredPart.nomCap} решает, как она сидит, стоит и спит на этой неделе.` – ⚙ 11.10 дыра {injuredPart.nomCap} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 
 The injury catalogue now needs `.loc` and `.acc` in addition to the forms listed in §19. `.loc`
 includes the required preposition because Russian may need `на колене` for one location and `в`
@@ -624,16 +624,35 @@ signal, so localization must not vary the replies merely to make the pool sound 
 
 | authored layer | English source cells | Russian drafts | state |
 | --- | ---: | ---: | --- |
-| core temperament/stage matrix | 148 | 148 | complete as DRAFT |
-| motherhood temperament matrix | 28 | 28 | complete as DRAFT |
-| bereavement | 4 | 4 | complete as DRAFT |
-| divorce | 4 | 4 | complete as DRAFT |
-| fork aftermath | 8 | 8 | complete as DRAFT |
-| explicit `WEEK_NOTES` rows | 132 | 132 | complete as DRAFT |
-| **total** | **324** | **324** | **complete as DRAFT** |
+| core temperament/stage matrix | 148 | 148 | complete as DRAFT · ⚙ 11.10 счётчик ledger-таблицы, не ряд перевода `QUESTION` |
+| motherhood temperament matrix | 28 | 28 | complete as DRAFT · ⚙ 11.10 счётчик ledger-таблицы, не ряд перевода `QUESTION` |
+| bereavement | 4 | 4 | complete as DRAFT · ⚙ 11.10 счётчик ledger-таблицы, не ряд перевода `QUESTION` |
+| divorce | 4 | 4 | complete as DRAFT · ⚙ 11.10 счётчик ledger-таблицы, не ряд перевода `QUESTION` |
+| fork aftermath | 8 | 8 | complete as DRAFT · ⚙ 11.10 счётчик ledger-таблицы, не ряд перевода `QUESTION` |
+| explicit `WEEK_NOTES` rows | 132 | 132 | complete as DRAFT · ⚙ 11.10 счётчик ledger-таблицы, не ряд перевода `QUESTION` |
+| **total** | **324** | **324** | **complete as DRAFT** · ⚙ 11.10 счётчик ledger-таблицы, не ряд перевода `QUESTION` |
 
 The 132-row count is anchored to current source, not its stale 113-row comment. Before
 implementation, add catalogue parity tests that compare these stable ids/semantic keys rather than
 English sentence text, render every body-part and birthday-gift variant, enforce the 80-character
 budget on rendered Russian, and confirm the same seeded row index in both locales. No Russian line
 may change claims, licences, chance gates or the persisted main RNG state.
+
+## ⚙ 11.10 agent-authored (бланкет) – the week notes that name the injured part, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+10 keys of `weekNotes.ts`. RU09D-F047 … F088 drafted these ten sentences over an inflected form of the body part (`{knockPart.gen}`, `{injuredPart.loc}` …) that the key does not carry – it carries the part as the code spells it, an English word. So the Russian says the place in a nominative position, in brackets or after a colon (`Лёд на больное место ({0}) дважды в день.`) and keeps each draft's other words. The birthday repeat line receives the age as an English word, the gift label and the repeat age as a number: `{0}. Снова: {1} – традиция с {2}-летия.`
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-DWN-01 | `A week off the {0}. She was bored by Tuesday and said so by Wednesday.` | `Неделя отдыха для больного места ({0}). Во вторник заскучала, в среду сказала.` |
+| RU21-DWN-02 | `Band exercises for the {0}, in front of the hall mirror.` | `Упражнения с эспандером ({0}) у зеркала в прихожей.` |
+| RU21-DWN-03 | `Everything is one-handed for now. The {0} sets the terms.` | `Пока всё одной рукой. Условия задаёт больное место: {0}.` |
+| RU21-DWN-04 | `Ice on the {0}, twice a day. She times it herself.` | `Лёд на больное место ({0}) дважды в день. Время засекает сама.` |
+| RU21-DWN-05 | `Ice, stretching, no court. The {0} is quieter than it was.` | `Лёд, растяжка, без корта. Больное место ({0}) беспокоит меньше.` |
+| RU21-DWN-06 | `She revised one-handed, the {0} strapped up beside her on the table.` | `Готовилась одной рукой, а больное место ({0}) в фиксаторе лежало рядом на столе.` |
+| RU21-DWN-07 | `She trained on the {0} all week and did not mention it once.` | `Всю неделю тренировалась с травмой ({0}) и ни разу о ней не упомянула.` |
+| RU21-DWN-08 | `The {0} decides how she sits, stands and sleeps this week.` | `На этой неделе от больного места ({0}) зависит, как она сидит, стоит и спит.` |
+| RU21-DWN-09 | `The {0} held. We watched her serve more closely than usual.` | `Больное место ({0}) выдержало. За подачей мы следили внимательнее обычного.` |
+| RU21-DWN-10 | `{0}. {1} again – a tradition since {2}.` | `{0}. Снова: {1} – традиция с {2}-летия.` |

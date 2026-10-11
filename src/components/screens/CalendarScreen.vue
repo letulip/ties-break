@@ -87,7 +87,8 @@ import { useDayCrossSweep } from '../../composables/dayCrossSweep'
 // so the two projections of the week press cannot drift (see the composable's header).
 import { softLeaveLine, useSoftLeaveGuard } from '../../composables/softLeave'
 import { weekDateLine, weekDayNumbers, weekLabel, weekRange } from '../../shared/dates'
-import { formatCents, entryFeeLabel } from '../../shared/money'
+import { formatCents } from '../../shared/money'
+import { entryFeeText } from '../../composables/entryFee'
 // D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with Season.
 import { enterActionName } from '../../composables/eventName'
 // The upcoming-event card's shared parts, owned once and drawn by the Season feed too.
@@ -618,7 +619,7 @@ const showGo = computed(() => !game.snapshot?.pending)
 
         <div class="controls cal-card-chips">
           <!-- ⭐ #28: see SeasonScreen - "no entry fee" is a fact, "$0" is a hole. -->
-          <span class="entry-fee">{{ entryFeeLabel(marker.entryFeeCents) }}</span>
+          <span class="entry-fee">{{ entryFeeText(marker.entryFeeCents) }}</span>
           <span class="pill">{{ t('closes {week}', { week: weekLabel(marker.deadlineWeek, startYear) }) }}</span>
           <span v-if="marker.entered" class="pill ok">{{ t('Entered') }}</span>
           <!-- ⭐ ROUND 41 #16 – THE WILD CARD, ON THIS SCREEN'S OWN COPY OF THE SAME CARD. Round 21

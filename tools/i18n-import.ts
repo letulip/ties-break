@@ -64,11 +64,17 @@ export interface Row {
   /** The English literal, or null when the cell is not one clean literal. */
   english: string | null
   russian: string | null
+  /** The Russian cell is EMPTY – nothing in it at all, as against a cell that holds something which is not one clean literal (both read `russian: null`). The table was seeded with the English and his column has not been written yet. */
+  russianBlank: boolean
   /** The source file the row cites (`src/App.vue:353` -> `src/App.vue`), when a cell is exactly such a path. */
   hint: string | null
   status: Status
   /** Russian equals English and the row says so (§9.5 / «Latin»): a ruled proper noun. */
   ruledLatin: boolean
+  /** ⭐ 11.10 – set ONLY by the corpus joiner (`tools/i18n-corpus-join.ts`): the family of a row whose English came from the LIVE corpus at its coordinate, because the document has no English column. A table row never carries it. */
+  corpus?: string
+  /** The joiner's coordinate for that row (`A1 first-court · sunny · note`), shown in every report line. */
+  coord?: string
 }
 
 export interface ParseStats {
@@ -235,7 +241,7 @@ function rowFrom(doc: string, line: number, cells: string[], shape: Shape, pair:
   }
   const status: Status = tokens.size === 0 ? 'DRAFT' : tokens.size === 1 ? ([...tokens][0] as Status) : 'AMBIGUOUS'
   const ruledLatin = ru.text !== null && ru.text === en.text && /§\s*9\.5|\bLatin\b/i.test(cells.join(' '))
-  return { doc, line, english: en.text, russian: ru.text, hint, status, ruledLatin }
+  return { doc, line, english: en.text, russian: ru.text, russianBlank: ru.text === null && ru.rest === '', hint, status, ruledLatin }
 }
 
 // ── the files ───────────────────────────────────────────────────────────────────────────────────────────
@@ -346,7 +352,8 @@ export interface Compiled {
   formatProv: Map<string, Prov>
 }
 
-const HOLE_TOKEN = /\{\{[^}]*\}\}|\$\{[^}]*\}|\{[A-Za-z_][\w.]*\}|\{\d+\}|\*[A-Za-z]{1,12}\*/g
+/** His placeholder spellings (`{n}`, `{0}`, `*N*`, `{{ x }}`, `${x}`) – exported so the corpus joiner spells a live key's hole the way HIS Russian does, from this one pattern. */
+export const HOLE_TOKEN = /\{\{[^}]*\}\}|\$\{[^}]*\}|\{[A-Za-z_][\w.]*\}|\{\d+\}|\*[A-Za-z]{1,12}\*/g
 
 /** The key's placeholders in order of appearance (`{0}` -> `0`), escapes skipped. */
 function keyHoles(key: string): string[] {
@@ -389,7 +396,22 @@ export function adaptPlaceholders(english: string, russian: string, key: string)
   return { value }
 }
 
-export function compile(rows: readonly Row[], live: Live): Compiled {
+// ⚠ 11.10 – THE BLANKET RULING, ONE SOURCE OF TRUTH. The owner, on seeing the merged game still
+// speak English: «всё должно быть переведено, кроме имён и названий. Все описания, пояснения,
+// записки, попапы, чаты, слова тренеров, всё» – the per-row читка gate retires and his authored
+// DRAFT rows compile as written (tables not edited, statuses kept). The mode is THIS constant, read
+// by the CLI, the check gate and every test that drives them – a flag in package.json would be a
+// second copy the l3-t net's direct runGate() call could disagree with, which it did for an hour.
+export const BLANKET_INCLUDE_DRAFTS = true
+
+/** ⭐ 11.10 – AN EMPTY RUSSIAN CELL ON A DRAFT ROW IS HIS COLUMN WAITING, NOT A DEFECT. The tables are seeded with the English and the Russian is the next thing he writes (93 such rows the day the blanket
+ *  compiled the DRAFTs – all of them were reported `ambiguous-cell`, i.e. as broken, which they are not). Only a DRAFT: an APPROVED / LANDED row with an empty Russian cell is a status with no translation
+ *  behind it – an error in the status, and it stays `ambiguous-cell`; a cell that holds something which is not one clean literal (`russianBlank` false) stays `ambiguous-cell` too. */
+const awaitsHisColumn = (row: Row): boolean => row.status === 'DRAFT' && row.russianBlank
+const russianCellWhy = (row: Row): string =>
+  row.russianBlank ? `the Russian cell is empty on a ${row.status} row – a status with no translation behind it` : 'the Russian cell is not one clean literal'
+
+export function compile(rows: readonly Row[], live: Live, opts: { includeDrafts?: boolean } = {}): Compiled {
   const index = indexCatalog(live.catalog)
   const entries = new Map<string, string>()
   const prov = new Map<string, Prov>()
@@ -403,7 +425,7 @@ export function compile(rows: readonly Row[], live: Live): Compiled {
   const formatDefs = live.formats ?? DEFAULT_FORMATS
 
   for (const row of rows) {
-    const eligible = row.status === 'APPROVED' || row.status === 'LANDED' || row.ruledLatin
+    const eligible = row.status === 'APPROVED' || row.status === 'LANDED' || row.ruledLatin || ((opts.includeDrafts ?? BLANKET_INCLUDE_DRAFTS) && row.status === 'DRAFT')
     const out = (disposition: Disposition, extra: Partial<Outcome> = {}): void => {
       outcomes.push({ row, disposition, ...extra })
     }
@@ -455,7 +477,8 @@ export function compile(rows: readonly Row[], live: Live): Compiled {
         continue
       }
       if (row.russian === null) {
-        out('ambiguous-cell', { format: fmt.id, why: 'the Russian cell is not one clean literal' })
+        if (awaitsHisColumn(row)) out('pending', { format: fmt.id })
+        else out('ambiguous-cell', { format: fmt.id, why: russianCellWhy(row) })
         continue
       }
       const made = patternFromExample(fmt, row.russian)
@@ -502,7 +525,8 @@ export function compile(rows: readonly Row[], live: Live): Compiled {
       continue
     }
     if (row.russian === null) {
-      out('ambiguous-cell', { key, why: 'the Russian cell is not one clean literal' })
+      if (awaitsHisColumn(row)) out('pending', { key, multiSurface })
+      else out('ambiguous-cell', { key, why: russianCellWhy(row) })
       continue
     }
     const adapted = adaptPlaceholders(row.english, row.russian, key)

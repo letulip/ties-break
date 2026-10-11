@@ -764,7 +764,7 @@ export function personalityLine(composure: number, temperament: Temperament): st
 
 /** Short first names, all <= 5 characters so every shape below fits the cell. Deliberately
  *  international: she meets people at school and in hotel lobbies in six countries. */
-const FRIEND_NAMES = [
+export const FRIEND_NAMES = [
   'Emma', 'Mia', 'Sofia', 'Nina', 'Lena', 'Zoe', 'Iris', 'Maja',
   'Noor', 'Yuki', 'Alba', 'Ines', 'Sara', 'Elif', 'Hana', 'Aida',
 ] as const

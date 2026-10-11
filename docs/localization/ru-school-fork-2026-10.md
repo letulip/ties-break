@@ -21,9 +21,9 @@ lines are `DRAFT`; the shared university names are RU-05/RU-12D.
 | timing lead | `The junior rungs close on age at nineteen – the season ahead is the last of them. A college place is reserved today and taken up when the academic year starts ({departsLabel}); the other two roads begin now. Nobody has to keep going.` | `В девятнадцать юниорский тур для неё закроется – впереди последний сезон. Место в университете можно закрепить сейчас: учёба начнётся {departsLabel}, а до неё она продолжит играть. Два других пути начинаются сразу. Продолжать теннис она не обязана.` |
 | departure fallback | `next September` | `в следующем сентябре` |
 | available cash | `The family has` | `На счёте семьи` |
-| rank heading | `Her {ladder} rank` | `Её место в рейтинге {localizedLadder}` |
+| rank heading | `Her {ladder} rank` | `Её место в рейтинге {ladder}` |
 | unranked | `unranked` | `Без рейтинга` |
-| rank value | `#{rank}` | `№{rank}` |
+| rank value | `#{rank}` (`ForkDialog.vue`) | `№{rank}` |
 | permanent outlay | `Spent so far` | `Безвозвратные расходы` |
 | family prize receipts | `The tennis has paid` | `Призовые семьи` |
 | tour entry cutoff | `{tier} admits down to` | `Допуск в {tier} – до места` |
@@ -54,7 +54,7 @@ names that place in its summary.
 | half coverage band | `About half the bill` | `Стипендия покрывает около половины` |
 | partial coverage band | `Part of the bill` | `Стипендия покрывает часть` |
 | no coverage band | `Nothing at all` | `Без покрытия` |
-| percentage after band | `({pct}%)` | `({pct}%)` |
+| percentage after band | `({pct}%)` | `({pct}%)` – ⚙ 11.10 ключ умер, ряд исторический – скобки с процентом собираются в коде `QUESTION` |
 | fully funded weekly bill | `Family pays nothing` | `Семья не платит` |
 | family payment | `Family pays {weekly} a week – {annual} a year` | `Семья платит {weekly} в неделю – {annual} в год` |
 | cannot currently afford | `Beyond what the family has` | `Сейчас на счёте семьи этой суммы нет` |

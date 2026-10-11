@@ -14,7 +14,7 @@
 //   §3 NOTHING SHIPS UNCOVERED: the `cp` keys of the three files are exactly the keys the corpus reaches, and every `new SaveFileError(` outside the documented dev path takes a ref;
 //   §4 THROUGH THE REAL WORKER: `importSave` answers every file variant with the kind in `code`, the English in `error` and the ref in `c` – the arm that turns red when a refusal goes back to a plain `Error`;
 //   §5 `errorText`: a ref is rendered, a bare kind and a stale ref print the raw message, and a Russian probe catalog reaches every hole and every nested clause;
-//   §6 THE OWNER'S ROWS: every key has a DRAFT row in the saves table (Russian left empty – his words).
+//   §6 THE OWNER'S ROWS: every key has a DRAFT row in the saves table; since the 11.10 blanket (RU-21) the Russian column is written by an agent, `DRAFT`, his live edit follows.
 // The mounted half (the store, `StoreError`, the Saves strip and the recovery screen drawing the translation) is tests/component/i18n-l3-7-errors-display.test.ts.
 //
 // Capture mode (`SFE_CAPTURE=<path>`) writes the outcome of every variant on WHATEVER tree it runs on; the stored fixture was captured on the pre-wave tree.
@@ -286,21 +286,25 @@ describe.skipIf(!!target)('the save-file refusals', () => {
     })
   })
 
-  describe('§6 the owner\'s rows – every key has its DRAFT row in the saves table, the Russian column empty (his words)', () => {
+  describe('§6 the owner\'s rows – every key has its DRAFT row in the saves table, and since the 11.10 blanket the Russian column is written (RU-21)', () => {
     const keys = (): Set<string> => new Set(FILES.flatMap(cpKeys))
 
-    it('each key written by the three files joins a row of ru-saves-settings-2026-10.md that has no Russian yet', () => {
+    it('each key written by the three files joins a row of ru-saves-settings-2026-10.md that carries Russian, and ru.json compiles it', () => {
       const rows = readRows(listDocs()).rows.filter((r) => r.doc === 'ru-saves-settings-2026-10.md' && r.english !== null)
       const byKey = new Map(rows.map((r) => [normKey(r.english!), r]))
       const missing: string[] = []
-      const answered: string[] = []
+      const unanswered: string[] = []
       for (const k of keys()) {
         const row = byKey.get(normKey(k.replace(/\{\d+\}/g, '${x}')))
         if (!row) missing.push(k)
-        else if (row.russian !== null) answered.push(k)
+        else if (row.russian === null) unanswered.push(k)
       }
-      expect(missing, 'a sentence with no row for the owner to write').toEqual([])
-      expect(answered, 'his Russian is not ours to write: these rows were filled in without him').toEqual([])
+      expect(missing, 'a sentence with no row').toEqual([])
+      // ⚙ 11.10, THE BLANKET (RU-21): this arm read «his Russian is not ours to write: these rows were filled in without him» until the owner ruled that everything player-facing is translated and
+      // his live edit follows the agent's draft. Re-aimed, not relaxed: an EMPTY cell is now the defect (a Russian player reads that refusal in English), and the compiled file must carry each one.
+      expect(unanswered, 'a refusal whose Russian cell is empty – the sentence reaches a Russian player in English').toEqual([])
+      const ru = JSON.parse(SRC('src/i18n/ru.json')) as Record<string, string>
+      expect([...keys()].filter((k) => !ru[k]), 'a refusal ru.json does not carry').toEqual([])
       expect(rows.length).toBeGreaterThan(30)
     })
 

@@ -31,6 +31,7 @@ import { installCatalog, missedKeys, resetI18nForTests, resetMisses, setLocale }
 import { installMemoryStorage } from './setup'
 import { assertInlineRowFits, assertRowFits, demandedWidth, lengthPx, PHONE, setViewport } from './fits'
 import { hardcodeLeaks, installPseudoLocale, pseudoCatalog } from './pseudoloc'
+import { expectCounterIsExact, expectLabelsFollowTheCatalog, recordingCatalog } from './ruCompiled'
 
 /** His approved Russian, as the importer compiled it. Every expected value below is read from here by key. */
 const RU = JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string, string>
@@ -83,6 +84,17 @@ async function openShell(opts: ShellOptions = {}): Promise<{ w: VueWrapper; game
 
 const tabLabels = (w: VueWrapper): string[] => w.findAll('.tab-btn .tab-label').map((e) => e.text())
 const tabNames = (w: VueWrapper): (string | undefined)[] => w.findAll('.tab-btn').map((e) => e.attributes('aria-label'))
+/** Every player-visible string under `root`: text nodes and the four copy attributes, in one string – for "is this word on screen" (the L2-3 instrument). */
+function seen(root: Element): string {
+  const parts: string[] = [root.textContent ?? '']
+  for (const el of [root, ...Array.from(root.querySelectorAll('*'))]) {
+    for (const a of ['title', 'aria-label', 'placeholder', 'alt']) {
+      const v = el.getAttribute(a)
+      if (v) parts.push(v)
+    }
+  }
+  return parts.join('\n')
+}
 
 describe('L2-1 parity – the English the shell shipped, byte for byte', () => {
   it('the bottom bar: five labels, the same five accessible names, the landmark `Main`', async () => {
@@ -321,10 +333,12 @@ describe('L2-1 parity – the tour, first and last mark', () => {
 
 // --- the Russian smoke: the real ru.json, the locale flipped ---------------------------------------------------
 
-describe('L2-1 Russian smoke – his approved rows reach the screen', () => {
-  it('the nav: Home and the Stats TAB read his rulings; the labels he has not approved yet stay English and count as misses', async () => {
-    installCatalog('ru', RU)
+describe('L2-1 Russian smoke – his compiled rows reach the screen', () => {
+  it('the nav: Home and the Stats TAB read his rulings; every other label follows the catalog – his Russian where ru.json has a row, English and counted where none', async () => {
+    const rec = recordingCatalog(RU)
+    installCatalog('ru', rec.catalog)
     await setLocale('ru')
+    await rec.begin() // let anything an earlier test left mounted settle first, then record
     resetMisses()
     const { w } = await openShell()
     const labels = tabLabels(w)
@@ -332,9 +346,11 @@ describe('L2-1 Russian smoke – his approved rows reach the screen', () => {
     expect(labels[3], 'the Stats tab is the NAV key, not the screen heading').toBe(ruOf('nav|Stats'))
     expect(tabNames(w)[2], 'the accessible name ships with the control').toBe(ruOf('Home'))
     expect(tabNames(w)[3]).toBe(ruOf('nav|Stats'))
-    // DRAFT rows compile nowhere: Season / Calendar / Trophies and the landmark fall back to English, counted
-    expect(labels[0]).toBe('Season')
-    expect(missedKeys()).toEqual(expect.arrayContaining(['Season', 'Calendar', 'Trophies', 'Main']))
+    // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED: «DRAFT rows compile nowhere: Season / Calendar / Trophies and the landmark fall back to English, counted» held in the читка regime. The blanket compiles his DRAFT rows as
+    // written, so each of the four says which way it falls under the catalog – his Russian on the control and not counted when ru.json has the row, English and counted when it has none.
+    expect(labels[0]).toBe(RU.Season ?? 'Season')
+    expectLabelsFollowTheCatalog(['Season', 'Calendar', 'Trophies', 'Main'], missedKeys(), RU, seen(w.element))
+    expectCounterIsExact(rec.asked, missedKeys(), RU)
     expect(missedKeys()).not.toContain('Home')
     expect(missedKeys()).not.toContain('nav|Stats')
     w.unmount()
@@ -353,15 +369,17 @@ describe('L2-1 Russian smoke – his approved rows reach the screen', () => {
     w.unmount()
   })
 
-  it('the wizard: the three family cards read the labels he approved on 07.10, the draft blurbs stay English', async () => {
+  it('the wizard: the three family cards read the labels he approved on 07.10, and every blurb follows the catalog – his Russian where ru.json has the row, English where none', async () => {
     installCatalog('ru', RU)
     await setLocale('ru')
     const w = mountWizard()
     await walkTo(w, 4)
     const rows = w.findAll('.ob-stack .ob-row')
     expect(rows.map((r) => r.get('.ob-row-title').text())).toEqual([ruOf('Wealthy'), ruOf('Middle class'), ruOf('Working class')])
-    expect(rows[0]!.get('.ob-row-blurb').text(), 'a DRAFT blurb never shows as Russian').toBe('Top academies are within reach.')
-    expect(rows[0]!.get('.ob-row-money').element.textContent).toBe('$120,000 starting budget')
+    // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED: «a DRAFT blurb never shows as Russian» was the читка regime. The blanket compiles it, so the blurb reads the catalog – his row when there is one, the English when not.
+    expect(rows[0]!.get('.ob-row-blurb').text(), 'the blurb follows the catalog').toBe(RU['Top academies are within reach.'] ?? 'Top academies are within reach.')
+    // the figure keeps its own element and the sentence is cut at the marker (`{budget} starting budget`): the line is the catalog's sentence with the figure in its hole – his row when there is one, the English when not
+    expect(rows[0]!.get('.ob-row-money').element.textContent).toBe((RU['{budget} starting budget'] ?? '{budget} starting budget').replace('{budget}', () => '$120,000'))
     w.unmount()
   })
 

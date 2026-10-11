@@ -23,6 +23,7 @@ import { lintFormats, lintRu, lintScoreTailTable, runGate, SCORE_TAIL_KEYS } fro
 import { buildCatalog, checkSeat, parseCatalog, readCatalogText, seenLiterals, serializeCatalog } from '../tools/i18n-extract'
 import type { Catalog } from '../tools/i18n-extract'
 import { englishPattern, FORMAT_EXAMPLES, FORMATS_PATH, formatIndex, patternFromExample, serializeFormats } from '../tools/i18n-formats'
+import { readAllRows } from '../tools/i18n-corpus-join'
 import { applyLanded, compile, listDocs, parseTables, planLanded, readRows, serializeRu } from '../tools/i18n-import'
 import type { Live } from '../tools/i18n-import'
 import { DECLARED_SEATS, unseatable } from '../tools/i18n-seats'
@@ -142,6 +143,10 @@ const SEAT_KEYS: Record<string, number> = {
   'finance.flavors': 26, //         14 coaching-week pool lines (both axes) + 12 gear tier flavors
   // ⭐ 10.10 (owner item 34) – the epilogue's paragraph, the sixth dynamic `t()` call:
   'ending.blurb': 9, //             ENDING_BLURB, one per `CareerEndingType` – a Record's values no census rule reads, drawn by `t(ENDING_BLURB[type])` on the last page
+  // ⭐ 11.10 (RU-22, the display boundary) – the seventh dynamic `t()` call, and the coach's two remarks on her form:
+  'form.eye': 2, //                 `coachFormNote`'s two returned literals (a `return '…'` no census rule reads), stored as `c: { k: eye }` – the keys exist the day the seat does
+  'engine.text': 291, //            `engineText(english)` in words.ts: every `label`/`blurb`/`note` of ECONOMY (the shop, the kit, the vacations, the ads, the staff rungs, the hitting partner's three notes), the radar's note pool + its training read (MOVE_POOL 45 + FOG_POOL 5, read off the source) + its five axis labels, the kid tiles' friend lines, the psychologist's four years, the three college places ⭐ RU-23 (11.10): + the coach market's own prose, 251 -> 291 – the sixteen bios, the four load notes, the profile's four labels and four arguments (cut at the dash by the engine's own splitter), the plaque's eleven and the travel line, read off the real functions.
+  'coach.room': 12, //              ⭐ RU-23 (11.10): the four labels and the four arguments of the long note's reads, the short of Home's plate that is not a label (the other three are their labels: one key each), the three rungs of the below-best ladder – `{ k: text }` refs, read off `ROOM_BANDS` and `BELOW_BEST_LADDER`
 }
 
 describe('§2 the declared seats – every dynamic key set the code asks for is named, from the real constants, and held against the tree', () => {
@@ -162,8 +167,9 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     expect(built.seatProblems).toEqual([])
     expect(built.undeclared).toEqual([])
     // ⭐ RE-AIMED 10.10 (owner item 34): 5 -> 6 – `t(ENDING_BLURB[type])` in EndingScreen, the sixth call, declared as the seat `ending.blurb` (below).
-    expect(built.stats.dynamicCalls).toBe(6)
-    expect(built.stats.dynamicDeclared).toBe(6)
+    // ⭐ RE-AIMED 11.10 (RU-22): 6 -> 7 – `t(english)` in `src/i18n/words.ts`, the display boundary's one look-up of a label the engine owns, declared as the seat `engine.text`.
+    expect(built.stats.dynamicCalls).toBe(7)
+    expect(built.stats.dynamicDeclared).toBe(7)
     expect(built.stats.dynamicUndeclared).toBe(0)
     expect(dynamicSites.map((d) => `${d.file} ${d.arg}`).sort()).toEqual([
       'src/components/EndingScreen.vue ENDING_BLURB[type]',
@@ -172,6 +178,7 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
       'src/components/LifeBeatDialog.vue replying.done',
       'src/components/LifeMomentOverlay.vue moment.confirm',
       'src/components/screens/CalendarScreen.vue fridgeNote',
+      'src/i18n/words.ts english',
     ])
   })
 
@@ -200,8 +207,9 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     }
     const bare = buildCatalog({ seats: [] })
     // 159 gift keys + 34 of the 10.10 families (the 35th, one coaching line, the census already met) + the nine epilogue paragraphs (10.10, item 34 – a Record's values, no census rule reads them)
-    // – every seat-only key the census cannot see. ⭐ RE-AIMED 10.10: 193 -> 202.
-    expect(bare.catalog.count, 'the catalog the census alone sees').toBe(built.catalog.count - 202)
+    // – every seat-only key the census cannot see. ⭐ RE-AIMED 10.10: 193 -> 202. ⭐ RE-AIMED 11.10 (RU-22): 202 -> 210 – the three hitting-partner notes (a `note:` property), the three college places (`COLLEGE_TIER_NAME` values) and the coach's two remarks on her form (returned literals); then 210 -> 260 with the radar's training read (the 50 lines of two private arrays – 45 of them already had RU-05's rows waiting).
+    // ⭐ RE-AIMED 11.10 (RU-23): 260 -> 308 – the coach market's prose (39 of the 40 new `engine.text` keys: the travel line is an exported constant the census reads on its own) and nine of the twelve keys of `coach.room` (the three rungs of the below-best ladder are `text:` properties the census already reads).
+    expect(bare.catalog.count, 'the catalog the census alone sees').toBe(built.catalog.count - 308)
     expect([...gifts].filter((g) => bare.catalog.keys[g] !== undefined)).toEqual([])
   })
 
@@ -222,8 +230,9 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
       if (!e.wrapped && now.wrapped) flipped++
       expect({ ...now, wrapped: undefined, seat: undefined, home: undefined }, k).toEqual({ ...e, wrapped: undefined, seat: undefined, home: undefined })
     }
-    // 159 gifts + 34 of the 10.10 families + the nine epilogue paragraphs (10.10, item 34), as above – ⭐ RE-AIMED 10.10: 193 -> 202
-    expect(built.stats.wrapped - bare.stats.wrapped).toBe(flipped + 202)
+    // 159 gifts + 34 of the 10.10 families + the nine epilogue paragraphs (10.10, item 34), as above – ⭐ RE-AIMED 10.10: 193 -> 202; ⭐ RE-AIMED 11.10 (RU-22): 202 -> 260, as above
+    // ⭐ RE-AIMED 11.10 (RU-23): 260 -> 308, as above
+    expect(built.stats.wrapped - bare.stats.wrapped).toBe(flipped + 308)
   })
 
   // ── the mutations: a fabricated seat, driven through the SAME code ──────────────────────────────────────────────────────────
@@ -298,9 +307,11 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     const green = runGate()
     expect(green.problems).toEqual([])
     // ⭐ RE-AIMED 10.10 (owner item 34): 5 -> 6 – the epilogue's `t(ENDING_BLURB[type])`, declared as `ending.blurb`
-    expect(green.lines.join('\n')).toMatch(/6 dynamic t\(\) calls: 6 declared, 0 unreadable/)
+    expect(green.lines.join('\n')).toMatch(/7 dynamic t\(\) calls: 7 declared, 0 unreadable/)
     // ⭐ RE-AIMED 10.10: 16 seats / 2,275 keys -> 17 / 2,284 (+ `ending.blurb`, nine keys)
-    expect(green.lines.join('\n')).toMatch(/seats {5}17 declared \(tools\/i18n-seats\.ts\) reach 2284 catalog keys/)
+    // ⭐ RE-AIMED 11.10 (RU-22): 17 / 2,284 -> 19 / 2,537 (+ `form.eye` 2 keys, + `engine.text` 251 keys – some of which another seat or the census already reached)
+    // ⭐ RE-AIMED 11.10 (RU-23): 19 / 2,537 -> 20 / 2,589 (+ `coach.room` 12 keys, + 40 `engine.text` keys for the coach market's prose)
+    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 2589 catalog keys/)
   })
 })
 
@@ -440,7 +451,10 @@ describe('§5 a row whose English is what a formatter prints compiles into a pat
   })
 
   it('⭐ THE REAL ROW: the APPROVED short year compiles to a pattern read from his own cell; `unmatched` is 0; the committed formats.ru.json is exactly that', () => {
-    const { rows } = readRows(listDocs())
+    // ⭐ RE-AIMED 11.10 (the corpus joiner, same day as the blanket): `readRows` is his replacement tables ALONE, and 791 of ru.json's entries now come from his COORDINATE tables (album,
+    // gifts, the week-note grid – no English column, joined to the live corpus by position). The claim at the foot of this case – «ru.json is exactly what the importer compiles» – is
+    // KEPT, and it needs the reader the CLI and the gate use (`readAllRows`); the table-only reader would call 791 correct entries hand edits. Nothing else in the case moved.
+    const { rows } = readAllRows(listDocs())
     const row = rows.find((r) => r.english === "W14 '31" && r.status === 'APPROVED')!
     expect(row, 'the APPROVED short-year row is in his tables').toBeDefined()
     const compiled = compile(rows, live())
@@ -455,7 +469,9 @@ describe('§5 a row whose English is what a formatter prints compiles into a pat
     // and the pattern renders BACK to his example for the sample week (the pattern is what he wrote, with holes)
     expect(formatMessage(expected, { week: 14, yy: '31' }, { locale: 'ru' })).toBe(row.russian)
     expect(compiled.outcomes.filter((x) => x.disposition === 'unmatched')).toEqual([])
-    expect(compiled.formats.size).toBe(1)
+    // ⭐ RE-AIMED 11.10 (the blanket ruling, owner: «всё должно быть переведено»): 1 -> 2 – while only APPROVED compiled the table held the short year alone; his DRAFT «W27 2033» row now
+    // compiles beside it, as the long header's pattern (`dates.weekYearLabel`). Both are READ from his cells – the pin names the two ids, never their Russian.
+    expect([...compiled.formats.keys()].sort()).toEqual(['dates.weekLabel', 'dates.weekYearLabel'])
     expect(serializeFormats(compiled.formats), 'run npm run i18n:import').toBe(readFileSync(FORMATS_PATH, 'utf8'))
     // ru.json did not move for it: a pattern is not a catalog key
     expect(serializeRu(compiled.entries)).toBe(readFileSync('src/i18n/ru.json', 'utf8'))
@@ -463,8 +479,12 @@ describe('§5 a row whose English is what a formatter prints compiles into a pat
 
   it('DRAFT rows that name a formatter example are PENDING (a live formatter), not pending-dead (drift)', () => {
     const draft = rowsOf(FIXTURE("| `W14 '31` | `STAND 14 · '31` | |", "| `W27 2033` | `STAND 27 · 2033` | |"))
-    const outs = compile(draft, live()).outcomes
+    // ⭐ RE-AIMED 11.10 (the blanket ruling): this law is the per-row читка regime (`--approved-only`) – the importer now compiles DRAFT by default, so the arm names its regime
+    const outs = compile(draft, live(), { includeDrafts: false }).outcomes
     expect(outs.map((x) => [x.disposition, x.format])).toEqual([['pending', 'dates.weekLabel'], ['pending', 'dates.weekYearLabel']])
+    // and the default regime, held beside it: the same two DRAFT rows are formats – a live formatter's example is never drift in either regime
+    const blanket = compile(draft, live()).outcomes
+    expect(blanket.map((x) => [x.disposition, x.format])).toEqual([['format', 'dates.weekLabel'], ['format', 'dates.weekYearLabel']])
   })
 
   it('MUTATION 1: his Russian that does not carry a part exactly once is `ambiguous-cell` with the reason, and compiles nothing', () => {
@@ -536,7 +556,8 @@ describe('§5 a row whose English is what a formatter prints compiles into a pat
     expect(runGate({ formatsPath: path }).problems.map((p) => p.rule)).toEqual(['formats-stale'])
     writeFileSync(path, '{}\n')
     expect(runGate({ formatsPath: path }).problems.map((p) => p.rule)).toEqual(['formats-stale'])
-    expect(runGate().lines.join('\n')).toMatch(/formats {3}1 formatter pattern\(s\) of 2 registered/)
+    // ⭐ RE-AIMED 11.10 (the blanket ruling): 1 -> 2 patterns of 2 registered – see the real-row arm above
+    expect(runGate().lines.join('\n')).toMatch(/formats {3}2 formatter pattern\(s\) of 2 registered/)
   })
 
   it('formats.ru.json is NEVER shipped by the lazy glob (it matches ru.json / es.json by name), and nothing under src/ imports it yet', () => {

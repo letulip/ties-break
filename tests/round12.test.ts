@@ -510,7 +510,8 @@ describe('R12-S2 — "Best result: best Champion"', () => {
     // ⭐ L4-2b (10.10): the card's labels read through `t()` now, so the pin reads the source the way it was written (`tTransparent`) – a wrapped label is the same word, and a changed word still reddens.
     const dialog = tTransparent(read('../src/components/SeasonSummaryDialog.vue'))
     expect(dialog).toContain('>Best result</span>')
-    expect(dialog).toContain('{{ summary.bestResultText }}')
+    // ⭐ RE-AIMED 11.10 (RU-22): the best result is still the engine's text, printed once – now through the round reader, which returns a finish word as the Russian noun under ru.json and everything else as written
+    expect(dialog).toContain("{{ engineWord('round', summary.bestResultText) }}")
     // ...the Stats season table never used the string at all – it renders the stored INDEX through
     // finishLabel itself, so it is untouched by this change...
     const history = read('../src/components/SeasonHistoryTable.vue')

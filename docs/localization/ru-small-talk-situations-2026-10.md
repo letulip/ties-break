@@ -243,7 +243,7 @@ RU kit term is `обмотка`. Her achievement is doing the small repair herse
 
 | stance | English source | Russian draft |
 | --- | --- | --- |
-| invite | `Ask how bad it looks` | `Спросить, сильно ли неровно получилось` |
+| invite | `Ask how bad it looks` | `Спросить, сильно ли это бросается в глаза` – ⚙ 11.10 выровнено на чат-ок-форму (один ключ) |
 | respond | `Say that's one less thing she needs anyone for` | `Сказать, что теперь и с этим она справляется сама` |
 | space | `Say you still can't do it either` | `Сказать, что вы до сих пор этого не умеете` |
 

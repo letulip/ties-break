@@ -802,11 +802,11 @@ describe('the marker opens ONE event, with enter-or-close', () => {
     expect(screen).not.toMatch(/^import .*ConfirmDialog/m)
     // ⚠ RE-AIMED 01.08 (chore/w1-quick-wins): formatDollars → the shared formatCents (identical string
     // on screen, one formatter for the app); the card still prints all three facts.
-    // ⚠ RE-AIMED AGAIN, round-17 #28: `formatCents` → `entryFeeLabel`. A Grand Slam levies NO entry
+    // ⚠ RE-AIMED AGAIN, round-17 #28: `formatCents` → `entryFeeLabel` (RU-22, 11.10: now `entryFeeText`, composables/entryFee.ts – the same strings through the catalogue). A Grand Slam levies NO entry
     // fee - the real rule, and the one genuinely-zero fee in the tier table - and `formatCents(0)`
     // rendered it as "$0", which reads as a number nobody filled in rather than as a fact. The claim
     // is unchanged: this card prints all three facts, so it can be its own confirmation.
-    for (const fact of ['{{ entryFeeLabel(marker.entryFeeCents) }}', 'Travel budget', // ⚠ L2-3 (08.10) – RE-AIMED, A REAL PREMISE MOVING (RU03-M05): the chip is `{{ t('closes {week}', { week: weekLabel(…) }) }}` now – the
+    for (const fact of ['{{ entryFeeText(marker.entryFeeCents) }}', 'Travel budget', // ⚠ L2-3 (08.10) – RE-AIMED, A REAL PREMISE MOVING (RU03-M05): the chip is `{{ t('closes {week}', { week: weekLabel(…) }) }}` now – the
       // deadline still prints through `weekLabel(marker.deadlineWeek, startYear)`, but the literal text `closes {{ … }}` is gone from the template
       // by design (the word and its hole are one message the Russian orders itself). The claim kept: same word, same formatter, same week.
       "{{ t('closes {week}', { week: weekLabel(marker.deadlineWeek, startYear) }) }}"]) {

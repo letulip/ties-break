@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { t } from '../i18n'
+import { engineText, t } from '../i18n'
 import { SKILL_CEILING_MAX, SKILL_KEYS, type SkillKey } from '../engine/development'
 import type { RadarAxis } from '../shared/protocol'
 
@@ -341,7 +341,7 @@ const notes = computed(() =>
     <ul v-if="notes.length" class="radar-notes">
       <li v-for="n in notes" :key="n.key">
         <span class="radar-note-axis">{{ n.label }}</span>
-        <span class="radar-note-text">{{ n.note }}</span>
+        <span class="radar-note-text">{{ engineText(n.note) }}</span>
       </li>
     </ul>
     <p v-else class="radar-quiet">{{ t('Too early to say – still learning what she has.') }}</p>
