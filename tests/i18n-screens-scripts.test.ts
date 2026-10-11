@@ -70,13 +70,12 @@ const WAVE = waveFromDocs()
 // ---- §1 the census ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /** The catalogue keys without a Russian value – the census as a pure function, so a mutation arm can drive it. */
 const withoutRussian = (ru: Readonly<Record<string, string>>): string[] => Object.keys(CAT.keys).filter((k) => ru[k] === undefined).sort()
-// ⚠ RE-AIMED 11.10, the same day: the five bare twins took their own ctx tags at the call sites
-// (btn|Load, btn|Import, heading|Stats, recap|Training, poster|def./lost to), so the bare keys DIED
-// with their last callers and their parked Russian moved onto the tagged rows. The census is TWO.
-const BARE_WITH_A_TAGGED_TWIN_IN_THE_SAME_FILE: string[] = []
-const HELD_ENDING_PARAGRAPHS = (ru: Readonly<Record<string, string>>): string[] => withoutRussian(ru).filter((k) => CAT.keys[k]!.home.join() === 'src/engine/ending.ts')
+// ⚠ RE-AIMED 11.10, the same day, twice: the five bare twins took their own ctx tags at the call
+// sites (btn|Load, btn|Import, heading|Stats, recap|Training, poster|def./lost to) and the two held
+// ending paragraphs settled by the owner's word – so the helpers that ENUMERATED the census died
+// with it (noUnusedLocals refuses a list nobody reads), and §1 asserts the zero directly.
 
-describe('§1 THE CENSUS – seven keys have no Russian, and each one is named', () => {
+describe('§1 THE CENSUS – zero keys without Russian, and the road to zero is named', () => {
   it('⚠ RE-AIMED 11.10 TO ZERO: every catalogue key has a Russian value – the owner ruled both held paragraphs the same day («she agreed to one more»; «доделывай»)', () => {
     expect(withoutRussian(RU)).toEqual([])
   })
