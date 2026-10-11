@@ -27,7 +27,7 @@ destructive confirmations. All Russian copy is `DRAFT`; user-entered names remai
 | `No careers yet.` | `Пока нет ни одной карьеры.` |
 | `Active` | `Текущая` |
 | `{week} · age {age} · last played {date}` | `{week} · возраст: {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}} · последняя игра: {date}` |
-| `Load` | `Загрузить` – ⚙ 11.10 простой ключ и его op-двойник живут в одном файле (MoreScreen.vue): хинт их не разводит, простому нужен свой ctx-ключ (класс №15/№4) `QUESTION` |
+| `btn\|Load` | `Загрузить` – ⚙ 11.10 вызов получил свой тег `btn\|` (кнопка-глагол; op-существительное живёт отдельно) |
 | `Load career – {kidName}` | `Загрузить карьеру – {kidName}` |
 | `Delete` | `Удалить` |
 | `Delete career – {kidName}` | `Удалить карьеру – {kidName}` |
@@ -221,7 +221,7 @@ or hide a worker refusal behind English `StoreError` text.
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU21-SAV-01 | `Import` | `Импортировать` – ⚙ 11.10 the plain key and its tagged twin live in one file (`MoreScreen.vue`): the join cannot tell them apart, so the plain key needs its own ctx tag in the code (class №15/№4) – the Russian waits here `QUESTION` |
+| RU21-SAV-01 | `btn\|Import` | `Импортировать` – ⚙ 11.10 the call took its own `btn\|` tag (a verb button; the op noun lives apart) |
 | RU21-SAV-02 | `▶ life events ×{0} (dev)` | `▶ события жизни ×{0} (тест)` |
 | RU21-SAV-03 | `Another tab has newer progress for this career – reload before continuing here.` | `В другой вкладке у этой карьеры более свежий прогресс – перезагрузите страницу, прежде чем продолжать здесь.` |
 | RU21-SAV-04 | `She has already said this one – there is nothing here left to answer` | `Она уже сказала своё – отвечать здесь больше нечего` |

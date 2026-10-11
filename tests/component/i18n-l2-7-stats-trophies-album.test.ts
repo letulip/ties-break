@@ -302,7 +302,7 @@ describe('L2-7 completeness – every string of the stats files is a wired key, 
 
   it('the rows RU-07 names have a wired key each, and the file that owns each really calls t() with it', () => {
     const SITES: [string, string[]][] = [
-      ['src/components/screens/StatsScreen.vue', ['Stats', 'Which ranking table', 'picker|National', 'picker|International', 'picker|Professional', 'tile|National', 'tile|International',
+      ['src/components/screens/StatsScreen.vue', ['heading|Stats', 'Which ranking table', 'picker|National', 'picker|International', 'picker|Professional', 'tile|National', 'tile|International',
         'tile|Professional', 'Local, Regional and National results. These are the points that open her next tier.',
         'Junior Tour results only. A national title is worth nothing here – the two tables never meet.', 'W15 and up – the paid tour. Junior points never cross over.',
         'Junior career – closed at {0}', 'Peaked #{0} at year-end',
@@ -345,7 +345,7 @@ describe('L2-7 seams – tables of words are getters, computed rows follow the l
   it('the picker, the tiles, the headings and the strip follow a locale flip WITHOUT a remount', async () => {
     installCatalog('ru', {
       'picker|National': 'PICK-N*', 'picker|International': 'PICK-I*', 'picker|Professional': 'PICK-P*', 'tile|Professional': 'TILE-P*', '{0} rank': 'RANK* {0}', '{0} W–L': 'WL* {0}',
-      Professional: 'FULL-P*', '{0} ranking': 'RK* {0}', 'Season by season': 'SEASONS*', 'Counting results': 'COUNTING*', 'strip|Stats': 'STRIP*', Stats: 'HEAD*', 'Which ranking table': 'WHICH*',
+      Professional: 'FULL-P*', '{0} ranking': 'RK* {0}', 'Season by season': 'SEASONS*', 'Counting results': 'COUNTING*', 'strip|Stats': 'STRIP*', 'heading|Stats': 'HEAD*', 'Which ranking table': 'WHICH*', /* ⚠ RE-AIMED 11.10: the heading took its own tag */
     })
     const w = mountStats()
     expect(seen(w.element)).toContain('Professional ranking')
@@ -417,7 +417,7 @@ describe('L2-7 context tags – added where one English needs two Russians (meas
   it('the mounted sites ask for the TAGGED key, not the bare one (a stand-in catalog that only knows the tags and decoys for the bare words)', async () => {
     installCatalog('ru', {
       'picker|National': 'PN*', 'picker|International': 'PI*', 'picker|Professional': 'PP*', National: 'BARE*', International: 'BARE*',
-      'tile|Professional': 'TP*', Professional: 'BARE*', 'strip|Stats': 'STRIP*', 'counting|Tier': 'TOURN*', Tier: 'BARE*', Stats: 'HEAD*',
+      'tile|Professional': 'TP*', Professional: 'BARE*', 'strip|Stats': 'STRIP*', 'counting|Tier': 'TOURN*', Tier: 'BARE*', 'heading|Stats': 'HEAD*', // ⚠ RE-AIMED 11.10
     })
     await setLocale('ru')
     const w = mountStats()

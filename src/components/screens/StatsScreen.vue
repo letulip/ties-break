@@ -393,7 +393,7 @@ function goToSection(id: string): void {
 <template>
   <template v-if="game.snapshot">
     <section>
-      <h2>{{ t('Stats') }}</h2>
+      <h2>{{ t('heading|Stats') }}</h2>
       <!-- WHICH TABLE. Above the tiles, because it governs every figure under it. Carries this
            screen's own class because the shared plate comes off here - see .stats-ladder-row. -->
       <SegmentedRow

@@ -937,7 +937,7 @@ const practiceWeekLabel = computed(() => weekLabel(week.value, startYear.value))
            much, because a number there would unpick the radar on screen C – see the script.
            ⭐ ROUND 41 #11 – padding rides Card's own default now, see the Finances tile above. -->
       <Card class="recap-tile">
-        <Eyebrow>{{ t('Training') }}</Eyebrow>
+        <Eyebrow>{{ t('recap|Training') }}</Eyebrow>
         <div class="recap-rows">
           <div class="recap-row">
             <span class="recap-row-key">{{ t('On court') }}</span>

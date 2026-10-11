@@ -402,7 +402,7 @@ async function onImportPicked(e: Event) {
     // Destructive ONLY when it really is: an import that replaces nothing is not a red button, and
     // colouring it red anyway is the same mistake as warning identically in both cases.
     danger: existing !== undefined,
-    confirmLabel: () => (existing ? t('Overwrite') : t('Import')),
+    confirmLabel: () => (existing ? t('Overwrite') : t('btn|Import')),
     // The File object outlives the picker, so this closure – and Retry after it – can re-read the
     // same file after a transient failure (worker hiccup, storage pressure) without asking the
     // player to find it again.
@@ -645,7 +645,7 @@ const TAB_OPTIONS = computed(() => [
           :disabled="game.busy || c.careerId === activeCareerId"
           :aria-label="t('Load career – {0}', [c.kidName])"
           @click="askLoadCareer(c)"
-        >{{ t('Load') }}</button>
+        >{{ t('btn|Load') }}</button>
         <button
           class="danger"
           :disabled="game.busy"
@@ -694,7 +694,7 @@ const TAB_OPTIONS = computed(() => [
               :disabled="game.busy"
               :aria-label="t('Load save {0}', [s.name])"
               @click="tracked(() => game.restoreSlot(s.slot))"
-            >{{ t('Load') }}</button>
+            >{{ t('btn|Load') }}</button>
             <!-- TB-19: the delete beside it is routed through the shared ConfirmDialog - it was
                  the screen's one unconfirmed irreversible action. See askDeleteSlot. -->
             <IconButton

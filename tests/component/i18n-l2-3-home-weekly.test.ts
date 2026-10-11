@@ -212,7 +212,7 @@ describe('L2-3 completeness – every string of the batch files is a wired key, 
       'MON', 'SUN', 'Monday', 'Sunday', 'Close this tournament', 'Enter', 'Not enough funds', 'closes {week}', 'wild card',
       'Back to Home', 'Close the week\'s story', 'No event – training week', 'Latest match: {score}', 'Grind 85/15', 'Training {train}% · Rest {rest}%', 'Planned spend', 'Proceed to Home',
       'Week story, {week}', 'Asleep', 'in the airport on the way home', 'recap|Income', 'Family income', 'recap|Spent', 'recap|Balance',
-      'Her cut {pct}% – {amount} into her own account.', 'The income above is what the family kept.', 'dot|Training', 'Training', 'Rest', '{n} of 7 days training',
+      'Her cut {pct}% – {amount} into her own account.', 'The income above is what the family kept.', 'dot|Training', 'recap|Training', 'Rest', '{n} of 7 days training',
       'recap|Steady', 'Low', 'Hurt', 'On the mend', 'Frustrated', 'A quiet week.', '{ladder} rank up {n} – now #{rank}', '{ladder} rank down {n} – now #{rank}',
       'She played her practice match', 'Watch the replay', 'Next goal', 'Win one match at the {event}', 'Win the {event}', 'Reach the {round} at the {event}', 'Work on her {axis}',
     ]
@@ -292,6 +292,7 @@ describe('L2-3 context tags – added where one English needs two Russians (meas
     ['recap|Focused', 'Focused'],
     ['recap|Tired', 'Tired'],
     ['dot|Training', 'Training'],
+    ['recap|Training', 'Training'], // ⚠ 11.10: the eyebrow took its own tag beside the dot
   ]
   it.each(TAGS)('%s is a wired key that renders the bare English', (tagged, bare) => {
     expect(CATALOG.keys[tagged]?.wrapped, `${tagged} is not wired`).toBe(true)

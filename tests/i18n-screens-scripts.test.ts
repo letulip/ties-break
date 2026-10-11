@@ -16,7 +16,7 @@
 import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { analyzeMessage, splitContext, translate, type MissReason } from '../src/shared/i18n'
+import { analyzeMessage, translate, type MissReason } from '../src/shared/i18n'
 import { liveCorpora, readAllRows } from '../tools/i18n-corpus-join'
 import { CATALOG_PATH, parseCatalog, seenLiterals } from '../tools/i18n-extract'
 import { compile, listDocs, TABLES_DIR } from '../tools/i18n-import'
@@ -70,8 +70,10 @@ const WAVE = waveFromDocs()
 // ---- §1 the census ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 /** The catalogue keys without a Russian value – the census as a pure function, so a mutation arm can drive it. */
 const withoutRussian = (ru: Readonly<Record<string, string>>): string[] => Object.keys(CAT.keys).filter((k) => ru[k] === undefined).sort()
-/** Five bare keys whose tagged twin lives in the same file: the importer's join (English text + a file hint) cannot tell two keys of one file apart, so no row reaches the plain key. */
-const BARE_WITH_A_TAGGED_TWIN_IN_THE_SAME_FILE = ['Import', 'Load', 'Stats', 'Training', 'def.']
+// ⚠ RE-AIMED 11.10, the same day: the five bare twins took their own ctx tags at the call sites
+// (btn|Load, btn|Import, heading|Stats, recap|Training, poster|def./lost to), so the bare keys DIED
+// with their last callers and their parked Russian moved onto the tagged rows. The census is TWO.
+const BARE_WITH_A_TAGGED_TWIN_IN_THE_SAME_FILE: string[] = []
 const HELD_ENDING_PARAGRAPHS = (ru: Readonly<Record<string, string>>): string[] => withoutRussian(ru).filter((k) => CAT.keys[k]!.home.join() === 'src/engine/ending.ts')
 
 describe('§1 THE CENSUS – seven keys have no Russian, and each one is named', () => {
@@ -80,26 +82,27 @@ describe('§1 THE CENSUS – seven keys have no Russian, and each one is named',
     const held = HELD_ENDING_PARAGRAPHS(RU)
     expect(held, 'the two ENDING_BLURB paragraphs the owner held on 10.10 (their English is under question)').toHaveLength(2)
     expect(left.filter((k) => !held.includes(k)), 'every other catalogue key has a Russian value').toEqual([...BARE_WITH_A_TAGGED_TWIN_IN_THE_SAME_FILE].sort())
-    expect(left).toHaveLength(7)
+    expect(left).toHaveLength(2)
   })
 
-  it('each of the five really has a tagged twin on the same file (that is why no table row can reach it) and is the plain half of the pair', () => {
-    for (const plain of BARE_WITH_A_TAGGED_TWIN_IN_THE_SAME_FILE) {
-      const homes = CAT.keys[plain]!.home
-      const twins = Object.keys(CAT.keys).filter((k) => k !== plain && splitContext(k).ctx !== null && splitContext(k).text === plain && CAT.keys[k]!.home.some((h) => homes.includes(h)))
-      expect(twins.length, `${plain}: a tagged key of the same English on one of ${homes.join(', ')}`).toBeGreaterThanOrEqual(1)
+  it('the five one-time bare twins are resolved: the bare keys are gone and their tagged heirs carry Russian', () => {
+    for (const heir of ['btn|Load', 'btn|Import', 'heading|Stats', 'recap|Training', 'poster|def.']) {
+      expect(CAT.keys[heir], heir).toBeDefined()
+      expect(RU[heir], `${heir} carries the parked Russian`).toBeDefined()
     }
+    for (const dead of ['Load', 'Import', 'Stats', 'Training', 'def.']) expect(CAT.keys[dead], `${dead} died with its last caller`).toBeUndefined()
   })
 
-  it('their Russian is parked, not lost: three have their own `QUESTION` row in this wave (Import, Stats, def.), the other two in the older ones', () => {
-    expect([...WAVE.parked].sort()).toEqual(['Import', 'Stats', 'def.'])
+  it('the parked Russian moved onto the tagged heirs the same day; only the historic def. row keeps its QUESTION', () => {
+    // ⚠ RE-AIMED 11.10: Import and Stats re-pointed to btn|Import / heading|Stats and compile; def. died into the existing poster| pair.
+    expect([...WAVE.parked].sort()).toEqual(['def.'])
   })
 })
 
 // ---- §2 the wave renders ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 describe('§2 THE WAVE – 681 keys, every value rendered under the real ru.json', () => {
   it('681 keys were added by this wave: 628 new rows and 53 scaffold cells', () => {
-    expect(WAVE.keys.size).toBe(681)
+    expect(WAVE.keys.size).toBe(683) /* ⚠ 11.10: +2 – the Import/Stats rows re-pointed to their tagged heirs the same day */
     expect(WAVE.scaffold).toBe(53)
   })
 
@@ -296,7 +299,7 @@ describe('§5 THE ARMS BITE – the nets above are not vacuous', () => {
     const [victim] = Object.keys(RU).filter((k) => WAVE.keys.has(k))
     const dropped = { ...RU }
     delete dropped[victim!]
-    expect(withoutRussian(dropped)).toHaveLength(8)
-    expect(withoutRussian(RU)).toHaveLength(7)
+    expect(withoutRussian(dropped)).toHaveLength(3) /* ⚠ 11.10: the census fell 7 -> 2 when the five twins took their tags */
+    expect(withoutRussian(RU)).toHaveLength(2)
   })
 })

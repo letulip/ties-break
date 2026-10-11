@@ -587,7 +587,7 @@ describe('L2-11 seams – a flip re-labels a mounted More and a blocking confirm
       '{0} KB': '{0} KB-X',
       '{0} min ago': '{0} MIN-AGO',
       Active: 'ACTIVE-PILL',
-      Load: 'LOAD-B',
+      'btn|Load': 'LOAD-B', // ⚠ RE-AIMED 11.10: the button took its own btn| tag (the five bare twins)
       Delete: 'DELETE-B',
       Cancel: 'CANCEL-B',
       'Load career – {0}': 'LOAD-CAREER<{0}>',
@@ -769,7 +769,7 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
     const ru = nouns.map((r) => r.russian)
     expect(ru).toHaveLength(6)
     // `Load` the button has a clean row and a Russian; the noun in the status row is a DIFFERENT Russian
-    const verb = rowsFor('Load')
+    const verb = rowsFor('btn|Load') // ⚠ RE-AIMED 11.10: the verb row lives on the btn| tag now
     expect(verb.length).toBeGreaterThanOrEqual(1)
     expect(new Set(verb.map((r) => r.russian)).size).toBe(1)
     expect(ru[1]).not.toBe(verb[0]!.russian)
@@ -777,10 +777,10 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
     const importFile = rowsFor('Import a save file')
     expect(importFile).toHaveLength(1)
     expect(importFile[0]!.russian).not.toBe(ru[5])
-    // the tagged keys exist; the bare `Load` and `Import` stay the buttons'
-    for (const k of ['op|Save', 'op|Load', 'op|Delete save', 'op|Delete career', 'op|Export', 'op|Import']) expect(CATALOG.keys[k]?.home, k).toEqual(['src/components/screens/MoreScreen.vue'])
-    expect(CATALOG.keys.Load?.home).toEqual(['src/components/screens/MoreScreen.vue'])
-    expect(CATALOG.keys.Import?.home).toEqual(['src/components/screens/MoreScreen.vue'])
+    // ⚠ RE-AIMED 11.10: the buttons took their own btn| tags (the five bare twins died with their last callers)
+    for (const k of ['op|Save', 'op|Load', 'op|Delete save', 'op|Delete career', 'op|Export', 'op|Import', 'btn|Load', 'btn|Import']) expect(CATALOG.keys[k]?.home, k).toEqual(['src/components/screens/MoreScreen.vue'])
+    expect(CATALOG.keys.Load, 'the bare key died with its last caller').toBeUndefined()
+    expect(CATALOG.keys.Import, 'the bare Import died with its last caller too').toBeUndefined()
   })
 
   it('⚠ THE NAME TRAP: the saves table\'s column `Name` and the wizard\'s summary term `Name` are two Russians – the column takes `saves|Name`', () => {

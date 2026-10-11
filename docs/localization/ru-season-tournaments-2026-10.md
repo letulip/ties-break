@@ -756,7 +756,7 @@ records RU-07 and worker-event history RU-11.
 | RU21-SEA-79 | `Skip {0}? The entry fee is forfeited – the list closed with her on it. Travel is refunded and the week passes without playing.` | `Пропустить турнир «{0}»? Заявочный взнос не возвращается – список закрылся, когда она уже была в нём. Дорожные расходы вернутся, а неделя пройдёт без игры.` |
 | RU21-SEA-80 | `Three wins for the title.` | `До титула – три победы.` |
 | RU21-SEA-81 | `Two wins for the title.` | `До титула – две победы.` |
-| RU21-SEA-82 | `def.` | `обыграла` – ⚙ 11.10 the plain key and its tagged twin live in one file (`TournamentFlow.vue`): the join cannot tell them apart, so the plain key needs its own ctx tag in the code (class №15/№4) – the Russian waits here `QUESTION` |
+| RU21-SEA-82 | `def.` | `обыграла` – ⚙ 11.10 RESOLVED: оба вызова переведены на существующие `poster\|`-ключи, голый ключ умер; ряд исторический `QUESTION` |
 | RU21-SEA-83 | `in the Final` | `в финале` |
 | RU21-SEA-84 | `path\|L` | `П` |
 | RU21-SEA-85 | `path\|W` | `В` |

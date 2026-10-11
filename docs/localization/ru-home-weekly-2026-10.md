@@ -539,7 +539,7 @@ take a formatted `{amount}` and an integer `{pct}`; they must not rebuild either
 
 | id | source | English | Russian |
 | --- | --- | --- | --- |
-| RU03-RT01 | tile eyebrow | `Training` | `Тренировки` – ⚙ 11.10 плитка и её dot-двойник живут в одном файле (WeekRecapCard.vue): хинт их не разводит, плитке нужен свой ctx-ключ (класс №15/№4) `QUESTION` |
+| RU03-RT01 | tile eyebrow | `recap\|Training` | `Тренировки` – ⚙ 11.10 плитка получила свой тег (dot-двойник в единственном числе остаётся точке) |
 | RU03-RT02 | plan row and dot tooltip | `On court` | `На корте` |
 | RU03-RT02b | plan row and dot tooltip | `dot\|Training` | `Тренировка` |
 | RU03-RT03 | plan row and dot tooltip | `Rest` | `Отдых` |

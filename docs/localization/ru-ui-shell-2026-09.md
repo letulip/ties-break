@@ -117,7 +117,7 @@ caller must not invent a synonym merely because it lives in another file.
 | RU01-C12 | `Watch again` | `Посмотреть ещё раз` | replay from start |
 | RU01-C13 | `To result` | `К результату` | leave playback for box score |
 | RU01-C14 | `Skip to result` | `Сразу к результату` | skip unviewed play |
-| RU01-C15 | `Load` | `Загрузить` – ⚙ 11.10 простой ключ и его op-двойник живут в одном файле (MoreScreen.vue): хинт их не разводит, простому нужен свой ctx-ключ (класс №15/№4) `QUESTION` | save/career load |
+| RU01-C15 | `btn\|Load` | `Загрузить` – ⚙ 11.10 вызов затегирован `btn\|`; дубль ряда в saves-таблице несёт то же значение | save/career load |
 | RU01-C16 | `Delete` | `Удалить` | destructive; confirmation remains separate |
 | RU01-C17 | `Save as…` | `Сохранить как…` | named save |
 

@@ -1379,7 +1379,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
         <div v-if="pathCells.length" class="tf-path" :style="{ gridTemplateColumns: `repeat(${pathCells.length}, 1fr)` }">
           <div v-for="(c, i) in pathCells" :key="i" class="tf-path-cell" :class="{ lost: !c.won }">
             <span class="tf-path-round">{{ c.short }}</span>
-            <span class="tf-path-opp">{{ c.won ? t('def.') : t('lost to') }} <b>{{ c.opp }}</b></span>
+            <span class="tf-path-opp">{{ c.won ? t('poster|def.') : t('poster|lost to') }} <b>{{ c.opp }}</b></span>
             <span class="tf-path-score num">{{ c.score }}</span>
             <svg class="tf-path-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
@@ -1436,7 +1436,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
         <div v-if="pathCells.length" class="tf-path" :style="{ gridTemplateColumns: `repeat(${pathCells.length}, 1fr)` }">
           <div v-for="(c, i) in pathCells" :key="i" class="tf-path-cell" :class="{ lost: !c.won }">
             <span class="tf-path-round">{{ c.short }}</span>
-            <span class="tf-path-opp">{{ c.won ? t('def.') : t('lost to') }} <b>{{ c.opp }}</b></span>
+            <span class="tf-path-opp">{{ c.won ? t('poster|def.') : t('poster|lost to') }} <b>{{ c.opp }}</b></span>
             <span class="tf-path-score num">{{ c.score }}</span>
             <svg class="tf-path-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
