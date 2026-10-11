@@ -74,6 +74,7 @@
     "tools/his-careers-dose.ts",
     "tools/i18n-check.ts",
     "tools/i18n-cli.ts",
+    "tools/i18n-corpus-join.ts",
     "tools/i18n-extract.ts",
     "tools/i18n-formats.ts",
     "tools/i18n-import.ts",

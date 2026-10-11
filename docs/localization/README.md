@@ -18,6 +18,13 @@ last-reviewed: 2026-10-07
   rows he ruled on 07.10 carry `APPROVED` with the date (`Новая история`, the three family
   labels, the short year; `docs/decisions.md`).
 - Runtime code and tests remain the authority for what a line means and when it appears.
+- Three documents carry no English column – the album corpus (`ru-album-corpus`), the birthday gifts
+  (`ru-birthday-corpus`) and the week-note grid (`ru-diary-week-notes-corpus`): a cell is addressed by where it
+  sits (occasion, voice, register / gift, field / voice, moment, stage). `tools/i18n-corpus-join.ts` joins each cell to
+  the live corpus at that coordinate (the English there is the key) and the pair compiles like any other row.
+  A coordinate the live corpus no longer has is a `corpus-orphan`: named in `npm run i18n:check`, never compiled, and
+  not a failure of the gate – it waits for the owner to re-aim it. The gift `event` line is a Russian-only addition with no English field to
+  be its key yet, so it is reported the same way until the engine grows one.
 - The localization work covers player-facing text only: visible copy, accessibility names,
   generated narrative, letters, match commentary and formatters. Developer comments and historical
   documents are not translation targets.

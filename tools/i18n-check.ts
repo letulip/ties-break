@@ -22,10 +22,18 @@
 //   seats              (L3-T) a declared seat (tools/i18n-seats.ts) the tree no longer backs is a RED – it would mark keys wired
 //                      that no code asks for.
 //   record files       the two skipped files exist under the names the importer skips.
+//   corpus files       (11.10) the three coordinate documents the corpus joiner reads BY NAME (`CORPUS_DOCS` in tools/i18n-corpus-join.ts) exist – a rename would
+//                      silently turn a whole family of his Russian off, the same failure the record-file rule closes for the two records.
+//   conflict           (the importer's own) now also covers a corpus cell whose Russian disagrees with another row for the same key – both are named, the key compiles nowhere.
 //   not shipped        nothing under src/ imports catalog.en.json (a static import would bundle it).
 //
 // What it REPORTS and never fails on: the same-English-many-surfaces flag (until a ctx column exists in his
 // tables), drift among DRAFT rows (his baseline is d69ff15d and main moves), and the coverage per batch.
+//
+// ⭐ 11.10 – THE CORPUS ORPHANS ARE IN THAT SECOND LIST, ON PURPOSE. A coordinate of his that finds no pair in the live corpus (`moved`: the id, voice or band the English no
+// longer has) is the same fact as a dead DRAFT row – the English walked away from his baseline and the line waits for him to re-aim it; `russian-only` (the gift table's `event`)
+// is a sentence he added for Russian that has no English to be its key until the engine grows the field. Neither is a defect of the tree, so the gate PRINTS the count and
+// the names (renderCorpusReport) and goes red only for what IS one: a conflict, a malformed ru.json, a corpus document gone from disk.
 //
 // ⚠ EVERY RULE IS A PURE FUNCTION OVER PLAIN DATA (`lintRu`, `lintCatalogKeys`), so the mutation arms in
 // tests/i18n-pipeline.test.ts drive the SAME code with a fabricated mutation and watch it go red – a gate no
@@ -36,7 +44,9 @@ import { join } from 'node:path'
 import { analyzeMessage, MessageError, splitContext } from '../src/shared/i18n'
 import { buildCatalog, CATALOG_PATH, diffCatalogs, parseCatalog, readCatalogText, seenLiterals, serializeCatalog } from './i18n-extract'
 import type { Catalog } from './i18n-extract'
-import { compile, listDocs, readRows, RECORD_FILES, renderReport, RU_PATH, serializeRu, TABLES_DIR } from './i18n-import'
+import { liveCorpora, missingCorpusDocs, readAllRows, renderCorpusReport } from './i18n-corpus-join'
+import type { Corpora } from './i18n-corpus-join'
+import { compile, listDocs, RECORD_FILES, renderReport, RU_PATH, serializeRu, TABLES_DIR } from './i18n-import'
 import { FORMAT_EXAMPLES, FORMATS_PATH, serializeFormats } from './i18n-formats'
 import type { FormatDef } from './i18n-formats'
 
@@ -178,7 +188,7 @@ export interface GateResult {
   problems: Problem[]
 }
 
-export function runGate(opts: { tablesDir?: string; catalogPath?: string; ruPath?: string; formatsPath?: string; build?: Parameters<typeof buildCatalog>[0] } = {}): GateResult {
+export function runGate(opts: { tablesDir?: string; catalogPath?: string; ruPath?: string; formatsPath?: string; build?: Parameters<typeof buildCatalog>[0]; corpora?: Corpora } = {}): GateResult {
   const tablesDir = opts.tablesDir ?? TABLES_DIR
   const catalogPath = opts.catalogPath ?? CATALOG_PATH
   const ruPath = opts.ruPath ?? RU_PATH
@@ -213,7 +223,10 @@ export function runGate(opts: { tablesDir?: string; catalogPath?: string; ruPath
   lines.push(`seats     ${s.seats} declared (tools/i18n-seats.ts) reach ${s.seatKeys} catalog keys${fresh.undeclared.length > 0 ? `; UNDECLARED dynamic calls: ${fresh.undeclared.map((d) => `${d.file}:${d.line} t(${d.arg})`).join(', ')}` : ''}`)
   problems.push(...lintCatalogKeys(fresh.catalog))
 
-  const { rows, stats } = readRows(listDocs(tablesDir), tablesDir)
+  // ⭐ 11.10: the corpus joiner's coordinate tables ride the same compile as his replacement tables (one reader – `readAllRows` – for the CLI and for this gate).
+  const corpora = opts.corpora ?? liveCorpora()
+  for (const d of missingCorpusDocs(tablesDir)) problems.push({ rule: 'corpus-file', where: d, detail: 'a coordinate document the corpus joiner reads by name is gone – a rename would silently turn a whole family of his Russian off' })
+  const { rows, stats, corpus } = readAllRows(listDocs(tablesDir), tablesDir, corpora)
   const compiled = compile(rows, { catalog: catalog ?? fresh.catalog, seen: seenLiterals })
   const ruText = existsSync(ruPath) ? readFileSync(ruPath, 'utf8') : null
   const wanted = serializeRu(compiled.entries)
@@ -245,6 +258,7 @@ export function runGate(opts: { tablesDir?: string; catalogPath?: string; ruPath
   lines.push(`ru.json   ${Object.keys(ru).length} entries (${[...compiled.prov.values()].filter((p) => p.identity).length} identity: product mark / ruled Latin), compiled from ${stats.replacement} replacement tables, ${RECORD_FILES.length} record files skipped`)
   lines.push(`formats   ${Object.keys(formats).length} formatter pattern(s) of ${FORMAT_EXAMPLES.length} registered (${formatsPath})`)
   lines.push(...renderReport(compiled, stats, { catalog: catalog ?? fresh.catalog, seen: seenLiterals }).map((l) => `  ${l}`))
+  lines.push(...renderCorpusReport(corpus, compiled, corpora).map((l) => `  ${l}`))
   lines.push(`i18n:check ${problems.length === 0 ? 'green' : `RED (${problems.length})`} in ${process.uptime().toFixed(1)} s of process time (the tree scan at import is most of it)`)
   return { lines, problems }
 }

@@ -23,6 +23,7 @@ import { lintFormats, lintRu, lintScoreTailTable, runGate, SCORE_TAIL_KEYS } fro
 import { buildCatalog, checkSeat, parseCatalog, readCatalogText, seenLiterals, serializeCatalog } from '../tools/i18n-extract'
 import type { Catalog } from '../tools/i18n-extract'
 import { englishPattern, FORMAT_EXAMPLES, FORMATS_PATH, formatIndex, patternFromExample, serializeFormats } from '../tools/i18n-formats'
+import { readAllRows } from '../tools/i18n-corpus-join'
 import { applyLanded, compile, listDocs, parseTables, planLanded, readRows, serializeRu } from '../tools/i18n-import'
 import type { Live } from '../tools/i18n-import'
 import { DECLARED_SEATS, unseatable } from '../tools/i18n-seats'
@@ -440,7 +441,10 @@ describe('§5 a row whose English is what a formatter prints compiles into a pat
   })
 
   it('⭐ THE REAL ROW: the APPROVED short year compiles to a pattern read from his own cell; `unmatched` is 0; the committed formats.ru.json is exactly that', () => {
-    const { rows } = readRows(listDocs())
+    // ⭐ RE-AIMED 11.10 (the corpus joiner, same day as the blanket): `readRows` is his replacement tables ALONE, and 791 of ru.json's entries now come from his COORDINATE tables (album,
+    // gifts, the week-note grid – no English column, joined to the live corpus by position). The claim at the foot of this case – «ru.json is exactly what the importer compiles» – is
+    // KEPT, and it needs the reader the CLI and the gate use (`readAllRows`); the table-only reader would call 791 correct entries hand edits. Nothing else in the case moved.
+    const { rows } = readAllRows(listDocs())
     const row = rows.find((r) => r.english === "W14 '31" && r.status === 'APPROVED')!
     expect(row, 'the APPROVED short-year row is in his tables').toBeDefined()
     const compiled = compile(rows, live())

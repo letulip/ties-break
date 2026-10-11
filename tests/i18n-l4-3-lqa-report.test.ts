@@ -7,7 +7,8 @@
 import { describe, expect, it } from 'vitest'
 import { AREA_UNLISTED, TOP_N, buildReport, catalogAreaTotals, evaluateGate, renderConsole, renderMarkdown, summarizeRoute, type CatalogIndex, type GateBatch, type RouteRecord } from '../tools/lqa-ru-report'
 import { batchName, knownBatches } from '../tools/lqa-ru-batches'
-import { compile, listDocs, readRows, TABLES_DIR } from '../tools/i18n-import'
+import { readAllRows } from '../tools/i18n-corpus-join'
+import { compile, listDocs, TABLES_DIR } from '../tools/i18n-import'
 import { parseCatalog, seenLiterals, CATALOG_PATH } from '../tools/i18n-extract'
 import { readFileSync } from 'node:fs'
 
@@ -136,7 +137,8 @@ describe('the zero-gate', () => {
 
 describe('the batches, read from his real tables', () => {
   const catalog = parseCatalog(readFileSync(CATALOG_PATH, 'utf8'))
-  const { rows } = readRows(listDocs(TABLES_DIR), TABLES_DIR)
+  // ⭐ 11.10: the same reader the tool uses (`tools/lqa-ru.ts`) – the corpus joiner's three documents are batches too, and their keys are catalog keys like any other
+  const { rows } = readAllRows(listDocs(TABLES_DIR), TABLES_DIR)
   const known = knownBatches(compile(rows, { catalog, seen: seenLiterals }))
 
   it('a batch is a table doc minus its prefix and date, the importer report\'s own spelling', () => {

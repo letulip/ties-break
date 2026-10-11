@@ -71,6 +71,10 @@ export interface Row {
   status: Status
   /** Russian equals English and the row says so (§9.5 / «Latin»): a ruled proper noun. */
   ruledLatin: boolean
+  /** ⭐ 11.10 – set ONLY by the corpus joiner (`tools/i18n-corpus-join.ts`): the family of a row whose English came from the LIVE corpus at its coordinate, because the document has no English column. A table row never carries it. */
+  corpus?: string
+  /** The joiner's coordinate for that row (`A1 first-court · sunny · note`), shown in every report line. */
+  coord?: string
 }
 
 export interface ParseStats {
@@ -348,7 +352,8 @@ export interface Compiled {
   formatProv: Map<string, Prov>
 }
 
-const HOLE_TOKEN = /\{\{[^}]*\}\}|\$\{[^}]*\}|\{[A-Za-z_][\w.]*\}|\{\d+\}|\*[A-Za-z]{1,12}\*/g
+/** His placeholder spellings (`{n}`, `{0}`, `*N*`, `{{ x }}`, `${x}`) – exported so the corpus joiner spells a live key's hole the way HIS Russian does, from this one pattern. */
+export const HOLE_TOKEN = /\{\{[^}]*\}\}|\$\{[^}]*\}|\{[A-Za-z_][\w.]*\}|\{\d+\}|\*[A-Za-z]{1,12}\*/g
 
 /** The key's placeholders in order of appearance (`{0}` -> `0`), escapes skipped. */
 function keyHoles(key: string): string[] {
