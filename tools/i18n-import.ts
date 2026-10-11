@@ -64,6 +64,8 @@ export interface Row {
   /** The English literal, or null when the cell is not one clean literal. */
   english: string | null
   russian: string | null
+  /** The Russian cell is EMPTY – nothing in it at all, as against a cell that holds something which is not one clean literal (both read `russian: null`). The table was seeded with the English and his column has not been written yet. */
+  russianBlank: boolean
   /** The source file the row cites (`src/App.vue:353` -> `src/App.vue`), when a cell is exactly such a path. */
   hint: string | null
   status: Status
@@ -235,7 +237,7 @@ function rowFrom(doc: string, line: number, cells: string[], shape: Shape, pair:
   }
   const status: Status = tokens.size === 0 ? 'DRAFT' : tokens.size === 1 ? ([...tokens][0] as Status) : 'AMBIGUOUS'
   const ruledLatin = ru.text !== null && ru.text === en.text && /§\s*9\.5|\bLatin\b/i.test(cells.join(' '))
-  return { doc, line, english: en.text, russian: ru.text, hint, status, ruledLatin }
+  return { doc, line, english: en.text, russian: ru.text, russianBlank: ru.text === null && ru.rest === '', hint, status, ruledLatin }
 }
 
 // ── the files ───────────────────────────────────────────────────────────────────────────────────────────
@@ -397,6 +399,13 @@ export function adaptPlaceholders(english: string, russian: string, key: string)
 // second copy the l3-t net's direct runGate() call could disagree with, which it did for an hour.
 export const BLANKET_INCLUDE_DRAFTS = true
 
+/** ⭐ 11.10 – AN EMPTY RUSSIAN CELL ON A DRAFT ROW IS HIS COLUMN WAITING, NOT A DEFECT. The tables are seeded with the English and the Russian is the next thing he writes (93 such rows the day the blanket
+ *  compiled the DRAFTs – all of them were reported `ambiguous-cell`, i.e. as broken, which they are not). Only a DRAFT: an APPROVED / LANDED row with an empty Russian cell is a status with no translation
+ *  behind it – an error in the status, and it stays `ambiguous-cell`; a cell that holds something which is not one clean literal (`russianBlank` false) stays `ambiguous-cell` too. */
+const awaitsHisColumn = (row: Row): boolean => row.status === 'DRAFT' && row.russianBlank
+const russianCellWhy = (row: Row): string =>
+  row.russianBlank ? `the Russian cell is empty on a ${row.status} row – a status with no translation behind it` : 'the Russian cell is not one clean literal'
+
 export function compile(rows: readonly Row[], live: Live, opts: { includeDrafts?: boolean } = {}): Compiled {
   const index = indexCatalog(live.catalog)
   const entries = new Map<string, string>()
@@ -463,7 +472,8 @@ export function compile(rows: readonly Row[], live: Live, opts: { includeDrafts?
         continue
       }
       if (row.russian === null) {
-        out('ambiguous-cell', { format: fmt.id, why: 'the Russian cell is not one clean literal' })
+        if (awaitsHisColumn(row)) out('pending', { format: fmt.id })
+        else out('ambiguous-cell', { format: fmt.id, why: russianCellWhy(row) })
         continue
       }
       const made = patternFromExample(fmt, row.russian)
@@ -510,7 +520,8 @@ export function compile(rows: readonly Row[], live: Live, opts: { includeDrafts?
       continue
     }
     if (row.russian === null) {
-      out('ambiguous-cell', { key, why: 'the Russian cell is not one clean literal' })
+      if (awaitsHisColumn(row)) out('pending', { key, multiSurface })
+      else out('ambiguous-cell', { key, why: russianCellWhy(row) })
       continue
     }
     const adapted = adaptPlaceholders(row.english, row.russian, key)

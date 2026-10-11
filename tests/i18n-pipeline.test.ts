@@ -16,6 +16,8 @@
 //   5. the `few` branch missing from a plural             -> `plural` goes red.
 //   6. a dead APPROVED row                                -> `unmatched` (drift), never compiled.
 //   7. `foreign-surface` check removed                    -> «Stats» joins the screen heading and the trap test goes red.
+//   8. `normKey` back to the consumed-leader regexp       -> `{n}{letter}` stays a leftover and `{0}` stays text: 11.10 arms 1 and 2 go red.
+//   9. the pending class off / its DRAFT test dropped / «blank» widened to any null cell -> 11.10 arm 3 goes red (three separate mutations, each watched).
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -603,5 +605,81 @@ describe('08.10 – the twin-key bug and the header classifier', () => {
     expect(rows[0].english, 'the English comes from the English-titled column, not from `source`').toBe(
       'You are the parent',
     )
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ 11.10 – THE normKey BUG AND THE EMPTY RUSSIAN CELL – the regression arms.
+// Fixture Russian is a bracketed stand-in (`[ru] …`): these arms are about the JOIN and the CLASS, never about wording.
+// =================================================================================================
+describe('11.10 – normKey meets every hole of a run, and an empty Russian DRAFT cell is pending', () => {
+  const holes = catalogOf({
+    'Seat {0}{1}': { home: ['src/engine/world/albumBook.ts'] },
+    '🩹 {0} retired hurt at the {1}{2}.': { home: ['src/engine/world/worldNews.ts'] },
+    'Won {0} of {1}': { home: ['src/components/HerWeekTab.vue'] },
+    'Aged {0}': { home: ['src/components/screens/ProfileScreen.vue'] },
+    'Tennis & trips': { home: ['src/components/EndingScreen.vue'] },
+    Stats: { home: ['src/components/screens/StatsScreen.vue'] },
+    'Centre Court': { home: ['src/engine/world/venues.ts'] },
+  })
+  const lv: Live = { catalog: holes, seen: new Set() }
+
+  it('⭐ ARM 1 – TWO HOLES IN A ROW: `{n}{letter}` and `{tier}{when}` are two holes each, not one hole and a leftover (the old regexp swallowed the second hole\'s leader) – and each row joins its key', () => {
+    expect(normKey('Seat {n}{letter}')).toBe('Seat ¤¤')
+    expect(normKey('{tier}{when}')).toBe('¤¤')
+    expect(normKey('a {x}{y}{z} b')).toBe('a ¤¤¤ b')
+    expect(normKey('{{ a }}{{ b }}')).toBe('¤¤')
+    // the thing the leader character was FOR: a source `${…}` run is still one hole each, never two-and-a-half
+    expect(normKey('Won ${a}${b}')).toBe('Won ¤¤')
+    expect(normKey('Won ${a}{b}')).toBe('Won ¤¤')
+    // through the importer's own index, to the key the code asks for
+    const index = indexCatalog(holes)
+    expect(index.get(normKey('Seat {n}{letter}'))).toEqual(['Seat {0}{1}'])
+    expect(index.get(normKey('🩹 {rivalName} retired hurt at the {tier}{when}.'))).toEqual(['🩹 {0} retired hurt at the {1}{2}.'])
+    // …and the whole row compiles, his holes re-pointed by position (the second row names them in another order on purpose)
+    const out = compile(rowsOf(TABLE('| R1 | | `Seat {n}{letter}` | `[ru] Seat {n}{letter}` | |', '| R2 | | `🩹 {rivalName} retired hurt at the {tier}{when}.` | `[ru] {when}{tier}{rivalName}` | |')), lv)
+    expect(out.outcomes.map((o) => o.disposition)).toEqual(['compiled', 'compiled'])
+    expect([...out.entries]).toEqual([['Seat {0}{1}', '[ru] Seat {0}{1}'], ['🩹 {0} retired hurt at the {1}{2}.', '[ru] {2}{1}{0}']])
+  })
+
+  it('⭐ ARM 2 – A NUMBERED HOLE (`{0}`) IN HIS ENGLISH CELL normalises too: it met no key at all before, whatever the catalog held', () => {
+    expect(normKey('Aged {0}')).toBe('Aged ¤')
+    expect(normKey('Won {0} of {1}')).toBe('Won ¤ of ¤')
+    expect(normKey('{12} left')).toBe('¤ left')
+    // the two spellings of one sentence meet, and a brace that is not a whole hole stays text
+    expect(normKey('Aged {n}')).toBe(normKey('Aged {0}'))
+    expect(normKey('Aged {0.5x}')).toBe('Aged {0.5x}')
+    const index = indexCatalog(holes)
+    expect(index.get(normKey('Won {0} of {1}'))).toEqual(['Won {0} of {1}'])
+    const out = compile(rowsOf(TABLE('| R1 | | `Aged {0}` | `[ru] Aged {0}` | |')), lv)
+    expect(out.outcomes[0]).toMatchObject({ disposition: 'compiled', key: 'Aged {0}' })
+    expect(out.entries.get('Aged {0}')).toBe('[ru] Aged {0}')
+  })
+
+  it('⭐ ARM 3 – AN EMPTY RUSSIAN CELL: on a DRAFT it is `pending` (his column is waiting, not a defect); on an APPROVED / LANDED row it stays `ambiguous-cell` (a status with no translation); a cell with something unclean in it is still `ambiguous-cell`', () => {
+    const rows = rowsOf(
+      TABLE(
+        '| R1 | | `Tennis & trips` | | |',
+        '| R2 | | `Tennis & trips` | | `APPROVED` |',
+        '| R3 | | `Stats` | | `LANDED` |',
+        '| R4 | | `Centre Court` | `[a]` / `[b]` | |',
+        '| R5 | | `Stats` | | `QUESTION` |',
+      ),
+    )
+    expect(rows.map((r) => r.russianBlank), 'empty is not the same as unclean – the parser tells them apart').toEqual([true, true, true, false, true])
+    const out = compile(rows, lv)
+    expect(out.outcomes.map((o) => o.disposition)).toEqual(['pending', 'ambiguous-cell', 'ambiguous-cell', 'ambiguous-cell', 'pending'])
+    expect(out.outcomes[0]).toMatchObject({ disposition: 'pending', key: 'Tennis & trips' })
+    expect(out.outcomes[1]?.why, 'the reason names the empty cell and the status that contradicts it').toMatch(/empty .*APPROVED/)
+    expect(out.outcomes[2]?.why).toMatch(/empty .*LANDED/)
+    expect(out.outcomes[3]?.why, 'an unclean cell keeps the old reason').toContain('not one clean literal')
+    expect(out.entries.size, 'a waiting column compiles nothing').toBe(0)
+    // a formatter row (`W14 '31`) takes the same road: DRAFT + empty -> pending (with its format), APPROVED + empty -> ambiguous-cell
+    const fmt = compile(rowsOf(TABLE("| R1 | | `W14 '31` | | |", "| R2 | | `W14 '31` | | `APPROVED` |")), lv)
+    expect(fmt.outcomes.map((o) => [o.disposition, o.format])).toEqual([['pending', 'dates.weekLabel'], ['ambiguous-cell', 'dates.weekLabel']])
+    expect(fmt.formats.size).toBe(0)
+    // the join's own verdicts still come first: an empty cell does not hide a dead English (drift), and the читка regime reads the DRAFT as pending exactly as before
+    expect(compile(rowsOf(TABLE('| R1 | | `This sentence is nowhere` | | |')), lv).outcomes[0]?.disposition).toBe('unmatched')
+    expect(compile(rowsOf(TABLE('| R1 | | `Tennis & trips` | | |')), lv, { includeDrafts: false }).outcomes[0]?.disposition).toBe('pending')
   })
 })

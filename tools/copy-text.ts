@@ -29,11 +29,19 @@ export const bareOf = (text: string): string => holeify(text).split(HOLE).join('
 export const letterCount = (s: string): number => (s.match(/[\p{L}\p{N}]/gu) ?? []).length
 export const wordsOf = (text: string): number => bareOf(text).split(/\s+/).filter(Boolean).length
 export const hasHole = (text: string): boolean => holeify(text).includes(HOLE)
-/** A comparison key that survives the doc's `{name}` / `{{ x }}` spellings and the source's `${…}`. */
+/** A comparison key that survives the doc's `{name}` / `{0}` / `{{ x }}` spellings and the source's `${…}`. */
 export function normKey(s: string): string {
   const unified = s
     .replace(/\{\{[^}]*\}\}/g, '${x}')
-    .replace(/(^|[^$])\{[A-Za-z_][\w.]*\}/g, '$1${x}')
+    // ⚠ 11.10 – A LOOKBEHIND, NOT A CONSUMED LEADER. The old `(^|[^$])\{name\}` ate the character in front of
+    // each hole so a source `${…}` (a `$` leader) would be left alone – but in `{n}{letter}` the second hole's
+    // leader is the FIRST hole's closing brace, already swallowed by the previous match, so only the first
+    // hole normalised and «Seat {n}{letter}» never met its key `Seat {0}{1}` (rows parked as QUESTION on
+    // 11.10 for exactly this). `(?<!\$)` asks the same question – «is a `$` right before the brace?» – without
+    // taking the character, so any run of holes normalises. The numbered spelling `{0}` is the same regexp's
+    // second alternative: his English cells write the key's own holes now and then, and `adaptPlaceholders`
+    // always read them – only this join was blind to them.
+    .replace(/(?<!\$)\{(?:[A-Za-z_][\w.]*|\d+)\}/g, '${x}')
     .replace(/\*[A-Za-z]{1,12}\*/g, '${x}') // the wave-7 tables write a hole as *N* / *finish*
   return holeify(unified).replace(/`¤`/g, HOLE).replace(/\s+/g, ' ').trim()
 }

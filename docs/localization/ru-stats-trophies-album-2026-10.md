@@ -390,7 +390,7 @@ Russian book.
 | English | Russian |
 | --- | --- |
 | `Gate {n}` | `Вход {n}` |
-| `Seat {n}{letter}` | `Место {n}{letter}` – ⚙ 11.10 две дыры подряд: склейка нормализует только первую (normKey) – ряд ждёт правки инструмента `QUESTION` |
+| `Seat {n}{letter}` | `Место {n}{letter}` |
 | `Row {n}` | `Ряд {n}` |
 | `Age {n}` – ⚙ 11.10 в русской ячейке указание, а не перевод: ряд ждёт самого русского `QUESTION` | use counted age, for example `21 год` |
 

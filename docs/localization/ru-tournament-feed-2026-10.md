@@ -45,7 +45,7 @@ displaced an older result` distinct.
 
 | source / case | English | Russian draft |
 | --- | --- | --- |
-| summary shell | `{tier} ({surface}, {week}): {kidName} – {finish} (+{points} pts){rankSuffix}{retiredSuffix}` | `Турнир «{tier}» ({surface}, {week}): {kidName} – {finish} (+{points} очков){rankSuffix}{retiredSuffix}` – ⚙ 11.10 две дыры подряд: склейка нормализует только первую (normKey) – ряд ждёт правки инструмента `QUESTION` |
+| summary shell | `{tier} ({surface}, {week}): {kidName} – {finish} (+{points} pts){rankSuffix}{retiredSuffix}` | `Турнир «{tier}» ({surface}, {week}): {kidName} – {finish} (+{points} очков){rankSuffix}{retiredSuffix}` |
 | `points <= 0` | empty ranking suffix | `пустой суффикс` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 | points banked, not yet rankable | `(+{points} banked – a ranking needs {events} events with points, or {minimum})` | `(+{points}: очки зачтены, но для места в рейтинге нужны {events, plural, one {{events} турнир} few {{events} турнира} many {{events} турниров} other {{events} турниров}} с очками или {minimum} очков)` – ⚙ 11.10 дыра возвращена (бланкет) |
 | points, no best-N improvement | `(does not improve best {N})` | `(не улучшает сумму {N} лучших результатов)` |

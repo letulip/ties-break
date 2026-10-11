@@ -10,6 +10,7 @@
 //   4. THE CONTEXT TAGS. Every tag this wave added is a wired key, renders the bare English, and the mounted sites ask for the TAGGED key.
 //   5. THE RUSSIAN SMOKE. The REAL `src/i18n/ru.json` is installed and the locale flipped. ⚠ NO CYRILLIC LITERAL LIVES IN THIS FILE – every
 //      expectation is READ from ru.json by key. As of this wave no RU-07 row is APPROVED, so the unapproved arm is the one that bites today.
+//      ⚠ RE-AIMED 11.10 (бланкет): the blanket compiled his DRAFT rows (ru.json 56 -> 3 310), so the sentence above is the pre-blanket world. The smoke now reads «compiled» for «approved» – see tests/component/ruCompiled.ts for the law and why it is measured on the keys the mounts ASKED for.
 //   6. THE `xx` SWEEP. No unbracketed text where a string is wired, and the tightest surfaces still hold a 375x667 phone with every word longer.
 //      The numbers print.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -41,6 +42,7 @@ import { installCatalog, missCount, missedKeys, resetI18nForTests, resetMisses, 
 import { installMemoryStorage } from './setup'
 import { PHONE, availableWidth, demandedWidth, setViewport } from './fits'
 import { DEFAULT_ALLOW, hardcodeLeaks, installPseudoLocale } from './pseudoloc'
+import { compiledArm, expectCounterIsExact, expectLabelsFollowTheCatalog, recordingCatalog } from './ruCompiled'
 
 /** His approved Russian, as the importer compiled it. Every Russian expectation below is read from here by key. */
 const RU = JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string, string>
@@ -452,9 +454,12 @@ describe('L2-7 Russian smoke – ru.json read by key, no Cyrillic typed here', (
     w.unmount()
   })
 
-  it('the REAL ru.json: every approved row on these surfaces renders his Russian; every unapproved one renders English and is counted', async () => {
-    installCatalog('ru', RU)
+  it('the REAL ru.json: every compiled row these surfaces ask for renders his Russian; what ru.json does not carry renders English and is counted', async () => {
+    const rec = recordingCatalog(RU)
+    const asked = rec.asked
+    installCatalog('ru', rec.catalog)
     await setLocale('ru')
+    await rec.begin() // let anything an earlier test left mounted settle first, then record
     resetMisses()
     const stats = mountStats()
     const itf = mountStats(patched(golden, { ageYears: 19, activeLadder: 'itf' }))
@@ -462,13 +467,13 @@ describe('L2-7 Russian smoke – ru.json read by key, no Cyrillic typed here', (
     const everything = mounted.map((m) => seen(m.element)).join('\n')
     const HERE = /StatsScreen|SeasonHistoryTable|CountingResultsTable/
     const wiredHere = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.some((h) => HERE.test(h)))
-    // the approved arm: today `wiredHere` is empty (no RU-07 row is APPROVED) and the loop wakes by itself the day one is
-    for (const key of wiredHere) expect(everything, `${key} is approved and wired, so his Russian must render`).toContain(RU[key]!)
-    // the unapproved arm: English on screen, and the miss counter says so (ruling 4 as a number)
-    expect(everything).toContain('Counting results')
-    expect(missCount(), 'unapproved rows must be counted as misses').toBeGreaterThan(20)
-    for (const key of ['Points', 'Counting results', 'Season by season', 'Funds', 'Total', 'picker|National', '{0} rank']) expect(missedKeys(), key).toContain(key)
-    console.log(`[L2-7 smoke] ru.json: ${Object.keys(RU).length} keys; approved AND wired on these screens: ${wiredHere.length}; distinct misses on two mounted stats surfaces: ${missedKeys().length}`)
+    // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED. The blanket compiled his DRAFT rows (ru.json 56 -> 3 310): «approved» is «compiled» below and both claims stand – his Russian reaches the screen, and what ru.json
+    // lacks is English and counted. The compiled arm reads every key the mounts ASKED for, across named holes and ICU plurals (tests/component/ruCompiled.ts says why that, and not a named-gap walk over
+    // `wiredHere`); `wiredHere` is the vocabulary its coverage floor is taken of. The old `NOT_IN_POSE` set is gone with the walk: a key the pose never asks for is not a claim, it is coverage.
+    const arm = compiledArm({ what: 'L2-7', ru: RU, asked, screen: everything, wiredHere, coverageFloor: 0.95 })
+    expectCounterIsExact(asked, missedKeys(), RU)
+    expectLabelsFollowTheCatalog(['Points', 'Counting results', 'Season by season', 'Funds', 'Total', 'picker|National', '{0} rank'], missedKeys(), RU, everything)
+    console.log(`[L2-7 smoke] ru.json: ${Object.keys(RU).length} keys; asked AND compiled on these screens: ${arm.askedCompiled.length}; reached ${arm.observed.length} of ${arm.observed.length + arm.unreached.length} compiled, wired keys; distinct misses on two mounted stats surfaces: ${missedKeys().length} (${missCount()} counted)`)
     mounted.forEach((m) => m.unmount())
   })
 })
@@ -815,9 +820,12 @@ describe('L2-7b context tag – album|Back to Home (measured against every batch
 })
 
 describe('L2-7b Russian smoke – the cabinet and the album chrome from the REAL ru.json', () => {
-  it('every approved row on these surfaces renders his Russian; every unapproved one renders English and is counted', async () => {
-    installCatalog('ru', RU)
+  it('every compiled row these surfaces ask for renders his Russian; what ru.json does not carry renders English and is counted', async () => {
+    const rec = recordingCatalog(RU)
+    const asked = rec.asked
+    installCatalog('ru', rec.catalog)
     await setLocale('ru')
+    await rec.begin() // let anything an earlier test left mounted settle first, then record
     resetMisses()
     const trophies = mountTrophies()
     const album = mountAlbum(patched(golden, { hasHeirloom: true }))
@@ -825,12 +833,13 @@ describe('L2-7b Russian smoke – the cabinet and the album chrome from the REAL
     const everything = mounted.map((m) => seen(m.element)).join('\n')
     const HERE = /TrophiesScreen|AlbumScreen|components\/album\//
     const wiredHere = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.some((h) => HERE.test(h)))
-    for (const key of wiredHere) expect(everything, `${key} is approved and wired, so his Russian must render`).toContain(RU[key]!)
-    expect(everything).toContain('Trophy cabinet')
-    expect(missCount(), 'unapproved rows must be counted as misses').toBeGreaterThan(10)
-    // ⚠ 10.10 – `album|Back to Home` left this miss list: the chat-ok approved its row, so it renders Russian above instead of counting as a miss.
-    for (const key of ['Trophy cabinet', 'Champion', 'Chapters', 'Sheet {0} of {1}']) expect(missedKeys(), key).toContain(key)
-    console.log(`[L2-7b smoke] ru.json: ${Object.keys(RU).length} keys; approved AND wired on these screens: ${wiredHere.length}; distinct misses on two mounted surfaces: ${missedKeys().length}`)
+    // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED. The blanket compiled his DRAFT rows (ru.json 56 -> 3 310): «approved» is «compiled» below and both claims stand – his Russian reaches the screen, and what ru.json
+    // lacks is English and counted. The compiled arm reads every key the mounts ASKED for, across named holes and ICU plurals (tests/component/ruCompiled.ts says why that, and not a named-gap walk over
+    // `wiredHere`); `wiredHere` is the vocabulary its coverage floor is taken of. The old `NOT_IN_POSE` set is gone with the walk: a key the pose never asks for is not a claim, it is coverage.
+    const arm = compiledArm({ what: 'L2-7b', ru: RU, asked, screen: everything, wiredHere, coverageFloor: 0.8 })
+    expectCounterIsExact(asked, missedKeys(), RU)
+    expectLabelsFollowTheCatalog(['Trophy cabinet', 'Champion', 'Chapters', 'Sheet {0} of {1}'], missedKeys(), RU, everything)
+    console.log(`[L2-7b smoke] ru.json: ${Object.keys(RU).length} keys; asked AND compiled on these screens: ${arm.askedCompiled.length}; reached ${arm.observed.length} of ${arm.observed.length + arm.unreached.length} compiled, wired keys; distinct misses on two mounted surfaces: ${missedKeys().length} (${missCount()} counted)`)
     mounted.forEach((m) => m.unmount())
   })
 })
