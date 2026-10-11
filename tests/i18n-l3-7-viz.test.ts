@@ -246,9 +246,10 @@ describe('§4 the pick keys are immovable – no draw, no new family, the hash a
 // key may lack a row bar the named joins. ⚠ NO CYRILLIC IS TYPED HERE – every expectation is read from ru.json by key, and the two mutation arms use ASCII stand-ins.
 describe('§6 the compiled ru.json renders every ref of the grids – no fallback to English, no key without a row', () => {
   const RU = JSON.parse(readFileSync(resolve(ROOT, 'src/i18n/ru.json'), 'utf8')) as Record<string, string>
-  /** The clause joins are ALL HOLES, so there is nothing to translate: the catalogue keys them (§1) and ru.json has no row, which counts one miss per join in a Russian log. Named, and held both
-   *  ways below – a join that gains a row is a stale exemption. */
-  const JOINS = ['{0} {1}', '{0} {1} {2}']
+  /** The clause joins are ALL HOLES, so there is nothing to translate: the catalogue keys them (§1). They had no row, which counted one miss per join in a Russian log, and were named here as the only
+   *  exemption – held both ways, a join that gained a row was a stale exemption. ⚙ 11.10 (RU-21): both joins now carry an IDENTITY row (`docs/localization/ru-engine-tails-2026-10.md`: Russian joins
+   *  clauses with the same space), so the exemption is retired and the list is empty; the identity itself is held below – a join that stopped being `{0} {1}` would reorder or drop a clause. */
+  const JOINS: string[] = []
   function render(catalog: Readonly<Record<string, string>>): { missing: string[]; invalid: string[]; refs: number } {
     const missing = new Set<string>()
     const invalid = new Set<string>()
@@ -258,12 +259,13 @@ describe('§6 the compiled ru.json renders every ref of the grids – no fallbac
     return { missing: [...missing].sort(), invalid: [...invalid].sort(), refs: all.length }
   }
 
-  it('the REAL ru.json: not one distinct ref of the grids falls back to English, and the only keys without a row are the clause joins', () => {
+  it('the REAL ru.json: not one distinct ref of the grids falls back to English, and no key is without a row (the clause joins carry identity rows since RU-21)', () => {
     const got = render(RU)
     expect(got.refs, 'a non-empty denominator – §2 fills the grids').toBeGreaterThan(1000)
     expect(got.invalid, 'a Russian value the formatter cannot render for the params the engine passes (a plural over a spelled count word or a name, a hole the ref does not carry)').toEqual([])
     expect(got.missing.filter((k) => !JOINS.includes(k)), 'a key the grids ask for and ru.json does not carry').toEqual([])
     for (const join of JOINS) expect(RU[join], `«${join}» has a row now – delete it from JOINS`).toBeUndefined()
+    for (const join of ['{0} {1}', '{0} {1} {2}']) expect(RU[join], `«${join}»: the clause join is an identity row – Russian joins clauses with the same space`).toBe(join)
   })
 
   it('the keys no seeded match can reach (§3\'s named few) carry a row too – a branch that cannot be said today and can tomorrow must not fall back', () => {

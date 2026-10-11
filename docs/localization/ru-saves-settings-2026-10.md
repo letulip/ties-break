@@ -108,67 +108,69 @@ and no English fragment stays inside a Russian sentence. `{field}` is the name o
 (`seasonHistory`, `rngMain` …) and stays as it is in every language; `{detail}` in the "could not be
 upgraded" sentence is a lower layer's own diagnostic and stays as written.
 
+⚙ 11.10 (the owner's blanket ruling): the Russian column is **filled by an agent**, all 31 cells, `DRAFT`, his live edit follows ([RU-21](ru-engine-tails-2026-10.md)). The register is the system's plain one – a refusal says what is wrong with the file and, where the player can act, what to do (`обновите приложение, затем импортируйте файл`), with no jargon: «checksum» is `проверка целостности`, «schema» is `формат сохранения`, «malformed» is `составлен неверно` against «damaged» `повреждён`, so the two kinds stay two. A frame and its clause are one pair: the field frame reads `поле «{field}» …` and every clause under it agrees with the neuter `поле` (`должно быть списком`, `вне допустимого диапазона`, `длиннее N символов`); the clauses of the plain frame follow the dash (`в нём больше данных, чем может вместить любая карьера`). The size is `МБ` (the `КБ` of the save list, §Save list), the count of characters is a plural over a number, and the lower layer's `{detail}` and the field name stay as written. `Tennis Sim` is the file format's own name in the English string and stays.
+
 Not a save, cut short, too large, unpacks too far (one sentence each):
 
 | English | Russian draft |
 | --- | --- |
-| `Not a Tennis Sim save file` | |
-| `This save file is cut short – it is smaller than its own header` | |
-| `This file is too large to be a save ({megabytes} MB – the limit is {limit} MB)` | |
-| `This save file expands far beyond any real career – refusing to unpack it` | |
+| `Not a Tennis Sim save file` | `Это не файл сохранения Tennis Sim` |
+| `This save file is cut short – it is smaller than its own header` | `Файл сохранения обрезан – он меньше собственного заголовка` |
+| `This file is too large to be a save ({megabytes} MB – the limit is {limit} MB)` | `Файл слишком велик для сохранения ({megabytes} МБ – предел {limit} МБ)` |
+| `This save file expands far beyond any real career – refusing to unpack it` | `Файл при распаковке стал бы намного больше любой настоящей карьеры – распаковывать его не будем` |
 
 From a newer build (the file door, and the player's own database at boot):
 
 | English | Russian draft |
 | --- | --- |
-| `This save is from a newer version of the game (schema v{declaredVersion}, this build reads up to v{supportedVersion}) – update the app, then import it` | |
-| `Save schema {declaredVersion} is newer than supported {supportedVersion}` | |
+| `This save is from a newer version of the game (schema v{declaredVersion}, this build reads up to v{supportedVersion}) – update the app, then import it` | `Это сохранение создано в более новой версии игры (формат v{declaredVersion}; эта версия читает форматы до v{supportedVersion}) – сначала обновите приложение, затем импортируйте файл` |
+| `Save schema {declaredVersion} is newer than supported {supportedVersion}` | `Формат сохранения {declaredVersion} новее поддерживаемого ({supportedVersion})` |
 
 Damaged (`corrupted`):
 
 | English | Russian draft |
 | --- | --- |
-| `Save checksum mismatch: data is corrupted` | |
-| `This save file is damaged – its contents cannot be read` | |
-| `This save file is damaged – it declares an impossible save version` | |
-| `This save file is damaged – its header and its data disagree about the save version` | |
-| `This save file could not be upgraded – {detail}` | |
+| `Save checksum mismatch: data is corrupted` | `Проверка целостности не пройдена – данные сохранения повреждены` |
+| `This save file is damaged – its contents cannot be read` | `Файл сохранения повреждён – его содержимое не удаётся прочитать` |
+| `This save file is damaged – it declares an impossible save version` | `Файл сохранения повреждён – в нём указана невозможная версия формата` |
+| `This save file is damaged – its header and its data disagree about the save version` | `Файл сохранения повреждён – заголовок и данные называют разные версии формата` |
+| `This save file could not be upgraded – {detail}` | `Файл сохранения не удалось привести к текущему формату – {detail}` |
 
 Malformed (`invalid-shape`) – the three frames:
 
 | English | Russian draft |
 | --- | --- |
-| `This save file is malformed – it does not contain a career` | |
-| `This save file is malformed – {clause}` | |
-| `This save file is malformed – "{field}" {clause}` | |
+| `This save file is malformed – it does not contain a career` | `Файл сохранения составлен неверно – в нём нет карьеры` |
+| `This save file is malformed – {clause}` | `Файл сохранения составлен неверно – {clause}` |
+| `This save file is malformed – "{field}" {clause}` | `Файл сохранения составлен неверно – поле «{field}» {clause}` |
 
 …and the clauses that finish the first of the two (a file that is too big or too deep):
 
 | English | Russian draft |
 | --- | --- |
-| `it contains more data points than any career can hold` | |
-| `its data nests deeper than any save the game writes` | |
-| `it contains a non-finite number` | |
-| `it contains an implausibly long text field` | |
-| `one of its lists is implausibly long` | |
-| `it contains an implausibly long field name` | |
+| `it contains more data points than any career can hold` | `в нём больше данных, чем может вместить любая карьера` |
+| `its data nests deeper than any save the game writes` | `данные в нём вложены глубже, чем в любом сохранении игры` |
+| `it contains a non-finite number` | `в нём есть недопустимое число` |
+| `it contains an implausibly long text field` | `в нём есть неправдоподобно длинное текстовое поле` |
+| `one of its lists is implausibly long` | `один из его списков неправдоподобно длинный` |
+| `it contains an implausibly long field name` | `в нём есть неправдоподобно длинное название поля` |
 
 …and the clauses that finish the second (`"{field}" …` – a field that is missing or the wrong kind;
 these read after the word for a field, so they agree with it):
 
 | English | Russian draft |
 | --- | --- |
-| `must be a non-empty text` | |
-| `is longer than {max} characters` | |
-| `must be a whole number between {min} and {max}` | |
-| `is out of range` | |
-| `must be a list` | |
-| `must carry the player profile` | |
-| `must carry the weekly plan` | |
-| `must carry the career totals` | |
-| `must be the trophies ledger` | |
-| `must carry the on-ramp latches` | |
-| `must carry a valid RNG position` | |
+| `must be a non-empty text` | `должно быть непустым текстом` |
+| `is longer than {max} characters` | `длиннее {max, plural, one {{max} символа} few {{max} символов} many {{max} символов} other {{max} символа}}` |
+| `must be a whole number between {min} and {max}` | `должно быть целым числом от {min} до {max}` |
+| `is out of range` | `вне допустимого диапазона` |
+| `must be a list` | `должно быть списком` |
+| `must carry the player profile` | `должно содержать профиль игрока` |
+| `must carry the weekly plan` | `должно содержать недельный план` |
+| `must carry the career totals` | `должно содержать итоги карьеры` |
+| `must be the trophies ledger` | `должно быть журналом трофеев` |
+| `must carry the on-ramp latches` | `должно содержать отметки пройденного входного этапа` |
+| `must carry a valid RNG position` | `должно содержать допустимую позицию генератора случайных чисел` |
 
 One refusal stays English by construction, and is named here so it is not a surprise: a record out of
 the player's own database that will not open (a torn file, JSON that does not parse) is reported with

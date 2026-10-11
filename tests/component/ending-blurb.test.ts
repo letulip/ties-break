@@ -302,6 +302,32 @@ describe('⭐ 10.10 §4 – drawn through t(): the nine are catalog keys under a
     bare.unmount()
   })
 
+  // ⚙ 11.10, THE BLANKET (RU-21): the Russian column of the nine rows was empty by the owner's own ruling (the words were his); under the blanket seven are written and compile, and the two whose
+  // English is under question (`college`, `natural` – each contradicts a line on the same page, docs/localization/ru-ending-screen-2026-10.md) stay `QUESTION` with no row. Mounted on the REAL
+  // ru.json, because the unit pin (tests/i18n-engine-tails.test.ts §1) proves the file and not the page: a Russian session must show the Russian paragraph for seven endings and the English one for
+  // those two. ⚠ NO CYRILLIC IS TYPED HERE – every expectation is read from ru.json by key.
+  it('⚙ 11.10 the REAL ru.json: seven paragraphs draw their compiled Russian, and the two held ones (`college`, `natural`) still draw the English', async () => {
+    const RU = JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string, string>
+    installCatalog('ru', RU)
+    await setLocale('ru')
+    const held: CareerEndingType[] = ['college', 'natural']
+    for (const type of TYPES) {
+      setActivePinia(createPinia())
+      document.body.innerHTML = ''
+      const w = mountEnding(posed(type))
+      const text = flat(w.get('.album-blurb').text())
+      if (held.includes(type)) {
+        expect(RU[ENDING_BLURB[type]], `${type}: held by the owner until the English is settled`).toBeUndefined()
+        expect(text, `${type}: no row, so the English sentence`).toBe(flat(ENDING_BLURB[type]))
+      } else {
+        expect(RU[ENDING_BLURB[type]], `${type}: the compiled row`).toBeTruthy()
+        expect(text, `${type}: the Russian paragraph`).toBe(flat(RU[ENDING_BLURB[type]]!))
+        expect(text, `${type}: not the English`).not.toBe(flat(ENDING_BLURB[type]))
+      }
+      w.unmount()
+    }
+  })
+
   it('under `xx` every paragraph is its pseudo-localized sentence – so the pseudo catalog (built from the English keys) HAS the nine', async () => {
     await installPseudoLocale()
     for (const type of TYPES) {

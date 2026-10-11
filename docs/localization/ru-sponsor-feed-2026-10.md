@@ -38,3 +38,18 @@ ranking phrase uses RU-07's full localized ladder label rather than lowercasing 
 `LADDER_LABEL`. Do not say the signed offer is still waiting in the inbox: the source selects
 the signed branch first. The incumbent renewal's expiry is this opening week, so its urgency is
 fact, not marketing colour.
+
+## ⚙ 11.10 agent-authored (бланкет) – the new kit letters, as four whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+§1 above parked the two «new offer» rows as `QUESTION` because the code spells the table's name into the key (`International #{rank}` / `National #{rank}`), which a single `{ladder}` slot cannot carry. The four keys are the live sentences – one letter or several, for the International or the National table – and the rows say the table in Russian (RU-07's `международный рейтинг` / `национальный рейтинг`, lower-cased inside the bracket). The brand is `бренд «{0}»`; the several-brands list is the engine's comma-joined string plus the last name (`{0} и {1}`), so it takes no case. `DRAFT`, his live edit follows.
+
+### The four letters
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-SPF-01 | `A letter from {0} – they want to put her in their kit (International #{1}). It is in the inbox.` | `Письмо от бренда «{0}»: предлагают ей экипировку (международный рейтинг: №{1}). Письмо во входящих.` |
+| RU21-SPF-02 | `A letter from {0} – they want to put her in their kit (National #{1}). It is in the inbox.` | `Письмо от бренда «{0}»: предлагают ей экипировку (национальный рейтинг: №{1}). Письмо во входящих.` |
+| RU21-SPF-03 | `Letters from {0} and {1} – they all want to put her in their kit (International #{2}). They are in the inbox.` | `Письма от брендов {0} и {1}: каждый предлагает ей экипировку (международный рейтинг: №{2}). Письма во входящих.` |
+| RU21-SPF-04 | `Letters from {0} and {1} – they all want to put her in their kit (National #{2}). They are in the inbox.` | `Письма от брендов {0} и {1}: каждый предлагает ей экипировку (национальный рейтинг: №{2}). Письма во входящих.` |

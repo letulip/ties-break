@@ -67,3 +67,21 @@ The source uses the match record's `retiredId`, not a guessed score pattern. A f
 retirement triggers the same physical injury consequence as a tournament retirement, while a
 pre-match medical cancellation refunds the court; Russian wording must keep those two paths
 different.
+
+## ⚙ 11.10 agent-authored (бланкет) – the vacation receipt and the match-verb words, as five keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+`planner.ts` writes the family-vacation receipt and the practice-match row, and `TournamentFlow.vue` prints the same `lost to` before an opponent's name on the finale poster. The vacation row carries its recovery clause in the key (`Family vacation – {label}: +{gain} condition.` stays for the packages without one). The three verb phrases are the **words the code joins between two names** – one of four verbs of a practice match and the loser's verb of the finale – and the stored row `Practice match: {0} {1} {2} {3} – no ranking points` is the sentence they compose. `DRAFT`, his live edit follows.
+
+The phrases stand between two names in the nominative (`снялась в матче против`, `играла против снявшейся`, `уступила`): the finale poster's `def. {0}` is `обыграла {0}` and `lost to {0}` `уступила {0}`. The vacation row's `{2}` is `ECONOMY.vacation.buffWeeks`, a number, as a duration in the accusative after `держится`. The stored row's `{1}` is the English verb, printed as given.
+
+### The five keys
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-PLN-01 | `Family vacation – {0}: +{1} condition, and the recovery holds for {2} weeks.` | `Семейный отпуск – {0}: форма +{1}, а эффект восстановления держится {2, plural, one {{2} неделю} few {{2} недели} many {{2} недель} other {{2} недели}}.` |
+| RU21-PLN-02 | `Practice match: {0} {1} {2} {3} – no ranking points` | `Тренировочный матч: {0} {1} {2} {3} – рейтинговых очков нет` – ⚙ the stored English `text`; `{1}` is the English verb |
+| RU21-PLN-03 | `had to stop against` | `снялась в матче против` |
+| RU21-PLN-04 | `was playing a retiring` | `играла против снявшейся` |
+| RU21-PLN-05 | `lost to` | `уступила` – ⚙ the loser's verb of the practice-match row (`planner.ts`); the finale poster's `poster\|lost to` is its own key |

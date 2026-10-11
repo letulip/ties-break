@@ -132,3 +132,47 @@ seat `ending.blurb`). Their nine rows, with the Russian column empty because the
 therefore not met yet: until a Russian cell is approved, a Russian session shows the English sentence
 on that line, like any other unapproved row. Whether to hold the line back in Russian until then is his
 call before a Russian release.
+
+## ⚙ 11.10 agent-authored (бланкет) – the nine ending rows, their four legacy details and her last word
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+Seventeen catalogue keys of `src/engine/ending.ts` and `src/engine/world/endings.ts` had no Russian on 11.10 and are not reached by the tables above: the **nine rows the latch writes** (`endingRowRef`: the title and the detail as one key, `She left at the top – {0}.`), the **four older spellings of the details** that the 10.10 trim shortened (they stay readable for saves written before it), and **the final offer** – the sentence with her age in front and the three sentences of her last word. One row per key; the English cell is the key verbatim and the holes are the key's own `{0}`. `DRAFT`, his live edit follows.
+
+**Seven of the nine frames are just `{0}`, and that is not a lazy row.** The detail nests into the hole as a ref, and RU-12C wrote its details as **complete feed rows** – `Она не вернулась в тур: N недель без новой заявки.`, `Первым не выдержал организм: …`, `После школы она остановилась.` – so a frame that put the title in front of them would print it twice. Two frames are the other way round, because his own `APPROVED` details are fragments (`{weeks} weeks below zero` is `N недель ниже нуля`, `{seasons} seasons, no step higher` is `N сезонов без шага вверх`: «квитанция несёт число, историю говорит блёрб»): `The money ran out – {0}.` and `She had gone as far as she was going – {0}.` keep the title and the dash, as the English does.
+
+**`peak` is the one door where his two details do not agree.** `she was #{rank} the week she said it` is a complete row (it names the leaving), while his approved `a title in her last season` is the verbless `Титул – в её последний сезон.`; under the `{0}` frame that sentence stands alone. If the title-and-fragment model is the one he wants for `peak` as well, the frame becomes `Она ушла на вершине – {0}.` and the rank row and the title-only row below become fragments: three cells, nothing else moves.
+
+**The four legacy details** are the longer spellings the trim cut (`… and nobody had to call it a failure`, `… – there was no next entry fee`, `… and the table would not move`, `a title at the top of the sport, and she went the same season`). Each Russian follows the shape of its trimmed twin – a complete sentence where the twin is one, a fragment under the title where the twin is one – and keeps the clause the trim removed; the consolation in the first is the English's own. **The final offer:** her age is a whole number (`view.ageYears`) and the one-more-year count a number, so both are real plurals, and the `time` / `times` twins carry the same Russian plural. RU-12C rows 97–98 stay as the record of the composite sentence they could not key; these four rows are what the code now keys.
+
+### The nine rows the latch writes (`endingRowRef`)
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-END-01 | `She stopped after school – {0}.` | `{0}` – ⚙ the detail is already the complete row «После школы она остановилась.» |
+| RU21-END-02 | `She went to college – {0}.` | `{0}` – ⚙ the detail begins «Она поступила в университет: …» |
+| RU21-END-03 | `The money ran out – {0}.` | `Деньги закончились – {0}.` – ⚙ his approved detail is the fragment «N недель ниже нуля» |
+| RU21-END-04 | `The body stopped first – {0}.` | `{0}` – ⚙ the detail begins «Первым не выдержал организм: …» |
+| RU21-END-05 | `She played until she was done – {0}.` | `{0}` – ⚙ every natural detail is a complete sentence of her own |
+| RU21-END-06 | `She had gone as far as she was going – {0}.` | `Дальше она идти не хотела – {0}.` – ⚙ his approved detail is the fragment «N сезонов без шага вверх» |
+| RU21-END-07 | `She left at the top – {0}.` | `{0}` – ⚙ see the peak note above |
+| RU21-END-08 | `She stopped after the fall – {0}.` | `{0}` – ⚙ the detail begins «После спада она остановилась: …» |
+| RU21-END-09 | `She did not go back – {0}.` | `{0}` – ⚙ the detail begins «Она не вернулась в тур: …» |
+
+### The four legacy details
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-END-10 | `she stopped when school ended, and nobody had to call it a failure` | `После школы она остановилась, и никому не пришлось называть это провалом.` – ⚙ the legacy long form, kept for saves written before the 10.10 trim; the consolation is the English's own |
+| RU21-END-11 | `{0} weeks below zero – there was no next entry fee` | `{0, plural, one {{0} неделя} few {{0} недели} many {{0} недель} other {{0} недели}} ниже нуля – на следующий заявочный взнос денег уже не было` – ⚙ the legacy long form; a fragment under «Деньги закончились – {0}.» |
+| RU21-END-12 | `{0} seasons and the table would not move` | `{0, plural, one {{0} сезон} few {{0} сезона} many {{0} сезонов} other {{0} сезона}} – таблица так и не сдвинулась` – ⚙ the legacy long form; a fragment under «Дальше она идти не хотела – {0}.» |
+| RU21-END-13 | `a title at the top of the sport, and she went the same season` | `Титул на вершине спорта – и в тот же сезон она ушла.` – ⚙ the title-only exit; complete, because the peak frame is `{0}` |
+
+### The final offer
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-END-14 | `She is {0}. {1}` | `Ей {0, plural, one {{0} год} few {{0} года} many {{0} лет} other {{0} года}}. {1}` – ⚙ `{1}` nests one of the three sentences below |
+| RU21-END-15 | `Nobody asked her this time. She said it herself, and she said it steadily. This season was the last one.` | `На этот раз никто не спрашивал. Она сказала сама, спокойно: этот сезон был последним.` |
+| RU21-END-16 | `Nobody asked her this time. She said it herself, and she said it steadily. You have said one more year {0} time, and this season was the last one.` | `На этот раз никто не спрашивал. Она сказала сама, спокойно. «Ещё один год» прозвучало уже {0, plural, one {{0} раз} few {{0} раза} many {{0} раз} other {{0} раза}}, а этот сезон был последним.` – ⚙ RU-12C's wording, whose `прозвучало` names no sayer; the colon after «спокойно» became a full stop because nothing followed it that she said |
+| RU21-END-17 | `Nobody asked her this time. She said it herself, and she said it steadily. You have said one more year {0} times, and this season was the last one.` | `На этот раз никто не спрашивал. Она сказала сама, спокойно. «Ещё один год» прозвучало уже {0, plural, one {{0} раз} few {{0} раза} many {{0} раз} other {{0} раза}}, а этот сезон был последним.` – ⚙ the `time` twin: the same Russian plural |

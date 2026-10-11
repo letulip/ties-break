@@ -523,3 +523,25 @@ honest: the line reports her best result, not the exact number of titles or fina
 RU-02 is now covered end to end: entry, onboarding, ages five through thirteen, every childhood
 tournament face and the handover into the weekly career. The next document begins RU-03: Home,
 weekly state, family presence and the ordinary notes through the school and after-school stages.
+
+## ⚙ 11.10 agent-authored (бланкет) – the handover's nine count phrases, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+§14.5 above drafted the count phrases (`на одном местном турнире` … `на восьми местных турнирах`) as a table of one to eight; the code keeps nine whole phrases, `no local tournaments` to `eight local tournaments`, each a key (`PLAYED_COPY.counts`: the noun is inside the count, so no plural rule is needed in code). The rows are that table, one per key, plus the nought. `DRAFT`, his live edit follows.
+
+The phrase is a prepositional one because the frame is: `She played {n}, and {best}.` is `За эти годы она сыграла {n}; {best}.`, and the count completes it as `сыграла на трёх местных турнирах`. The nought is unreachable – the line is absent when she entered nothing – and reads `ни на одном местном турнире` so no key stays empty. **RU02B-HO-R5** (the coach's first person, `ошибался`) is not one of these keys and stays open as §14.3 flags it.
+
+### The nine phrases
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-HND-01 | `no local tournaments` | `ни на одном местном турнире` |
+| RU21-HND-02 | `one local tournament` | `на одном местном турнире` |
+| RU21-HND-03 | `two local tournaments` | `на двух местных турнирах` |
+| RU21-HND-04 | `three local tournaments` | `на трёх местных турнирах` |
+| RU21-HND-05 | `four local tournaments` | `на четырёх местных турнирах` |
+| RU21-HND-06 | `five local tournaments` | `на пяти местных турнирах` |
+| RU21-HND-07 | `six local tournaments` | `на шести местных турнирах` |
+| RU21-HND-08 | `seven local tournaments` | `на семи местных турнирах` |
+| RU21-HND-09 | `eight local tournaments` | `на восьми местных турнирах` |

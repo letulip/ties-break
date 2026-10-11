@@ -1134,3 +1134,93 @@ be recovered from a generic literal after the fact.
 Batch status: **drafted end to end**. The profile, life-stage language, full radar corpus, coach
 market, weekly training matrix, future-week planner, knocks and injury-stop copy have all received a
 source-coverage pass. Every Russian line remains `DRAFT` pending the owner's read.
+
+## ⚙ 11.10 agent-authored (бланкет) – the knock dialog and the knock feed, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+§19 above drafted the knock over three forms of a body part (`{partNom}`, `{partAcc}`, `{partLocation}`) that a localized region id would supply. The live keys carry the part as **one English word in one hole**, `{0}`, and the card prints it as given. The 30 rows below are §19.3–§19.7 re-cut to that shape: the 21 sentences of `knock.ts` (the parent's line, the coach's read, the cause, the two costs) and the 9 feed rows of `world/knock.ts`. `DRAFT`, his live edit follows.
+
+**Where a row leaves §19's mould.** The part has no case here, so each sentence that asked for the accusative or the locative (`придерживала {partAcc}`, `лёд на {partLocation}`) is built round a nominative: after a colon (`больное место: {0}`), a dash, or an impersonal verb (`болело`). The place stays `больное место` / `то же место` / `боль`, §19's own vocabulary (`Что-то побаливает`); the coach is the noun `тренер` in the present tense with no pronoun (R15-7); the family is `мы`. The costs and the cause are §19.5–§19.6's own sentences. This also answers the `QUESTION` row of §19.5, whose `{partLocation}` hole the key does not have.
+
+**Seam that is code, not translation:** the part is an English word (`BODY_REGIONS`), so a Russian row prints `больное место: ankle`; every row already holds it in a nominative position, so none changes when it becomes a Russian name.
+
+### The parent's line – a fresh knock
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-KNK-01 | `She came off court on Friday holding her {0}.` | `В пятницу она сошла с корта, держась за больное место: {0}.` |
+| RU21-KNK-02 | `Her {0} was sore all week. She only said so on Sunday.` | `Всю неделю болело: {0}. Рассказала об этом только в воскресенье.` |
+| RU21-KNK-03 | `Ice on her {0} after Thursday. She says it is fine.` | `После четверга – лёд на больном месте: {0}. Говорит, что всё в порядке.` |
+| RU21-KNK-04 | `She has been favouring the {0} since midweek.` | `С середины недели она бережёт больное место: {0}.` |
+
+### The parent's line – the same place again
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-KNK-05 | `It is the {0} again. She mentioned it in the car, then said it was nothing.` | `Снова жалуется: {0}. Сказала об этом в машине, а потом отмахнулась: ничего страшного.` |
+| RU21-KNK-06 | `The same {0}. She rolled it out on the kitchen floor and did not look up.` | `Всё то же место – {0}. Разминала его на кухонном полу и не поднимала глаз.` |
+| RU21-KNK-07 | `Her {0} is talking to her again. She knows we noticed.` | `Опять даёт о себе знать: {0}. Она понимает: мы заметили.` |
+
+### The coach's read – a repeat
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-KNK-08 | `The coach was blunter this time – has seen this one before, and does not like it.` | `На этот раз тренер говорит жёстче: такое уже было, и это не нравится.` |
+| RU21-KNK-09 | `The coach remembers the last time – would sit her down, and said so twice.` | `Тренер помнит прошлый раз и дважды повторяет: ей нужно пропустить неделю.` |
+| RU21-KNK-10 | `The coach asked how long it has been doing this – and did not like the answer.` | `Первый вопрос тренера – как давно это продолжается. Ответ явно не понравился.` |
+
+### The coach's read – she is worn
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-KNK-11 | `The coach thinks she is running on empty and the body is saying so.` | `По мнению тренера, она работает на пустом баке – организм даёт об этом знать.` |
+| RU21-KNK-12 | `The coach has seen her tired for weeks – would take the week.` | `Тренер уже не первую неделю видит её уставшей и советует пропустить эту.` |
+| RU21-KNK-13 | `The coach says a body this flat picks things up – and would rather not find out.` | `Тренер говорит: у вымотанного организма всё начинает болеть. Лучше не проверять, чем это кончится.` |
+
+### The coach's read – an ordinary week
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-KNK-14 | `The coach is not worried – and is not telling us to ignore it either.` | `Тренер не тревожится, но и игнорировать это не советует.` |
+| RU21-KNK-15 | `The coach shrugged – would let her train and keep an eye on it.` | `Тренер пожимает плечами: пусть тренируется, а за этим можно просто следить.` |
+| RU21-KNK-16 | `The coach says it is probably nothing – probably, and that word is not ours.` | `Тренер говорит, что, скорее всего, ничего серьёзного. Но «скорее всего» – не наша уверенность.` |
+| RU21-KNK-17 | `The coach says these come and go at her age – and left the decision with us.` | `Тренер говорит, что в её возрасте такое приходит и уходит, а решение оставляет нам.` |
+
+### Why it may have happened
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-KNK-18 | `We sent her back out with a knock to her {0} before. Now the same place is troubling her again.` | `Раньше мы уже отправили её тренироваться с этой болью: {0}. Теперь снова беспокоит то же место.` |
+
+### The two costs
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-KNK-19 | `A hug, the sofa, and a week of next to no tennis. That week of work is gone.` | `Обнять, уложить на диван и почти неделю не вспоминать о теннисе. Работа этой недели пропадёт.` |
+| RU21-KNK-20 | `She trains as planned, and for the next three weeks the odds are against us.` | `Она тренируется по плану, а следующие три недели риск будет выше.` |
+| RU21-KNK-21 | `She trains as planned. If this one goes, it goes properly – and it will be the same {0}.` | `Она тренируется по плану. Если теперь станет хуже, то всерьёз – и в том же месте: {0}.` |
+
+### The knock feed – arrival
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-KNK-22 | `She has picked up a sore {0}. Not an injury – yet.` | `Что-то побаливает: {0}. Пока не травма.` |
+| RU21-KNK-23 | `Her {0} is sore again – the same one.` | `Снова болит: {0} – то же место.` |
+
+### The knock feed – the coach and the decision
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-KNK-24 | `The coach is not calling the {0} alone – not on a week like this.` | `Тренер не берётся решать в одиночку – только не на такой неделе. Что беспокоит: {0}.` |
+| RU21-KNK-25 | `The coach wants to talk about her {0} before anyone decides.` | `Прежде чем решать, тренер хочет обсудить больное место: {0}.` |
+| RU21-KNK-26 | `The coach is in two minds about the {0} – and is asking us.` | `Тренер сомневается, стоит ли тренироваться: {0}. Решение оставляет нам.` |
+| RU21-KNK-27 | `The coach is keeping her off the court this week – the {0}.` | `Тренер оставляет её вне корта на эту неделю. Причина: {0}.` |
+| RU21-KNK-28 | `The coach is happy for her to train through the {0}.` | `Тренер разрешает продолжить тренировки, несмотря на боль: {0}.` |
+
+### The knock feed – the family's choice
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-KNK-29 | `Resting the {0} – a week off the training court.` | `Даём отдохнуть больному месту: {0}. Неделя без тренировочного корта.` |
+| RU21-KNK-30 | `Training through the {0}. The coach knows.` | `Продолжаем тренировки, несмотря на боль: {0}. Тренер в курсе.` |

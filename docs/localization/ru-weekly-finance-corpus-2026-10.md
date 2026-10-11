@@ -114,3 +114,32 @@ model` / `New shoes – mid-range performance` / `New shoes – top-line, fitted
 refresh – club basics` / `Apparel refresh – brand kit` / `Apparel refresh – full designer
 kit`. Keep `stringing` as its own ledger category, as the code does. A fully covered purchase
 may have `amountCents: 0`; never render negative zero.
+
+## ⚙ 11.10 agent-authored (бланкет) – the kit flavours and the court row, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+The twelve recurring kit flavours of `gear.ts` and the court row of `phaseFinance.ts` had no Russian on 11.10. The flavour table above gives the twelve by background and gear line; the rows here are the same Russian keyed by the English text the code carries, one per key, wording kept. The court row is `{venue} – {hours} ч, {clause}`: venue and clause are the Russian pools above, the hours a plain number. `DRAFT`, his live edit follows.
+
+### Recurring kit flavours
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-GER-01 | `New racket – used, off the classifieds` | `Новая ракетка – подержанная, по объявлению` |
+| RU21-GER-02 | `New racket – current retail model` | `Новая ракетка – модель из магазина` |
+| RU21-GER-03 | `New racket – custom pro stock` | `Новая ракетка – изготовлена для игрока` |
+| RU21-GER-04 | `Restring – budget synthetic` | `Перетяжка – недорогая синтетика` |
+| RU21-GER-05 | `Restring – multifilament` | `Перетяжка – мультифиламентная струна` |
+| RU21-GER-06 | `Restring – tour gut` | `Перетяжка – натуральная струна` |
+| RU21-GER-07 | `New shoes – last season's model` | `Новая обувь – прошлогодняя модель` |
+| RU21-GER-08 | `New shoes – mid-range performance` | `Новая обувь – модель для тренировок и матчей` |
+| RU21-GER-09 | `New shoes – top-line, fitted` | `Новая обувь – подогнана по ноге` |
+| RU21-GER-10 | `Apparel refresh – club basics` | `Обновление формы – базовый клубный комплект` |
+| RU21-GER-11 | `Apparel refresh – brand kit` | `Обновление формы – комплект бренда` |
+| RU21-GER-12 | `Apparel refresh – full designer kit` | `Обновление формы – дизайнерский комплект` |
+
+### The court row
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-GER-13 | `{0} – {1} h, {2}` | `{0} – {1} ч, {2}` |

@@ -59,3 +59,22 @@ The set ordinal needs **two** Russian cases; a single translated `SET_ORDINAL` a
 insufficient. Event names use the locale's existing tournament labels and quotes so arbitrary
 labels are not declined. The retirement row is not added when there was no retirement or when
 the daughter herself retired; those gates stay in the engine, not in translation.
+
+## ⚙ 11.10 agent-authored (бланкет) – the opponent's retirement row, as six whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+§2 above drafted the row as a stem over a `{when}` suffix and parked its pieces as `QUESTION`; the code spells **six whole sentences** (at a rung the world reports on / in her own match × no set to name / after a completed set / inside a set), and the set is the English ordinal (`first` … `fifth`) in a hole. The rows are the draft re-cut to that shape, `снялась из-за травмы` and `на турнире «{tier}»` kept. `DRAFT`, his live edit follows.
+
+**Where a row leaves §2's mould.** (1) `В матче {kidShort} – {rivalName} соперница снялась` became `Соперница по матчу – {1}`: the retiree is `{0}` and the heroine `{1}`, and a nominative after a dash reads straight in either order. (2) The set clause is built round the accusative of the ordinal (`доиграв {2} сет` / `не доиграв {2} сет`), which for a masculine inanimate noun is the nominative form – the one form the code can hand in; §2's genitive and prepositional pair would need two arguments it does not carry. «Went off after the set» is `доиграв … сет`, «in the set» is `не доиграв … сет`: the same two facts. **Seam that is code, not translation:** `SET_ORDINAL` hands the English word in, so a Russian row prints `доиграв first сет`.
+
+### The six sentences
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-MNW-01 | `🩹 {0} retired hurt at the {1}.` | `🩹 {0} снялась из-за травмы на турнире «{1}».` |
+| RU21-MNW-02 | `🩹 {0} retired hurt at the {1} – she went off after the {2} set.` | `🩹 {0} снялась из-за травмы на турнире «{1}», доиграв {2} сет.` |
+| RU21-MNW-03 | `🩹 {0} retired hurt at the {1} – she went off in the {2} set.` | `🩹 {0} снялась из-за травмы на турнире «{1}», не доиграв {2} сет.` |
+| RU21-MNW-04 | `🩹 {0} retired hurt against {1}.` | `🩹 {0} снялась из-за травмы. Соперница по матчу – {1}.` |
+| RU21-MNW-05 | `🩹 {0} retired hurt against {1} – she went off after the {2} set.` | `🩹 {0} снялась из-за травмы, доиграв {2} сет. Соперница по матчу – {1}.` |
+| RU21-MNW-06 | `🩹 {0} retired hurt against {1} – she went off in the {2} set.` | `🩹 {0} снялась из-за травмы, не доиграв {2} сет. Соперница по матчу – {1}.` |

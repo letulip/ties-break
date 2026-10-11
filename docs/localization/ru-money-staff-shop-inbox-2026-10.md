@@ -1689,3 +1689,176 @@ The notice has no signature decision; it signs `– {brand}` and closes with `П
 RU-06 is now drafted end to end: family budget, equipment, sponsorship surfaces, specialists,
 assets, the inbox shell and all nine current letter families. Every Russian line remains `DRAFT`
 until owner read-through and in-game LQA.
+
+## ⚙ 11.10 agent-authored (бланкет) – the economy's labels and blurbs, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+These are the 81 catalogue keys of `src/engine/economy/shop.ts`, `equipment.ts` and `vacation.ts` (the catalogue reads their home as `src/engine/economy.ts`) that had no Russian on 11.10: the shop's 22 assets (a label and a one-line blurb each), the twelve rungs of kit (a label and a blurb each), the seven vacation blurbs and the six advertising trades. One row per key; the English cell is the key verbatim. `DRAFT`, his live edit follows.
+
+**Nothing here is a new voice.** §7.3 (kit), §9 (trades) and §23 (assets) of this document and RU-05 §18 (vacations) already drafted each of these as a display resource keyed by an item id, in the register the shop speaks: a short, literal label and a blurb that may sound knowingly warm (`Флайбридж`, `до девяти`). The rows below are that same Russian re-keyed to the English text the catalogue actually carries, so the stack does not hold two Russian voices for one shelf; where the earlier draft renders an image a little differently from the English (§23 gives «water that belongs to the family» as `собственный бассейн`) the earlier wording stands and nothing is added.
+
+**Marks stay Latin.** `Ashline`, `Kestra`, `Multifil Standard`, `Court Basics` and `Baseline Trainer` are fictional catalogue marks (§7.3, §9.5): their rows are identity rows (`Latin`). The one generic rung name, `Club synthetic`, is translated, as §7.3 already did. Every row is a plain string with no hole, so there is no count to inflect and no English word to leak.
+
+**Seam that is code, not translation.** Nearly none of these strings is read through `t()` yet – the shop and the kit card print `item.label` / `blurb` off the snapshot, the vacation card its package blurb – so a Russian build keeps printing them in English until a wave wraps those sites (§28 above names the arrangement: label and blurb become locale resources selected at the presentation edge). `Cars` is the exception (`composables/shop.ts` asks for it). The rows are ready the day the sites are.
+
+### The shop's twenty-two assets – labels
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ECO-01 | `A savings deposit` | `Сберегательный вклад` |
+| RU21-ECO-02 | `An index fund` | `Индексный фонд` |
+| RU21-ECO-03 | `The sensible estate` | `Практичный универсал` |
+| RU21-ECO-04 | `The luxury four-by-four` | `Роскошный внедорожник` |
+| RU21-ECO-05 | `The one from the poster` | `Тот самый с плаката` |
+| RU21-ECO-06 | `The unreasonable one` | `Совершенно неразумный` |
+| RU21-ECO-07 | `A place of their own` | `Своё жильё` |
+| RU21-ECO-08 | `The house with the garden` | `Дом с садом` |
+| RU21-ECO-09 | `The villa with the pool` | `Вилла с бассейном` |
+| RU21-ECO-10 | `The house on the headland` | `Дом на мысе` |
+| RU21-ECO-11 | `The merch brand` | `Собственный бренд` |
+| RU21-ECO-12 | `The sailing boat` | `Парусная лодка` |
+| RU21-ECO-13 | `The small yacht` | `Небольшая яхта` |
+| RU21-ECO-14 | `The yacht` | `Яхта` |
+| RU21-ECO-15 | `The big yacht` | `Большая яхта` |
+| RU21-ECO-16 | `The small plane` | `Небольшой самолёт` |
+| RU21-ECO-17 | `The plane` | `Самолёт` |
+| RU21-ECO-18 | `The long-range plane` | `Дальнемагистральный самолёт` |
+| RU21-ECO-19 | `The land` | `Земля` |
+| RU21-ECO-20 | `The courts` | `Корты` |
+| RU21-ECO-21 | `The clubhouse` | `Клубный дом` |
+| RU21-ECO-22 | `The staff` | `Команда академии` |
+
+### The shop's twenty-two assets – blurbs
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ECO-23 | `The dull one – it will not lose money and it will not make much.` | `Самый спокойный вариант: деньги не пропадут, но и большого дохода не принесут.` |
+| RU21-ECO-24 | `A slice of the whole market. It will have bad years – it has never had a bad decade.` | `Доля всего рынка. Плохие годы у него бывают; плохого десятилетия ещё не было.` |
+| RU21-ECO-25 | `Five doors and a boot that takes the kit bags. Nobody looks at it twice.` | `Пять дверей и багажник для сумок с экипировкой. Никто не обернётся вслед.` |
+| RU21-ECO-26 | `Tall, quiet, and it will never once see a field.` | `Высокий, тихий – и ни разу не съедет с асфальта.` |
+| RU21-ECO-27 | `Two seats, no boot, and the one that was on the bedroom wall.` | `Два места, никакого багажника – тот самый, что висел на стене.` |
+| RU21-ECO-28 | `Four seats, no roof, and no defence for any of it.` | `Четыре места, никакой крыши и ни одного разумного оправдания.` |
+| RU21-ECO-29 | `The end of renting. Small, theirs on paper, and hers to paint.` | `Больше никакой аренды. Небольшое, их по документам, и стены можно красить как хочется.` |
+| RU21-ECO-30 | `Room for all of them, and a garden nobody has to share.` | `Места хватит всем, а сад больше не нужно ни с кем делить.` |
+| RU21-ECO-31 | `Glass, warm stone, and water that belongs to the family.` | `Стекло, тёплый камень и собственный бассейн.` |
+| RU21-ECO-32 | `Above the sea, with a pool that looks as though it falls into it.` | `Над морем, с бассейном, который будто переливается прямо в него.` |
+| RU21-ECO-33 | `Her name on shirts and bags. It sells while she is talked about.` | `Её имя на футболках и сумках. Пока о ней говорят, всё это продаётся.` |
+| RU21-ECO-34 | `Two cabins, a mast, and weekends that answer to the wind.` | `Две каюты, мачта и выходные, которыми распоряжается ветер.` |
+| RU21-ECO-35 | `A flybridge, four berths, and a bay to be at anchor in.` | `Флайбридж, четыре спальных места и бухта, где можно встать на якорь.` |
+| RU21-ECO-36 | `Crew of six, and a week of it is a week nobody can reach them.` | `Команда из шести человек и неделя, за которую до них никто не доберётся.` |
+| RU21-ECO-37 | `The one the harbour has to make room for.` | `Та самая, ради которой в гавани освобождают место.` |
+| RU21-ECO-38 | `Seven seats, short runways, and home the same night.` | `Семь мест, короткие полосы и возможность вернуться домой в тот же день.` |
+| RU21-ECO-39 | `Ten seats and no airport that keeps them waiting.` | `Десять мест и ни одного аэропорта, который заставит их ждать.` |
+| RU21-ECO-40 | `Melbourne without stopping, and a bed on the way back.` | `До Мельбурна без посадки и с кроватью на обратном пути.` |
+| RU21-ECO-41 | `Twelve hectares outside town, and a name on the deeds.` | `Двенадцать гектаров за городом и имя в документах на собственность.` |
+| RU21-ECO-42 | `Sixteen of them, and the lights that keep them open till nine.` | `Шестнадцать кортов и освещение, с которым можно играть до девяти.` |
+| RU21-ECO-43 | `Gym, kitchen, forty beds and somewhere to do the homework.` | `Зал, кухня, сорок мест и комната для домашних заданий.` |
+| RU21-ECO-44 | `Coaches, physios and the person who answers the telephone.` | `Тренеры, физиотерапевты и человек, который отвечает на звонки.` |
+
+### The twelve rungs of kit – labels
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ECO-45 | `Club synthetic` | `Клубная синтетика` |
+| RU21-ECO-46 | `Ashline Alloy` | `Ashline Alloy` – ⚙ Latin (§9.5) |
+| RU21-ECO-47 | `Court Basics` | `Court Basics` – ⚙ Latin (§9.5) |
+| RU21-ECO-48 | `Multifil Standard` | `Multifil Standard` – ⚙ Latin (§9.5) |
+| RU21-ECO-49 | `Ashline Composite` | `Ashline Composite` – ⚙ Latin (§9.5) |
+| RU21-ECO-50 | `Baseline Trainer` | `Baseline Trainer` – ⚙ Latin (§9.5) |
+| RU21-ECO-51 | `Kestra Control` | `Kestra Control` – ⚙ Latin (§9.5) |
+| RU21-ECO-52 | `Kestra Team 98` | `Kestra Team 98` – ⚙ Latin (§9.5) |
+| RU21-ECO-53 | `Kestra Grip` | `Kestra Grip` – ⚙ Latin (§9.5) |
+| RU21-ECO-54 | `Kestra Tour Gut` | `Kestra Tour Gut` – ⚙ Latin (§9.5) |
+| RU21-ECO-55 | `Kestra Pro Stock` | `Kestra Pro Stock` – ⚙ Latin (§9.5) |
+| RU21-ECO-56 | `Kestra Tour` | `Kestra Tour` – ⚙ Latin (§9.5) |
+
+### The twelve rungs of kit – blurbs
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ECO-57 | `Cheap nylon – it goes dead in a fortnight.` | `Недорогой нейлон – через пару недель теряет упругость.` |
+| RU21-ECO-58 | `Heavy aluminium starter – slow, stiff, hard on the arm.` | `Тяжёлая стартовая алюминиевая ракетка – медленная, жёсткая и сильно нагружает руку.` |
+| RU21-ECO-59 | `Flat soles, no support – she slides when she should grip.` | `Плоская подошва без поддержки – скользит там, где должна держать корт.` |
+| RU21-ECO-60 | `The usual bed – fine until it is not.` | `Обычная натяжка – служит нормально, пока вдруг не перестаёт.` |
+| RU21-ECO-61 | `The frame most juniors own. Nothing wrong with it.` | `Такая ракетка есть у большинства юниорок. В ней нет ничего плохого.` |
+| RU21-ECO-62 | `Proper court shoes, mid-range.` | `Полноценная теннисная обувь среднего уровня.` |
+| RU21-ECO-63 | `Holds tension – the bed is still alive in week four.` | `Хорошо держит натяжение – даже на четвёртой неделе струны ещё живые.` |
+| RU21-ECO-64 | `A current retail frame, and it stays sound far longer.` | `Современная серийная ракетка, которая гораздо дольше остаётся в порядке.` |
+| RU21-ECO-65 | `Real support underfoot. Fewer rolled ankles.` | `Надёжная поддержка стопы. Меньше подвернутых голеностопов.` |
+| RU21-ECO-66 | `What the tour restrings with. Fresh, always.` | `Такими струнами пользуются в туре. Всегда свежая натяжка.` |
+| RU21-ECO-67 | `Custom-weighted. She will never out-grow it.` | `Индивидуальный вес. Она уже не перерастёт эту ракетку.` |
+| RU21-ECO-68 | `Fitted, cushioned, replaced before they wear.` | `Подогнаны по ноге, хорошо амортизируют и меняются до износа.` |
+
+### The seven vacation blurbs
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ECO-69 | `No travel, no drills – her own bed and her own people.` | `Никуда не ехать, никаких тренировок – своя кровать и свои люди.` |
+| RU21-ECO-70 | `Two trains and a bus – slow food, slow days.` | `Два поезда и автобус – неспешная еда, неспешные дни.` |
+| RU21-ECO-71 | `Tent, lake, no racket in the car.` | `Палатка, озеро, а ракетка остаётся дома.` |
+| RU21-ECO-72 | `A real holiday – sea, sleep, sun.` | `Настоящий отпуск – море, сон и солнце.` |
+| RU21-ECO-73 | `Pool, physio, massage – rest with a programme.` | `Бассейн, физиотерапия и массаж – отдых по программе.` |
+| RU21-ECO-74 | `The clinic the pros use – she comes back new.` | `Клиника, которой пользуются профессионалы: вернётся как новая.` |
+| RU21-ECO-75 | `Nowhere to be, and the sea to be nowhere on.` | `Никуда не нужно спешить – только море и целая неделя.` |
+
+### The advertising trades
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ECO-76 | `Watches` | `Часы` |
+| RU21-ECO-77 | `Cars` | `Автомобили` |
+| RU21-ECO-78 | `Drinks` | `Напитки` |
+| RU21-ECO-79 | `Clothing` | `Одежда` |
+| RU21-ECO-80 | `Airline` | `Авиакомпания` |
+| RU21-ECO-81 | `Fragrance` | `Парфюмерия` |
+
+## ⚙ 11.10 agent-authored (бланкет) – the shop's events, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+`src/engine/world/shop.ts` writes the asset events: the order, the delivery, the listing, the sale and the market report. §26–§27 of this document drafted all of them as semantic events with a `{tail}` / `{label}` slot; the 20 rows below are the live keys, one sentence per form, with RU-06's wording kept (`Заказано`, `Готово`, `Выставлено на продажу`, `по цене покупки`). `DRAFT`, his live edit follows.
+
+**A tail is a whole sentence per form.** The code never joins a clause to a stem any more: «exactly what it cost», «{n} less than it cost» and «{n} more than it cost» are three keys per sale, so each Russian row says its own tail and nothing is assembled. The part-sale rows read the money first and the asset second, as the English does (`Sold {0} of: {1}`), so the Russian re-orders the holes (`Из актива «{1}» выведено {0}`); the asset is a nominative label inside quotes and never takes a case. The market rows keep §27.1's numerical form (`+12%`, `−12%`) so a grammatical gender is never inferred from a translated label.
+
+**Seams that are code, not translation.** The asset's label (`{0}` of the market rows, `{1}` of the part-sale rows, `{0}` of the order rows) is still the English catalogue label in the snapshot (see the economy section below), so a Russian sentence prints it as the engine gives it. Four rows are the stored English `text` the writer keeps beside the ref (`saleTail(...)`, `MARKET_SEASON_OPENING`, `said`); no code asks for them, they read the English clause the writer composes, and the market pair prints the English opening `A season of the market` as `{0}`. Nothing in them is inflected.
+
+### Orders, deliveries, listings
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-SHP-01 | `Added to: {0}` | `Пополнено: {0}` |
+| RU21-SHP-02 | `Ordered: {0}` | `Заказано: {0}` |
+| RU21-SHP-03 | `Delivered: {0}` | `Готово: {0}` |
+| RU21-SHP-04 | `Put on the market: {0}` | `Выставлено на продажу: {0}` |
+| RU21-SHP-05 | `Taken off the market: {0}` | `Снято с продажи: {0}` |
+| RU21-SHP-06 | `{0} is on order – due {1}` | `{0} в заказе · готово: {1}` |
+
+### A whole holding sold
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-SHP-07 | `Sold: {0} – exactly what it cost` | `Продано: {0} – по цене покупки.` |
+| RU21-SHP-08 | `Sold: {0} – {1} less than it cost` | `Продано: {0} – на {1} дешевле цены покупки.` |
+| RU21-SHP-09 | `Sold: {0} – {1} more than it cost` | `Продано: {0} – на {1} дороже цены покупки.` |
+| RU21-SHP-10 | `Sold: {0} – {1}` | `Продано: {0} – {1}.` – ⚙ the stored English `text`: `{1}` is the clause `saleTail(...)` composes, in English |
+
+### A part of a holding sold
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-SHP-11 | `Sold {0} of: {1} – exactly what it cost` | `Из актива «{1}» выведено {0} – по цене покупки.` |
+| RU21-SHP-12 | `Sold {0} of: {1} – {2} less than it cost` | `Из актива «{1}» выведено {0} – на {2} дешевле цены покупки.` |
+| RU21-SHP-13 | `Sold {0} of: {1} – {2} more than it cost` | `Из актива «{1}» выведено {0} – на {2} дороже цены покупки.` |
+| RU21-SHP-14 | `Sold {0} of: {1} – {2}` | `Из актива «{1}» выведено {0} – {2}.` – ⚙ the stored English `text`: `{2}` is the clause `saleTail(...)` composes, in English |
+
+### The market's season report
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-SHP-15 | `A season of the market – {0} is level over the season.` | `Рынок за сезон – {0}: без изменений.` |
+| RU21-SHP-16 | `A season of the market – {0} is up {1}% over the season.` | `Рынок за сезон – {0}: +{1}%.` |
+| RU21-SHP-17 | `A season of the market – {0} is down {1}% over the season.` | `Рынок за сезон – {0}: −{1}%.` |
+| RU21-SHP-18 | `A season of the market – a crash year: {0} is down {1}% over the season.` | `Рынок за сезон – год обвала: {0}, −{1}%.` |
+| RU21-SHP-19 | `{0} – {1} {2} over the season.` | `{0} – {1}: {2} за сезон.` – ⚙ the stored English `text`: `{0}` is the English opening `A season of the market`, `{2}` the English clause `is up 12%` |
+| RU21-SHP-20 | `{0} – a crash year: {1} {2} over the season.` | `{0} – год обвала: {1}: {2} за сезон.` – ⚙ the stored English `text`, as above |

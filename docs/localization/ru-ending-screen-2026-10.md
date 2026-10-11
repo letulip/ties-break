@@ -98,17 +98,19 @@ and the **Russian column is empty on purpose: the words are his**. The English i
 character for character; nothing was reworded. Until a Russian cell is approved, a Russian session
 shows the English sentence on that line, as it does for every unapproved row.
 
+⚙ 11.10 (the owner's blanket ruling): seven of the nine cells are **filled by an agent**, `DRAFT`, his live edit follows ([RU-21](ru-engine-tails-2026-10.md)). The register is the epilogue's own – third person, past tense, the daughter `она`, nothing graded and nothing consoled («None of these may console»): the quiet verbs (`положила ракетку`, `ушла`), no adverb of feeling, and the English figure kept where it is a figure (`точка в конце фразы` for «the end of the sentence», `решила арифметика` for «the arithmetic did»). The vocabulary is RU-12C's (`следующий уровень`, `вершина`, `заявочный взнос`). **The `college` and the `natural` paragraphs are not translated** and stay `QUESTION`: the English of both disagrees with a line on the same page (the two disagreements listed below), so the owner's ruling of 10.10 holds the Russian until the English is settled; until then a Russian session shows the English sentence on those two lines.
+
 | Surface | English | Russian draft |
 | --- | --- | --- |
-| epilogue paragraph, `stopped` | `School ended and the next ladder wanted more than the family had. She put the racket down there, and that is an ending, not a loss.` | |
-| epilogue paragraph, `college` | `A scholarship, a closed league that pays no ranking points, and a stretch of years in which the money finally goes the other way. The tour does not wait, and it does not remember.` | |
-| epilogue paragraph, `bankruptcy` | `Week after week below zero, and then a week with no entry fee in it. Nobody chose this one – the arithmetic did.` | |
-| epilogue paragraph, `injury` | `The body had been telling the same story for years. This time it was not a layoff, it was the end of the sentence.` | |
-| epilogue paragraph, `natural` | `She was asked every off-season and for years she said one more. This year she did not.` | |
-| epilogue paragraph, `plateau` | `The rung above stayed where it was and so did she. Her own words for it were the plainest ones – she could not reach the top, so she went.` | |
-| epilogue paragraph, `peak` | `She was at the top of the sport the season she stopped. Nobody put the question to her and nobody had to – it was decided before anybody else heard about it.` | |
-| epilogue paragraph, `fall` | `One season took most of what the season before it had built. Nobody asked her to stop and nobody talked her out of it.` | |
-| epilogue paragraph, `family` | `She had a child, and the months after it went by without an entry in them. No one asked her to choose – by spring the choice had long been made.` | |
+| epilogue paragraph, `stopped` | `School ended and the next ladder wanted more than the family had. She put the racket down there, and that is an ending, not a loss.` | `Школа закончилась, а следующий уровень требовал больше, чем было у семьи. Здесь она положила ракетку – это окончание, а не поражение.` |
+| epilogue paragraph, `college` | `A scholarship, a closed league that pays no ranking points, and a stretch of years in which the money finally goes the other way. The tour does not wait, and it does not remember.` | – ⚙ 11.10 английский текст ждёт правки (противоречия, чат 10.10): русский не пишется, пока он под вопросом `QUESTION` |
+| epilogue paragraph, `bankruptcy` | `Week after week below zero, and then a week with no entry fee in it. Nobody chose this one – the arithmetic did.` | `Неделя за неделей – ниже нуля, а потом пришла неделя, когда заплатить заявочный взнос было нечем. Никто этого не выбирал – решила арифметика.` |
+| epilogue paragraph, `injury` | `The body had been telling the same story for years. This time it was not a layoff, it was the end of the sentence.` | `Годами тело говорило одно и то же. На этот раз это была не пауза в игре, а точка в конце фразы.` |
+| epilogue paragraph, `natural` | `She was asked every off-season and for years she said one more. This year she did not.` | – ⚙ 11.10 английский текст ждёт правки (противоречия, чат 10.10): русский не пишется, пока он под вопросом `QUESTION` |
+| epilogue paragraph, `plateau` | `The rung above stayed where it was and so did she. Her own words for it were the plainest ones – she could not reach the top, so she went.` | `Ступень выше осталась там, где была, и она тоже. Её собственные слова были самыми простыми: до вершины ей не дотянуться, поэтому она ушла.` |
+| epilogue paragraph, `peak` | `She was at the top of the sport the season she stopped. Nobody put the question to her and nobody had to – it was decided before anybody else heard about it.` | `В тот сезон, когда она остановилась, она была на вершине спорта. Никто не задавал ей этого вопроса, да и не нужно было: всё было решено раньше, чем об этом узнал кто-то ещё.` |
+| epilogue paragraph, `fall` | `One season took most of what the season before it had built. Nobody asked her to stop and nobody talked her out of it.` | `Один сезон забрал большую часть того, что построил предыдущий. Никто не просил её остановиться – и никто не отговаривал.` |
+| epilogue paragraph, `family` | `She had a child, and the months after it went by without an entry in them. No one asked her to choose – by spring the choice had long been made.` | `У неё родился ребёнок, и следующие месяцы прошли без единой заявки. Выбирать её никто не просил – к весне выбор давно был сделан.` |
 
 The paragraph is centred, in a column about as wide as the title above it, so a Russian sentence that
 runs longer than the English takes a line or two more on the page and nothing else moves (the page
