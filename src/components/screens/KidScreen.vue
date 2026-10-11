@@ -66,7 +66,8 @@ import { TIER_SHORT } from '../../engine/season/calendar'
 import { BEST_N_BY_TRACK } from '../../engine/season/ranking'
 import type { PortraitEmotion } from '../../shared/avatarEmotion'
 import { COACH_TIER_WORD } from '../../composables/coachWords'
-import { t } from '../../i18n'
+import { ladderName } from '../../composables/kidIdentity'
+import { engineText, t } from '../../i18n'
 // U0 - the shared components (docs/specs/ui-components.md).
 // ⭐⭐ ROUND 42 #10 – AND StatRow IS NOW ONE OF THEM. This line used to read «it is not used here: it
 // belongs to the Money screen, which is where it earned its shape», which was true until the owner
@@ -211,6 +212,17 @@ const moodLabel = computed(
 // these words - not the grade, not the reading of her play style, not who she is closest to this
 // year. See the header note: this screen renders facts, it does not make them.
 const life = computed(() => game.snapshot?.life ?? null)
+// ⭐ RU-22 (11.10) – THE TILES' ENGLISH, READ AT THE DISPLAY BOUNDARY. The engine owns these labels (`kidLife.ts`, which can never call `t()`); the three whose text is a catalog key – the school
+// cell's heading, the relationships heading, the friends tile's second line – are read through `engineText`, which returns the text as written under English. The tiles' other lines are
+// composed or short labels the catalog does not hold yet (RU-22's cut list names them).
+const schoolTileLabel = computed(() => {
+  const label = life.value?.relationships?.label ?? life.value?.schoolLabel
+  return label === undefined ? t('School') : engineText(label)
+})
+const friendsTileNote = computed(() => {
+  const note = life.value?.friends.note
+  return note === undefined ? '' : engineText(note)
+})
 
 // --- THE RANK, on the card that explains it --------------------------------------------------
 // `rankLabel` is the shared rule: a kid with no counting result reads "Unranked" rather than the
@@ -224,6 +236,8 @@ const life = computed(() => game.snapshot?.life ?? null)
 const activeLadder = computed(() => game.snapshot?.activeLadder ?? 'domestic')
 const ladder = computed(() => game.snapshot?.ladders[activeLadder.value])
 const ladderLabel = computed(() => LADDER_LABEL[activeLadder.value])
+// ⭐ RU-22 (11.10): the English label above stays the engine's word (it is handed to messages as a param, which the hole table reads); the HEADING that is drawn is the table's name in the player's words.
+const ladderHeading = computed(() => ladderName(activeLadder.value))
 const countingResults = computed(() => ladder.value?.countingResults ?? [])
 // THE WINDOW WIDTH IS THE TABLE'S OWN (W2-LADDER §3): six on the junior and national tables,
 // EIGHTEEN on the professional one (the WTA's own §VIII.A.4.a.i; it read sixteen until the 05.08
@@ -511,7 +525,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              the same `kid-tile-line` pair, so the `nowrap` rule and the 16-character budget below hold for them
              unchanged. The owner's words are in that function's header: round13-nav bans Cyrillic in a template. -->
         <Card class="kid-tile" pad="11px 9px">
-          <p class="kid-tile-label">{{ life?.relationships?.label ?? life?.schoolLabel ?? t('School') }}</p>
+          <p class="kid-tile-label">{{ schoolTileLabel }}</p>
           <p class="kid-tile-line">{{ life?.relationships?.lead ?? life?.school.lead }}</p>
           <p class="kid-tile-line kid-tile-line-soft">{{ life?.relationships?.note ?? life?.school.note }}</p>
         </Card>
@@ -519,7 +533,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
         <Card class="kid-tile" pad="11px 9px">
           <p class="kid-tile-label">{{ t('Friends') }}</p>
           <p class="kid-tile-line">{{ life?.friends.lead }}</p>
-          <p class="kid-tile-line kid-tile-line-soft">{{ life?.friends.note }}</p>
+          <p class="kid-tile-line kid-tile-line-soft">{{ friendsTileNote }}</p>
         </Card>
 
         <!-- THE DOOR to screen T. `as="button"` because the ELEMENT is what says "this is a door" -
@@ -687,7 +701,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              did up there: this is the card that explains where the number comes from, so the
              number and its working now sit together instead of a screen apart. -->
         <p class="kid-rank-line">
-          <b class="kid-rank-value">{{ ladderLabel }} {{ rankText }}</b>
+          <b class="kid-rank-value">{{ ladderHeading }} {{ rankText }}</b>
           <span class="kid-rank-points">{{ pointsText }}</span>
         </p>
         <p class="kid-panel-note">

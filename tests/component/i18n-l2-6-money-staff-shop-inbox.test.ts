@@ -420,7 +420,8 @@ describe('L2-6 completeness – every string of the batch files is a wired key, 
 
   it('the rows RU-06 names have a wired key each, and the file that owns each really calls t() with it', () => {
     const SITES: [string, string[]][] = [
-      ['src/components/screens/MoneyScreen.vue', ['screen|Back to Home', 'Family Budget', '{0} in the account · {1}', 'week below zero', 'weeks below zero', 'before the money runs out for good. One week back in the black clears it.',
+      // ⭐ RE-AIMED 11.10 (RU-22): the debt countdown's noun is three TAGGED keys (`one|`, `few|`, `many|`) – the figure is its own element, and Russian has three forms where English has two
+      ['src/components/screens/MoneyScreen.vue', ['screen|Back to Home', 'Family Budget', '{0} in the account · {1}', 'one|week below zero', 'few|weeks below zero', 'many|weeks below zero', 'before the money runs out for good. One week back in the black clears it.',
         'Which part of the budget', 'Total income', 'Total spent', 'spend|Balance', 'Budget period', 'No spending in this window yet.', 'Income', 'View all transactions', 'spent', 'Budget', 'Physio recovery',
         'Weekly retainer - lowers injury risk, shortens recoveries and adds a little condition each week. Charged on the weeks she is fit.', 'She is hurt, so this week bills rehab:',
         'An injured week bills rehab instead:', ', with or without the retainer above.', 'Started this career with {0}.', 'Which bills', 'Her kit',
@@ -646,8 +647,8 @@ describe('L2-6 xx sweep – no unwrapped literal in the frames, and the phone st
    *  ⚠ NO NAME-SHAPED PATTERNS HERE (L2-5's rule): a name or an engine word is allowed because the SNAPSHOT or an engine table carries it – see `engineProse`. */
   const ENGINE_BORN: RegExp[] = [
     /^W\d+( \d{4}| ['’]\d{2})?$/, /^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d+(?: – (?:[A-Za-z]+ )?\d+)?(?:, \d{4})?$/, /^[−-]?\$[\d,.]+[KMB]?$/, /^[−-]?\$[\d,.]+/,
-    // the physio bands (`weeklyBand` builds «$54-91/wk» in the screen – a money shape with an English unit, the formatter's landing, named in the spec note)
-    /^\$\d+-\d+\/wk$/, /^\d+(?:\.\d+)?%$/, /^\d+°?$/, /^#\d+$/, /^[\d,]+$/, /^\d+(?:-\d+)*$/, /^[—–-]$/, /^\?$/, /^%$/, /^·$/,
+    // ⭐ RU-22 (11.10): the physio bands (`weeklyBand`, «$54-91/wk») are not on this list any more – the unit goes through the catalogue's `{0}/wk`, so a raw one on a surface is a leak again.
+    /^\d+(?:\.\d+)?%$/, /^\d+°?$/, /^#\d+$/, /^[\d,]+$/, /^\d+(?:-\d+)*$/, /^[—–-]$/, /^\?$/, /^%$/, /^·$/,
     // the week label with the bracket after a contract term: «W45 '34 (36 weeks left)» (`weekLabel` + `weeksLeftBracket`, shared/dates.ts – RU-13D's formatters)
     /^W\d+ ['’]\d{2} \((?:last week|\d+ weeks? left)\)$/,
   ]

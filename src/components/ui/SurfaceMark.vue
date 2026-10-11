@@ -25,9 +25,13 @@
 // Moving the rules would mean re-aiming a pin to look somewhere else for facts that did not change,
 // which buys nothing. This component emits the class contract; the sheet owns the drawing.
 //
+// ⭐ RU-22 (11.10): THE NAME IS THE ENGINE'S ID (`hard`, `clay`, `grass`), so it is read through the surface reader at the moment it is drawn – under English `engineWord` returns the id as written (the mark is
+// byte-identical), under Russian the court's own word that `surfaceWord` already uses everywhere else.
+//
 // WHAT THE CALLER OWNS: whether the surface is NAMED beside the ring, and how big the ring is. A
 // friendly-match subtitle wants 15px and no name; a calendar row wants 19px and the name.
 import type { Surface } from '../../engine/match/types'
+import { engineWord } from '../../i18n'
 
 withDefaults(
   defineProps<{
@@ -46,6 +50,6 @@ withDefaults(
 <template>
   <span class="surface-mark" :class="[`surf-${surface}`, { 'surface-mark--sm': size === 'sm' }]" :title="title">
     <span class="surface-ring" aria-hidden="true"><i></i></span>
-    <template v-if="showName">{{ surface }}</template>
+    <template v-if="showName">{{ engineWord('surface', surface) }}</template>
   </span>
 </template>

@@ -19,7 +19,8 @@ import { annotateMatch } from '../../src/engine/match/rally'
 import { JUNIOR_TOUR } from '../../src/engine/season/tournament'
 import { buildCommentary } from '../../src/viz/commentary'
 import { buildPreview } from '../../src/viz/preview'
-import { renderCopyRef, type CopyRef } from '../../src/shared/i18n'
+import { renderCopyRef, translate, type CopyRef, type RenderContext } from '../../src/shared/i18n'
+import { createWordReaders } from '../../src/i18n/words'
 import { installCatalog, resetI18nForTests, setLocale } from '../../src/i18n'
 import type { MatchOptions, MatchPlayer } from '../../src/engine/match/types'
 import { installMemoryStorage } from './setup'
@@ -141,7 +142,10 @@ describe('L3-7 – the log draws the commentary and the preview through their re
     const w = mountViewer()
     await clock()
     await skipToResult(w)
-    const ctx = { locale: 'ru', lookup: (k: string) => RU[k] }
+    // ⭐ RE-AIMED 11.10 (RU-22): the expected rows are rendered under the context the APP installs – the probe catalog AND the display boundary's word hook (`src/i18n/index.ts`). The booth hands the code's
+    // English count word to a hole, and the boundary reads the six holes that sit under a plural as digits (`Sixteen` -> `16`); the probe's numbered markers keep every other word as the engine wrote it.
+    const plain: RenderContext = { locale: 'ru', lookup: (k: string) => RU[k] }
+    const ctx: RenderContext = { ...plain, words: createWordReaders((key, params) => translate(key, params, plain)).holes }
     const rows = logRows(w)
     const beatRows = rows.filter((r) => !r.intro)
     expect(beatRows.length).toBe(beats.length)

@@ -57,7 +57,7 @@ import { weekLabel } from '../shared/dates'
 // ⚙ L2-10b (08.10) – THE CARD'S OWN WORDS ARE CATALOG KEYS (docs/localization/ru-school-fork-2026-10.md, RU-12E): the kicker, the lede, the five facts, the quotes' frames, the three
 // answers and the summary under the one that commits her. The college places' names (`COLLEGE_TIER_NAME`), the tier short (`TIER_SHORT`) and the week label are the ENGINE'S words
 // and stay holes. The table of funding bands is GETTERS over `t()` and keeps its type; the ladder's name is the chip's own (`ladderName`), lowercased where English lowercased it.
-import { t } from '../i18n'
+import { engineText, t } from '../i18n'
 import { ladderName } from '../composables/kidIdentity'
 import { activeLadderOfSnapshot, type CollegeTier, type ForkAnswer } from '../shared/protocol'
 import { useStartYear } from '../composables/startYear'
@@ -227,7 +227,7 @@ const rows = computed<TierRow[]>(() =>
   quotes.value.map((q) => {
     return {
       tier: q.tier,
-      name: TIER_LABEL[q.tier],
+      name: engineText(TIER_LABEL[q.tier]),
       // ⭐⭐ THE ODDS REPLACED THE SQUAD (round 21 #2). `Squad 55` was ours, on a scale the card never
       // printed her own number on, so there was nothing to compare it to; this is a measured share of
       // careers out of this build. ⚠ THE WINDOW IS NAMED ONCE UNDER THE LIST, not three times on it.

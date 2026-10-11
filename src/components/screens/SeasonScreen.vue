@@ -96,7 +96,8 @@ import { TIER_SHORT } from '../../composables/weekAhead'
 import { layoffHoldsWeek, layoffNoteFor } from '../../composables/weekDays'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
 import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
-import { formatCents, entryFeeLabel } from '../../shared/money'
+import { formatCents } from '../../shared/money'
+import { entryFeeText } from '../../composables/entryFee'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
 import type { TierId } from '../../engine/season/types'
 import type { AnnotatedMatch } from '../../viz/types'
@@ -1697,9 +1698,9 @@ function closeExhibition(): void {
               <!-- The entry fee reads as a FIGURE, in white, on the same row as the deadline chips
                    (owner, 28.07) - it is money, like the travel budget above it, not a caption. -->
               <!-- ⭐ #28: a slam levies no entry fee at all, and "no entry fee" is a fact where "$0" reads
-                   as a number nobody filled in. `entryFeeLabel` carries the word "entry" itself, so the
+                   as a number nobody filled in. `entryFeeText` carries the word "entry" itself, so the
                    chip prints the label bare rather than prefixing a second one. -->
-              <span class="entry-fee">{{ entryFeeLabel(ev.entryFeeCents) }}</span>
+              <span class="entry-fee">{{ entryFeeText(ev.entryFeeCents) }}</span>
               <!-- R12-8b: the layoff covers this WEEK, whatever the event's own lock says – a
                    points-locked card names the band first (lock precedence), so without the chip
                    the injury never appeared on it at all. -->

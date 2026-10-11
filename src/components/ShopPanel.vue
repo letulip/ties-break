@@ -42,7 +42,7 @@ import { shelfArtUrl } from '../art/shelf'
 // ⭐ THE SECONDARY MARKET, S5 – the listed row's one control is a DRAFT word (SM10), declared beside the popup's three so the panel and the
 // popup cannot spell it two ways.
 import { SALE_LABELS, type ShopState } from '../composables/shop'
-import { t } from '../i18n'
+import { engineText, t } from '../i18n'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
 import ProgressRing from './ui/ProgressRing.vue'
@@ -302,12 +302,12 @@ const screenTab = computed(() => props.screenTab)
         </div>
         <div class="shop-row-body">
           <div class="shop-row-head">
-            <span class="shop-row-name">{{ row.label }}</span>
+            <span class="shop-row-name">{{ engineText(row.label) }}</span>
             <span class="shop-row-rate" :class="{ 'is-down': row.annualRatePct < 0 }">
               {{ rateLine(row) }}
             </span>
           </div>
-          <p class="shop-row-blurb">{{ row.blurb }}</p>
+          <p class="shop-row-blurb">{{ engineText(row.blurb) }}</p>
           <!-- ⭐⭐⭐ ROUND 34 #19 – THE FUND'S OWN CHART. His words, the four windows and the
                decision NOT to store a series are in `shopChartNote` in the script block and on
                `ShopRowView.priceHistory` (no Cyrillic in a template).

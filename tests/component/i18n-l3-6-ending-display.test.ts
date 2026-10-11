@@ -204,7 +204,9 @@ describe('L3-6 – the retirement card draws her sentences from their refs', () 
     plateau.unmount()
     const age = mountRetire(AGE, { physicalShare: 0.9, lastWinterIn: 2 })
     expect(flat(age.get('.retire-rung').text())).toBe('RUNG-2')
-    expect(flat(age.get('.retire-last-winter').text())).toBe('HERWINTER<Two>')
+    // ⭐ RE-AIMED 11.10 (RU-22): the spelled English count (`Two`) is an engine word the display boundary READS – this key's real Russian row puts a PLURAL over the hole, so the hole is handed in as the digits
+    // it stands for (`2`, the `digits` class of src/i18n/words.ts) and the plural reads them; the sentence around it is still the probe's.
+    expect(flat(age.get('.retire-last-winter').text())).toBe('HERWINTER<2>')
     // ...and the ONE sentence with no entry stays English (a miss falls back, it never blanks)
     expect(flat(age.get('.retire-lede').text())).toMatch(/^Twenty-nine is when the question starts/)
     age.unmount()

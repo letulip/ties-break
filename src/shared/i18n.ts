@@ -69,6 +69,14 @@ export interface RenderContext {
   /** Told once per key that fell back to English. Called from inside a render, so it must not write
    *  reactive state. */
   onMiss?: (key: string, why: MissReason) => void
+  /** ⭐ 11.10 (RU-21's leaks, the display boundary) – THE UI'S READER FOR THE ENGINE-BORN WORDS A MESSAGE TAKES AS HOLES. The engine writes English
+   *  WORDS into refs and the UI hands them to `t()` as params (`finishLabel`, `LADDER_LABEL`, a body part, `SET_ORDINAL`…): the Russian row around
+   *  the hole is Russian, the word in it was not. This hook is asked ONCE per message, with the message's own key and its params, and returns the
+   *  params with those words read through the catalog. It is called only on the path that renders a CATALOG HIT, so English – whose key renders
+   *  itself and never reaches a lookup – cannot reach it by construction: the English bytes are unchanged, not merely "tested unchanged". A message
+   *  whose Russian row is invalid falls back to English with the ORIGINAL params. The engine never sets this (it renders nothing); `src/i18n/words.ts`
+   *  holds the tables and `src/i18n/index.ts` supplies it. Pure: returns `params` itself when nothing is to be read. */
+  words?: (key: string, params: MessageParams | undefined) => MessageParams | undefined
 }
 
 /** A message that cannot be parsed or rendered. `translate` and `renderCopyRef` catch exactly this. */
@@ -368,7 +376,7 @@ function translateAt(key: string, params: MessageParams | undefined, ctx: Render
       ctx.onMiss?.(key, 'missing')
     } else {
       try {
-        return formatAt(hit, params, ctx, depth)
+        return formatAt(hit, ctx.words ? ctx.words(key, params) : params, ctx, depth)
       } catch (e) {
         if (!(e instanceof MessageError)) throw e
         ctx.onMiss?.(key, 'invalid')

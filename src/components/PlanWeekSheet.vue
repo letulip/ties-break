@@ -33,7 +33,7 @@ import {
 } from '../engine/economy'
 import { practiceCoachRateCents } from '../engine/coach'
 import { formatCents } from '../shared/money'
-import { t } from '../i18n'
+import { engineText, t } from '../i18n'
 import { ageAtWeek } from '../engine/world'
 import { layoffBlock, medicalBlock, practiceCaution, type PracticeCaution } from '../engine/world'
 import { isOffSeasonWeek } from '../engine/season/calendar'
@@ -434,9 +434,9 @@ function askVacation(row: PackageRow): void {
                  nothing. It is beside Book now: the cost and the commitment read as one gesture, and
                  the title line is a title again. -->
             <div class="pkg-head">
-              <span class="pkg-label">{{ row.label }}</span>
+              <span class="pkg-label">{{ engineText(row.label) }}</span>
             </div>
-            <p class="hint pkg-blurb">{{ row.blurb }}</p>
+            <p class="hint pkg-blurb">{{ engineText(row.blurb) }}</p>
             <p class="hint pkg-effect">
               {{ t('+{0} condition → {1}/100', [row.gain, row.returnsTo]) }}<template v-if="row.buffFactor < 1">{{ ` ${t('· injury risk −{0}% for {1} weeks', [Math.round((1 - row.buffFactor) * 100), ECONOMY.vacation.buffWeeks])}` }}</template>
             </p>

@@ -13,10 +13,13 @@
 //   §2 every producer, rendered: no fallback, no unresolved hole, Russian
 //   §3 a counted noun really inflects (the same plural category, the same word; two categories, two words)
 //   §4 the dollar sign survives (`$` before a hole is a literal) and the mutation arm bites
+//   §5 ⭐ RU-22 (11.10) the display boundary: the engine-born words these producers hand into holes are READ (the Russian reading is in the line, the hook off prints the English word)
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { cp, renderCopyRef, type CopyRef, type MissReason } from '../src/shared/i18n'
+import { cp, renderCopyRef, translate, type CopyRef, type MissReason, type RenderContext } from '../src/shared/i18n'
+import { createWordReaders } from '../src/i18n/words'
+import { engineVocabulary, rawWordsIn } from './helpers/ruVocabulary'
 import { buildKnockPrompt } from '../src/engine/knock'
 import { collegeLeagueRef } from '../src/engine/collegeLeague'
 import { callUpRef } from '../src/engine/nationalTeam'
@@ -36,21 +39,28 @@ const RU = JSON.parse(readFileSync(resolve(ROOT, 'src/i18n/ru.json'), 'utf8')) a
 const CYR = /\p{Script=Cyrillic}/u
 
 interface Rig {
-  ctx: { locale: string; lookup: (k: string) => string | undefined; onMiss: (k: string, why: MissReason) => void }
+  ctx: RenderContext
   missing: Set<string>
   invalid: Set<string>
 }
-/** A Russian render context over a catalogue (the real one unless a mutation arm hands another), collecting what fell back and why. */
-function rig(catalog: Readonly<Record<string, string>> = RU): Rig {
+/** A Russian render context over a catalogue (the real one unless a mutation arm hands another), collecting what fell back and why.
+ *  ⭐ RU-22 (11.10): IT CARRIES THE DISPLAY BOUNDARY'S WORD HOOK, as the app's context does (`src/i18n/index.ts`) – these producers hand the engine's English words into holes, and the screen reads them at the
+ *  moment of showing; a rig without the hook would render a line the player never sees. `hook: false` is the control arm (§5). */
+function rig(catalog: Readonly<Record<string, string>> = RU, hook = true): Rig {
   const missing = new Set<string>()
   const invalid = new Set<string>()
-  return { ctx: { locale: 'ru', lookup: (k) => catalog[k], onMiss: (k, why) => (why === 'missing' ? missing : invalid).add(k) }, missing, invalid }
+  const onMiss = (k: string, why: MissReason): void => void (why === 'missing' ? missing : invalid).add(k)
+  const plain: RenderContext = { locale: 'ru', lookup: (k) => catalog[k], onMiss }
+  const readers = createWordReaders((key, params) => translate(key, params, plain))
+  return { ctx: { ...plain, words: hook ? readers.holes : undefined }, missing, invalid }
 }
+const VOCAB = engineVocabulary()
 /** Render a ref and hold the three things a Russian row must satisfy. */
 function russian(r: Rig, ref: CopyRef, label: string): string {
   const out = renderCopyRef(ref, r.ctx)
   expect(CYR.test(out), `${label}: no Russian came out – «${out}»`).toBe(true)
   expect(/undefined|NaN|\[object|\{\d+\}/.test(out), `${label}: an unresolved hole in «${out}»`).toBe(false)
+  expect(rawWordsIn(out, VOCAB), `${label}: an ENGLISH WORD of the engine's vocabulary survives in «${out}» – the display boundary (src/i18n/words.ts) has no reader for the hole, or the hole is not in src/i18n/wordHoles.ts`).toEqual([])
   return out
 }
 const clean = (r: Rig, what: string, allowed: readonly string[] = []): void => {
@@ -264,5 +274,112 @@ describe('§4 the dollar sign survives, and the mutation arm bites', () => {
     // an escape, not a typed letter: the value carries Russian (so the first check passes) and a hole nobody fills (so the second must fail)
     const r = rig({ ...RU, [key]: '\u044f {7}' })
     expect(() => russian(r, cp`Medical`, 'mutant')).toThrow(/unresolved hole/)
+  })
+})
+
+// =====================================================================================================================================================================================================
+// §5 ⭐ RU-22 (11.10) – THE DISPLAY BOUNDARY: the words these producers hand into their holes are READ, not printed
+// =====================================================================================================================================================================================================
+//
+// §2 above renders every producer under the production context, and `russian()` now also refuses an ENGLISH WORD OF THE ENGINE'S VOCABULARY in the line (`tests/helpers/ruVocabulary.ts`): a stage, a finish, a body part,
+// an ordinal, a label. This section is the positive half – the Russian reading of the word IS in the line, read from ru.json by key – and the control: with the hook switched off the very same line prints the English
+// word, so the checks above can fail. The seams RU-21 listed as «code, not translation» close here: the body part and the descriptor, the ladder's name, the finish, the set ordinal, the nation's place, the age in
+// words, the seat label, the competition label, the surface, the court row, the economy's labels.
+describe('§5 the display boundary reads the engine-born words', () => {
+  const read = (key: string): string => {
+    const v = RU[key]
+    expect(v, `ru.json carries «${key}»`).toBeDefined()
+    return v as string
+  }
+  const withHook = (ref: CopyRef): string => renderCopyRef(ref, rig().ctx)
+  const withoutHook = (ref: CopyRef): string => renderCopyRef(ref, rig(RU, false).ctx)
+
+  it('the injury row: the part and the descriptor stand in Russian, in the order the Russian row prints them', () => {
+    const ref = injuryRowRef(false, false, false, 'lower back', 'stress reaction', false, 3)
+    const out = withHook(ref)
+    expect(out).toContain(read('body|lower back'))
+    expect(out).toContain(read('hurt|stress reaction'))
+    expect(rawWordsIn(withoutHook(ref), VOCAB).sort(), 'control: the hook off prints both English words').toEqual(['lower back', 'stress reaction'])
+  })
+
+  it('the knock dialog: the part stands in Russian in all five sentences', () => {
+    for (const part of ['ankle', 'lower back', 'shoulder']) {
+      const p = buildKnockPrompt({ part, repeat: false, sinceWeek: 9, choice: null, untilWeek: 9 } as unknown as Parameters<typeof buildKnockPrompt>[0], 'ru22-knock', 20, { train: 30, rest: 50 } as unknown as WeekPlan)
+      for (const c of [p.lineC, p.readC, p.causeC, p.restCostC, p.pushCostC]) {
+        const out = withHook(c!)
+        if (rawWordsIn(withoutHook(c!), VOCAB).includes(part)) expect(out, `«${part}» is read in «${out}»`).toContain(read(`body|${part}`))
+      }
+    }
+  })
+
+  it('the season wrap-up: the ladder is the compact word, the best finish is a Russian noun', () => {
+    for (const [track, key] of [['domestic', 'tile|National'], ['itf', 'tile|International'], ['wta', 'tile|Professional']] as const) {
+      const ref = seasonWrapRef({ year: 2031, rankTrack: track, rank: 12, startRank: 20, best: 'Semifinalist', played: true, points: 40, wins: 8, losses: 5, funds: '+$1,200' })
+      const out = withHook(ref)
+      expect(out).toContain(read(key))
+      expect(out).toContain(read('finish|Semifinalist'))
+      expect(rawWordsIn(withoutHook(ref), VOCAB).sort(), 'control').toEqual([track === 'domestic' ? 'National' : track === 'itf' ? 'International' : 'Professional', 'Semifinalist'].sort())
+    }
+  })
+
+  it('the tournament summary: the finish, the surface and the stage read in Russian', () => {
+    const ref = tournamentSummaryRef({ tier: 'World Tour 500', surface: 'clay', week: "W14 '31", kid: 'M. Larsen', finish: 'Quarterfinalist', points: 40, delta: 40, bestN: 18, notRanked: false, retired: false })
+    const out = withHook(ref)
+    expect(out).toContain(read('finish|Quarterfinalist'))
+    expect(out).toContain(read('Clay').toLowerCase())
+    expect(out).toContain('World Tour 500') // a tournament's name is data
+    expect(rawWordsIn(withoutHook(ref), VOCAB).sort(), 'control').toEqual(['Quarterfinalist', 'clay'])
+  })
+
+  it('the retirement rows: the set is an adjective that agrees with `сет`', () => {
+    for (const [set, key] of [['first', 'ord|first'], ['second', 'ord|second'], ['third', 'ord|third'], ['fourth', 'ord|fourth'], ['fifth', 'ord|fifth']] as const) {
+      const ref = cp`🩹 ${'A. Berg'} retired hurt against ${'M. Larsen'} – she went off in the ${set} set.`
+      expect(withHook(ref)).toContain(read(key))
+      expect(rawWordsIn(withoutHook(ref), VOCAB)).toEqual([set])
+    }
+  })
+
+  it('the university feed: the competition is named in Russian, and the nation\'s place is a number with the Russian ending', () => {
+    const league = collegeLeagueRef({ roundsWon: 1, rounds: 3 })
+    expect(withHook(league)).toContain(read('league|the College League'))
+    expect(rawWordsIn(withoutHook(league), VOCAB), 'control').toContain('the College League')
+    const cup = callUpRef({ rubbersPlayed: 5, rubbersWon: 3, nationFinish: 3 })
+    const out = withHook(cup)
+    expect(out).toContain(read('league|the Nations Cup'))
+    expect(out).toContain(read('place|{0}').replace('{0}', '3'))
+    expect(rawWordsIn(withoutHook(cup), VOCAB).sort()).toEqual(['3rd', 'the Nations Cup'].sort())
+  })
+
+  it('the birthday and the age line: the age is a Russian numeral (a capital where the line opens with it)', () => {
+    const lower = cp`She is ${'seventeen'} this week.`
+    expect(withHook(lower)).toContain(read('num|seventeen'))
+    const capital = cp`${'Sixteen'} today. Her plans started before breakfast.`
+    const out = withHook(capital)
+    const word = read('num|sixteen')
+    expect(out.startsWith(word.charAt(0).toUpperCase() + word.slice(1)), out).toBe(true)
+    expect(rawWordsIn(withoutHook(lower), VOCAB)).toEqual(['seventeen'])
+  })
+
+  it('the stored ledger rows: the seat label, the court row, the shop and the vacation read in Russian', () => {
+    const fare = cp`${'Hitting partner'} travel to ${'Regional Championship'} – one additional fare`
+    expect(withHook(fare)).toContain(read('Hitting partner'))
+    const court = cp`${'Academy courts'} – ${5} h, ${'the busy hours'}`
+    const courtOut = withHook(court)
+    expect(courtOut).toContain(read('court|Academy courts'))
+    expect(courtOut).toContain(read('court|the busy hours'))
+    const vacation = cp`Family vacation – ${'Staycation with friends'}: +${12} condition.`
+    expect(withHook(vacation)).toContain(read('Staycation with friends'))
+    const sold = cp`Sold: ${'The yacht'} – exactly what it cost`
+    expect(withHook(sold)).toContain(read('The yacht'))
+    for (const ref of [fare, court, vacation, sold]) expect(rawWordsIn(withoutHook(ref), VOCAB).length, 'control').toBeGreaterThan(0)
+  })
+
+  it('MUTATION: the Russian row of a word deleted, or the table cut – the same producers go red under the same check', () => {
+    const without = { ...RU }
+    delete without['body|lower back']
+    const ref = injuryRowRef(false, false, false, 'lower back', 'stress reaction', false, 3)
+    const out = renderCopyRef(ref, rig(without).ctx)
+    expect(rawWordsIn(out, VOCAB)).toEqual(['lower back'])
+    expect(() => russian(rig(without), ref, 'mutant')).toThrow(/ENGLISH WORD/)
   })
 })

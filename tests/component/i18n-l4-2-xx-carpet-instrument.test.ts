@@ -51,7 +51,7 @@ describe('the allowlist – a shape is never a word, an engine word is an exact 
   })
 
   it('the shapes it does carry: week labels, dates, money, ranks, tier codes, the product mark', () => {
-    for (const shape of ['W12', "W45 '31", 'W45 2031', '$1,234', '-$86', '$254.4M', '#34', 'Oct 20–26, 2031', "Jan '38", 'entry $40', 'x8', 'WTA 250', 'Ties Break', '12', '+3']) {
+    for (const shape of ['W12', "W45 '31", 'W45 2031', '$1,234', '-$86', '$254.4M', '#34', 'Oct 20–26, 2031', "Jan '38", 'x8', 'WTA 250', 'Ties Break', '12', '+3']) {
       expect(SHAPES.some((re) => re.test(shape)), `«${shape}» is not copy`).toBe(true)
     }
     expect(WORDS).toEqual(['hard', 'clay', 'grass', 'carpet'])

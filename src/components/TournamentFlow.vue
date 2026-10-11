@@ -48,7 +48,7 @@ import { replayMatch } from '../composables/annotatedMatch'
 import { computeMatchStats } from '../viz/match/matchStats'
 import { matchStatMeta, matchStatRows } from '../composables/matchStatTable'
 import { courtSentence, rankText, surfaceName } from '../composables/eventCard'
-import { t } from '../i18n'
+import { engineWord, t } from '../i18n'
 import { TIERS } from '../engine/season/calendar'
 import { KID_ID, flipScore, prizeCentsFor } from '../engine/world'
 import { LADDER_LABEL } from '../shared/protocol'
@@ -809,7 +809,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
     v-if="pending"
     :title="phase === 'splash' ? null : replayOpen ? shortTierLabel(pending.tierLabel) : pending.tierLabel"
     :headline-meta="replayOpen ? [weekShort] : null"
-    :headline-badge="replayOpen ? watchedRoundLabel : null"
+    :headline-badge="replayOpen ? engineWord('round', watchedRoundLabel) : null"
     :screen="watchedScreen"
     :class="{ 'tf-fit': phase === 'pre' && !replayOpen }"
   >
@@ -1007,7 +1007,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
              actually read for. The same claim the crowd cell makes further up: absent is a different
              sentence from a dash. -->
         <div class="tf-round-row">
-          <p class="tf-round">{{ pending.roundLabel }}</p>
+          <p class="tf-round">{{ engineWord('round', pending.roundLabel) }}</p>
           <p v-if="drawSize !== null" class="tf-draw">{{ t('{0}-player draw', [drawSize]) }}</p>
         </div>
         <!-- Both ranks are read off the table THIS tournament is played on, and the panel says which
@@ -1133,7 +1133,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
            tabs below carry the same results in more detail. -->
       <div v-if="pending.bracket.length && phase !== 'finale' && !replayOpen" class="tf-strip">
         <div v-for="(r, i) in pending.bracket" :key="i" class="tf-strip-row" :class="{ won: r.kidWon }">
-          <span class="tf-strip-round">{{ r.roundLabel }}</span>
+          <span class="tf-strip-round">{{ engineWord('round', r.roundLabel) }}</span>
           <span class="tf-strip-result">{{ r.kidWon ? t('path|W') : t('path|L') }}</span>
           <span class="tf-strip-opp">{{ r.oppName }}</span>
           <span class="tf-strip-score num">{{ r.score }}</span>
@@ -1234,7 +1234,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
       class="tf-scene"
       :stage="kidStage"
       emotion="serious"
-      :label="pending.roundLabel"
+      :label="engineWord('round', pending.roundLabel)"
       fill
     >
       <!-- ⭐⭐⭐ ROUND 42 #36 – THE PLATE'S OWN VOCABULARY IS SHARED NOW (`.scene-*`, src/style.css).
@@ -1315,7 +1315,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
     <!-- Round-7 spectate: after the kid's exit, walk the rounds she isn't in, up to the Final.
          Her own result stays visible; the draw above (BracketTabs) shows this round. -->
     <section v-else-if="phase === 'spectate'" class="tf-card tf-spectate">
-      <p class="tf-spectate-kid">{{ kidShort }} – {{ pending.finishLabel }}</p>
+      <p class="tf-spectate-kid">{{ kidShort }} – {{ engineWord('round', pending.finishLabel) }}</p>
       <p class="tf-round">{{ spectateRoundLabel }}</p>
       <p class="hint">{{ t('She\'s out – see how the draw finishes.') }}</p>
       <div class="tf-actions">
@@ -1421,11 +1421,11 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
           <p class="tf-poster-status">{{ t('Champion') }}</p>
           <h2 class="tf-poster-name">{{ championName }}</h2>
           <p class="tf-poster-line">
-            {{ kidShort }} – <b>{{ pending.finishLabel }}</b>
+            {{ kidShort }} – <b>{{ engineWord('round', pending.finishLabel) }}</b>
           </p>
         </template>
         <template v-else>
-          <p class="tf-poster-status">{{ pending.finishLabel }}</p>
+          <p class="tf-poster-status">{{ engineWord('round', pending.finishLabel) }}</p>
           <h2 class="tf-poster-name">{{ kidFullName }}</h2>
         </template>
         <div class="controls tf-poster-chips">

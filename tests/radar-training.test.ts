@@ -177,9 +177,11 @@ describe('training read – NOT ONE NUMBER reaches the card', () => {
     const tile = card.slice(from, to)
     const bindings = [...tile.matchAll(/\{\{\s*([^}]+?)\s*\}\}/g)].map((m) => m[1])
     expect(bindings.length).toBeGreaterThan(3)
+    // RU-22 (11.10): the read is drawn through `engineText(…)` – the display boundary's reader, which hands the engine's English back untouched under `en` and reads the sentence's Russian row under ru. It is
+    // still the read and nothing else: the wrap is the ONE shape added, around exactly these two fields.
     for (const b of bindings) {
       expect(b, `Training tile interpolates ${b}`).toMatch(
-        /^(plan\.(train|rest)|trainingRead\.(label|text)|DAY_LETTERS\[i\])$/,
+        /^(plan\.(train|rest)|trainingRead\.(label|text)|engineText\(trainingRead\.(label|text)\)|DAY_LETTERS\[i\])$/,
       )
     }
     // ...and the wing's NAME is the engine's, never a table in the screen. Both halves: no literal

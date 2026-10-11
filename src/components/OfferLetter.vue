@@ -53,7 +53,7 @@ import type {
   StaffLetterTerms,
   TourLetterTerms,
 } from '../shared/protocol'
-import { LADDER_LABEL } from '../shared/protocol'
+import { ladderName } from '../composables/kidIdentity'
 import { finishLabel } from '../engine/world/labels'
 import { formatCents } from '../shared/money'
 import { t } from '../i18n'
@@ -234,7 +234,8 @@ const staffMatches = computed(() => (staffTerms.value.wins ?? 0) + (staffTerms.v
 const staffRankLine = computed(() => {
   const tm = staffTerms.value
   if (tm.endRank === undefined || !tm.rankTrack) return ''
-  return `${LADDER_LABEL[tm.rankTrack]} #${tm.endRank}`
+  // ⭐ RU-22 (11.10): the table's name in the player's words and the shared `#{rank}` message – under English the same string this template literal built.
+  return `${ladderName(tm.rankTrack)} ${t('#{rank}', { rank: tm.endRank })}`
 })
 /** The coach's deepest run (L3-2): the sentence, with the titles clause as part of the same message so a translation owns its order. */
 const staffRunLine = computed(() => {

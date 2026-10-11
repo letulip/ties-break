@@ -1904,8 +1904,8 @@ These are the 81 catalogue keys of `src/engine/economy/shop.ts`, `equipment.ts` 
 | RU21-MON-31 | `one year` | `1 год` |
 | RU21-MON-32 | `runs to` | `до` |
 | RU21-MON-33 | `this season` | `за этот сезон` |
-| RU21-MON-34 | `week below zero` | `нед. ниже нуля` |
-| RU21-MON-35 | `weeks below zero` | `нед. ниже нуля` |
+| RU21-MON-34 | `one\|week below zero` | `неделя ниже нуля` – ⚙ 11.10 (RU-22): the figure stands in its own element, so the noun is three tagged messages (`one\|`, `few\|` in RU22-WRD-96, `many\|` in the next row) instead of two bare ones |
+| RU21-MON-35 | `many\|weeks below zero` | `недель ниже нуля` |
 | RU21-MON-36 | `{0} a year ·` | `{0} в год ·` |
 | RU21-MON-37 | `{0} good weeks` | `{0, plural, one {{0} неделя} few {{0} недели} many {{0} недель} other {{0} недели}} службы` |
 | RU21-MON-38 | `1 thing` | `1 актив` |

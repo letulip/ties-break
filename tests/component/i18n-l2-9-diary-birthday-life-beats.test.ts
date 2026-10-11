@@ -224,7 +224,12 @@ describe('L2-9a Russian smoke – ru.json read by key, no Cyrillic typed here', 
     // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED. The blanket compiled his DRAFT rows (ru.json 56 -> 3 310): «approved» is «compiled» below and both claims stand – his Russian reaches the screen, and what ru.json
     // lacks is English and counted. The compiled arm reads every key the mounts ASKED for, across named holes and ICU plurals (tests/component/ruCompiled.ts says why that, and not a named-gap walk over
     // `wiredHere`); `wiredHere` is the vocabulary its coverage floor is taken of. The old `NOT_IN_POSE` set is gone with the walk: a key the pose never asks for is not a claim, it is coverage.
-    const arm = compiledArm({ what: 'L2-9a', ru: RU, asked, screen: everything, wiredHere, coverageFloor: 0.95 })
+    // ⭐ 11.10, RU-22 (the display boundary): the age is an engine word (`ageInWords`) and the card reads it through the numeral reader of src/i18n/words.ts. The row `num|fourteen` is asked and compiled, and the
+    // line opens with the number, so the reader returns it with the capital the English had – the lower-case value is not on the screen as written. Held both ways like every name here.
+    const NOT_DRAWN: Record<string, string> = {
+      'num|fourteen': 'the birthday heading opens with the age, so the numeral reader (src/i18n/words.ts `age`) draws it with a capital – the value is on the screen, in its sentence-initial case',
+    }
+    const arm = compiledArm({ what: 'L2-9a', ru: RU, asked, screen: everything, wiredHere, notDrawn: NOT_DRAWN, coverageFloor: 0.95 })
     expectCounterIsExact(asked, missedKeys(), RU)
     expectLabelsFollowTheCatalog(['Her birthday – {0}', 'Proceed'], missedKeys(), RU, everything)
     console.log(`[L2-9a smoke] ru.json: ${Object.keys(RU).length} keys; asked AND compiled on these screens: ${arm.askedCompiled.length}; reached ${arm.observed.length} of ${arm.observed.length + arm.unreached.length} compiled, wired keys; distinct misses on the birthday card: ${missedKeys().length} (${missCount()} counted)`)

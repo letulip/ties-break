@@ -43,7 +43,7 @@ import { seasonYear } from '../shared/dates'
 import { formatCentsSigned } from '../shared/money'
 import type { SeasonHistoryEntry } from '../shared/protocol'
 import type { LadderTrack } from '../engine/season/types'
-import { t } from '../i18n'
+import { engineWord, t } from '../i18n'
 import { useStartYear } from '../composables/startYear'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
@@ -204,7 +204,7 @@ const cells = computed(() =>
                 <span class="ph-name">{{ seasonYear(c.row.seasonIndex, startYear) }}</span>
                 <!-- Best result of that season, in the same wording the finale card uses. Absent on
                      a season with no tournaments, and on rows the v14 migration backfilled. -->
-                <span v-if="c.row.bestFinish !== undefined" class="ph-rank">{{ finishLabel(c.row.bestFinish) }}</span>
+                <span v-if="c.row.bestFinish !== undefined" class="ph-rank">{{ engineWord('round', finishLabel(c.row.bestFinish)) }}</span>
               </th>
               <!-- A DASH IS THE ANSWER "no rank in this table", and it is not a zero. Either she was
                    never ranked here (v46 omits `endRank` rather than printing the tie floor every

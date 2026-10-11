@@ -31,13 +31,15 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { isVNode, type Component, type ComponentInternalInstance, type VNode } from 'vue'
-import { resetI18nForTests } from '../../src/i18n'
+import { installCatalog, resetI18nForTests, setLocale } from '../../src/i18n'
 import { useGameStore } from '../../src/stores/game'
 import type { Snapshot } from '../../src/shared/protocol'
 import { installMemoryStorage } from './setup'
 import { NARROW_PHONE, PHONE, assertDismissReachable, availableWidth, demandedWidth, setViewport, type Viewport } from './fits'
 import { expandRendered, hardcodeLeaks, installPseudoLocale } from './pseudoloc'
 import { SHAPES, allowlistSize, engineWords, isEngineBorn } from './xxAllowlist'
+import { engineVocabulary, rawWordsIn } from '../helpers/ruVocabulary'
+import { RU_RAW } from './ruRawFindings'
 import { FINDINGS } from './xxFindings'
 import { CONTAINED } from './xxInventory'
 
@@ -381,6 +383,46 @@ function writeReport(area: string, rows: readonly Row[]): void {
 const DISCOVER = process.env.XX_CARPET_DISCOVER === '1'
 
 /** Define one `describe` over a registry: a case per surface, the ledger assertion, and the part-file write. */
+
+/** ⭐ RU-22 (11.10) – THE RU ARM: every text node and copy attribute under `root`, as the player reads them. */
+function textPieces(root: Element): string[] {
+  const out: string[] = []
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    const parent = (n as Text).parentElement
+    if (parent && SKIP.test(parent.tagName)) continue
+    const text = (n as Text).nodeValue ?? ''
+    if (/\p{L}/u.test(text)) out.push(text)
+  }
+  for (const el of Array.from(root.querySelectorAll('[title],[aria-label],[placeholder],[alt]'))) {
+    for (const a of ['title', 'aria-label', 'placeholder', 'alt']) {
+      const v = el.getAttribute(a)
+      if (v && /\p{L}/u.test(v)) out.push(v)
+    }
+  }
+  return out
+}
+
+let ruCatalog: Record<string, string> | null = null
+/** Mount a surface under the REAL ru.json and return the engine words (`ruVocabulary.ts`) it prints raw. */
+export async function ruRawWords(s: Surface, mutateCatalog?: (ru: Record<string, string>) => Record<string, string>): Promise<string[]> {
+  document.body.innerHTML = ''
+  setActivePinia(createPinia())
+  resetI18nForTests(null)
+  ruCatalog ??= JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string, string>
+  installCatalog('ru', mutateCatalog ? mutateCatalog({ ...ruCatalog }) : ruCatalog)
+  await setLocale('ru')
+  setViewport(PHONE)
+  const m = await s.mount(PHONE)
+  const vocabulary = engineVocabulary()
+  const found = new Set<string>()
+  for (const piece of textPieces(document.body)) for (const w of rawWordsIn(piece, vocabulary)) found.add(w)
+  m.unmount()
+  resetI18nForTests(null)
+  document.documentElement.lang = 'en'
+  return [...found].sort()
+}
+
 export function carpet(area: string, surfaces: readonly Surface[]): void {
   const rows: Row[] = []
   describe(`L4-2 xx carpet – ${area}`, () => {
@@ -415,6 +457,15 @@ export function carpet(area: string, surfaces: readonly Surface[]): void {
         if (DISCOVER) return
         const known = FINDINGS.filter((f) => f.area === area && f.surface === s.id).map((f) => `${f.kind}: ${f.detail}`).sort()
         expect(findingsOf(row), `${s.id}: observed findings vs the ledger (xxFindings.ts) – a new one is red, a fixed one must be deleted`).toEqual(known)
+      })
+      it(`${s.id}: ru – no engine word with a Russian reading is printed raw`, async () => {
+        const raw = await ruRawWords(s)
+        const known = RU_RAW.filter((f) => f.area === area && f.surface === s.id).map((f) => f.word).sort()
+        if (process.env.RU_RAW_DISCOVER) {
+          if (raw.length > 0) console.log(`[ru raw] ${area} | ${s.id} | ${JSON.stringify(raw)}`)
+          return
+        }
+        expect(raw, `${s.id}: the engine words this surface prints raw under ru.json vs the ledger (ruRawFindings.ts) – a new one is red, a fixed one must be deleted`).toEqual(known)
       })
     }
   })

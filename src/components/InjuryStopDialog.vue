@@ -52,7 +52,7 @@ import type { InjurySeverity } from '../shared/protocol'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { weekLabel } from '../shared/dates'
-import { t } from '../i18n'
+import { engineWord, t } from '../i18n'
 import { formatCents } from '../shared/money'
 import { facePoint } from '../art/faceRects'
 import { useStartYear } from '../composables/startYear'
@@ -211,7 +211,7 @@ useDialogFocus(card, () => emit('continue'))
         <tbody>
           <tr>
             <th>{{ t('Injury') }}</th>
-            <td>{{ injury.kind }}</td>
+            <td>{{ engineWord('kind', injury.kind) }}</td>
           </tr>
           <tr>
             <th>{{ t('Severity') }}</th>

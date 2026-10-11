@@ -34,7 +34,7 @@ import { weekLabel } from '../shared/dates'
 // – the place names, the league and squad labels, the league exit label, the round labels, the opponents – are holes or raw, and the engine's receipts are L3.
 // A sentence that English builds from a counted clause is a whole message per shape (the same count fork the old template literals made), so nothing here
 // composes a plural in code. English renders itself, so not one word on this card moved.
-import { t } from '../i18n'
+import { engineWord, t } from '../i18n'
 import { KID_ID } from '../engine/world/constants'
 import { COLLEGE_TRIP_WEEKS } from '../engine/world'
 import { WEEKS_PER_YEAR } from '../engine/season/calendar'
@@ -134,7 +134,7 @@ const collegeReportHead = computed(() => {
 const leagueFact = computed(() => {
   const run = league.value
   if (run === null) return null
-  return wonTheLeague(run) ? t('Won it') : leagueExitLabel(run)
+  return wonTheLeague(run) ? t('Won it') : engineWord('round', leagueExitLabel(run))
 })
 
 /**
@@ -243,6 +243,10 @@ const watching = ref<WorldMatch | null>(null)
  *  headed a college championship match with her country's name – the exact class of quiet lie the
  *  «кроме названий турниров» ruling is about. */
 const watchingTitle = ref<string>(NATIONAL_TEAM.label)
+// ⭐ RU-22 (11.10): the two competitions name themselves with the ENGINE's English (`COLLEGE_LEAGUE.label`, `NATIONAL_TEAM.label`), which the Russian rows already know under `league|`. The labels stay the English
+// source for the logic (`watching` is compared, the viewer's title is handed down) and are read through the league reader where they are DRAWN.
+const leagueName = computed(() => engineWord('league', COLLEGE_LEAGUE.label))
+const cupName = computed(() => engineWord('league', NATIONAL_TEAM.label))
 
 function watch(match: WorldMatch, title: string): void {
   watching.value = match
@@ -309,7 +313,7 @@ const leagueArt = computed(() => {
  *  carries `rounds` beside the result – and a second idea of what a round is called cannot get in. */
 function leagueLabel(match: WorldMatch): string {
   const rounds = league.value?.rounds ?? match.round + 1
-  return `${stageLabel(match.round, 2 ** rounds)} – ${formatShortName(match.oppName)}`
+  return `${engineWord('round', stageLabel(match.round, 2 ** rounds))} – ${formatShortName(match.oppName)}`
 }
 
 /** "Rubber 2 – L. Kovac" – which one it was and who it was against, off the FROZEN record rather
@@ -390,13 +394,13 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
       // career at every tier, so the copy may say «every year» without a hedge.
       rows.push({
         week: w,
-        label: COLLEGE_LEAGUE.label,
+        label: leagueName.value,
         what: t('A draw of {0}, every year – her matches can be watched', [COLLEGE_LEAGUE.drawSize]),
       })
     } else if (seasonWeek === NATIONAL_TEAM.seasonWeek) {
       rows.push({
         week: w,
-        label: NATIONAL_TEAM.label,
+        label: cupName.value,
         what: t('If the selectors call her off the championship, the rubbers can be watched'),
       })
     } else if ((COLLEGE_TRIP_WEEKS as readonly number[]).includes(seasonWeek)) {
@@ -459,7 +463,7 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
              at the dd's own size does not fit a 90px column on a 375px phone, and a fact that
              collides with the one beside it is not more legible than the sentence it came from. -->
         <div v-if="leagueFact" class="college-fact-wide">
-          <dt>{{ COLLEGE_LEAGUE.label }}</dt>
+          <dt>{{ leagueName }}</dt>
           <dd>{{ leagueFact }}</dd>
         </div>
       </dl>
@@ -467,7 +471,7 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
            call-up because that is the order the two happened in AND the direction the causality runs:
            the championship is week 12 and the letter that reads it is week 14. -->
       <div v-if="league" class="college-league">
-        <p class="college-league-head">{{ COLLEGE_LEAGUE.label }}</p>
+        <p class="college-league-head">{{ leagueName }}</p>
         <!-- ⚠ NO ART IS CREATED HERE. `occasionArtUrl` borrows the shipped regional set by OCCASION
              (round 24 #4, the owner's own choice), so a fixture with no rung still has an honest
              picture and nothing new was drawn for it. -->
@@ -479,7 +483,7 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
              assertion counting «the rows» had to be able to say which competition it meant. -->
         <ul v-if="leagueMatches.length > 0" class="college-rubbers">
           <li v-for="m in leagueMatches" :key="m.eventId">
-            <button class="college-rubber college-league-match" type="button" @click="watch(m, COLLEGE_LEAGUE.label)">
+            <button class="college-rubber college-league-match" type="button" @click="watch(m, leagueName)">
               <span class="rubber-who">{{ leagueLabel(m) }}</span>
               <span class="rubber-score">{{ rubberOutcome(m) }}</span>
               <span class="rubber-watch">{{ t('Watch') }}</span>
@@ -495,7 +499,7 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
            is nothing to open – the sentence above has already said which of the two it was. -->
       <ul v-if="collegeRubbers.length > 0" class="college-rubbers">
         <li v-for="(m, i) in collegeRubbers" :key="m.eventId">
-          <button class="college-rubber" type="button" @click="watch(m, NATIONAL_TEAM.label)">
+          <button class="college-rubber" type="button" @click="watch(m, cupName)">
             <span class="rubber-who">{{ rubberLabel(m, i) }}</span>
             <span class="rubber-score">{{ rubberOutcome(m) }}</span>
             <span class="rubber-watch">{{ t('Watch') }}</span>

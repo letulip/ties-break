@@ -21,7 +21,7 @@
 // date line above the tabs (they belong to whichever screen mounts this).
 import { computed, nextTick, ref, watch } from 'vue'
 import { KID_ID } from '../engine/world'
-import { t } from '../i18n'
+import { engineWord, t } from '../i18n'
 // U0: the round switcher is the app's standard segmented control, and this file was its ONE
 // consumer – the pair `.tab-row` / `.tab-pill` had been "shared once" and never got a component.
 // docs/specs/ui-components.md §8 says this makes it official, so the draw is SegmentedRow's real
@@ -73,7 +73,7 @@ const tabs = computed<RoundTab[]>(() => {
   for (const m of props.matches) if (!seen.has(m.round)) seen.set(m.round, m.roundLabel)
   return [...seen.keys()]
     .sort((a, b) => a - b)
-    .map((round) => ({ round, short: shortStage(round, props.drawSize), label: seen.get(round) ?? '' }))
+    .map((round) => ({ round, short: shortStage(round, props.drawSize), label: engineWord('round', seen.get(round) ?? '') }))
 })
 
 // The selected round tracks `activeRound` but can be overridden by tapping a tab; it snaps back

@@ -712,7 +712,8 @@ describe('one header slot per match screen, and it says where it takes you', () 
     // header and reads the capsule's own background, which is the assertion that would have caught
     // it. What is pinned HERE is only which slot each fact goes in, which is this file's subject.
     expect(flow).toMatch(/:headline-meta="replayOpen \? \[weekShort\] : null"/)
-    expect(flow).toMatch(/:headline-badge="replayOpen \? watchedRoundLabel : null"/)
+    // ⭐ RE-AIMED 11.10 (RU-22): the badge is still the WATCHED round (not `pending.roundLabel`), now read through the round reader; the label the booth logic compares stays the engine's English
+    expect(flow).toMatch(/:headline-badge="replayOpen \? engineWord\('round', watchedRoundLabel\) : null"/)
     // ⚠ SPELLED OUT, AND WHAT PAID FOR IT IS THE TITLE. The item's own risk was that the round would
     // not fit: with the full tournament name `Regional Championship` (188.5px) + `W36 '35` (44.2) +
     // `Quarterfinal` (68) is 320.3px against 283.8px of room at 375pt, and it wraps. Dropping the

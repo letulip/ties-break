@@ -644,15 +644,15 @@ export function gapInResultsNote(gap: number, points: number): string | null {
   // Strongest open rung first: it is the one she would actually travel to, and it pays the most per
   // trip.
   for (const id of [...openDomesticRungs(points)].reverse()) {
-    const t = TIERS[id]
+    const rung = TIERS[id]
     // FEWEST TRIPS, then the EASIEST finish that still needs that many. The second half matters more
     // than it looks: at 110 points, National's 40-point gap is closed by one Regional title (80) and
     // equally by one Regional final (48), and telling a parent to go and win the thing when reaching
     // the final would do is advice that is true and unkind. Ties on trip count therefore break toward
     // the LOWEST finish, which is the highest index in this array.
     let best: { finish: number; n: number } | null = null
-    for (let finish = 0; finish < t.points.length; finish++) {
-      const value = t.points[finish]
+    for (let finish = 0; finish < rung.points.length; finish++) {
+      const value = rung.points[finish]
       if (value <= 0) continue // a first-round exit pays nothing (wave B) and closes no gap
       const n = Math.ceil(gap / value)
       // Only say it when it is a plan rather than a life sentence. Beyond three trips the honest answer
@@ -661,8 +661,17 @@ export function gapInResultsNote(gap: number, points: number): string | null {
       if (!best || n < best.n || (n === best.n && finish > best.finish)) best = { finish, n }
     }
     if (best) {
-      const phrase = finishPhrase(best.finish, t.drawSize)
-      return best.n === 1 ? `one more ${phrase} at ${t.label}` : `${best.n} more ${phrase}s at ${t.label}`
+      // ⭐ RU-22 (11.10): THE ENGLISH FRAME AROUND THE ENGINE'S FINISH, WHOLE – ten messages (the phrase x one or many) instead of a template literal, so the Russian can decline each noun. Under English every one
+      // of them renders the string this line used to build (`{0} more titles at X`, `round of 16s` included – the key spells the plural the template spelled).
+      const phrase = finishPhrase(best.finish, rung.drawSize)
+      const where = rung.label
+      const many = best.n
+      if (phrase === 'title') return many === 1 ? t('one more title at {0}', [where]) : t('{0} more titles at {1}', [many, where])
+      if (phrase === 'final') return many === 1 ? t('one more final at {0}', [where]) : t('{0} more finals at {1}', [many, where])
+      if (phrase === 'semi-final') return many === 1 ? t('one more semi-final at {0}', [where]) : t('{0} more semi-finals at {1}', [many, where])
+      if (phrase === 'quarter-final') return many === 1 ? t('one more quarter-final at {0}', [where]) : t('{0} more quarter-finals at {1}', [many, where])
+      const size = Math.min(2 ** best.finish, rung.drawSize)
+      return many === 1 ? t('one more round of {0} at {1}', [size, where]) : t('{0} more round of {1}s at {2}', [many, size, where])
     }
   }
   return null

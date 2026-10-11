@@ -49,7 +49,8 @@
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { prefersReducedMotion } from '../../composables/reducedMotion'
-import { eventText, localizedList, t } from '../../i18n'
+import { engineText, eventText, locale, localizedList, t } from '../../i18n'
+import { pluralCategory } from '../../shared/i18n'
 // ⭐ ROUND 42 #11 – `staffResultShareBps` joins the same import, and for the reason round 29 #13
 // gave on the coaches page: the percentage a screen prints must be the one `finalizeTournament`
 // pays through, never a typed copy of it. See `coachShareNote` below.
@@ -151,7 +152,8 @@ function weeklyBand(band: readonly [number, number]): string {
   const background = game.snapshot?.profile.background
   if (!background) return ''
   const [cLo, cHi] = corridorBandFor(background, coachTierById(game.snapshot?.coachId ?? null))
-  return `$${Math.round((band[0] * cLo) / 100)}-${Math.round((band[1] * cHi) / 100)}/wk`
+  // ⭐ RU-22 (11.10): the unit is the catalogue's own `{0}/wk` (the support staff's price tag says it with the same key), so the band reads `/нед.` under ru.json; under English the string is the one this template built.
+  return t('{0}/wk', [`$${Math.round((band[0] * cLo) / 100)}-${Math.round((band[1] * cHi) / 100)}`])
 }
 const physioCostLabel = computed(() => weeklyBand(ECONOMY.physio.retainerPerWeekCents))
 // ⚠ THE NUMBER THE BILLS TAB HAS NEVER QUOTED (round-16 #15). `resolvePhysio` (world/injury.ts)
@@ -844,6 +846,15 @@ const kitDeal = computed(() => game.snapshot?.kitDeal ?? null)
 /** ⭐ ROUND 29 PART FOUR P6/§8 – the portfolio shelf, engine-derived rows (`AdPortfolioRow`), empty
  *  before eighteen. This screen renders states and formats money; it decides nothing. */
 const adPortfolio = computed(() => game.snapshot?.adPortfolio ?? [])
+// ⭐ RU-22 (11.10) – THE DEBT COUNTDOWN'S NOUN, IN THREE FORMS WHERE THE LANGUAGE HAS THREE. The figure is its own element (`<strong>3</strong>`), so the noun is a separate message and the figure cannot be inside it.
+// English has two forms and Russian three (`неделя` / `недели` / `недель`): all three are CONTEXT-TAGGED keys (`one|`, `few|`, `many|`) – under English the tag is stripped and `one` / `many` read the two words this
+// template always printed, while `few` is never selected (`pluralCategory('en', n)` is `one` or `other`), so the bytes did not move; the category is the language's own (`1, 21 … one`, `2 – 4, 22 – 24 … few`). A bare
+// twin would have been ambiguous for the importer (two keys of one file behind one English text, the class №15/№4 of RU-21), so the pair that used to be bare is tagged too.
+
+const debtWeeksNoun = computed(() => {
+  const category = pluralCategory(locale.value, game.snapshot?.debt?.weeks ?? 0)
+  return category === 'one' ? t('one|week below zero') : category === 'few' ? t('few|weeks below zero') : t('many|weeks below zero')
+})
 // ⭐ ROUND 29 PART FOUR P7/P8 – fame, the engine's own whole number (rounded ONCE at the snapshot
 // boundary, `condition`'s rule); this screen never re-rounds it and never re-derives the fold.
 const fame = computed(() => game.snapshot?.fame ?? 0)
@@ -1181,7 +1192,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
            makes it a spell rather than a sentence. -->
       <p v-if="game.snapshot.debt" class="money-debt" role="status">
         <strong>{{ game.snapshot.debt.weeks }}</strong>
-        {{ game.snapshot.debt.weeks === 1 ? t('week below zero') : t('weeks below zero') }} &middot;
+        {{ debtWeeksNoun }} &middot;
         <strong>{{ Math.max(0, game.snapshot.debt.graceWeeks - game.snapshot.debt.weeks) }}</strong>
         {{ t('before the money runs out for good. One week back in the black clears it.') }}
       </p>
@@ -1469,7 +1480,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
             <span class="kit-line-name">{{ LINE_TITLE[view.line] ?? view.line }}</span>
             <span class="kit-line-state">{{ wearWord(view.wear) }}</span>
           </div>
-          <p class="kit-line-blurb">{{ view.blurb }}</p>
+          <p class="kit-line-blurb">{{ engineText(view.blurb) }}</p>
           <!-- Each rung now carries what it BUYS (weeks of good kit) beside what it costs, and the
                price is the engine's `payableCents` - what the family really hands over once a deal's
                allowance is applied - never a discount this screen worked out for itself.
@@ -1492,7 +1503,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
               :aria-pressed="rung.owned"
               @click="chooseRung(view, rung)"
             >
-              <span class="kit-rung-name">{{ rung.label }}</span>
+              <span class="kit-rung-name">{{ engineText(rung.label) }}</span>
               <span class="kit-rung-good">
                 {{ t('{0} good weeks', [rung.goodWeeks]) }}
                 <span v-if="rung.owned && view.goodWeeksLeft !== null" class="kit-rung-left">
@@ -1582,7 +1593,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
         </p>
         <div v-for="row in adPortfolio" :key="row.category" class="ad-slot" :class="`is-${row.state}`">
           <div class="ad-slot-head">
-            <span class="ad-slot-name">{{ row.label }}</span>
+            <span class="ad-slot-name">{{ engineText(row.label) }}</span>
             <span v-if="row.state === 'filled'" class="ad-slot-brand">{{ row.brand }}</span>
             <span v-else-if="row.state === 'open'" class="ad-slot-state">{{ t('Open – nobody signed') }}</span>
             <span v-else class="ad-slot-state">

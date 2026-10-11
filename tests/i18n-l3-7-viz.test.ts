@@ -15,7 +15,8 @@ import { describe, expect, it } from 'vitest'
 import ts from 'typescript'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { renderCopyRef, SOURCE_LOCALE, splitContext, type CopyRef, type MissReason } from '../src/shared/i18n'
+import { renderCopyRef, SOURCE_LOCALE, splitContext, translate, type CopyRef, type MissReason, type RenderContext } from '../src/shared/i18n'
+import { createWordReaders } from '../src/i18n/words'
 import { boothLineageLines, buildCommentary } from '../src/viz/commentary'
 import { simulateMatch } from '../src/engine/match/engine'
 import { annotateMatch } from '../src/engine/match/rally'
@@ -241,7 +242,8 @@ describe('§4 the pick keys are immovable – no draw, no new family, the hash a
 
 // ⭐ 11.10 (THE BLANKET) – §6: THE COMPILED RUSSIAN, RENDERED ON THE PARAMS THE ENGINE REALLY PASSES. docs/localization/ru-match-viewer-commentary-2026-10.md §26.
 // `i18n:check` lints a Russian VALUE – it parses, it reads the key's holes, a plural carries its four categories – but never against the TYPE of the param that arrives. A `{1, plural, …}` over the
-// engine's spelled count word ("four") parses, passes the gate, and at render time THROWS: the formatter falls back to the WHOLE English sentence and counts the key invalid. That is the one way an
+// engine's spelled count word ("four") parses, passes the gate, and at render time THROWS: the formatter falls back to the WHOLE English sentence and counts the key invalid – EXCEPT over the six holes
+// that the display boundary reads as digits (RU-22, `src/i18n/wordHoles.ts` class `digits`), which is why these refs render under the app's own context and not a bare one. That is the one way an
 // edit to a booth row goes wrong silently, and the owner edits these rows live. So every DISTINCT ref the two grids built (§2) is rendered here under the REAL ru.json: nothing may be invalid, and no
 // key may lack a row bar the named joins. ⚠ NO CYRILLIC IS TYPED HERE – every expectation is read from ru.json by key, and the two mutation arms use ASCII stand-ins.
 describe('§6 the compiled ru.json renders every ref of the grids – no fallback to English, no key without a row', () => {
@@ -250,10 +252,14 @@ describe('§6 the compiled ru.json renders every ref of the grids – no fallbac
    *  exemption – held both ways, a join that gained a row was a stale exemption. ⚙ 11.10 (RU-21): both joins now carry an IDENTITY row (`docs/localization/ru-engine-tails-2026-10.md`: Russian joins
    *  clauses with the same space), so the exemption is retired and the list is empty; the identity itself is held below – a join that stopped being `{0} {1}` would reorder or drop a clause. */
   const JOINS: string[] = []
+  /** ⭐ RU-22 (11.10): rendered under the context the APP installs – the catalogue and the display boundary's word hook (`src/i18n/index.ts`). The booth hands the code's English count word to a hole, and
+   *  the boundary reads it at the moment of showing: a spelled Russian numeral for the rows that name nothing after it, DIGITS for the six rows that put their own plural over it (`src/i18n/wordHoles.ts`).
+   *  A plain context would price a plural over the spelled word as the throw it is there – and a screen never renders in one. */
   function render(catalog: Readonly<Record<string, string>>): { missing: string[]; invalid: string[]; refs: number } {
     const missing = new Set<string>()
     const invalid = new Set<string>()
-    const ctx = { locale: 'ru', lookup: (k: string) => catalog[k], onMiss: (k: string, why: MissReason) => (why === 'missing' ? missing : invalid).add(k) }
+    const plain: RenderContext = { locale: 'ru', lookup: (k: string) => catalog[k], onMiss: (k: string, why: MissReason) => (why === 'missing' ? missing : invalid).add(k) }
+    const ctx: RenderContext = { ...plain, words: createWordReaders((key, params) => translate(key, params, plain)).holes }
     const all = [...GRID_REFS, ...PREVIEW_REFS]
     for (const json of all) renderCopyRef(JSON.parse(json) as CopyRef, ctx)
     return { missing: [...missing].sort(), invalid: [...invalid].sort(), refs: all.length }
@@ -272,7 +278,7 @@ describe('§6 the compiled ru.json renders every ref of the grids – no fallbac
     expect(UNREACHED.filter((k) => RU[k] === undefined)).toEqual([])
   })
 
-  it('it bites: a plural over the engine\'s spelled count word, or over a name, renders the English and is counted invalid', () => {
+  it('it bites: a plural over a spelled count word the boundary reads as a WORD, or over a name, renders the English and is counted invalid – and over the six holes it reads as DIGITS, it renders', () => {
     const countWord = '{0} saves {1} match points.'
     const overAName = 'Across the net: {0}, {1}.'
     expect(RU[countWord], 'the rows the mutations edit exist').toBeDefined()
@@ -280,5 +286,9 @@ describe('§6 the compiled ru.json renders every ref of the grids – no fallbac
     const plural = (n: number): string => `{${n}, plural, one {x} few {x} many {x} other {x}}`
     const broken = { ...RU, [countWord]: `{0} ${plural(1)}`, [overAName]: `${plural(0)} {1}` }
     expect(render(broken).invalid).toEqual([overAName, countWord].sort())
+    // the other half, RU-22: the same edit on a row whose hole the table reads as digits is a valid row
+    const overDigits = '{0} points in a row for {1}.'
+    expect(RU[overDigits]).toBeDefined()
+    expect(render({ ...RU, [overDigits]: `${plural(0)} {1}` }).invalid).toEqual([])
   })
 })

@@ -32,6 +32,7 @@
 // `tests/component/album-rank-ink.test.ts` re-derives all eight from `--tier-*` at runtime: touch a
 // token, or nudge a factor, and the pin goes red pointing at the exact channel.
 import type { AlbumTicket } from '../../shared/protocol'
+import { engineWord } from '../../i18n'
 
 defineProps<{ ticket: AlbumTicket }>()
 </script>
@@ -51,7 +52,7 @@ defineProps<{ ticket: AlbumTicket }>()
     <!-- THE PERFORATION. A dashed border on the stub, not a drawn row of dots: a border can never
          fall out of step with the height of the thing it is tearing off. -->
     <div class="album-pass-stub">
-      <p class="album-pass-stage">{{ ticket.stage }}</p>
+      <p class="album-pass-stage">{{ engineWord('round', ticket.stage) }}</p>
       <div class="album-pass-code" aria-hidden="true">
         <span v-for="(w, i) in ticket.bars" :key="i" :style="{ width: `${w}px` }"></span>
       </div>

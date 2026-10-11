@@ -57,7 +57,7 @@ import { activeLadderOfSnapshot } from '../shared/protocol'
 import type { TravelHomeMood, TravelHomeScene, WorldEvent, WorldMatch } from '../shared/protocol'
 import { useStartYear } from '../composables/startYear'
 // L2-3 (08.10): RU-03 §20–§23 – the recap's frame, labels, alts, finance rows and memos, mood words and the goal scrap call `t()`.
-import { eventText, localizedList, t } from '../i18n'
+import { engineText, eventText, localizedList, t } from '../i18n'
 import { ladderName } from '../composables/kidIdentity'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
@@ -951,8 +951,8 @@ const practiceWeekLabel = computed(() => weekLabel(week.value, startYear.value))
         <template v-if="trainingRead">
           <span class="recap-hairline"></span>
           <p class="recap-train-read">
-            <span v-if="trainingRead.label" class="recap-train-axis">{{ trainingRead.label }}</span>
-            <span class="recap-train-text">{{ trainingRead.text }}</span>
+            <span v-if="trainingRead.label" class="recap-train-axis">{{ engineText(trainingRead.label) }}</span>
+            <span class="recap-train-text">{{ engineText(trainingRead.text) }}</span>
           </p>
         </template>
         <div class="recap-days" :aria-label="t('{n} of 7 days training', { n: trainDayCount })" role="img">

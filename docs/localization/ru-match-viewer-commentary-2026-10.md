@@ -809,16 +809,16 @@ The nested words the point-ending sentences take in their holes: the unit of the
 
 ### 26.3 How the deciding point ended
 
-The compact manner mould (RU-08 §16.2): the second sentence of a break, hold or set row. `{0} ударов` opens a long rally and the count is never below eight, so the plural noun holds for every value the beat can reach.
+The compact manner mould (RU-08 §16.2): the second sentence of a break, hold or set row. `{0} ударов` opens a long rally and the count is never below eight, so the plural noun holds for every value the beat can reach. ⚙ RU-22 (11.10): the count reaches the row as the code's English word (`Num`), so the three `{0} shots` rows read it as digits and put their own plural over it – right for a rally past twenty too, which the code prints in digits already.
 
 | English | Russian |
 | --- | --- |
 | `An ace {0} to finish.` | `Эйс {0} ставит точку.` |
 | `An ace {0} to seal it.` | `Эйс {0} решает гейм.` |
 | `It ends on a double fault.` | `Всё заканчивается двойной ошибкой.` |
-| `{0} shots, and it ends with a winner {1}.` | `{0} ударов – и в конце удар навылет {1}.` |
+| `{0} shots, and it ends with a winner {1}.` | `{0, plural, one {{0} удар} few {{0} удара} many {{0} ударов} other {{0} удара}} – и в конце удар навылет {1}.` – ⚙ 11.10 RU-22: счёт приходит из кода английским словом (Num) и читается цифрами; существительное согласует множественное число самой строки |
 | `A winner {0} to end it.` | `Удар навылет {0} ставит точку.` |
-| `{0} shots, and {1} ends it {2}.` | `{0} ударов, и {1} завершает розыгрыш {2}.` |
+| `{0} shots, and {1} ends it {2}.` | `{0, plural, one {{0} удар} few {{0} удара} many {{0} ударов} other {{0} удара}}, и {1} завершает розыгрыш {2}.` – ⚙ 11.10 RU-22: счёт приходит из кода английским словом (Num) и читается цифрами; существительное согласует множественное число самой строки |
 | `{0} ends it with a winner {1}.` | `{0} завершает всё ударом навылет {1}.` |
 | `A long exchange, and {0} {1}.` | `Долгий обмен, и {0} {1}.` |
 | `{0} {1}.` | `{0} {1}.` – ⚙ 11.10 слоты – имя и готовая фраза из 26.2; русская строка совпадает с ключом |
@@ -892,20 +892,20 @@ RU-08 §17.3. The counted forms (`saves {1} …`) take the engine's English coun
 
 ### 26.7 Runs, long games and long rallies
 
-RU-08 §19. A point streak is five points or longer (six below the WTA 1000) and a long rally ten shots or more, so `очков` and `ударов` are right for every value; a run of games starts at four and a long game at three deuces (four below the WTA 1000), where «гейма / геймов» and «раза / раз» would split, so those rows carry the count without a noun after it.
+RU-08 §19. A point streak is five points or longer (six below the WTA 1000) and a long rally ten shots or more, so `очков` and `ударов` are right for every value; a run of games starts at four and a long game at three deuces (four below the WTA 1000), where «гейма / геймов» and «раза / раз» would split, so those rows carry the count without a noun after it. ⚙ RU-22 (11.10): the count is the code's English word (`Num`); the game and deuce rows read it as the spelled Russian word (it opens the sentence on the game rows, so its capital stays), and the three point rows read it as digits under their own plural – `очков` is wrong for 21 or 22, and a streak of 24 points is a 6-0 set.
 
 | English | Russian |
 | --- | --- |
-| `{0} points in a row for {1}.` | `{0} очков подряд выигрывает {1}.` |
-| `{0} points without reply for {1}.` | `{0} очков без ответа берёт {1}.` |
-| `{0} points in a row, all of them {1}'s.` | `{0} очков подряд. Их все выигрывает {1}.` |
+| `{0} points in a row for {1}.` | `{0, plural, one {{0} очко} few {{0} очка} many {{0} очков} other {{0} очка}} подряд выигрывает {1}.` – ⚙ 11.10 RU-22: счёт приходит из кода английским словом (Num) и читается цифрами; существительное согласует множественное число самой строки |
+| `{0} points without reply for {1}.` | `{0, plural, one {{0} очко} few {{0} очка} many {{0} очков} other {{0} очка}} без ответа берёт {1}.` – ⚙ 11.10 RU-22: счёт приходит из кода английским словом (Num) и читается цифрами; существительное согласует множественное число самой строки |
+| `{0} points in a row, all of them {1}'s.` | `{0, plural, one {{0} очко} few {{0} очка} many {{0} очков} other {{0} очка}} подряд. Их все выигрывает {1}.` – ⚙ 11.10 RU-22: счёт приходит из кода английским словом (Num) и читается цифрами; существительное согласует множественное число самой строки |
 | `{0} games in a row for {1}.` | `{0} подряд – {1} берёт гейм за геймом.` – ⚙ 11.10 RU-08 §19.2 пишет «{N} гейма» с существительным; слово-число (шов кода) не даёт согласовать «гейма / геймов», счёт стоит без существительного |
 | `{0} games without reply for {1}.` | `{0} без ответа – {1} забирает геймы один за другим.` – ⚙ 11.10 то же: существительного после счёта нет |
 | `{0} games on the trot for {1}.` | `{0} подряд, и каждый гейм выигрывает {1}.` – ⚙ 11.10 то же; RU-08 §19.2 «Каждый из них выигрывает» – здесь «каждый гейм» |
 | `{0} deuces in this game. {1} is still serving.` | `«Ровно» в этом гейме – {0}. {1} всё ещё подаёт.` – ⚙ 11.10 RU-08 §19.3 пишет «{N} раз»; «раза / раз» не согласовать со словом-числом, счёт стоит после тире |
 | `{0} times to deuce, and it is not over. {1} goes again.` | `Гейм не окончен: «ровно» было {0}. {1} подаёт снова.` – ⚙ 11.10 то же |
 | `{0} deuces. {1} has still not held it.` | `«Ровно» – {0}. {1} всё ещё не взяла свою подачу.` – ⚙ 11.10 то же |
-| `{0} shots, and {1} puts it away {2}.` | `{0} ударов, и {1} завершает розыгрыш {2}.` |
+| `{0} shots, and {1} puts it away {2}.` | `{0, plural, one {{0} удар} few {{0} удара} many {{0} ударов} other {{0} удара}}, и {1} завершает розыгрыш {2}.` – ⚙ 11.10 RU-22: счёт приходит из кода английским словом (Num) и читается цифрами; существительное согласует множественное число самой строки |
 
 ### 26.8 The match beat: what it was for, and how it ended
 

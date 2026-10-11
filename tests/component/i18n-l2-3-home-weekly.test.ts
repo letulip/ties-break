@@ -356,6 +356,10 @@ describe('L2-3 Russian smoke – ru.json read by key, no Cyrillic typed here', (
       // ⭐ 11.10, THE SCREENS-AND-SCRIPTS WAVE (RU-21): `tierState()` (composables/tierState.ts) builds the note AND the title of every rung of the ladder eagerly and the strip draws one state per rung; these seven are the
       // words of rung states this pose does not show (a lock by points, a lock by age, a rung open with a game on the calendar, the acceptance-list rung). Held both ways like every name here: a pose that shows
       // one of those states makes its name stale and red.
+      // ⭐ 11.10, RU-22 (the display boundary): two engine words are READ lower-cased where they are drawn – the surface chip (`SurfaceMark` -> the surface reader keeps the id's case) and the next-goal line's skill
+      // (`Work on her {axis}`, a lower-case axis). The rows `Hard` and `Stamina` are asked and compiled; their lower-case readings are on screen.
+      'Hard': 'the surface chip draws the court in the lower case the engine id has (`хард`) – the reader lowers the capitalised row',
+      'Stamina': 'the next-goal line names the skill in lower case (`Work on her {axis}`) – the axis reader lowers the capitalised row',
       'Open – on the calendar': 'tierState() note of a rung that is open with an event on the calendar – this pose\'s strip draws the other states',
       'International points come from Junior Tour events.': 'the ITF half of the lock title\'s `earned` sentence (tierState.ts `earnedAt`) – drawn only in the title of a rung locked by international points',
       '{tier} – locked: {more} more {unit} (she has {has} of {need}). {earned}': 'the title (tooltip) of a rung locked by points – tierState() builds it for every rung and the strip draws it only on a locked one',

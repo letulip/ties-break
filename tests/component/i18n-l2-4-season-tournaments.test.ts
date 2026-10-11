@@ -451,6 +451,9 @@ describe('L2-4 Russian smoke – ru.json read by key, no Cyrillic typed here', (
       'Opens at {age}': 'tierState() note of a rung locked by age – this pose\'s girl is past every age gate it draws',
       '{tier} – opens at {when}': 'the title of a rung locked by age – built eagerly, drawn only on a locked rung',
       'the top {pct}% internationally': 'one clause of `tierOpensWhen()` for a rung with a percentage cut – only the title of such a locked rung reads it',
+      // ⭐ 11.10, RU-22: `gapInResultsNote` is ten whole messages now (it was a template literal that glued an English finish into the sentence); tierState() builds the one this pose's gap needs inside the
+      // title of a rung locked by points, which the pose does not draw (the same reason as the two lock titles above).
+      '{0} more titles at {1}': 'the results plan inside the title of a rung locked by points (`gapInResultsNote`) – built eagerly by tierState(), drawn only on a locked rung',
     }
     // ⭐ FLOOR MOVED ON PURPOSE, DOWN (11.10, the screens-and-scripts wave, RU-21): the wave compiled 121 rows homed on the Season screen, the tournament flow, the bracket and `tierState` and the pose did not change –
     // 97 of the 275 compiled, wired keys are reached (0.353, the run prints it), a hair over the old 0.35, so the next key added to these surfaces would have broken the floor. Measured share less 0.03, rounded down
@@ -475,9 +478,8 @@ describe('L2-4 xx sweep – no unwrapped literal in the frames, and the phone st
     /^W\d+( \d{4}| ’\d{2})?$/, /^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d+(?: – (?:[A-Za-z]+ )?\d+)?(?:, \d{4})?$/, /^\$[\d,.]+[KMB]?$/, /^[−-]?\$[\d,.]+/,
     // ⚠ THE NAMED LEFTOVERS OF THIS WAVE, each for its reason: the week label after the season year (`weekOnly`, RU-13D's formatter), the planner's
     // phase ranges and the week-range rows (`W1-10`, `W42 · Oct 20–26, 2031` – `weekRange`, the same formatter, anchored on the `W<digits>` it starts
-    // with, so it cannot swallow a heading) and the card's fee pill (`entryFeeLabel`, shared/money.ts – engine-importable, no RU-04 row; Calendar
-    // shares it, so it is one decision for both screens).
-    /^· W\d+$/, /^W\d+(?:-\d+)?(?: · .+)?$/, /^(?:entry \$[\d,.]+|no entry fee)$/,
+    // with, so it cannot swallow a heading). ⭐ RU-22 (11.10): the card's fee pill is not on this list any more – `entryFeeText` (composables/entryFee.ts) says its word through the catalogue.
+    /^· W\d+$/, /^W\d+(?:-\d+)?(?: · .+)?$/,
     /^\d+°?$/, /^#\d+$/, /^[\d,]+$/, /^\d+(?:-\d+)*$/, /^[—–-]$/, /^\?$/, /^%$/, /^\d+(?:\.\d+)?%$/,
   ]
 

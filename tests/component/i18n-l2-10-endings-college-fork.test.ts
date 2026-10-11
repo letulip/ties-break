@@ -940,7 +940,10 @@ describe('L2-10b completeness – the college cards are wired; the engine\'s wor
     }
     // the engine's words are holes, never keys of this card
     for (const hole of ['COLLEGE_PLACE[c.tier]', 'NATIONAL_TEAM.label', 'leagueExitLabel(run)', 'formatShortName(match.oppName)']) expect(source, hole).toContain(hole)
-    for (const bare of ['{{ COLLEGE_LEAGUE.label }}', '{{ row.label }}', '{{ weekLabel(row.week, startYear) }}']) expect(source, bare).toContain(bare)
+    // ⭐ RE-AIMED 11.10 (RU-22): the league's label is still the ENGINE's (`COLLEGE_LEAGUE.label` – the card imports it and compares nothing against it), but it is DRAWN through the league reader (`leagueName`,
+    // `engineWord('league', …)`), which returns the label as written under English and the competition's Russian name under ru.json; the week plan's row label rides the same computed.
+    for (const bare of ['{{ leagueName }}', '{{ row.label }}', '{{ weekLabel(row.week, startYear) }}']) expect(source, bare).toContain(bare)
+    expect(source, 'the league label is drawn through the reader').toContain("const leagueName = computed(() => engineWord('league', COLLEGE_LEAGUE.label))")
   })
 
   it('`engine/collegeLeague.ts`, `engine/nationalTeam.ts` and `engine/collegeOffer.ts` still do not call `t()` (invariant 1)', () => {
@@ -1104,7 +1107,8 @@ describe('L2-10b completeness – the fork\'s own words are wired; the engine\'s
     ]) {
       expect(source, call).toContain(call)
     }
-    expect(source, 'the place names are the engine\'s').toContain('name: TIER_LABEL[q.tier]')
+    // ⭐ RE-AIMED 11.10 (RU-22): still the engine's names (`COLLEGE_TIER_NAME`), now read through `engineText` – the seat `engine.text` names the three, and the Russian rows that waited for them wake
+    expect(source, 'the place names are the engine\'s').toContain('name: engineText(TIER_LABEL[q.tier])')
   })
 
   it('the ladder\'s name for the rank head is the chip\'s own word, lowercased where English lowercased it: the three tracks agree with the protocol label', () => {
@@ -1182,7 +1186,8 @@ describe('L2-10b dynamic seat – LifeMomentOverlay reads the engine\'s one cont
     // ⭐ L3-5 (10.10): 4 -> 5 – the fridge note's picked line is read through `t(fridgeNote)` in CalendarScreen (a dynamic seat, the engine's own literal looked up as a key, L2-9b's shape)
     // ⭐ RE-AIMED 10.10 (owner item 34): 5 -> 6 – the last page draws `ENDING_BLURB[type]` through `t()` in EndingScreen (the declared seat `ending.blurb`, the sixth, same shape; its nets are
     // tests/component/ending-blurb.test.ts and the L3-T registry). One more call and one more declared seat – `dynamicUndeclared` stays 0 in tests/i18n-l3-t-tooling.test.ts.
-    expect(stats.dynamicCalls, 'the gate\'s «dynamic t() calls unreadable»: 3 (L2-9b) + L2-10 + the fridge seat (L3-5) + the epilogue paragraph (10.10)').toBe(6)
+    // ⭐ RE-AIMED 11.10 (RU-22): 6 -> 7 – `t(english)` in `src/i18n/words.ts`, the display boundary's one look-up of an engine label (the declared seat `engine.text`).
+    expect(stats.dynamicCalls, 'the gate\'s «dynamic t() calls unreadable»: 3 (L2-9b) + L2-10 + the fridge seat (L3-5) + the epilogue paragraph (10.10) + the display boundary (11.10)').toBe(7)
   })
 
   it('seams: the label follows the locale, the line does not; a label with no row falls back to the engine\'s English and is COUNTED', async () => {
