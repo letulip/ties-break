@@ -75,7 +75,14 @@ function context(): RenderContext {
  *  label the catalog does not know under another locale renders as written and counts as a miss. Only for a CLOSED set of engine strings – an open one (a name, a free sentence) would fill the
  *  miss counter with things that were never meant to be translated; the seat `engine.text` names the set. */
 export function engineText(english: string): string {
-  return locale.value === 'en' ? english : readers.text(english)
+  // an empty string is no label (the plaque of a career with no coach, the travel line of a family that sends nobody): it is not looked up and cannot be a miss
+  return locale.value === 'en' || english === '' ? english : readers.text(english)
+}
+
+/** ⭐ RU-23 – A LINE OF THE KID SCREEN'S TILES, shown in the player's words: the personality line, the school and college tile, the friends tile's lead (`words.ts`, `tile`). English returns the line as written; a
+ *  line that matches no shape comes back as written too. `lead` is the tile's first line when `english` is its second – one English shape («12 years done») is two Russian sentences under two leads. */
+export function engineTile(english: string, lead?: string): string {
+  return locale.value === 'en' || english === '' ? english : readers.tile(english, lead)
 }
 
 /** One engine word through its class (`words.ts`): the few screens that hold a word and no message. English returns the word as written. */

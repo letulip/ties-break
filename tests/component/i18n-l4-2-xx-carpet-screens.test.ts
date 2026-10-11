@@ -30,7 +30,6 @@ import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import StatsScreen from '../../src/components/screens/StatsScreen.vue'
 import TrophiesScreen from '../../src/components/screens/TrophiesScreen.vue'
 import AlbumScreen from '../../src/components/screens/AlbumScreen.vue'
-import { coachBlurb, coachProfileNote } from '../../src/engine/world/coachMarket'
 import type { Snapshot } from '../../src/shared/protocol'
 import { bookOf } from './albumFixture'
 import { carpet, posed, type Extra, type Surface } from './xxCarpet'
@@ -42,9 +41,8 @@ Element.prototype.scrollIntoView = function () {}
 const screen = (id: string, swept: string, comp: Component, snap: () => Snapshot, props: Record<string, unknown> = {}, after?: (w: VueWrapper) => Promise<void>, extra: Extra = {}): Surface =>
   posed(id, 'screen', swept, comp, snap, props, after, extra)
 
-/** The Coach Market's own prose: the engine writes a blurb per coach and a profile note per tier/fit (`coachBlurb`, `coachProfileNote` – L2-5's corpus). */
-const coachWords = (snap: Snapshot): string[] =>
-  (snap.coachMarket ?? []).flatMap((r) => [coachBlurb(r.id) ?? '', coachProfileNote(r.tier, r.fit), coachProfileNote(r.tier, 'good'), coachProfileNote(r.tier, 'off')])
+// ⭐ RU-23 (11.10): THE COACH MARKET'S OWN PROSE IS NO LONGER AN ALLOWANCE. It was – `coachBlurb` and `coachProfileNote` were engine words the surface printed unwrapped, so the carpet listed them as the
+// engine's. They are catalog keys now (the seat `engine.text`), read through `engineText`, so under `xx` they are bracketed like any wrapped line and a raw print of one is a leak again.
 const BOOK = bookOf(3)
 /** The same three sheets with a layout-C opener: the tag card and the tagged page the plain book never draws. */
 const BOOK_C = bookOf(3, { layout: 'C' })
@@ -65,8 +63,8 @@ const SURFACES: readonly Surface[] = [
   screen('CalendarScreen', 'L2-3', CalendarScreen, coached),
   screen('SeasonScreen', 'L2-4', SeasonScreen, coached),
   screen('KidScreen', 'L2-5', KidScreen, selfCoached),
-  screen('CoachMarketScreen (coaches)', 'L2-5', CoachMarketScreen, coached, {}, undefined, { words: coachWords }),
-  screen('CoachMarketScreen (her week)', 'L2-5', CoachMarketScreen, selfCoached, {}, undefined, { words: coachWords }),
+  screen('CoachMarketScreen (coaches)', 'L2-5', CoachMarketScreen, coached),
+  screen('CoachMarketScreen (her week)', 'L2-5', CoachMarketScreen, selfCoached),
   money('MoneyScreen: Spending', 0, coached),
   money('MoneyScreen: Bills', 1, coached),
   money('MoneyScreen: History', 2, coached),

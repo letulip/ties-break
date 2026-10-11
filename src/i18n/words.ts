@@ -32,6 +32,8 @@ export interface WordReaders {
   word: (cls: WordClass, english: string) => string
   /** A label the economy or the coach owns, read through the catalog by its own text. */
   text: (english: string) => string
+  /** ⭐ RU-23 – A LINE OF THE KID SCREEN'S TILES (the personality line, the school and college tile, the friends tile's lead): a sentence matcher per shape. `lead` is the tile's first line when `english` is its second. */
+  tile: (english: string, lead?: string) => string
   /** The English words each class KNOWS, per class – what the tests feed through the readers to prove every word of the vocabulary has a Russian reading, and what the carpet looks for raw on a screen. */
   vocabulary: Readonly<Record<string, readonly string[]>>
 }
@@ -262,6 +264,113 @@ export function createWordReaders(t: Translate, tables: WordTables = { holes: HO
     return m ? t('{0} of {1} years on the scholarship', [Number(m[1]), Number(m[2])]) : english
   }
 
+  // ── the Kid screen's tiles (RU-23) ────────────────────────────────────────────────────────────────
+  // `kidLife.ts` composes the lines of three tiles in English and the screen printed them as they came. Each tile line is a WHOLE sentence or a short label, so a reader here matches the SHAPE and asks the
+  // catalog for the sentence – the Russian owns its order and its plural, and nothing Russian is typed. The words of the personality line are RU-05 §4's (feminine, agreeing with her: she is the subject of
+  // every tile); the school notes and the stage lines are RU-05 §5's; the friends lead is §6's. A line that matches no shape comes back as written.
+  const trait = lex('trait', {
+    'Unshakeable': () => t('Unshakeable'),
+    'Patient': () => t('Patient'),
+    'Impatient': () => t('Impatient'),
+    'Hot-headed': () => t('Hot-headed'),
+    'stubborn': () => t('stubborn'),
+    'single-minded': () => t('single-minded'),
+    'self-contained': () => t('self-contained'),
+    'easy-going': () => t('easy-going'),
+  })
+  /** The grade's note under the number, and the weeks that override the class standing. */
+  const schoolNote = lex('schoolNote', {
+    'Exams this week': () => t('Exams this week'),
+    'Summer break': () => t('Summer break'),
+    'Oldest in class': () => t('Oldest in class'),
+    'Older than most': () => t('Older than most'),
+    'Young in class': () => t('Young in class'),
+    'Youngest of all': () => t('Youngest of all'),
+  })
+  /** The rungs after the last grade, and the two college notes with no number in them. */
+  const stageLine = lex('stageLine', {
+    'Student tennis': () => t('Student tennis'),
+    'Final year': () => t('Final year'),
+    'Graduate': () => t('Graduate'),
+    'Left college': () => t('Left college'),
+    'The last bell': () => t('The last bell'),
+    'Tennis full-time': () => t('Tennis full-time'),
+    'No more classes': () => t('No more classes'),
+    'Grown up': () => t('Grown up'),
+    'Her own life now': () => t('Her own life now'),
+  })
+  // The friends tile names her closest friend. The names are localized DATA in Russian (RU-05 §6) – not a brand, not a tournament: the sixteen of `kidLife.ts`, once as the name and once as the person
+  // she is «with» (the instrumental, which no suffix at the call site can build: `Эммой`, `Софией`, `Майей`, and the names that do not decline). Deliberately NOT `lex`: a friend's name is not an engine
+  // WORD for the carpet's vocabulary to hunt, and a rival who happens to be called Sofia is a name nobody reads through a class.
+  const friend = lexicon({
+    Emma: () => t('friend|Emma'),
+    Mia: () => t('friend|Mia'),
+    Sofia: () => t('friend|Sofia'),
+    Nina: () => t('friend|Nina'),
+    Lena: () => t('friend|Lena'),
+    Zoe: () => t('friend|Zoe'),
+    Iris: () => t('friend|Iris'),
+    Maja: () => t('friend|Maja'),
+    Noor: () => t('friend|Noor'),
+    Yuki: () => t('friend|Yuki'),
+    Alba: () => t('friend|Alba'),
+    Ines: () => t('friend|Ines'),
+    Sara: () => t('friend|Sara'),
+    Elif: () => t('friend|Elif'),
+    Hana: () => t('friend|Hana'),
+    Aida: () => t('friend|Aida'),
+  })
+  const friendWith = lexicon({
+    Emma: () => t('with|Emma'),
+    Mia: () => t('with|Mia'),
+    Sofia: () => t('with|Sofia'),
+    Nina: () => t('with|Nina'),
+    Lena: () => t('with|Lena'),
+    Zoe: () => t('with|Zoe'),
+    Iris: () => t('with|Iris'),
+    Maja: () => t('with|Maja'),
+    Noor: () => t('with|Noor'),
+    Yuki: () => t('with|Yuki'),
+    Alba: () => t('with|Alba'),
+    Ines: () => t('with|Ines'),
+    Sara: () => t('with|Sara'),
+    Elif: () => t('with|Elif'),
+    Hana: () => t('with|Hana'),
+    Aida: () => t('with|Aida'),
+  })
+  const tile = (english: string, lead?: string): string => {
+    let m = /^(\S+) and (\S+)$/.exec(english)
+    if (m) {
+      const a = trait(m[1] as string)
+      const b = trait(m[2] as string)
+      return a === m[1] || b === m[2] ? english : t('{0} and {1}', [a, b])
+    }
+    m = /^(\d+)(?:st|nd|rd|th) grade$/.exec(english)
+    if (m) return t('{0} grade', [Number(m[1])])
+    const note = schoolNote(english)
+    if (note !== english) return note
+    m = /^Year (\d+) of (\d+)$/.exec(english)
+    if (m) return t('Year {0} of {1}', [Number(m[1]), Number(m[2])])
+    // «12 years done» under «The last bell» is the SCHOOL's twelve years; the same shape under «Graduate» is a course of four – two different Russian sentences for one English shape, told apart by the lead
+    m = /^(\d+) years done$/.exec(english)
+    if (m) return lead === 'The last bell' ? t('12 years done') : t('{0} years done', [Number(m[1])])
+    m = /^(\d+) of (\d+) years$/.exec(english)
+    if (m) return t('{0} of {1} years', [Number(m[1]), Number(m[2])])
+    const stage = stageLine(english)
+    if (stage !== english) return stage
+    m = /^Close to (\S+)$/.exec(english)
+    if (m) {
+      const name = friendWith(m[1] as string)
+      return name === m[1] ? english : t('Close to {0}', [name])
+    }
+    m = /^(\S+) next door$/.exec(english)
+    if (m) {
+      const name = friend(m[1] as string)
+      return name === m[1] ? english : t('{0} next door', [name])
+    }
+    return english
+  }
+
   // ── the body ──────────────────────────────────────────────────────────────────────────────────────
   const partWord = lex('part', {
     'ankle': () => t('body|ankle'),
@@ -364,6 +473,9 @@ export function createWordReaders(t: Translate, tables: WordTables = { holes: HO
     court,
     eco: text,
     ecoLower,
+    trait,
+    schoolNote,
+    stageLine,
   }
 
   const positional = new Map<string, Map<string, WordReader>>()
@@ -402,5 +514,5 @@ export function createWordReaders(t: Translate, tables: WordTables = { holes: HO
   // the composite words have no table of their own: their vocabulary is every part with every descriptor, the legacy words, and the places a nation can finish
   vocab.kind = [...PARTS.flatMap((part) => ['soreness', 'strain', 'stress reaction', 'tear', 'niggle'].map((d) => `${part} ${d}`)), 'injury', 'an injury']
   vocab.place = Array.from({ length: 24 }, (_, i) => `${i + 1}${['th', 'st', 'nd', 'rd'][(i + 1) % 100 >= 11 && (i + 1) % 100 <= 13 ? 0 : (i + 1) % 10] ?? 'th'}`)
-  return { holes, word: (cls, english) => readers[cls](english), text, vocabulary: vocab }
+  return { holes, word: (cls, english) => readers[cls](english), text, tile, vocabulary: vocab }
 }

@@ -7,6 +7,8 @@
 // name below under the historical public path. Nothing here imports that barrel back.
 
 import type { LifeMoment } from './narrative'
+// ⭐ RU-23 (11.10): the coach's three reads on her room carry a CopyRef beside the string, grouped in ONE key (`coachNotesC`) – the `*C` convention of docs/specs/i18n-2026-10.md §3.2.
+import type { CopyRef } from '../i18n'
 import type { LadderTrack, TierId } from '../../engine/season/types'
 // ⭐ v85 T10: which pregnancy painting the week wears. Declared beside the two paintings it names,
 // in the module that already owns every «which picture is this» union the wire carries.
@@ -666,6 +668,13 @@ export interface Snapshot {
    *  long forms, so the plate and the coach card can never disagree. Replaces wave A's
    *  `coachDeclineShort`, whose two rank arms moved to the card on the same ruling. */
   coachRoomShort: string
+  /** ⭐ RU-23 (11.10) – THE REFS BESIDE THE THREE NOTES ABOVE, in one key: each `CopyRef` is the sentence as `{ k, p }` so a screen can show it under the player's language (`eventText({ text, c })`), and `null` exactly
+   *  where its string is ''. `room` is `coachRoomNote`'s, `decline` is `coachDeclineNote`'s, `short` is `coachRoomShort`'s. A note is a READ – a label, the short dash and an argument, joined by `coachRead` – and
+   *  the argument of a decline read is a whole sentence with the rank move and the seasons as holes, so Russian owns the order and the plural of each.
+   *
+   *  ⚠ ONE KEY AND ALWAYS PRESENT, because the wire has one shape in one order on every career (D-P8, tests/principles-d07-inbox-bound.test.ts): three optional siblings would have been three keys a career
+   *  sometimes lacks. Class (b): derived at snapshot time, persists nothing, owes no migration and does not move `SAVE_SCHEMA_VERSION`; each string above is its ref rendered in English – one decision, two spellings. */
+  coachNotesC: { room: CopyRef | null; decline: CopyRef | null; short: CopyRef | null }
   /** ⭐⭐ THE HANDOVER'S READ, AND IT IS EMPTY ON EVERY WEEK BUT THE FIRST (childhood prologue §5).
    *
    *  One of the three words this game already grades remaining room in – `Huge potential` /

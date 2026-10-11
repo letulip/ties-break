@@ -95,7 +95,17 @@ import { startingSkills, withHeadStart } from './player'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidLadderRank, kidPoints, tierOpenFor } from './ladder'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
-import { cp } from '../../shared/i18n'
+// ⭐ RU-23 (11.10) – THE ROOM AND DECLINE NOTES ARE CopyRefs NOW (class (b): assembled at snapshot time off the decline read, never stored), and the English the screens always showed is the ref
+// rendered under the source locale – `knock.ts`' own precedent – so a string and its translation cannot drift. The branches, the thresholds and the words are untouched; nothing here draws.
+import { cp, isCopyRef, renderCopyRef, SOURCE_LOCALE, type CopyRef } from '../../shared/i18n'
+
+/** the English of a ref – the snapshot still carries the string beside it */
+const en = (c: CopyRef): string => renderCopyRef(c, { locale: SOURCE_LOCALE })
+
+/** ⭐ RU-23 – A NOTE'S ENGLISH, '' where the engine has nothing to say (`null`): the string every one of the three notes always was, read off the ref that carries the decision. */
+export function coachNoteText(ref: CopyRef | null): string {
+  return ref === null ? '' : en(ref)
+}
 
 // --- THE COACH MARKET (v23) --------------------------------------------------------------------
 
@@ -1630,7 +1640,7 @@ export function coachEdgeView(world: WorldState): Snapshot['coachEdge'] {
  *  by construction, so "the trips he travels to" would print under Sabine Kobayashi. Short dash, and
  *  45 characters: inside the 60 a real browser measured as the two-line ceiling for this column at
  *  320px (§4a), so it costs the card the same two lines the plaque costs. */
-const TRAVEL_EDGE_LINE = 'Twice that on the trips the coach travels to.'
+export const TRAVEL_EDGE_LINE = 'Twice that on the trips the coach travels to.'
 
 /**
  * HOW MUCH ROOM IS LEFT IN HER, in one sentence - the context every number on screen T is relative to.
@@ -1684,13 +1694,21 @@ const TRAVEL_EDGE_LINE = 'Twice that on the trips the coach travels to.'
  * Pure, zero draws, derived at snapshot time.
  */
 export function coachRoomNote(world: WorldState): string {
+  const ref = coachRoomNoteRef(world)
+  return ref === null ? '' : en(ref)
+}
+
+/** ⭐ RU-23 – THE REF BESIDE `coachRoomNote`, and the string above is its English: one decision, two spellings that cannot differ. A note is a READ – a label, the separator and an argument (`coachRead`) – so a screen that sets the label in bold
+ *  shows the two parts each in its own language. A band row's two parts are keys of their own (the seat `coach.room` names them from `ROOM_BANDS` itself); past the peak the argument is the decline note's, with its
+ *  count and its rank move as holes. `null` where the engine has nothing to say. */
+export function coachRoomNoteRef(world: WorldState): CopyRef | null {
   // ⚠⚠ PAST THE PEAK THE QUESTION CHANGES, AND SO DOES THE ANSWER (round 38 #7b). The headroom read
   // below is not wrong – it is measuring something that has stopped being the subject.
-  const decline = coachDeclineNote(world)
-  if (decline) return decline
+  const decline = coachDeclineNoteRef(world)
+  if (decline !== null) return decline
   const band = roomBandRow(world)
-  if (band === null) return ''
-  return `${band.label}${ROOM_NOTE_SEP}${band.note}`
+  if (band === null) return null
+  return coachRead({ k: band.label }, { k: band.note })
 }
 
 /** ⭐ ROUND 39 #2b (REOPENED 08.09) – ONE BAND READ UNDER TWO SENTENCES, the `declineRead` pattern
@@ -1755,12 +1773,14 @@ function roomBandRow(world: WorldState): { label: string; note: string; short: s
 // register lands on its own: measured on the #7b fixture's shape (35.3, 80.4%), the sentence says
 // two. The full before/after table is in `tools/r39-body-seasons.ts`'s output, in the round ledger.
 
-/** ⭐ THE LABEL, and it is deliberately NOT one of `ROOM_BANDS`'. Those four are a headroom ladder
+/** ⭐ THE LABEL – «Past her peak» – and it is deliberately NOT one of `ROOM_BANDS`'. Those four are a headroom ladder
  *  and this is not a rung of it; reusing «Close to her ceiling» here would say the one thing that is
  *  now false – there is no ceiling left to be close to. `tests/component/round24-coach-card.test.ts`
  *  sweeps all four off Home by name, so a label borrowed from that list would also silently re-open
- *  the round-34 complaint on a fourteen-year-old's screen. */
-const DECLINE_LABEL = 'Past her peak'
+ *  the round-34 complaint on a fourteen-year-old's screen.
+ *
+ *  ⭐ RU-23 – IT IS A REF NOW (a key of its own, `Past her peak`), and the label is the FIRST PART of every read below it: see `coachRead`. */
+const DECLINE_LABEL_REF: CopyRef = cp`Past her peak`
 
 /** ⭐⭐ ROUND 39 #13a – WHERE A PROFESSIONAL BODY ENDS, for the coach's sentence and nothing else.
  *
@@ -1983,9 +2003,10 @@ export function seasonRankRead(world: WorldState): { yearMove: number | null; be
  *  one warning apart: whichever of them speaks this week is speaking off this row. `lastWinter` is
  *  null on every week outside his window, which is what keeps both formatters byte-identical to what
  *  shipped for the whole of the decline before it. */
-type DeclineRead = { seasons: number; yearMove: number | null; belowBest: number | null; lastWinter: number | null }
+export type DeclineRead = { seasons: number; yearMove: number | null; belowBest: number | null; lastWinter: number | null }
 
-function declineRead(world: WorldState): DeclineRead | null {
+/** ⭐ RU-23 – exported for `tests/i18n-coach-market.test.ts`, whose oracle rebuilds the pre-ref English from this read and holds the refs to it. */
+export function declineRead(world: WorldState): DeclineRead | null {
   const bounds = ageCurveOf(world.ageCurve, world.careerTotals?.weeksLostToInjury ?? 0)
   const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay, world.startYear)
   if (age < bounds.declineStart) return null
@@ -1995,8 +2016,11 @@ function declineRead(world: WorldState): DeclineRead | null {
 }
 
 /** ⚠ ROUND 39 #13c – «down 1 places» had no singular. The seasons clause next to it always had one
- *  (`season/seasons`), so the defect was one word wide and lived in both rank arms. */
-const places = (n: number): string => `${n} ${n === 1 ? 'place' : 'places'}`
+ *  (`season/seasons`), so the defect was one word wide and lived in both rank arms.
+ *
+ *  ⭐ RU-23 – A REF NOW, and the two forms are two keys under one context tag (`gap|`): the singular is its own sentence and the count a hole, the house rule for a counted phrase. The tag keeps the
+ *  generic words «1 place» / «{0} places» from ever sharing a Russian row with another surface's places (a nation's place, a seed); Russian has three forms and carries them inside its own row. */
+const placesRef = (n: number): CopyRef => (n === 1 ? cp`gap|1 place` : cp`gap|${n} places`)
 
 /** ⭐⭐⭐ ROUND 40 #14b (DRAFT COPY, AWAITING THE OWNER'S WORD) – HIS VOICE FOR THE NEAR-FINAL CASE.
  *
@@ -2014,25 +2038,36 @@ const places = (n: number): string => `${n} ${n === 1 ? 'place' : 'places'}`
  *  ⚠ DIGITS, because this note is deliberately the one string on the wire that carries them (see
  *  `Snapshot.coachDeclineNote`). Her own voice spells its counts instead; that split is not an
  *  accident of two authors. */
-function lastWinterClause(winters: number): string {
-  return winters === 1 ? 'her last winter is the next one' : `her last winter is ${winters} seasons away`
+function lastWinterClauseRef(winters: number): CopyRef {
+  return winters === 1 ? cp`her last winter is the next one` : cp`her last winter is ${winters} seasons away`
+}
+
+/** ⭐ RU-23 – THE BODY CLAUSE, the ordinary arm of what the note says she has left: one whole sentence per form (1 / many), the count a hole. */
+function bodyClauseRef(seasons: number): CopyRef {
+  return seasons === 1 ? cp`her body has about 1 more season in it` : cp`her body has about ${seasons} more seasons in it`
+}
+
+/** ⭐ RU-23 – THE LONG NOTE'S ARGUMENT, one whole sentence per arm (the rank move and the clause as nested refs): the Russian row owns the order and the plural of each. The label before it is `DECLINE_LABEL_REF`
+ *  and the two are joined by `coachRead`. */
+function declineArgumentRef(read: DeclineRead): CopyRef {
+  const { seasons, yearMove, belowBest } = read
+  const left = read.lastWinter !== null ? lastWinterClauseRef(read.lastWinter) : bodyClauseRef(seasons)
+  return yearMove !== null && yearMove > 0
+    ? cp`down ${placesRef(yearMove)} on the year, and ${left}.`
+    : belowBest !== null && belowBest > 0
+      ? cp`${placesRef(belowBest)} below her best season, and ${left}.`
+      : cp`${left}, and no coach buys that back.`
 }
 
 export function coachDeclineNote(world: WorldState): string {
+  const ref = coachDeclineNoteRef(world)
+  return ref === null ? '' : en(ref)
+}
+
+/** ⭐ RU-23 – THE REF BESIDE `coachDeclineNote` (class (b): derived at snapshot time, persists nothing, owes no migration). `null` while she is still growing – the same data-level guarantee the string has. */
+export function coachDeclineNoteRef(world: WorldState): CopyRef | null {
   const read = declineRead(world)
-  if (read === null) return ''
-  const { seasons, yearMove, belowBest } = read
-  const left =
-    read.lastWinter !== null
-      ? lastWinterClause(read.lastWinter)
-      : `her body has about ${seasons} more ${seasons === 1 ? 'season' : 'seasons'} in it`
-  const note =
-    yearMove !== null && yearMove > 0
-      ? `down ${places(yearMove)} on the year, and ${left}.`
-      : belowBest !== null && belowBest > 0
-        ? `${places(belowBest)} below her best season, and ${left}.`
-        : `${left}, and no coach buys that back.`
-  return `${DECLINE_LABEL}${ROOM_NOTE_SEP}${note}`
+  return read === null ? null : coachRead(DECLINE_LABEL_REF, declineArgumentRef(read))
 }
 
 // =================================================================================================
@@ -2125,7 +2160,7 @@ const DECLINE_ROTATION: Record<DeclinePhase, readonly DeclineVariant[]> = {
  *
  *  ⚠ ORDERED LOWEST-FIRST and scanned from the top with `>=`, so the table IS the thresholds: an
  *  edit here is the whole change, and `tests/r39-coach-short.test.ts` pins both edges on both sides. */
-const BELOW_BEST_LADDER: readonly { from: number; text: string }[] = [
+export const BELOW_BEST_LADDER: readonly { from: number; text: string }[] = [
   { from: 1, text: "She's below her best" },
   { from: 79, text: "She's far below her best" },
   { from: 257, text: "She's way below her best" },
@@ -2138,6 +2173,9 @@ function belowBestShort(behind: number): string {
   return BELOW_BEST_LADDER[0]!.text
 }
 
+/** ⭐ RU-23 – A LADDER RUNG IS ITS OWN KEY (the sentence IS the key, a seat names the three: `coach.room`). */
+const belowBestRef = (behind: number): CopyRef => ({ k: belowBestShort(behind) })
+
 /** ONE VARIANT'S SENTENCE, or null when the history cannot stand behind it.
  *
  *  ⚠⚠ THE WORDS ARE HIS, VERBATIM (invariant 4). «she's down N places» / «she's below her best» /
@@ -2145,12 +2183,12 @@ function belowBestShort(behind: number): string {
  *  and CAPITALISED on his word of 08.09 («поправь пожалуйста») – the plate opens a line, so the
  *  sentence case is his own second ruling on the same copy. «Past her peak – about N seasons left» is byte-identical to
  *  the string wave A2 shipped. #13c's singular care rides on `places`. */
-function declineVariantText(variant: DeclineVariant, read: DeclineRead): string | null {
+function declineVariantRef(variant: DeclineVariant, read: DeclineRead): CopyRef | null {
   switch (variant) {
     case 'fell':
-      return read.yearMove !== null && read.yearMove > 0 ? `She's down ${places(read.yearMove)}` : null
+      return read.yearMove !== null && read.yearMove > 0 ? cp`She's down ${placesRef(read.yearMove)}` : null
     case 'below':
-      return read.belowBest !== null && read.belowBest > 0 ? belowBestShort(read.belowBest) : null
+      return read.belowBest !== null && read.belowBest > 0 ? belowBestRef(read.belowBest) : null
     case 'seasons':
       // ⭐⭐⭐ ROUND 40 #14b (DRAFT COPY) – THE BODY CLAUSE BECOMES THE WARNING INSIDE HIS WINDOW, and
       // it is the LONG sentence's own clause compressed, exactly as this variant has always been the
@@ -2159,9 +2197,18 @@ function declineVariantText(variant: DeclineVariant, read: DeclineRead): string 
       // plate that kept it while the card said «her last winter is 2 seasons away» would put two
       // different numbers about her remaining time on two of the coach's own surfaces – which is the
       // contradiction the owner reported in #13a, arriving from the other side.
-      return read.lastWinter !== null
-        ? `${DECLINE_LABEL}${ROOM_NOTE_SEP}${read.lastWinter === 1 ? 'her last winter is next' : `her last winter is ${read.lastWinter} seasons away`}`
-        : `${DECLINE_LABEL}${ROOM_NOTE_SEP}about ${read.seasons} ${read.seasons === 1 ? 'season' : 'seasons'} left`
+      //
+      // ⭐ RU-23 – the label and one of four clauses (1 / many for each), joined as the long note is. The clause «her last winter is {0} seasons away» is the long note's own, one key for both.
+      return coachRead(
+        DECLINE_LABEL_REF,
+        read.lastWinter !== null
+          ? read.lastWinter === 1
+            ? cp`her last winter is next`
+            : lastWinterClauseRef(read.lastWinter)
+          : read.seasons === 1
+            ? cp`about 1 season left`
+            : cp`about ${read.seasons} seasons left`,
+      )
   }
 }
 
@@ -2189,15 +2236,21 @@ function declineVariantText(variant: DeclineVariant, read: DeclineRead): string 
  *  clock – no stream is touched, nothing is persisted, and calling it twice on one world is the
  *  same string twice. */
 export function coachDeclineShort(world: WorldState): string {
+  const ref = coachDeclineShortRef(world)
+  return ref === null ? '' : en(ref)
+}
+
+/** ⭐ RU-23 – THE REF BESIDE `coachDeclineShort`: the rotation's pick, as the sentence it is. `null` while she is still growing. */
+export function coachDeclineShortRef(world: WorldState): CopyRef | null {
   const read = declineRead(world)
-  if (read === null) return ''
+  if (read === null) return null
   for (const variant of DECLINE_ROTATION[declinePhaseOf(world.week)]) {
-    const text = declineVariantText(variant, read)
-    if (text !== null) return text
+    const ref = declineVariantRef(variant, read)
+    if (ref !== null) return ref
   }
   // Unreachable while every row above ends at `seasons`; the floor is spelled out rather than
   // thrown so a future row edit degrades to the body read instead of emptying Home's plate.
-  return declineVariantText('seasons', read)!
+  return declineVariantRef('seasons', read)!
 }
 
 /** ⭐⭐⭐ ROUND 39 #2b (REOPENED 08.09) – THE ONE SHORT READ HOME RENDERS, either half. The owner: «И
@@ -2215,9 +2268,16 @@ export function coachDeclineShort(world: WorldState): string {
  *  at all), no digit in any growing read (the fog rule), and «Past her peak» still unreachable
  *  before her own `declineStart` (`declineRead`'s gate). */
 export function coachRoomShort(world: WorldState): string {
-  const decline = coachDeclineShort(world)
-  if (decline) return decline
-  return roomBandRow(world)?.short ?? ''
+  const ref = coachRoomShortRef(world)
+  return ref === null ? '' : en(ref)
+}
+
+/** ⭐ RU-23 – THE REF BESIDE `coachRoomShort`: past the peak the rotation's pick, on a growing career the band's short as its own key (a seat names the four: `coach.room`). `null` where the engine says nothing. */
+export function coachRoomShortRef(world: WorldState): CopyRef | null {
+  const decline = coachDeclineShortRef(world)
+  if (decline !== null) return decline
+  const band = roomBandRow(world)
+  return band === null ? null : { k: band.short }
 }
 
 /** ⭐⭐ ROUND 34 #2b – HOW MUCH OF WHAT SHE COULD BECOME SHE HAS ACTUALLY BECOME. One definition,
@@ -2318,6 +2378,32 @@ export const ROOM_NOTE_SEP = ' – '
 export function coachRoomBand(note: string): string {
   const at = note.indexOf(ROOM_NOTE_SEP)
   return at > 0 ? note.slice(0, at) : ''
+}
+
+/** ⭐ RU-23 – THE ARGUMENT, the splitter's other half: what follows the first separator (the whole note when there is none). `coachRoomBand(note)` + `ROOM_NOTE_SEP` + this IS the note, for a note that has a band.
+ *  A screen that reads each half through the catalog (the profile's four sentences are a pure look-up with no ref) splits the ENGLISH first, here, and translates the halves – never the sentence it has already translated. */
+export function coachRoomArgument(note: string): string {
+  const at = note.indexOf(ROOM_NOTE_SEP)
+  return at > 0 ? note.slice(at + ROOM_NOTE_SEP.length) : note
+}
+
+/** ⭐ RU-23 – A READ AS ONE REF: `label – argument`, each part a ref of its own. English renders it to the string the engine always wrote; a screen that sets the label in bold takes the two halves apart
+ *  with `coachReadParts` and shows each in the player's language – so the bold label is the Russian label, with no sentence translated first and cut after.
+ *
+ *  ⚠ THE SEPARATOR IS A PARAM, NOT PART OF THE KEY: `read|{0}{1}{2}` joins the label, `ROOM_NOTE_SEP` and the argument. The dash is code (the one definition the splitter `coachRoomBand` cuts on too) and is
+ *  never a row the translator can lose; the key is tagged so its row is the coach's reads' alone, and its shape (three holes, nothing between) cannot be mistaken for any other join in the catalogue. */
+export function coachRead(label: CopyRef, tail: CopyRef): CopyRef {
+  return cp`read|${label}${ROOM_NOTE_SEP}${tail}`
+}
+
+/** The key a read carries, taken off the one template that writes it. */
+export const READ_JOIN_KEY: string = coachRead(DECLINE_LABEL_REF, DECLINE_LABEL_REF).k
+
+/** ⭐ RU-23 – THE TWO HALVES OF A READ, or null for a ref that is not one (a short plate that is a single sentence, a note an older worker wrote with no ref at all). */
+export function coachReadParts(ref: CopyRef | undefined): { label: CopyRef; tail: CopyRef } | null {
+  if (ref === undefined || ref.k !== READ_JOIN_KEY) return null
+  const [label, sep, tail] = ref.p ?? []
+  return sep === ROOM_NOTE_SEP && isCopyRef(label) && isCopyRef(tail) ? { label, tail } : null
 }
 
 // =================================================================================================
@@ -2604,7 +2690,7 @@ export function handoverBaseBand(world: WorldState): HandoverBaseBand {
  *  still ahead of her»), because «Huge potential» is two words. No digit in any of them: the fog
  *  rule holds on Home exactly as it holds here, and the row is ONE row, so the market's long
  *  sentence and Home's short can only ever describe the same rung. */
-const ROOM_BANDS: { label: string; note: string; short: string }[] = [
+export const ROOM_BANDS: { label: string; note: string; short: string }[] = [
   {
     label: 'Huge potential',
     note: 'most of her game is still ahead of her, and this is where a coach buys the most.',

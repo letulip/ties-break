@@ -67,7 +67,7 @@ import { BEST_N_BY_TRACK } from '../../engine/season/ranking'
 import type { PortraitEmotion } from '../../shared/avatarEmotion'
 import { COACH_TIER_WORD } from '../../composables/coachWords'
 import { ladderName } from '../../composables/kidIdentity'
-import { engineText, t } from '../../i18n'
+import { engineText, engineTile, t } from '../../i18n'
 // U0 - the shared components (docs/specs/ui-components.md).
 // ⭐⭐ ROUND 42 #10 – AND StatRow IS NOW ONE OF THEM. This line used to read «it is not used here: it
 // belongs to the Money screen, which is where it earned its shape», which was true until the owner
@@ -223,6 +223,14 @@ const friendsTileNote = computed(() => {
   const note = life.value?.friends.note
   return note === undefined ? '' : engineText(note)
 })
+// ⭐ RU-23 (11.10) – THE TILES' OWN LINES, read by SHAPE (`engineTile`, `words.ts`): the personality line (two of eight words), the school and college tile's two lines (a grade, a class standing, a year of a course, the
+// rungs after school) and the friends tile's lead (a name inside a phrase). English returns each as written; the second line of a tile is read WITH the first (`12 years done` is the school under «The last bell»
+// and a degree under «Graduate»). A line that matches no shape – the relationships tile's, for one – comes back as written.
+const personalityText = computed(() => engineTile(life.value?.personality ?? ''))
+const schoolLead = computed(() => life.value?.relationships?.lead ?? life.value?.school.lead ?? '')
+const schoolLeadText = computed(() => engineTile(schoolLead.value))
+const schoolNoteText = computed(() => engineTile(life.value?.relationships?.note ?? life.value?.school.note ?? '', schoolLead.value))
+const friendsLeadText = computed(() => engineTile(life.value?.friends.lead ?? ''))
 
 // --- THE RANK, on the card that explains it --------------------------------------------------
 // `rankLabel` is the shared rule: a kid with no counting result reads "Unranked" rather than the
@@ -482,7 +490,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              and the measurement that licenses it is written down. -->
         <Card class="kid-tile" pad="11px 9px">
           <p class="kid-tile-label">{{ t('Personality') }}</p>
-          <p class="kid-tile-line kid-tile-personality">{{ life?.personality }}</p>
+          <p class="kid-tile-line kid-tile-personality">{{ personalityText }}</p>
         </Card>
 
         <Card class="kid-tile kid-tile-ring" pad="11px 9px">
@@ -526,13 +534,13 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              unchanged. The owner's words are in that function's header: round13-nav bans Cyrillic in a template. -->
         <Card class="kid-tile" pad="11px 9px">
           <p class="kid-tile-label">{{ schoolTileLabel }}</p>
-          <p class="kid-tile-line">{{ life?.relationships?.lead ?? life?.school.lead }}</p>
-          <p class="kid-tile-line kid-tile-line-soft">{{ life?.relationships?.note ?? life?.school.note }}</p>
+          <p class="kid-tile-line">{{ schoolLeadText }}</p>
+          <p class="kid-tile-line kid-tile-line-soft">{{ schoolNoteText }}</p>
         </Card>
 
         <Card class="kid-tile" pad="11px 9px">
           <p class="kid-tile-label">{{ t('Friends') }}</p>
-          <p class="kid-tile-line">{{ life?.friends.lead }}</p>
+          <p class="kid-tile-line">{{ friendsLeadText }}</p>
           <p class="kid-tile-line kid-tile-line-soft">{{ friendsTileNote }}</p>
         </Card>
 

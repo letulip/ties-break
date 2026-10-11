@@ -45,7 +45,6 @@ import { RADAR_AXIS_LABEL } from '../../src/engine/radar'
 import { SKILL_KEYS } from '../../src/engine/development'
 import { ECONOMY } from '../../src/engine/economy'
 import { COUNTRY_NAMES } from '../../src/composables/countries'
-import { coachBlurb, coachProfileNote } from '../../src/engine/world/coachMarket'
 import { buildKnockPrompt } from '../../src/engine/knock'
 import { createWorld, toSnapshot } from '../../src/engine/world'
 import { COACH_TIER_WORD } from '../../src/composables/coachWords'
@@ -582,7 +581,7 @@ describe('L2-5 xx sweep – no unwrapped literal in the frames, and the phone st
       // the flag's accessible name is the country in words – RU-13D's landing (composables/countries.ts), a named leftover of this wave
       JSON.stringify(COUNTRY_NAMES),
       JSON.stringify(ECONOMY.vacation),
-      ...(snap.coachMarket ?? []).flatMap((r) => [coachBlurb(r.id) ?? '', coachProfileNote(r.tier, r.fit), coachProfileNote(r.tier, 'good'), coachProfileNote(r.tier, 'off')]),
+      // ⭐ RU-23 (11.10): `coachBlurb` / `coachProfileNote` LEFT THIS CORPUS – the bios and the profile's halves are catalog keys read through `engineText`, bracketed under xx like any wrapped line.
     ].join('\n')
     return (leak) => {
       const prose = leak.replace(/^[\p{Extended_Pictographic}‍️\s]+/u, '').trim()

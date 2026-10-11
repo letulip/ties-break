@@ -44,6 +44,8 @@ import { tournamentSummaryRef } from '../src/engine/world/tournamentClose'
 import { trainFlavors, restFlavors } from '../src/engine/world/phaseFinance'
 import { gear } from '../src/engine/economy/gear'
 import { COLLEGE_TIER_NAME } from '../src/engine/collegeOffer'
+import { HIREABLE_TIERS } from '../src/engine/coach'
+import { BELOW_BEST_LADDER, ROOM_BANDS, TRAVEL_EDGE_LINE, coachBlurb, coachLoadNote, coachPlaqueLine, coachProfileNote, coachRoomArgument, coachRoomBand } from '../src/engine/world/coachMarket'
 import { ECONOMY } from '../src/engine/economy'
 import { RADAR_AXIS_LABEL } from '../src/engine/radar'
 import { readFileSync } from 'node:fs'
@@ -220,6 +222,44 @@ function formEyeSentences(): string[] {
   return [good, rust]
 }
 
+/** ⭐ RU-23 (11.10) – THE COACH MARKET'S OWN PROSE, off the real functions: the sixteen bios (`coachBlurb` over the roster's portraits), the four rungs' load notes, the style profile (`coachProfileNote` over
+ *  every rung and fit – the band is a function of the two – CUT at its dash by the engine's own splitter: four labels and four arguments, because the screen reads each half through the catalog and never a
+ *  sentence it has already translated), the eleven sentences of the plaque (`coachPlaqueLine` over every state: two before the verdict, three placements at each of three tenures) and the travel line.
+ *  Pure look-ups the screen calls, or strings the snapshot hands over, from a CLOSED set; the screen reads each through `engineText`. Walked, not listed: a seventeenth portrait or a fifth fit band joins
+ *  the seat by existing. */
+function coachMarketTexts(): string[] {
+  const out = new Set<string>()
+  for (const slot of ECONOMY.coach.roster) out.add(coachBlurb(slot.portrait))
+  for (const tier of HIREABLE_TIERS) out.add(coachLoadNote(tier))
+  for (const tier of HIREABLE_TIERS) {
+    for (const fit of ['great', 'good', 'off'] as const) {
+      const note = coachProfileNote(tier, fit)
+      out.add(coachRoomBand(note))
+      out.add(coachRoomArgument(note))
+    }
+  }
+  // before the verdict: the reveal week is in the same season as the clock, or a season out (`seasonIndexOf` is the engine's own, so two weeks 10 and 120 apart are two seasons)
+  out.add(coachPlaqueLine({ placement: null, week: 0, revealWeek: 10, seasonsTogether: 0 }))
+  out.add(coachPlaqueLine({ placement: null, week: 0, revealWeek: 120, seasonsTogether: 0 }))
+  for (const placement of ['upper', 'middle', 'lower'] as const) {
+    for (const seasonsTogether of [1, 2, 3]) out.add(coachPlaqueLine({ placement, week: 200, revealWeek: 100, seasonsTogether }))
+  }
+  out.add(TRAVEL_EDGE_LINE)
+  out.delete('')
+  return [...out]
+}
+
+/** ⭐ RU-23 (11.10) – THE ROOM BANDS AND THE BELOW-BEST LADDER, as the engine writes them into refs (`{ k: text }`, no hole): the two parts of the long note's READ (the label and the argument – the engine joins
+ *  them, `coachRead`), the four shorts Home's plate carries on a growing career (three of them are the label verbatim: one key, not two), and the three rungs of the ladder past her peak. Read off the real
+ *  tables, never retyped. */
+function coachRoomLines(): string[] {
+  return [
+    ...ROOM_BANDS.flatMap((row) => [row.label, row.note]),
+    ...ROOM_BANDS.map((row) => row.short),
+    ...BELOW_BEST_LADDER.map((rung) => rung.text),
+  ]
+}
+
 export const DECLARED_SEATS: readonly Seat[] = [
   // ── the five dynamic `t()` calls (L2-9b, L2-10b, L3-5) ──────────────────────────────────────────────────────────────────────
   {
@@ -270,8 +310,23 @@ export const DECLARED_SEATS: readonly Seat[] = [
       { home: 'src/engine/radar.ts', keys: uniq([...censusSentences('src/engine/radar.ts'), ...radarTrainingLines(), ...Object.values(RADAR_AXIS_LABEL)]) },
       { home: 'src/engine/kidLife.ts', keys: censusSentences('src/engine/kidLife.ts') },
       { home: 'src/engine/world/psychologist.ts', keys: [...Object.values(PSY_FOCUS_LABEL), ...Object.values(PSY_FOCUS_LINE)] },
+      { home: 'src/engine/world/coachMarket.ts', keys: coachMarketTexts() },
       { home: 'src/engine/collegeOffer.ts', keys: Object.values(COLLEGE_TIER_NAME) },
     ],
+  },
+
+  // ── RU-23 (11.10): THE ROOM NOTE, THE DECLINE NOTE'S FIXED ARMS AND HOME'S PLATE ─────────────────────────────────────────────
+  // `coachRoomNoteRef` / `coachRoomShortRef` write `{ k: text }` for a band row (the text IS the key, no hole): the label and the argument of the long note, the short of Home's plate, and the decline ladder's
+  // three rungs; the arms with a count are `cp` templates and need no seat. Four writers, one family.
+  {
+    id: 'coach.room',
+    via: 'ref',
+    writers: [
+      { file: 'src/engine/world/coachMarket.ts', needle: 'return coachRead({ k: band.label }, { k: band.note })' },
+      { file: 'src/engine/world/coachMarket.ts', needle: 'return band === null ? null : { k: band.short }' },
+      { file: 'src/engine/world/coachMarket.ts', needle: 'const belowBestRef = (behind: number): CopyRef => ({ k: belowBestShort(behind) })' },
+    ],
+    groups: () => [{ home: 'src/engine/world/coachMarket.ts', keys: coachRoomLines() }],
   },
 
   // ── the refs the engine writes beside a corpus string (L3-4, L3-5, L3-6) ───────────────────────────────────────────────────

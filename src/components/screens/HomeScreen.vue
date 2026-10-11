@@ -614,7 +614,11 @@ const coachQuote = computed(() =>
  *  rotation is the ENGINE's (`declinePhaseOf`, off the ledger's season clock – deterministic and
  *  drawless): this screen still prints one field and adds no condition of its own, so which
  *  sentence appears is not a thing the template can get wrong. */
-const coachRoomShort = computed(() => game.snapshot?.coachRoomShort ?? '')
+// ⭐ RU-23 (11.10): shown through its ref (`eventText`) – the rotation's pick or the band's short, as the sentence the engine wrote; English renders the string beside it byte for byte.
+const coachRoomShort = computed(() => {
+  const snap = game.snapshot
+  return snap ? eventText({ text: snap.coachRoomShort, c: snap.coachNotesC?.short ?? undefined }) : ''
+})
 
 // ⚠⚠ ROUND 34 #2a – THE CEILING READ IS NO LONGER ON THIS SCREEN, and the `roomBand` computed that
 // fed it is gone with it. It lived here from round 24 to round 34: round 23 asked for «подсказки про

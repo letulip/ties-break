@@ -41,6 +41,10 @@ export type WordClass =
   | 'court' // the court row's venue and booking clause (`phaseFinance.ts`)
   | 'eco' // a label the economy owns (shop asset, vacation package, kit grade …) – a key of the catalog already
   | 'ecoLower' // …lowercased by the code before it was handed in
+  // ⭐ RU-23 – the Kid screen's tile vocabularies: words the TILE MATCHER reads (`tile` in `words.ts`), not holes of a message – so no row of the table below names them, and the carpet's ru arm hunts them raw
+  | 'trait' // the eight words of the personality line (`COMPOSURE_BANDS`, `TEMPERAMENT_WORD`)
+  | 'schoolNote' // the school tile's second line: the exam fortnight, the summer, the four standings in the class (`lifeStageTile`)
+  | 'stageLine' // the lines after the last grade and the college lines with no number in them (`afterSchoolTile`)
 
 /** `[key, ...hole indexes]` – a positional message. */
 export type HoleRow = readonly [key: string, ...holes: number[]]
@@ -364,6 +368,10 @@ export const HOLE_TABLE: Readonly<Record<WordClass, readonly HoleRow[]>> = {
     ["The masseur's week is re-cut – {0} on the table from the next bill.", 0],
     ['The weekly call changes hands – {0} from the next bill.', 0],
   ],
+  // ⭐ RU-23 – the tile vocabularies are read by the tile matcher, which holds its own shapes; there is no message with a hole of these classes
+  trait: [],
+  schoolNote: [],
+  stageLine: [],
 }
 
 /** The UI's own messages with named holes. */

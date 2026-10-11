@@ -110,7 +110,7 @@ lead text.
 
 | English | Russian |
 | --- | --- |
-| `{ordinal} grade` | `{grade}-й класс` |
+| `{ordinal} grade` | `{ordinal}-й класс` – ⚙ 11.10 (RU-23) дыра названа как в английской ячейке: было `{grade}` |
 | `Exams this week` | `На этой неделе экзамены` |
 | `Summer break` | `Летние каникулы` |
 | `Oldest in class` | `Одна из старших` |
@@ -129,10 +129,10 @@ while she is still enrolled, exactly as in the current engine.
 
 | state | English lead | Russian lead | English note | Russian note |
 | --- | --- | --- | --- | --- |
-| studying | `Year {y} of {total}` | `{course}-й курс из {total}` | `Student tennis` | `Студенческий теннис` |
-| final year | `Year {y} of {total}` | `{course}-й курс из {total}` | `Final year` | `Выпускной курс` |
-| completed | `Graduate` | `Выпускница` | `{n} years done` | `{years} учёбы` |
-| left early | `Left college` | `Ушла из университета` | `{done} of {total} years` | `{done} курса из {total}` |
+| studying | `Year {y} of {total}` | `{y}-й курс из {total}` – ⚙ 11.10 (RU-23) дыра названа как в английской ячейке: было `{course}` | `Student tennis` | `Студенческий теннис` |
+| final year | `Year {y} of {total}` | `{y}-й курс из {total}` – ⚙ 11.10 (RU-23) дыра названа как в английской ячейке: было `{course}` | `Final year` | `Выпускной курс` |
+| completed | `Graduate` | `Выпускница` | `{n} years done` | `{n, plural, one {{n} год} few {{n} года} many {{n} лет} other {{n} года}} учёбы` – ⚙ 11.10 (RU-23) дыра названа как в английской ячейке, формы – по примеру ниже (`4 года учёбы`): было `{years} учёбы` |
+| left early | `Left college` | `Ушла из университета` | `{done} of {total} years` | `{done, plural, one {{done} курс} few {{done} курса} many {{done} курсов} other {{done} курса}} из {total}` – ⚙ 11.10 (RU-23) плюрализация: было `{done} курса из {total}`, что давало «1 курса из 4»; формы – по примерам выше (`1 курс из 4`, `2 курса из 4`) |
 | first year out | `The last bell` | `Последний звонок` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` | `12 years done` | `Школа окончена` |
 | ages 19–21 | `Tennis full-time` | `Только теннис` | `No more classes` | `Больше никаких уроков` |
 | 22+ | `Grown up` | `Взрослая` | `Her own life now` | `Теперь у неё своя жизнь` |
@@ -1344,3 +1344,157 @@ source-coverage pass. Every Russian line remains `DRAFT` pending the owner's rea
 | RU21-PRF-109 | `Speed work` | `Скорость` |
 | RU21-PRF-110 | `Summer read` | `Летнее чтение` |
 | RU21-PRF-111 | `Volley work` | `Игра с лёта` |
+
+## ⚙ 11.10 agent-authored (бланкет) – the coach market's own prose, and the Kid screen's tiles (RU-23)
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+The last English the product still spoke in connected sentences: the coach market (the room note, the decline note, the style profile, the load note, the plaque, the sixteen portraits' bios) and the lines of the Kid screen's tiles that the display-boundary wave could not read (the personality line, the school and college tile, the friends tile's lead). All of it is **engine copy shown through the catalogue**, by three mechanisms:
+
+- **The three notes that carry a count or a rank move ride a `CopyRef` the engine writes beside the string** – `Snapshot.coachNotesC` (its `room`, `decline` and `short`; class (b): derived at snapshot time, persisted nowhere, no migration, no schema move). A note is a **read**: a label, the short dash and an argument, each a ref of its own (`Past her peak` and `down {0} on the year, and {1}.`, joined by `read|{0}{1}{2}`), so the screen that sets the label in bold shows the two halves each in the player's language instead of cutting a sentence it has already translated.
+- **The closed pools are read through the catalogue by `engineText`** (the seat `engine.text`): the bios, the four load notes, the profile's four labels and four arguments, the plaque's eleven sentences and the travel line. The profile has no ref – it is a pure look-up the screen calls – so the screen cuts the English at its dash with the engine's own splitter and reads each half.
+- **The Kid tiles are read by shape** (`engineTile`, `src/i18n/words.ts`): a sentence matcher per tile line, each shape asking the catalogue for its whole sentence.
+
+**Rows that were already on file and are woken by the new keys, not repeated here.** The sixteen bios (§16.2 above), the eight words of the personality line (§4), the six school notes (§5.2) and the eight stage lines after school (§5.3) had a clean English cell and no live key; the seats and readers gave them one, so they compile as the owner's editorial pass wrote them. Five cells of §4–§5 needed a touch to compile or to be right, and are fixed in place with their wording kept: the three whose hole was named differently in the Russian than in the English cell (`{ordinal}-й класс`, `{y}-й курс из {total}` twice), `{n} years done` (the same, plus its plural: `4 года учёбы`), and `{done} of {total} years` (left early), which was woken and was wrong as a form – `{done} курса из {total}` read «1 курса из 4» – and now carries its plural.
+
+**How the reads are cut.** The bold label is the first part and the tail is the separator and the second part; in Russian the separator is the same short dash (`Пик позади – …`), set by the code (`ROOM_NOTE_SEP`, a parameter of the join), not by a row. The decline note's three arguments are three whole sentences with two holes – the rank move and the clause about what is left – and both holes are messages, so each carries its own plural: the rank move (`1 место`, `3 места`, `57 мест`) and the seasons (`до последнего межсезонья осталось 3 сезона`, `у организма осталось около 3 сезонов`). The label `Пик позади` is one row, shared by the long note and the short plate.
+
+**Two deliberate reworkings of the §16.5 draft.** The draft's last-winter clause was `до последнего межсезонья – {seasons}`; a clause that follows the label's dash would read as a second dash, so it is a verb phrase (`до последнего межсезонья осталось 3 сезона`). And the two clauses of the short plate that differ from the long note's in English (`her last winter is next` against `her last winter is the next one`) share one Russian reading.
+
+**The Russian is the coach's: plain, dry, a claim about her and nothing else.** No sentence names the coach's sex (R15-7: `работает с юниорками`, not `работал`), none quotes a number except the rank move and the seasons the note has always carried, and the plaque keeps RU-05's first-person fragments (`выше моих ожиданий`), which work for a coach of either gender.
+
+### The reads' own key and the decline note
+
+`read|{0}{1}{2}` is the key every read is joined with – the label, the dash, the argument – and its row is the identity, kept as a row so the translator sees the join. The label, the three arguments, the two forms of a rank move and the four clauses about what is left follow. A rank move is accusative after `на` in both arms that use it; the seasons are the genitive after `около` and the verb phrase after `до последнего межсезонья`.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU23-CMK-01 | `read\|{0}{1}{2}` | `{0}{1}{2}` |
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU23-CMK-02 | `Past her peak` | `Пик позади` |
+| RU23-CMK-03 | `down {0} on the year, and {1}.` | `за год опустилась на {0}, и {1}.` |
+| RU23-CMK-04 | `{0} below her best season, and {1}.` | `на {0} ниже своего лучшего сезона, и {1}.` |
+| RU23-CMK-05 | `{0}, and no coach buys that back.` | `{0}, и никакой тренер этого не вернёт.` |
+| RU23-CMK-06 | `gap\|1 place` | `1 место` |
+| RU23-CMK-07 | `gap\|{0} places` | `{0, plural, one {{0} место} few {{0} места} many {{0} мест} other {{0} места}}` |
+| RU23-CMK-08 | `her last winter is the next one` | `следующее межсезонье станет последним` |
+| RU23-CMK-09 | `her last winter is {0} seasons away` | `до последнего межсезонья {0, plural, one {остался {0} сезон} few {осталось {0} сезона} many {осталось {0} сезонов} other {осталось {0} сезона}}` |
+| RU23-CMK-10 | `her body has about 1 more season in it` | `у организма осталось около 1 сезона` |
+| RU23-CMK-11 | `her body has about {0} more seasons in it` | `у организма осталось около {0, plural, one {{0} сезона} few {{0} сезонов} many {{0} сезонов} other {{0} сезона}}` |
+
+### The room note – a growing career
+
+The label and the argument of each rung of the headroom ladder (RU-05 §16.4, columns one to three), and Home's short form of the first (the other three shorts are the labels verbatim – one key each, not two). None of them contains a digit (the fog of war).
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU23-CMK-12 | `Huge potential` | `Огромный потенциал` |
+| RU23-CMK-13 | `most of her game is still ahead of her, and this is where a coach buys the most.` | `большая часть её игры ещё впереди, и здесь тренер даёт больше всего.` |
+| RU23-CMK-14 | `Still room to grow` | `Ещё есть куда расти` |
+| RU23-CMK-15 | `there is real room left in her game, and a coach is what buys it.` | `в её игре остаётся заметный запас, и раскрыть его помогает тренер.` |
+| RU23-CMK-16 | `Close to her ceiling` | `Близко к потолку` |
+| RU23-CMK-17 | `she is running out of room, and every rung is worth less than it was.` | `запас заканчивается, и каждый следующий уровень даёт меньше прежнего.` |
+| RU23-CMK-18 | `At her ceiling` | `У своего потолка` |
+| RU23-CMK-19 | `no coach can add much more now, whatever the price.` | `сейчас ни один тренер, независимо от цены, не добавит многого.` |
+| RU23-CMK-20 | `Most of her game ahead` | `Большая часть игры впереди` |
+
+### Home's short plate – past her peak
+
+The rotation's pick: `she's down N places` early in the season, the below-her-best ladder late (`She's below her best` / `far below` / `way below` are RU21-TAL-09 – 11, already on file) and the seasons read in the middle. The plate has no room for the long form, so the rank move is the bare phrase.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU23-CMK-21 | `She's down {0}` | `Она опустилась на {0}` |
+| RU23-CMK-22 | `her last winter is next` | `следующее межсезонье станет последним` |
+| RU23-CMK-23 | `about 1 season left` | `осталось около 1 сезона` |
+| RU23-CMK-24 | `about {0} seasons left` | `осталось около {0, plural, one {{0} сезона} few {{0} сезонов} many {{0} сезонов} other {{0} сезона}}` |
+
+### What the rung buys – the load note and the profile
+
+RU-05 §16.3, under the English cells they were drafted for. The load note is `coachLoadNote`; the profile is `coachProfileNote`, four sentences cut at their dash into a label and an argument (eight rows). No sentence takes a pronoun for the coach.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU23-CMK-25 | `Basic physio – the easy calls are handled, and the rest come to you.` | `Базовая физиотерапия: простые решения принимают без вас, остальные оставляют вам.` |
+| RU23-CMK-26 | `Proper physio – most weeks are decided without you.` | `Полноценная физиотерапия: большинство недель обходится без вашего решения.` |
+| RU23-CMK-27 | `A good medical team – you are rarely the one asked.` | `Хорошая медицинская команда: к вам обращаются редко.` |
+| RU23-CMK-28 | `The best medical team money buys – her body is handled, and you hear about it after.` | `Лучшая медицинская команда, которую можно купить: о её теле заботятся, а вы узнаёте уже о результате.` |
+| RU23-CMK-29 | `Above the rung` | `Выше уровня` |
+| RU23-CMK-30 | `the style match buys more here than the price does.` | `сочетание стилей даёт больше, чем одна цена.` |
+| RU23-CMK-31 | `The rung's pace` | `Темп уровня` |
+| RU23-CMK-32 | `the style adds nothing to it and takes nothing away.` | `стиль ничего не добавляет и ничего не отнимает.` |
+| RU23-CMK-33 | `Under the rung` | `Ниже уровня` |
+| RU23-CMK-34 | `the style gives back much of what the price buys.` | `из-за стиля теряется многое из того, что покупает цена.` |
+| RU23-CMK-35 | `Under your own hours` | `Медленнее ваших тренировок` |
+| RU23-CMK-36 | `for her game, this teaches slower than you do.` | `для её игры этот тренер развивает навыки медленнее вас.` |
+
+### The plaque and the travel line
+
+RU-05 §16.4: the two arms before the verdict, and the verdict as three tenures over three placements – nine whole sentences, because the placement fragment follows the tenure's clause. `Her progress` is the shared referent of both arms. The last row is the sentence under the second figure (`TRAVEL_EDGE_LINE`).
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU23-CMK-37 | `Her progress – I will know in the off-season.` | `Её прогресс – в межсезонье будет понятнее.` |
+| RU23-CMK-38 | `Her progress – too soon, ask next off-season.` | `Её прогресс – времени прошло мало, вернёмся к этому в следующее межсезонье.` |
+| RU23-CMK-39 | `A season in – it looks like more than I had hoped for.` | `После первого сезона похоже, что темп выше моих ожиданий.` |
+| RU23-CMK-40 | `A season in – it looks like about the pace I expected.` | `После первого сезона похоже, что темп примерно такой, как ожидалось.` |
+| RU23-CMK-41 | `A season in – it looks like less than I had hoped for.` | `После первого сезона похоже, что темп ниже моих ожиданий.` |
+| RU23-CMK-42 | `Two seasons in and it holds – more than I had hoped for.` | `После двух сезонов оценка держится: темп выше моих ожиданий.` |
+| RU23-CMK-43 | `Two seasons in and it holds – about the pace I expected.` | `После двух сезонов оценка держится: темп примерно такой, как ожидалось.` |
+| RU23-CMK-44 | `Two seasons in and it holds – less than I had hoped for.` | `После двух сезонов оценка держится: темп ниже моих ожиданий.` |
+| RU23-CMK-45 | `Season after season – more than I had hoped for.` | `Сезон за сезоном: темп выше моих ожиданий.` |
+| RU23-CMK-46 | `Season after season – about the pace I expected.` | `Сезон за сезоном: темп примерно такой, как ожидалось.` |
+| RU23-CMK-47 | `Season after season – less than I had hoped for.` | `Сезон за сезоном: темп ниже моих ожиданий.` |
+| RU23-CMK-48 | `Twice that on the trips the coach travels to.` | `На турнирах, куда едет тренер, эффект вдвое выше.` |
+
+### The Kid screen's tiles
+
+`kidLife.ts` composes the lines in English; the reader matches the SHAPE and asks for the sentence, so Russian owns the order and the plural (`1-й курс из 4`, `4 года учёбы`). `{0} years done` has two readings by the tile's lead: under `Graduate` it is a degree (`4 года учёбы`, RU-05's row), under `The last bell` it is the school (`Школа окончена`) – one English shape, two Russian sentences, told apart by the first line of the tile. `The last bell` and `12 years done` are the §5.3 row that carried a `QUESTION` («ключ умер»): the key is live now, and the rows here are the live ones.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU23-KID-01 | `The last bell` | `Последний звонок` |
+| RU23-KID-02 | `12 years done` | `Школа окончена` |
+| RU23-KID-03 | `Close to {0}` | `Дружит с {0}` |
+| RU23-KID-04 | `{0} next door` | `{0} всегда рядом` |
+
+### The friend's name
+
+The sixteen names are localized data (RU-05 §6): the nominative for `{0} next door` (`Эмма всегда рядом`), the instrumental for `Close to {0}` (`Дружит с Эммой`) – an ending no suffix at the call site can build. `Зои`, `Ирис`, `Нур`, `Юки`, `Инес` and `Элиф` do not decline; `Миа` is declined like the other names in `-а`. A friend is a first name in a phrase, never a brand or a tournament, so the names are rows and not Latin identity rows (§9.5 is about those).
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU23-KID-05 | `friend\|Emma` | `Эмма` |
+| RU23-KID-06 | `friend\|Mia` | `Миа` |
+| RU23-KID-07 | `friend\|Sofia` | `София` |
+| RU23-KID-08 | `friend\|Nina` | `Нина` |
+| RU23-KID-09 | `friend\|Lena` | `Лена` |
+| RU23-KID-10 | `friend\|Zoe` | `Зои` |
+| RU23-KID-11 | `friend\|Iris` | `Ирис` |
+| RU23-KID-12 | `friend\|Maja` | `Майя` |
+| RU23-KID-13 | `friend\|Noor` | `Нур` |
+| RU23-KID-14 | `friend\|Yuki` | `Юки` |
+| RU23-KID-15 | `friend\|Alba` | `Альба` |
+| RU23-KID-16 | `friend\|Ines` | `Инес` |
+| RU23-KID-17 | `friend\|Sara` | `Сара` |
+| RU23-KID-18 | `friend\|Elif` | `Элиф` |
+| RU23-KID-19 | `friend\|Hana` | `Хана` |
+| RU23-KID-20 | `friend\|Aida` | `Аида` |
+| RU23-KID-21 | `with\|Emma` | `Эммой` |
+| RU23-KID-22 | `with\|Mia` | `Мией` |
+| RU23-KID-23 | `with\|Sofia` | `Софией` |
+| RU23-KID-24 | `with\|Nina` | `Ниной` |
+| RU23-KID-25 | `with\|Lena` | `Леной` |
+| RU23-KID-26 | `with\|Zoe` | `Зои` |
+| RU23-KID-27 | `with\|Iris` | `Ирис` |
+| RU23-KID-28 | `with\|Maja` | `Майей` |
+| RU23-KID-29 | `with\|Noor` | `Нур` |
+| RU23-KID-30 | `with\|Yuki` | `Юки` |
+| RU23-KID-31 | `with\|Alba` | `Альбой` |
+| RU23-KID-32 | `with\|Ines` | `Инес` |
+| RU23-KID-33 | `with\|Sara` | `Сарой` |
+| RU23-KID-34 | `with\|Elif` | `Элиф` |
+| RU23-KID-35 | `with\|Hana` | `Ханой` |
+| RU23-KID-36 | `with\|Aida` | `Аидой` |

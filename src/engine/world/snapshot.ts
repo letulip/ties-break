@@ -126,7 +126,7 @@ import { arrivalStatus, entryStatus, layoffCoveringAsPlayed, projectedConditionA
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
-import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachRoomShort, coachTravelsWithHer, handoverBaseBand, handoverRoomBand, lastWinterIn } from './coachMarket'
+import { coachBilling, coachDeclineNoteRef, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachNoteText, coachRoomNoteRef, coachRoomShortRef, coachTravelsWithHer, handoverBaseBand, handoverRoomBand, lastWinterIn } from './coachMarket'
 import { masseurRehabWeeksAhead, masseurRoomNote, masseurRungOf, masseurSessionCents, masseurUnlocked, masseurWeeklyCents } from './masseur'
 // ⭐⭐⭐ v80, WAVE F2 – the third seat's two derivations, from the leaf that owns them.
 import { sparringRungWeeklyCents, sparringStoodDown, sparringUnlocked, sparringWeeklyCents } from './sparring'
@@ -1663,6 +1663,10 @@ function carriedOnTheWire(world: WorldState): Offer[] {
 
 export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snapshot {
   const pending = pendingView(world)
+  // ⭐ RU-23 – THE COACH'S THREE READS ON HER ROOM, each ONCE: the ref is the decision and the string beside it is that ref's English, so the two wires cannot disagree (class (b): derived here, persisted nowhere).
+  const roomNoteC = coachRoomNoteRef(world)
+  const declineNoteC = coachDeclineNoteRef(world)
+  const roomShortC = coachRoomShortRef(world)
   // Computed ONCE and shared by the snapshot field and the diary facts – two computations could
   // never disagree, but one is also cheaper and reads as the single decision it is.
   const lossStreak = computeLossStreak(world)
@@ -2269,16 +2273,18 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     coachId: world.coachId,
     coachMarket: coachMarket(world),
     coachBilling: coachBilling(world),
-    coachRoomNote: coachRoomNote(world),
+    coachRoomNote: coachNoteText(roomNoteC),
     // ⭐ ROUND 38 #6d/#7b – the decline half on its own wire, EMPTY until she is past her own peak.
     // Home reads this and never `coachRoomNote`: see the field's note for why the guarantee lives
     // here rather than in a `v-if` on the screen.
-    coachDeclineNote: coachDeclineNote(world),
+    coachDeclineNote: coachNoteText(declineNoteC),
     // ⭐ ROUND 39 #2b (REOPENED 08.09) – the ONE short read Home renders: past her peak the seasons
     // clause the owner kept, on a growing career her headroom band in the 3-5 words he sized. The
     // long sentence above renders on the coach card in the market list (#2a); each half shares its
     // derivation with the long form (`declineRead` / `roomBandRow`), so no two surfaces can disagree.
-    coachRoomShort: coachRoomShort(world),
+    coachRoomShort: coachNoteText(roomShortC),
+    // ⭐ RU-23 – the three refs, one key, always there (the wire has one shape): `null` where the string beside it is ''.
+    coachNotesC: { room: roomNoteC, decline: declineNoteC, short: roomShortC },
     // ⚠ WEEK 0 ONLY – see the field's own note. The handover is the one screen that reads it and it
     // exists for one week; a career past its first tick must not carry a reading of her true ceiling.
     handoverBand: world.week === 0 ? handoverRoomBand(world) : '',

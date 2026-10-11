@@ -145,7 +145,8 @@ const SEAT_KEYS: Record<string, number> = {
   'ending.blurb': 9, //             ENDING_BLURB, one per `CareerEndingType` – a Record's values no census rule reads, drawn by `t(ENDING_BLURB[type])` on the last page
   // ⭐ 11.10 (RU-22, the display boundary) – the seventh dynamic `t()` call, and the coach's two remarks on her form:
   'form.eye': 2, //                 `coachFormNote`'s two returned literals (a `return '…'` no census rule reads), stored as `c: { k: eye }` – the keys exist the day the seat does
-  'engine.text': 251, //            `engineText(english)` in words.ts: every `label`/`blurb`/`note` of ECONOMY (the shop, the kit, the vacations, the ads, the staff rungs, the hitting partner's three notes), the radar's note pool + its training read (MOVE_POOL 45 + FOG_POOL 5, read off the source) + its five axis labels, the kid tiles' friend lines, the psychologist's four years, the three college places
+  'engine.text': 291, //            `engineText(english)` in words.ts: every `label`/`blurb`/`note` of ECONOMY (the shop, the kit, the vacations, the ads, the staff rungs, the hitting partner's three notes), the radar's note pool + its training read (MOVE_POOL 45 + FOG_POOL 5, read off the source) + its five axis labels, the kid tiles' friend lines, the psychologist's four years, the three college places ⭐ RU-23 (11.10): + the coach market's own prose, 251 -> 291 – the sixteen bios, the four load notes, the profile's four labels and four arguments (cut at the dash by the engine's own splitter), the plaque's eleven and the travel line, read off the real functions.
+  'coach.room': 12, //              ⭐ RU-23 (11.10): the four labels and the four arguments of the long note's reads, the short of Home's plate that is not a label (the other three are their labels: one key each), the three rungs of the below-best ladder – `{ k: text }` refs, read off `ROOM_BANDS` and `BELOW_BEST_LADDER`
 }
 
 describe('§2 the declared seats – every dynamic key set the code asks for is named, from the real constants, and held against the tree', () => {
@@ -207,7 +208,8 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     const bare = buildCatalog({ seats: [] })
     // 159 gift keys + 34 of the 10.10 families (the 35th, one coaching line, the census already met) + the nine epilogue paragraphs (10.10, item 34 – a Record's values, no census rule reads them)
     // – every seat-only key the census cannot see. ⭐ RE-AIMED 10.10: 193 -> 202. ⭐ RE-AIMED 11.10 (RU-22): 202 -> 210 – the three hitting-partner notes (a `note:` property), the three college places (`COLLEGE_TIER_NAME` values) and the coach's two remarks on her form (returned literals); then 210 -> 260 with the radar's training read (the 50 lines of two private arrays – 45 of them already had RU-05's rows waiting).
-    expect(bare.catalog.count, 'the catalog the census alone sees').toBe(built.catalog.count - 260)
+    // ⭐ RE-AIMED 11.10 (RU-23): 260 -> 308 – the coach market's prose (39 of the 40 new `engine.text` keys: the travel line is an exported constant the census reads on its own) and nine of the twelve keys of `coach.room` (the three rungs of the below-best ladder are `text:` properties the census already reads).
+    expect(bare.catalog.count, 'the catalog the census alone sees').toBe(built.catalog.count - 308)
     expect([...gifts].filter((g) => bare.catalog.keys[g] !== undefined)).toEqual([])
   })
 
@@ -229,7 +231,8 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
       expect({ ...now, wrapped: undefined, seat: undefined, home: undefined }, k).toEqual({ ...e, wrapped: undefined, seat: undefined, home: undefined })
     }
     // 159 gifts + 34 of the 10.10 families + the nine epilogue paragraphs (10.10, item 34), as above – ⭐ RE-AIMED 10.10: 193 -> 202; ⭐ RE-AIMED 11.10 (RU-22): 202 -> 260, as above
-    expect(built.stats.wrapped - bare.stats.wrapped).toBe(flipped + 260)
+    // ⭐ RE-AIMED 11.10 (RU-23): 260 -> 308, as above
+    expect(built.stats.wrapped - bare.stats.wrapped).toBe(flipped + 308)
   })
 
   // ── the mutations: a fabricated seat, driven through the SAME code ──────────────────────────────────────────────────────────
@@ -307,7 +310,8 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     expect(green.lines.join('\n')).toMatch(/7 dynamic t\(\) calls: 7 declared, 0 unreadable/)
     // ⭐ RE-AIMED 10.10: 16 seats / 2,275 keys -> 17 / 2,284 (+ `ending.blurb`, nine keys)
     // ⭐ RE-AIMED 11.10 (RU-22): 17 / 2,284 -> 19 / 2,537 (+ `form.eye` 2 keys, + `engine.text` 251 keys – some of which another seat or the census already reached)
-    expect(green.lines.join('\n')).toMatch(/seats {5}19 declared \(tools\/i18n-seats\.ts\) reach 2537 catalog keys/)
+    // ⭐ RE-AIMED 11.10 (RU-23): 19 / 2,537 -> 20 / 2,589 (+ `coach.room` 12 keys, + 40 `engine.text` keys for the coach market's prose)
+    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 2589 catalog keys/)
   })
 })
 

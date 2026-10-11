@@ -42,6 +42,8 @@ import { DIARY_CLASS_B_KEYS } from './helpers/l3-4-diary-keys'
 import { LIFE_CLASS_B_KEYS } from './helpers/l3-5-life-keys'
 // ⭐ L3-6 (10.10): the endings' and the album's class-(b) keys, a list of their own (their net proves it is exactly what the touched files spell)
 import { ENDING_CLASS_B_KEYS } from './helpers/l3-6-ending-keys'
+// ⭐ RU-23 (11.10): the coach market's class-(b) keys, a list of their own (its net proves it is exactly what `world/coachMarket.ts` spells)
+import { COACH_CLASS_B_KEYS } from './helpers/ru23-coach-keys'
 import { OWN_KEY_ROW as LIFE_OWN_KEY_ROW } from '../src/engine/world/lifeBeat/ownKeyCopy'
 import { LOSS_HER_LINE as LIFE_LOSS_HER_LINE, PAUSE_EVENT as LIFE_PAUSE_EVENT } from '../src/engine/world/lifeBeat/pregnancyCopy'
 import { LEAK_EVENT as LIFE_LEAK_EVENT } from '../src/engine/world/lifeBeat/leakCopy'
@@ -127,6 +129,10 @@ const NEW_KEYS: readonly string[] = [
   // page's strings and the scroll's labels and details. The page and the record are assembled at SNAPSHOT time off `world.ending` and never stored; the fragments are stored once, NESTED in the params of the latch row
   // (whose own key is the table's), so no old save holds one as a key. The list lives in tests/helpers/l3-6-ending-keys.ts, generated from the scan and held to it by tests/i18n-l3-6-endings-album.test.ts §1.
   ...ENDING_CLASS_B_KEYS,
+  // ⭐ RU-23 (11.10): THE COACH MARKET'S ROOM AND DECLINE NOTES, CLASS (b) AS WELL – and TRANSPORT-ONLY: the long note, the short plate and their clauses are assembled at SNAPSHOT time off the decline read and ride the
+  // wire as the three refs of `coachNotesC` (room / decline / short); they are shown and never stored, so no old save holds one and the frozen table has no entry for them. Each arm and each form (1 / many) is its own
+  // WHOLE sentence. The list lives in tests/helpers/ru23-coach-keys.ts, held to the scan by tests/i18n-coach-market.test.ts §1.
+  ...COACH_CLASS_B_KEYS,
   // ⭐ L3-7 (10.10): THE KNOCK PROMPT, CLASS (b) AS WELL – the dialog's five sentences (what happened, the coach's read, the named cause, the two costs). `buildKnockPrompt` assembles them at SNAPSHOT time
   // from the knock's own facts and never stores them, so no old save holds one and the frozen v92 table has none. The commentary and the preview are outside this scan (src/viz) and carry a list of their own
   // (tests/helpers/l3-7-viz-keys.ts, held to the scan by tests/i18n-l3-7-viz.test.ts §1).
@@ -467,6 +473,10 @@ const DYNAMIC_SEATS: Record<string, number> = {
   // ⭐ L3-6 (10.10) – THE ALBUM'S SEAT: `selfKey`, one literal `{ k: text }` for a corpus cell (a caption, a note, a line, an arc cell). Class (b): the string a cell holds IS its key, and `albumCorpus.ts` is a census copy leaf,
   // so every one of the 456 + 16 cells is already a catalog key. Their can-hold proof is tests/i18n-l3-6-endings-album.test.ts §11 (it walks the corpus), not the frozen table's - no old save holds a corpus line as a key.
   'src/engine/world/albumBook.ts': 1,
+  // ⭐ RU-23 (11.10) – THE COACH MARKET'S SEAT: four literal `{ k: text }` objects for the texts a TABLE holds – the band row's label and its argument (the two parts of a read), the band's short, and a rung of
+  // the below-best ladder. Class (b), transport-only: the text the table holds IS its key, and the seat `coach.room` (tools/i18n-seats.ts) walks the real tables; the can-hold proof is
+  // tests/i18n-coach-market.test.ts §2 (it renders every band and rung against the English), not the frozen table's – no old save holds a note as a key.
+  'src/engine/world/coachMarket.ts': 4,
 }
 
 function literalsIn(node: ts.Node, out: string[] = []): string[] {
