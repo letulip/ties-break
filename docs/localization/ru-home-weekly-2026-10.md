@@ -27,8 +27,8 @@ formatter:
 | id | English shape | Russian shape | note |
 | --- | --- | --- | --- |
 | RU03-F01 | `W27 2033` | `Неделя 27 · 2033` | full Home heading; do not expose `W` |
-| RU03-F02 | `Jun 3 – Jun 9` | `3–9 июня` | same-month range |
-| RU03-F03 | `Jan 27 – Feb 2, 2031` | `27 января – 2 февраля 2031` | cross-month range |
+| RU03-F02 | `Jun 3 – Jun 9` | `3–9 июня` – ⚙ 11.10 формат даты: форматтера в реестре ещё нет – ряд ждёт его, не ключ каталога `QUESTION` | same-month range |
+| RU03-F03 | `Jan 27 – Feb 2, 2031` | `27 января – 2 февраля 2031` – ⚙ 11.10 формат даты: форматтера в реестре ещё нет – ряд ждёт его, не ключ каталога `QUESTION` | cross-month range |
 | RU03-F04 | `W14 '31` | `Нед. 14 · ’31` | compact row label only |
 | RU03-F05 | `{age} years old {flag}` | `{age} · {flag}` | the flag already separates identity; a bare localized age is enough |
 
@@ -40,7 +40,7 @@ a number at the component call site.
 | RU03-G01 | `CLOCK_GREETINGS` | `Good morning` | `Доброе утро` |
 | RU03-G02 | `CLOCK_GREETINGS` | `Good afternoon` | `Добрый день` |
 | RU03-G03 | `CLOCK_GREETINGS` | `Good evening` | `Добрый вечер` |
-| RU03-G04 | `CLOCK_GREETINGS` | `Good night` | `Доброй ночи` |
+| RU03-G04 | `CLOCK_GREETINGS` | `Good night` | `Спокойной ночи` – ⚙ 11.10 выровнено с дневниковой строкой (один ключ, тёплая форма) |
 
 The current collision check removes `Good ` and searches the remaining English time word inside the
 photo caption. That cannot survive translation. The greeting and caption need semantic time tags, or
@@ -69,9 +69,9 @@ states. `Требующее внимания` covers both without promising an a
 
 | key | English label | Russian label |
 | --- | --- | --- |
-| domestic | `National` | `Национальный рейтинг` |
-| itf | `International` | `Международный рейтинг` |
-| wta | `Professional` | `Профессиональный рейтинг` |
+| domestic | `National` (`kidIdentity.ts`) | `Национальный рейтинг` |
+| itf | `International` (`kidIdentity.ts`) | `Международный рейтинг` |
+| wta | `Professional` (`kidIdentity.ts`) | `Профессиональный рейтинг` |
 | unranked | `Unranked` | `Без рейтинга` |
 
 The chip should not become `Национальный рейтинг · Рейтинг №…`; its visible composition is the
@@ -95,7 +95,7 @@ an ordinal formatter rather than attempting to pronounce the symbol.
 | RU03-C02 | near higher floors | `Condition {n} percent, near the higher entry floors` | `Форма: {n} процентов, близко к порогу турниров более высокого уровня` |
 | RU03-C03 | fit | `Condition {n} percent, fit` | `Форма: {n} процентов, готова играть` |
 | RU03-C04 | tired caution | `Worn out – she needs a rest week` | `Вымоталась – нужна неделя отдыха` |
-| RU03-C05 | match streak | `{n} match weeks in a row` | `{duration} подряд с матчами` |
+| RU03-C05 | match streak | `{n} match weeks in a row` | `{duration} подряд с матчами` – ⚙ 11.10 дыра {duration} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 
 C05 requires an instrumental duration: `одна неделя подряд`, `две недели подряд`, `пять недель
 подряд`. The renderer should not reuse an accusative duration from the week-advance control.
@@ -196,8 +196,8 @@ every four weeks, so each line must stand alone without sounding like a new diag
 | RU03-S06 | outgrown a11y | `{tier}: outgrown – {detail}` | `{tier}: возрастной уровень пройден – {detail}` |
 | RU03-S07 | locked a11y | `{tier}: locked – {detail}` | `{tier}: пока недоступен – {detail}` |
 | RU03-S08 | waiting a11y | `{tier}: open – {detail}` | `{tier}: доступен – {detail}` |
-| RU03-S09 | gap control | `Show {n} more levels` | `Показать ещё {countedLevels}` |
-| RU03-S10 | gap description | `{n} levels hidden ({from} to {to}) – tap to show the whole ladder` | `Скрыто: {countedLevels}, от {from} до {to}. Нажмите, чтобы показать всю лестницу.` |
+| RU03-S09 | gap control | `Show {n} more levels` | `Показать ещё {countedLevels}` – ⚙ 11.10 дыра {countedLevels} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
+| RU03-S10 | gap description | `{n} levels hidden ({from} to {to}) – tap to show the whole ladder` | `Скрыто: {countedLevels}, от {from} до {to}. Нажмите, чтобы показать всю лестницу.` – ⚙ 11.10 дыра {countedLevels} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU03-S11 | collapse name | `Show only her current levels` | `Показать только актуальные уровни` |
 | RU03-S12 | collapse title | `Back to her current window` | `Вернуться к актуальному диапазону` |
 
@@ -213,7 +213,7 @@ Russian (`победа`, `финал`, `полуфинал`, `четвертьф
 | RU03-N01 | eyebrow | `News` | `Новости` | |
 | RU03-N02 | empty state | `No news yet.` | `Новостей пока нет.` | |
 | RU03-N03 | table name | `News – {week}` | `Новости · {week}` | avoids a spoken dash chain |
-| RU03-N04 | visible match separator | `vs` | `–` | same rule as the prologue flow |
+| RU03-N04 | visible match separator | `vs` (`HomeScreen.vue`) | `–` | same rule as the prologue flow |
 | RU03-N05 | friendly chip | `practice` | `тренировка` | this flag denotes a practice match |
 | RU03-N06 | replay cue | `Watch` | `Смотреть` | opens replay |
 
@@ -228,8 +228,8 @@ English islands while that content is active.
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU03-K01 | `Play {fixture}` | `Играть: {localizedFixture}` |
-| RU03-K02 | `Play {fixture}` | `Играть: {localizedFixture}` |
+| RU03-K01 | `Play {fixture}` (`HomeScreen.vue`) | `Играть: {fixture}` |
+| RU03-K02 | `Play {fixture}` (`HomeScreen.vue`) | `Играть: {fixture}` |
 | RU03-K03 | `Finish the year` | `Закончить учебный год` |
 | RU03-K04 | `Play the first year` | `Начать первый год` |
 | RU03-K05 | `Play the final year` | `Начать последний год` |
@@ -267,7 +267,7 @@ the college card and can remain shorter.
 | RU03-CA03 | grid group | `The seven days of {dateLine}` | `Семь дней: {dateLine}` |
 | RU03-CA04 | paper label | `Notes` | `Заметки` |
 | RU03-CA05 | look-ahead heading | `Weeks after that` | `Следующие недели` |
-| RU03-CA06 | marker accessible suffix | `{note}, {label}, {dates} – open this tournament` | `открыть турнир` |
+| RU03-CA06 | marker accessible suffix | `{note}, {label}, {dates} – open this tournament` | `{note}, {label}, {dates} – открыть турнир` – ⚙ 11.10 дыра возвращена (бланкет) |
 | RU03-CA07 | entered chip | `Entered` | `Заявлена` |
 | RU03-CA08 | look-ahead footnote | `Only tournaments she can enter are marked here – the whole calendar, and every booking, live on the Season tab.` | `Здесь отмечены только турниры, на которые она может заявиться. Полный календарь и все заявки – на экране «Сезон».` |
 | RU03-CA09 | sweep hint | `Tap anywhere to skip` | `Нажмите в любом месте, чтобы пропустить` |
@@ -308,7 +308,7 @@ names remain two letters and must be checked with the existing seven-column phon
 | --- | --- | --- | --- |
 | RU03-CW01 | layoff title | `On the bench` | `Вне игры` |
 | RU03-CW02 | layoff, no return | `She is out – no training this week.` | `Она вне игры – на этой неделе тренировок не будет.` |
-| RU03-CW03 | layoff with return | `Out with the {injury} – back {week}.` | `Из-за травмы она не играет – вернётся {week}.` |
+| RU03-CW03 | layoff with return | `Out with the {injury} – back {week}.` | `Из-за травмы ({injury}) она не играет – вернётся {week}.` – ⚙ 11.10 дыра возвращена (бланкет) |
 | RU03-CW04 | trip title | `Tournament week` | `Турнирная неделя` |
 | RU03-CW05 | named trip | `She is away at {event} – the draw owns the week.` | `{event}: она уехала на турнир, и всю неделю решает сетка.` |
 | RU03-CW06 | unnamed trip | `She is away at a tournament – the draw owns the week.` | `Она уехала на турнир – всю неделю решает сетка.` |
@@ -318,7 +318,7 @@ names remain two letters and must be checked with the existing seven-column phon
 | RU03-CW10 | off-season readout | `The tour is closed – this is the block where next year gets built.` | `Тур закрыт – в эти недели строится следующий сезон.` |
 | RU03-CW11 | exam title | `Exams` | `Экзамены` |
 | RU03-CW12 | exams, no sessions | `Exams this week – no tournaments, and no sessions booked either.` | `На этой неделе экзамены: без турниров и без запланированных тренировок.` |
-| RU03-CW13 | exams with sessions | `Exams this week – no tournaments, but her {n} sessions stand.` | `На этой неделе экзамены: турниров нет, но {sessions} остаются в расписании.` |
+| RU03-CW13 | exams with sessions | `Exams this week – no tournaments, but her {n} sessions stand.` | `На этой неделе экзамены: турниров нет, но {sessions} остаются в расписании.` – ⚙ 11.10 дыра {sessions} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU03-CW14 | shoot title | `Shooting week` | `Неделя съёмок` |
 | RU03-CW15 | summer title | `Summer block` | `Летний блок` |
 | RU03-CW16 | ordinary title | `Training week` | `Неделя тренировок` |
@@ -332,10 +332,10 @@ the event name before a colon so a tournament title needs no prepositional form.
 | id | English | Russian |
 | --- | --- | --- |
 | RU03-CR01 | `No sessions – a full week off court.` | `Тренировок нет – целая неделя вне корта.` |
-| RU03-CR02 | `{sessions} sessions over {days} days – {doubled} of them two sessions a day.` | `{sessions} за {days}; в {doubledDays} – по две тренировки.` |
+| RU03-CR02 | `{sessions} sessions over {days} days – {doubled} of them two sessions a day.` | `{sessions} за {days}; в {doubledDays} – по две тренировки.` – ⚙ 11.10 дыра {doubledDays} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU03-CR03 | `{sessions} sessions, one a day – no school, so there is room to double up.` | `{sessions}, по одной в день. Школы нет – можно поставить по две.` |
 | RU03-CR04 | `{sessions} sessions, all of them on court.` | `{sessions}, все на корте.` |
-| RU03-CR05 | `{sessions} sessions – {court} on court, {gym} in the gym.` | `{sessions}: {courtSessions} на корте, {gymSessions} в зале.` |
+| RU03-CR05 | `{sessions} sessions – {court} on court, {gym} in the gym.` | `{sessions}: {courtSessions} на корте, {gymSessions} в зале.` – ⚙ 11.10 дыра {gymSessions} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU03-CR06 | `Practice match on {day}.` | `Тренировочный матч – {dayAccusative}.` |
 | RU03-CR07 | `She is training on a sore {part}.` | `Она тренируется, несмотря на ушиб.` |
 | RU03-CR08 | one-day shoot | `{brand} shoot on {day}.` | `Съёмка для {brand} – {dayAccusative}.` |
@@ -367,7 +367,7 @@ literal currently found in its block definitions; repeated English labels share 
 | Flight home | Перелёт домой | Flight out | Перелёт туда |
 | Free time | Свободное время | Gym | Зал |
 | Her pals | С друзьями | Home day | День дома |
-| Home | Домой | Last day | Последний день |
+| Home | Дом | Last day | Последний день |
 | Last one | Последний приём | Last swim | Последнее купание |
 | Lie-in | Выспаться | Long lunch | Долгий обед |
 | Long way home | Долгая дорога домой | Match play | Игровая тренировка |
@@ -519,10 +519,10 @@ travel-note → week-note → expense fallback order; translating only the card 
 | id | source | English | Russian |
 | --- | --- | --- | --- |
 | RU03-RF01 | tile eyebrow | `Finances` | `Финансы` |
-| RU03-RF02 | tournament cheque | `Income` | `Призовые` |
+| RU03-RF02 | tournament cheque | `recap\|Income` | `Призовые` |
 | RU03-RF03 | other family income | `Family income` | `Доход семьи` |
-| RU03-RF04 | outgoing total | `Spent` | `Расходы` |
-| RU03-RF05 | net result | `Balance` | `Итог` |
+| RU03-RF04 | outgoing total | `recap\|Spent` | `Расходы` |
+| RU03-RF05 | net result | `recap\|Balance` | `Итог` |
 | RU03-RF06 | daughter's share memo | `Her cut {pct}% – {amount} into her own account.` | `Её доля {pct} % – {amount} на её личный счёт.` |
 | RU03-RF07 | legacy-save foot | `The income above is what the family kept.` | `Выше указан доход, оставшийся семье.` |
 | RU03-RF08 | coach share memo | `Coach's cut {pct}% – {amount}, inside Spent above.` | `Доля тренера {pct} % – {amount}; она уже входит в расходы выше.` |
@@ -539,10 +539,11 @@ take a formatted `{amount}` and an integer `{pct}`; they must not rebuild either
 
 | id | source | English | Russian |
 | --- | --- | --- | --- |
-| RU03-RT01 | tile eyebrow | `Training` | `Тренировки` |
-| RU03-RT02 | plan row and dot tooltip | `On court` / `Training` | `На корте` / `Тренировка` |
+| RU03-RT01 | tile eyebrow | `Training` | `Тренировки` – ⚙ 11.10 плитка и её dot-двойник живут в одном файле (WeekRecapCard.vue): хинт их не разводит, плитке нужен свой ctx-ключ (класс №15/№4) `QUESTION` |
+| RU03-RT02 | plan row and dot tooltip | `On court` | `На корте` |
+| RU03-RT02b | plan row and dot tooltip | `dot\|Training` | `Тренировка` |
 | RU03-RT03 | plan row and dot tooltip | `Rest` | `Отдых` |
-| RU03-RT04 | day-row aria-label | `{n} of 7 days training` | `Тренировки: {trainingDays} из 7 дней` |
+| RU03-RT04 | day-row aria-label | `{n} of 7 days training` | `Тренировки: {trainingDays} из 7 дней` – ⚙ 11.10 дыра {trainingDays} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU03-RM01 | tile eyebrow | `Mood` | `Настроение` |
 | RU03-RM02 | energy label | `Energy` | `Силы` |
 
@@ -553,11 +554,11 @@ The portrait's fallback words are compact states rather than diagnoses:
 
 | emotion | English | Russian |
 | --- | --- | --- |
-| norm | `Steady` | `Ровная` |
-| happy | `Happy` | `Радостная` |
+| norm | `recap\|Steady` | `Ровная` |
+| happy | `recap\|Happy` | `Радостная` |
 | sad | `Low` | `Не в духе` |
-| serious | `Focused` | `Собранная` |
-| tired | `Tired` | `Уставшая` |
+| serious | `recap\|Focused` | `Собранная` |
+| tired | `recap\|Tired` | `Уставшая` |
 | injury | `Hurt` | `Травмирована` |
 | rehab | `On the mend` | `Восстанавливается` |
 | angry | `Frustrated` | `Раздражена` |
@@ -576,15 +577,15 @@ duplicating a translation table in this card.
 | --- | --- | --- | --- |
 | RU03-RH01 | tile eyebrow | `Highlights` | `Главное` |
 | RU03-RH02 | empty state | `A quiet week.` | `Спокойная неделя.` |
-| RU03-RH03 | rank rose | `{ladder} rank up {n} – now #{rank}` | `{ladder}: поднялась на {places}; теперь №{rank}` |
-| RU03-RH04 | rank fell | `{ladder} rank down {n} – now #{rank}` | `{ladder}: опустилась на {places}; теперь №{rank}` |
+| RU03-RH03 | rank rose | `{ladder} rank up {n} – now #{rank}` | `{ladder}: поднялась на {places}; теперь №{rank}` – ⚙ 11.10 дыра {places} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
+| RU03-RH04 | rank fell | `{ladder} rank down {n} – now #{rank}` | `{ladder}: опустилась на {places}; теперь №{rank}` – ⚙ 11.10 дыра {places} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU03-RH05 | practice-match note | `She played her practice match` | `Она сыграла тренировочный матч` |
 | RU03-RH06 | replay control | `Watch the replay` | `Смотреть повтор` |
 | RU03-RH07 | goal label | `Next goal` | `Следующая цель` |
 | RU03-RH08 | first rung | `Win one match at the {event}` | `Выиграть один матч на турнире «{event}»` |
 | RU03-RH09 | title rung | `Win the {event}` | `Выиграть турнир «{event}»` |
-| RU03-RH10 | round rung | `Reach the {round} at the {event}` | `Дойти до {roundGenitive} на турнире «{event}»` |
-| RU03-RH11 | skill rung | `Work on her {axis}` | `Поработать над {axisInstrumental}` |
+| RU03-RH10 | round rung | `Reach the {round} at the {event}` | `Дойти до {roundGenitive} на турнире «{event}»` – ⚙ 11.10 дыра {roundGenitive} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
+| RU03-RH11 | skill rung | `Work on her {axis}` | `Поработать над {axisInstrumental}` – ⚙ 11.10 дыра {axisInstrumental} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 
 `{places}` is a counted phrase: `1 место`, `2 места`, `5 мест`. `{roundGenitive}` is a localized
 case-bearing phrase such as `четвертьфинала`, `полуфинала` or `финала`; `{axisInstrumental}` is

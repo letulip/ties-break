@@ -17,15 +17,20 @@ destructive confirmations. All Russian copy is `DRAFT`; user-entered names remai
 | English | Russian draft |
 | --- | --- |
 | `Which settings` (tab group name) | `Раздел настроек` |
-| `Play` / `Sound, animations and how a match opens` | `Игра` / `Звук, анимация и просмотр матча` |
-| `Saves` / `Careers, save slots, import and export` | `Сохранения` / `Карьеры, копии, импорт и экспорт` |
-| `About` / `Version, seed and privacy` | `О приложении` / `Версия, код карьеры и конфиденциальность` |
+| `Play` | `Игра` |
+| `Sound, animations and how a match opens` | `Звук, анимация и просмотр матча` |
+| `Saves` | `Сохранения` |
+| `Careers, save slots, import and export` | `Карьеры, копии, импорт и экспорт` |
+| `About` | `О приложении` |
+| `Version, seed and privacy` | `Версия, код карьеры и конфиденциальность` |
 | `Careers` | `Карьеры` |
 | `No careers yet.` | `Пока нет ни одной карьеры.` |
 | `Active` | `Текущая` |
 | `{week} · age {age} · last played {date}` | `{week} · возраст: {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}} · последняя игра: {date}` |
-| `Load` / `Load career – {kidName}` | `Загрузить` / `Загрузить карьеру – {kidName}` |
-| `Delete` / `Delete career – {kidName}` | `Удалить` / `Удалить карьеру – {kidName}` |
+| `Load` | `Загрузить` – ⚙ 11.10 простой ключ и его op-двойник живут в одном файле (MoreScreen.vue): хинт их не разводит, простому нужен свой ctx-ключ (класс №15/№4) `QUESTION` |
+| `Load career – {kidName}` | `Загрузить карьеру – {kidName}` |
+| `Delete` | `Удалить` |
+| `Delete career – {kidName}` | `Удалить карьеру – {kidName}` |
 
 `{kidName}` is a nominative label after an em dash, never forced into the English possessive.
 `careerAge` already respects the stored birthday where known; localization must not derive
@@ -40,12 +45,17 @@ age anew. The accessible name begins with the visible verb for speech-input matc
 | `none yet` | `пока нет` |
 | `Restore previous` | `Восстановить предыдущее` |
 | `Named saves` – table name | `Именные сохранения` |
-| columns `Name` / `Saved` / `Week` / `Size` | `Название` / `Сохранено` / `Неделя` / `Размер` |
+| `saves\|Name` | `Название` |
+| `Saved` | `Сохранено` |
+| `Week` | `Неделя` |
+| `Size` | `Размер` |
 | `Load save {name}` | `Загрузить сохранение «{name}»` |
 | `Delete save {name}` | `Удалить сохранение «{name}»` |
-| placeholder `save name`, accessible `Save name` | `название сохранения`, `Название сохранения` |
+| `save name` | `название сохранения` |
+| `Save name` | `Название сохранения` |
 | `Save as…` | `Сохранить как…` |
-| `Export to file` / `Import from file` | `Экспортировать в файл` / `Импортировать из файла` |
+| `Export to file` | `Экспортировать в файл` |
+| `Import from file` | `Импортировать из файла` |
 | `storage: unknown` | `Хранилище: статус неизвестен` |
 | `storage: persistent` | `Хранилище: защищено от автоочистки` |
 | `storage: best-effort` | `Хранилище: браузер может очистить` |
@@ -64,10 +74,15 @@ persistence, not a guarantee against device loss or manual deletion.
 
 | English source | Russian draft |
 | --- | --- |
-| `Save` / `Load` / `Delete save` / `Delete career` / `Export` / `Import` (`OP_LABEL`) | `Сохранение` / `Загрузка` / `Удаление сохранения` / `Удаление карьеры` / `Экспорт` / `Импорт` |
+| `op\|Save` (`OP_LABEL`) | `Сохранение` |
+| `op\|Load` | `Загрузка` |
+| `op\|Delete save` | `Удаление сохранения` |
+| `op\|Delete career` | `Удаление карьеры` |
+| `op\|Export` | `Экспорт` |
+| `op\|Import` | `Импорт` |
 | `{operation}…` | `{operation}…` |
 | `{operation} – done` | `{operation} – готово` |
-| `{operation} failed – {message}` | `{operation}: не удалось завершить. {localizedMessage}` |
+| `{operation} failed – {message}` | `{operation}: не удалось завершить. {message}` |
 | `Retry` | `Повторить` |
 | `Your browser may clear saves under storage pressure – export a backup file now and then.` | `При нехватке места браузер может очистить сохранения. Время от времени экспортируйте резервную копию.` |
 | `Export files hold this career's readable data – name, progress, finances – so treat a backup like the personal file it is.` | `Файл экспорта содержит читаемые данные карьеры: имя, прогресс и финансы. Храните копию как личный файл.` |

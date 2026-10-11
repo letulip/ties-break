@@ -27,18 +27,18 @@ compiles nowhere.
 | record season age | `she was {ageYears}` | `ей было {ageYears, plural, one {{ageYears} год} few {{ageYears} года} many {{ageYears} лет} other {{ageYears} лет}}` |
 | empty record | `Nothing was ever written down. That happens.` | `Здесь не осталось записей. Бывает и так.` |
 | final page heading | `The last page` | `Последняя страница` |
-| portrait alt | `Aged {stage}` | `Портрет: возрастной этап «{stageLocalized}»` |
+| portrait alt | `Aged {stage}` | `Портрет: возрастной этап «{stage}»` |
 | real album door | `View the album` | `Посмотреть альбом` |
 | visible test export | `Export save (dev)` | `Экспортировать сохранение (тест)` |
-| family's prize share | `Family's share` | `Доля семьи` · ⚙ removed 07.10 (round 48 #3) |
+| family's prize share | `Family's share` | `Доля семьи` · ⚙ removed 07.10 (round 48 #3) · ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 | permanent outlay | `Tennis & trips` | `Теннис и поездки` · `APPROVED` 08.10 (his own wording; `docs/decisions.md`) |
 | daughter's account | `Her account` | `Её счёт` |
-| still owned holdings | `Still owned` | `Осталось в собственности` · ⚙ removed 07.10 (round 47 #6) |
+| still owned holdings | `Still owned` | `Осталось в собственности` · ⚙ removed 07.10 (round 47 #6) · ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 | current portfolio value | `Family's portfolio` | `Капитал семьи` |
 | seasons | `Seasons` | `Сезонов` |
 | best rank | `Best rank` | `Высшее место в рейтинге` |
 | titles | `Titles` | `Титулов` |
-| one-more-year refrain | `You said one more year {count} time/times.` | `«Ещё один год», – говорили мы. Так было {count, plural, one {{count} раз} few {{count} раза} many {{count} раз} other {{count} раз}}.` |
+| one-more-year refrain | `You said one more year {count} time/times.` | `«Ещё один год», – говорили мы. Так было {count, plural, one {{count} раз} few {{count} раза} many {{count} раз} other {{count} раз}}.` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
 | resume college fallback | `Another year –` | `Ещё один год –` |
 | new unrelated childhood | `Raise another` | `Новая история` · `APPROVED` 07.10 (his own wording, spec §9.9a) |
 | dynasty, daughter lived during tour | `Raise her daughter` | `Вырастить её дочь` |
@@ -76,9 +76,9 @@ unranked fallback.
 
 | Condition | English | Russian draft | Markup constraint (live source, rounds 47/48) |
 | --- | --- | --- | --- |
-| completed academy earns | `Her academy stands – {built} of {total} stages built – and it earns {money} a week.` | `Её академия работает: построено {built} из {total} этапов, доход – {money} в неделю.` | `{built}`, `{total}` and `{money}` each render inside their own `<b class="ending-fig">`; `{money}` is the compact form from $1M (`$40.6M`, locale-invariant by ruling, see RU-13D). The Russian cell must give each of the three its own marked segment. |
-| academy begun, no earnings | `Her academy is begun – {built} of {total} stages built.` | `Строительство её академии началось: построено {built} из {total} этапов.` | `{built}` and `{total}` each render inside their own `<b class="ending-fig">`; no money figure in this note. The Russian cell must give both their own marked segment. |
-| lifetime advertising deal | `The {brand} deal never ran out – {money} a year, for life.` | `Договор с брендом «{brand}» не закончился вместе с карьерой: {money} в год пожизненно.` | `{money}` renders inside `<b class="ending-fig">` and is compact from $1M. ⚠ The two words `for life` are a plain `<b>` (round 48 #5, his «make for life bold»): words, not a figure, so not `ending-fig`. The Russian cell's equivalent of `for life` (in this draft `пожизненно`) must be a marked bold segment; the cell has no markup slot for it today. Constraint noted only – his wording is untouched. |
+| completed academy earns | `Her academy stands – {built} of {total} stages built – and it earns {money} a week.` | `Её академия работает: построено {built} из {total} этапов, доход – {money} в неделю.` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` | `{built}`, `{total}` and `{money}` each render inside their own `<b class="ending-fig">`; `{money}` is the compact form from $1M (`$40.6M`, locale-invariant by ruling, see RU-13D). The Russian cell must give each of the three its own marked segment. |
+| academy begun, no earnings | `Her academy is begun – {built} of {total} stages built.` | `Строительство её академии началось: построено {built} из {total} этапов.` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` | `{built}` and `{total}` each render inside their own `<b class="ending-fig">`; no money figure in this note. The Russian cell must give both their own marked segment. |
+| lifetime advertising deal | `The {brand} deal never ran out – {money} a year, for life.` | `Договор с брендом «{brand}» не закончился вместе с карьерой: {money} в год пожизненно.` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` | `{money}` renders inside `<b class="ending-fig">` and is compact from $1M. ⚠ The two words `for life` are a plain `<b>` (round 48 #5, his «make for life bold»): words, not a figure, so not `ending-fig`. The Russian cell's equivalent of `for life` (in this draft `пожизненно`) must be a marked bold segment; the cell has no markup slot for it today. Constraint noted only – his wording is untouched. |
 
 The academy note has two fact shapes. Do not imply an unbuilt academy already earns money. The
 lifetime deal's annual amount belongs to that signed deal; the ended career does not continue to

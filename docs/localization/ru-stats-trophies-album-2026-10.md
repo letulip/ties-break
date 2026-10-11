@@ -116,11 +116,11 @@ Heading and table aria use the selected track's full display name.
 
 | source | Russian |
 | --- | --- |
-| rank column | `№` |
-| player | `Игрок` |
-| age | `Возраст` |
-| points | `Очки` |
-| own-rank foot | `Её место: {rank}` |
+| `#` · rank column | `№` |
+| `Player` | `Игрок` |
+| `Age` | `Возраст` |
+| `Points` | `Очки` |
+| `Her rank: {rank}` · own-rank foot | `Её место: {rank}` |
 
 An entirely scoreless table displays `–` in every rank cell and `Без рейтинга` in her summary. A
 missing age is also `–`; neither absence becomes zero.
@@ -157,10 +157,10 @@ Accessible name: **`Зачётные результаты · {fullTrack}`**.
 | English | Russian |
 | --- | --- |
 | `Week` | `Неделя` |
-| `Tier` | `Турнир` – SUPERSEDED 10.10: чат-ок отдал ключ `Tier` форме RU-04 G04 «Уровень»; эта ячейка историческая |
+| `Tier` | `Турнир` – SUPERSEDED 10.10: чат-ок отдал ключ `Tier` форме RU-04 G04 «Уровень»; эта ячейка историческая · ⚙ 11.10 ряд исторический: колонка таблицы зачётных результатов – ключ с тегом counting, ему уже отдано «Уровень» (ряд ниже по файлу) `QUESTION` |
 | `Pts` | `Очки` |
-| `Total` | `Всего` |
-| generic empty state | `Зачётных результатов пока нет: они появятся после турнира с рейтинговыми очками.` |
+| `Total` (`CountingResultsTable.vue`) | `Всего` |
+| generic empty state | `Зачётных результатов пока нет: они появятся после турнира с рейтинговыми очками.` – ⚙ 11.10 ключ умер, ряд исторический – такой английской строки в исходниках нет `QUESTION` |
 
 Tier labels use RU-04's localized tournament catalogue. `–` remains the honest value for a legacy
 row without a tier id.
@@ -390,9 +390,9 @@ Russian book.
 | English | Russian |
 | --- | --- |
 | `Gate {n}` | `Вход {n}` |
-| `Seat {n}{letter}` | `Место {n}{letter}` |
+| `Seat {n}{letter}` | `Место {n}{letter}` – ⚙ 11.10 две дыры подряд: склейка нормализует только первую (normKey) – ряд ждёт правки инструмента `QUESTION` |
 | `Row {n}` | `Ряд {n}` |
-| `Age {n}` | use counted age, for example `21 год` |
+| `Age {n}` – ⚙ 11.10 в русской ячейке указание, а не перевод: ряд ждёт самого русского `QUESTION` | use counted age, for example `21 год` |
 
 Seat letters `A–F` remain Latin because they are an invented ticket coordinate, not prose.
 
@@ -501,4 +501,4 @@ The parent-written `note`, `caption` and loose `line` corpus is drafted separate
 | RU07-RH09 | `Nothing here until she plays her first Local Open.` | |
 | RU07-RH10 | `On every table, results older than 52 weeks drop out – points must be defended.` | |
 | RU07-RH11 | `She has three rankings and they are counted separately – a result pays into one table only, and the totals never add up together.` | |
-| RU07-RH12 | `{0} – {1} · {2} pts` | |
+| RU07-RH12 | `{a} – {b} · {c} pts` | |

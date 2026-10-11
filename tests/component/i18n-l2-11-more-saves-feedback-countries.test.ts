@@ -90,7 +90,6 @@ function cellsOf(doc: string, needle: string): string[] {
   if (line === undefined) throw new Error(`${doc}: no line carries «${needle}»`)
   return splitRow(line).map((c) => c.replace(/`/g, '').trim())
 }
-const parts = (cell: string): string[] => cell.split(' / ').map((p) => p.trim())
 
 beforeEach(() => {
   installMemoryStorage()
@@ -748,10 +747,14 @@ describe('L2-11 seams – a flip re-labels a mounted More and a blocking confirm
 
 describe('L2-11 context tags – four decisions, nine tagged keys, and the bare ones, each measured against every batch table', () => {
   it('⚠ THE OPERATION NOUNS: RU-13A\'s status row writes six NOUNS in one cell; two of them collide with a VERB on the same screen, so the family takes one tag', () => {
-    const [english, russian] = cellsOf('ru-saves-settings-2026-10.md', '(`OP_LABEL`)')
-    const en = parts(english!.replace(' (OP_LABEL)', ''))
-    const ru = parts(russian!)
-    expect(en).toEqual(['Save', 'Load', 'Delete save', 'Delete career', 'Export', 'Import'])
+    // ⭐ RE-AIMED 11.10 (row hygiene, not relaxed): RU-13A's one-cell list of six nouns was split into one row per tagged key – each row NAMES its `op|` key in the English cell – so the six are read under their tagged spellings, in the list's own order
+    const tagged = ['op|Save', 'op|Load', 'op|Delete save', 'op|Delete career', 'op|Export', 'op|Import']
+    const nouns = tagged.map((k) => {
+      const hit = rowsFor(k).filter((r) => r.doc.includes('saves-settings'))
+      expect(hit, k).toHaveLength(1)
+      return hit[0]!
+    })
+    const ru = nouns.map((r) => r.russian)
     expect(ru).toHaveLength(6)
     // `Load` the button has a clean row and a Russian; the noun in the status row is a DIFFERENT Russian
     const verb = rowsFor('Load')
@@ -769,10 +772,13 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
   })
 
   it('⚠ THE NAME TRAP: the saves table\'s column `Name` and the wizard\'s summary term `Name` are two Russians – the column takes `saves|Name`', () => {
-    const [columnsEn, columnsRu] = cellsOf('ru-saves-settings-2026-10.md', 'columns `Name`')
-    const columns = parts(columnsEn!.replace('columns ', ''))
-    const russianColumns = parts(columnsRu!)
-    expect(columns).toEqual(['Name', 'Saved', 'Week', 'Size'])
+    // ⭐ RE-AIMED 11.10 (row hygiene, not relaxed): the columns row («`Name` / `Saved` / `Week` / `Size`») was split into one row per column and the Name column NAMES its tag (`saves|Name`) – read in the table's own order
+    const columns = ['saves|Name', 'Saved', 'Week', 'Size'].map((e) => {
+      const hit = rowsFor(e).filter((r) => r.doc.includes('saves-settings'))
+      expect(hit, e).toHaveLength(1)
+      return hit[0]!
+    })
+    const russianColumns = columns.map((c) => c.russian)
     const wizard = rowsFor('Name')
     expect(wizard).toHaveLength(1)
     expect(wizard[0]!.doc).toContain('onboarding')
@@ -780,8 +786,9 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
     expect(CATALOG.keys.Name?.home).toContain('src/components/OnboardingWizard.vue')
     expect(CATALOG.keys.Name?.home).not.toContain('src/components/screens/MoreScreen.vue')
     expect(CATALOG.keys['saves|Name']?.home).toEqual(['src/components/screens/MoreScreen.vue'])
-    // …while `Week` agrees across the two tables, so the column header stays on the bare key
-    expect(rowsFor('Week')).toHaveLength(1)
+    // …while `Week` agrees across the tables, so the column header stays on the bare key (⭐ RE-AIMED 11.10: the column is a row of its own now, so two rows, one Russian)
+    expect(rowsFor('Week').length).toBeGreaterThanOrEqual(2)
+    expect(new Set(rowsFor('Week').map((r) => r.russian)).size).toBe(1)
     expect(russianColumns[2]).toBe(rowsFor('Week')[0]!.russian)
     expect(CATALOG.keys.Week?.home).toContain('src/components/screens/MoreScreen.vue')
   })
@@ -791,7 +798,8 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
     expect(about, 'RU-13B\'s is the only clean row for the word').toHaveLength(1)
     expect(about[0]!.doc).toContain('play-about-settings')
     const friendly = cellsOf('ru-season-tournaments-2026-10.md', 'RU04-F06')
-    expect(friendly[1], 'the field\'s row is DESCRIBED, not quoted: its English cell can never join a key').toBe('seed field label')
+    // ⭐ RE-AIMED 11.10 (row hygiene, not relaxed): the field's row used to be DESCRIBED, not quoted («seed field label»), so its English cell could never join a key; it now NAMES its tag and keeps the description as its annotation
+    expect(friendly[1], 'the field\'s row names its tagged key, the description rides as the annotation').toBe('friendly\\|Seed · seed field label')
     expect(friendly[2]).not.toBe(about[0]!.russian)
     // the importer joins a clean row to the bare key – so the bare key must be About\'s, or the About Russian would land on the field silently
     expect(CATALOG.keys.Seed?.home).toEqual(['src/components/screens/MoreScreen.vue'])
@@ -800,7 +808,13 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
   })
 
   it('⚠ THE SKIP TRAP: the settings pill `Skip` (its compact word) and the tournament flow\'s `Skip` button are two Russians – the pill takes `view|Skip`', () => {
-    const pills = parts(cellsOf('ru-play-about-settings-2026-10.md', 'amount pills')[2]!)
+    // ⭐ RE-AIMED 11.10 (row hygiene, not relaxed): the amount, title and speed pills were composite rows; each is one row per pill now (the amount pill `Skip` names its `view|` tag) – read by its English from the settings doc
+    const play = (english: string): string => {
+      const hit = rowsFor(english).filter((r) => r.doc.includes('play-about-settings'))
+      expect(hit, english).toHaveLength(1)
+      return hit[0]!.russian!
+    }
+    const pills = ['Full', 'Key', 'view|Skip'].map(play)
     expect(pills).toHaveLength(3)
     const tournament = rowsFor('Skip')
     expect(tournament).toHaveLength(1)
@@ -817,13 +831,13 @@ describe('L2-11 context tags – four decisions, nine tagged keys, and the bare 
     const viewerKey = cellsOf('ru-match-viewer-commentary-2026-10.md', 'Key` – compact toggle')
     expect(pills[1]).toBe(viewerKey[1])
     // …and the three FULL titles on the settings pills are RU-08's own words (the settings row's cell says so: «(RU-08)») – read from the split FULL-word rows since 10.10
-    const titles = parts(cellsOf('ru-play-about-settings-2026-10.md', 'pill titles')[2]!.replace(' (RU-08)', ''))
+    const titles = ['Every point', 'Key points only', 'Skip to the result'].map(play)
     const viewerFull = cellsOf('ru-match-viewer-commentary-2026-10.md', 'Every point` – full word')
     const viewerKeyFull = cellsOf('ru-match-viewer-commentary-2026-10.md', 'Key points only` – full word')
     expect(titles.slice(0, 2)).toEqual([viewerFull[1], viewerKeyFull[1]])
     expect(titles[2]).toBe(rowsFor('Skip to the result')[0]!.russian)
     // the speed words are the same compact forms in both tables
-    const speeds = parts(cellsOf('ru-play-about-settings-2026-10.md', 'speed pills')[2]!)
+    const speeds = ['1×', '2×', '4×'].map(play)
     expect(speeds).toEqual(['Normal speed', 'Double speed', 'Quadruple speed'].map((row) => cellsOf('ru-match-viewer-commentary-2026-10.md', row)[2]))
   })
 

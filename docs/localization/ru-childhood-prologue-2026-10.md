@@ -198,7 +198,7 @@ The coach asks again on this face:
 | id | source | English | Russian |
 | --- | --- | --- | --- |
 | RU02B-12Q-T1 | `cards.ts:636` | `The coach asked about the Local Open again, and asked you to think about it before answering this time.` | `Тренер снова спросил про местный открытый турнир и на этот раз попросил не отвечать сразу.` |
-| RU02B-12Q-T2 | `cards.ts:639–642` | repeated answer pair | `Подать заявку` / `В этом году не ехать` |
+| RU02B-12Q-T2 | `cards.ts:639–642` | `repeated answer pair` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` | `Подать заявку` / `В этом году не ехать` |
 | RU02B-12Q-T3 | `cards.ts:640` | `An entry and a weekend, on top of the year.` | `Взнос и поездка на выходные – сверх расходов за год.` |
 | RU02B-12Q-T4 | `cards.ts:642` | `Nothing extra. She practises that weekend like any other.` | `Дополнительных расходов нет. В эти выходные она тренируется как обычно.` |
 
@@ -225,7 +225,7 @@ On this face she asks for the tournament herself:
 | id | source | English | Russian |
 | --- | --- | --- | --- |
 | RU02B-12M-T1 | `cards.ts:743` | `She wants to enter the Local Open in the spring. She asked twice, on two different days.` | `Она хочет заявиться на весенний местный открытый турнир. Просила дважды, в разные дни.` |
-| RU02B-12M-T2 | `cards.ts:744–747` | repeated answer pair | `Подать заявку` / `В этом году не ехать` |
+| RU02B-12M-T2 | `cards.ts:744–747` | `repeated answer pair` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` | `Подать заявку` / `В этом году не ехать` |
 | RU02B-12M-T3 | `cards.ts:745` | `An entry and a weekend, on top of the year.` | `Взнос и поездка на выходные – сверх расходов за год.` |
 | RU02B-12M-T4 | `cards.ts:747` | `Nothing extra. She practises that weekend like any other.` | `Дополнительных расходов нет. В эти выходные она тренируется как обычно.` |
 
@@ -305,7 +305,7 @@ age ten: `местный открытый турнир`.
 | RU02B-LO-04 | `cards.ts:895` | `Watch match` | `Смотреть матч` | consistent with the main tournament flow |
 | RU02B-LO-05 | `cards.ts:901` | `Skip the rest of the weekend` | `Пропустить оставшиеся матчи` | says exactly what the control skips; `выходные` is atmosphere, not the object |
 | RU02B-LO-06 | `cards.ts:918` | `She is alright – worn out, nothing more. She sleeps the whole drive home, and in a few days she is asking to play again.` | `С ней всё в порядке – просто вымоталась. Всю дорогу домой она спит, а через несколько дней снова просится на корт.` | this is true only in the prologue; it must not leak into career injuries |
-| RU02B-LO-07 | `PrologueLocalOpen.vue:325,370` | `vs` | `–` | visual separator; accessible wording should expose `{name} против {name}` |
+| RU02B-LO-07 | `PrologueLocalOpen.vue:325,370` | `vs` (`PrologueLocalOpen.vue`) | `–` | visual separator; accessible wording should expose `{name} против {name}` |
 
 `Пропустить оставшиеся матчи` is intentionally more concrete than the English line. The action does
 not skip a real weekend in the calendar; it skips the rest of this tournament presentation. It also
@@ -318,7 +318,7 @@ and reused by the childhood and career flows.
 
 | id | source shape | English example | Russian rule |
 | --- | --- | --- | --- |
-| RU02B-LO-F1 | `localDrawLine(drawSize)` | `8-player draw` | `Сетка на {n} участниц` |
+| RU02B-LO-F1 | `localDrawLine(drawSize)` | `{n}-player draw` | `Сетка на {n} участниц` |
 | RU02B-LO-F2 | `stageLabel` | `Final` | `Финал` |
 | RU02B-LO-F3 | `stageLabel` | `Semifinal` | `Полуфинал` |
 | RU02B-LO-F4 | `stageLabel` | `Quarterfinal` | `Четвертьфинал` |
@@ -418,9 +418,9 @@ the player's choices appear to have changed her potential.
 
 | id | source | English | Russian | note |
 | --- | --- | --- | --- | --- |
-| RU02B-HO-01 | `handoverKicker(ageWord)` | `She is {age}` | `Ей {возраст прописью}` | reads the world's actual age |
+| RU02B-HO-01 | `handoverKicker(ageWord)` | `She is {age}` (`handover.ts`) | `Ей {age}` | reads the world's actual age |
 | RU02B-HO-02 | `HANDOVER_COPY.title` | `This is the girl you raised.` | `Вот какой она стала рядом с вами.` | keeps the parent's place without sounding like ownership |
-| RU02B-HO-03 | `handoverRoseTitle(ageWord)` | `Where she is at {age}` | `Её навыки в {возраст}` | accessible title for the radar, not a visible ceiling claim |
+| RU02B-HO-03 | `handoverRoseTitle(ageWord)` | `Where she is at {age}` | `Её навыки в {age}` | accessible title for the radar, not a visible ceiling claim |
 | RU02B-HO-04 | `HANDOVER_COPY.coachLabel` | `The coach who has watched her` | `Мнение тренера` | avoids inventing a named or gendered biography |
 | RU02B-HO-05 | `HANDOVER_COPY.goOn` | `Go on with her` | `Идти с ней дальше` | continues this girl's career |
 | RU02B-HO-06 | `HANDOVER_COPY.startAgain` | `Start again` | `Начать сначала` | says nothing about rerolls, odds or seeds |

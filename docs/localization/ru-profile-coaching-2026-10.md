@@ -26,7 +26,7 @@ scholarship, not a Russian secondary vocational college. Its Russian product ter
 | --- | --- | --- | --- |
 | RU05-P01 | back aria | `screen\|Back to Home` | `Вернуться на экран «Дом»` · `APPROVED` 10.10 – ключ назван тегом: три ключа делят этот английский |
 | RU05-P02 | settings aria/title | `Settings` | `Настройки` |
-| RU05-P03 | age and birthday | `{n} years old · B-Day {date}` | `{age} · День рождения: {date}` |
+| RU05-P03 | age and birthday | `{n} years old · B-Day {date}` | `{age} · День рождения: {date}` – ⚙ 11.10 дыра {age} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU05-P04 | `Personality` | `Personality` | `Характер` |
 | RU05-P05 | `Condition` | `Condition` | `Форма` |
 | RU05-P06 | condition aria | `Condition: {n} percent` | `Форма: {n} процентов` |
@@ -60,11 +60,11 @@ These are compact descriptions of how she is now, not labels for her personality
 
 | emotion | English | Russian |
 | --- | --- | --- |
-| norm | `Steady` | `Спокойна` |
-| happy | `Happy` | `Радуется` |
+| norm | `Steady` (`KidScreen.vue`) | `Спокойна` |
+| happy | `Happy` (`KidScreen.vue`) | `Радуется` |
 | sad | `Low` | `Не в духе` |
-| serious | `Focused` | `Сосредоточена` |
-| tired | `Tired` | `Устала` |
+| serious | `Focused` (`KidScreen.vue`) | `Сосредоточена` |
+| tired | `Tired` (`KidScreen.vue`) | `Устала` |
 | injury | `Hurt` | `Травмирована` |
 | rehab | `On the mend` | `Восстанавливается` |
 | angry | `Angry` | `Злится` |
@@ -133,7 +133,7 @@ while she is still enrolled, exactly as in the current engine.
 | final year | `Year {y} of {total}` | `{course}-й курс из {total}` | `Final year` | `Выпускной курс` |
 | completed | `Graduate` | `Выпускница` | `{n} years done` | `{years} учёбы` |
 | left early | `Left college` | `Ушла из университета` | `{done} of {total} years` | `{done} курса из {total}` |
-| first year out | `The last bell` | `Последний звонок` | `12 years done` | `Школа окончена` |
+| first year out | `The last bell` | `Последний звонок` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` | `12 years done` | `Школа окончена` |
 | ages 19–21 | `Tennis full-time` | `Только теннис` | `No more classes` | `Больше никаких уроков` |
 | 22+ | `Grown up` | `Взрослая` | `Her own life now` | `Теперь у неё своя жизнь` |
 
@@ -147,7 +147,7 @@ University place names:
 | `The university at home` | `Местный университет` |
 | `A university away from home` | `Университет вдали от дома` |
 | `A private university` | `Частный университет` |
-| legacy unknown | `Университет, который она выбрала` |
+| legacy unknown | `Университет, который она выбрала` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 
 The note under the grid uses these full patterns:
 
@@ -220,12 +220,12 @@ shortening the event into the vague `За границей`.
 | English | Russian |
 | --- | --- |
 | `Her own account` | `Её собственный счёт` |
-| `Balance` | `Баланс` |
+| `Balance` | `Баланс` – ⚙ 11.10 подпись счёта на экране ребёнка – голая строка в engine/kidLife.ts, через t() ещё не проходит: ключа под ряд нет (класс №15/№4) `QUESTION` |
 | `Her cut of a prize cheque` | `Её доля призовых` |
 | `Manager's cut of a sponsor cheque` | `Доля менеджера со спонсорской выплаты` |
 | `Her share goes no higher.` | `Её доля больше не растёт.` |
-| growing share | `Каждый день рождения, который она встречает в туре, её доля растёт на {points} п. п. – максимум до {cap}%.` |
-| brand addendum | `Такая же доля отчисляется ей из еженедельного дохода её бренда.` |
+| growing share | `Каждый день рождения, который она встречает в туре, её доля растёт на {points} п. п. – максимум до {cap}%.` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
+| brand addendum | `Такая же доля отчисляется ей из еженедельного дохода её бренда.` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 
 `п. п.` means percentage points; using `%` after the step would misstate the mechanic. The older
 paragraph form on Money must consume the same message parts and figures in RU-06 rather than receive
@@ -453,16 +453,16 @@ prepositional forms; lowercasing a localized display label is not grammar.
 | --- | --- | --- |
 | RU05-C01 | `Back` | `Назад` |
 | RU05-C02 | `Coach Market` | `Рынок тренеров` |
-| RU05-C03 | `{name} · {style} · {n} coaches` | `{name} · {style} · {coaches}` |
+| RU05-C03 | `{name} · {style} · {n} coaches` | `{name} · {style} · {coaches}` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
 | RU05-C04 | `Her week` | `Её неделя` |
 | RU05-C05 | `Coaches` | `Тренеры` |
-| RU05-C06 | `Support staff` | `Специалисты` |
+| RU05-C06 | `market\|Support staff` | `Специалисты` |
 | RU05-C07 | `What this screen is about` – group aria | `Раздел рынка тренеров` |
 | RU05-C08 | `Style` | `Стиль` |
 | RU05-C09 | `Sort` | `Сортировка` |
 | RU05-C10 | `Best fit` | `Сначала подходящие` |
 | RU05-C11 | `Price` | `Сначала дешевле` |
-| RU05-C12 | style lens | `Показано соответствие стилю «{style}», а не её нынешней игре.` |
+| RU05-C12 | style lens | `Показано соответствие стилю «{style}», а не её нынешней игре.` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 
 `{coaches}` is `1 тренер`, `2 тренера`, `5 тренеров`. The style catalogue is RU-02A's; no shortened
 market-only copy.
@@ -472,7 +472,7 @@ Coach tiers and fit:
 | semantic value | English | Russian |
 | --- | --- | --- |
 | self | `Self-coached` | `Тренирует семья` |
-| budget | `Budget` | `Бюджетный` |
+| budget | `coach\|Budget` | `Бюджетный` |
 | middle | `Middle` | `Средний` |
 | high | `High` | `Высокий` |
 | elite | `Elite` | `Элитный` |
@@ -492,7 +492,7 @@ coach route renders the shared blocks.
 | English | Russian |
 | --- | --- |
 | `Team budget` | `Бюджет команды` |
-| `{money} /week free` | `Свободно: {money} в неделю` |
+| `{money} /week free` | `Свободно: {money} в неделю` – ⚙ 11.10 дыра ключа и русский не сходятся (паритет): ряд не компилится `QUESTION` |
 | `{money} committed` | `Обязательства: {money}` |
 | `{money} weekly cap` | `Лимит на неделю: {money}` |
 | `Coach` | `Тренер` |
@@ -500,8 +500,8 @@ coach route renders the shared blocks.
 | `Psychologist` | `Психолог` |
 | `Hitting partner` | `Спарринг-партнёр` |
 | `Household, every week` | `Семья за неделю` |
-| `{in} in – {out} out – {net} left over` | `доход {in} – расход {out} – остаётся {net}` |
-| `{in} in – {out} out – {net} short` | `доход {in} – расход {out} – не хватает {net}` |
+| `{in} in – {out} out – {net} left over` | `доход {in} – расход {out} – остаётся {net}` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
+| `{in} in – {out} out – {net} short` | `доход {in} – расход {out} – не хватает {net}` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
 
 Shelf, upkeep and business-income explanations reuse RU-06's semantic messages; this route must not
 keep a private translation just because it mounts the component.
@@ -513,14 +513,14 @@ real billed time: `Легко · {hours} ч/нед.`, and so on.
 
 | id | meaning | English | Russian |
 | --- | --- | --- | --- |
-| RU05-C13 | price context | `Every price below is {n} sessions a week – more sessions, more money.` | `Все цены ниже рассчитаны на {sessions} в неделю: больше тренировок – выше оплата.` |
+| RU05-C13 | price context | `Every price below is {n} sessions a week – more sessions, more money.` | `Все цены ниже рассчитаны на {sessions} в неделю: больше тренировок – выше оплата.` – ⚙ 11.10 дыра {sessions} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU05-C14 | travel heading | `Coach travels to tournaments` | `Тренер ездит на турниры` |
 | RU05-C15 | self-coached | `You are coaching her yourself – there is nobody to send. Turn it on and it takes effect when you hire somebody.` | `Вы тренируете её сами – отправлять пока некого. Настройку можно включить заранее: она заработает после найма тренера.` |
 | RU05-C16 | sponsor cover | `Your sponsor pays {pct}% of the second seat at the events that pay prize money – the rest is yours.` | `На турнирах с призовыми спонсор оплачивает {pct}% второго билета, остальное платит семья.` |
 | RU05-C17 | scholarship | `The support does not pay for the second seat – hers is discounted, the coach travels at the full fare.` | `Поддержка снижает стоимость её билета, но не второго: поездка тренера оплачивается полностью.` |
 | RU05-C18 | ordinary fare | `One additional fare per trip – a second seat beside hers.` | `Один дополнительный билет на каждую поездку – место рядом с ней.` |
-| RU05-C19 | priced covered trips | `{rule} Her seats cost {herFare} over the {trips} ahead; the second seat adds {coachFare}.` | `В следующих {trips} её билеты стоят {herFare}; место тренера добавит ещё {coachFare}.` |
-| RU05-C20 | priced ordinary trips | `{rule} {coachFare} over the {trips} she has booked this season.` | `По заявленным на сезон {trips} поездка тренера добавит {coachFare}.` |
+| RU05-C19 | priced covered trips | `{rule} Her seats cost {herFare} over the {trips} ahead; the second seat adds {coachFare}.` | `{rule} В следующих {trips} её билеты стоят {herFare}; место тренера добавит ещё {coachFare}.` – ⚙ 11.10 дыра возвращена (бланкет) |
+| RU05-C20 | priced ordinary trips | `{rule} {coachFare} over the {trips} she has booked this season.` | `{rule} По заявленным на сезон {trips} поездка тренера добавит {coachFare}.` – ⚙ 11.10 дыра возвращена (бланкет) |
 
 The English implementation currently assembles C19–C20 inside a computed string. `{trips}` is a
 counted phrase (`1 поездке`, `2 поездках`, `5 поездках`), not a number plus English noun.
@@ -535,11 +535,11 @@ Nested junior option:
 | English | Russian |
 | --- | --- |
 | `...and to junior events too` | `…и на юниорские турниры тоже` |
-| base note | `Юниорские и национальные турниры не платят призовых: билет покупает присутствие, но не приносит дохода.` |
-| priced tail | `В этом сезоне на карточке ещё {trips}; их общая стоимость – {money}.` |
-| confirm | `Отправлять тренера ещё и на юниорские и национальные турниры? На этих уровнях нет призовых, поэтому второй билет оплачивается из доходов, которых теннис пока не приносит. В замере по 30 карьер в каждой группе неограниченные юниорские поездки привели к банкротству 8 из 30 обеспеченных и 15 из 30 семей со средним достатком – во всех случаях до её двадцатилетия. Деньги ваши, решение тоже.` |
-| confirm action | `Отправлять тренера` |
-| cancel | `Пока нет` |
+| `Junior and domestic events pay no prize money – the fare buys presence, and nothing comes back.` · base note | `Юниорские и национальные турниры не платят призовых: билет покупает присутствие, но не приносит дохода.` |
+| priced tail | `В этом сезоне на карточке ещё {trips}; их общая стоимость – {money}.` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
+| `Send the coach to junior and domestic tournaments too? Those rungs pay no prize money, so the second fare is a bill against an income she does not have yet. Measured over 30 careers a cell, an unlimited junior fare bankrupted 8 of 30 wealthy families and 15 of 30 middle ones – every one of them before she turned twenty. Your money, your call.` · confirm | `Отправлять тренера ещё и на юниорские и национальные турниры? На этих уровнях нет призовых, поэтому второй билет оплачивается из доходов, которых теннис пока не приносит. В замере по 30 карьер в каждой группе неограниченные юниорские поездки привели к банкротству 8 из 30 обеспеченных и 15 из 30 семей со средним достатком – во всех случаях до её двадцатилетия. Деньги ваши, решение тоже.` |
+| `Send the coach` · confirm action | `Отправлять тренера` |
+| `Not yet` · cancel | `Пока нет` |
 
 Junior switch names state `Включено`/`Выключено` and describe either stopping or adding the extra fare
 on trips without prize money. The warning is intentionally candid and does not disable the choice.
@@ -557,10 +557,10 @@ Current bill and universal share:
 | --- | --- |
 | `/wk` | `/нед.` |
 | `Current` | `Работает с ней` |
-| `{n} pts short` | `Не хватает {points}` |
+| `{n} pts short` | `Не хватает {points}` – ⚙ 11.10 дыра {points} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | `Hire ›` | `Нанять ›` |
-| unknown chemistry | `Взаимопонимание с ней: пока неизвестно` |
-| known chemistry | `Взаимопонимание с ней: {signedPct}` |
+| `Chemistry with her: not known yet` · unknown chemistry | `Взаимопонимание с ней: пока неизвестно` |
+| known chemistry | `Взаимопонимание с ней: {signedPct}` – ⚙ 11.10 дыра русского ждёт готовую фразу со словом, а ключ отдаёт голое число: ряд ждёт локализованный аргумент `QUESTION` |
 
 The row's accessible pattern is:
 
@@ -680,7 +680,7 @@ responsibility but must consume this same decline descriptor.
 | `Balanced` | `Баланс` |
 | `Grind` | `Интенсивно` |
 | `I coach her myself` | `Тренирую её самостоятельно` |
-| week grid aria | `Неделя по дням` |
+| `The week, day by day` · week grid aria | `Неделя по дням` |
 | `Next week – {note}` | `На следующей неделе – {note}` |
 
 Capacity and lock copy:
@@ -744,7 +744,7 @@ The table shows the compact semantic target; implementation must select the paid
 | RU05-W12 | lead | `A friendly at the club – watchable, no ranking points. One notch of fatigue, and she keeps her base recovery but loses the rest bonus for the week.` | `Тренировочный матч в клубе можно посмотреть, но рейтинговых очков за него нет. Он добавит немного усталости: обычное восстановление сохранится, а бонус за неделю отдыха – нет.` |
 | RU05-W13 | `Court rental` | `Аренда корта` |
 | RU05-W14 | `+ coach for the match ({fee} – the other half is on the opponent's family)` | `+ тренер на матч ({fee}; вторую половину оплачивает семья соперницы)` |
-| RU05-W15 | `Total` | `Итого` |
+| RU05-W15 | `plan\|Total` | `Итого` |
 | RU05-W16 | injured refusal tail | `A friendly is still a match, so the week books nothing until she is back – leave it to rest.` | `Тренировочный матч всё равно остаётся матчем, поэтому до её возвращения забронировать его нельзя. Оставьте эту неделю для отдыха.` |
 | RU05-W17 | medical refusal tail | `A friendly is still a match, so it is out too at condition {condition} – try the Vacation tab, or leave the week to training.` | `Тренировочный матч тоже требует допуска, а при форме {condition}/100 его нет. Выберите отпуск или оставьте неделю для обычных тренировок.` |
 | RU05-W18 | `Cancel` (`ConfirmDialog.vue`) | `Отмена` · `APPROVED` 10.10 – диалоговое «Отмена»; хинт в аннотации разводит с `undo\|Cancel` Сезона |
@@ -838,7 +838,7 @@ semantic booking/cancellation facts, including old saves:
 | `Family vacation booked – {week} ({label})` | `Семейный отпуск забронирован – {week} ({label})` |
 | `Cancelled the family vacation – {week}` | `Семейный отпуск отменён – {week}` |
 | `Family vacation – {label}: +{gain} condition.` | `Семейный отпуск – {label}: форма +{gain}.` |
-| `Family vacation – {label}: +{gain} condition, and the recovery holds for {weeks}.` | `Семейный отпуск – {label}: форма +{gain}, сниженный риск травмы действует {weeks}.` |
+| `Family vacation – {label}: +{gain} condition, and the recovery holds for {weeks}.` | `Семейный отпуск – {label}: форма +{gain}, сниженный риск травмы действует {weeks}.` – ⚙ 11.10 дыра русского ждёт готовую фразу со словом, а ключ отдаёт голое число: ряд ждёт локализованный аргумент `QUESTION` |
 
 The paid expense row, informational booking row and resolved-week row are three distinct events.
 Migration must not infer one from another or collapse them; history order and amounts stay intact.
@@ -893,7 +893,7 @@ known English values but persist/use region ids going forward.
 | --- | --- | --- |
 | RU05-K01 | `A knock – {week}` | `Что-то побаливает – {week}` |
 | RU05-K02 | `The same knock again – {week}` | `Снова то же место – {week}` |
-| RU05-K03 | `Her {part}.` | `Беспокоит {partNom}.` |
+| RU05-K03 | `Her {part}.` | `Беспокоит {part}.` |
 | RU05-K04 | `Rest it` | `Дать отдохнуть` |
 | RU05-K05 | `Train through it` | `Продолжить тренировки` |
 | RU05-K06 | `Proceed` | `Продолжить` |
@@ -947,7 +947,7 @@ bands and do not strengthen opinion into medical fact.
 
 | condition | English | Russian |
 | --- | --- | --- |
-| same place previously pushed | `We sent her back out with a knock to her {part} before. Now the same place is troubling her again.` | `Раньше мы уже отправили её тренироваться с этой болью – {partLocation}. Теперь беспокоит то же место.` |
+| same place previously pushed | `We sent her back out with a knock to her {part} before. Now the same place is troubling her again.` | `Раньше мы уже отправили её тренироваться с этой болью – {partLocation}. Теперь беспокоит то же место.` – ⚙ 11.10 дыра {partLocation} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | no single player-caused factor | `No single choice explains this one. We had been careful. Bodies still have bad weeks.` | `Одним решением это не объяснить. Мы были осторожны, но у организма всё равно бывают плохие недели.` |
 | fatigue dominates | `She began the week already tired. Her body had less room for the work we asked of it.` | `Она начала неделю уже уставшей. На заданную нами работу у организма осталось меньше запаса.` |
 | load dominates | `We set a hard week. It asked more of her body than an ordinary one.` | `Мы задали тяжёлую неделю. Она потребовала от организма больше обычного.` |

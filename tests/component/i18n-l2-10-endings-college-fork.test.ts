@@ -1216,7 +1216,8 @@ describe('L2-10b dynamic seat – LifeMomentOverlay reads the engine\'s one cont
 
 describe('L2-10b context tags – `Spent` and `Banked`, measured with the importer\'s own row reader', () => {
   it('⚠ THE SPENT TRAP: two rows carry the English «Spent» with two Russians – the year card\'s (RU-12D) and the weekly recap\'s (RU-03, already `recap|Spent`) – and the ending screen\'s row is gone; the card keeps the BARE key because the other live surface already took its tag', () => {
-    const rows = rowsFor('Spent')
+    // ⭐ RE-AIMED 11.10 (row hygiene, not relaxed): the weekly recap's row now NAMES its tag in the English cell (`recap|Spent`) – the importer joins it to the tagged key outright – so the two rows are read under their two spellings
+    const rows = [...rowsFor('Spent'), ...rowsFor('recap|Spent')]
     expect(rows.map((r) => r.doc.replace(/^ru-|-2026-\d\d\.md$/g, '')).sort()).toEqual(['college-year', 'home-weekly'])
     expect(new Set(rows.map((r) => r.russian)).size, 'two surfaces, two Russians').toBe(2)
     expect(CATALOG.keys['recap|Spent'], 'the recap\'s side took its tag in L2-3').toBeTruthy()
@@ -1228,7 +1229,8 @@ describe('L2-10b context tags – `Spent` and `Banked`, measured with the import
   })
 
   it('«Banked» has two rows with two Russians inside ONE table (the year card\'s balance ROSE; the graduation card\'s SIGNED total): the card keeps the bare key, the graduation card takes `total|Banked`', () => {
-    const rows = rowsFor('Banked')
+    // ⭐ RE-AIMED 11.10 (row hygiene, not relaxed): the graduation card's row now NAMES its tag (`total|Banked`) – the two rows are read under their two spellings
+    const rows = [...rowsFor('Banked'), ...rowsFor('total|Banked')]
     expect(rows).toHaveLength(2)
     expect(new Set(rows.map((r) => r.russian)).size).toBe(2)
     expect(CATALOG.keys.Banked?.home).toEqual(['src/components/CollegeYearCard.vue'])

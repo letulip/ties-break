@@ -126,8 +126,8 @@ The selected line, portrait stage, emotion and rotation cursor remain unchanged.
 | source | Russian |
 | --- | --- |
 | `one year ago` | `год назад` |
-| `Week {n}` | `Неделя {n}` |
-| empty/too early state | use the RU-03 Home-card line, not a second diary translation |
+| `Week {n}` | `Неделя {n}` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
+| empty/too early state | `use the RU-03 Home-card line, not a second diary translation` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 
 The anniversary tolerance remains ±1 week. Russian text does not recalculate dates or change which
 milestone interrupts the rotation.
@@ -214,7 +214,7 @@ home and a life out of suitcases; none invents keys, a roommate or a city.
 | --- | --- |
 | `the day together` – diary seam (ключа в каталоге пока нет – ряд ждёт) | `день вместе` |
 | `Her birthday. No parcel – just the day, kept clear for each other.` | `Её день рождения. Без свёртка – просто день, который мы оставили друг для друга.` |
-| `Her birthday. {giftLabel}, opened before the cake.` | `Её день рождения. {giftLabelSentence}, открыли ещё до торта.` |
+| `Her birthday. {giftLabel}, opened before the cake.` | `Её день рождения. {giftLabel}, открыли ещё до торта.` |
 
 The second event cannot safely insert a button label unchanged: Russian labels are nominative
 (`Фотоаппарат`), while the sentence needs an object or a passive construction. Each gift catalogue

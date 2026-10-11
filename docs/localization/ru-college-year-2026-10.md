@@ -33,13 +33,13 @@ fictional, so `Кубок наций` names this game's competition, not a real-
 | Source case | English | Russian draft |
 | --- | --- | --- |
 | all years spent, defensive | `All {total} years spent` | `Все {total, plural, one {{total} год} few {{total} года} many {{total} лет} other {{total} лет}} программы позади` |
-| current year in progress | `Year {next} of {total} under way – {spent} spent` | `Идёт {next}-й год из {total}; завершено {done, plural, one {{done} год} few {{done} года} many {{done} лет} other {{done} лет}}` |
-| next year waiting | `Year {next} of {total} is next – {spent} spent` | `Впереди {next}-й год из {total}; завершено {done, plural, one {{done} год} few {{done} года} many {{done} лет} other {{done} лет}}` |
-| no completed years phrase | `none spent` | `пока ни одного` |
+| current year in progress | `Year {next} of {total} under way – {spent} spent` | `Идёт {next}-й год из {total}; завершено {done, plural, one {{done} год} few {{done} года} many {{done} лет} other {{done} лет}}` – ⚙ 11.10 русский читает {done} (число лет), ключ отдаёт {spent} (деньги): паритет не сходится, ряд не компилится `QUESTION` |
+| next year waiting | `Year {next} of {total} is next – {spent} spent` | `Впереди {next}-й год из {total}; завершено {done, plural, one {{done} год} few {{done} года} many {{done} лет} other {{done} лет}}` – ⚙ 11.10 русский читает {done} (число лет), ключ отдаёт {spent} (деньги): паритет не сходится, ряд не компилится `QUESTION` |
+| no completed years phrase | `none spent` | `пока ни одного` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
 | report heading | `Year {index}, as it happened` | `{index}-й год – как он прошёл` |
 | first-year lead | `{place}. A scholarship, and the family pays whatever the award does not. She can leave at the end of any year.` | `{place}. У неё стипендия; всё, что она не покрывает, оплачивает семья. После любого учебного года она может уйти.` |
 | final year ahead | `One year of the scholarship left. After it she is out either way.` | `Остался один год стипендии. После него программа в любом случае закончится.` |
-| ordinary years ahead | `{done} year/years spent, {left} left on the scholarship.` | `Позади {done, plural, one {{done} год} few {{done} года} many {{done} лет} other {{done} лет}}; стипендии осталось на {left, plural, one {{left} год} few {{left} года} many {{left} лет} other {{left} лет}}.` |
+| ordinary years ahead | `{done} years spent, {left} left on the scholarship.` | `Позади {done, plural, one {{done} год} few {{done} года} many {{done} лет} other {{done} лет}}; стипендии осталось на {left, plural, one {{left} год} few {{left} года} many {{left} лет} other {{left} лет}}.` |
 | annual family bill | `{money} for the year, charged weekly` | `Доля семьи за год – {money}; списывается еженедельно` |
 | next year fully covered | `Student tennis again, and the award covers the whole year.` | `Впереди ещё год студенческого тенниса; стипендия покрывает его полностью.` |
 | next year costs family | `Student tennis again – {annualBill}.` | `Впереди ещё год студенческого тенниса. {annualBill}.` |
@@ -54,14 +54,14 @@ describe it as one lump sum.
 | Source | English | Russian draft |
 | --- | --- | --- |
 | competition rule, once per card | `None of it pays ranking points or prize money. A student field and a national squad award neither.` | `Ни Студенческая лига, ни Кубок наций не приносят рейтинговых очков или призовых.` |
-| balance fell | `Spent` | `Потрачено` |
-| balance rose | `Banked` | `На счёте прибавилось` |
+| balance fell | `Spent` (`CollegeYearCard.vue`) | `Потрачено` |
+| balance rose | `Banked` (`CollegeYearCard.vue`) | `На счёте прибавилось` |
 | tuition fact | `Tuition` | `Обучение` |
 | rank fact | `Rank` | `Рейтинг` |
-| rank span | `#{start} to #{end}` | `№{start} → №{end}` |
+| rank span | `#{start} to #{end}` | `№{start} → №{end}` – ⚙ 11.10 вызов передаёт уже готовые «#N» (rankMark): русский «№» задвоил бы знак – ряд ждёт локализованный аргумент `QUESTION` |
 | absent rank | `–` | `–` |
 | league fact, title | `Won it` | `Победа` |
-| league fact, exit | `{leagueExitLabel}` | `{localizedStage}` |
+| league fact, exit | `{leagueExitLabel}` | `{localizedStage}` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 
 `Spent` / `Banked` label the **change in the family's balance**, not her earnings. The amount
 is displayed absolute because the noun already gives its direction. Tuition is separate from
@@ -74,12 +74,12 @@ below should not repeat it. Rank `null` must not become №1 or №0.
 | --- | --- | --- |
 | won championship | `She won it – {played} matches, {won} wins.` | `Она выиграла Студенческую лигу: {played, plural, one {{played} матч} few {{played} матча} many {{played} матчей} other {{played} матчей}}, {won, plural, one {{won} победа} few {{won} победы} many {{won} побед} other {{won} побед}}.` |
 | left championship | `She went out in the {stage} – {played} matches, {won} wins.` | `Выбыла на стадии «{stage}»: {played, plural, one {{played} матч} few {{played} матча} many {{played} матчей} other {{played} матчей}}, {won, plural, one {{won} победа} few {{won} победы} many {{won} побед} other {{won} побед}}.` |
-| stakes | `the Nations Cup selectors read this result when they pick the squad.` | `При отборе на Кубок наций этот результат учитывают.` |
+| stakes | `the Nations Cup selectors read this result when they pick the squad.` | `При отборе на Кубок наций этот результат учитывают.` – ⚙ 11.10 дыра ключа и русский не сходятся (паритет): ряд не компилится `QUESTION` |
 | no call-up | `Nobody wrote to her this year.` | `В этом году вызова в сборную не было.` |
-| named but did not play | `named in the squad, never on court` | `вошла в состав, но на корт не вышла` |
-| rubbers won | `{won} of {played} rubbers won` | `выиграла {won} из {played} матчей за сборную` |
-| national finish | `Her country called – {court}, and the nation finished {place}th.` | `Её вызвали в сборную: {court}. Сборная заняла {place}-е место.` |
-| league match label | `{stage} – {opponent}` | `{stage} – {opponent}` |
+| named but did not play | `named in the squad, never on court` | `вошла в состав, но на корт не вышла` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
+| rubbers won | `{won} of {played} rubbers won` | `выиграла {won} из {played} матчей за сборную` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
+| national finish | `Her country called – {court}, and the nation finished {place}th.` | `Её вызвали в сборную: {court}. Сборная заняла {place}-е место.` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
+| league match label | `{stage} – {opponent}` | `{stage} – {opponent}` – ⚙ 11.10: та же склейка, identity |
 | national match label | `Rubber {n} – {opponent}` | `Матч {n} – {opponent}` |
 | replay affordance | `Watch` | `Смотреть` |
 
@@ -128,9 +128,9 @@ stray tap on the scrim.
 | graduated title | `She has graduated.` | `Она окончила университет.` |
 | early-leaver title | `She has left the scholarship.` | `Она ушла из университетской программы.` |
 | year row | `Year {index}` | `{index}-й год` |
-| rank span | `#{start} to #{end}` | `№{start} → №{end}` |
+| rank span | `#{start} to #{end}` | `№{start} → №{end}` – ⚙ 11.10 вызов передаёт уже готовые «#N» (rankMark): русский «№» задвоил бы знак – ряд ждёт локализованный аргумент `QUESTION` |
 | total years | `Years` | `Лет в программе` |
-| total balance delta | `Banked` | `Изменение баланса семьи` |
+| total balance delta | `total\|Banked` | `Изменение баланса семьи` |
 | no national call | `Her country never called.` | `В сборную её так и не вызвали.` |
 | called in some years | `Her country called in {n} of them, and paid her nothing, which is what it pays everybody.` | `Её вызывали в сборную в {n, plural, one {{n} году} few {{n} годах} many {{n} годах} other {{n} годах}}. Призовых там не платят никому.` |
 | next path | `Qualifying is the way forward again. Her week is on the home screen.` | `Дальше снова квалификация. Её неделя – на экране «Дом».` |

@@ -412,7 +412,7 @@ shoelace repair is story texture and does not replace, buy or repair a game inve
 
 | stance | English source | Russian draft |
 | --- | --- | --- |
-| invite | `Ask how bad it looks` | `Спросить, сильно ли это заметно` |
+| invite | `Ask how bad it looks` | `Спросить, сильно ли это бросается в глаза` – ⚙ 11.10 выровнено на чат-ок-форму (один ключ) |
 | respond | `Say that is a useful kind of stubborn` | `Сказать, что такое упрямство полезно` |
 | space | `Say you would have bought a new one` | `Сказать, что вы бы купили новую сумку` |
 

@@ -21,7 +21,7 @@ need to be true, brief and varied where the source is varied. Every line below i
 | family vacation coaching not billed | `A week away as a family – no coaching billed` | `Семейная неделя отдыха – тренировки не оплачиваются` |
 | local sponsor cameo | `A local sponsor chipped in!` | `Местный спонсор помог с расходами.` |
 | delivered asset upkeep | `Upkeep: {item.label}` | `Содержание актива: {item.label}` |
-| covered gear suffix | `{gearFlavor} – on {brand}` | `{localizedGearFlavor}; оплачено брендом «{brand}»` |
+| covered gear suffix | `{gearFlavor} – on {brand}` | `{gearFlavor}; оплачено брендом «{brand}»` |
 
 The first two zero-cost coaching lines keep `amountCents: 0` and the coaching category. The
 parent-income row is about a regular family contribution, not a wage from the daughter. The

@@ -23,7 +23,7 @@ contract and ledger facts stay with the existing engine.
 | champion, professional debut season | `🏆 {name} won the {tier}, at {age} – a first season on tour.` | `🏆 Победа на турнире «{tier}»: {name}, {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}. Первый сезон в профессиональном туре.` |
 | champion, final tour season | `🏆 {name} won the {tier}, at {age} – in a last season on tour.` | `🏆 Победа на турнире «{tier}»: {name}, {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} лет}}. Последний сезон в профессиональном туре.` |
 | junior-cohort turnover | `A new intake: {left} players have left the tour and {joined} thirteen-year-olds have taken their places.` | `Новый набор юниорского тура: ушедшие – {left}; тринадцатилетние новички – {joined}.` |
-| notable departure suffix | `{name} (#{rank}) is among those who stopped.` | `Среди завершивших выступления – {name} (№{rank}).` |
+| notable departure suffix | `{name} (#{rank}) is among those who stopped.` | `Среди завершивших выступления – {name} (№{rank}).` – ⚙ 11.10 у ключа есть префиксная дыра {0} (предыдущая фраза), русский её не читает: паритет не сходится, ряд не компилится `QUESTION` |
 
 Dynamic names stay in nominative slots after colons. The champion's first/last-season note is
 derived from the same career chair as the English news; do not infer it from age. The cohort
@@ -40,7 +40,7 @@ line uses a compact bulletin construction so `1` does not create broken verb agr
 | reviewed: cover rises | `Academy review: her scholarship rises to {pct}% of her travel.` | `Пересмотр стипендии: академия теперь покрывает больше дорожных расходов – {pct}%.` |
 | reviewed: cover falls | `Academy review: her scholarship falls to {pct}% of her travel.` | `Пересмотр стипендии: академия теперь покрывает меньше дорожных расходов – {pct}%.` |
 | all kit already covered | `No academy kit grant this year – {brand} already kits her out.` | `В этом году гранта академии на экипировку нет: бренд «{brand}» уже обеспечивает её всем необходимым.` |
-| kit grant, partial brand cover | `Academy kit grant – {uncovered}; {brand} covers her {covered}.` | `Грант академии на экипировку – расходы на {непокрытый список}; бренд «{brand}» оплачивает {покрытый список}.` |
+| kit grant, partial brand cover | `Academy kit grant – {uncovered}; {brand} covers her {covered}.` | `Грант академии на экипировку – расходы на {uncovered}; бренд «{brand}» оплачивает {covered}.` |
 | kit grant, no brand | `Academy kit grant – rackets, strings and shoes for the season` | `Грант академии на сезон: ракетки, струны и обувь.` |
 
 `ACADEMY_NOTICE` is currently used as an **English text-prefix signal** by

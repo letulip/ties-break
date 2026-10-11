@@ -18,16 +18,17 @@ ranking windows and penalty thresholds are unchanged.
 
 | source | English template | Russian draft |
 | --- | --- | --- |
-| family prize, no daughter share | `{tier} prize money – {finish}` | `Призовые турнира «{tier}» – {результат}` |
-| family prize, daughter's share split | `{tier} prize money – {finish}, less her {pct}% share ({herAmount})` | `Призовые турнира «{tier}» – {результат}; её доля {pct}% ({herAmount}) уже вычтена` |
+| family prize, no daughter share | `{tier} prize money – {finish}` | `Призовые турнира «{tier}» – {finish}` |
+| family prize, daughter's share split | `{tier} prize money – {finish}, less her {pct}% share ({herAmount})` | `Призовые турнира «{tier}» – {finish}; её доля {pct}% ({herAmount}) уже вычтена` |
 | daughter's prize share | `{kidName}'s share of the prize money – {herAmount} into her own account` | `{kidName}: доля призовых – {herAmount} на личный счёт` |
 | coach share | `Coach's share of the prize money – {pct}% of the {tier} cheque` | `Доля тренера от призовых – {pct}% от чека за турнир «{tier}»` |
 | masseur share | `Masseur's share of the prize money – {pct}% of the {tier} cheque` | `Доля массажиста от призовых – {pct}% от чека за турнир «{tier}»` |
 | first prize milestone | `💰 First prize money – {amount} at the {tier}!` | `💰 Первые призовые – {amount} за турнир «{tier}»!` |
 | appearance fee | `Appearance fee – {tier}` | `Выплата за участие – турнир «{tier}»` |
-| result bonus | `Sponsor bonus – {finish} at the {tier}` | `Бонус спонсора – {результат} на турнире «{tier}»` |
+| result bonus | `Sponsor bonus – {finish} at the {tier}` | `Бонус спонсора – {finish} на турнире «{tier}»` |
 | deep run relief | `Deep week, fresh legs – the table work on tour kept the run from eating her.` | `Долгая турнирная неделя, но ноги ещё держат: массаж между матчами помог выдержать нагрузку.` |
-| masseur tour bill | `Masseur on tour – {N} {match/matches} worked, billed per match` | `Массажист в поездке – {N, plural, one {{N} матч} few {{N} матча} many {{N} матчей} other {{N} матчей}}, оплата за каждый` |
+| masseur tour bill | `Masseur on tour – {N} matches worked, billed per match` | `Массажист в поездке – {N, plural, one {{N} матч} few {{N} матча} many {{N} матчей} other {{N} матчей}}, оплата за каждый` |
+| masseur tour bill | `Masseur on tour – {N} match worked, billed per match` | `Массажист в поездке – {N, plural, one {{N} матч} few {{N} матча} many {{N} матчей} other {{N} матчей}}, оплата за каждый` – ⚙ 11.10 близнец ключа по числу – тот же русский plural |
 
 `{результат}` must use the localized `finishLabel` family, not its stored English display
 string. The family's prize row shows the **net** amount and explicitly names the already
@@ -44,14 +45,14 @@ displaced an older result` distinct.
 
 | source / case | English | Russian draft |
 | --- | --- | --- |
-| summary shell | `{tier} ({surface}, {week}): {kidName} – {finish} (+{points} pts){rankSuffix}{retiredSuffix}` | `Турнир «{tier}» ({покрытие}, {неделя}): {kidName} – {результат} (+{points} очков){суффикс рейтинга}{суффикс травмы}` |
-| `points <= 0` | empty ranking suffix | пустой суффикс |
-| points banked, not yet rankable | `(+{points} banked – a ranking needs {events} events with points, or {minimum})` | `(очки зачтены, но для места в рейтинге нужны {events, plural, one {{events} турнир} few {{events} турнира} many {{events} турниров} other {{events} турниров}} с очками или {minimum} очков)` |
+| summary shell | `{tier} ({surface}, {week}): {kidName} – {finish} (+{points} pts){rankSuffix}{retiredSuffix}` | `Турнир «{tier}» ({surface}, {week}): {kidName} – {finish} (+{points} очков){rankSuffix}{retiredSuffix}` – ⚙ 11.10 две дыры подряд: склейка нормализует только первую (normKey) – ряд ждёт правки инструмента `QUESTION` |
+| `points <= 0` | empty ranking suffix | `пустой суффикс` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
+| points banked, not yet rankable | `(+{points} banked – a ranking needs {events} events with points, or {minimum})` | `(+{points}: очки зачтены, но для места в рейтинге нужны {events, plural, one {{events} турнир} few {{events} турнира} many {{events} турниров} other {{events} турниров}} с очками или {minimum} очков)` – ⚙ 11.10 дыра возвращена (бланкет) |
 | points, no best-N improvement | `(does not improve best {N})` | `(не улучшает сумму {N} лучших результатов)` |
 | partial best-N improvement | `(ranking total +{delta})` | `(к рейтинговой сумме +{delta} очков)` |
-| full improvement | empty ranking suffix | пустой суффикс |
+| full improvement | empty ranking suffix | `пустой суффикс` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 | she retired | ` – she retired hurt` | ` – снялась из-за травмы` |
-| opponent champion row | `🏆 {championName} won the {tier} ({surface}).` | `🏆 Победа на турнире «{tier}» ({покрытие}): {championName}.` |
+| opponent champion row | `🏆 {championName} won the {tier} ({surface}).` | `🏆 Победа на турнире «{tier}» ({surface}): {championName}.` |
 | first career title | `🏆 First career title: {tier}!` | `🏆 Первый титул в карьере: турнир «{tier}»!` |
 | first Slam main draw | `🏆 First Grand Slam main draw – from this week the world knows her name.` | `🏆 Первая основная сетка турнира Большого шлема. Теперь о ней знают далеко за пределами привычного круга.` |
 | first national win | `🏆 First win at National level!` | `🏆 Первая победа на национальном уровне!` |
@@ -65,8 +66,10 @@ public-recognition beat, not a claim that she won the event.
 
 | source / case | English | Russian draft |
 | --- | --- | --- |
-| penalty, named event | `Tour penalty: {points} {point/points} – {tier}. {running} of {threshold} in the last 52 weeks.` | `Штраф тура: {points, plural, one {{points} очко} few {{points} очка} many {{points} очков} other {{points} очков}} – турнир «{tier}». За последние 52 недели накоплено {running} из {threshold} штрафных очков.` |
-| penalty, season commitment | `Tour penalty: {points} {point/points} – season commitment. {running} of {threshold} in the last 52 weeks.` | `Штраф тура: {points, plural, one {{points} очко} few {{points} очка} many {{points} очков} other {{points} очков}} – обязательство на сезон. За последние 52 недели накоплено {running} из {threshold} штрафных очков.` |
+| penalty, named event | `Tour penalty: {points} points – {tier}. {running} of {threshold} in the last 52 weeks.` | `Штраф тура: {points, plural, one {{points} очко} few {{points} очка} many {{points} очков} other {{points} очков}} – турнир «{tier}». За последние 52 недели накоплено {running} из {threshold} штрафных очков.` |
+| penalty, named event | `Tour penalty: {points} point – {tier}. {running} of {threshold} in the last 52 weeks.` | `Штраф тура: {points, plural, one {{points} очко} few {{points} очка} many {{points} очков} other {{points} очков}} – турнир «{tier}». За последние 52 недели накоплено {running} из {threshold} штрафных очков.` – ⚙ 11.10 близнец ключа по числу – тот же русский plural |
+| penalty, season commitment | `Tour penalty: {points} points – season commitment. {running} of {threshold} in the last 52 weeks.` | `Штраф тура: {points, plural, one {{points} очко} few {{points} очка} many {{points} очков} other {{points} очков}} – обязательство на сезон. За последние 52 недели накоплено {running} из {threshold} штрафных очков.` |
+| penalty, season commitment | `Tour penalty: {points} point – season commitment. {running} of {threshold} in the last 52 weeks.` | `Штраф тура: {points, plural, one {{points} очко} few {{points} очка} many {{points} очков} other {{points} очков}} – обязательство на сезон. За последние 52 недели накоплено {running} из {threshold} штрафных очков.` – ⚙ 11.10 близнец ключа по числу – тот же русский plural |
 | suspension | `Tour suspension – {weeks} weeks, through week {untilWeek}.` | `Отстранение от тура на {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недель}}, до конца недели {untilWeek}.` |
 
 `{untilWeek}` is currently an internal absolute week index in the English source. Translating

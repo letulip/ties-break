@@ -21,7 +21,7 @@ formatted by the shared money layer; translation must not recompute the charge o
 | missing offer error | `That letter is not in the inbox.` | `Этого письма нет во входящих.` |
 | signed offer error | `That deal is already signed.` | `Этот контракт уже подписан.` |
 | unavailable offer error | `That offer has already gone.` | `Этого предложения уже нет.` |
-| commission suffix, only if nonzero | `{receipt}, the manager's {rate}% of {gross}` | `{квитанция}; комиссия менеджера – {rate}% от {gross}` |
+| commission suffix, only if nonzero | `{receipt}, the manager's {rate}% of {gross}` | `{receipt}; комиссия менеджера – {rate}% от {gross}` |
 | daughter's sponsor share | `{kidName}'s share of the sponsor money – {herAmount} into her own account` | `{kidName}: доля спонсорского платежа – {herAmount} на личный счёт` |
 | quarterly retainer | `{brand} retainer – quarterly` | `Квартальная выплата от бренда «{brand}»` |
 | lifetime ad anniversary | `{brand} endorsement – year {index}, for life` | `Рекламный контракт с брендом «{brand}» – год {index}, пожизненный договор` |
@@ -40,9 +40,9 @@ contract or academy actually covered part of the fare.
 
 | source / case | English | Russian draft |
 | --- | --- | --- |
-| coach extra fare | `Coach travel to {tier} – one additional fare{payer}` | `Поездка тренера на турнир «{tier}» – ещё один билет{плательщик}` |
-| masseur extra fare | `Masseur travel to {tier} – one additional fare{payer}` | `Поездка массажиста на турнир «{tier}» – ещё один билет{плательщик}` |
-| hitting-partner extra fare | `Hitting partner travel to {tier} – one additional fare{payer}` | `Поездка спарринг-партнёра на турнир «{tier}» – ещё один билет{плательщик}` |
+| coach extra fare | `Coach travel to {tier} – one additional fare{payer}` | `Поездка тренера на турнир «{tier}» – ещё один билет{плательщик}` – ⚙ 11.10 дыра {0} ключа – роль (Coach / Masseur / Hitting partner) по-английски, русский пишет её словами: паритет не сходится, ряд не компилится `QUESTION` |
+| masseur extra fare | `Masseur travel to {tier} – one additional fare{payer}` | `Поездка массажиста на турнир «{tier}» – ещё один билет{плательщик}` – ⚙ 11.10 дыра {0} ключа – роль (Coach / Masseur / Hitting partner) по-английски, русский пишет её словами: паритет не сходится, ряд не компилится `QUESTION` |
+| hitting-partner extra fare | `Hitting partner travel to {tier} – one additional fare{payer}` | `Поездка спарринг-партнёра на турнир «{tier}» – ещё один билет{плательщик}` – ⚙ 11.10 дыра {0} ключа – роль (Coach / Masseur / Hitting partner) по-английски, русский пишет её словами: паритет не сходится, ряд не компилится `QUESTION` |
 | staff fare, brand partly pays | ` ({brand} covers {share}%)` | ` (бренд «{brand}» покрывает {share}%)` |
 | base travel, no support | `Travel to {tier}` | `Поездка на турнир «{tier}»` |
 | base travel, academy only | `Travel to {tier} – academy covers {academyShare}%` | `Поездка на турнир «{tier}» – академия покрывает {academyShare}%` |
@@ -60,15 +60,15 @@ by the engine; they are not reverse-calculated from rounded cents.
 | --- | --- | --- |
 | SPL-SC01 | `Cancel the shoot` | |
 | SPL-SC02 | `Do both` | |
-| SPL-SC03 | `Lights, flights and a draw in one week – {0} condition off the week.` | |
-| SPL-SC04 | `Move the shoot to {0}` | |
-| SPL-SC05 | `Pull out of the {0}` | |
+| SPL-SC03 | `Lights, flights and a draw in one week – {n} condition off the week.` | |
+| SPL-SC04 | `Move the shoot to {week}` | |
+| SPL-SC05 | `Pull out of the {tier}` | |
 | SPL-SC06 | `She plays as planned and the campaign waits – nothing is paid for it.` | |
-| SPL-SC07 | `She plays as planned, and {0} take back {1} of the campaign fee.` | |
-| SPL-SC08 | `She shoots, and the {0} entry comes back, and a late withdrawal counts against her.` | |
-| SPL-SC09 | `She shoots, and the {0} entry comes back.` | |
-| SPL-SC10 | `She shoots, and the {0} entry is forfeited, and a late withdrawal counts against her.` | |
-| SPL-SC11 | `She shoots, and the {0} entry is forfeited.` | |
+| SPL-SC07 | `She plays as planned, and {brand} take back {amount} of the campaign fee.` | |
+| SPL-SC08 | `She shoots, and the {tier} entry comes back, and a late withdrawal counts against her.` | |
+| SPL-SC09 | `She shoots, and the {tier} entry comes back.` | |
+| SPL-SC10 | `She shoots, and the {tier} entry is forfeited, and a late withdrawal counts against her.` | |
+| SPL-SC11 | `She shoots, and the {tier} entry is forfeited.` | |
 | SPL-SC12 | `Something has to give. All four answers are hers to make.` | |
-| SPL-SC13 | `Two things at once – {0}` | |
-| SPL-SC14 | `{0} want her that week, and so does the {1}.` | |
+| SPL-SC13 | `Two things at once – {what}` | |
+| SPL-SC14 | `{brand} want her that week, and so does the {tier}.` | |

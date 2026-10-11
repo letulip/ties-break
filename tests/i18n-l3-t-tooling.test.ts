@@ -455,7 +455,9 @@ describe('§5 a row whose English is what a formatter prints compiles into a pat
     // and the pattern renders BACK to his example for the sample week (the pattern is what he wrote, with holes)
     expect(formatMessage(expected, { week: 14, yy: '31' }, { locale: 'ru' })).toBe(row.russian)
     expect(compiled.outcomes.filter((x) => x.disposition === 'unmatched')).toEqual([])
-    expect(compiled.formats.size).toBe(1)
+    // ⭐ RE-AIMED 11.10 (the blanket ruling, owner: «всё должно быть переведено»): 1 -> 2 – while only APPROVED compiled the table held the short year alone; his DRAFT «W27 2033» row now
+    // compiles beside it, as the long header's pattern (`dates.weekYearLabel`). Both are READ from his cells – the pin names the two ids, never their Russian.
+    expect([...compiled.formats.keys()].sort()).toEqual(['dates.weekLabel', 'dates.weekYearLabel'])
     expect(serializeFormats(compiled.formats), 'run npm run i18n:import').toBe(readFileSync(FORMATS_PATH, 'utf8'))
     // ru.json did not move for it: a pattern is not a catalog key
     expect(serializeRu(compiled.entries)).toBe(readFileSync('src/i18n/ru.json', 'utf8'))
@@ -463,8 +465,12 @@ describe('§5 a row whose English is what a formatter prints compiles into a pat
 
   it('DRAFT rows that name a formatter example are PENDING (a live formatter), not pending-dead (drift)', () => {
     const draft = rowsOf(FIXTURE("| `W14 '31` | `STAND 14 · '31` | |", "| `W27 2033` | `STAND 27 · 2033` | |"))
-    const outs = compile(draft, live()).outcomes
+    // ⭐ RE-AIMED 11.10 (the blanket ruling): this law is the per-row читка regime (`--approved-only`) – the importer now compiles DRAFT by default, so the arm names its regime
+    const outs = compile(draft, live(), { includeDrafts: false }).outcomes
     expect(outs.map((x) => [x.disposition, x.format])).toEqual([['pending', 'dates.weekLabel'], ['pending', 'dates.weekYearLabel']])
+    // and the default regime, held beside it: the same two DRAFT rows are formats – a live formatter's example is never drift in either regime
+    const blanket = compile(draft, live()).outcomes
+    expect(blanket.map((x) => [x.disposition, x.format])).toEqual([['format', 'dates.weekLabel'], ['format', 'dates.weekYearLabel']])
   })
 
   it('MUTATION 1: his Russian that does not carry a part exactly once is `ambiguous-cell` with the reason, and compiles nothing', () => {
@@ -536,7 +542,8 @@ describe('§5 a row whose English is what a formatter prints compiles into a pat
     expect(runGate({ formatsPath: path }).problems.map((p) => p.rule)).toEqual(['formats-stale'])
     writeFileSync(path, '{}\n')
     expect(runGate({ formatsPath: path }).problems.map((p) => p.rule)).toEqual(['formats-stale'])
-    expect(runGate().lines.join('\n')).toMatch(/formats {3}1 formatter pattern\(s\) of 2 registered/)
+    // ⭐ RE-AIMED 11.10 (the blanket ruling): 1 -> 2 patterns of 2 registered – see the real-row arm above
+    expect(runGate().lines.join('\n')).toMatch(/formats {3}2 formatter pattern\(s\) of 2 registered/)
   })
 
   it('formats.ru.json is NEVER shipped by the lazy glob (it matches ru.json / es.json by name), and nothing under src/ imports it yet', () => {

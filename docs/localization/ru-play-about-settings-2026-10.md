@@ -22,12 +22,13 @@ English by owner ruling.
 | shared `AUDIO_COPY.music` | `Music` | `Музыка` |
 | haptics | `Haptics` | `Виброотклик` |
 | unsupported haptics | `Not supported on this device` | `На этом устройстве недоступно` |
-| switch state | `ON` / `OFF` | `ВКЛ` / `ВЫКЛ` |
+| switch state | `ON` | `ВКЛ` |
+| switch state | `OFF` | `ВЫКЛ` |
 | section | `Week story` | `История недели` |
 | switch | `Open at the end of a week` | `Открывать в конце недели` |
 | off hint | `Off: the story stays on the This week tab – tap over whenever you like` | `Если выключить, история останется во вкладке «Эта неделя»: её можно открыть в любой момент.` |
 | heavy-content section and label | `The weight` | `Тяжёлые темы` (RU-02A §6) |
-| content-switch hint | `Off: no new loss or bereavement arrives. What a career has already lived stays.` | RU-02A §6's single shared `WEIGHT_COPY.settingsHint` translation; do not make a second version |
+| content-switch hint | `Off: no new loss or bereavement arrives. What a career has already lived stays.` – ⚙ 11.10 ряд-указатель: русский этого ключа живёт в onboarding (подсказка настроек, один общий перевод), второй версии не нужно `QUESTION` | RU-02A §6's single shared `WEIGHT_COPY.settingsHint` translation; do not make a second version |
 
 `Music` is also `MuteButton`'s accessible name; one shared localized declaration serves both.
 The heavy-content switch belongs to the **career**, not to the device; it appears only with a
@@ -64,11 +65,17 @@ changing a control inside one match does not write back here.
 | section | `Match playback` | `Просмотр матча` |
 | speed label | `Speed` | `Скорость` |
 | speed hint | `How fast a match plays when it opens` | `С какой скоростью матч начнёт воспроизводиться` |
-| speed pills | `1×` / `2×` / `4×` | `1×` / `2×` / `4×` |
+| speed pills | `1×` | `1×` |
+| speed pills | `2×` | `2×` |
+| speed pills | `4×` | `4×` |
 | amount label | `How much to watch` | `Что показывать` |
 | amount hint | `Full: every point · Key: key points only · Skip: straight to the result` | `Все – каждый розыгрыш · Ключевые – только важные розыгрыши · Итог – сразу результат` |
-| amount pills | `Full` / `Key` / `Skip` | `Все` / `Ключевые` / `Итог` |
-| pill titles | `Every point` / `Key points only` / `Skip to the result` | `Все розыгрыши` / `Только ключевые розыгрыши` / `Сразу к результату` (RU-08) |
+| amount pills | `Full` | `Все` |
+| amount pills | `Key` | `Ключевые` |
+| amount pills | `view\|Skip` | `Итог` |
+| pill titles | `Every point` | `Все розыгрыши` (RU-08) |
+| pill titles | `Key points only` | `Только ключевые розыгрыши` |
+| pill titles | `Skip to the result` | `Сразу к результату` |
 
 `Итог` is a compact settings label for the same action RU-08 calls `Сразу к результату` in
 full. Check the match viewer and settings together so the two controls remain recognizably
@@ -82,13 +89,13 @@ one preference. Phone LQA must cover pill width and the long Russian hint.
 | table accessible name | `About this app` | `Сведения о приложении` |
 | product row | `App` | `Приложение` |
 | versioned save row | `Save schema` | `Версия сохранения` |
-| seed row | `Seed` | `Код карьеры` |
+| seed row | `Seed` (`MoreScreen.vue`) | `Код карьеры` |
 | seed button title | `Copy seed` | `Скопировать код карьеры` |
 | privacy row | `Privacy` | `Конфиденциальность` |
 | privacy short promise | `Everything stays on this device – no accounts, no analytics.` | `Данные игры остаются на этом устройстве: аккаунтов и аналитики нет.` |
 | policy link | `Privacy note` | `Политика конфиденциальности` |
 | issues link | `GitHub Issues` | `Сообщить о проблеме на GitHub` |
-| build footer, `buildInfo.ts` | `Build {sha} · {YYYY-MM-DD} · save schema v{schema}` | `Сборка {sha} · {date} · формат сохранения v{schema}` |
+| build footer, `buildInfo.ts` | `Build {sha} · {date} · save schema v{schema}` | `Сборка {sha} · {date} · формат сохранения v{schema}` |
 | build fallback, `buildInfo.ts` | `unknown` | `неизвестно` |
 
 ⚙ 10.10 (hint pass): the product value is the PAIR of identity keys `Ties Break` + `Ace Parent` (§9.5, both APPROVED in RU-02); the old composite row could not be one literal and is retired to this note.

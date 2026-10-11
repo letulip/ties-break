@@ -389,7 +389,15 @@ export function adaptPlaceholders(english: string, russian: string, key: string)
   return { value }
 }
 
-export function compile(rows: readonly Row[], live: Live): Compiled {
+// ⚠ 11.10 – THE BLANKET RULING, ONE SOURCE OF TRUTH. The owner, on seeing the merged game still
+// speak English: «всё должно быть переведено, кроме имён и названий. Все описания, пояснения,
+// записки, попапы, чаты, слова тренеров, всё» – the per-row читка gate retires and his authored
+// DRAFT rows compile as written (tables not edited, statuses kept). The mode is THIS constant, read
+// by the CLI, the check gate and every test that drives them – a flag in package.json would be a
+// second copy the l3-t net's direct runGate() call could disagree with, which it did for an hour.
+export const BLANKET_INCLUDE_DRAFTS = true
+
+export function compile(rows: readonly Row[], live: Live, opts: { includeDrafts?: boolean } = {}): Compiled {
   const index = indexCatalog(live.catalog)
   const entries = new Map<string, string>()
   const prov = new Map<string, Prov>()
@@ -403,7 +411,7 @@ export function compile(rows: readonly Row[], live: Live): Compiled {
   const formatDefs = live.formats ?? DEFAULT_FORMATS
 
   for (const row of rows) {
-    const eligible = row.status === 'APPROVED' || row.status === 'LANDED' || row.ruledLatin
+    const eligible = row.status === 'APPROVED' || row.status === 'LANDED' || row.ruledLatin || ((opts.includeDrafts ?? BLANKET_INCLUDE_DRAFTS) && row.status === 'DRAFT')
     const out = (disposition: Disposition, extra: Partial<Outcome> = {}): void => {
       outcomes.push({ row, disposition, ...extra })
     }

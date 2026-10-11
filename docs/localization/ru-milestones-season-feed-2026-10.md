@@ -38,9 +38,9 @@ only its two full-sentence literals would leave `rank`, `pts`, `W-L`, and `funds
 | `bestText` no matches | `no tournaments played` | `турниров не было` |
 | rank movement improved | `(↑{N} vs season start)` | `(↑{N} мест с начала сезона)` |
 | rank movement worsened | `(↓{N} vs season start)` | `(↓{N} мест с начала сезона)` |
-| ranked | `{LADDER_LABEL} rank #{N}{movement}` | `{полное название рейтинга}: №{N}{движение}` |
-| unranked | `Unranked – {LADDER_LABEL}` | `{полное название рейтинга}: без места` |
-| assembled wrap-up | `Season {year} wrap-up: {rankText} · {points} pts this season · {bestText} · {wins}-{losses} (W-L) · funds {signedFunds}` | `Итоги сезона {year}: {рейтинг} · {points} очков за сезон · {лучший результат} · {wins} побед, {losses} поражений · изменение средств: {signedFunds}` |
+| ranked | `{LADDER_LABEL} rank #{N}{movement}` | `{полное название рейтинга}: №{N}{движение}` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
+| unranked | `Unranked – {LADDER_LABEL}` | `{полное название рейтинга}: без места` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
+| assembled wrap-up | `Season {year} wrap-up: {rankText} · {points} pts this season · {bestText} · {wins}-{losses} (W-L) · funds {signedFunds}` | `Итоги сезона {year}: {рейтинг} · {points} очков за сезон · {лучший результат} · {wins} побед, {losses} поражений · изменение средств: {signedFunds}` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
 
 Use RU-07's full ranking names (`Национальный рейтинг`, `Международный рейтинг`,
 `Профессиональный рейтинг`) as the track-dependent phrase; do not lowercase the existing

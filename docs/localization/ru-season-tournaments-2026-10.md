@@ -32,7 +32,7 @@ Full catalogue labels are localized; compact surfaces may continue to use the co
 | j30 | `Junior Tour 30` | `Юниорский тур 30` | `J30` |
 | j60 | `Junior Tour 60` | `Юниорский тур 60` | `J60` |
 | j300 | `Junior Tour 300` | `Юниорский тур 300` | `J300` |
-| w15…w1000 | `World Tour {n}` | `Мировой тур {n}` | `W{n}` |
+| w15…w1000 | `World Tour {n}` | `Мировой тур {n}` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` | `W{n}` |
 | slam | `Grand Slam` | `Большой шлем` | `Большой шлем` |
 
 `Местный открытый турнир` is already the RU-02B tournament name and must be the same catalogue
@@ -58,9 +58,9 @@ currently depend on that English punctuation trick.
 | RU04-S01 | heading | `Season Planner` | `План сезона` |
 | RU04-S02 | guide button | `Tour guide` | `Гид по туру` |
 | RU04-S03 | pro allowance | `Pro entries, birthday to birthday: {used} of {limit}` | `Профессиональные турниры, от дня рождения до дня рождения: {used} из {limit}` |
-| RU04-S04 | supply summary | `{n} left to enter over {weeks} weeks` | `До конца сезона: {availableEvents} за {remainingWeeks}` |
-| RU04-S05 | lower-rung tail | `+{n} lower` | `+{lowerEvents} на уровнях ниже` |
-| RU04-S06 | visible reconciliation | `{n} of them on the cards below` | `На карточках ниже показано: {visibleEvents}` |
+| RU04-S04 | supply summary | `{n} left to enter over {weeks} weeks` | `До конца сезона: {availableEvents} за {remainingWeeks}` – ⚙ 11.10 дыра {remainingWeeks} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
+| RU04-S05 | lower-rung tail | `+{n} lower` | `+{n} на уровнях ниже` |
+| RU04-S06 | visible reconciliation | `{n} of them on the cards below` | `На карточках ниже показано: {visibleEvents}` – ⚙ 11.10 дыра {visibleEvents} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 
 `{availableEvents}` and `{remainingWeeks}` are complete counted phrases: `1 доступный турнир`, `2
 доступных турнира`, `5 доступных турниров`; `за 1 неделю`, `за 2 недели`, `за 5 недель`. The compact
@@ -71,8 +71,8 @@ pointer surfaces they are:
 
 | id | English meaning | Russian |
 | --- | --- | --- |
-| RU04-S07 | pro allowance explanation | `Возрастное правило тура ограничивает число профессиональных турниров между двумя днями рождения. Новый лимит начинается в следующий день рождения; юниорские и национальные турниры в него не входят.` |
-| RU04-S08 | supply explanation | `Все турниры до конца сезона, на которые она ещё может заявиться, включая редкие уровни за пределами восьминедельной ленты. За одну неделю можно сыграть только один турнир.` |
+| RU04-S07 | `The tour's age rule limits how many professional (W) events she may enter in the year she is this age – counted from birthday to birthday. A fresh allowance arrives on her next birthday; junior and national events are not counted.` · pro allowance explanation | `Возрастное правило тура ограничивает число профессиональных турниров между двумя днями рождения. Новый лимит начинается в следующий день рождения; юниорские и национальные турниры в него не входят.` |
+| RU04-S08 | `Tournaments you can still enter this season, counted across every level open to her – including the rare ones the eight-week feed cannot show. She can play one event a week at most, so the supply is always larger than the schedule.` · supply explanation | `Все турниры до конца сезона, на которые она ещё может заявиться, включая редкие уровни за пределами восьминедельной ленты. За одну неделю можно сыграть только один турнир.` |
 
 The five narrow phase cells use `Хард · Грунт · Трава · Хард · Пауза`. Their week ranges use the
 shared localized week formatter; `W3–W10` must not survive inside an otherwise Russian strip.
@@ -155,8 +155,8 @@ the same question.
 | RU04-N05 | `Most of this field is ranked above her.` | `Большинство участниц стоит в рейтинге выше неё.` |
 | RU04-N06 | `A field of about her own level.` | `Поле примерно её уровня.` |
 | RU04-N07 | `She is among the strongest entered.` | `Она среди сильнейших в заявке.` |
-| RU04-N08 | positive court read | `Этот корт подходит под её игру.` |
-| RU04-N09 | negative court read | `Этот корт ей не подходит.` |
+| RU04-N08 | positive court read | `Этот корт подходит под её игру.` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом иначе `QUESTION` |
+| RU04-N09 | negative court read | `Этот корт ей не подходит.` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом иначе `QUESTION` |
 
 N08–N09 are rendered from semantic affinity, not by cutting and re-capitalizing the localized
 surface hint. `event.coachCaution` remains authored coach prose and is translated with the coach
@@ -168,16 +168,16 @@ voice in RU-05.
 | --- | --- | --- |
 | RU04-N10 | `Surface` | `Покрытие` |
 | RU04-N11 | `Prize money` | `Призовые` |
-| RU04-N12 | winner-cheque title | `Чек победительницы на этом уровне` |
-| RU04-N13 | junior zero title | `На юниорском туре призовых нет ни на одном уровне` |
-| RU04-N14 | `Winner` | `Победительница` |
+| RU04-N12 | winner-cheque title | `Чек победительницы на этом уровне` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом иначе `QUESTION` |
+| RU04-N13 | `The junior tour pays no prize money at any level` · junior zero title | `На юниорском туре призовых нет ни на одном уровне` |
+| RU04-N14 | `Winner` (`NextTournamentPanel.vue`) | `Победительница` |
 | RU04-N15 | `Spectators` | `Зрители` |
-| RU04-N16 | crowd title | `Около {spectators} зрителей у кортов – это атмосфера, а не фактор матча` |
+| RU04-N16 | `About {spectators} people around the courts – atmosphere, not a factor in play` · crowd title | `Около {spectators} зрителей у кортов – это атмосфера, а не фактор матча` |
 | RU04-N17 | `First round` | `Первый круг` |
-| RU04-N18 | `{n}-player draw` | `Сетка на {players}` |
+| RU04-N18 | `{n}-player draw` | `Сетка на {players}` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом (ряд в childhood-prologue даёт «Сетка на {0} участниц» для всех размеров сетки) `QUESTION` |
 | RU04-N19 | `Unranked` | `Без рейтинга` |
 | RU04-N20 | `VS` | `–` |
-| RU04-N21 | drawn-note | `До начала недели известна только соперница по первому кругу – остальная сетка сложится на месте.` |
+| RU04-N21 | `Only the first round is drawn before the week starts – the rest of the bracket is made when she gets there.` · drawn-note | `До начала недели известна только соперница по первому кругу – остальная сетка сложится на месте.` |
 
 The winner-points value uses `{points} очков` with the shared point formatter. N18 uses a complete
 counted phrase (`8 участниц`, `32 участницы`) rather than appending a noun to the number. The visible
@@ -197,14 +197,14 @@ dash in N20 has an accessible `{player} против {opponent}` label.
 | RU04-C08 | `academy covers {pct}%` | `академия оплачивает {pct} %` |
 | RU04-C09 | `injury` | `травма` |
 | RU04-C10 | `shoot` | `съёмка` |
-| RU04-C11 | shoot title | `Съёмка для {brand}: тренировки остаются, остальное время уходит на съёмку` |
+| RU04-C11 | `{brand} shoot week – she keeps her sessions and gives up the rest` · shoot title | `Съёмка для {brand}: тренировки остаются, остальное время уходит на съёмку` |
 | RU04-C12 | deadline open | `closes {week}` | `заявки до {week}` |
 | RU04-C13 | deadline passed | `Closed {week}` | `заявки закрыты · {week}` |
 | RU04-C14 | `Entered` | `Заявлена` |
 | RU04-C15 | `wild card` | `уайлд-кард` |
-| RU04-C16 | wild-card title | `Одно из {places}, которые турнир оставляет игрокам страны-хозяйки: в обычный список участниц она не проходит.` |
+| RU04-C16 | wild-card title | `Одно из {places}, которые турнир оставляет игрокам страны-хозяйки: в обычный список участниц она не проходит.` – ⚙ 11.10 дыра русского ждёт готовую фразу со словом, а ключ отдаёт голое число: ряд ждёт локализованный аргумент `QUESTION` |
 | RU04-C17 | `defending {points} pts` | `защищает {points}` |
-| RU04-C18 | defending title | `Результат этой недели год назад ({points}) выйдет из 52-недельного профессионального зачёта с началом этой недели.` |
+| RU04-C18 | `Her counted result from this week last year ({points} pts) leaves the 52-week professional window as this week arrives.` · defending title | `Результат этой недели год назад ({points}) выйдет из 52-недельного профессионального зачёта с началом этой недели.` |
 | RU04-C19 | `Outgrown – she is past this level` | `Уровень пройден – она его переросла` |
 | RU04-C20 | parent plaque | `Your read:` | `Наша оценка:` |
 | RU04-C21 | hired-coach plaque | `Coach says:` | `Тренер говорит:` |
@@ -275,8 +275,8 @@ inside the Russian pool; it must not draw again or consume the main RNG stream.
 | RU04-E07 | `Exhausted – race anyway? Rest would be wiser.` | `Вымоталась – всё равно играть? Отдых был бы разумнее.` |
 | RU04-E08 | `+ Plan week` | `+ Спланировать неделю` |
 | RU04-E09 | `Exams this week` | `На этой неделе экзамены` |
-| RU04-E10 | pro counter | `проф. турниры: {used} / {limit}` |
-| RU04-E11 | junior counter | `юниорские турниры: {used} / {limit}` |
+| RU04-E10 | pro counter | `проф. турниры: {used} / {limit}` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
+| RU04-E11 | junior counter | `юниорские турниры: {used} / {limit}` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 
 The accessible entry name needs the **date** as well as the event label: a season can show
 several tournaments of the same tier. This is the exact `enterActionName` source, not merely a
@@ -340,8 +340,8 @@ plus a space.
 | RU04-W10 | `Play it and watch` | `Сыграть и посмотреть` |
 | RU04-W11 | `undo\|Cancel` | `Отменить` · `APPROVED` 10.10 – ключ получил `undo\|`-тег (чат-ок: «Отмена» закрывает диалог, «Отменить» отменяет бронь; это кнопки отмены брони на Сезоне) |
 | RU04-W12 | `School owns this week.` | `Эта неделя принадлежит школе.` |
-| RU04-W13 | open-but-unscheduled note | `Ей также доступны: {tiers}. В ближайшие {weeks} их нет в календаре. Это не блокировка – просто такие турниры проходят реже.` |
-| RU04-W14 | stacked-week note | `На одной неделе теперь может быть несколько турниров. Сыграть можно только один – выбирать вам.` |
+| RU04-W13 | open-but-unscheduled note | `Ей также доступны: {tiers}. В ближайшие {weeks} их нет в календаре. Это не блокировка – просто такие турниры проходят реже.` – ⚙ 11.10 дыра русского ждёт готовую фразу со словом, а ключ отдаёт голое число: ряд ждёт локализованный аргумент `QUESTION` |
+| RU04-W14 | stacked-week note | `На одной неделе теперь может быть несколько турниров. Сыграть можно только один – выбирать вам.` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 
 The recovery offer:
 
@@ -363,10 +363,10 @@ sentence builders merely because the sheet emits structured values.
 | --- | --- | --- |
 | RU04-F01 | `Friendly match` | `Тренировочный матч` |
 | RU04-F02 | `Top seed` | `Первая сеяная` |
-| RU04-F03 | `vs` – visible | `–` |
+| RU04-F03 | `vs` – visible · (`SeasonScreen.vue`) | `–` |
 | RU04-F04 | `No points, no money – a hit-out` | `Без очков и призовых – просто сыграть` |
 | RU04-F05 | `Play match` | `Сыграть матч` |
-| RU04-F06 | seed field label | `Ключ матча` |
+| RU04-F06 | `friendly\|Seed` · seed field label | `Ключ матча` |
 | RU04-F07 | `optional` | `необязательно` |
 | RU04-F08 | `Close the friendly` | `Закрыть тренировочный матч` |
 | RU04-F09 | `Close` | `Закрыть` |
@@ -421,7 +421,7 @@ Finish labels use the same semantic source:
 | 1 | `Runner-up` | `Финалистка` |
 | 2 | `Semifinalist` | `Полуфиналистка` |
 | 3 | `Quarterfinalist` | `Четвертьфиналистка` |
-| 4+ | `Round of {2^finish}` | `Выбыла в {localized stage}` |
+| 4+ | `Round of {2^finish}` | `Выбыла в {localized stage}` – ⚙ 11.10 дыра русского ждёт готовую фразу со словом, а ключ отдаёт голое число: ряд ждёт локализованный аргумент `QUESTION` |
 
 On a poster the early-exit form is a sentence, for example `Аня – выбыла в 1/8 финала`, rather than
 the unnatural noun `участница 1/8 финала`. In tables that need a compact value, render the stage
@@ -440,17 +440,17 @@ feed a national placing through the knockout formatter.
 | RU04-T03 | unresolved-draw exit | `Skip all rounds` | `Пропустить все раунды` |
 | RU04-T04 | fact | `Surface` | `Покрытие` |
 | RU04-T05 | fact | `Prize money` | `Призовые` |
-| RU04-T06 | fact | `Winner` | `Победительнице` |
+| RU04-T06 | fact | `splash\|Winner` | `Победительнице` |
 | RU04-T07 | fact | `Spectators` | `Зрители` |
 | RU04-T08 | winner cheque title | `The winner's cheque at this tier` | `Приз победительнице на этом уровне` |
 | RU04-T09 | junior zero-prize title | `The junior tour pays no prize money at any level` | `На юниорском туре призовых нет ни на одном уровне` |
 | RU04-T10 | student zero-points title | `A student field awards no ranking points` | `Студенческий турнир не даёт рейтинговых очков` |
-| RU04-T11 | crowd title | `About {n} people around the courts – atmosphere, not a factor in play` | `Около {people} у кортов – это атмосфера, а не фактор матча` |
-| RU04-T12 | draw size | `{n}-player draw` | `Сетка на {players}` |
-| RU04-T13 | age | `Age {n}` | `{age}` |
+| RU04-T11 | crowd title | `About {n} people around the courts – atmosphere, not a factor in play` | `Около {people} у кортов – это атмосфера, а не фактор матча` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом (ряд с подписью зрителей выше по файлу) `QUESTION` |
+| RU04-T12 | draw size | `{n}-player draw` | `Сетка на {players}` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом (ряд в childhood-prologue даёт «Сетка на {0} участниц» для всех размеров сетки) `QUESTION` |
+| RU04-T13 | age | `Age {n}` | `{age}` – ⚙ 11.10 дыра {age} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент `QUESTION` |
 | RU04-T14 | versus, visible, panel | `VS` | `–` |
-| RU04-T14a | versus, visible, compact | `vs` | `–` |
-| RU04-T15 | versus, accessible | `{a} vs {b}` | `{a} против {b}` |
+| RU04-T14a | versus, visible, compact | `vs` (`TournamentFlow.vue`) | `–` |
+| RU04-T15 | versus, accessible | `{a} vs {b}` | `{a} против {b}` `QUESTION` – ⚙ 11.10: ключ в коде общий с видимой парой «{0} – {1}» (T39-ок); aria-форма «против» ждёт своего ключа (№15) |
 | RU04-T16 | rank | `Unranked` | `Без рейтинга` |
 | RU04-T17 | ladder caption | `{ladder} ranking` | `{ladder}` |
 
@@ -525,7 +525,7 @@ Pre-match:
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU04-T35 | `Skip` | `Пропустить` |
+| RU04-T35 | `Skip` (`TournamentFlow.vue`) | `Пропустить` |
 | RU04-T36 | `Watch match` | `Смотреть матч` |
 
 Here `Пропустить` means skip the replay and reveal this one result. It must never reuse the command
@@ -550,7 +550,7 @@ write a second set.
 | RU04-T45 | `km/h` | `км/ч` · `APPROVED` 10.10 |
 | RU04-T46 | `Avg rally {n} shots · ~{duration}` – metadata | `В среднем {n} за розыгрыш · около {duration}` · `APPROVED` 10.10 – дыра переименована {shots}→{n} под английскую ячейку (позиционный маппинг) |
 | RU04-T47 | `Watch again` | `Посмотреть ещё раз` · `APPROVED` 10.10 |
-| RU04-T48 | `Next` | `Дальше` |
+| RU04-T48 | `result\|Next` | `Дальше` |
 | RU04-T49 | viewer proceed | `To the result` | `К результату` |
 
 `Виннеры` is established Russian tennis language and avoids the ambiguous `победные удары`.
@@ -563,7 +563,7 @@ label from section 2, with no extra `рейтинг`: `· Международн
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU04-T50 | `{kid} – {finish}` | `{kid} – {finish sentence}` |
+| RU04-T50 | `{kid} – {finish}` | `{kid} – {finish}` – ⚙ 11.10: ключ – чистая пунктуационная склейка, identity; слова живут в параметрах |
 | RU04-T51 | `She's out – see how the draw finishes.` | `Она выбыла – посмотрим, чем закончится сетка.` |
 | RU04-T52 | `Next round` | `Следующий раунд` |
 | RU04-T53 | `Continue` | `Продолжить` |
@@ -578,11 +578,11 @@ rest of the field.
 | --- | --- | --- | --- |
 | RU04-T54 | champion status | `Champion` | `Победительница` |
 | RU04-T55 | runner-up status | `Runner-up` | `Финалистка` |
-| RU04-T56 | champion line | `def. {opponent} in the Final` | `Обыграла {opponent} в финале` |
-| RU04-T57 | runner-up line | `lost to {opponent} in the Final` | `Уступила {opponent} в финале` |
-| RU04-T58 | points | `+{n} pts` | `+{points}` |
+| RU04-T56 | champion line | `def. {opponent} in the Final` | `Обыграла {opponent} в финале` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
+| RU04-T57 | runner-up line | `lost to {opponent} in the Final` | `Уступила {opponent} в финале` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
+| RU04-T58 | points | `+{n} pts` | `+{n}` |
 | RU04-T59 | path win | `def. {opponent}` | `обыграла {opponent}` |
-| RU04-T60 | path loss | `lost to {opponent}` | `уступила {opponent}` |
+| RU04-T60 | path loss | `lost to {opponent}` | `уступила {opponent}` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
 | RU04-T61 | `Continue` | `Продолжить` |
 
 `{points}` is `1 очко`, `2 очка`, `5 очков`. The poster deliberately says `Финалистка`, not
@@ -636,7 +636,7 @@ records RU-07 and worker-event history RU-11.
 | RU04-SW01 | `Academy covered` | |
 | RU04-SW02 | `Best result` | |
 | RU04-SW03 | `Earned this season` | |
-| RU04-SW05 | `Final {0} rank` | |
+| RU04-SW05 | `Final {n} rank` | |
 | RU04-SW08 | `Lost to injury` | |
 | RU04-SW09 | `Matches` | |
 | RU04-SW10 | `Money` | |
@@ -646,14 +646,14 @@ records RU-07 and worker-event history RU-11.
 | RU04-SW15 | `Ranking` | |
 | RU04-SW16 | `Record` | |
 | RU04-SW17 | `Season points` | |
-| RU04-SW18 | `Season {0} · wrap-up` | |
+| RU04-SW18 | `Season {n} · wrap-up` | |
 | RU04-SW19 | `She has not played a Junior Tour event yet. Her national standing is on the Stats tab.` | |
 | RU04-SW21 | `Spent this season` | |
 | RU04-SW22 | `That's a season.` | |
 | RU04-SW23 | `Tournaments entered` | |
-| RU04-SW24 | `from #{0}` | |
-| RU04-SW25 | `{0} could not move her {1} ranking` | |
-| RU04-SW26 | `{0} wk` | |
+| RU04-SW24 | `from #{n}` | |
+| RU04-SW25 | `{a} could not move her {b} ranking` | |
+| RU04-SW26 | `{n} wk` | |
 
 ### ⚙ 10.10 добавка (№40, усмотрение архитектора): отчёт промежутка недель (WeekSpanReport) – русская колонка твоя (DRAFT); общие ключи (Close, Continue, #{rank}, Unranked) живут в своих таблицах
 

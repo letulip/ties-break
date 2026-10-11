@@ -38,7 +38,7 @@ if (cmd === 'extract') {
   const explicit = args.filter((a) => a.endsWith('.md')).map((a) => a.split('/').pop() ?? a)
   const { rows, stats } = readRows(listDocs(dir), dir)
   const live = { catalog, seen: seenLiterals }
-  const compiled = compile(rows, live)
+  const compiled = compile(rows, live, flag('--approved-only') ? { includeDrafts: false } : {})
   if (flag('--mark-landed')) {
     const ru = readRu(ruPath) ?? {}
     const plan = planLanded(compiled, live, ru, dir, explicit.length > 0 ? explicit : undefined)

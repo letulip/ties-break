@@ -68,7 +68,7 @@ reads as the parent and game pausing together while remaining concise.
 | RU01-R06 | `src/App.vue:1013` | `Stopped: a new offer is in her inbox, on Home – answer it before its deadline or it lapses.` | `Во входящих на экране «Дом» новое предложение. Нужно ответить до срока, иначе оно станет недоступно.` | avoids formal address | `DRAFT` |
 | RU01-R07 | `src/App.vue:1039` | `She played the college championship – the matches are in the news feed, and they can be watched.` | `Она сыграла студенческий чемпионат. Матчи можно посмотреть в новостях.` | | `DRAFT` |
 | RU01-R08 | `src/App.vue:1058` | `Stopped: below zero, and out of time.` | `Остановились: бюджет в минусе, отсрочка закончилась.` | terminal countdown arm | `DRAFT` |
-| RU01-R09 | `src/App.vue:1059` | `Stopped: {debtWeeks} week(s) below zero – {left} before the money runs out for good.` | `Остановились: бюджет в минусе уже {debtDuration}. До окончательной остановки осталось {remainingDuration}.` | both placeholders are localized durations, never raw number + noun | `DRAFT` |
+| RU01-R09 | `src/App.vue:1059` | `Stopped: {debtWeeks} week(s) below zero – {left} before the money runs out for good.` | `Остановились: бюджет в минусе уже {debtDuration}. До окончательной остановки осталось {remainingDuration}.` – ⚙ 11.10 дыра русского ждёт готовую фразу со словом, а ключ отдаёт голое число: ряд ждёт локализованный аргумент | both placeholders are localized durations, never raw number + noun | `QUESTION` |
 
 RU01-R09 requires a duration formatter that returns accusative duration (`1 неделю`, `2 недели`,
 `5 недель`) for `debtDuration` and nominative duration (`1 неделя`, `2 недели`, `5 недель`) after
@@ -90,9 +90,9 @@ it accepts a grammatical-form parameter.
 | RU01-W09 | `src/composables/weekAhead.ts:141` | `Shooting week` | `Неделя съёмок` | advertising shoot, not tennis hitting | `DRAFT` |
 | RU01-W10 | `src/composables/weekAhead.ts:144` | `Exam week` | `Неделя экзаменов` | | `DRAFT` |
 | RU01-W11 | `src/composables/weekAhead.ts:146` | `Off-season week` | `Межсезонье` | shorter and idiomatic | `DRAFT` |
-| RU01-W12 | `src/composables/weekAction.ts:137` | `Her {part} is waiting on your call – nothing moves until you answer.` | `Нужно решить, что делать с травмой: пока нет ответа, время не пойдёт дальше.` | temporary case-safe form; a body-part-aware catalogue may restore specificity | `DRAFT` |
+| RU01-W12 | `src/composables/weekAction.ts:137` | `Her {part} is waiting on your call – nothing moves until you answer.` | `Нужно решить, что делать с травмой ({part}): пока нет ответа, время не пойдёт дальше.` – ⚙ 11.10 дыра возвращена (бланкет) | temporary case-safe form; a body-part-aware catalogue may restore specificity | `DRAFT` |
 | RU01-W13 | `src/composables/weekAction.ts:157` | `She has something to say – nothing moves until you hear her out.` | `Она хочет поговорить – сначала нужно её выслушать.` | shorter; exact blocking consequence remains | `DRAFT` |
-| RU01-W14 | `src/composables/weekAction.ts:181` | `Next {weeks} weeks` | `Вперёд на {duration}` | duration is accusative: `4 недели`, `6 недель` | `DRAFT` |
+| RU01-W14 | `src/composables/weekAction.ts:181` | `Next {weeks} weeks` | `Вперёд на {duration}` – ⚙ 11.10 дыра {duration} русского не из ключа (готовая фраза со словом или падежная форма): ряд ждёт локализованный аргумент | duration is accusative: `4 недели`, `6 недель` | `QUESTION` |
 | RU01-W15 | `src/composables/softLeave.ts:36` | `She wanted a minute – leave anyway?` | `Она хотела поговорить. Всё равно перейти к следующей неделе?` | names what the press actually spends | `DRAFT` |
 
 ## 6. Shared control vocabulary
@@ -117,7 +117,7 @@ caller must not invent a synonym merely because it lives in another file.
 | RU01-C12 | `Watch again` | `Посмотреть ещё раз` | replay from start |
 | RU01-C13 | `To result` | `К результату` | leave playback for box score |
 | RU01-C14 | `Skip to result` | `Сразу к результату` | skip unviewed play |
-| RU01-C15 | `Load` | `Загрузить` | save/career load |
+| RU01-C15 | `Load` | `Загрузить` – ⚙ 11.10 простой ключ и его op-двойник живут в одном файле (MoreScreen.vue): хинт их не разводит, простому нужен свой ctx-ключ (класс №15/№4) `QUESTION` | save/career load |
 | RU01-C16 | `Delete` | `Удалить` | destructive; confirmation remains separate |
 | RU01-C17 | `Save as…` | `Сохранить как…` | named save |
 
@@ -159,6 +159,6 @@ English one is exactly who the prompt is for). The two language names are the la
 | id | English | Russian |
 | --- | --- | --- |
 | RU01-RD01 | `In the account` | |
-| RU01-RD03 | `{0} /wk` | |
-| RU01-RD04 | `{0} committed` | |
-| RU01-RD05 | `{0} weekly cap` | |
+| RU01-RD03 | `{0} /wk` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом, этот ряд – пустой сид `QUESTION` | |
+| RU01-RD04 | `{0} committed` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом, этот ряд – пустой сид `QUESTION` | |
+| RU01-RD05 | `{0} weekly cap` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом, этот ряд – пустой сид `QUESTION` | |

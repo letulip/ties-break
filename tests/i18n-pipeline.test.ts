@@ -142,8 +142,8 @@ describe('the table parser reads cells conservatively', () => {
 // THE JOIN AND THE DISPOSITIONS
 // =================================================================================================
 
-describe('compile – English joins, the location breaks ties, and only APPROVED/LANDED ever compiles', () => {
-  it('an APPROVED row on a live key compiles; DRAFT and QUESTION never do', () => {
+describe('compile – English joins, the location breaks ties, and APPROVED/LANDED always compile (DRAFT only under the 11.10 blanket, QUESTION never)', () => {
+  it('an APPROVED row on a live key compiles; DRAFT and QUESTION never do (the per-row читка regime – `--approved-only`)', () => {
     const rows = rowsOf(
       TABLE(
         '| R1 | | `Tennis & trips` | `Теннис и поездки` | `APPROVED` 08.10 |',
@@ -151,9 +151,22 @@ describe('compile – English joins, the location breaks ties, and only APPROVED
         '| R3 | | `Tennis & trips` | `ещё` | `QUESTION` |',
       ),
     )
-    const out = compile(rows, live())
+    // ⭐ RE-AIMED 11.10 (the blanket ruling): the law below is the читка regime, so the arm names it – the default compile now takes DRAFT rows too (next arm)
+    const out = compile(rows, live(), { includeDrafts: false })
     expect([...out.entries]).toEqual([['Tennis & trips', 'Теннис и поездки']])
     expect(out.outcomes.map((o) => o.disposition)).toEqual(['compiled', 'pending', 'pending'])
+  })
+
+  it('⭐ THE BLANKET (owner 11.10, «всё должно быть переведено, кроме имён и названий»): by default a DRAFT row compiles as written, a QUESTION row still never does, and two rows that disagree are a conflict', () => {
+    const draft = rowsOf(TABLE('| R2 | | `Tennis & trips` | `другое` | |', '| R3 | | `Tennis & trips` | `ещё` | `QUESTION` |'))
+    const out = compile(draft, live())
+    expect([...out.entries]).toEqual([['Tennis & trips', 'другое']])
+    expect(out.outcomes.map((o) => o.disposition)).toEqual(['compiled', 'pending'])
+    // an APPROVED row and a DRAFT row on one key that disagree compile NOTHING and say so (neither is more right) – the same law as before, now reachable by a DRAFT
+    const clash = rowsOf(TABLE('| R1 | | `Tennis & trips` | `Теннис и поездки` | `APPROVED` 08.10 |', '| R2 | | `Tennis & trips` | `другое` | |'))
+    const c = compile(clash, live())
+    expect([...c.entries]).toEqual([])
+    expect(c.outcomes.map((o) => o.disposition)).toEqual(['conflict', 'conflict'])
   })
 
   it('⚠ THE TRAP: «Stats» is live only as a screen heading, so the nav row (App.vue) is foreign-surface, not joined', () => {

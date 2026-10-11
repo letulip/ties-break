@@ -53,7 +53,7 @@ Segmented-group accessible name: **`Скорость воспроизведен�
 | --- | --- |
 | `Skip to the result` | `Сразу к результату` |
 | `Watch again ↻` | `Посмотреть ещё раз ↻` · `APPROVED` 10.10 |
-| shout picker aria | `Выберите реплику` |
+| shout picker aria | `Выберите реплику` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 | `Shout 📣` | `Крикнуть 📣` |
 
 The skip remains a link-like action outside the viewing-mode switch. It ends viewing; it is not a
@@ -80,7 +80,7 @@ not imply a tactical instruction or a guaranteed effect on the already-resolved 
 | source | Russian |
 | --- | --- |
 | `Live` – live badge | `Идёт` |
-| elapsed-clock aria | `Время матча: {clock}` |
+| `Elapsed match time {clock}` · elapsed-clock aria | `Время матча: {clock}` |
 | `km/h` – speed unit | `км/ч` · `APPROVED` 10.10 – чат-ок: цифры едины, слова единиц переводимы |
 | `TB` – tiebreak marker | `ТБ` |
 | `· serving` – player suffix | `· подаёт` |
@@ -107,8 +107,8 @@ shout control.
 | `Hanging on` | `Ещё держится` |
 | `1st serve %` | `Первая подача` |
 | `Break points` | `Брейк-пойнты` |
-| momentum chart aria | `Ход матча: {caption}` |
-| empty log | `Разминка. Первый мяч уже летит.` |
+| `Momentum: {caption}` · momentum chart aria | `Ход матча: {caption}` |
+| `Warming up. The first ball is on its way.` · empty log | `Разминка. Первый мяч уже летит.` |
 
 The seven momentum phrases describe the match probability from her side, not confidence or mood.
 `Почти выиграла` may appear only for the same `p >= 0.9` band as English; it is not a final score.
@@ -122,7 +122,7 @@ Percent values remain locale-formatted integers. Break-point pairs keep tennis o
 | source | Russian |
 | --- | --- |
 | `{name} could not continue.` | `{name} не смогла продолжить.` |
-| `She retired hurt at {score}.` | `Она снялась при счёте {score}.` |
+| `She retired hurt at {score}.` | `Она снялась при счёте {score}.` – ⚙ 11.10 дыра {score} русского не из ключа: ключ – голый префикс, счёт дописывается отдельно `QUESTION` |
 | `A long match on tired legs.` | `Долгий матч на уставших ногах.` |
 | `Stay with her` | `Остаться с ней` |
 
@@ -140,7 +140,7 @@ retirement stays in commentary and does not open this family alert.
 | `Unforced errors` | `Невынужденные ошибки` |
 | `Max serve` | `Макс. скорость подачи` |
 | `{speed} km/h` | `{speed} км/ч` · `APPROVED` 10.10 |
-| `Avg rally {rally} shots · ~{duration}` | `В среднем {rally} удара за розыгрыш · около {duration}` |
+| `Avg rally {rally} shots · ~{duration}` | `В среднем {rally} за розыгрыш · около {duration}` – ⚙ 11.10 выровнено на APPROVED T46 («удара» не согласуется с 5+) |
 
 `{rally}` uses a Russian decimal comma and counted form: `1,0 удара`, `2,4 удара`, `5,0 удара`.
 The value is an average, so plural-category agreement on the decimal is not copied from integer
@@ -154,7 +154,7 @@ duration string.
 | `Practice match` | `Тренировочный матч` |
 | `To result` – header | `К результату` |
 | `Friendly at the club` | `Тренировочный матч в клубе` |
-| `vs` – compact | `против` |
+| `practice\|vs` – compact | `против` |
 | `sparring partner` | `спарринг-партнёр` |
 | `No ranking points` | `Без рейтинговых очков` |
 | `Skip to result` | `Сразу к результату` |
@@ -468,13 +468,13 @@ log deliberately makes between a break and a meaningful hold.
 | source | Russian draft |
 | --- | --- |
 | `{name} serves first.` | `Первой подаёт {name}.` |
-| tiebreak set | `{who} берёт {ordinal} сет на тай-брейке.` |
-| break to take set | `{who} делает брейк и берёт {ordinal} сет.` |
-| serve out set | `{who} подаёт на {ordinal} сет и берёт его.` |
-| second set levels match | `Счёт по сетам равный.` |
-| breaks back at 6-all | `{who} возвращает брейк – 6:6.` |
-| holds at 6-all | `{who} берёт свою подачу – 6:6.` |
-| tiebreak follows | `Сет решит тай-брейк.` |
+| `{who} takes the {ordinal} set in a tiebreak.` · tiebreak set | `{who} берёт {ordinal} сет на тай-брейке.` |
+| `{who} breaks to take the {ordinal} set.` · break to take set | `{who} делает брейк и берёт {ordinal} сет.` |
+| `{who} serves out the {ordinal} set.` · serve out set | `{who} подаёт на {ordinal} сет и берёт его.` |
+| `One set each.` · second set levels match | `Счёт по сетам равный.` |
+| `{who} breaks back for six games all.` · breaks back at 6-all | `{who} возвращает брейк – 6:6.` |
+| `{who} holds for six games all.` · holds at 6-all | `{who} берёт свою подачу – 6:6.` |
+| `A breaker decides the set.` · tiebreak follows | `Сет решит тай-брейк.` |
 
 `{ordinal}` is generated as an agreeing Russian ordinal (`первый`, `второй`), never by translating
 an English suffix. The corresponding leads are `Сет.` and `Тай-брейк.`.
@@ -499,8 +499,8 @@ round label inside commentary.
 
 | source | Russian draft |
 | --- | --- |
-| `takes it in three` | `{winner} побеждает в трёх сетах.` |
-| `takes it in straight sets` | `{winner} побеждает в двух сетах.` |
+| `{winner} takes it in three.` | `{winner} побеждает в трёх сетах.` |
+| `{winner} takes it in straight sets.` | `{winner} побеждает в двух сетах.` |
 | `Match.` – lead | `Матч.` |
 
 Append the licensed stake sentence, then a point-ending sentence from §16 and the room line from
@@ -690,7 +690,7 @@ does not turn a college title into a professional one. No line invents the mothe
 
 | source | Russian |
 | --- | --- |
-| compact rail `S{set}` | visible `1-й`, `2-й`, `3-й`; accessible `{ordinal} сет` |
+| compact rail `S{set}` | `visible `1-й`, `2-й`, `3-й`; accessible `{ordinal} сет`` – ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 | `Corner.` | `У скамейки.` |
 | `Off court.` | `Вне корта.` |
 
