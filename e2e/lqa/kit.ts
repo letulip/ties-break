@@ -98,6 +98,14 @@ export const OUT_DIR = process.env.LQA_OUT ?? `${process.cwd()}/lqa-out`
 /** Wait for the LQA build's hook and prove the page is in Russian – the instrument's own precondition, failed loudly. */
 export async function hookReady(page: Page, expected: 'ru' | 'en' = 'ru'): Promise<void> {
   await page.waitForFunction((name) => Reflect.has(window, name), HOOK)
+  // ⚠ 11.10 – WAIT for the locale, never assert the instant: `locale()` reports the ACTIVE locale,
+  // and the Russian catalog is a lazy chunk that grew from 10 rows to ~5.9k (772 KB) under the
+  // blanket – on the suite's cold first route the old instant assert raced the chunk and read `en`.
+  await page.waitForFunction(
+    ([name, want]) => (Reflect.get(window, name as string) as { locale: () => string }).locale() === want,
+    [HOOK, expected] as const,
+    { timeout: 15_000 },
+  )
   expect(await page.evaluate((name) => (Reflect.get(window, name) as HookShape).locale(), HOOK), `the LQA runner expected locale ${expected}`).toBe(expected)
 }
 

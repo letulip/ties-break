@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 168 dated entries, newest 2026-10-10. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 169 dated entries, newest 2026-10-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 7 | [FOURTH BATCH: THE SUPPORTS' REFUSALS BANK LIKE THE COACH'S, AT THEIR OWN SCALE](#02102026--fourth-batch-the-supports-refusals-bank-like-the-coachs-at-their-own-scale) | 2026-10-02 |
 | college | 17 | [THE COLLEGE WAVE'S SEVEN, RULED IN ONE LINE: «ПО ТВОИМ РЕКОМЕНДАЦИЯМ»](#24092026--the-college-waves-seven-ruled-in-one-line-по-твоим-рекомендациям) | 2026-09-24 |
 | economy-and-money | 17 | [THE TARIFF IS HIS LEVER: J 1-2-3, W BY STAGE, THE SHOOT PAYS PER DAY](#02102026--the-tariff-is-his-lever-j-1-2-3-w-by-stage-the-shoot-pays-per-day) | 2026-10-02 |
-| general | 36 | [THE MORNING BATCH: THIRTEEN YELLOW WORDS WHOLESALE, FOUR RED RULINGS](#10102026--the-morning-batch-thirteen-yellow-words-wholesale-four-red-rulings) | 2026-10-10 |
+| general | 37 | [THE BLANKET: EVERYTHING TRANSLATES, THE PER-ROW ЧИТКА RETIRES](#11102026--the-blanket-everything-translates-the-per-row-читка-retires) | 2026-10-11 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -6087,3 +6087,16 @@ documented. **34** – the nine ENDING_BLURB sentences get a home on the ending 
 нам это как-то в наш финальный экран можно гармонично встроить») – placement proposal with a
 screenshot, his live look before it stands. **14** – direction ruled: when the Russian prologue
 rows land, try spacing first («можно какими-то отступами исправить без вреда»).
+
+## 11.10.2026 – THE BLANKET: EVERYTHING TRANSLATES, THE PER-ROW ЧИТКА RETIRES
+
+«Бери пожалуйста агентов, бери все вьюшки и ищите где остался английский, всё должно быть
+переведено, кроме имен и названий. Все описания, пояснения, записки, попапы, чаты, слова
+тренеров, всё» – ruled after the merged game still spoke English on his save: the machinery was
+done but ru.json held 56 rows behind the per-row читка gate of the stack's own design. The ruling
+retires that gate (`BLANKET_INCLUDE_DRAFTS` carries the quote): his ~3,800 DRAFT rows compile as
+written, his coordinate corpora join by (id, voice, field), and agents AUTHOR the Russian where no
+row exists – style guide, №10 family voice, RU-04 lexicon, every wave annotated for his live edit.
+Eight waves on `loc/ru-fill` took ru.json 56 -> 5,857 of 5,859 (the two held ENDING_BLURB
+paragraphs await his English call), the display boundary localises engine-born words with English
+byte-identity proven, and the coach market was the last product screen to leave English.
