@@ -236,3 +236,89 @@ copy an engine key.
   sentence.
 - Locale changes no birthday offer, asked id, option order, bond delta, week gate or RNG draw.
 
+## ⚙ 11.10 agent-authored (бланкет) – the memory-card lines and the weekly phrase pool, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+78 keys: the 15 memory-card lines of `engine/diary.ts`, the birthday dialog's kicker, and the 61 lines of `diary/pool.ts` that the phrase pool still had without Russian. RU-09's draft of the memory lines (`Её {tierTitlePhrase}.`, `Впервые дошла до {tierFinalGenitive}.`) needs a case form of the tier the key does not carry – `short(tier)` is the tier's code (`J30`, `W15`) or the English `Local` / `tournament` – so the Russian keeps the owner's words and puts the code after a dash (`Её первый титул – {0}.`). The ranking lines receive `LADDER_LABEL.itf` in English and put it in brackets. The pool's lines are the parent's observations: short, past tense for her, the family `мы` where the family acts, nothing graded. `an injury` is an unwrapped fallback (no call site asks for it).
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-DIA-01 | `Her birthday – {0}` | `Её день рождения – {0}` |
+| RU21-DIA-02 | `First prize money – a real cheque.` | `Первые призовые. Настоящий чек.` |
+| RU21-DIA-03 | `First prize money – a {0} cheque.` | `Первые призовые – чек за турнир {0}.` |
+| RU21-DIA-04 | `First time through to a {0} final.` | `Впервые дошла до финала – {0}.` |
+| RU21-DIA-05 | `Her first international entry – {0}.` | `Первая международная заявка – {0}.` |
+| RU21-DIA-06 | `Her first international entry.` | `Первая международная заявка.` |
+| RU21-DIA-07 | `Her first {0} final.` | `Её первый финал – {0}.` |
+| RU21-DIA-08 | `Her first {0} title.` | `Её первый титул – {0}.` |
+| RU21-DIA-09 | `Season {0}: #{1} {2}.` | `Сезон {0}: №{1} ({2}).` |
+| RU21-DIA-10 | `She ended {0} #{1} {2}.` | `{0} год она закончила на №{1} ({2}).` |
+| RU21-DIA-11 | `The first passport week – {0}.` | `Первая неделя с паспортом – {0}.` |
+| RU21-DIA-12 | `The first passport week.` | `Первая неделя с паспортом.` |
+| RU21-DIA-13 | `The first week the tennis paid her.` | `Первая неделя, когда теннис ей заплатил.` |
+| RU21-DIA-14 | `The week she won her first {0}.` | `Неделя, когда она взяла свой первый титул – {0}.` |
+| RU21-DIA-15 | `The week went by.` | `Неделя прошла.` |
+| RU21-DIA-16 | `an injury` | `Травма` |
+| RU21-DIA-17 | `{0} – her first injury.` | `{0}. Её первая травма.` |
+| RU21-DIA-18 | `A clinic full of people who do this for a living.` | `Клиника, полная людей, для которых это работа.` |
+| RU21-DIA-19 | `A family week away – she came back lighter.` | `Неделя с семьёй вдали от дома – вернулась будто налегке.` |
+| RU21-DIA-20 | `A hit-out at the club, nothing on the line.` | `Просто обмен ударами в клубе, на кону ничего.` |
+| RU21-DIA-21 | `A new month on the kitchen calendar. The same routine.` | `Новый месяц на кухонном календаре. Тот же распорядок.` |
+| RU21-DIA-22 | `A practice match, and the usual training.` | `Тренировочный матч и обычные тренировки.` |
+| RU21-DIA-23 | `A quiet training week.` | `Спокойная неделя тренировок.` |
+| RU21-DIA-24 | `A school project took the evenings – glue on everything.` | `Школьный проект забрал вечера – клей на всём.` |
+| RU21-DIA-25 | `A spare key on her own ring. We are still getting used to that.` | `Запасной ключ на её собственной связке. Мы всё ещё привыкаем.` |
+| RU21-DIA-26 | `A voice note from the supermarket: no milk, plenty of string.` | `Голосовое из магазина: молока нет, зато струн сколько угодно.` |
+| RU21-DIA-27 | `A week at her grandmother's – slow food, slow days, and it shows.` | `Неделя у бабушки – неспешная еда, неспешные дни, и это заметно.` |
+| RU21-DIA-28 | `A week at home – nothing special, and it worked.` | `Неделя дома – ничего особенного, и это сработало.` |
+| RU21-DIA-29 | `A week away. The racquet stayed home.` | `Неделя в отъезде. Ракетка осталась дома.` |
+| RU21-DIA-30 | `A week by the sea, and she slept through most of it.` | `Неделя у моря, и большую её часть она проспала.` |
+| RU21-DIA-31 | `A week of swimming pools and physio beds.` | `Неделя бассейнов и кушеток физиотерапевта.` |
+| RU21-DIA-32 | `A week outdoors – tired legs, clear head.` | `Неделя на воздухе – усталые ноги, ясная голова.` |
+| RU21-DIA-33 | `A week where nothing could reach her, and her legs noticed first.` | `Неделя, когда ничто не могло до неё добраться, – и первыми это почувствовали ноги.` |
+| RU21-DIA-34 | `An ordinary week – practice, errands, an early night.` | `Обычная неделя – тренировки, дела, ранний отбой.` |
+| RU21-DIA-35 | `An ordinary week – practice, pasta, an early night.` | `Обычная неделя – тренировки, паста, ранний отбой.` |
+| RU21-DIA-36 | `An ordinary week – school, practice, pasta.` | `Обычная неделя – школа, тренировки, паста.` |
+| RU21-DIA-37 | `Exams took the week.` | `Экзамены забрали всю неделю.` |
+| RU21-DIA-38 | `Fresh – the rest is paying off.` | `Свежая – отдых работает.` |
+| RU21-DIA-39 | `Groceries together on Saturday. She pushed the cart.` | `В субботу вместе ходили за продуктами. Тележку везла она.` |
+| RU21-DIA-40 | `Her calendar said rest. She said errands counted.` | `В календаре у неё отдых. Она сказала, что дела тоже считаются.` |
+| RU21-DIA-41 | `Her own bed all week. Half the street in the kitchen.` | `Всю неделю спала в своей кровати. На кухне – пол-улицы.` |
+| RU21-DIA-42 | `Her phone buzzed all evening. The homework got done anyway.` | `Телефон жужжал весь вечер. Уроки она всё равно сделала.` |
+| RU21-DIA-43 | `Her washing machine lost a fight with red clay.` | `Её стиральная машина проиграла бой красному грунту.` |
+| RU21-DIA-44 | `Homework at the kitchen table, racquet by the door.` | `Уроки на кухонном столе, ракетка у двери.` |
+| RU21-DIA-45 | `Match week – the travel and the tennis both took their cut.` | `Турнирная неделя – дорога и теннис взяли каждый своё.` |
+| RU21-DIA-46 | `Nothing to report. That is its own kind of good.` | `Сообщить нечего. Это тоже по-своему хорошо.` |
+| RU21-DIA-47 | `Off-season – rest, errands, and the block where next year gets built.` | `Межсезонье – отдых, дела и работа над планом на следующий год.` |
+| RU21-DIA-48 | `Off-season – rest, family, and the block where next year gets built.` | `Межсезонье – отдых, семья и работа над планом на следующий год.` |
+| RU21-DIA-49 | `Off-season – rest, school, family.` | `Межсезонье – отдых, школа, семья.` |
+| RU21-DIA-50 | `On the road this week.` | `Эта неделя прошла в дороге.` |
+| RU21-DIA-51 | `Out with the {0} – {1} to go.` | `Выбыла из-за травмы ({0}) – осталось: {1}.` |
+| RU21-DIA-52 | `Out with the {0} – {1} week to go.` | `Выбыла из-за травмы ({0}). {1, plural, one {Осталась {1} неделя} few {Осталось {1} недели} many {Осталось {1} недель} other {Осталось {1} недели}}.` |
+| RU21-DIA-53 | `Out with the {0} – {1} weeks to go.` | `Выбыла из-за травмы ({0}). {1, plural, one {Осталась {1} неделя} few {Осталось {1} недели} many {Осталось {1} недель} other {Осталось {1} недели}}.` |
+| RU21-DIA-54 | `Pasta again. Nobody complained.` | `Опять паста. Никто не жаловался.` |
+| RU21-DIA-55 | `Rain most of the week – practice moved indoors.` | `Почти всю неделю дождь – тренировки перенесли под крышу.` |
+| RU21-DIA-56 | `Rehab sets the pace this week.` | `На этой неделе темп задаёт восстановление.` |
+| RU21-DIA-57 | `Rest with a programme – she came back moving properly.` | `Отдых по программе – вернулась и двигается как надо.` |
+| RU21-DIA-58 | `School week – the court waited.` | `Школьная неделя – корт подождал.` |
+| RU21-DIA-59 | `Sea, sleep, sun – in that order, every day.` | `Море, сон, солнце – в таком порядке, каждый день.` |
+| RU21-DIA-60 | `Seven days of water in every direction, and no telephone worth answering.` | `Семь дней воды во все стороны и ни одного звонка, на который стоило бы ответить.` |
+| RU21-DIA-61 | `She called while cooking. Something burned; the story survived.` | `Позвонила, пока готовила. Что-то подгорело – а история уцелела.` |
+| RU21-DIA-62 | `She came by for twenty minutes and stayed for dinner.` | `Заехала на двадцать минут и осталась на ужин.` |
+| RU21-DIA-63 | `She forgot to call. Then called twice on Sunday.` | `Забыла позвонить. Зато в воскресенье позвонила дважды.` |
+| RU21-DIA-64 | `She is running on empty – a rest week would not hurt.` | `Она на исходе сил – неделя отдыха не помешала бы.` |
+| RU21-DIA-65 | `She missed the bus and ran for it, laughing.` | `Не успела на автобус и бежала за ним, смеясь.` |
+| RU21-DIA-66 | `She seems calm.` | `Кажется, она спокойна.` |
+| RU21-DIA-67 | `Still tired from the {0} trip.` | `Всё ещё устала после поездки ({0}).` |
+| RU21-DIA-68 | `The Sunday call ran long. Nobody minded.` | `Воскресный звонок затянулся. Никто не возражал.` |
+| RU21-DIA-69 | `The family chat got one photo: racquet, coffee, rain.` | `В семейный чат пришла одна фотография: ракетка, кофе, дождь.` |
+| RU21-DIA-70 | `The full programme, and it worked – she came back new.` | `Полная программа, и она сработала – вернулась как новая.` |
+| RU21-DIA-71 | `The racquet did not come. The tent did.` | `Ракетка не поехала. Палатка поехала.` |
+| RU21-DIA-72 | `Training, laundry, sleep, repeat.` | `Тренировки, стирка, сон – и по кругу.` |
+| RU21-DIA-73 | `Training, school, repeat.` | `Тренировки, школа – и по кругу.` |
+| RU21-DIA-74 | `Training, sleep, repeat.` | `Тренировки, сон – и по кругу.` |
+| RU21-DIA-75 | `Two trains and a bus. She slept on both trains.` | `Два поезда и автобус. В обоих поездах она спала.` |
+| RU21-DIA-76 | `Warm evenings – dinner ran long on the balcony.` | `Тёплые вечера – ужин на балконе затягивался.` |
+| RU21-DIA-77 | `We talk about money after she goes to bed.` | `О деньгах мы говорим, когда она ложится спать.` |
+| RU21-DIA-78 | `We talk about money after the call ends.` | `О деньгах мы говорим, когда заканчивается звонок.` |

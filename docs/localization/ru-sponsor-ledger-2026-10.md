@@ -58,20 +58,20 @@ by the engine; they are not reverse-calculated from rounded cents.
 
 | id | English | Russian |
 | --- | --- | --- |
-| SPL-SC01 | `Cancel the shoot` | |
-| SPL-SC02 | `Do both` | |
-| SPL-SC03 | `Lights, flights and a draw in one week – {n} condition off the week.` | |
-| SPL-SC04 | `Move the shoot to {week}` | |
-| SPL-SC05 | `Pull out of the {tier}` | |
-| SPL-SC06 | `She plays as planned and the campaign waits – nothing is paid for it.` | |
-| SPL-SC07 | `She plays as planned, and {brand} take back {amount} of the campaign fee.` | |
-| SPL-SC08 | `She shoots, and the {tier} entry comes back, and a late withdrawal counts against her.` | |
-| SPL-SC09 | `She shoots, and the {tier} entry comes back.` | |
-| SPL-SC10 | `She shoots, and the {tier} entry is forfeited, and a late withdrawal counts against her.` | |
-| SPL-SC11 | `She shoots, and the {tier} entry is forfeited.` | |
-| SPL-SC12 | `Something has to give. All four answers are hers to make.` | |
-| SPL-SC13 | `Two things at once – {what}` | |
-| SPL-SC14 | `{brand} want her that week, and so does the {tier}.` | |
+| SPL-SC01 | `Cancel the shoot` | `Отменить съёмку` |
+| SPL-SC02 | `Do both` | `Успеть и то и другое` |
+| SPL-SC03 | `Lights, flights and a draw in one week – {n} condition off the week.` | `Софиты, перелёты и сетка за одну неделю – форма снижается на {n}.` |
+| SPL-SC04 | `Move the shoot to {week}` | `Перенести съёмку: {week}` |
+| SPL-SC05 | `Pull out of the {tier}` | `Сняться с турнира «{tier}»` |
+| SPL-SC06 | `She plays as planned and the campaign waits – nothing is paid for it.` | `Она играет как запланировано, а кампания подождёт – за это ничего не платится.` |
+| SPL-SC07 | `She plays as planned, and {brand} take back {amount} of the campaign fee.` | `Она играет как запланировано, а бренд «{brand}» забирает {amount} из гонорара за кампанию.` |
+| SPL-SC08 | `She shoots, and the {tier} entry comes back, and a late withdrawal counts against her.` | `Она едет на съёмку, заявочный взнос {tier} возвращается, но позднее снятие засчитывается ей в штрафные очки тура.` |
+| SPL-SC09 | `She shoots, and the {tier} entry comes back.` | `Она едет на съёмку, заявочный взнос {tier} возвращается.` |
+| SPL-SC10 | `She shoots, and the {tier} entry is forfeited, and a late withdrawal counts against her.` | `Она едет на съёмку, заявочный взнос {tier} не возвращается, а позднее снятие засчитывается ей в штрафные очки тура.` |
+| SPL-SC11 | `She shoots, and the {tier} entry is forfeited.` | `Она едет на съёмку, заявочный взнос {tier} не возвращается.` |
+| SPL-SC12 | `Something has to give. All four answers are hers to make.` | `Чем-то придётся пожертвовать. Любой из четырёх вариантов – её выбор.` |
+| SPL-SC13 | `Two things at once – {what}` | `Два дела одновременно – {what}` |
+| SPL-SC14 | `{brand} want her that week, and so does the {tier}.` | `В ту неделю её ждут и «{brand}», и турнир «{tier}».` |
 
 ## ⚙ 11.10 agent-authored (бланкет) – the manager's cut and the staff fares, as whole keys
 

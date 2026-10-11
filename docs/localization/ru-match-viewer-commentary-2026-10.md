@@ -1023,3 +1023,18 @@ RU-08 §11–§13, the ladder of four storeys. Ranks print as `№{n}`, the degr
 | `A true bounce all day, and no surprises off it.` | `Отскок будет ровным весь день – без сюрпризов.` |
 | `Slow and high, and the ball will bite.` | `Медленно и высоко – мяч будет цепляться за покрытие.` – ⚙ 11.10 RU-08 §13 называет «Грунт» в строке, хотя сам пишет, что заметки о покрытии его не повторяют; здесь покрытие не названо |
 | `It will stay low and skid through, so the points will be short.` | `Мяч пойдёт низко и проскользит; розыгрыши будут короткими.` |
+
+## ⚙ 11.10 agent-authored (бланкет) – the match controls and the score readout
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+6 keys: the three group labels of `MatchControls.vue`, the retired-hurt prefix and the set tag of `MatchViewer.vue`, and the points-played readout of `matchReadout.ts`. `She retired hurt at` is a bare prefix – the score and the reason are written by the template after it (RU-08's `QUESTION` row had the score inside the sentence); `S{0}` is `{0}-й`, the visible form RU-08 chose.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-MTV-01 | `How much of the match to watch` | `Сколько матча смотреть` |
+| RU21-MTV-02 | `Playback speed` | `Скорость воспроизведения` |
+| RU21-MTV-03 | `What to shout` | `Что крикнуть` |
+| RU21-MTV-04 | `She retired hurt at` | `Она снялась при счёте` |
+| RU21-MTV-05 | `S{0}` | `{0}-й` |
+| RU21-MTV-06 | `{0} points played` | `Сыграно {0, plural, one {{0} розыгрыш} few {{0} розыгрыша} many {{0} розыгрышей} other {{0} розыгрыша}}` |

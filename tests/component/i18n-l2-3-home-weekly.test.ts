@@ -352,6 +352,16 @@ describe('L2-3 Russian smoke – ru.json read by key, no Cyrillic typed here', (
     // Home alone had 117 state alternatives) across a NAMED hole (`№{rank}`) and an ICU plural, which the old `split(/\{\d+\}/)` could not read; coverage of `wiredHere` is a measured floor.
     const NOT_DRAWN: Record<string, string> = {
       'Good afternoon': 'HomeScreen renders the ENGINE\'s own greeting eagerly as the fallback of the caption-collision rule (`fromEngine`) and draws it only when the clock\'s word collides with the photo caption – at 09:00 the clock says morning',
+      // ⭐ 11.10, THE SCREENS-AND-SCRIPTS WAVE (RU-21): `tierState()` (composables/tierState.ts) builds the note AND the title of every rung of the ladder eagerly and the strip draws one state per rung; these seven are the
+      // words of rung states this pose does not show (a lock by points, a lock by age, a rung open with a game on the calendar, the acceptance-list rung). Held both ways like every name here: a pose that shows
+      // one of those states makes its name stale and red.
+      'Open – on the calendar': 'tierState() note of a rung that is open with an event on the calendar – this pose\'s strip draws the other states',
+      'International points come from Junior Tour events.': 'the ITF half of the lock title\'s `earned` sentence (tierState.ts `earnedAt`) – drawn only in the title of a rung locked by international points',
+      '{tier} – locked: {more} more {unit} (she has {has} of {need}). {earned}': 'the title (tooltip) of a rung locked by points – tierState() builds it for every rung and the strip draws it only on a locked one',
+      'Opens in the top {cut}': 'tierState() note of an acceptance-list rung that is not open yet – this pose\'s ladder has none in that state',
+      'Opens at {age}': 'tierState() note of a rung locked by age – this pose\'s girl is past every age gate it draws',
+      'the top {cut} internationally': 'one clause of `tierOpensWhen()` – only the title of an acceptance-list rung that is locked reads it',
+      '{tier} – opens at {when}': 'the title (tooltip) of a rung locked by age – tierState() builds it eagerly, the strip draws it only on a locked rung',
     }
     const arm = compiledArm({ what: 'L2-3', ru: RU, asked, screen: everything, wiredHere, notDrawn: NOT_DRAWN, coverageFloor: 0.3 })
     // the miss arm: the counter and ru.json agree, key by key – and the five labels this file always named still say which way they fall.

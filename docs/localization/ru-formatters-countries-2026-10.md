@@ -119,3 +119,36 @@ Not covered by the ruling, so left as drafted: the word rows (`взнос`, `б�
   турнира должен оставаться именно отсутствием вступительного взноса.
 - Все 24 названия проверить в выборе страны, профиле, шапке, More и турнирах.
 - Отображение не вправе менять `week`, `fundsCents`, `country`, RNG или `.tsave`.
+
+## ⚙ 11.10 agent-authored (бланкет) – the twelve months of the birthday pickers
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+24 keys of `identityCopy.ts`: the twelve month names (nominative, for the month picker) and the twelve `Month {day}` forms, which put the day first and the month in the genitive (`{day} июня`) as RU-13D asks. The picker shows the capitalised nominative; the lowercase list in this document's prose is the same twelve words in running text.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-FMT-01 | `April` | `Апрель` |
+| RU21-FMT-02 | `April {day}` | `{day} апреля` |
+| RU21-FMT-03 | `August` | `Август` |
+| RU21-FMT-04 | `August {day}` | `{day} августа` |
+| RU21-FMT-05 | `December` | `Декабрь` |
+| RU21-FMT-06 | `December {day}` | `{day} декабря` |
+| RU21-FMT-07 | `February` | `Февраль` |
+| RU21-FMT-08 | `February {day}` | `{day} февраля` |
+| RU21-FMT-09 | `January` | `Январь` |
+| RU21-FMT-10 | `January {day}` | `{day} января` |
+| RU21-FMT-11 | `July` | `Июль` |
+| RU21-FMT-12 | `July {day}` | `{day} июля` |
+| RU21-FMT-13 | `June` | `Июнь` |
+| RU21-FMT-14 | `June {day}` | `{day} июня` |
+| RU21-FMT-15 | `March` | `Март` |
+| RU21-FMT-16 | `March {day}` | `{day} марта` |
+| RU21-FMT-17 | `May` | `Май` |
+| RU21-FMT-18 | `May {day}` | `{day} мая` |
+| RU21-FMT-19 | `November` | `Ноябрь` |
+| RU21-FMT-20 | `November {day}` | `{day} ноября` |
+| RU21-FMT-21 | `October` | `Октябрь` |
+| RU21-FMT-22 | `October {day}` | `{day} октября` |
+| RU21-FMT-23 | `September` | `Сентябрь` |
+| RU21-FMT-24 | `September {day}` | `{day} сентября` |

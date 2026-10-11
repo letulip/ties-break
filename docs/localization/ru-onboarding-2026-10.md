@@ -258,3 +258,13 @@ owner-approved and therefore appear here as settled terminology.
 
 Read the three economic labels together: `Обеспеченная семья` / `Средний достаток` / `Скромный
    бюджет`. They are intentionally about playable means, not a literal Russian class taxonomy.
+
+## ⚙ 11.10 agent-authored (бланкет) – the content-notice blurb
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+1 key of `identityCopy.ts`: the line under the wizard's content-notice toggle. RU-18 already carries the toggle's label (`Потеря беременности и смерть близкого`); the blurb says what the notice covers and that it can be left out.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ONB-01 | `Some careers meet a pregnancy that ends, or a death in the family. They are written carefully and they are part of the story this game tells. You can leave them out.` | `В некоторых карьерах случается потеря беременности или смерть в семье. Эти события написаны бережно и составляют часть истории, которую рассказывает игра. Их можно отключить.` |

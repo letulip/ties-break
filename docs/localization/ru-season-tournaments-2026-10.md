@@ -633,32 +633,170 @@ records RU-07 and worker-event history RU-11.
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU04-SW01 | `Academy covered` | |
-| RU04-SW02 | `Best result` | |
-| RU04-SW03 | `Earned this season` | |
-| RU04-SW05 | `Final {n} rank` | |
-| RU04-SW08 | `Lost to injury` | |
-| RU04-SW09 | `Matches` | |
-| RU04-SW10 | `Money` | |
-| RU04-SW11 | `No result counted on that table this season. Her other standings are on the Stats tab.` | |
-| RU04-SW12 | `Off-season now: rest, family time, and the block where next year gets built.` | |
-| RU04-SW13 | `Off-season now: rest, school, family time.` | |
-| RU04-SW15 | `Ranking` | |
-| RU04-SW16 | `Record` | |
-| RU04-SW17 | `Season points` | |
-| RU04-SW18 | `Season {n} · wrap-up` | |
-| RU04-SW19 | `She has not played a Junior Tour event yet. Her national standing is on the Stats tab.` | |
-| RU04-SW21 | `Spent this season` | |
-| RU04-SW22 | `That's a season.` | |
-| RU04-SW23 | `Tournaments entered` | |
-| RU04-SW24 | `from #{n}` | |
-| RU04-SW25 | `{a} could not move her {b} ranking` | |
-| RU04-SW26 | `{n} wk` | |
+| RU04-SW01 | `Academy covered` | `Оплатила академия` |
+| RU04-SW02 | `Best result` | `Лучший результат` |
+| RU04-SW03 | `Earned this season` | `Заработано за сезон` |
+| RU04-SW05 | `Final {n} rank` | `Итоговый рейтинг ({n})` |
+| RU04-SW08 | `Lost to injury` | `Потеряно из-за травм` |
+| RU04-SW09 | `Matches` | `Матчи` |
+| RU04-SW10 | `Money` | `Деньги` |
+| RU04-SW11 | `No result counted on that table this season. Her other standings are on the Stats tab.` | `В этой таблице за сезон нет зачётных результатов. Остальные её места в рейтингах – на вкладке «Рейтинг».` |
+| RU04-SW12 | `Off-season now: rest, family time, and the block where next year gets built.` | `Теперь межсезонье: отдых, время с семьёй и работа над планом на следующий год.` |
+| RU04-SW13 | `Off-season now: rest, school, family time.` | `Теперь межсезонье: отдых, школа, время с семьёй.` |
+| RU04-SW15 | `Ranking` | `Рейтинг` |
+| RU04-SW16 | `Record` | `Победы и поражения` |
+| RU04-SW17 | `Season points` | `Очки сезона` |
+| RU04-SW18 | `Season {n} · wrap-up` | `Сезон {n} · итоги` |
+| RU04-SW19 | `She has not played a Junior Tour event yet. Her national standing is on the Stats tab.` | `Она ещё не играла на юниорском туре. Её национальное место – на вкладке «Рейтинг».` |
+| RU04-SW21 | `Spent this season` | `Потрачено за сезон` |
+| RU04-SW22 | `That's a season.` | `Вот и сезон позади.` |
+| RU04-SW23 | `Tournaments entered` | `Заявлено турниров` |
+| RU04-SW24 | `from #{n}` | `с №{n}` |
+| RU04-SW25 | `{a} could not move her {b} ranking` | `Не могли повлиять на её рейтинг ({b}): {a}` |
+| RU04-SW26 | `{n} wk` | `{n} нед.` |
 
 ### ⚙ 10.10 добавка (№40, усмотрение архитектора): отчёт промежутка недель (WeekSpanReport) – русская колонка твоя (DRAFT); общие ключи (Close, Continue, #{rank}, Unranked) живут в своих таблицах
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU04-SP01 | `1 week passed. Everything they raised is below.` | |
-| RU04-SP02 | `Nothing was raised in that time.` | |
-| RU04-SP03 | `{n} weeks passed. Everything they raised is below.` | |
+| RU04-SP01 | `1 week passed. Everything they raised is below.` | `Прошла 1 неделя. Всё, что произошло за это время, – ниже.` |
+| RU04-SP02 | `Nothing was raised in that time.` | `За это время ничего не произошло.` |
+| RU04-SP03 | `{n} weeks passed. Everything they raised is below.` | `{n, plural, one {Прошла {n} неделя} few {Прошли {n} недели} many {Прошло {n} недель} other {Прошло {n} недели}}. Всё, что произошло за это время, – ниже.` |
+
+## ⚙ 11.10 agent-authored (бланкет) – the Season screen, the tournament flow and the tier states, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+125 keys of the Season screen (`SeasonScreen.vue`), the tournament flow and its bracket (`TournamentFlow.vue`, `BracketTabs.vue`), the tier states (`tierState.ts`), the tour guide and briefing, and the calendar tooltips the two screens share. The 24 scaffold cells of the 10.10 №40 addition (`SeasonSummaryDialog`, `WeekSpanReport`) are filled in place above and are not repeated.
+
+**RU-04's own words are kept wherever they say the same thing.** Most of them sit in rows with four cells under a three-cell header – the parser skips such rows as malformed, so they never compiled; the cells below are their compiled home and the skipped rows stay untouched: §12's compact stage tabs (`Ф`, `ПФ`, `ЧФ`, `1/8` … `1/64`) and the path marks `В` / `П`, the draw-rounds and finale aria lines, `Наша оценка:` / `Тренер говорит:`, `Пауза`, `нет`, the supply phrases (`До конца сезона: … доступных турниров за … недель`), the §4 clause templates for the opening conditions (`с {age} лет`, `в возрасте {min}–{max} лет`, `место в международном рейтинге: не ниже №{cut}`, `верхние {pct}% …`, `доступен с начала карьеры`, joined by `и`) RU-03 M08–M11 (the wild-card tooltip, the exhaustion line, the entered state), §8.1's lock vocabulary (`Доступен – есть в календаре`, `Откроется в {age}`, `Открывается в первых {cut} местах рейтинга`, `Возрастной лимит тура – …`, `Семейная поездка – …`), §8.2's confirmations Q01 – Q07 (`Подать заявку на турнир «…»`, `Играть несмотря на усталость`, `Взнос … вернётся полностью`), §9's W13 / W14 / R03 (the open-but-unscheduled note, the stacked weeks, the recovery offer) and the draw-seam closing lines (`Но с жеребьёвкой повезло.`, `Но самое трудное здесь – первый круг.`).
+
+**The tier-state sentences read their holes in nominative positions.** `{tier}` is the engine's tier label (`Local Open`, `World Tour 15`) – a name, put inside `«…»` after `Уровень` and never declined; `{when}` is the string `tierOpensWhen()` builds from the clauses above (the sentence says `откроется – {when}`); `{gap}` is `gapInResultsNote`'s English phrase (L2-4's named leftover) and stays after a dash; `{unit}` is RU-21's genitive-plural point unit. `Round of {0}` cannot be RU02B-LO's `1/{remaining / 2} финала` (an ICU message does no arithmetic), so the rare non-power-of-two round reads `Круг из N участниц`; the powers of two keep `1/8 … 1/64` through the compact tabs. The coach's draw-seam clauses follow a field reading and open with `Но` or state the draw outright. `def.` is the plain half of a same-file twin (`poster|def.`): its Russian is parked below as `QUESTION`, and until its call sites are tagged the two path rows of the flow read `def. I. Aigner` beside `уступила I. Aigner`.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-SEA-01 | `Draw rounds` | `Раунды турнирной сетки` |
+| RU21-SEA-02 | `Her match – {0} vs {1}` | `Её матч: {0} против {1}` |
+| RU21-SEA-03 | `Semifinals:` | `В полуфиналах:` |
+| RU21-SEA-04 | `The Final` | `Финал` |
+| RU21-SEA-05 | `The final – {0} vs {1}` | `Финал: {0} против {1}` |
+| RU21-SEA-06 | `stage\|F` | `Ф` |
+| RU21-SEA-07 | `stage\|QF` | `ЧФ` |
+| RU21-SEA-08 | `stage\|R128` | `1/64` |
+| RU21-SEA-09 | `stage\|R16` | `1/8` |
+| RU21-SEA-10 | `stage\|R32` | `1/16` |
+| RU21-SEA-11 | `stage\|R64` | `1/32` |
+| RU21-SEA-12 | `stage\|R{0}` | `из {0}` |
+| RU21-SEA-13 | `stage\|SF` | `ПФ` |
+| RU21-SEA-14 | `Exhausted – racing risks injury.` | `Вымоталась – плотный график повышает риск травмы.` |
+| RU21-SEA-15 | `One of the {0} places this tournament holds for players of the host nation – she is outside the acceptance list.` | `Одно из {0, plural, one {{0} места} few {{0} мест} many {{0} мест} other {{0} места}}, которые турнир оставляет игрокам страны-хозяйки: в обычный список участниц она не проходит.` |
+| RU21-SEA-16 | `Also open to her: {0} – none scheduled in the next {1} weeks. Not locked, just rarer: keep watching the calendar.` | `Ей также доступны: {0}. В ближайшие {1, plural, one {{1} неделю} few {{1} недели} many {{1} недель} other {{1} недели}} их нет в календаре. Это не блокировка – просто такие турниры проходят реже; следите за календарём.` |
+| RU21-SEA-17 | `Book it` | `Забронировать` |
+| RU21-SEA-18 | `Cancel her entry to {event} ({week})? Entries closed on {deadline}, so the {fee} entry fee is NOT refunded. The week frees up for a practice match or a family week.` | `Отменить заявку на турнир «{event}» ({week})? Приём заявок закончился {deadline}, поэтому взнос {fee} не вернётся. Неделю можно будет отдать тренировочному матчу или семье.` |
+| RU21-SEA-19 | `Cancel the entry` | `Отменить заявку` |
+| RU21-SEA-20 | `Cancel the match` | `Отменить матч` |
+| RU21-SEA-21 | `Cancel the practice match in {week}? {fee} comes back in full.` | `Отменить тренировочный матч ({week})? Сумма {fee} вернётся полностью.` |
+| RU21-SEA-22 | `Cancel {package} in {week}? Nothing was paid for it.` | `Отменить «{package}» ({week})? За это ничего не заплачено.` |
+| RU21-SEA-23 | `Cancel {package} in {week}? {fee} comes back in full.` | `Отменить «{package}» ({week})? Сумма {fee} вернётся полностью.` |
+| RU21-SEA-24 | `Closed {week}` | `заявки закрыты · {week}` |
+| RU21-SEA-25 | `Coach says:` | `Тренер говорит:` |
+| RU21-SEA-26 | `Condition {0}/100. A week away in {1} would bring her back fresher – nothing is booked until you say so.` | `Форма: {0}/100. Неделя отдыха ({1}) поможет восстановиться. Мы ничего не забронируем без вашего решения.` |
+| RU21-SEA-27 | `Enter anyway` | `Всё равно заявиться` |
+| RU21-SEA-28 | `Enter {event} ({week}, {surface})? {fee}` | `Подать заявку на турнир «{event}» ({week}, {surface})? {fee}` |
+| RU21-SEA-29 | `Entry fee {fee}.` | `Взнос – {fee}.` |
+| RU21-SEA-30 | `Family vacation – {package}` | `Семейная поездка – {package}` |
+| RU21-SEA-31 | `First round: {0}, {1}.` | `Первый круг: {0}, {1}.` |
+| RU21-SEA-32 | `Her first one is winnable, though.` | `Но первую соперницу можно проходить.` |
+| RU21-SEA-33 | `Injured – rest up` | `Травма – нужен отдых` |
+| RU21-SEA-34 | `No entry fee – the trip is still yours to pay for.` | `Взноса нет, но поездку семья оплачивает сама.` |
+| RU21-SEA-35 | `Not available this week` | `На этой неделе недоступен` |
+| RU21-SEA-36 | `Of everyone here, she drew the wrong one first.` | `Из всего списка в первом круге досталась не та.` |
+| RU21-SEA-37 | `Practice match in {week} – {fee}. No ranking points.` | `Тренировочный матч ({week}) – {fee}. Рейтинговых очков нет.` |
+| RU21-SEA-38 | `Practice match with the coach in {week} – {fee}. No ranking points.` | `Тренировочный матч с тренером ({week}) – {fee}. Рейтинговых очков нет.` |
+| RU21-SEA-39 | `Push through` | `Играть несмотря на усталость` |
+| RU21-SEA-40 | `She could use a week off – maybe a family week?` | `Ей не помешает неделя отдыха – может, с семьёй?` |
+| RU21-SEA-41 | `She has a way in, though – look who she opens against.` | `Но вход в турнир есть – достаточно посмотреть, с кем она начинает.` |
+| RU21-SEA-42 | `She has drawn the one who can stop her, though.` | `Но ей попалась как раз та, кто может её остановить.` |
+| RU21-SEA-43 | `She is worn out – maybe a family week?` | `Она вымоталась – может, провести неделю с семьёй?` |
+| RU21-SEA-44 | `The draw has been kind, though.` | `Но с жеребьёвкой повезло.` |
+| RU21-SEA-45 | `The first round is the hard part, though.` | `Но самое трудное здесь – первый круг.` |
+| RU21-SEA-46 | `The junior tour caps how many international tournaments she may enter in the year she is this age – counted from birthday to birthday. This is where she stands against it.` | `Юниорский тур ограничивает число международных турниров между двумя днями рождения. Здесь видно, сколько из лимита уже использовано.` |
+| RU21-SEA-47 | `The tour's age rule caps how many professional tournaments she may enter in the year she is this age – counted from birthday to birthday. This is where she stands against it.` | `Возрастное правило тура ограничивает число профессиональных турниров между двумя днями рождения. Здесь видно, сколько из лимита уже использовано.` |
+| RU21-SEA-48 | `Weeks can carry more than one event now – she can only play one, so the pick is yours.` | `На одной неделе теперь может быть несколько турниров. Сыграть можно только один – выбирать вам.` |
+| RU21-SEA-49 | `Withdraw from {event} ({week})? Entry fee {fee} will be refunded.` | `Сняться с турнира «{event}» ({week})? Взнос {fee} вернётся полностью.` |
+| RU21-SEA-50 | `Year limit reached` | `Годовой лимит исчерпан` |
+| RU21-SEA-51 | `Your read:` | `Наша оценка:` |
+| RU21-SEA-52 | `junior entries {used} / {limit}` | `юниорские заявки {used} / {limit}` |
+| RU21-SEA-53 | `pager\|Next` | `Вперёд` |
+| RU21-SEA-54 | `phase\|Off` | `Пауза` |
+| RU21-SEA-55 | `pro entries {used} / {limit}` | `профессиональные заявки {used} / {limit}` |
+| RU21-SEA-56 | `skipping {0}` | `пропускает турнир «{0}»` |
+| RU21-SEA-57 | `supply\|{code} {count}` | `{code}: {count}` |
+| RU21-SEA-58 | `{0} left to enter over {1} weeks` | `До конца сезона: {0, plural, one {{0} доступный турнир} few {{0} доступных турнира} many {{0} доступных турниров} other {{0} доступного турнира}} за {1, plural, one {{1} неделю} few {{1} недели} many {{1} недель} other {{1} недели}}` |
+| RU21-SEA-59 | `{0} of them on the cards below` | `На карточках ниже показано: {0, plural, one {{0} доступный турнир} few {{0} доступных турнира} many {{0} доступных турниров} other {{0} доступного турнира}}` |
+| RU21-SEA-60 | `{0}, {1} - open the planner` | `{0}, {1} – открыть план недели` |
+| RU21-SEA-61 | `{caution} Enter {event} ({week}, {surface}) anyway? {fee}` | `{caution} Всё равно подать заявку на турнир «{event}» ({week}, {surface})? {fee}` |
+| RU21-SEA-62 | `{caution} Enter {event} ({week}, {surface})? {fee}` | `{caution} Всё равно подать заявку на турнир «{event}» ({week}, {surface})? {fee}` |
+| RU21-SEA-63 | `{label} in {week} – {price}, +{gain} condition. No tournaments that week.` | `{label} ({week}) – {price}, форма +{gain}. Турниров на этой неделе не будет.` |
+| RU21-SEA-64 | `Tour age rule – {used} of {limit}` | `Возрастной лимит тура – {used} из {limit}` |
+| RU21-SEA-65 | `Year limit – {used} of {limit}` | `Годовой лимит – {used} из {limit}` |
+| RU21-SEA-66 | `fee\|none` | `нет` |
+| RU21-SEA-67 | `The commitment rules now apply.` | `Теперь действуют правила обязательного участия.` |
+| RU21-SEA-68 | `Tour office · {0}` | `Администрация тура · {0}` |
+| RU21-SEA-69 | `What declining costs` | `Во что обойдётся отказ` |
+| RU21-SEA-70 | `What the tour asks for` | `Чего требует тур` |
+| RU21-SEA-71 | `At the tournament with her this week – one additional fare on this trip.` | `На этой неделе тренер с ней на турнире – ещё один билет в расходах поездки.` |
+| RU21-SEA-72 | `Five wins for the title.` | `До титула – пять побед.` |
+| RU21-SEA-73 | `Four wins for the title.` | `До титула – четыре победы.` |
+| RU21-SEA-74 | `Her condition going into this tournament: {0} percent` | `Форма перед турниром: {0, plural, one {{0} процент} few {{0} процента} many {{0} процентов} other {{0} процента}}` |
+| RU21-SEA-75 | `One win for the title.` | `До титула – одна победа.` |
+| RU21-SEA-76 | `Round of {0}` | `Круг из {0, plural, one {{0} участницы} few {{0} участниц} many {{0} участниц} other {{0} участницы}}` |
+| RU21-SEA-77 | `Six wins for the title.` | `До титула – шесть побед.` |
+| RU21-SEA-78 | `Skip event` | `Пропустить турнир` |
+| RU21-SEA-79 | `Skip {0}? The entry fee is forfeited – the list closed with her on it. Travel is refunded and the week passes without playing.` | `Пропустить турнир «{0}»? Заявочный взнос не возвращается – список закрылся, когда она уже была в нём. Дорожные расходы вернутся, а неделя пройдёт без игры.` |
+| RU21-SEA-80 | `Three wins for the title.` | `До титула – три победы.` |
+| RU21-SEA-81 | `Two wins for the title.` | `До титула – две победы.` |
+| RU21-SEA-82 | `def.` | `обыграла` – ⚙ 11.10 the plain key and its tagged twin live in one file (`TournamentFlow.vue`): the join cannot tell them apart, so the plain key needs its own ctx tag in the code (class №15/№4) – the Russian waits here `QUESTION` |
+| RU21-SEA-83 | `in the Final` | `в финале` |
+| RU21-SEA-84 | `path\|L` | `П` |
+| RU21-SEA-85 | `path\|W` | `В` |
+| RU21-SEA-86 | `poster\|def.` | `обыграла` |
+| RU21-SEA-87 | `poster\|lost to` | `уступила` |
+| RU21-SEA-88 | `{0} wins for the title.` | `До титула – {0, plural, one {{0} победа} few {{0} победы} many {{0} побед} other {{0} победы}}.` |
+| RU21-SEA-89 | `Age {0}` | `{0, plural, one {{0} год} few {{0} года} many {{0} лет} other {{0} года}}` |
+| RU21-SEA-90 | `International points come from Junior Tour events.` | `Международные очки приносят турниры юниорского тура.` |
+| RU21-SEA-91 | `National points come from Local, Regional and National events, and the table starts again each season.` | `Национальные очки приносят местные, региональные и национальные турниры; таблица начинается заново каждый сезон.` |
+| RU21-SEA-92 | `National points come from Local, Regional and National events.` | `Национальные очки приносят местные, региональные и национальные турниры.` |
+| RU21-SEA-93 | `Not on the list yet` | `Пока не в списке` |
+| RU21-SEA-94 | `Open – none in {weeks} weeks` | `Доступен – в ближайшие {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недели}} его нет` |
+| RU21-SEA-95 | `Open – on the calendar` | `Доступен – есть в календаре` |
+| RU21-SEA-96 | `Opens at {age}` | `Откроется в {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} года}}` |
+| RU21-SEA-97 | `Opens in the top {cut}` | `Открывается в первых {cut} местах рейтинга` |
+| RU21-SEA-98 | `Outgrown` | `Уровень пройден` |
+| RU21-SEA-99 | `Past this level – none in {weeks} weeks` | `Уровень пройден – в ближайшие {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недели}} его нет` |
+| RU21-SEA-100 | `Past this level – still open` | `Уровень пройден – но доступен` |
+| RU21-SEA-101 | `Reach {required} {unit}` | `Набрать {required} {unit}` |
+| RU21-SEA-102 | `Under-{n}` | `Младше {n}` |
+| RU21-SEA-103 | `age {age}` | `с {age, plural, one {{age} года} few {{age} лет} many {{age} лет} other {{age} года}}` |
+| RU21-SEA-104 | `age {min}-{max}` | `в возрасте {min}–{max, plural, one {{max} год} few {{max} года} many {{max} лет} other {{max} года}}` |
+| RU21-SEA-105 | `gate\|{0} and {1}` | `{0} и {1}` |
+| RU21-SEA-106 | `gate\|{points} {unit}` | `{points} {unit}` |
+| RU21-SEA-107 | `open from the start` | `доступен с начала карьеры` |
+| RU21-SEA-108 | `the top {cut} internationally` | `место в международном рейтинге: не ниже №{cut}` |
+| RU21-SEA-109 | `the top {pct}% internationally` | `верхние {pct}% международного рейтинга` |
+| RU21-SEA-110 | `{current} / {required} {unit}` | `{current} из {required} {unit}` |
+| RU21-SEA-111 | `{points} {unit} in one season` | `{points} {unit} за один сезон` |
+| RU21-SEA-112 | `{tier} is under-{n} – at {age} she has aged out of it.` | `Уровень «{tier}» – для возраста младше {n}: в {age} она уже из него выросла.` |
+| RU21-SEA-113 | `{tier} – locked: {more} more {unit} (she has {has} of {need}) – {gap}. {earned}` | `Уровень «{tier}» закрыт: нужно ещё {more} {unit} (у неё {has} из {need}) – {gap}. {earned}` |
+| RU21-SEA-114 | `{tier} – locked: {more} more {unit} (she has {has} of {need}). {earned}` | `Уровень «{tier}» закрыт: нужно ещё {more} {unit} (у неё {has} из {need}). {earned}` |
+| RU21-SEA-115 | `{tier} – open to her, but none is scheduled in the next {weeks} weeks. This tier comes round less often than the others; it is not locked.` | `Уровень «{tier}» ей доступен, но в ближайшие {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недели}} турниров нет. Этот уровень проходит реже остальных, он не закрыт.` |
+| RU21-SEA-116 | `{tier} – open to her, next one {when}` | `Уровень «{tier}» ей доступен, ближайший турнир: {when}` |
+| RU21-SEA-117 | `{tier} – opens at {when}` | `Уровень «{tier}» откроется – {when}` |
+| RU21-SEA-118 | `{tier} – opens at {when}. Entry here is an acceptance list read off her international ranking – she has no international ranking yet.` | `Уровень «{tier}» откроется – {when}. Допуск сюда идёт по списку, который строится по международному рейтингу, а международного рейтинга у неё пока нет.` |
+| RU21-SEA-119 | `{tier} – opens at {when}. Entry here is an acceptance list read off her international ranking – she is #{rank}.` | `Уровень «{tier}» откроется – {when}. Допуск сюда идёт по списку, который строится по международному рейтингу; сейчас она – №{rank}.` |
+| RU21-SEA-120 | `{tier} – outgrown: she is past this level` | `Уровень «{tier}» пройден: она его переросла` |
+| RU21-SEA-121 | `{tier} – past this level but still hers to enter, but none is scheduled in the next {weeks} weeks. This tier comes round less often than the others; it is not locked.` | `Уровень «{tier}» ею пройден, но заявляться на него по-прежнему можно; в ближайшие {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недели}} турниров нет. Этот уровень проходит реже остальных, он не закрыт.` |
+| RU21-SEA-122 | `{tier} – she has used all {limit} of her international events for this year (age {age}). Not locked: a fresh allowance arrives on her next birthday.` | `Уровень «{tier}»: на этот год (возраст – {age}) использованы все {limit, plural, one {{limit} международный турнир} few {{limit} международных турнира} many {{limit} международных турниров} other {{limit} международного турнира}}. Он не закрыт: новый лимит появится в её следующий день рождения.` |
+| RU21-SEA-123 | `{tier} – she is past this level, and it is still hers to enter: next one {when}. The stronger rung on a week takes the card.` | `Уровень «{tier}» ею пройден, но заявляться на него можно: ближайший турнир – {when}. Если на неделе несколько уровней, в карточку попадает более сильный.` |
+| RU21-SEA-124 | `{tier} – she is past this level.` | `Уровень «{tier}» ею пройден.` |
+| RU21-SEA-125 | `{tier} – the tour's age rule allows {limit} pro entries at {age} and she has used all {used}. Not locked: a fresh allowance arrives on her next birthday, and the junior and national events stay open.` | `Уровень «{tier}»: по возрастному правилу тура в {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} года}} ей доступно не больше {limit, plural, one {{limit} профессиональной заявки} few {{limit} профессиональных заявок} many {{limit} профессиональных заявок} other {{limit} профессиональной заявки}}, и использовано уже {used}. Он не закрыт: новый лимит появится в её следующий день рождения, а юниорские и национальные турниры остаются открытыми.` |

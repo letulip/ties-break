@@ -212,7 +212,7 @@ export function compiledArm(o: {
   const wired = o.wiredHere.filter((key) => o.ru[key] !== undefined)
   const observed = wired.filter((key) => o.asked.has(key))
   const unreached = wired.filter((key) => !o.asked.has(key))
-  expect(observed.length / Math.max(1, wired.length), `${o.what}: the poses reach ${observed.length} of the ${wired.length} compiled, wired keys of these surfaces – coverage fell below its floor (extend the pose, or move the floor on purpose)`).toBeGreaterThanOrEqual(o.coverageFloor)
+  expect(observed.length / Math.max(1, wired.length), `${o.what}: the poses reach ${observed.length} of the ${wired.length} compiled, wired keys of these surfaces – coverage fell below its floor (extend the pose, or move the floor on purpose). Not reached: ${unreached.slice(0, 80).map((k) => JSON.stringify(k.slice(0, 60))).join(' | ')}`).toBeGreaterThanOrEqual(o.coverageFloor)
   return { observed, unreached, askedCompiled }
 }
 

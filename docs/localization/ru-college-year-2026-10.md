@@ -141,3 +141,29 @@ year card, this component does not select `Spent` when negative. Russian therefo
 quantity neutrally as `Изменение баланса семьи`, preserving the signed number. The university
 years are read from banked year records even if live match results were pruned. Graduation and
 early leaving must not be conflated.
+
+## ⚙ 11.10 agent-authored (бланкет) – the university year card, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+17 keys of `CollegeYearCard.vue` and `CollegeDoneDialog.vue`. The siblings with the other count (`{0} years spent`, `She went out in the {0} – {1} matches, {2} wins.`) already carried Russian; the singular and mixed forms are cut in their mould (`Выбыла на стадии «{0}»: 1 матч, 1 победа.`). The two `Year {0} of {1} … {2} spent` rows RU-12D parked as `QUESTION` (the key's `{2}` is the number of years spent, not money) are read the way their Russian was drafted: `Идёт {0}-й год из {1}; завершено 2 года`. The ordinal of the nation's place arrives as a bare number, so the suffix is the neuter `-е` that suits every number (`заняла 3-е место`); `{0} selectors read this result …` receives the competition label (`the Nations Cup`) in English and puts it in brackets.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-CLY-01 | `{0} to {1}` | `{0} → {1}` |
+| RU21-CLY-02 | `1 dual match for the programme` | `1 матч между командами университетов` |
+| RU21-CLY-03 | `1 year spent, {0} left on the scholarship.` | `Позади 1 год; стипендии осталось на {0, plural, one {{0} год} few {{0} года} many {{0} лет} other {{0} года}}.` |
+| RU21-CLY-04 | `A scholarship, and the family pays whatever the award does not. She can leave at the end of any year.` | `У неё стипендия; всё, что она не покрывает, оплачивает семья. После любого учебного года она может уйти.` |
+| RU21-CLY-05 | `Her country called – named in the squad, never on court, and the nation finished {0}th.` | `Её вызвали в сборную: вошла в состав, но на корт не вышла. Сборная заняла {0}-е место.` |
+| RU21-CLY-06 | `Her country called – {0} of {1} rubbers won, and the nation finished {2}th.` | `Её вызвали в сборную: выиграла {0} из {1, plural, one {{1} матча} few {{1} матчей} many {{1} матчей} other {{1} матча}} за сборную. Сборная заняла {2}-е место.` |
+| RU21-CLY-07 | `She went out in the {0} – 1 match, 1 win.` | `Выбыла на стадии «{0}»: 1 матч, 1 победа.` |
+| RU21-CLY-08 | `She went out in the {0} – 1 match, {1} wins.` | `Выбыла на стадии «{0}»: 1 матч, {1, plural, one {{1} победа} few {{1} победы} many {{1} побед} other {{1} победы}}.` |
+| RU21-CLY-09 | `She went out in the {0} – {1} matches, 1 win.` | `Выбыла на стадии «{0}»: {1, plural, one {{1} матч} few {{1} матча} many {{1} матчей} other {{1} матча}}, 1 победа.` |
+| RU21-CLY-10 | `She won it – 1 match, 1 win.` | `Она выиграла Студенческую лигу: 1 матч, 1 победа.` |
+| RU21-CLY-11 | `She won it – 1 match, {0} wins.` | `Она выиграла Студенческую лигу: 1 матч, {0, plural, one {{0} победа} few {{0} победы} many {{0} побед} other {{0} победы}}.` |
+| RU21-CLY-12 | `She won it – {0} matches, 1 win.` | `Она выиграла Студенческую лигу: {0, plural, one {{0} матч} few {{0} матча} many {{0} матчей} other {{0} матча}}, 1 победа.` |
+| RU21-CLY-13 | `Year {0} of {1} is next – none spent` | `Впереди {0}-й год из {1}; завершённых пока нет` |
+| RU21-CLY-14 | `Year {0} of {1} is next – {2} spent` | `Впереди {0}-й год из {1}; завершено {2, plural, one {{2} год} few {{2} года} many {{2} лет} other {{2} года}}` |
+| RU21-CLY-15 | `Year {0} of {1} under way – none spent` | `Идёт {0}-й год из {1}; завершённых пока нет` |
+| RU21-CLY-16 | `Year {0} of {1} under way – {2} spent` | `Идёт {0}-й год из {1}; завершено {2, plural, one {{2} год} few {{2} года} many {{2} лет} other {{2} года}}` |
+| RU21-CLY-17 | `{0} selectors read this result when they pick the squad.` | `Этот результат учитывают отборщики ({0}) при выборе состава сборной.` |

@@ -1224,3 +1224,123 @@ source-coverage pass. Every Russian line remains `DRAFT` pending the owner's rea
 | --- | --- | --- |
 | RU21-KNK-29 | `Resting the {0} – a week off the training court.` | `Даём отдохнуть больному месту: {0}. Неделя без тренировочного корта.` |
 | RU21-KNK-30 | `Training through the {0}. The coach knows.` | `Продолжаем тренировки, несмотря на боль: {0}. Тренер в курсе.` |
+
+## ⚙ 11.10 agent-authored (бланкет) – the coach market, the week plan, the injury stop and the profile, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+111 keys of `CoachMarketScreen.vue`, `HerWeekTab.vue`, `PlanWeekSheet.vue`, `InjuryStopDialog.vue`, `KidScreen.vue`, `SkillsRadar.vue` and `weekGrid.ts`. RU-05's own sentences are kept wherever they say the same thing – and most of them (W03, W06–W08, W11, W12, W16, W17, W24–W27, R11) sit in rows with four cells under a three-cell header that the parser skips, so they never compiled; the cells below are their compiled home. `{0} sessions, {1} hours{2} – {3}.{4}` is a frame whose parts are keys of their own (`, в 2 дня по две тренировки`, `3 дня без занятий`, `$120 за неделю.`); the Russian frame joins them with a semicolon and counts both nouns. The coach-tier words (`Элитный`, `Средний` …) are adjectives, so `{0} tier` is `{0} уровень`. The trips counted phrase (`1 trip`, `{0} trips`) is handed into RU05-C19 (`В следующих {2} …`, a prepositional) and RU05-C20 (`По заявленным на сезон {2} …`, a dative): one phrase cannot be both, it is written in the prepositional and C20 reads wrong until it is re-cut. The session kinds of the week grid are short nouns (`Подача`, `Приём подачи`, `Игра с лёта`).
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-PRF-01 | `, {0} of them two sessions a day` | `, в {0, plural, one {{0} день} few {{0} дня} many {{0} дней} other {{0} дня}} по две тренировки` |
+| RU21-PRF-02 | `1 day off` | `один день без занятий` |
+| RU21-PRF-03 | `No school this week – a day can take two sessions, if you want them.` | `На этой неделе нет школы – в день можно провести две тренировки, если захотите.` |
+| RU21-PRF-04 | `One session a day this week – the dots are the room each day has left.` | `На этой неделе – по одной тренировке в день; точки показывают, сколько места осталось в каждом дне.` |
+| RU21-PRF-05 | `One session a day while school is on – the dots are the room each day has left.` | `Пока идёт школа – по одной тренировке в день; точки показывают, сколько места осталось в каждом дне.` |
+| RU21-PRF-06 | `Tick "{0}" to plan it again – it lets the coach go.` | `Отметьте «{0}», чтобы снова планировать неделю самим – тренер при этом уходит.` |
+| RU21-PRF-07 | `Your coach` | `Ваш тренер` |
+| RU21-PRF-08 | `{0} days off` | `{0, plural, one {{0} день} few {{0} дня} many {{0} дней} other {{0} дня}} без занятий` |
+| RU21-PRF-09 | `{0} h` | `{0} ч` |
+| RU21-PRF-10 | `{0} on {1}` | `{0}: {1}` |
+| RU21-PRF-11 | `{0} sessions is her maximum – untick one to move it.` | `Максимум для неё – {0, plural, one {{0} тренировка} few {{0} тренировки} many {{0} тренировок} other {{0} тренировки}}; чтобы перенести тренировку, снимите отметку с одной из них.` |
+| RU21-PRF-12 | `{0} sessions is her minimum – tick another before you take one away.` | `Минимум для неё – {0, plural, one {{0} тренировка} few {{0} тренировки} many {{0} тренировок} other {{0} тренировки}}; прежде чем снять отметку, поставьте её на другом дне.` |
+| RU21-PRF-13 | `{0} sessions, {1} hours{2} – {3}.{4}` | `{0, plural, one {{0} тренировка} few {{0} тренировки} many {{0} тренировок} other {{0} тренировки}}, {1, plural, one {{1} час} few {{1} часа} many {{1} часов} other {{1} часа}}{2}; {3}.{4}` |
+| RU21-PRF-14 | `{0} sets her week.` | `{0} планирует её неделю.` |
+| RU21-PRF-15 | `{0} this week.` | `{0} за неделю.` |
+| RU21-PRF-16 | `{0} – {1} of {2} sessions` | `{0} – {1} из {2, plural, one {{2} тренировки} few {{2} тренировок} many {{2} тренировок} other {{2} тренировки}}` |
+| RU21-PRF-17 | `Fees refunded: +{0}` | `Возвращено взносов: +{0}` |
+| RU21-PRF-18 | `Forfeited: {0}` | `Взнос потерян: {0}` |
+| RU21-PRF-19 | `Major` | `Серьёзная` |
+| RU21-PRF-20 | `Minor` | `Лёгкая` |
+| RU21-PRF-21 | `Moderate` | `Умеренная` |
+| RU21-PRF-22 | `Nothing – the layoff reaches no entry she holds` | `Ничего – пауза не затрагивает ни одной её заявки` |
+| RU21-PRF-23 | `Nothing – those lists had closed.` | `Ничего – эти списки уже закрылись.` |
+| RU21-PRF-24 | `Off court – it came on between matches.` | `Вне корта – травма появилась между матчами.` |
+| RU21-PRF-25 | `On court – she had to stop during a practice match against {0}.` | `На корте – она не смогла доиграть тренировочный матч; соперница – {0}.` |
+| RU21-PRF-26 | `On court – she had to stop during a practice match.` | `На корте – она не смогла доиграть тренировочный матч.` |
+| RU21-PRF-27 | `On court – she had to stop mid-match against {0} in the {1}. The round she had reached is hers.` | `На корте – она не смогла доиграть матч; соперница – {0}, стадия – {1}. Достигнутый круг остаётся за ней.` |
+| RU21-PRF-28 | `On court – she had to stop mid-match against {0}. The round she had reached is hers.` | `На корте – она не смогла доиграть матч; соперница – {0}. Достигнутый круг остаётся за ней.` |
+| RU21-PRF-29 | `On court – she had to stop mid-match in the {0}. The round she had reached is hers.` | `На корте – она не смогла доиграть матч; стадия – {0}. Достигнутый круг остаётся за ней.` |
+| RU21-PRF-30 | `On court – she had to stop mid-match. The round she had reached is hers.` | `На корте – она не смогла доиграть матч. Достигнутый круг остаётся за ней.` |
+| RU21-PRF-31 | `Only the weeks she is out are cancelled – anything from {0} on is still booked.` | `Отменены только недели, которые она пропускает; всё, что идёт с {0} и позже, остаётся в силе.` |
+| RU21-PRF-32 | `Severe` | `Тяжёлая` |
+| RU21-PRF-33 | `She comes back from this. Rest and rehab now – the news feed tracks her recovery.` | `Она оправится от этой травмы. Сейчас – отдых и восстановление; как она поправляется, видно в ленте новостей.` |
+| RU21-PRF-34 | `With the masseur – more like {0} wk, back around {1}.` | `С массажистом – скорее {0} нед. Вернётся примерно: {1}.` |
+| RU21-PRF-35 | `With the masseur – more like {0} wks, back around {1}.` | `С массажистом – скорее {0} нед. Вернётся примерно: {1}.` |
+| RU21-PRF-36 | `Withdrawn: {0}` | `Заявка снята: {0}` |
+| RU21-PRF-37 | `~{0} wk – back around {1}` | `~{0} нед. – вернётся примерно: {1}` |
+| RU21-PRF-38 | `~{0} wks – back around {1}` | `~{0} нед. – вернётся примерно: {1}` |
+| RU21-PRF-39 | `+{0} condition → {1}/100` | `Форма +{0} → {1}/100` |
+| RU21-PRF-40 | `A friendly at the club – watchable, no ranking points. One notch of fatigue, and she keeps her base recovery but loses the rest bonus for the week.` | `Тренировочный матч в клубе можно посмотреть, но рейтинговых очков за него нет. Он добавит немного усталости: обычное восстановление сохранится, а бонус за неделю отдыха – нет.` |
+| RU21-PRF-41 | `A week away – no tournaments that week, and she comes back fresher. Cancel any time before the week starts for a full refund.` | `Неделя отдыха без турниров – она вернётся свежее. До начала недели бронь можно отменить с полным возвратом.` |
+| RU21-PRF-42 | `Cancel any time before the week starts and nothing is owed either way.` | `До начала недели бронь можно отменить: платить всё равно не за что.` |
+| RU21-PRF-43 | `Cancel any time before the week starts and the money comes back in full.` | `До начала недели бронь можно отменить с полным возвратом.` |
+| RU21-PRF-44 | `Off-season – family time, no matches. Try the Vacation tab.` | `Межсезонье – время для семьи, без матчей. Выберите вкладку «Отпуск».` |
+| RU21-PRF-45 | `plan\|Cancel` | `Отмена` |
+| RU21-PRF-46 | `{0} A friendly is still a match, so it is out too at condition {1} – try the Vacation tab, or leave the week to training.` | `{0} Тренировочный матч тоже требует допуска, а при форме {1}/100 его нет. Выберите отпуск или оставьте неделю для обычных тренировок.` |
+| RU21-PRF-47 | `{0} A friendly is still a match, so the week books nothing until she is back – leave it to rest.` | `{0} Тренировочный матч всё равно остаётся матчем, поэтому до её возвращения забронировать его нельзя. Оставьте эту неделю для отдыха.` |
+| RU21-PRF-48 | `{0} A week away is still hers to book – the trip is rest, not tennis.` | `{0} Отпуск всё равно можно забронировать: поездка – это отдых, а не теннис.` |
+| RU21-PRF-49 | `{0} · condition {1}/100` | `{0} · форма {1}/100` |
+| RU21-PRF-50 | `{0} – booked, {1}. She plays no tournament while she is away.` | `{0} – забронировано: {1}. На этой неделе она не играет на турнирах.` |
+| RU21-PRF-51 | `· injury risk −{0}% for {1} weeks` | `· риск травмы −{0}% на {1, plural, one {{1} неделю} few {{1} недели} many {{1} недель} other {{1} недели}}` |
+| RU21-PRF-52 | `price\|free` | `бесплатно` |
+| RU21-PRF-53 | `+{0}-{1}% a season` | `+{0}–{1}% за сезон` |
+| RU21-PRF-54 | `+{0}-{1}% per match` | `+{0}–{1}% за матч` |
+| RU21-PRF-55 | `+{0}-{1}% travelling with her` | `+{0}–{1}% в поездках с ней` |
+| RU21-PRF-56 | `, chemistry {0}%` | `, взаимопонимание {0}%` |
+| RU21-PRF-57 | `/week free` | `в неделю свободно` |
+| RU21-PRF-58 | `1 more trip` | `ещё 1 поездка` |
+| RU21-PRF-59 | `1 trip` | `1 поездке` |
+| RU21-PRF-60 | `Chemistry with her: {0}%` | `Взаимопонимание с ней: {0}%` |
+| RU21-PRF-61 | `Coach her yourself` | `Тренировать её самим` |
+| RU21-PRF-62 | `Coach travels to junior and domestic tournaments – off. Press to buy the additional fare on those trips too.` | `Тренер ездит на юниорские и национальные турниры – выключено. Нажмите, чтобы покупать дополнительный билет и на эти поездки.` |
+| RU21-PRF-63 | `Coach travels to junior and domestic tournaments – on. Press to stop paying the additional fare on the trips that pay no prize money.` | `Тренер ездит на юниорские и национальные турниры – включено. Нажмите, чтобы больше не платить за дополнительный билет в поездках без призовых.` |
+| RU21-PRF-64 | `Coach travels to tournaments with her – off. Press to buy one additional fare per trip.` | `Тренер ездит с ней на турниры – выключено. Нажмите, чтобы покупать по одному дополнительному билету на каждую поездку.` |
+| RU21-PRF-65 | `Coach travels to tournaments with her – on. Press to send the coach home for competition weeks.` | `Тренер ездит с ней на турниры – включено. Нажмите, чтобы в турнирные недели тренер оставался дома.` |
+| RU21-PRF-66 | `Every coach here also takes` | `Каждый тренер здесь также берёт` |
+| RU21-PRF-67 | `Every price below is {0} sessions a week – more sessions, more money.` | `Все цены ниже рассчитаны на {0, plural, one {{0} тренировку} few {{0} тренировки} many {{0} тренировок} other {{0} тренировки}} в неделю: больше тренировок – выше оплата.` |
+| RU21-PRF-68 | `Hire {0} at {1} a week? {2}` | `Нанять тренера: {0} – {1} в неделю? {2}` |
+| RU21-PRF-69 | `Let {0} go? She is self-coached from this week: the weekly bill becomes court time only, and the trained eye you were paying for goes too.` | `Уволить: {0}? С этой недели она занимается без тренера: в еженедельный счёт войдёт только аренда корта, а опытный взгляд, за который вы платили, уйдёт вместе с тренером.` |
+| RU21-PRF-70 | `Showing fit against {0}, not the game she plays.` | `Показано соответствие стилю «{0}», а не той игре, которую она ведёт.` |
+| RU21-PRF-71 | `You are coaching her yourself. The weekly bill is court time only.` | `Вы тренируете её самостоятельно. В еженедельном счёте только аренда корта.` |
+| RU21-PRF-72 | `You can always take her back onto the court yourself. The weekly bill becomes court time only.` | `Вы всегда можете снова тренировать её самостоятельно. Тогда в еженедельном счёте останется только аренда корта.` |
+| RU21-PRF-73 | `Your weekly coaching bill does not change.` | `Еженедельный счёт за тренера не изменится.` |
+| RU21-PRF-74 | `Your weekly coaching bill falls by {0}.` | `Еженедельный счёт за тренера уменьшится на {0}.` |
+| RU21-PRF-75 | `Your weekly coaching bill rises by {0}.` | `Еженедельный счёт за тренера увеличится на {0}.` |
+| RU21-PRF-76 | `a week at her current plan – {0} over {1} weeks.` | `в неделю при её нынешнем плане – {0} за {1, plural, one {{1} неделю} few {{1} недели} many {{1} недель} other {{1} недели}}.` |
+| RU21-PRF-77 | `her coach now` | `сейчас её тренер` |
+| RU21-PRF-78 | `hire` | `можно нанять` |
+| RU21-PRF-79 | `locked, {0} ranking points short` | `закрыто: не хватает {0, plural, one {{0} рейтингового очка} few {{0} рейтинговых очков} many {{0} рейтинговых очков} other {{0} рейтингового очка}}` |
+| RU21-PRF-80 | `of every prize cheque she collects.` | `от каждого призового чека, который она получает.` |
+| RU21-PRF-81 | `your coach` | `ваш тренер` |
+| RU21-PRF-82 | `{0} coaches` | `{0, plural, one {{0} тренер} few {{0} тренера} many {{0} тренеров} other {{0} тренера}}` |
+| RU21-PRF-83 | `{0} more trips` | `ещё {0, plural, one {{0} поездка} few {{0} поездки} many {{0} поездок} other {{0} поездки}}` |
+| RU21-PRF-84 | `{0} pts short` | `Не хватает {0, plural, one {{0} очка} few {{0} очков} many {{0} очков} other {{0} очка}}` |
+| RU21-PRF-85 | `{0} trips` | `{0, plural, one {{0} поездке} few {{0} поездках} many {{0} поездках} other {{0} поездках}}` |
+| RU21-PRF-86 | `{0} {1} over the {2} on her card this season.` | `{0} В карточке этого сезона: {2} – {1}.` |
+| RU21-PRF-87 | `{0} {1}/wk` | `{0} {1}/нед.` |
+| RU21-PRF-88 | `{0}, {1} tier, {2}, {3} a week{4} – {5}` | `{0}, {1} уровень, {2}, {3} в неделю{4} – {5}` |
+| RU21-PRF-89 | `{0}-{1} /wk` | `{0}–{1} в неделю` |
+| RU21-PRF-90 | `{0} tier` | `{0} уровень` |
+| RU21-PRF-91 | `College – {0}` | `Университет – {0}` |
+| RU21-PRF-92 | `Counter­puncher` | `Контратакующая игра` |
+| RU21-PRF-93 | `Her skills: serve, return, composure, stamina and groundstrokes. The dashed contour is where she started, the solid one is where she is today, and the haze around them is how far she could go.` | `Её навыки: подача, приём, хладнокровие, выносливость и удары с отскока. Пунктирный контур – с чего она начинала, сплошной – где она сейчас, а дымка вокруг – до чего она может дойти.` |
+| RU21-PRF-94 | `Her {0} rank counts her {1} best {2} results from the last 52 weeks. Full tables are on the Stats tab.` | `Её рейтинг ({0}) считается по лучшим результатам за последние 52 недели – их число: {1}; таблица результатов: {2}. Полные таблицы – на вкладке «Рейтинг».` |
+| RU21-PRF-95 | `School – {0}` | `Школа – {0}` |
+| RU21-PRF-96 | `What her coach can tell so far. The dashed shape is where she started, the solid shape is where she is, and the haze around them is how far she might go. All three sharpen as the coach learns her.` | `Что тренер может сказать на данный момент. Пунктирная форма – с чего она начинала, сплошная – где она сейчас, а дымка вокруг – до чего она может дойти. Все три уточняются, пока тренер узнаёт её лучше.` |
+| RU21-PRF-97 | `What you can tell so far. The dashed shape is where she started, the solid shape is where she is, and the haze around them is how far she might go. All three sharpen as you learn her.` | `Что вы можете сказать на данный момент. Пунктирная форма – с чего она начинала, сплошная – где она сейчас, а дымка вокруг – до чего она может дойти. Все три уточняются, пока вы узнаёте её лучше.` |
+| RU21-PRF-98 | `{0} years old · B-Day {1}` | `{0, plural, one {{0} год} few {{0} года} many {{0} лет} other {{0} года}} · День рождения: {1}` |
+| RU21-PRF-99 | `Too early to say – still learning what she has.` | `Пока рано судить – мы ещё разбираемся, что у неё есть.` |
+| RU21-PRF-100 | `Core work` | `Работа над кором` |
+| RU21-PRF-101 | `Gym drills` | `Упражнения в зале` |
+| RU21-PRF-102 | `Leg work` | `Работа над ногами` |
+| RU21-PRF-103 | `Net play` | `Игра у сетки` |
+| RU21-PRF-104 | `Point play` | `Игра на очки` |
+| RU21-PRF-105 | `Rally work` | `Розыгрыши` |
+| RU21-PRF-106 | `Rehab gym` | `Зал: восстановление` |
+| RU21-PRF-107 | `Return work` | `Приём подачи` |
+| RU21-PRF-108 | `Serve work` | `Подача` |
+| RU21-PRF-109 | `Speed work` | `Скорость` |
+| RU21-PRF-110 | `Summer read` | `Летнее чтение` |
+| RU21-PRF-111 | `Volley work` | `Игра с лёта` |

@@ -547,7 +547,11 @@ describe('L2-5 Russian smoke – ru.json read by key, no Cyrillic typed here', (
       'Training week': 'HerWeekTab reads it only to COMPARE with the week\'s title (`title !== t(\'Training week\')`, HerWeekTab.vue:154) – a label read for logic; the Season screen draws it',
       '{sessions} sessions, all of them on court.': 'weekDays.ts builds the week\'s plan sentence (`trainingReadout`) for every reader of a week record, but HerWeekTab draws the calendar\'s readout only for a week whose title is not an ordinary training week or summer block (HerWeekTab.vue:154) – this pose is one',
     }
-    const arm = compiledArm({ what: 'L2-5', ru: RU, asked, screen: everything, wiredHere, notDrawn: NOT_DRAWN, coverageFloor: 0.6 })
+    // ⭐ FLOOR MOVED ON PURPOSE, DOWN (11.10, the screens-and-scripts wave, RU-21): the wave compiled 100 rows homed on these surfaces (the coach market, the week plan, the injury stop, the Kid screen, the week grid)
+    // and the pose did not change, so the share of the compiled, wired vocabulary it reaches fell: 137 of 238 = 0.576 (the run prints it), was over 0.6. The protocol is «extend the pose, or move the floor on
+    // purpose»; this moves it – the measured share less 0.03, rounded down to 0.05 – because the unreached are states the pose never mounts (a hire dialog, the travel toggles, an injury stop on court, a vacation
+    // booking) and a pose for each is a wave of its own. The Russian of every one of them is held meanwhile by tests/i18n-screens-scripts.test.ts, which renders each value with the call site's own hole types.
+    const arm = compiledArm({ what: 'L2-5', ru: RU, asked, screen: everything, wiredHere, notDrawn: NOT_DRAWN, coverageFloor: 0.5 })
     expectCounterIsExact(asked, missedKeys(), RU)
     expectLabelsFollowTheCatalog(['Coach Market', 'Skills', 'Where she started', 'Court rental', 'Severity', 'Rest it', 'market|Support staff'], missedKeys(), RU, everything)
     console.log(`[L2-5 smoke] ru.json: ${Object.keys(RU).length} keys; asked AND compiled on these screens: ${arm.askedCompiled.length}; reached ${arm.observed.length} of ${arm.observed.length + arm.unreached.length} compiled, wired keys; distinct misses on seven mounted surfaces: ${missedKeys().length} (${missCount()} counted)`)

@@ -212,3 +212,21 @@ here; the confirmation remains in the UI, translation does not weaken the warnin
 The 52-week button is shipped in every build by owner ruling; therefore its visible text is
 within the localization scope even though it says `dev`. It must not skip authoritative stops
 or hide a worker refusal behind English `StoreError` text.
+
+## ⚙ 11.10 agent-authored (бланкет) – the More screen's last labels and the store-error toasts
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+9 rows: the dev boost of the Play tab, the seven store and offer errors of `errorText.ts` (the system's plain voice, formal `вы` where a direct address cannot be avoided, the state and the way out), and the parked `Import`. `Import` and `Load` are the plain halves of same-file twins (`op|Import`, `op|Load`): the join cannot tell two keys of one file apart, so a row cannot reach them and the Russian waits as `QUESTION` (`Импортировать` here; `Загрузить` is already on file in the saves table and in RU01-C15) until each plain key gets its own context tag in the code (class №15/№4). `Language` is filled in place in RU-01.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-SAV-01 | `Import` | `Импортировать` – ⚙ 11.10 the plain key and its tagged twin live in one file (`MoreScreen.vue`): the join cannot tell them apart, so the plain key needs its own ctx tag in the code (class №15/№4) – the Russian waits here `QUESTION` |
+| RU21-SAV-02 | `▶ life events ×{0} (dev)` | `▶ события жизни ×{0} (тест)` |
+| RU21-SAV-03 | `Another tab has newer progress for this career – reload before continuing here.` | `В другой вкладке у этой карьеры более свежий прогресс – перезагрузите страницу, прежде чем продолжать здесь.` |
+| RU21-SAV-04 | `She has already said this one – there is nothing here left to answer` | `Она уже сказала своё – отвечать здесь больше нечего` |
+| RU21-SAV-05 | `She is already signed for next season.` | `Она уже подписана на следующий сезон.` |
+| RU21-SAV-06 | `Simulation restarted from the last saved week.` | `Симуляция перезапущена с последней сохранённой недели.` |
+| RU21-SAV-07 | `That action was based on an outdated screen – it was refreshed. Try again.` | `Это действие было выполнено на устаревшем экране – экран обновлён. Повторите попытку.` |
+| RU21-SAV-08 | `The simulation crashed. Try again, or reopen the app to continue.` | `Симуляция остановилась из-за сбоя. Повторите попытку или откройте приложение заново.` |
+| RU21-SAV-09 | `The simulation restarted. Try again.` | `Симуляция перезапущена. Повторите попытку.` |

@@ -148,17 +148,29 @@ English one is exactly who the prompt is for). The two language names are the la
 
 | id | source | English | Russian | note | status |
 | --- | --- | --- | --- | --- | --- |
-| RU01-L01 | `src/components/LocalePrompt.vue:43` | `Choose your language` | | first-run prompt title, an `h2` on a 320 px dialog card; the card is the first thing a new device sees | `DRAFT` |
-| RU01-L02 | `src/components/LocalePrompt.vue:44` | `You can change this later in Settings.` | | one short sentence under the title; `Settings` is the existing label of the gear on Home and the Kid screen (its `aria-label`/`title`), which opens the More screen | `DRAFT` |
+| RU01-L01 | `src/components/LocalePrompt.vue:43` | `Choose your language` | `Выберите язык` | first-run prompt title, an `h2` on a 320 px dialog card; the card is the first thing a new device sees | `DRAFT` |
+| RU01-L02 | `src/components/LocalePrompt.vue:44` | `You can change this later in Settings.` | `Это можно изменить позже в настройках.` | one short sentence under the title; `Settings` is the existing label of the gear on Home and the Kid screen (its `aria-label`/`title`), which opens the More screen | `DRAFT` |
 | RU01-L03 | `src/components/LocalePrompt.vue:46`, `src/components/screens/MoreScreen.vue:747` | `English` | `English` | the language's own NAME, a button on the prompt and a pill on the switcher; 10.10 чат-ок: «English / Русский» – автоним не переводится, identity-ряд | `APPROVED` |
 | RU01-L04 | `src/components/screens/MoreScreen.vue:753` | `Russian` | `Русский` | 10.10 чат-ок: автоним; кнопка промпта с 10.10 – скриптовая константа «Русский» (не переводится по построению), этот ряд кормит пилюлю переключателя | `APPROVED` |
-| RU01-L05 | `src/components/screens/MoreScreen.vue:740` | `Language` | | switcher heading on the Saves tab (an `h2`, like `Saves` and `Danger zone`) and the accessible name of the two-pill group (`MoreScreen.vue:741`) | `DRAFT` |
+| RU01-L05 | `src/components/screens/MoreScreen.vue:740` | `Language` | `Язык` | switcher heading on the Saves tab (an `h2`, like `Saves` and `Danger zone`) and the accessible name of the two-pill group (`MoreScreen.vue:741`) | `DRAFT` |
 
 ### ⚙ 10.10 добавка (№40, усмотрение архитектора): рейл-дашборд (RailDashboard) – русская колонка твоя (DRAFT); общие ключи (Close, Continue, #{rank}, Unranked) живут в своих таблицах
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU01-RD01 | `In the account` | |
+| RU01-RD01 | `In the account` | `На счёте` |
 | RU01-RD03 | `{0} /wk` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом, этот ряд – пустой сид `QUESTION` | |
 | RU01-RD04 | `{0} committed` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом, этот ряд – пустой сид `QUESTION` | |
 | RU01-RD05 | `{0} weekly cap` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом, этот ряд – пустой сид `QUESTION` | |
+
+## ⚙ 11.10 agent-authored (бланкет) – the debt toast and the multi-week button, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+3 keys. The stop toast of `App.vue` and the multi-week button of `weekAction.ts` were parked above as `QUESTION` (RU01-R09, RU01-W14) because their Russian was drafted over a localized duration (`{debtDuration}`, `{duration}`) that the key never carries – the keys hand in plain numbers. The plural therefore lives in the value (`уже 3 недели`, `осталось 2 недели`, `Вперёд на 4 недели`) and the owner's `Остановились:` prefix and moulds are kept. The four scaffold cells of the 10.10 №40 addition (`LocalePrompt` ×2, `RailDashboard`, the `Language` heading) are filled in place above.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-SHL-01 | `Stopped: {weeks} week below zero – {left} before the money runs out for good.` | `Остановились: бюджет в минусе уже {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недели}}. До окончательной остановки {left, plural, one {осталась {left} неделя} few {осталось {left} недели} many {осталось {left} недель} other {осталось {left} недели}}.` |
+| RU21-SHL-02 | `Stopped: {weeks} weeks below zero – {left} before the money runs out for good.` | `Остановились: бюджет в минусе уже {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недели}}. До окончательной остановки {left, plural, one {осталась {left} неделя} few {осталось {left} недели} many {осталось {left} недель} other {осталось {left} недели}}.` |
+| RU21-SHL-03 | `Next {weeks} weeks` | `Вперёд на {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недели}}` |

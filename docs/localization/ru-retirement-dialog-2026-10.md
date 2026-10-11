@@ -86,3 +86,21 @@ her age. Zero previous answers: `На этот раз никто не спраш
 No new random draw or re-opening variation is allowed. The English source of the prior-answers
 branch reads `You have said one more year {count} time/times, and this season was the last one.`
 since round 48 #4 (RU-18 D09); `прозвучало` names no sayer, so the Russian stands as drafted.
+
+## ⚙ 11.10 agent-authored (бланкет) – the decline lines of the coach, her own words and the winters warning
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+9 keys of `declineVoice.ts`: the owner's nine approved decline sentences (`COACH_DECLINE_LINES`, `COACH_WEEK_CHOICE`, `HER_DECLINE_LINES`) and the season card's winters warning. Her words keep `ты` to the parent and the guillemets; the coach's are the compressed professional register. The warning counts the winters the way RU-12G does – `межсезонье` – and its count arrives as an English word (`spelledCount()`: `Two`, `Three`), so the plural keys read `Ещё межсезоний после этого: {0}.` and the singular key has no hole.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-RET-01 | `At this age you choose your weeks. This is not one of them.` | `В этом возрасте недели выбирают. Эту выбирать не стоит.` |
+| RU21-RET-02 | `At this age you choose your weeks. This is one to choose.` | `В этом возрасте недели выбирают. Эту – стоит выбрать.` |
+| RU21-RET-03 | `Her legs are a year older than this draw thinks.` | `Её ноги на год старше, чем думает эта сетка.` |
+| RU21-RET-04 | `One more winter after this one, and then nobody asks her again.` | `После этого межсезонья будет ещё одно, а потом её больше никто не спросит.` |
+| RU21-RET-05 | `She will want the first set. The third one is not hers the way it was.` | `Первый сет она захочет выиграть. Третий уже не принадлежит ей так, как прежде.` |
+| RU21-RET-06 | `{0} more winters after this one, and then nobody asks her again.` | `Ещё межсезоний после этого: {0}. А потом её больше никто не спросит.` |
+| RU21-RET-07 | `«Ask me again next winter. You will get the same answer, and one year it will not be true.»` | `«Спроси меня ещё раз следующей зимой. Ответ будет тот же, и однажды он перестанет быть правдой».` |
+| RU21-RET-08 | `«I am not finished. I am just not twenty-six.»` | `«Я не закончила. Просто мне уже не двадцать шесть».` |
+| RU21-RET-09 | `«I can still play. I just cannot play three of them back to back any more.»` | `«Я ещё могу играть. Только три таких матча подряд я уже не вытяну».` |

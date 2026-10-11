@@ -151,3 +151,24 @@ Two are not repetition but disagreement with a line on the same page:
   stage labels for a useful accessible name, never the raw English enum value.
 - The takeover retains dialog focus and both forward paths; translation must not add Escape close
   to a blocking ending. Check button width, totals wrapping and screen-reader order on a phone.
+
+## ⚙ 11.10 agent-authored (бланкет) – the epilogue notes that the template chains from fragments
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+12 keys. The epilogue assembles three notes from fragments – the lifetime deal (`The {0} deal never ran out –` $X `a year,` **`for life`**), the academy (`Her academy stands –` N `of` M `stages built – and it earns` $X `a week.`) and the one-more-year refrain (`You said one more year` N `time.` / `times.`) – so the full sentences RU-12A drafted (and parked as `QUESTION`: «в коде фраза собрана из кусков») are cut in the same places and keep their words: the figure stands between two fragments and the word order of each Russian half is chosen so that it reads the same whatever the figure is. **The refrain is the one place where the Russian cannot inflect:** the code picks between exactly two keys (`time.` for 1, `times.` for the rest), and Russian needs three forms (`1 раз`, `2 раза`, `5 раз`), so the number moves to the end – `Сколько раз: 3.` – and both keys carry only the closing full stop. The two `ENDING_BLURB` paragraphs that are still `QUESTION` are not here.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ENS-01 | `Her academy is begun –` | `Строительство её академии началось: построено` |
+| RU21-ENS-02 | `Her academy stands –` | `Её академия работает: построено` |
+| RU21-ENS-03 | `The {0} deal never ran out –` | `Договор с брендом «{0}» не закончился вместе с карьерой:` |
+| RU21-ENS-04 | `You said one more year` | `«Ещё один год», – говорили мы. Сколько раз:` |
+| RU21-ENS-05 | `a week.` | `в неделю.` |
+| RU21-ENS-06 | `a year,` | `в год,` |
+| RU21-ENS-07 | `for life` | `пожизненно` |
+| RU21-ENS-08 | `of` | `из` |
+| RU21-ENS-09 | `stages built – and it earns` | `этапов, доход –` |
+| RU21-ENS-10 | `stages built.` | `этапов.` |
+| RU21-ENS-11 | `time.` | `.` |
+| RU21-ENS-12 | `times.` | `.` |

@@ -618,8 +618,20 @@ describe('L2-6 Russian smoke – ru.json read by key, no Cyrillic typed here', (
     const NOT_DRAWN: Record<string, string> = {
       'Masseur travels to tournaments – on. Press to keep the table work at home.': 'the travel toggle\'s aria-label is `on ? onLabel : offLabel` (SupportStaffTab.vue:833) and the seat record builds both eagerly; both staff poses leave the toggle OFF',
       'Hitting partner travel is on. Press to keep the hitting partner at the home club.': 'the same toggle for the hitting partner: the record carries `onLabel`, the aria-label draws it only while travel is ON – both poses leave it off',
+      // ⭐ 11.10, THE SCREENS-AND-SCRIPTS WAVE (RU-21): the staff tab builds the hire / release / focus confirmations eagerly as props of its ConfirmDialogs (`hireMessage`, `releaseMessage`,
+      // `psychologistFocusConfirm`) and draws one only when the dialog opens – this pose opens none. The Russian of each is held by the wave's own test (tests/i18n-screens-scripts.test.ts).
+      'Hire a masseur for {0} a week ({1})? You can end the arrangement any week, like the coach.': 'a ConfirmDialog message, built eagerly and drawn only when the hire dialog opens – this pose opens none',
+      'Let the masseur go? The weekly salary stops, and rehab goes back to the clinic alone.': 'the release dialog\'s message – drawn only when that dialog opens',
+      'Hire a psychologist for {0} a week ({1})? You can end the arrangement any week, like the coach.': 'a ConfirmDialog message, built eagerly and drawn only when the hire dialog opens – this pose opens none',
+      'Let the psychologist go? The weekly salary stops, and the calls end with the week.': 'the release dialog\'s message – drawn only when that dialog opens',
+      'Set the psychologist\'s work for this season to {0}? The year\'s work is chosen once a season, and the next choice comes in the next off-season.': 'the focus confirmation\'s message – drawn only when the dialog opens',
+      'Hire a hitting partner for {0} a week ({1})? You can end the arrangement any week, like the coach.': 'a ConfirmDialog message, built eagerly and drawn only when the hire dialog opens – this pose opens none',
+      'Let the hitting partner go? The weekly salary stops, and regular match-style practice between events ends.': 'the release dialog\'s message – drawn only when that dialog opens',
     }
-    const arm = compiledArm({ what: 'L2-6', ru: RU, asked, screen: everything, wiredHere, notDrawn: NOT_DRAWN, coverageFloor: 0.4 })
+    // ⭐ FLOOR MOVED ON PURPOSE, DOWN (11.10, the screens-and-scripts wave, RU-21): the wave compiled 48 rows of the Money screen, the household strip and the support-staff tab (the kit and ad-slot sentences, the weekly-quote
+    // paragraphs, the staff confirmations); the vocabulary grew from 124 to 172 compiled, wired keys and the pose reaches 65 of it (0.378; the floor was 0.4). The unreached are Money-screen states these poses do not open
+    // (an injured week, a sponsor allowance spent or part-covered, a lifetime ad deal, the quotes of a coached and a self-coached week). Measured share less 0.03, rounded down to 0.05 = 0.3.
+    const arm = compiledArm({ what: 'L2-6', ru: RU, asked, screen: everything, wiredHere, notDrawn: NOT_DRAWN, coverageFloor: 0.3 })
     expectCounterIsExact(asked, missedKeys(), RU)
     expectLabelsFollowTheCatalog(['Family Budget', 'Total income', 'View all transactions', 'Household, every week', 'Hire'], missedKeys(), RU, everything)
     console.log(`[L2-6 smoke] ru.json: ${Object.keys(RU).length} keys; asked AND compiled on these screens: ${arm.askedCompiled.length}; reached ${arm.observed.length} of ${arm.observed.length + arm.unreached.length} compiled, wired keys; distinct misses on three mounted surfaces: ${missedKeys().length} (${missCount()} counted)`)
@@ -1149,7 +1161,10 @@ describe('L2-6b Russian smoke – the shop and the inbox from the REAL ru.json',
     // the host screen (MoneyScreen) builds its Spend, History and Staff labels eagerly while this smoke is about the SHOP and the INBOX, so the claim is scoped to the keys homed on them –
     // the other tabs' words are read by the L2-6 smoke above, where they are drawn.
     // ⭐ FLOOR MOVED ON PURPOSE, UP (11.10, RU-20): the pose above reaches 249 of the 265 compiled, wired keys (0.94; the run prints it) – the measured share less 0.03, rounded down to 0.05. It was 0.2 when two letters were all the pose held.
-    const arm = compiledArm({ what: 'L2-6b', ru: RU, asked, screen: everything, wiredHere, only: wiredHere, coverageFloor: 0.9 })
+    // ⭐ FLOOR MOVED ON PURPOSE, DOWN (11.10, the screens-and-scripts wave, RU-21): the letters wave extended the pose to reach 249 of 265 (0.94, floor 0.9). This wave compiled the shelf's last 73 rows (`shop.ts`,
+    // `ShopPanel`: the sale and order confirmations, the market lines, the chart captions) and the vocabulary grew from 266 to 339 while the pose reaches 291 (0.858): the unreached are the shelf states the pose does not open
+    // (a sale confirmation, an order in flight, a listing on the market, the chart). Measured share less 0.03, rounded down to 0.05 = 0.8. The pose for the shelf's flows is the follow-up.
+    const arm = compiledArm({ what: 'L2-6b', ru: RU, asked, screen: everything, wiredHere, only: wiredHere, coverageFloor: 0.8 })
     expectCounterIsExact(asked, missedKeys(), RU)
     expectLabelsFollowTheCatalog(['The shelf', 'Invest', 'Tournament desk'], missedKeys(), RU, everything)
     console.log(`[L2-6b smoke] ru.json: ${Object.keys(RU).length} keys; asked AND compiled on these screens: ${arm.askedCompiled.length}; reached ${arm.observed.length} of ${arm.observed.length + arm.unreached.length} compiled, wired keys; distinct misses on two mounted surfaces: ${missedKeys().length} (${missCount()} counted)`)

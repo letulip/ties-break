@@ -624,3 +624,43 @@ routed to RU-09, RU-11 and RU-04 rather than silently treated as translated.
 
 The next editorial batch is RU-04: Season planner, tournament cards, eligibility and the complete
 tournament flow.
+
+## ⚙ 11.10 agent-authored (бланкет) – Home, the week recap, the next goal and the week-day scripts, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+31 keys of `HomeScreen.vue` (the ladder gap control), `WeekRecapCard.vue`, `nextGoal.ts`, `weekDays.ts` and the calendar's entered state. RU-03's `QUESTION` rows (RU03-S09, S10, C05, RH03, RH04, RH10, RH11, RT04, CW13, CR02, CR05) parked their Russian over a counted phrase the key never carries (`{countedLevels}`, `{places}`, `{trainingDays}`); the keys hand in numbers, so the plural lives in the value (`Показать ещё 3 уровня`, `поднялась на 2 места`, `5 недель подряд с матчами`) and RU-03's moulds are kept. Where a hole is an English word from the code the Russian puts it in a nominative position: `Reach the {round} at the {event}` receives `finishPhrase()`'s English `semi-final`, so it reads `Дойти до стадии «{round}»` (RU03-RH10's genitive needs a Russian word); `Work on her {axis}` receives the lowered radar label, which is Russian. The weekday names are nominative and capitalised (`Понедельник`) because the plan sheet prints them as headings; the caps tags are the two-letter `ПН … ВС`. `Training` (the recap tile's eyebrow) is the plain half of a same-file twin and stays parked in RU03-RT01.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-HOM-01 | `She is in. Withdrawing lives on the Season tab.` | `Она заявлена. Сняться можно на экране «Сезон».` |
+| RU21-HOM-02 | `1 level hidden ({tier}) – tap to show the whole ladder` | `Скрыт 1 уровень ({tier}). Нажмите, чтобы показать всю лестницу.` |
+| RU21-HOM-03 | `Best {0} finish · {1}` | `Лучший результат на {0} · {1}` |
+| RU21-HOM-04 | `Outgrown – her best {0} result stays on the books · {1}` | `Уровень пройден – её лучший результат на {0} остаётся в зачёте · {1}` |
+| RU21-HOM-05 | `Show 1 more level` | `Показать ещё 1 уровень` |
+| RU21-HOM-06 | `Show {n} more levels` | `Показать ещё {n, plural, one {{n} уровень} few {{n} уровня} many {{n} уровней} other {{n} уровня}}` |
+| RU21-HOM-07 | `Unlocked – enter your first!` | `Доступен – можно подать первую заявку.` |
+| RU21-HOM-08 | `{n} levels hidden ({from} to {to}) – tap to show the whole ladder` | `Скрыто: {n, plural, one {{n} уровень} few {{n} уровня} many {{n} уровней} other {{n} уровня}}, от {from} до {to}. Нажмите, чтобы показать всю лестницу.` |
+| RU21-HOM-09 | `{n} match weeks in a row` | `{n, plural, one {{n} неделя} few {{n} недели} many {{n} недель} other {{n} недели}} подряд с матчами` |
+| RU21-HOM-10 | `{ladder} rank down {n} – now #{rank}` | `{ladder}: опустилась на {n, plural, one {{n} место} few {{n} места} many {{n} мест} other {{n} места}}; теперь №{rank}` |
+| RU21-HOM-11 | `{ladder} rank up {n} – now #{rank}` | `{ladder}: поднялась на {n, plural, one {{n} место} few {{n} места} many {{n} мест} other {{n} места}}; теперь №{rank}` |
+| RU21-HOM-12 | `{n} of 7 days training` | `Тренировки: {n} из 7 дней` |
+| RU21-HOM-13 | `Reach the {round} at the {event}` | `Дойти до стадии «{round}» на турнире «{event}»` |
+| RU21-HOM-14 | `Work on her {axis}` | `Поработать над навыком: {axis}` |
+| RU21-HOM-15 | `Exams this week – no tournaments, but her {sessions} sessions stand.` | `На этой неделе экзамены: турниров нет, но тренировки по плану сохраняются – {sessions, plural, one {{sessions} тренировка} few {{sessions} тренировки} many {{sessions} тренировок} other {{sessions} тренировки}}.` |
+| RU21-HOM-16 | `FRI` | `ПТ` |
+| RU21-HOM-17 | `Friday` | `Пятница` |
+| RU21-HOM-18 | `MON` | `ПН` |
+| RU21-HOM-19 | `Monday` | `Понедельник` |
+| RU21-HOM-20 | `SAT` | `СБ` |
+| RU21-HOM-21 | `SUN` | `ВС` |
+| RU21-HOM-22 | `Saturday` | `Суббота` |
+| RU21-HOM-23 | `Sunday` | `Воскресенье` |
+| RU21-HOM-24 | `THU` | `ЧТ` |
+| RU21-HOM-25 | `TUE` | `ВТ` |
+| RU21-HOM-26 | `Thursday` | `Четверг` |
+| RU21-HOM-27 | `Tuesday` | `Вторник` |
+| RU21-HOM-28 | `WED` | `СР` |
+| RU21-HOM-29 | `Wednesday` | `Среда` |
+| RU21-HOM-30 | `{sessions} sessions over {days} days – {doubled} of them two sessions a day.` | `{sessions, plural, one {{sessions} тренировка} few {{sessions} тренировки} many {{sessions} тренировок} other {{sessions} тренировки}} за {days, plural, one {{days} день} few {{days} дня} many {{days} дней} other {{days} дня}}; в {doubled, plural, one {{doubled} день} few {{doubled} дня} many {{doubled} дней} other {{doubled} дня}} – по две тренировки.` |
+| RU21-HOM-31 | `{sessions} sessions – {court} on court, {gym} in the gym.` | `{sessions, plural, one {{sessions} тренировка} few {{sessions} тренировки} many {{sessions} тренировок} other {{sessions} тренировки}}: на корте – {court}, в зале – {gym}.` |

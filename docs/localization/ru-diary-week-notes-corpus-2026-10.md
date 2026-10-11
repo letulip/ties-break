@@ -637,3 +637,22 @@ implementation, add catalogue parity tests that compare these stable ids/semanti
 English sentence text, render every body-part and birthday-gift variant, enforce the 80-character
 budget on rendered Russian, and confirm the same seeded row index in both locales. No Russian line
 may change claims, licences, chance gates or the persisted main RNG state.
+
+## ⚙ 11.10 agent-authored (бланкет) – the week notes that name the injured part, as whole keys
+
+⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
+
+10 keys of `weekNotes.ts`. RU09D-F047 … F088 drafted these ten sentences over an inflected form of the body part (`{knockPart.gen}`, `{injuredPart.loc}` …) that the key does not carry – it carries the part as the code spells it, an English word. So the Russian says the place in a nominative position, in brackets or after a colon (`Лёд на больное место ({0}) дважды в день.`) and keeps each draft's other words. The birthday repeat line receives the age as an English word, the gift label and the repeat age as a number: `{0}. Снова: {1} – традиция с {2}-летия.`
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-DWN-01 | `A week off the {0}. She was bored by Tuesday and said so by Wednesday.` | `Неделя отдыха для больного места ({0}). Во вторник заскучала, в среду сказала.` |
+| RU21-DWN-02 | `Band exercises for the {0}, in front of the hall mirror.` | `Упражнения с эспандером ({0}) у зеркала в прихожей.` |
+| RU21-DWN-03 | `Everything is one-handed for now. The {0} sets the terms.` | `Пока всё одной рукой. Условия задаёт больное место: {0}.` |
+| RU21-DWN-04 | `Ice on the {0}, twice a day. She times it herself.` | `Лёд на больное место ({0}) дважды в день. Время засекает сама.` |
+| RU21-DWN-05 | `Ice, stretching, no court. The {0} is quieter than it was.` | `Лёд, растяжка, без корта. Больное место ({0}) беспокоит меньше.` |
+| RU21-DWN-06 | `She revised one-handed, the {0} strapped up beside her on the table.` | `Готовилась одной рукой, а больное место ({0}) в фиксаторе лежало рядом на столе.` |
+| RU21-DWN-07 | `She trained on the {0} all week and did not mention it once.` | `Всю неделю тренировалась с травмой ({0}) и ни разу о ней не упомянула.` |
+| RU21-DWN-08 | `The {0} decides how she sits, stands and sleeps this week.` | `На этой неделе от больного места ({0}) зависит, как она сидит, стоит и спит.` |
+| RU21-DWN-09 | `The {0} held. We watched her serve more closely than usual.` | `Больное место ({0}) выдержало. За подачей мы следили внимательнее обычного.` |
+| RU21-DWN-10 | `{0}. {1} again – a tradition since {2}.` | `{0}. Снова: {1} – традиция с {2}-летия.` |
