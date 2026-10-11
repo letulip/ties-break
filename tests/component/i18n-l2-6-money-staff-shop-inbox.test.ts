@@ -46,6 +46,7 @@ import { installMemoryStorage } from './setup'
 import { PHONE, assertDismissReachable, availableWidth, demandedWidth, setViewport } from './fits'
 import { DEFAULT_ALLOW, hardcodeLeaks, installPseudoLocale } from './pseudoloc'
 import { compiledArm, expectCounterIsExact, expectLabelsFollowTheCatalog, recordingCatalog } from './ruCompiled'
+import { LIVE_WEEK, letterMatrix } from './l32-letter-matrix'
 
 /** His approved Russian, as the importer compiled it. Every Russian expectation below is read from here by key. */
 const RU = JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string, string>
@@ -1082,7 +1083,64 @@ describe('L2-6b Russian smoke – the shop and the inbox from the REAL ru.json',
     }
     const inbox = await mountInbox(withPost(coached, [entryLetter(), academyLetter()], 32), {}, [entryLetter(), academyLetter()])
     const mounted = [shop, inbox]
-    const everything = [...shelves, ...mounted.map((m) => seen(m.element))].join('\n')
+    // ⚠ 11.10, THE LETTERS WAVE (RU-20) – THE POSE GROWS, THE FLOOR DOES NOT FALL. Until that wave ru.json carried 26 of the letters area's 257 keys, so two posed letters and a list were nearly everything
+    // this smoke could see of them. The wave compiled the other 231 rows and the vocabulary the coverage share is taken of (`wiredHere`) grew with them while the pose stayed put: 15 of 265 compiled keys
+    // reached, 0.057, under a 0.2 floor. The protocol is «extend the pose, or move the floor on purpose»; this extends the pose, because the point of the arm is that his Russian REACHES the screen and
+    // 231 new rows deserve to be asked for by the real components: every arm of the paper (`letterMatrix` – the L3-2 net's own cases, posed as plain data – mounted as OfferLetter), the whole post as one
+    // inbox list (a sender and a subject per kind), the bin question, and the sign question of each kind of letter that has one (a kit letter at three coverages and a season, a rival-campaign bond with
+    // fees to come and with every fee banked, a finite and a one-year and an eight-year and a lifetime campaign, a buyer's offer, a raise). The dialogs belong to the sheet, so they are read off the document.
+    const matrix = letterMatrix()
+    const papers: string[] = []
+    for (const c of matrix) {
+      const paper = mount(OfferLetter, { props: { offer: c.offer, week: c.week ?? LIVE_WEEK, offers: c.offers ?? [c.offer], saleLabel: c.saleLabel } })
+      papers.push(seen(paper.element))
+      paper.unmount()
+    }
+    const wholePost = matrix.map((c) => c.offer)
+    const wholeList = await mountInbox(withPost(coached, wholePost, LIVE_WEEK), {}, wholePost)
+    papers.push(seen(wholeList.element))
+    wholeList.unmount()
+    const asDialog = async (inSnapshot: Offer[], post: Offer[], week: number, act: (sheet: VueWrapper) => Promise<void>): Promise<void> => {
+      const sheet = await mountInbox(withPost(coached, inSnapshot, week), { attachTo: document.body }, post)
+      await act(sheet)
+      papers.push(seen(document.body))
+      sheet.unmount()
+      document.body.innerHTML = ''
+    }
+    const caseNamed = (name: string): (typeof matrix)[number] => matrix.find((c) => c.name === name)!
+    // the edge arms of the LIST: a required event whose label was never stored, a season notice that never carried its rank, and a letter in its last week (the one-week form of the meta line)
+    const dueOffer = caseNamed('tour/due').offer
+    const seasonOffer = caseNamed('tour/season').offer
+    const noLabel = { ...dueOffer, id: 'edge-due', terms: { ...(dueOffer.terms as object), label: undefined } } as Offer
+    const noRank = { ...seasonOffer, id: 'edge-season', terms: { ...(seasonOffer.terms as object), maxRank: undefined } } as Offer
+    const edgeList = await mountInbox(withPost(coached, [noLabel, noRank], LIVE_WEEK), {}, [noLabel, noRank])
+    papers.push(seen(edgeList.element))
+    edgeList.unmount()
+    const lastWeek = caseNamed('kit/new').offer
+    const lastList = await mountInbox(withPost(coached, [lastWeek], lastWeek.deadlineWeek), {}, [lastWeek])
+    papers.push(seen(lastList.element))
+    lastList.unmount()
+    const read = caseNamed('entry/confirmed').offer
+    read.state = 'info' // a notice the parent has read: nothing to answer, so the list offers to take it away
+    await asDialog([read], [read], LIVE_WEEK, async (sheet) => {
+      await sheet.get('.inbox-open').trigger('click')
+      await sheet.get('.inbox-back').trigger('click')
+      await sheet.get('.inbox-bin').trigger('click')
+    })
+    const signed = async (offer: Offer, others: Offer[], week: number): Promise<void> =>
+      asDialog([offer, ...others], [offer], week, async (sheet) => {
+        await sheet.get('.inbox-open').trigger('click')
+        await sheet.get('.offer-sign').trigger('click')
+      })
+    for (const name of ['kit/new', 'kit/seasons-1', 'kit/covers-strings', 'kit/bond-cost', 'ad/cars', 'ad/term-1y', 'ad/capstone', 'ad/lifetime', 'sale/proposal', 'ask/coach-open']) {
+      const c = caseNamed(name)
+      await signed(c.offer, c.offers ?? [], c.week ?? LIVE_WEEK)
+    }
+    const bond = caseNamed('kit/bond-cost')
+    const rival = bond.offers![0]!
+    const banked = { ...rival, terms: { ...(rival.terms as object), termYears: 1, termWeeks: 52 } } as Offer
+    await signed(bond.offer, [banked], LIVE_WEEK)
+    const everything = [...shelves, ...mounted.map((m) => seen(m.element)), ...papers].join('\n')
     const HERE = /ShopPanel|composables\/shop|saleLetter|InboxSheet|OfferLetter/
     const wiredHere = Object.keys(RU).filter((k) => CATALOG.keys[k]?.wrapped && CATALOG.keys[k]!.home.some((h) => HERE.test(h)))
     // ⚠ RE-AIMED 11.10 (бланкет), NOT RELAXED. The blanket compiled his DRAFT rows (ru.json 56 -> 3 310): «approved» is «compiled» below and both claims stand – his Russian reaches the screen, and what ru.json
@@ -1090,7 +1148,8 @@ describe('L2-6b Russian smoke – the shop and the inbox from the REAL ru.json',
     // `wiredHere`); `wiredHere` is the vocabulary its coverage floor is taken of. The old `NOT_IN_POSE` set is gone with the walk: a key the pose never asks for is not a claim, it is coverage.
     // the host screen (MoneyScreen) builds its Spend, History and Staff labels eagerly while this smoke is about the SHOP and the INBOX, so the claim is scoped to the keys homed on them –
     // the other tabs' words are read by the L2-6 smoke above, where they are drawn.
-    const arm = compiledArm({ what: 'L2-6b', ru: RU, asked, screen: everything, wiredHere, only: wiredHere, coverageFloor: 0.2 })
+    // ⭐ FLOOR MOVED ON PURPOSE, UP (11.10, RU-20): the pose above reaches 249 of the 265 compiled, wired keys (0.94; the run prints it) – the measured share less 0.03, rounded down to 0.05. It was 0.2 when two letters were all the pose held.
+    const arm = compiledArm({ what: 'L2-6b', ru: RU, asked, screen: everything, wiredHere, only: wiredHere, coverageFloor: 0.9 })
     expectCounterIsExact(asked, missedKeys(), RU)
     expectLabelsFollowTheCatalog(['The shelf', 'Invest', 'Tournament desk'], missedKeys(), RU, everything)
     console.log(`[L2-6b smoke] ru.json: ${Object.keys(RU).length} keys; asked AND compiled on these screens: ${arm.askedCompiled.length}; reached ${arm.observed.length} of ${arm.observed.length + arm.unreached.length} compiled, wired keys; distinct misses on two mounted surfaces: ${missedKeys().length} (${missCount()} counted)`)

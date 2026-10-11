@@ -95,6 +95,7 @@ last-reviewed: 2026-10-07
 | [Batch 17 – Family-life delta](ru-life-delta-2026-10.md) | Expanded spouse voice, relationship tile, together-duration forms and life-moment wording | new pool and formats drafted |
 | [RU-18 – Rounds 47/48 delta](ru-main-delta-2-2026-10.md) | The string drift of rounds 47 and 48 applied (owner's order №11, 07.10): re-keys, removals, the Latin name rows, the family `мы` flips and the day's `APPROVED` rows – a record, not a replacement table | applied; both renamed-label rows ruled 08.10 |
 | [RU-19 – Family-voice pass](ru-family-voice-pass-2026-10.md) | The parent speaks as the family `мы` (owner's order №10, 07.10): every gendered parent-`я` cell converted by his formula, with the full before→after table, the staff gender-param flags and the unconverted singular remainder | applied as `DRAFT` for the owner's read |
+| [RU-20 – Letters](ru-letters-2026-10.md) | The inbox list, the sign questions and every paper in OfferLetter: the desks, the tour office, the academy, the four staff seats, the national squad, orders, buyers, advertising houses and kit sponsors | agent-authored 11.10 under the blanket ruling for every letters key that had no Russian; `DRAFT`, his live edit follows |
 
 Later batches will be added here rather than turned into one unreviewable mega-table. The intended
 order is: shell → onboarding/prologue → Home and the weekly story → season/calendar/tournaments →
