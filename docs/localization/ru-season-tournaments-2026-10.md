@@ -675,7 +675,7 @@ records RU-07 and worker-event history RU-11.
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU21-SEA-01 | `Draw rounds` | `Раунды турнирной сетки` |
+| RU21-SEA-01 | `Draw rounds` | `Круги сетки` |
 | RU21-SEA-02 | `Her match – {0} vs {1}` | `Её матч: {0} против {1}` |
 | RU21-SEA-03 | `Semifinals:` | `В полуфиналах:` |
 | RU21-SEA-04 | `The Final` | `Финал` |
@@ -704,9 +704,9 @@ records RU-07 and worker-event history RU-11.
 | RU21-SEA-27 | `Enter anyway` | `Всё равно заявиться` |
 | RU21-SEA-28 | `Enter {event} ({week}, {surface})? {fee}` | `Подать заявку на турнир «{event}» ({week}, {surface})? {fee}` |
 | RU21-SEA-29 | `Entry fee {fee}.` | `Взнос – {fee}.` |
-| RU21-SEA-30 | `Family vacation – {package}` | `Семейная поездка – {package}` |
+| RU21-SEA-30 | `Family vacation – {package}` | `Семейный отпуск – {package}` |
 | RU21-SEA-31 | `First round: {0}, {1}.` | `Первый круг: {0}, {1}.` |
-| RU21-SEA-32 | `Her first one is winnable, though.` | `Но первую соперницу можно проходить.` |
+| RU21-SEA-32 | `Her first one is winnable, though.` | `Но первую соперницу можно обыграть.` |
 | RU21-SEA-33 | `Injured – rest up` | `Травма – нужен отдых` |
 | RU21-SEA-34 | `No entry fee – the trip is still yours to pay for.` | `Взноса нет, но поездку семья оплачивает сама.` |
 | RU21-SEA-35 | `Not available this week` | `На этой неделе недоступен` |
@@ -716,9 +716,9 @@ records RU-07 and worker-event history RU-11.
 | RU21-SEA-39 | `Push through` | `Играть несмотря на усталость` |
 | RU21-SEA-40 | `She could use a week off – maybe a family week?` | `Ей не помешает неделя отдыха – может, с семьёй?` |
 | RU21-SEA-41 | `She has a way in, though – look who she opens against.` | `Но вход в турнир есть – достаточно посмотреть, с кем она начинает.` |
-| RU21-SEA-42 | `She has drawn the one who can stop her, though.` | `Но ей попалась как раз та, кто может её остановить.` |
+| RU21-SEA-42 | `She has drawn the one who can stop her, though.` | `Но ей попалась как раз та, которая может её остановить.` |
 | RU21-SEA-43 | `She is worn out – maybe a family week?` | `Она вымоталась – может, провести неделю с семьёй?` |
-| RU21-SEA-44 | `The draw has been kind, though.` | `Но с жеребьёвкой повезло.` |
+| RU21-SEA-44 | `The draw has been kind, though.` | `Но с сеткой повезло.` |
 | RU21-SEA-45 | `The first round is the hard part, though.` | `Но самое трудное здесь – первый круг.` |
 | RU21-SEA-46 | `The junior tour caps how many international tournaments she may enter in the year she is this age – counted from birthday to birthday. This is where she stands against it.` | `Юниорский тур ограничивает число международных турниров между двумя днями рождения. Здесь видно, сколько из лимита уже использовано.` |
 | RU21-SEA-47 | `The tour's age rule caps how many professional tournaments she may enter in the year she is this age – counted from birthday to birthday. This is where she stands against it.` | `Возрастное правило тура ограничивает число профессиональных турниров между двумя днями рождения. Здесь видно, сколько из лимита уже использовано.` |
@@ -736,7 +736,7 @@ records RU-07 and worker-event history RU-11.
 | RU21-SEA-59 | `{0} of them on the cards below` | `На карточках ниже показано: {0, plural, one {{0} доступный турнир} few {{0} доступных турнира} many {{0} доступных турниров} other {{0} доступного турнира}}` |
 | RU21-SEA-60 | `{0}, {1} - open the planner` | `{0}, {1} – открыть план недели` |
 | RU21-SEA-61 | `{caution} Enter {event} ({week}, {surface}) anyway? {fee}` | `{caution} Всё равно подать заявку на турнир «{event}» ({week}, {surface})? {fee}` |
-| RU21-SEA-62 | `{caution} Enter {event} ({week}, {surface})? {fee}` | `{caution} Всё равно подать заявку на турнир «{event}» ({week}, {surface})? {fee}` |
+| RU21-SEA-62 | `{caution} Enter {event} ({week}, {surface})? {fee}` | `{caution} Подать заявку на турнир «{event}» ({week}, {surface})? {fee}` |
 | RU21-SEA-63 | `{label} in {week} – {price}, +{gain} condition. No tournaments that week.` | `{label} ({week}) – {price}, форма +{gain}. Турниров на этой неделе не будет.` |
 | RU21-SEA-64 | `Tour age rule – {used} of {limit}` | `Возрастной лимит тура – {used} из {limit}` |
 | RU21-SEA-65 | `Year limit – {used} of {limit}` | `Годовой лимит – {used} из {limit}` |
@@ -778,7 +778,7 @@ records RU-07 and worker-event history RU-11.
 | RU21-SEA-101 | `Reach {required} {unit}` | `Набрать {required} {unit}` |
 | RU21-SEA-102 | `Under-{n}` | `Младше {n}` |
 | RU21-SEA-103 | `age {age}` | `с {age, plural, one {{age} года} few {{age} лет} many {{age} лет} other {{age} года}}` |
-| RU21-SEA-104 | `age {min}-{max}` | `в возрасте {min}–{max, plural, one {{max} год} few {{max} года} many {{max} лет} other {{max} года}}` |
+| RU21-SEA-104 | `age {min}-{max}` | `в возрасте {min}–{max, plural, one {{max} года} few {{max} лет} many {{max} лет} other {{max} года}}` |
 | RU21-SEA-105 | `gate\|{0} and {1}` | `{0} и {1}` |
 | RU21-SEA-106 | `gate\|{points} {unit}` | `{points} {unit}` |
 | RU21-SEA-107 | `open from the start` | `доступен с начала карьеры` |
@@ -786,16 +786,16 @@ records RU-07 and worker-event history RU-11.
 | RU21-SEA-109 | `the top {pct}% internationally` | `верхние {pct}% международного рейтинга` |
 | RU21-SEA-110 | `{current} / {required} {unit}` | `{current} из {required} {unit}` |
 | RU21-SEA-111 | `{points} {unit} in one season` | `{points} {unit} за один сезон` |
-| RU21-SEA-112 | `{tier} is under-{n} – at {age} she has aged out of it.` | `Уровень «{tier}» – для возраста младше {n}: в {age} она уже из него выросла.` |
+| RU21-SEA-112 | `{tier} is under-{n} – at {age} she has aged out of it.` | `Уровень «{tier}» – для возраста младше {n}: в {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} года}} она уже из него выросла.` |
 | RU21-SEA-113 | `{tier} – locked: {more} more {unit} (she has {has} of {need}) – {gap}. {earned}` | `Уровень «{tier}» закрыт: нужно ещё {more} {unit} (у неё {has} из {need}) – {gap}. {earned}` |
 | RU21-SEA-114 | `{tier} – locked: {more} more {unit} (she has {has} of {need}). {earned}` | `Уровень «{tier}» закрыт: нужно ещё {more} {unit} (у неё {has} из {need}). {earned}` |
-| RU21-SEA-115 | `{tier} – open to her, but none is scheduled in the next {weeks} weeks. This tier comes round less often than the others; it is not locked.` | `Уровень «{tier}» ей доступен, но в ближайшие {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недели}} турниров нет. Этот уровень проходит реже остальных, он не закрыт.` |
+| RU21-SEA-115 | `{tier} – open to her, but none is scheduled in the next {weeks} weeks. This tier comes round less often than the others; it is not locked.` | `Уровень «{tier}» ей доступен, но в ближайшие {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недели}} турниров нет. Турниры этого уровня проходят реже остальных; сам уровень не закрыт.` |
 | RU21-SEA-116 | `{tier} – open to her, next one {when}` | `Уровень «{tier}» ей доступен, ближайший турнир: {when}` |
 | RU21-SEA-117 | `{tier} – opens at {when}` | `Уровень «{tier}» откроется – {when}` |
 | RU21-SEA-118 | `{tier} – opens at {when}. Entry here is an acceptance list read off her international ranking – she has no international ranking yet.` | `Уровень «{tier}» откроется – {when}. Допуск сюда идёт по списку, который строится по международному рейтингу, а международного рейтинга у неё пока нет.` |
 | RU21-SEA-119 | `{tier} – opens at {when}. Entry here is an acceptance list read off her international ranking – she is #{rank}.` | `Уровень «{tier}» откроется – {when}. Допуск сюда идёт по списку, который строится по международному рейтингу; сейчас она – №{rank}.` |
 | RU21-SEA-120 | `{tier} – outgrown: she is past this level` | `Уровень «{tier}» пройден: она его переросла` |
-| RU21-SEA-121 | `{tier} – past this level but still hers to enter, but none is scheduled in the next {weeks} weeks. This tier comes round less often than the others; it is not locked.` | `Уровень «{tier}» ею пройден, но заявляться на него по-прежнему можно; в ближайшие {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недели}} турниров нет. Этот уровень проходит реже остальных, он не закрыт.` |
+| RU21-SEA-121 | `{tier} – past this level but still hers to enter, but none is scheduled in the next {weeks} weeks. This tier comes round less often than the others; it is not locked.` | `Уровень «{tier}» ею пройден, но заявляться на него по-прежнему можно; в ближайшие {weeks, plural, one {{weeks} неделю} few {{weeks} недели} many {{weeks} недель} other {{weeks} недели}} турниров нет. Турниры этого уровня проходят реже остальных; сам уровень не закрыт.` |
 | RU21-SEA-122 | `{tier} – she has used all {limit} of her international events for this year (age {age}). Not locked: a fresh allowance arrives on her next birthday.` | `Уровень «{tier}»: на этот год (возраст – {age}) использованы все {limit, plural, one {{limit} международный турнир} few {{limit} международных турнира} many {{limit} международных турниров} other {{limit} международного турнира}}. Он не закрыт: новый лимит появится в её следующий день рождения.` |
 | RU21-SEA-123 | `{tier} – she is past this level, and it is still hers to enter: next one {when}. The stronger rung on a week takes the card.` | `Уровень «{tier}» ею пройден, но заявляться на него можно: ближайший турнир – {when}. Если на неделе несколько уровней, в карточку попадает более сильный.` |
 | RU21-SEA-124 | `{tier} – she is past this level.` | `Уровень «{tier}» ею пройден.` |

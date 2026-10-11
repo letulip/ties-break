@@ -633,7 +633,7 @@ tournament flow.
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU21-HOM-01 | `She is in. Withdrawing lives on the Season tab.` | `Она заявлена. Сняться можно на экране «Сезон».` |
+| RU21-HOM-01 | `She is in. Withdrawing lives on the Season tab.` | `Она заявлена. Сняться можно на вкладке «Сезон».` |
 | RU21-HOM-02 | `1 level hidden ({tier}) – tap to show the whole ladder` | `Скрыт 1 уровень ({tier}). Нажмите, чтобы показать всю лестницу.` |
 | RU21-HOM-03 | `Best {0} finish · {1}` | `Лучший результат на {0} · {1}` |
 | RU21-HOM-04 | `Outgrown – her best {0} result stays on the books · {1}` | `Уровень пройден – её лучший результат на {0} остаётся в зачёте · {1}` |
@@ -662,5 +662,5 @@ tournament flow.
 | RU21-HOM-27 | `Tuesday` | `Вторник` |
 | RU21-HOM-28 | `WED` | `СР` |
 | RU21-HOM-29 | `Wednesday` | `Среда` |
-| RU21-HOM-30 | `{sessions} sessions over {days} days – {doubled} of them two sessions a day.` | `{sessions, plural, one {{sessions} тренировка} few {{sessions} тренировки} many {{sessions} тренировок} other {{sessions} тренировки}} за {days, plural, one {{days} день} few {{days} дня} many {{days} дней} other {{days} дня}}; в {doubled, plural, one {{doubled} день} few {{doubled} дня} many {{doubled} дней} other {{doubled} дня}} – по две тренировки.` |
+| RU21-HOM-30 | `{sessions} sessions over {days} days – {doubled} of them two sessions a day.` | `{sessions, plural, one {{sessions} тренировка} few {{sessions} тренировки} many {{sessions} тренировок} other {{sessions} тренировки}} за {days, plural, one {{days} день} few {{days} дня} many {{days} дней} other {{days} дня}}; из них {doubled, plural, one {{doubled} день} few {{doubled} дня} many {{doubled} дней} other {{doubled} дня}} – по две тренировки.` |
 | RU21-HOM-31 | `{sessions} sessions – {court} on court, {gym} in the gym.` | `{sessions, plural, one {{sessions} тренировка} few {{sessions} тренировки} many {{sessions} тренировок} other {{sessions} тренировки}}: на корте – {court}, в зале – {gym}.` |

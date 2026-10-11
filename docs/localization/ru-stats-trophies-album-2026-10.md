@@ -491,7 +491,7 @@ The parent-written `note`, `caption` and loose `line` corpus is drafted separate
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU07-RH01 | `A new result only raises the total if it beats the weakest counted one.` | `Новый результат повышает сумму, только если он лучше самого слабого из учтённых.` |
+| RU07-RH01 | `A new result only raises the total if it beats the weakest counted one.` | `Новый результат повышает сумму, только если он лучше самого слабого из зачётных.` |
 | RU07-RH02 | `Her best 18 results from the last 52 weeks. She appears on it after 3 scoring tournaments, or 10 points.` | `Её 18 лучших результатов за последние 52 недели. В таблице она появляется после 3 турниров с очками или 10 очков.` |
 | RU07-RH03 | `Her best 6 Junior Tour results from the last 52 weeks.` | `Её 6 лучших результатов юниорского тура за последние 52 недели.` |
 | RU07-RH04 | `Her best 6 results from the last 52 weeks.` | `Её 6 лучших результатов за последние 52 недели.` |

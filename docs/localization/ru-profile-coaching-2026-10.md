@@ -1233,7 +1233,7 @@ source-coverage pass. Every Russian line remains `DRAFT` pending the owner's rea
 
 | id | English | Russian |
 | --- | --- | --- |
-| RU21-PRF-01 | `, {0} of them two sessions a day` | `, в {0, plural, one {{0} день} few {{0} дня} many {{0} дней} other {{0} дня}} по две тренировки` |
+| RU21-PRF-01 | `, {0} of them two sessions a day` | `, из них {0, plural, one {{0} день} few {{0} дня} many {{0} дней} other {{0} дня}} – по две тренировки` |
 | RU21-PRF-02 | `1 day off` | `один день без занятий` |
 | RU21-PRF-03 | `No school this week – a day can take two sessions, if you want them.` | `На этой неделе нет школы – в день можно провести две тренировки, если захотите.` |
 | RU21-PRF-04 | `One session a day this week – the dots are the room each day has left.` | `На этой неделе – по одной тренировке в день; точки показывают, сколько места осталось в каждом дне.` |

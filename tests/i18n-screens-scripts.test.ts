@@ -3,7 +3,7 @@
 //
 // WHY THIS FILE EXISTS. `npm run i18n:check` proves a Russian value PARSES and reads the holes its key reads. It cannot see the class this wave is most exposed to: a plural written over a hole that the call site
 // hands in as a STRING (a money figure, a week label, `formatUnits()`, an English word from the code). The renderer does not throw into the player – it falls back to the WHOLE English sentence and counts a miss –
-// so the row compiles, the gate is green, and a Russian screen quietly shows English. The wave puts a plural over 88 holes of 74 rows; every one of them was checked against its call site on 11.10 and the
+// so the row compiles, the gate is green, and a Russian screen quietly shows English. The wave puts a plural over 90 holes of 76 rows; every one of them was checked against its call site on 11.10 and the
 // table below records the expression the site hands in. A hand edit that puts a plural over a hole NOT in the table goes red here, not in his playtest.
 //
 // ⚠ NO CYRILLIC IS TYPED HERE (the booth wave's rule): every expectation is read from ru.json, from the documents or from the catalogue; the mutation arms use ASCII stand-ins.
@@ -151,6 +151,7 @@ const NUMBER_FED_HOLES: ReadonlyArray<readonly [key: string, hole: string, fedBy
   ['Past this level – none in {weeks} weeks', 'weeks', 'weeks: input.horizonWeeks'],
   ['age {age}', 'age', 'tier.minAgeYears'],
   ['age {min}-{max}', 'max', 'max: tier.maxAgeYears'],
+  ['{tier} is under-{n} – at {age} she has aged out of it.', 'age', 'age: input.ageYears'],
   ['{tier} – open to her, but none is scheduled in the next {weeks} weeks. This tier comes round less often than the others; it is not locked.', 'weeks', 'weeks: input.horizonWeeks'],
   ['{tier} – past this level but still hers to enter, but none is scheduled in the next {weeks} weeks. This tier comes round less often than the others; it is not locked.', 'weeks', 'weeks: input.horizonWeeks'],
   ['{tier} – she has used all {limit} of her international events for this year (age {age}). Not locked: a fresh allowance arrives on her next birthday.', 'limit', 'limit'],
@@ -178,6 +179,7 @@ const NUMBER_FED_HOLES: ReadonlyArray<readonly [key: string, hole: string, fedBy
   ['Built to order – about {0} weeks from the week it is ordered.', '0', 'row.buildWeeks'],
   ['Built to order – about {0} years from the week it is ordered.', '0', 'Math.round(months / 12)'],
   ['Order {0} for {1}? The money goes this week and it arrives in {2} weeks.', '2', 'p.buildWeeks'],
+  ['Worth {0} years of what it sells', '0', 'row.earningsMultipleX (Math.round of brandMultipleX)'],
   ['{0} – {1} · {2} pts', '2', 'b.points'],
   ['Junior career – closed at {0}', '0', 'J_MAX_AGE + 1'],
   ['Next drop: {0}, {1} pts – leaves the window in 1 week.', '1', 'w.dropPts'],
@@ -243,7 +245,7 @@ describe('§3 THE PLURAL HOLES – a plural only stands over a hole the call sit
     const used = pluralPairs(WAVE.keys)
     const stale = NUMBER_FED_HOLES.filter(([k, h]) => !used.has(`${k}\u0000${h}`)).map(([k, h]) => `${k}  {${h}}`)
     expect(stale, 'table rows whose plural is gone from the value (delete them)').toEqual([])
-    expect(NUMBER_FED_HOLES).toHaveLength(88)
+    expect(NUMBER_FED_HOLES).toHaveLength(90)
   })
 
   it('every table row names a key of the catalogue and an expression', () => {

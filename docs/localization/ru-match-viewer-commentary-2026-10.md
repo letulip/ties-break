@@ -1035,6 +1035,6 @@ RU-08 §11–§13, the ladder of four storeys. Ranks print as `№{n}`, the degr
 | RU21-MTV-01 | `How much of the match to watch` | `Сколько матча смотреть` |
 | RU21-MTV-02 | `Playback speed` | `Скорость воспроизведения` |
 | RU21-MTV-03 | `What to shout` | `Что крикнуть` |
-| RU21-MTV-04 | `She retired hurt at` | `Она снялась при счёте` |
+| RU21-MTV-04 | `She retired hurt at` | `Она снялась из-за травмы при счёте` |
 | RU21-MTV-05 | `S{0}` | `{0}-й` |
 | RU21-MTV-06 | `{0} points played` | `Сыграно {0, plural, one {{0} розыгрыш} few {{0} розыгрыша} many {{0} розыгрышей} other {{0} розыгрыша}}` |
