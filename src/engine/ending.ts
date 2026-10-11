@@ -1140,14 +1140,20 @@ export const ENDING_BLURB: Record<CareerEndingType, string> = {
   // the freeze (spec §4) her professional rank is IDENTICAL at both ends in the median career,
   // because she was already off the list the week she walked in. The line that replaced it says the
   // thing that IS true of every college career and of nothing else in this game.
+  // ⚠ 11.10 (owner: «не возражаю, доделывай») – the engine refutes «the money goes the other way»:
+  // the family pays the remainder weekly and may go into debt (resolveCollegeBill, v51), and the fact
+  // line beside this paragraph says so. The sentence now states the share structure the code enforces.
   college:
-    'A scholarship, a closed league that pays no ranking points, and a stretch of years in which the money finally goes the other way. The tour does not wait, and it does not remember.',
+    'A scholarship covers its share, the family pays the rest, and a closed league pays no ranking points. The tour does not wait, and it does not remember.',
   bankruptcy:
     'Week after week below zero, and then a week with no entry fee in it. Nobody chose this one – the arithmetic did.',
   injury:
     'The body had been telling the same story for years. This time it was not a layoff, it was the end of the sentence.',
+  // ⚠ 11.10 (owner: «можно сказать she agreed for one more например… Сделай на свою усмотрение») –
+  // «agreed to one more» keeps HER as the subject (true: she agreed each year) and stops crediting
+  // her with SAYING the refrain, which the round-48 ruling gives to the parents.
   natural:
-    'She was asked every off-season and for years she said one more. This year she did not.',
+    'She was asked every off-season, and for years she agreed to one more. This year she did not.',
   plateau:
     'The rung above stayed where it was and so did she. Her own words for it were the plainest ones – she could not reach the top, so she went.',
   // ⚠ ROUND 45, AND BOTH OF THESE ARE DRAFTS (invariant 4) – see

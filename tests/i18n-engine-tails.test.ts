@@ -68,12 +68,9 @@ const clean = (r: Rig, what: string, allowed: readonly string[] = []): void => {
   expect([...r.missing].filter((k) => !allowed.includes(k)), `${what}: a key the producer asks for and ru.json does not carry`).toEqual([])
 }
 
-describe('§1 the two paragraphs whose English is under question stay without a row', () => {
-  it('ENDING_BLURB.college and ENDING_BLURB.natural are not in ru.json – the other seven are', () => {
-    expect(RU[ENDING_BLURB.college], 'college: the owner held the Russian until the English is settled (10.10)').toBeUndefined()
-    expect(RU[ENDING_BLURB.natural], 'natural: the same').toBeUndefined()
+describe('§1 all nine epilogue paragraphs carry Russian – the two held ones were ruled 11.10', () => {
+  it('⚠ RE-AIMED 11.10: the owner settled both Englishes («she agreed to one more»; «не возражаю, доделывай»), so every ENDING_BLURB has its row', () => {
     for (const [type, english] of Object.entries(ENDING_BLURB)) {
-      if (type === 'college' || type === 'natural') continue
       expect(CYR.test(RU[english] ?? ''), `${type}: the epilogue paragraph has its Russian`).toBe(true)
     }
   })

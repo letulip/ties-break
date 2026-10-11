@@ -305,5 +305,6 @@ The week recap prints one line a week for a coached career: where the coach has 
 | RU22-REL-07 | `span\|y` | `г` |
 | RU22-REL-08 | `span\|m` | `м` |
 | RU22-REL-09 | `span\|<1m` | `<1 м` |
+| RU22-REL-10 | `<1m` (`weddingCopy.ts`) | `<1m` – ⚙ 11.10 движковый компакт-код: под ru его перехватывает span-ридер до t() и показывает «<1 м»; ряд – identity (хинт разводит с тегом span\|<1m) |
 
 Русские значения лидов – его же припаркованные формы RU-17 R02–R05 (их ряды помечены решёнными).

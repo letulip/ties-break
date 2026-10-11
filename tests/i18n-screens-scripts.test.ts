@@ -77,12 +77,8 @@ const BARE_WITH_A_TAGGED_TWIN_IN_THE_SAME_FILE: string[] = []
 const HELD_ENDING_PARAGRAPHS = (ru: Readonly<Record<string, string>>): string[] => withoutRussian(ru).filter((k) => CAT.keys[k]!.home.join() === 'src/engine/ending.ts')
 
 describe('§1 THE CENSUS – seven keys have no Russian, and each one is named', () => {
-  it('the two held ending paragraphs and the five bare keys with a same-file tagged twin – nothing else', () => {
-    const left = withoutRussian(RU)
-    const held = HELD_ENDING_PARAGRAPHS(RU)
-    expect(held, 'the two ENDING_BLURB paragraphs the owner held on 10.10 (their English is under question)').toHaveLength(2)
-    expect(left.filter((k) => !held.includes(k)), 'every other catalogue key has a Russian value').toEqual([...BARE_WITH_A_TAGGED_TWIN_IN_THE_SAME_FILE].sort())
-    expect(left).toHaveLength(2)
+  it('⚠ RE-AIMED 11.10 TO ZERO: every catalogue key has a Russian value – the owner ruled both held paragraphs the same day («she agreed to one more»; «доделывай»)', () => {
+    expect(withoutRussian(RU)).toEqual([])
   })
 
   it('the five one-time bare twins are resolved: the bare keys are gone and their tagged heirs carry Russian', () => {
@@ -299,7 +295,7 @@ describe('§5 THE ARMS BITE – the nets above are not vacuous', () => {
     const [victim] = Object.keys(RU).filter((k) => WAVE.keys.has(k))
     const dropped = { ...RU }
     delete dropped[victim!]
-    expect(withoutRussian(dropped)).toHaveLength(3) /* ⚠ 11.10: the census fell 7 -> 2 when the five twins took their tags */
-    expect(withoutRussian(RU)).toHaveLength(2)
+    expect(withoutRussian(dropped)).toHaveLength(1) /* ⚠ 11.10: the census closed at ZERO when the owner ruled the two held paragraphs */
+    expect(withoutRussian(RU)).toHaveLength(0)
   })
 })

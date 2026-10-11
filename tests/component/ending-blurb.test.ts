@@ -131,7 +131,7 @@ describe('⭐ 10.10 §1 – every ending draws its own paragraph, the engine\'s 
   for (const type of TYPES) {
     it(`${type}: exactly one paragraph, and it is ENDING_BLURB.${type} – nothing composed, trimmed or marked up`, () => {
       // ⚠ 10.10 (owner: «при 0 надо починить») – `natural` mounts with a refrain count, because at
-      // count 0 its sentence («for years she said one more») is false and the page draws NO line;
+      // count 0 its sentence («for years she agreed to one more») is false and the page draws NO line;
       // the dedicated case below pins that skip.
       const w = mountEnding(posed(type))
       const lines = w.findAll('.album-blurb')
@@ -154,11 +154,9 @@ describe('⭐ 10.10 §1 – every ending draws its own paragraph, the engine\'s 
     spoken.unmount()
   })
 
-  it('⚠ HIS ROUND-48 #4 VOICE RULING («nothing credits her with saying one more year») holds for EIGHT of the nine paragraphs – the ninth, `natural`, is the named open exception', () => {
-    // The engine's `natural` sentence – «… for years she said one more.» – predates the ruling and was left «for the owner's eye» (docs/rounds/round-48.md, item 4). It is his wording, so it is
-    // drawn as it stands and the exception is NAMED here and in tests/component/r48-b1-ending-page.test.ts, which goes red the day it moves; this arm is that net's twin from the paragraph side.
+  it('⚠ HIS ROUND-48 #4 VOICE RULING («nothing credits her with saying one more year») holds for ALL NINE paragraphs – the natural exception retired 11.10 («she agreed to one more», his call)', () => {
     const credits = /\bshe (has |had )?said one more/i
-    expect(TYPES.filter((type) => credits.test(ENDING_BLURB[type]))).toEqual(['natural'])
+    expect(TYPES.filter((type) => credits.test(ENDING_BLURB[type]))).toEqual([])
   })
 
   it('the ending is read off the SNAPSHOT: the same page mounted as two endings draws two different paragraphs', () => {
@@ -306,24 +304,18 @@ describe('⭐ 10.10 §4 – drawn through t(): the nine are catalog keys under a
   // English is under question (`college`, `natural` – each contradicts a line on the same page, docs/localization/ru-ending-screen-2026-10.md) stay `QUESTION` with no row. Mounted on the REAL
   // ru.json, because the unit pin (tests/i18n-engine-tails.test.ts §1) proves the file and not the page: a Russian session must show the Russian paragraph for seven endings and the English one for
   // those two. ⚠ NO CYRILLIC IS TYPED HERE – every expectation is read from ru.json by key.
-  it('⚙ 11.10 the REAL ru.json: seven paragraphs draw their compiled Russian, and the two held ones (`college`, `natural`) still draw the English', async () => {
+  it('⚙ RE-AIMED 11.10 the REAL ru.json: all nine paragraphs draw their compiled Russian – the owner settled both held Englishes the same day', async () => {
     const RU = JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string, string>
     installCatalog('ru', RU)
     await setLocale('ru')
-    const held: CareerEndingType[] = ['college', 'natural']
     for (const type of TYPES) {
       setActivePinia(createPinia())
       document.body.innerHTML = ''
       const w = mountEnding(posed(type))
       const text = flat(w.get('.album-blurb').text())
-      if (held.includes(type)) {
-        expect(RU[ENDING_BLURB[type]], `${type}: held by the owner until the English is settled`).toBeUndefined()
-        expect(text, `${type}: no row, so the English sentence`).toBe(flat(ENDING_BLURB[type]))
-      } else {
-        expect(RU[ENDING_BLURB[type]], `${type}: the compiled row`).toBeTruthy()
-        expect(text, `${type}: the Russian paragraph`).toBe(flat(RU[ENDING_BLURB[type]]!))
-        expect(text, `${type}: not the English`).not.toBe(flat(ENDING_BLURB[type]))
-      }
+      expect(RU[ENDING_BLURB[type]], `${type}: the compiled row`).toBeTruthy()
+      expect(text, `${type}: the Russian paragraph`).toBe(flat(RU[ENDING_BLURB[type]]!))
+      expect(text, `${type}: not the English`).not.toBe(flat(ENDING_BLURB[type]))
       w.unmount()
     }
   })
