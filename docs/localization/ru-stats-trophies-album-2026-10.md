@@ -321,13 +321,13 @@ The screen is **`Альбом`**. It is a physical family book in its own langua
 | band | English draft | Russian draft |
 | --- | --- | --- |
 | `prologue` | `The beginning` | `Начало` |
-| `young` | `Growing up` | `Как она росла` |
+| `young` | `Growing up` | `Как ты росла` |
 | `teen` | `The breakthrough` | `Прорыв` |
 | `adult` | `The tour` | `В туре` |
 | `lateCareer` | `The final chapter` | `Последняя глава` |
 
-`Как она росла` is warmer than the catalogue noun `Взросление`; this is the parent's chapter tab,
-not a life-stage enum. `В туре` describes her lived stretch of years, while bare `Тур` can read as
+`Как ты росла` is warmer than the catalogue noun `Взросление`; this is the parent's chapter tab,
+not a life-stage enum (12.10 r49 №3: альбом говорит с дочерью на «ты»). `В туре` describes her lived stretch of years, while bare `Тур` can read as
 one tournament trip.
 
 The age line uses the shared counted-age formatter: `13 лет`, `21 год`, `22 года`; a range is
@@ -438,17 +438,17 @@ must never change which pool index the seed selected.
 
 | art meaning | Russian alt |
 | --- | --- |
-| portrait | `Она в ту неделю` |
+| portrait | `Ты в ту неделю` |
 | journey home | `Дорога домой` |
-| first days on court | `Её первые дни на корте` |
-| wedding | `День её свадьбы` |
+| first days on court | `Твои первые дни на корте` |
+| wedding | `День твоей свадьбы` |
 | baby home | `Неделя, когда малыша привезли домой` |
 | graduation | `День выпуска` |
-| farewell match | `Её прощальный матч` |
+| farewell match | `Твой прощальный матч` |
 | day after last match | `День после последнего матча` |
 
 `Малыша` preserves the current child-sex-neutral contract. The alt follows the art actually drawn:
-if an occasion falls back to a generic age portrait, it uses `Она в ту неделю`, never the unseen
+if an occasion falls back to a generic age portrait, it uses `Ты в ту неделю`, never the unseen
 event's description.
 
 ## 21. Graduation checklist
@@ -474,7 +474,7 @@ result without praising or grading it and emits no row when the save contains no
   another venue.
 - At 320 and 390 px, inspect the back-button accessible name, chapter header, `Левая/Правая
   страница`, page counter, phone chapter rows, longest chapter title and the Latin patch names.
-- At 768 and 1024 px, inspect the complete chapter rail and ensure `Как она росла` plus an age range
+- At 768 and 1024 px, inspect the complete chapter rail and ensure `Как ты росла` plus an age range
   does not force illegible plates.
 - Exercise one/few/many page counts, ages 21/22/25, a cross-month week, all ticket coordinate words,
   every finish depth, generic portrait fallbacks, graduation with mixed results and a null league
@@ -585,10 +585,10 @@ The parent-written `note`, `caption` and loose `line` corpus is drafted separate
 | RU21-ALB-04 | `the whole of it` | `за всю карьеру` |
 | RU21-ALB-05 | `Age {0} – {1}` | `{0}–{1, plural, one {{1} год} few {{1} года} many {{1} лет} other {{1} года}}` |
 | RU21-ALB-06 | `Graduation day` | `День выпуска` |
-| RU21-ALB-07 | `Her farewell match` | `Её прощальный матч` |
-| RU21-ALB-08 | `Her first days on a court` | `Её первые дни на корте` |
-| RU21-ALB-09 | `Her wedding day` | `День её свадьбы` |
-| RU21-ALB-10 | `Her, that week` | `Она в ту неделю` |
+| RU21-ALB-07 | `Her farewell match` | `Твой прощальный матч` |
+| RU21-ALB-08 | `Her first days on a court` | `Твои первые дни на корте` |
+| RU21-ALB-09 | `Her wedding day` | `День твоей свадьбы` |
+| RU21-ALB-10 | `Her, that week` | `Ты в ту неделю` |
 | RU21-ALB-11 | `The day after the last match` | `День после последнего матча` |
 | RU21-ALB-12 | `The journey home` | `Дорога домой` |
 | RU21-ALB-13 | `The week the baby came home` | `Неделя, когда малыш приехал домой` |
