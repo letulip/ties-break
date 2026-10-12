@@ -151,6 +151,21 @@ describe('the college scene T3 – the championship record on the graduate\'s pa
     expect(graduatedSheet(world).note!.lines, 'no championship, no checklist – and no «no championship» row either').toEqual([])
   })
 
+  it('⭐ r50 №1 – the degree frame wears its OWN painting and alt (the fixed-stem precedent the clamp follows)', () => {
+    // The graduated closer always resolved by fixed stem (`EVENT_STEM`), which is the mechanism the
+    // wedding, the birth and the pregnancy adopted at r50 №1 – so the album half of graduation is
+    // proven here the way the brief asks: a college-finishing world → the closer frame, its art on
+    // disk, its own alt.
+    const world = graduate('college-album-art', [])
+    world.college!.years = fourYears(world)
+    const sheet = graduatedSheet(world)
+    const hand = ALBUM_CORPUS.find((o) => o.id === 'graduated')!.voices[world.temperament!][0]
+    const frame = sheet.frames.find((f) => f.caption === hand.caption)
+    expect(frame, 'the degree frame is on its sheet').toBeDefined()
+    expect(frame!.art, 'the one graduation painting').toBe('images/fem-euro-brunnet/fem-euro-brunnet-adult-graduated.webp')
+    expect(frame!.alt, 'its own alt, never the portrait one').toBe('Graduation day')
+  })
+
   it('⚠⚠ the graduation note is the CORPUS\'s, unchanged – the checklist is beside his words, never over them', () => {
     const world = graduate('college-album-note', [])
     world.college!.years = fourYears(world)

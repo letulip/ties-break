@@ -127,9 +127,9 @@ After the tails, 688 catalogue keys still had no Russian: 216 of the `screens` a
 | Season screen, tournament flow and bracket, tier states, tour guide and briefing (`RU21-SEA`) | [ru-season-tournaments-2026-10.md](ru-season-tournaments-2026-10.md) | 125 |
 | Home ladder gap, week recap, next goal, week-day scripts, entered state (`RU21-HOM`) | [ru-home-weekly-2026-10.md](ru-home-weekly-2026-10.md) | 31 |
 | University year card (`RU21-CLY`) | [ru-college-year-2026-10.md](ru-college-year-2026-10.md) | 17 |
-| Album pages built in the engine (`RU21-ALB`) | [ru-stats-trophies-album-2026-10.md](ru-stats-trophies-album-2026-10.md) | 15 |
+| Album pages built in the engine (`RU21-ALB`) | [ru-stats-trophies-album-2026-10.md](ru-stats-trophies-album-2026-10.md) | 16 |
 | Stats, Trophies, Season history (`RU21-STA`) | [ru-stats-trophies-album-2026-10.md](ru-stats-trophies-album-2026-10.md) | 59 |
-| Epilogue notes chained from fragments (`RU21-ENS`) | [ru-ending-screen-2026-10.md](ru-ending-screen-2026-10.md) | 12 |
+| Epilogue notes chained from fragments (`RU21-ENS`) | [ru-ending-screen-2026-10.md](ru-ending-screen-2026-10.md) | 14 |
 | Coach market, week plan, injury stop, profile, week grid (`RU21-PRF`) | [ru-profile-coaching-2026-10.md](ru-profile-coaching-2026-10.md) | 111 |
 | Money, shelf, support staff (`RU21-MON`) | [ru-money-staff-shop-inbox-2026-10.md](ru-money-staff-shop-inbox-2026-10.md) | 121 |
 | Match controls, score readout (`RU21-MTV`) | [ru-match-viewer-commentary-2026-10.md](ru-match-viewer-commentary-2026-10.md) | 6 |
@@ -139,7 +139,7 @@ After the tails, 688 catalogue keys still had no Russian: 216 of the `screens` a
 | The twelve months (`RU21-FMT`) | [ru-formatters-countries-2026-10.md](ru-formatters-countries-2026-10.md) | 24 |
 | Injured-part week notes (`RU21-DWN`) | [ru-diary-week-notes-corpus-2026-10.md](ru-diary-week-notes-corpus-2026-10.md) | 10 |
 | Memory-card lines, weekly phrase pool (`RU21-DIA`) | [ru-diary-birthday-2026-10.md](ru-diary-birthday-2026-10.md) | 78 |
-| **New rows** (the compile/QUESTION split has moved twice since this record – the 11.10 re-points and r49 №9 on 12.10 – so it is not restated here: the live census is `tests/i18n-screens-scripts.test.ts` §1) | | **631** |
+| **New rows** (the compile/QUESTION split has moved twice since this record – the 11.10 re-points and r49 №9 on 12.10 – so it is not restated here: the live census is `tests/i18n-screens-scripts.test.ts` §1; r50 №1, 12.10, added the pregnancy alt `RU21-ALB-16`; r50 №5, 12.10, added the brand line's two rows `RU21-ENS-13`/`RU21-ENS-14`) | | **634** |
 | Scaffold cells filled in place (`SeasonSummaryDialog` 21, `WeekSpanReport` 3, `RankHelpDialog` 11, `ShootClashDialog` 14, `LocalePrompt` 2, `RailDashboard` 1, `Language` 1) | the 10.10 №40 sections of RU-04, RU-07, RU-01 and the sponsor ledger | **53** |
 
 ### What these rows keep from the earlier drafts

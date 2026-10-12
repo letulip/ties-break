@@ -344,8 +344,8 @@ so the two documents read down the page the same way. `TEMPERAMENTS` in `src/eng
 happens to list them `sunny, fiery, quiet, deep`; the emitted catalogue is a `Record`, which has no
 order, so the two never disagree about anything but reading.
 
-**`kind`** is the family the engine selects from: `prologue`, the nine `MilestoneType`s, `asset`,
-`rare`, `closing`. **`bands`** are the album's chapters – `prologue`, `young`, `teen`, `adult`,
+**`kind`** is the family the engine selects from: `prologue`, `lineage`, the nine `MilestoneType`s,
+`pregnancy` (derived at assembly, r50 №1 – no milestone exists), `asset`, `rare`, `closing`. **`bands`** are the album's chapters – `prologue`, `young`, `teen`, `adult`,
 `lateCareer`; `jun` appears nowhere, per §4. **`gate`** is the named condition beyond the kind,
 resolved engine-side; `any` means the kind alone is the occasion.
 
@@ -358,13 +358,19 @@ the commit»), and the anti-vacuity half, because a comparison of two empty list
 
 | written | count |
 | --- | ---: |
-| occasions | **38** |
-| notes (every variant hand of 38 × 4 voices) | **212** |
-| captions (every variant hand) | **212** |
-| lines (every variant hand) | **212** |
+| occasions | **39** |
+| notes (every variant hand of 39 × 4 voices) | **216** |
+| captions (every variant hand) | **216** |
+| lines (every variant hand) | **216** |
 | arc cells (2 directions × 4 voices) | **8** |
 | arc strings (8 × note + line) | **16** |
-| ⭐ authored strings in total | **652** |
+| ⭐ authored strings in total | **664** |
+
+⚠ **THE COUNTS MOVED AT ROUND 50 №1 (12.10)** – `A38` `pregnancy` is the thirty-ninth occasion (the
+week she told the family a baby was coming, derived from the `'expecting'` lifeLog row matched to
+the child that followed), and its twelve strings are DRAFT like every other line on the page. Every
+figure above is still the parser's own count of this file (`albumCounts`), asserted by the
+round-trip test.
 
 ⚠ **THE COUNTS MOVED AT ROUND 49 №4/№5/№7 (12.10, the content half)** – the seven occasions that
 fire more than once per career grew variant pools, against the owner's «много чего есть написать в
@@ -1227,6 +1233,44 @@ reaches this occasion again, and the handwriting does not need to know which tim
 | `fiery` | `The wrong moment, she says.` |
 | `deep` | `I am keeping that one.` |
 | `quiet` | `She stopped checking the time.` |
+
+### A38 · `pregnancy` · pregnancy · adult, lateCareer · **gate: `a-birth-followed-the-announcement`**
+**The occasion:** the week she told the family a baby was coming.
+**Where it comes from:** DERIVED, never stored (r50 №1, 12.10): the `'expecting'` lifeLog row
+(append-only since v73) matched to the child that followed it – for each `world.children` row, the
+nearest announcement before `bornWeek` inside the model's own term window
+(`pregnancyCandidates`, `world/albumBook.ts`). The page sits at the ANNOUNCEMENT week, which is the
+week the Home portrait starts wearing `pregnant-early` – the two surfaces date the moment
+identically.
+⚠⚠ **A pregnancy with NO matching child – a loss – stays OUT of the album.** The child-first
+derivation makes the silence automatic, and it is deliberate restraint: whether the book should
+hold a page about a loss is an owner ruling nobody has asked for, and until he rules the honest
+book says nothing.
+⚠ **The other person is never named, characterised or given a sex** (§3.3) – the wedding's law.
+⚠ **The CHILD's sex is unknown at the announcement**, so unlike A34 these lines may not say
+«daughter»: the baby is «it»-free and sex-free by construction.
+⚠ **No figure and no meter**, §3's money law – nothing is priced this week.
+
+| voice | note |
+| --- | --- |
+| `sunny` | `You told everybody to sit down first, and then you could not sit down yourself.` |
+| `fiery` | `You said it the way you announce a score, fast, and then you watched to see if we had kept up.` |
+| `deep` | `You waited until the kitchen was quiet and said it once, quietly, as if it had been true for a while.` |
+| `quiet` | `You told us the week and the plan in one breath, and the second breath was about everything else.` |
+
+| voice | caption |
+| --- | --- |
+| `sunny` | `Everybody sat down first.` |
+| `fiery` | `Announced like a score.` |
+| `deep` | `Once, quietly, in the kitchen.` |
+| `quiet` | `The week, the plan, one breath.` |
+
+| voice | line |
+| --- | --- |
+| `sunny` | `Nobody sat for long.` |
+| `fiery` | `We kept up. Just.` |
+| `deep` | `It had been true for a while.` |
+| `quiet` | `The plan was already made.` |
 
 ### A34 · `birth` · birth · adult, lateCareer · `any`
 **The occasion:** the week her daughter was born.

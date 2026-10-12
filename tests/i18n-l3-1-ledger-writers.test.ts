@@ -68,6 +68,9 @@ const NEW_KEYS: readonly string[] = [
   'she stopped when school ended',
   '{0} seasons, no step higher',
   'a title in her last season',
+  // ⚠ 12.10 r50 №1: the pregnancy frame's alt – a new spelling for new assemblies; no old save
+  // stores it (alts render from the frame, they are not ledger rows), listed for the walker's law.
+  'The week she told us',
   // ⚠ 10.10 (L3-7b, the SaveFileError typing): the 31 refusal sentences are TRANSPORT-ONLY –
   // they ride the worker reply beside the code and are never stored into a save, so no old
   // save can hold them and no v92 spelling exists to re-key to. Byte-identity of the shown

@@ -191,6 +191,7 @@ export type {
   AlbumTag,
   AlbumClubPatch,
   AlbumFiller,
+  AlbumChapterCup,
   AlbumSheetModel,
   AlbumChapter,
   AlbumBook,

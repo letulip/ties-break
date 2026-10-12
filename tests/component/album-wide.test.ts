@@ -8,7 +8,9 @@
 //
 //   THE WINDOW MOVED   the page is 600 / 640 / 700 and fits whole (r49 №13, 12.10: regraded from
 //                      the README's 540 / 556 on the owner's «давай сделаем крупнее шириной», and
-//                      1280 became a rung of its own), the pan affordance is gone, the chapters
+//                      1280 became a rung of its own; since r50 №2 the rung is only a CAP on
+//                      LANDSCAPE viewports, where the vh ceiling sizes the page – `pageAt` below
+//                      reads the oracle), the pan affordance is gone, the chapters
 //                      came out from behind their button;
 //   THE BOOK DID NOT   the same sheets in the same order, the pager counting the same real number,
 //                      `Back` present and `Career summary` absent, at all three widths.
@@ -52,6 +54,7 @@ import {
 } from '../../src/shared/protocol'
 import { DESKTOP, TABLET, setViewport, type Viewport } from './fits'
 import { bookOf, chapterOf } from './albumFixture'
+import { sheetFor } from '../../src/composables/albumFit'
 
 /** ⚠ 1024 EXACTLY, AND IT IS NOT `fits.ts`'s DESKTOP. That one is 1280 – the top of the band, and
  *  since r49 №13 (12.10) a rung of its own (`SHEET_WIDE_PX`, 700) – and this one is the BOTTOM of
@@ -59,7 +62,9 @@ import { bookOf, chapterOf } from './albumFixture'
  *  arrows fits in the reading column» is tight enough to be a claim (54px of strip past the
  *  column-gap – №13's regrade, counted beside the token). Both are exercised below: the ladder is
  *  asserted at 1024 and at 1280, so a rule that only holds at one end of the desktop band is
- *  caught. */
+ *  caught.
+ *  ⚠ r50 №2 (12.10): 850 < 1024 makes this row LANDSCAPE, so the vh fit owns it now – the rung is
+ *  its cap, and `pageAt` below says which of the two a row reads. */
 const DESKTOP_1024: Viewport = { width: 1024, height: 850 }
 const MOBILE: Viewport = { width: 390, height: 844 }
 
@@ -74,6 +79,14 @@ const LADDER = [
 
 /** The two wide ones – what this file is about. */
 const WIDE = LADDER.filter((w) => w.name !== '390')
+
+/** ⭐ r50 №2 (12.10): two of the four rows are LANDSCAPE viewports (850 < 1024, 800 < 1280), and on
+ *  those the vh CEILING – not the rung – sizes the page now: `AlbumScreen`'s handler writes the
+ *  fitted tokens inline on :root and the cascade follows. `sheetFor` is the pure twin the handler
+ *  calls (its own table is run-verified in `r50-album-fit.test.ts`); null means portrait or phone,
+ *  where the rung stands – so the 390 and 768x1024 rows read exactly what they always read. */
+const pageAt = (vp: Viewport, rung: number): number => sheetFor(vp.width, vp.height) ?? rung
+const stepAt = (vp: Viewport, rung: number): number => pageAt(vp, rung) + SHEET_GAP_PX
 
 const said = (text: string): string => text.replace(/\s+/g, ' ').trim()
 
@@ -101,13 +114,15 @@ describe('the ladder is the README\'s three widths, and nothing drifts off it', 
   // крупнее шириной»; at 390 it stays 470 and pans. The width is read off the mounted paper through
   // the real cascade for the reason the phone's own file gives: this layer is all layout, and a
   // stylesheet pin cannot see the rule that cancels it.
-  it('⚠⚠ the page measures 470 / 600 / 640 / 700 at 390 / 768 / 1024 / 1280', () => {
+  // ⭐ RE-AIMED r50 №2 (12.10): the 1024x850 and 1280x800 rows are landscape, so their pages are the
+  // fitted 580 / 530 now – the portrait rows still read the rungs the title names.
+  it('⚠⚠ the page measures the rung where portrait rules (470 / 600) and the vh ceiling where landscape fits', () => {
     for (const { name, vp, sheet } of LADDER) {
       const w = mountAlbum(vp)
       const paper = w.find('.album-paper')
       expect(paper.exists(), `no page was drawn at ${name}`).toBe(true)
       expect(px(getComputedStyle(paper.element).width), `the page is the wrong size at ${name}`).toBe(
-        sheet,
+        pageAt(vp, sheet),
       )
       w.unmount()
     }
@@ -138,14 +153,14 @@ describe('the ladder is the README\'s three widths, and nothing drifts off it', 
       expect(Number.isFinite(scale), `the page does not scale its collage at ${name}`).toBe(true)
       expect(
         Math.round(scale * LEAF_PX),
-        `at ${name} the collage is drawn at ${Math.round(scale * LEAF_PX)}px on a ${sheet}px page`,
+        `at ${name} the collage is drawn at ${Math.round(scale * LEAF_PX)}px on a ${pageAt(vp, sheet)}px page`,
       ).toBe(px(getComputedStyle(paper.element).width))
       w.unmount()
     }
   })
 
   it('⚠⚠ the film\'s pitch is the page plus one gutter, at every width', () => {
-    for (const { name, vp, sheet, step } of LADDER) {
+    for (const { name, vp, sheet } of LADDER) {
       // ⚠⚠ THE MOUNT IN FRONT OF THIS READ IS NOT DECORATION, and it cost a red to find. happy-dom
       // caches a computed style against the element it was read on and re-evaluates the media
       // queries when the tree changes – and `document.documentElement` is the ONE element that
@@ -159,10 +174,11 @@ describe('the ladder is the README\'s three widths, and nothing drifts off it', 
       const declared = px(
         getComputedStyle(document.documentElement).getPropertyValue('--album-step'),
       )
-      expect(declared, `the film has no declared pitch at ${name}`).toBe(step)
+      // r50 №2: on the landscape rows the declared pitch is the fitted one (inline on :root).
+      expect(declared, `the film has no declared pitch at ${name}`).toBe(stepAt(vp, sheet))
       expect(
-        declared - sheet,
-        `at ${name} the pitch is ${declared} against a ${sheet}px page – ${declared - sheet} of gutter`,
+        declared - pageAt(vp, sheet),
+        `at ${name} the pitch is ${declared} against a ${pageAt(vp, sheet)}px page – ${declared - pageAt(vp, sheet)} of gutter`,
       ).toBe(SHEET_GAP_PX)
       w.unmount()
     }
@@ -176,8 +192,13 @@ describe('the ladder is the README\'s three widths, and nothing drifts off it', 
   // 6 RED, this arm among them; «scale × leaf is the page» stays green, correctly – a 640 page at
   // 1.3617 is the 1024 rung agreeing with itself, which is why that loop alone could not have
   // guarded the new rung. Restored, 22 green.
-  it('⚠ r49 №13 – at 1280 the page is SHEET_WIDE_PX and the pitch pays one gutter over it', () => {
-    const w = mountAlbum(DESKTOP)
+  // ⭐ RE-AIMED r50 №2 (12.10): fits.ts's DESKTOP (1280x800) is LANDSCAPE, where the fit writes its
+  // own tokens over the rung – and the HANDLER computes its cap from the protocol constants, so at
+  // a landscape viewport a deleted `@media (min-width: 1280px)` block could hide behind the inline
+  // token for ever. A PORTRAIT 1280 viewport (a rotated monitor) is where the stylesheet's rung is
+  // the only authority: `sheetFor` refuses portrait, and the token can only come off the media block.
+  it('⚠ r49 №13 – at PORTRAIT 1280 the page is SHEET_WIDE_PX and the pitch pays one gutter over it', () => {
+    const w = mountAlbum({ width: 1280, height: 1300 })
     expect(
       px(getComputedStyle(w.find('.album-paper').element).width),
       'the 1280 rung is not read – the page wears a lower rung',
@@ -198,18 +219,20 @@ describe('the ladder is the README\'s three widths, and nothing drifts off it', 
   // film laid out 556 apart but scrolled 486 at a time lands every page two thirds of a gutter out of
   // register – which still renders, still pages, and looks like a rounding bug forever.
   it('⚠⚠ an arrow moves the film by the width\'s own pitch, not by the phone\'s', async () => {
-    for (const { name, vp, step } of LADDER) {
+    for (const { name, vp, sheet } of LADDER) {
       const w = mountAlbum(vp)
       const pan = w.find('.album-pan').element as HTMLElement
+      // r50 №2: the landscape rows scroll by the FITTED pitch – the script reads the same token.
+      const pitch = stepAt(vp, sheet)
 
       await w.find('.album-pager .album-step:last-of-type').trigger('click')
-      expect(pan.scrollLeft, `the next arrow moved the film wrong at ${name}`).toBe(step)
+      expect(pan.scrollLeft, `the next arrow moved the film wrong at ${name}`).toBe(pitch)
       expect(said(w.find('.album-count').text()), `the pager lost the page at ${name}`).toBe(
         'Sheet 2 of 4',
       )
 
       await w.findAll('.album-dot')[3].trigger('click')
-      expect(pan.scrollLeft, `a dot moved the film wrong at ${name}`).toBe(step * 3)
+      expect(pan.scrollLeft, `a dot moved the film wrong at ${name}`).toBe(pitch * 3)
       expect(said(w.find('.album-count').text())).toBe('Sheet 4 of 4')
       w.unmount()
     }
@@ -231,7 +254,8 @@ describe('at 768 and 1024 the page fits, and the window says so', () => {
     for (const { name, vp, sheet } of WIDE) {
       const w = mountAlbum(vp)
       const cs = getComputedStyle(w.find('.album-pan').element)
-      expect(px(cs.width), `the window is not one page wide at ${name}`).toBe(sheet)
+      // r50 №2: on the landscape rows «one page» is the fitted page – window and paper still agree.
+      expect(px(cs.width), `the window is not one page wide at ${name}`).toBe(pageAt(vp, sheet))
       expect(
         px(getComputedStyle(w.find('.album-paper').element).width),
         `the page and its window disagree at ${name}`,
@@ -378,8 +402,12 @@ describe('the chapters change shape three times and stay the same list', () => {
   //
   // The README gives each shape its reason: at 1024 «все 6 глав сеткой под листом», at 768 «та же
   // лента, скроллится горизонтально», and on a phone the rail «занял бы полэкрана», so it is a press.
-  it('⚠ 1024 – a grid under the page, with no scroller left in it', () => {
-    const w = mountAlbum(DESKTOP_1024, book())
+  // ⭐ RE-AIMED r50 №2 (12.10): 1024x850 is LANDSCAPE now owned by the fit, where the rail is the
+  // one-row strip (the grid is ≈134px of chrome that would eat the fitted sheet –
+  // `r50-album-fit.test.ts` holds that arm). «все 6 глав сеткой под листом» stands where height is
+  // no bound: PORTRAIT ≥1024, an iPad Pro upright.
+  it('⚠ 1024 PORTRAIT – a grid under the page, with no scroller left in it', () => {
+    const w = mountAlbum({ width: 1024, height: 1366 }, book())
     const list = w.find('.album-rail-list')
     expect(list.exists(), 'there is no chapter rail on a desktop').toBe(true)
     const cs = getComputedStyle(list.element)
@@ -430,14 +458,14 @@ describe('the chapters change shape three times and stay the same list', () => {
   // 8. THE RAIL IS A WAY THROUGH THE BOOK, NOT A PICTURE OF IT
   // ===============================================================================================
   it('⚠⚠ a plate pans the film to that chapter\'s first sheet, at both wide widths', async () => {
-    for (const { name, vp, step } of WIDE) {
+    for (const { name, vp, sheet } of WIDE) {
       const w = mountAlbum(vp, book())
       await w.findAll('.album-rail-plate')[2].trigger('click')
 
       expect(
         (w.find('.album-pan').element as HTMLElement).scrollLeft,
         `the third chapter's plate did not open it at ${name}`,
-      ).toBe(step * 4)
+      ).toBe(stepAt(vp, sheet) * 4) // r50 №2: the fitted pitch on the landscape rows
       expect(said(w.find('.album-count').text())).toBe('Sheet 5 of 6')
       w.unmount()
     }

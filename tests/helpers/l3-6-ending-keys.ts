@@ -56,6 +56,7 @@ export const ENDING_CLASS_B_KEYS: readonly string[] = [
   "The money turned",
   "The story has not stopped yet",
   "The tour",
+  "The week she told us",
   "The week the baby came home",
   "This time she said it looking out of the window. You have said one more year {0} times, and the {1} table has not moved. She will not fight you on one more – but you both know what she wants.",
   "Three seasons on the {0} table and it has not moved. If she cannot reach the top, she would rather go now – that is how she put it. She will keep playing if you want her to.",

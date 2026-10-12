@@ -172,3 +172,23 @@ Two are not repetition but disagreement with a line on the same page:
 | RU21-ENS-10 | `stages built.` | `этапов.` |
 | RU21-ENS-11 | `time.` | `.` – ⚙ 12.10 r49 №9: строка удалена с экрана, ключ умер `QUESTION` |
 | RU21-ENS-12 | `times.` | `.` – ⚙ 12.10 r49 №9: строка удалена с экрана, ключ умер `QUESTION` |
+
+## ⚙ 12.10 r50 №5 agent-authored – her brand's line beside the academy's
+
+⚙ 12.10 agent-authored under the 11.10 blanket ruling; his live edit follows. The owner's ask
+(round 50 №5): «под или над [строкой академии] можно сделать такую же надпись про её личный бренд,
+при его наличии на момент окончания».
+
+2 keys. The note renders only when the merch brand is **delivered** at the end, between the academy
+note and the lifetime deal's. The earning arm is chained the academy's way – `Her brand runs – and
+it earns` {money} `a week.` – with {money} in its own `<b class="ending-fig">`, compact from $1M,
+and `a week.` reused from RU21-ENS-05; the standing arm (the brand delivered, the family's weekly
+take 0) is one whole key with no figure. ⚠ The figure is the **family's take, not gross**: the
+brand's week is split with her (`merchFamilyWeeklyIncomeCents`), unlike the academy's unsplit gross
+above. The Russian halves match the academy row's voice (RU21-ENS-02/-09), so the two notes read as
+one family: «Её бренд работает: доход – $X в неделю.»
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU21-ENS-13 | `Her brand runs – and it earns` | `Её бренд работает: доход –` |
+| RU21-ENS-14 | `Her brand stands – no income this week.` | `Её бренд существует: дохода на этой неделе нет.` |

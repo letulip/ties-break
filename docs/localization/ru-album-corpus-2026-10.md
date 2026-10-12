@@ -15,8 +15,9 @@ This companion localizes the **35 original source IDs** in
 `caption` and a loose handwritten `line` – 420 player-facing strings, plus the 16 closing-arc
 strings. The old source header said 34/408 because it assigned `A34` to **both** `the-line`
 and `birth`; the IDs, not the repeated editorial number, are the reliable catalog keys.
-Current `main` has **38** IDs; the three new rare ones (36 strings) are in
-[RU-16](ru-album-delta-2026-10.md). Every Russian line below is `DRAFT`.
+Current `main` has **39** IDs; the three new rare ones (36 strings) are in
+[RU-16](ru-album-delta-2026-10.md), and `A38` `pregnancy` (12 strings, r50 №1) is in §16 below.
+Every Russian line below is `DRAFT`.
 
 The English corpus and runtime gates remain evidence for what happened. This document owns how the
 same parent's album sounds in Russian. It does not change occasion eligibility, dates, ages, facts,
@@ -461,7 +462,7 @@ venue without contradicting the handwriting.
 This is the cumulative career crossing, not a claim that every later week or season is profitable.
 `Сумму` is intentionally unnumbered.
 
-## 16. School, wedding and birth
+## 16. School, wedding, pregnancy and birth
 
 ### A20 · `school-done` · school ended
 
@@ -483,6 +484,19 @@ This is the cumulative career crossing, not a claim that every later week or sea
 
 No spouse name, pronoun, personality or continued presence is implied. The same Russian occasion
 therefore remains true for a later marriage.
+
+### A38 · `pregnancy` · the week she told the family a baby was coming
+
+r50 №1 (12.10). The page sits at the announcement week – the English spec's A38. No spouse is named
+or implied (the wedding's law), and the child's sex is unknown at the announcement, so the Russian
+may not say «дочка» or «девочка»: only «малыш»-free, sex-free phrasing about the news itself.
+
+| voice | note | caption | line |
+| --- | --- | --- | --- |
+| `sunny` | `Ты велела всем сначала сесть – а сама так и не смогла усидеть на месте.` | `Ты велела всем сначала сесть.` | `Долго никто не усидел.` |
+| `fiery` | `Ты сказала это быстро, как счёт в матче, и смотрела на наши лица – успели ли мы.` | `Объявлено, как счёт в матче.` | `Мы успели. Едва.` |
+| `deep` | `Ты дождалась, пока кухня затихнет, и сказала один раз, тихо – как о том, что уже давно правда.` | `Один раз, тихо, на кухне.` | `Это уже давно было правдой.` |
+| `quiet` | `Ты назвала неделю и план на одном дыхании, а второе дыхание было уже обо всём остальном.` | `Неделя, план – на одном дыхании.` | `План уже был готов.` |
 
 ### A34 · `birth` · the week her daughter came home
 

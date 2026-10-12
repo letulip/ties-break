@@ -76,32 +76,32 @@ function firstHit(seed: string, from: number): number {
 
 /** A career whose wedding LANDED through the real path: the hazard hit on its own sub-stream, the
  *  beat was answered, and `landWedding` latched `weeksAfterEngagement` later – the one writer of
- *  both the latch and the milestone. SEARCHED to land inside the adult band (the bride painting's
- *  own band, `FACE_BANDS.bride = ['adult']`), and throwing rather than falling back: a case that
- *  quietly ran at 31+ would be measuring the band fallback, not the wedding page. */
-function engineWedding(): WorldState {
-  for (let i = 0; i < 50; i++) {
-    const seed = `r49-wed-${i}`
-    const probe = createWorld(seed)
-    const gate = firstWeekAtAge(probe, WEDDING.ageGate)
-    const hit = firstHit(seed, gate)
-    const landing = hit + WEDDING.weeksAfterEngagement
-    if (kidAgeAt(probe, landing) > 30) continue
-    const world = createWorld(seed)
-    world.season = []
-    world.week = hit
-    world.loveEpisodes = [episodeRow(hit - WEDDING.minEpisodeWeeks)]
-    world.bond = 70
-    rollWedding(world)
-    answerLifeBeat(world, 'bless')
-    world.week = landing
-    landWedding(world)
-    if (world.loveEpisodes[0].latchedWeek !== landing) {
-      throw new Error('the engine did not land the wedding on the week its own predicate names')
-    }
-    return world
+ *  both the latch and the milestone.
+ *
+ *  ⚠ RE-AIMED r50 №1 (12.10): the `> 30 continue` skip is GONE. It existed because a landing at 31+
+ *  used to measure the band FALLBACK (`lateCareer-norm`) rather than the wedding page; the owner's
+ *  third ask turned that fallback into the defect, and the album now clamps the moment art
+ *  (`EVENT_STEM.wedding = 'adult-bride'`), so EVERY landing paints the same bride. `fromAge` lets
+ *  the 31+ arm start the hazard search inside the lateCareer band – the same engine path, later. */
+function engineWedding(fromAge: number = WEDDING.ageGate): WorldState {
+  const seed = 'r49-wed-0'
+  const probe = createWorld(seed)
+  const gate = firstWeekAtAge(probe, fromAge)
+  const hit = firstHit(seed, gate)
+  const landing = hit + WEDDING.weeksAfterEngagement
+  const world = createWorld(seed)
+  world.season = []
+  world.week = hit
+  world.loveEpisodes = [episodeRow(hit - WEDDING.minEpisodeWeeks)]
+  world.bond = 70
+  rollWedding(world)
+  answerLifeBeat(world, 'bless')
+  world.week = landing
+  landWedding(world)
+  if (world.loveEpisodes[0].latchedWeek !== landing) {
+    throw new Error('the engine did not land the wedding on the week its own predicate names')
   }
-  throw new Error('no seed in 50 lands an adult-band wedding')
+  return world
 }
 
 /** Every caption the wedding occasion can print in this voice – the whole r49 variant pool, so the
@@ -112,9 +112,11 @@ function weddingCaptions(voice: 'sunny' | 'fiery' | 'quiet' | 'deep'): Set<strin
   return new Set(row.voices[voice].map((h) => h.caption))
 }
 
-function frames(book: AlbumBook): { caption: string; art: string }[] {
-  return book.sheets.flatMap((sheet) => sheet.frames.map((f) => ({ caption: f.caption, art: f.art })))
+function frames(book: AlbumBook): { caption: string; art: string; alt: string }[] {
+  return book.sheets.flatMap((sheet) => sheet.frames.map((f) => ({ caption: f.caption, art: f.art, alt: f.alt })))
 }
+
+const BRIDE_ART = 'images/fem-euro-brunnet/fem-euro-brunnet-adult-bride.webp'
 
 describe('round 49 №8 – the engine-born wedding reaches the album', () => {
   it('⭐⭐⭐ one wedding frame, the bride painting at an adult-band week, the caption the corpus wrote', () => {
@@ -127,9 +129,51 @@ describe('round 49 №8 – the engine-born wedding reaches the album', () => {
     const caps = weddingCaptions(world.temperament!)
     const wedding = frames(book).filter((f) => caps.has(f.caption))
     expect(wedding, 'exactly one wedding frame in the book').toHaveLength(1)
-    expect(wedding[0].art, 'the bride painting, band-resolved at adult').toBe(
-      'images/fem-euro-brunnet/fem-euro-brunnet-adult-bride.webp',
-    )
+    expect(wedding[0].art, 'the bride painting – her own band, or the r50 clamp').toBe(BRIDE_ART)
+  })
+
+  it('⭐⭐⭐ r50 №1 – a landing at 31+ paints the SAME bride, with her own alt (the band clamp)', () => {
+    // The hole the owner reported three times: `FACE_BANDS.bride = ['adult']`, so a lateCareer
+    // wedding used to fall back to `lateCareer-norm` under the generic portrait alt – the frame
+    // existed and was unrecognizable. The clamp (`EVENT_STEM.wedding`) pins the art at any band;
+    // the HOME portrait fallback is untouched and stays pinned in tests/portrait-bands.test.ts.
+    const world = engineWedding(31)
+    const week = world.milestones.find((m) => m.type === 'wedding')!.week
+    expect(kidAgeAt(world, week), 'the landing really is inside the lateCareer band').toBeGreaterThan(30)
+    const book = assembleAlbum(world)
+    const caps = weddingCaptions(world.temperament!)
+    const wedding = frames(book).filter((f) => caps.has(f.caption))
+    expect(wedding, 'the 31+ wedding reaches the book').toHaveLength(1)
+    expect(wedding[0].art, 'adult-bride, clamped – never the band portrait').toBe(BRIDE_ART)
+    expect(wedding[0].alt, 'and the alt is the wedding\'s own, because the picture is').toBe('Her wedding day')
+  })
+
+  it('⭐⭐ r50 №1 – two landed weddings in ONE chapter keep BOTH frames: kind `wedding` leaves the cap\'s trim', () => {
+    // «в третий раз прошу» – the last quiet drop route. A divorce writes `endedWeek` and NOTHING
+    // else (`endEpisode`, loveEpisodes.ts), the first latch survives, and a second episode can land
+    // its own wedding. Both milestones band `adult` here; a two-frame chapter's honest cap is 1, so
+    // without the exemption `selectRepresentatives`' tightening pass cut the second frame silently.
+    // ⚠ both land in the LATE CAREER band (31+ has no upper edge, so two hits years apart still
+    // share the chapter) – which also exercises the r50 clamp on both frames at once
+    const world = engineWedding(31)
+    const first = world.loveEpisodes[0]
+    const w1 = first.latchedWeek!
+    expect(kidAgeAt(world, w1) > 30, 'the first landing is inside the lateCareer band').toBe(true)
+    first.endedWeek = w1 + 10
+    // the second attachment: posed the way the first was, old enough at its own hit week
+    const hit2 = firstHit(world.seed, w1 + WEDDING.minEpisodeWeeks + 12)
+    const landing2 = hit2 + WEDDING.weeksAfterEngagement
+    world.loveEpisodes.push(episodeRow(hit2 - WEDDING.minEpisodeWeeks))
+    world.week = hit2
+    rollWedding(world)
+    answerLifeBeat(world, 'bless')
+    world.week = landing2
+    landWedding(world)
+    expect(world.milestones.filter((m) => m.type === 'wedding'), 'two captured weddings').toHaveLength(2)
+    // ⚠ counted by ART, not caption: two firings of a one-hand pool write the same caption, and the
+    // per-sheet dedupe (r49 №4) blanks the literal repeat – which is about words, never about frames.
+    const brides = frames(assembleAlbum(world)).filter((f) => f.art === BRIDE_ART)
+    expect(brides, 'both wedding frames survive selection').toHaveLength(2)
   })
 
   it('⭐⭐ route (c): a same-week RARE no longer evicts the wedding – one week, one frame, the wedding wins', () => {

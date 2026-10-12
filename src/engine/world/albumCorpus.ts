@@ -1,6 +1,6 @@
 // ⭐⭐⭐ THE ALBUM'S HANDWRITING – **GENERATED FROM `docs/specs/album-corpus-2026-09.md`, NEVER
-// RETYPED.** 38 occasions, 4 voices, 3 registers, every variant hand counted (r49 №7):
-// 636 strings, plus the arc's 16 across 8 cells – **652 authored strings in total.**
+// RETYPED.** 39 occasions, 4 voices, 3 registers, every variant hand counted (r49 №7):
+// 648 strings, plus the arc's 16 across 8 cells – **664 authored strings in total.**
 //
 // ⭐⭐ THE THREE REGISTERS ARE THREE DIFFERENT THINGS A PARENT DOES ON A PAGE, and his 19.09
 // confirmation («всё верно») is what fixes them: the **note** speaks TO her («First day on court. You
@@ -21,7 +21,7 @@
 // ⚠ IT IS ORDINARY COMMITTED SOURCE AND NOT A BUILD STEP. Nothing in `npm run check`, `npm run build`
 // or the dev server generates it; the emitter is a one-off, as round 44 ruled for its sibling.
 //
-// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 652 authored strings. An agent retyping them produces
+// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 664 authored strings. An agent retyping them produces
 // typos that no test can catch, because a test written by the same agent compares against what was
 // typed. The document is the source of truth; this file is its projection.
 //
@@ -41,10 +41,12 @@ import type { Temperament } from '../spirit'
  *  so chapter 1 is the prologue instead. */
 export type AlbumBand = 'prologue' | 'young' | 'teen' | 'adult' | 'lateCareer'
 
-/** The family the selector draws an occasion from – the nine `MilestoneType`s plus `prologue`
- *  (the trace persisted at handover), `asset` (`world.assets` and its `boughtWeek`), `rare` (his
+/** The family the selector draws an occasion from – the nine `MilestoneType`s plus the corpus-only
+ *  six: `prologue` (the trace persisted at handover), `lineage` (the record the world was born
+ *  carrying), `pregnancy` (derived at assembly from the `'expecting'` lifeLog row and the child
+ *  that followed – r50 №1), `asset` (`world.assets` and its `boughtWeek`), `rare` (his
  *  super-rare three) and `closing` (the three written frames). */
-export type AlbumOccasionKind = 'prologue' | 'lineage' | 'title' | 'final' | 'prize' | 'international' | 'injury' | 'season-rank' | 'break-even' | 'school' | 'wedding' | 'birth' | 'asset' | 'rare' | 'closing'
+export type AlbumOccasionKind = 'prologue' | 'lineage' | 'title' | 'final' | 'prize' | 'international' | 'injury' | 'season-rank' | 'break-even' | 'school' | 'wedding' | 'pregnancy' | 'birth' | 'asset' | 'rare' | 'closing'
 
 /** ⭐ ONE OCCASION IN ONE VOICE: the three registers, finished. **No placeholders and no
  *  interpolation** – her name is the player's, so the note says «you» and the caption says «she», and
@@ -1013,6 +1015,35 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         note: 'You checked the time of everything, and then you let the day happen without running it.',
         caption: 'She let somebody else run it.',
         line: 'She stopped checking the time.',
+      }],
+    },
+  },
+  // A38 · pregnancy
+  {
+    id: 'pregnancy',
+    kind: 'pregnancy',
+    bands: ['adult', 'lateCareer'],
+    gate: 'a-birth-followed-the-announcement',
+    voices: {
+      sunny: [{
+        note: 'You told everybody to sit down first, and then you could not sit down yourself.',
+        caption: 'Everybody sat down first.',
+        line: 'Nobody sat for long.',
+      }],
+      fiery: [{
+        note: 'You said it the way you announce a score, fast, and then you watched to see if we had kept up.',
+        caption: 'Announced like a score.',
+        line: 'We kept up. Just.',
+      }],
+      deep: [{
+        note: 'You waited until the kitchen was quiet and said it once, quietly, as if it had been true for a while.',
+        caption: 'Once, quietly, in the kitchen.',
+        line: 'It had been true for a while.',
+      }],
+      quiet: [{
+        note: 'You told us the week and the plan in one breath, and the second breath was about everything else.',
+        caption: 'The week, the plan, one breath.',
+        line: 'The plan was already made.',
       }],
     },
   },

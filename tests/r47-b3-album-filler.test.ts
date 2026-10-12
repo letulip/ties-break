@@ -58,7 +58,8 @@ describe('round 47 #14 · the pool is the honest subset, and every picture is a 
 })
 
 describe('round 47 #14 · which sheets earn which kind (the table, over the whole corpus)', () => {
-  const NEVER = new Set(['lineage', 'prologue', 'wedding', 'birth', 'closing'])
+  // ⚠ 12.10 r50 №1: pregnancy joined FILLER_NEVER_KINDS – the page has its own painting.
+  const NEVER = new Set(['lineage', 'prologue', 'wedding', 'birth', 'closing', 'pregnancy'])
 
   it('the mood picks the kind: a happy occasion gets a holiday, every other a quiet day at home – and the NEVER kinds, the prologue band and an empty sheet get none', () => {
     const mood = (id: string): string => albumFillerKind('adult', [{ id, kind: 'rare' }]) ?? 'none'

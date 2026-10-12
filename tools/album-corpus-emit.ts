@@ -234,8 +234,10 @@ import type { Temperament } from '../spirit'
  *  so chapter 1 is the prologue instead. */
 export type AlbumBand = ${union(ALBUM_BANDS)}
 
-/** The family the selector draws an occasion from – the nine \`MilestoneType\`s plus \`prologue\`
- *  (the trace persisted at handover), \`asset\` (\`world.assets\` and its \`boughtWeek\`), \`rare\` (his
+/** The family the selector draws an occasion from – the nine \`MilestoneType\`s plus the corpus-only
+ *  six: \`prologue\` (the trace persisted at handover), \`lineage\` (the record the world was born
+ *  carrying), \`pregnancy\` (derived at assembly from the \`'expecting'\` lifeLog row and the child
+ *  that followed – r50 №1), \`asset\` (\`world.assets\` and its \`boughtWeek\`), \`rare\` (his
  *  super-rare three) and \`closing\` (the three written frames). */
 export type AlbumOccasionKind = ${union(ALBUM_KINDS)}
 

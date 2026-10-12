@@ -100,7 +100,7 @@ describe('§1 THE CENSUS – zero keys without Russian, and the road to zero is 
 // ---- §2 the wave renders ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 describe('§2 THE WAVE – 681 keys, every value rendered under the real ru.json', () => {
   it('681 keys were added by this wave: 628 new rows and 53 scaffold cells', () => {
-    expect(WAVE.keys.size).toBe(680) /* ⚠ 11.10: +2 – the Import/Stats rows re-pointed to their tagged heirs the same day. ⚠ 12.10 round 49 №9: −3 – the one-more-year note left EndingScreen; its three rows are parked QUESTION above */
+    expect(WAVE.keys.size).toBe(683) /* ⚠ 11.10: +2 – the Import/Stats rows re-pointed to their tagged heirs the same day. ⚠ 12.10 round 49 №9: −3 – the one-more-year note left EndingScreen; its three rows are parked QUESTION above. ⚠ 12.10 r50 №1: +1 – the pregnancy page's alt, RU21-ALB-16. ⚠ 12.10 r50 №5: +2 – the brand line's two keys, RU21-ENS-13/14 */
     expect(WAVE.scaffold).toBe(53)
   })
 
@@ -277,8 +277,10 @@ describe('§4 THE COUNTS IN RU-21 PART TWO are the documents\' counts', () => {
       expect(have, `${s.fam} in ${s.file}`).toBe(s.rows)
       sum += s.rows
     }
-    expect(sum).toBe(631)
-    expect(part).toContain('**631**')
+    // 631 → 632 at r50 №1 (12.10): the pregnancy page's alt, RU21-ALB-16 – run-verified
+    // 632 → 634 at r50 №5 (12.10): the brand line's two rows, RU21-ENS-13/14 – run-verified
+    expect(sum).toBe(634)
+    expect(part).toContain('**634**')
   })
 })
 

@@ -8,6 +8,9 @@
 // ⚠ REFRESHED 12.10 (r49 №8, schema v94): both fixtures re-captured; the field diff is EXACTLY the
 // 28 `schemaVersion` leaves (93→94) and the two aggregates that contain them – zero row, text or
 // next-draw digests moved, which is this twin saying the round changed no English and no draws.
+// ⚠ REFRESHED AGAIN 12.10 (r50 №5): the diff is EXACTLY TWO leaves – career 8/0's snapshot aggregate
+// and its `ending` field, the one bench career that owns the merch brand reading its new epilogue
+// line. The r50 №3 cup field moved nothing here – the digest never carried it.
 //
 // ⚠⚠ TWO PLATFORM FAMILIES, BOTH TRUE (10.10, the day-long hunt). The PR runner (ubuntu/x64,
 // node 22) produces snapshot digests no darwin/arm64 machine can – measured to the last cell: a

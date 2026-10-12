@@ -50,6 +50,7 @@ import type {
   AlbumTag,
   AlbumClubPatch,
   AlbumFiller,
+  AlbumChapterCup,
   AlbumTicket,
   AlbumTierStep,
   BuildLetterTerms,
@@ -141,6 +142,12 @@ export const ALBUM_MOOD: Record<string, PortraitEmotion> = {
   // table is consulted. The row exists because the mood is ALSO the journey rung's input and because
   // the table's own law – a row for every non-closing occasion – is what stops a silent `'norm'`.
   birth: 'norm',
+  // ⭐ r50 №1 – the announcement's row, and like the birth's it is UNREACHED IN PRACTICE: the frame
+  // resolves through `EVENT_STEM` at rung 1 (`adult-pregnant-early`), so this table is never asked
+  // for the picture. `happy` because the week is the telling, not the postpartum arithmetic that
+  // makes the birth's row `norm` – and because the table's own law (a row for every non-closing
+  // occasion) is what stops a silent `'norm'`.
+  pregnancy: 'happy',
   'first-house': 'happy',
   brand: 'happy',
   'academy-land': 'serious',
@@ -162,10 +169,33 @@ export const ALBUM_MOOD: Record<string, PortraitEmotion> = {
 }
 
 /** WHICH ONE-MOMENT PAINTING AN OCCASION HAS – the §4 ladder's TOP rung, as painting STEMS under
- *  `images/fem-euro-brunnet/`. The bride goes through `paintedStemFor` instead (band fallback – the
- *  wave-7 wiring: a wedding at thirty-one shows the band's own `norm`, never a 404). ⚠ `funeral`
- *  and the two `pregnant-*` paintings are on disk and reachable from NO row here: the world holds
- *  no death and no pregnancy, and the album does not invent one. */
+ *  `images/fem-euro-brunnet/`. A stem here is FIXED: one file, at every band she can reach the
+ *  occasion in – which since r50 №1 is the design and no longer the hazard (see the r50 block).
+ *
+ *  ⚠ COMMENT REFRESHED r50 №1 (12.10). This note used to say «`funeral` and the two `pregnant-*`
+ *  paintings are on disk and reachable from NO row here: the world holds no death and no pregnancy,
+ *  and the album does not invent one». Both halves of that sentence have aged out: the world HOLDS
+ *  a death since v87 (the weight wave's bereavement) and the pregnancy enters the album with THIS
+ *  row (r50 №1, off the `'expecting'` lifeLog row – `pregnancyCandidates`). `funeral` alone stays
+ *  reachable from no row here: whether the album shows a funeral page is an owner ruling nobody has
+ *  asked for yet, not a row to add quietly.
+ *
+ *  ⭐⭐⭐ r50 №1 (12.10, the owner's THIRD ask about the wedding photo): `wedding`, `birth` and the
+ *  new `pregnancy` are FIXED STEMS here, no longer band-resolved. Until this round the bride and the
+ *  birth went through `paintedStemFor` (the `MOMENT_FACE` table, the wave-7 wiring), whose band
+ *  fallback drew the band's own `norm` at 31+ – so a lateCareer wedding's frame existed and was
+ *  UNRECOGNIZABLE, which is exactly what he kept reporting. The design call is now the graduated
+ *  closer's, one row up: ONE BAND YOUNG BEATS INVISIBLE – a 31-year-old bride wears the adult-band
+ *  painting the way the 22-year-old graduate has always worn `adult-graduated`. ⚠ THE CLAMP IS THE
+ *  ALBUM'S ALONE: the Home and memory surfaces keep `paintedStemFor`'s honest norm-fallback exactly
+ *  as `tests/portrait-bands.test.ts` pins it (`lateCareer-norm` for a lateCareer bride), which is
+ *  why the mechanism is a fixed row HERE and not a clamp inside `shared/avatarEmotion.ts` – that
+ *  file is byte-untouched. `tests/r49-wedding-album.test.ts` carries the 31+ arm.
+ *
+ *  ⚠ BASE_PATH-SAFE BY CONSTRUCTION, the album wave's own deployed-only 404 lesson: every value here
+ *  goes through `paintingPath`, which returns a path RELATIVE to the app root, and `AlbumPhoto.vue`
+ *  is the one place that prefixes `import.meta.env.BASE_URL`. Every stem is swept against the files
+ *  on disk by `tests/albumBook.test.ts`. */
 const EVENT_STEM: Partial<Record<string, string>> = {
   'first-court': 'jun-training',
   graduated: 'adult-graduated',
@@ -174,31 +204,14 @@ const EVENT_STEM: Partial<Record<string, string>> = {
    *  `fem-euro-brunnet-lateCareer-retired.webp` is a file on disk and renaming art to match a word
    *  would be a change to a thing his own eyes have passed. */
   'career-ended': 'lateCareer-retired',
-}
-
-/** ⭐⭐⭐ WHICH OCCASIONS RESOLVE THROUGH THE **MOMENT-FACE** SEAM rather than through `EVENT_STEM`
- *  above – the paintings that exist in ONE band and therefore need a band FALLBACK, never a raw stem.
- *
- *  ⚠⚠ IT IS A TABLE AND IT USED TO BE AN `if (c.occasion.id === 'wedding')`, which is the shape
- *  `shared/avatarEmotion.ts`' own `FACE_BANDS` note predicted would have to be found and edited:
- *  «the next one-band painting that arrives needs exactly this seam, and a branch would have to be
- *  found and edited instead of a row being added». Wave 8b T6 is that arrival, so the branch became
- *  the table it should have been and the birth is a ROW.
- *
- *  ⚠ WHY NOT `EVENT_STEM`: that table names a STEM outright, and a stem cannot fall back. A wedding
- *  at thirty-one and a birth at thirty-one must both draw the band's own `norm` rather than a file
- *  that is not on disk – `paintedFaceFor` is the one place that decision lives, and this is the table
- *  that routes to it. Both halves are swept against disk by `tests/portrait-bands.test.ts`.
- *
- *  ⚠ BASE_PATH-SAFE BY CONSTRUCTION, which is the album wave's own deployed-only 404 lesson: every
- *  value here goes through `paintingPath`, which returns a path RELATIVE to the app root, and
- *  `AlbumPhoto.vue` is the one place that prefixes `import.meta.env.BASE_URL`. A stem that built an
- *  absolute `/images/...` here would work on localhost and 404 on the deployed sub-path. */
-type MomentFace = 'bride' | 'birth'
-const MOMENT_FACE: Partial<Record<string, MomentFace>> = {
-  wedding: 'bride',
-  // ⭐ wave 8b T6 (E2) – `fem-euro-brunnet-adult-birth.webp`, on disk since T5.
-  birth: 'birth',
+  /** ⭐⭐⭐ r50 №1 – the band clamp, as rows (the block above). The wedding's gate is 23+, so `adult`
+   *  is the common case and `lateCareer` the one the fallback used to make invisible. */
+  wedding: 'adult-bride',
+  birth: 'adult-birth',
+  /** ⭐ r50 №1 – the pregnancy page sits at the ANNOUNCEMENT week, which is `pregnant-early`'s own
+   *  window on the Home portrait (`pregnancyFaceAt` in shared/avatarEmotion.ts), so the album and
+   *  the hero describe the same week with the same painting. */
+  pregnancy: 'adult-pregnant-early',
 }
 
 /** The paintings' home – ONE spelling in this module, swept against the files on disk by
@@ -275,10 +288,17 @@ const ALT_DRAFT = {
   portrait: 'Her, that week',
   travel: 'The journey home',
   'jun-training': 'Her first days on a court',
-  bride: 'Her wedding day',
+  // ⚠ r50 №1 – the bride's and the birth's alts are KEYED BY STEM now (`EVENT_STEM`'s own keys),
+  // because the fixed stems retired the band fallback that used to decide between an occasion's own
+  // alt and the portrait one. The two STRINGS are character-identical to what they were – an alt is
+  // a catalog key (RU21-ALB-09 / RU21-ALB-13) and the copy is his.
+  'adult-bride': 'Her wedding day',
   // ⚠ DRAFT (wave 8b T6) – husband-agnostic and child-sex-agnostic, so it reads correctly on a
   // career whose marriage ended before the birth and on the day boys exist.
-  birth: 'The week the baby came home',
+  'adult-birth': 'The week the baby came home',
+  // ⚠ DRAFT (r50 №1) – the announcement's alt: husband-agnostic and child-sex-agnostic for the
+  // birth alt's own reasons, and doubly so here – at the announcement nobody knows the sex.
+  'adult-pregnant-early': 'The week she told us',
   'adult-graduated': 'Graduation day',
   'lateCareer-farewell': 'Her farewell match',
   'lateCareer-retired': 'The day after the last match',
@@ -313,14 +333,6 @@ export const ALBUM_PATCH_POOL: readonly string[] = [
   'Stoneleigh Tennis',
 ] as const
 
-/** ⚠ DRAFT – the alt each moment-face wears when its OWN painting is the one drawn; the band
- *  fallback takes `ALT_DRAFT.portrait` instead. A total `Record` over `MomentFace`, so a third
- *  one-band painting cannot join `MOMENT_FACE` without a sentence for it. */
-const MOMENT_ALT: Record<MomentFace, string> = {
-  bride: ALT_DRAFT.bride,
-  birth: ALT_DRAFT.birth,
-}
-
 // =================================================================================================
 // ⭐ L3-6 (10.10) – THE BOOK'S PROSE AS COPYREFS, BESIDE THE ENGLISH (docs/specs/i18n-2026-10.md §8, row L3-6)
 // =================================================================================================
@@ -346,13 +358,14 @@ const CHAPTER_TITLE_REF: Record<AlbumBand, CopyRef> = {
   lateCareer: cp`The final chapter`,
 }
 
-/** `ALT_DRAFT` as refs, the same eight lines; a picked alt maps back to its ref by its own text (the lines are unique, and none has a hole). */
+/** `ALT_DRAFT` as refs, the same nine lines; a picked alt maps back to its ref by its own text (the lines are unique, and none has a hole). */
 const ALT_REFS: readonly CopyRef[] = [
   cp`Her, that week`,
   cp`The journey home`,
   cp`Her first days on a court`,
   cp`Her wedding day`,
   cp`The week the baby came home`,
+  cp`The week she told us`,
   cp`Graduation day`,
   cp`Her farewell match`,
   cp`The day after the last match`,
@@ -628,6 +641,45 @@ function onceCandidates(world: WorldState): AlbumCandidate[] {
   // at a third of a chapter's sheets, and priority decides ORDER inside a band rather than admission.
   for (const m of world.milestones.filter((row) => row.type === 'birth')) {
     out.push(candidate(world, 'birth', m.week, 92))
+  }
+  return out
+}
+
+/** ⭐ r50 №1 – HOW FAR A BIRTH MAY TRAIL ITS ANNOUNCEMENT and still be the same pregnancy. The
+ *  model's own arithmetic (the `PREGNANT_LAST_WEEKS` note in shared/avatarEmotion.ts spells it out):
+ *  announcement → birth is `motherhood.playsOnWeeks + termWeeks` = 8 + 31 = **39 weeks**, and the
+ *  birth lands on the first TICK at/after the due week, so a few late weeks are honest. 45 is 39
+ *  plus that slack – wide enough that no real pregnancy falls out, and narrower than
+ *  `repeatCooldownWeeks` (52), so two pregnancies can never claim one announcement. */
+const PREGNANCY_MATCH_WEEKS = 45
+
+/** ⭐⭐⭐ r50 №1 – THE PREGNANCY ENTERS THE ALBUM, derived and never stored: NO schema move. The two
+ *  ledgers it reads both already outlive everything – the `'expecting'` lifeLog row (append-only,
+ *  «a row dropped for tidiness is a biography with a hole in it») and `world.children[].bornWeek`
+ *  (`landBirth`'s push, never pruned). For each CHILD, the nearest announcement before her
+ *  `bornWeek` inside the window above is the page's week – the ANNOUNCEMENT week, which is the week
+ *  the Home hero starts wearing `pregnant-early`, so the two surfaces date the moment identically.
+ *
+ *  ⚠⚠ A PREGNANCY WITH NO MATCHING CHILD – A LOSS – STAYS OUT OF THE ALBUM, AND THE DERIVATION IS
+ *  WHAT MAKES THE SILENCE AUTOMATIC: the walk is child-first, so an announcement no birth followed
+ *  is simply never asked for a frame. That is deliberate restraint, not a gap – whether the book
+ *  should hold a page about a loss is an owner ruling nobody has asked for (the funeral painting's
+ *  own standing, `EVENT_STEM`'s header), and until he rules the honest book says nothing.
+ *
+ *  ⚠ PRIORITY 91, ONE UNDER THE BIRTH'S 92: the pair can never collide on a week anyway
+ *  (announcement and birth sit ~39 weeks apart – the window's own arithmetic), so the number only
+ *  says «never evicts the birth» if some future world breaks that distance. Zero draws: a pure read
+ *  of two stored ledgers, like every resolver in §3. */
+function pregnancyCandidates(world: WorldState): AlbumCandidate[] {
+  const out: AlbumCandidate[] = []
+  const announcements = world.lifeLog.filter((row) => row.kind === 'expecting')
+  for (const child of world.children) {
+    let announced: number | null = null
+    for (const row of announcements) {
+      if (row.week > child.bornWeek || child.bornWeek - row.week > PREGNANCY_MATCH_WEEKS) continue
+      if (announced === null || row.week > announced) announced = row.week
+    }
+    if (announced !== null) out.push(candidate(world, 'pregnancy', announced, 91))
   }
   return out
 }
@@ -1244,6 +1296,16 @@ function groupCapOf(n: number): number {
   return Math.max(1, Math.floor(n / 3))
 }
 
+/** ⭐⭐⭐ r50 №1 (12.10) – THE KINDS THE THIRDS RULE MAY NOT TRIM, the way closers bypass `byWeek`.
+ *  The owner, on the wedding photo, for the THIRD time: «в третий раз прошу» – and the last quiet
+ *  drop route left was this cap: two weddings landing in ONE chapter (a divorce between them – the
+ *  first latch survives, `endEpisode` writes `endedWeek` and nothing else) are two frames of kind
+ *  `wedding`, and in a chapter of fewer than six frames the tightening pass cut the second one with
+ *  nothing anywhere saying so. A wedding is once per EPISODE and at most a couple per career – it
+ *  cannot crowd a chapter the way 248 season closes can, which is what the cap is FOR – so the kind
+ *  leaves the trim entirely: every landed wedding keeps its frame while the chapter has room. */
+const CAP_EXEMPT_KINDS: ReadonlySet<string> = new Set(['wedding'])
+
 function selectRepresentatives(candidates: AlbumCandidate[], budget: number): AlbumCandidate[] {
   // one frame per week: a title and its cheque in one week are one moment, and the higher priority
   // names it. Closers keep their own weeks even where they collide – the farewell and the last page
@@ -1275,13 +1337,14 @@ function selectRepresentatives(candidates: AlbumCandidate[], budget: number): Al
       if (room() <= 0) break
       if (picked.includes(c)) continue
       const held = picked.filter((p) => !p.closer && p.occasion.kind === c.occasion.kind).length
-      if (held >= cap) continue
+      // r50 №1 – an exempt kind (the wedding) is never blocked by the cap, only by the budget
+      if (held >= cap && !CAP_EXEMPT_KINDS.has(c.occasion.kind)) continue
       picked.push(c)
     }
     const honest = groupCapOf(picked.length)
     if (honest >= cap) break
     cap = honest
-    for (const kind of new Set(picked.filter((p) => !p.closer).map((p) => p.occasion.kind))) {
+    for (const kind of new Set(picked.filter((p) => !p.closer && !CAP_EXEMPT_KINDS.has(p.occasion.kind)).map((p) => p.occasion.kind))) {
       const members = picked
         .filter((p) => !p.closer && p.occasion.kind === kind)
         .sort((a, b) => b.priority - a.priority)
@@ -1393,17 +1456,9 @@ function awayWeek(world: WorldState, week: number): boolean {
  *  ⚠ NO DRAW, NO STREAM: the rotation is the week number's, like the scene it rotates from. */
 function frameArtOptions(world: WorldState, c: AlbumCandidate): { art: string; alt: string }[] {
   const stage = portraitStage(c.ageYears)
-  // rung 1 – the event painting, where the occasion has one. The bride resolves through
-  // `paintedStemFor` (the wave-7 wiring): band fallback, never a 404.
-  const moment = MOMENT_FACE[c.occasion.id]
-  if (moment) {
-    const stem = paintedStemFor(stage, moment)
-    // ⚠ THE BAND FALLBACK DECIDES THE ALT TOO, and `stem.endsWith` is how: a birth at thirty-one
-    // DRAWS `lateCareer-norm`, so calling it «the week the baby came home» would describe a picture
-    // that is not on screen. One reading, two consumers – the wave-7 wiring, generalised.
-    const own = MOMENT_ALT[moment]
-    return [{ art: paintingPath(stem), alt: stem.endsWith(moment) ? own : ALT_DRAFT.portrait }]
-  }
+  // rung 1 – the event painting, where the occasion has one. ⚠ r50 №1: the bride and the birth sit
+  // in this table as FIXED stems now (the band clamp – `EVENT_STEM`'s own block), so their alt is
+  // always the painting's own: there is no fallback left to describe.
   const eventStem = EVENT_STEM[c.occasion.id]
   if (eventStem) {
     return [
@@ -1629,7 +1684,7 @@ function flavourStartOf(seed: string): number {
  *      away week – a ticketless sheet is not a journey, and it already appears as a frame), and NOT on the prologue chapter (the child's chapter – a grown
  *      woman's holiday would be somebody else's childhood).
  *  WHICH KIND: the sheet's own mood (`ALBUM_MOOD` of its lead occasion) – a happy page gets a holiday picture, every other page a quiet one at home – and
- *  NEVER on a page that has its own painting or is the book's last word (`FILLER_NEVER_KINDS`: lineage, prologue, wedding, birth, closing). */
+ *  NEVER on a page that has its own painting or is the book's last word (`FILLER_NEVER_KINDS`: lineage, prologue, wedding, pregnancy, birth, closing). */
 const FILLER_DIR = 'images/weeks/'
 
 export type AlbumFillerKind = 'rest' | 'holiday'
@@ -1641,7 +1696,8 @@ export const ALBUM_FILLER_REST: Record<'young' | 'teen', readonly string[]> = {
   teen: ['off-1', 'off-2', 'off-3', 'chores-teen'],
 }
 
-const FILLER_NEVER_KINDS: ReadonlySet<string> = new Set(['lineage', 'prologue', 'wedding', 'birth', 'closing'])
+// r50 №1 – `pregnancy` joins for the set's own stated reason: a page with its own painting takes no snapshot.
+const FILLER_NEVER_KINDS: ReadonlySet<string> = new Set(['lineage', 'prologue', 'wedding', 'pregnancy', 'birth', 'closing'])
 
 /** Which kind of snapshot a sheet's occasions earn, or null for none. */
 export function albumFillerKind(band: AlbumBand, occasions: readonly { id: string; kind: string }[]): AlbumFillerKind | null {
@@ -1866,6 +1922,16 @@ function sheetsOf(
       doodles: [DOODLE_BY_KIND[lead.occasion.kind] ?? DOODLES[flavour.doodle]],
     })
   }
+  // ⭐ r50 №3 – ONE cup per chapter, on the chapter's FIRST C sheet: C is the layout with the open corners
+  // he pointed at, and the engine says WHICH cup while WHETHER a corner has room is the resolver's
+  // (`placeCup`), so a page too busy to hold it goes without – the tail's own rule. ⚠ No fallback to the
+  // chapter's next C sheet, deliberately: the engine may not import the UI (invariant 1), so it cannot know
+  // a sheet refused – and a cup on every C sheet would double the trophy in the rare chapter that holds two.
+  const cup = chapterCupOf(world, band)
+  if (cup) {
+    const at = sheets.findIndex((s) => s.layout === 'C')
+    if (at >= 0) sheets[at] = { ...(sheets[at] as AlbumSheetModel), cup }
+  }
   return sheets
 }
 
@@ -1874,6 +1940,30 @@ function sheetsOf(
 function bandOfAge(age: number): AlbumBand {
   const stage = portraitStage(age)
   return stage === 'jun' ? 'young' : stage
+}
+
+/** ⭐⭐ ROUND 50 №3 – THE CHAPTER'S BEST SILVERWARE (owner, 12.10: «какие-то из фото наград-кубков ставить
+ *  соответственно периоду и занятому месту»). THE RANKING RULE, the architect's decision: walk `TIER_LADDER`
+ *  from the TOP – the first rung whose cabinet holds a title OR a lost final inside the band wins, and at
+ *  that rung a title (gold) beats a final (silver). A higher rung's silver therefore outranks a lower rung's
+ *  gold: «занятое место» reads inside the period's BEST tournament, not across the whole shelf. A band whose
+ *  best is a semi gets NO cup – semis never enter `trophiesByTier` – and the corner stays empty: truth over
+ *  décor, the same standard the tail holds itself to (`hangTail`'s gate).
+ *
+ *  ⚠ THE WEEKS ARE BANDED BY THE SAME MAP THE CHAPTERS ARE BUILT ON – `bandOfAge(kidAgeAt(…))` – never by
+ *  label arithmetic: the chapter heading «26 – 30» is the adult band 23-30, and a cup dated off the label
+ *  would drift the day the bands do. A pure read of the never-pruned cabinet: zero draws, zero writes; the
+ *  prologue band owns no career week, so it answers null without a special case. */
+export function chapterCupOf(world: WorldState, band: AlbumBand): AlbumChapterCup | null {
+  const inBand = (weeks: readonly number[]): boolean => weeks.some((w) => bandOfAge(kidAgeAt(world, w)) === band)
+  for (let i = TIER_LADDER.length - 1; i >= 0; i--) {
+    const tier = TIER_LADDER[i] as TierId
+    const cabinet = world.trophiesByTier?.[tier]
+    if (!cabinet) continue
+    if (inBand(cabinet.titles)) return { tier, metal: 'gold' }
+    if (inBand(cabinet.finals)) return { tier, metal: 'silver' }
+  }
+  return null
 }
 
 // =================================================================================================
@@ -1976,6 +2066,7 @@ export function assembleAlbum(world: WorldState): AlbumBook {
     ...seasonCandidates(world),
     ...bodyCandidates(world),
     ...onceCandidates(world),
+    ...pregnancyCandidates(world),
     ...assetCandidates(world),
     ...rareCandidates(world),
     ...closerCandidates(world),

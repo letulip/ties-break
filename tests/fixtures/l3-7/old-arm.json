@@ -448,7 +448,7 @@
     0.533905585296452
    ],
    "world": "4b27436047ef",
-   "snapshot": "45c7427074ab",
+   "snapshot": "b9544b43341a",
    "worldFields": {
     "schemaVersion": "215bb47da8fa",
     "careerId": "ee58d00eaa2f",
@@ -663,7 +663,7 @@
     "lastSeasonSummary": "d316604f8474",
     "seasonWrapPrompt": "2be88ca4242c",
     "seasonHistory": "527ee26e356c",
-    "ending": "01e11eb740fe",
+    "ending": "85882f710bf3",
     "debt": "2be88ca4242c",
     "fork": "2be88ca4242c",
     "retirementOffer": "2be88ca4242c",

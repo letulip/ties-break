@@ -59,6 +59,10 @@
 //   #1b/#1c `placeSheet`'s TAIL GATE – a tag or pass the book's tail hung (`tail: true`, `albumBook.ts`'s `hangTail`) is an ask, not a fact of the sheet: it is drawn only where the
 //       note and the loose line leave its frame clear, the tag trying a rung smaller first (`TAIL_TAG_RUNGS`), and a page with no room goes without it – exactly the placement it had.
 // A 335-sheet sweep holds the guard: windows are at a shrunk rung on A 0 / B 22 / C 29 sheets before and after (`tests/r48-b3-album-tail.test.ts`; B's ceiling of 22 is untouched).
+//
+// ⭐⭐ ROUND 50 №3 – THE CHAPTER'S CUP IN C'S FREE CORNER (`placeCup`). A C sheet carrying `sheet.cup` hangs the trophy art frameless – top-right corner above
+//   the tag's frame first, bottom-left second – as a POST-PASS after `placeFiller`, with the placed snapshot (and its pair) among the obstacles, so asking for
+//   a cup moves nothing already settled and no count in the sweeps above can change. First free spot wins; a sheet with no clear corner shows no cup (null).
 import { SHEET_PX } from '../../shared/protocol'
 import type { AlbumFrame, AlbumLayout, AlbumNote, AlbumSheetModel } from '../../shared/protocol'
 
@@ -92,6 +96,8 @@ export interface SheetPlacement {
   clear: boolean
   /** ⭐ ROUND 47 #14 – the small snapshot hung in the gap the ticket or the tag would have filled, or null (`placeFiller`). */
   filler: FillerPlacement | null
+  /** ⭐ ROUND 50 №3 – the chapter's trophy cup in the sheet's free corner, or null (`placeCup`). */
+  cup: CupPlacement | null
   /** ⭐ ROUND 48 #1b / #1c – WHETHER THE SHEET'S TAG / TICKET IS DRAWN. Always, for one of the sheet's own; for one the book's tail HUNG (`tail`) only where the gap is
    *  clear of the note and the loose line – a page with no room goes without it and its snapshot (if any) takes the gap. `tagScale` is the rung the tag hangs at. */
   tagDrawn: boolean
@@ -100,7 +106,7 @@ export interface SheetPlacement {
 }
 
 /** What the resolver settles BEFORE the snapshot is asked for – the snapshot never moves any of it. */
-type PlacedCore = Omit<SheetPlacement, 'filler' | 'tagDrawn' | 'ticketDrawn' | 'tagScale'>
+type PlacedCore = Omit<SheetPlacement, 'filler' | 'cup' | 'tagDrawn' | 'ticketDrawn' | 'tagScale'>
 
 /** ⭐ ROUND 47 #14 – WHERE A SMALL SNAPSHOT MAY HANG: its card (`w` wide, a `photoH` window, leaning `tilt` degrees) and the spots to try, first free one
  *  wins. `home` is the index in `fixed` of the object whose frame it hangs in (B's pass, C's tag) – every OTHER piece of furniture is an obstacle. Every
@@ -127,6 +133,18 @@ export interface FillerPlacement {
   box: Box
   /** ⭐ ROUND 48 #1a – the second snapshot beside this one, placed only where the strip really had room for two (`FillerDef.pair`); absent otherwise. */
   pair?: FillerPlacement
+}
+
+/** ⭐ ROUND 50 №3 – a placed trophy cup: the square art (`size` a side), its lean, and `box` – the art with
+ *  the swing of its lean, which is what the obstacles and the sweep are measured against. Frameless on
+ *  purpose («без рамки, просто прозрачный фон»): no polaroid card, the shadow is the component's
+ *  `drop-shadow`, which follows the alpha edge. */
+export interface CupPlacement {
+  x: number
+  y: number
+  size: number
+  tilt: number
+  box: Box
 }
 
 /** Average advance of the app's handwriting face, in em. ⚠ MEASURED, NOT CHOSEN: the six real sheets
@@ -578,7 +596,8 @@ export function placeSheet(sheet: AlbumSheetModel, tuning: Tuning = TUNING): She
     seen = { ...seen, ticket: null }
     core = resolveSheet(seen, tuning)
   }
-  return { ...core, filler: placeFiller(seen, core), tagDrawn: seen.tag != null, ticketDrawn: seen.ticket != null, tagScale }
+  const filler = placeFiller(seen, core)
+  return { ...core, filler, cup: placeCup(seen, core, filler), tagDrawn: seen.tag != null, ticketDrawn: seen.ticket != null, tagScale }
 }
 
 /** ⭐ ROUND 48 #1b – THE TAIL TAG'S FOOTPRINT: layout C's column, as tall as «World Tour 1000» really draws it – MEASURED in real Chromium on his own save's last page
@@ -703,6 +722,37 @@ function placeFiller(sheet: AlbumSheetModel, core: PlacedCore): FillerPlacement 
   // so it moves nothing the first settled, and a strip with no room for two simply shows one. The mirrored lean has the same magnitude, so the same swing pad holds.
   const second = fit(-f.tilt, [first.box])
   return second ? { ...first, pair: second } : first
+}
+
+/** ⭐⭐ ROUND 50 №3 – THE CHAPTER'S CUP IN THE CORNER (owner, 12.10: «справа сверху в углу и слева внизу есть место … Без рамки, просто прозрачный фон и
+ *  картинка с тенюшкой»). ⚠ THE SIZE IS THE CORNER'S, NOT A TASTE: C's right-hand column is reserved from y 77 down (`LAYOUTS.C`'s tag frame, kept whether
+ *  or not a tag hangs – the tail may still ask for one), so the strip above it holds 68px of cup plus its 3px swing pad EXACTLY – the first spot's box
+ *  bottoms at 75, the frame's `GAP`-guarded edge, and one pixel more would touch. The bottom-left pair lands only where the note was moved off its drawn
+ *  corner or the hero gave height back; most sheets hold the drawn note there, and the cup goes without – no room, no object (`hangTail`'s standard). */
+export const CUP_PX = 68
+export const CUP_TILT = -2.5
+export const CUP_SPOTS: readonly { x: number; y: number }[] = [
+  { x: 386, y: 4 },
+  { x: 350, y: 4 },
+  { x: 16, y: 384 },
+  { x: 16, y: 328 },
+]
+
+/** ⭐ ROUND 50 №3 – THE CUP. A POST-PASS AFTER `placeFiller`, the same contract: it reads what is settled – cards, caption bands, furniture, the note, the
+ *  loose line AND the placed snapshot (its pair too) – and moves none of it, so a sheet asked for a cup keeps every box it had. First listed spot whose
+ *  swing box lies on the page and touches nothing wins; null = the sheet shows no cup. C-only: the spots are C's corners and the engine attaches to C. */
+function placeCup(sheet: AlbumSheetModel, core: PlacedCore, filler: FillerPlacement | null): CupPlacement | null {
+  if (!sheet.cup || sheet.layout !== 'C') return null
+  const pad = Math.ceil((CUP_PX / 2) * Math.sin((Math.abs(CUP_TILT) * Math.PI) / 180)) + 1
+  const placed = [core.note, core.line, filler?.box, filler?.pair?.box].flatMap((m) => (m ? [m] : []))
+  const obstacles = [...core.photos.flatMap((p) => [padded(p.box), ...(p.band ? [p.band] : [])]), ...LAYOUTS[sheet.layout].fixed(sheet), ...placed]
+  for (const s of CUP_SPOTS) {
+    const box: Box = { x: s.x - pad, y: s.y - pad, w: CUP_PX + 2 * pad, h: CUP_PX + 2 * pad }
+    if (box.x < 0 || box.y < 0 || box.x + box.w > PAGE || box.y + box.h > PAGE) continue
+    if (obstacles.some((o) => touches(box, o))) continue
+    return { x: s.x, y: s.y, size: CUP_PX, tilt: CUP_TILT, box }
+  }
+  return null
 }
 
 /** The picture window of a card – what a note over a photograph hides. */

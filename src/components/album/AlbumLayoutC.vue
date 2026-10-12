@@ -17,6 +17,7 @@ import AlbumFillerPhoto from './AlbumFillerPhoto.vue'
 import AlbumDoodleMark from './AlbumDoodleMark.vue'
 import AlbumSheetTitle from './AlbumSheetTitle.vue'
 import { noteSpot, placeSheet, spot } from './albumPlacement'
+import { trophyArtUrl } from '../../art/trophies'
 import type { AlbumSheetModel } from '../../shared/protocol'
 
 const props = defineProps<{ sheet: AlbumSheetModel }>()
@@ -27,6 +28,13 @@ const props = defineProps<{ sheet: AlbumSheetModel }>()
 const placed = computed(() => placeSheet(props.sheet))
 
 const tagStyle = computed(() => (placed.value.tagScale < 1 ? { transform: `scale(${placed.value.tagScale})`, transformOrigin: '50% 0' } : undefined))
+
+// ⭐ r50 №3 – the cup stands where the resolver said, leaning as it said; the art url is `trophyArtUrl`'s,
+// the one builder of that spelling (`art/trophies.ts` – the engine ships only the rung and the metal).
+const cupStyle = computed(() => {
+  const cup = placed.value.cup
+  return cup ? { ...spot({ x: cup.x, y: cup.y, w: cup.size }), transform: `rotate(${cup.tilt}deg)` } : undefined
+})
 </script>
 
 <template>
@@ -59,6 +67,20 @@ const tagStyle = computed(() => (placed.value.tagScale < 1 ? { transform: `scale
       :filler="sheet.filler"
       :tilt="placed.filler.tilt"
       :photo-height="placed.filler.photoH"
+    />
+
+    <!-- ⭐ r50 №3 – the chapter's best cup in the sheet's free corner: frameless transparent art whose shadow
+         is a drop-shadow along the alpha edge (his words, quoted verbatim beside `.album-c-cup`'s CSS
+         below – templates carry no Cyrillic by the copy rule).
+         Decoration like the snapshot – no alt, no copy; which cup is the engine's (`sheet.cup`), where is the
+         resolver's (`placed.cup`), and a sheet with no clear corner shows none. -->
+    <img
+      v-if="sheet.cup && placed.cup"
+      class="album-c-cup"
+      :style="cupStyle"
+      :src="trophyArtUrl(sheet.cup.tier, sheet.cup.metal)"
+      alt=""
+      aria-hidden="true"
     />
 
     <AlbumNoteCard
@@ -127,6 +149,16 @@ const tagStyle = computed(() => (placed.value.tagScale < 1 ? { transform: `scale
 
 .album-c-second {
   position: absolute;
+}
+
+/* r50 №3 – the trophy lies on the paper with only its shadow anchoring it: no card and no border, the
+   drop-shadow follows the cut-out's alpha edge, which is what makes it read as an object on the page
+   rather than a pasted rectangle. */
+/* ⚠ r50 №3 (12.10), the owner's words verbatim (the template comment points here): «без рамки,
+   просто прозрачный фон и картинка с тенюшкой». */
+.album-c-cup {
+  position: absolute;
+  filter: drop-shadow(2px 3px 4px rgba(0, 0, 0, 0.3));
 }
 
 .album-c-doodle {

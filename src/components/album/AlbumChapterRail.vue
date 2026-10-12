@@ -170,5 +170,29 @@ const emit = defineEmits<{ pick: [number] }>()
   .album-rail-title {
     white-space: normal;
   }
+
+  /* ⭐ r50 №2 – UNDER THE LANDSCAPE FIT THE GRID HANDS THE ROW BACK. The grid is ≈134px of chrome
+     where the strip is 66, and on a height-fitted screen that difference comes straight out of the
+     sheet – the recon's biggest single decision, decided: the strip whenever the album is fitting.
+     Portrait ≥1024 keeps the grid («все 6 глав сеткой под листом» stands where height is no bound).
+     The 768 strip's snap, touch and overscroll declarations are still in force from the block above
+     – only the four rules the grid changed are handed back. */
+  .album--fit .album-rail-list {
+    display: flex;
+    overflow-x: auto;
+    /* ⚠ r50 №2 (12.10): the SAME THREE the 768 strip carries above – this override re-opens a
+       horizontal scroller at ≥1024, and a scroller without its chain drags the page at its end
+       (tests/touch-and-scroll.test.ts, the rail's own shipped lesson). */
+    touch-action: pan-x pan-y;
+    overscroll-behavior-x: contain;
+    user-select: none;
+    -webkit-user-select: none;
+    scroll-snap-type: x proximity;
+    padding-bottom: 4px;
+  }
+
+  .album--fit .album-rail-title {
+    white-space: nowrap;
+  }
 }
 </style>

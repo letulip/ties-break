@@ -69,6 +69,11 @@ export const ALBUM_KINDS = [
   'break-even',
   'school',
   'wedding',
+  // ⭐ `pregnancy` JOINED AT r50 №1 (12.10), and it is the SIXTH corpus-only family rather than a
+  // `MilestoneType`: the occasion is DERIVED at assembly – the `'expecting'` lifeLog row matched to
+  // the child that followed it (`pregnancyCandidates` in world/albumBook.ts) – so no milestone
+  // exists, and a loss (an announcement no birth followed) stays out of the album by construction.
+  'pregnancy',
   'birth',
   'asset',
   'rare',
@@ -232,7 +237,7 @@ function parseOccasion(lines: string[], head: number, end: number): AlbumRow {
   if (m === null) fail(head, `unreadable occasion heading: ${lines[head]}`)
   const [, ref, id, kind, bandList, provenance] = m
   if (!ID.test(id)) fail(head, `${ref}'s id is not a machine key: ${id}`)
-  if (!(ALBUM_KINDS as readonly string[]).includes(kind)) fail(head, `${ref}'s kind is not one of the fifteen: ${kind}`)
+  if (!(ALBUM_KINDS as readonly string[]).includes(kind)) fail(head, `${ref}'s kind is not a member of ALBUM_KINDS: ${kind}`)
   const bands = bandList.split(',').map((b) => b.trim())
   if (bands.length === 0 || bands.some((b) => b.length === 0)) fail(head, `${ref} has an unreadable band list: ${bandList}`)
   for (const band of bands) {
