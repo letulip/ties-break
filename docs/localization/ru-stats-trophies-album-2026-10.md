@@ -229,11 +229,11 @@ shelf labels below already parameterise every W rung and need no change.)
 | --- | --- |
 | navigation and screen title | `Трофеи` |
 | empty summary | `Пока пусто: первый финал поставит сюда первый трофей.` |
-| winner cell | `Победительница` |
+| winner cell | `Победитель` – ⚙ 12.10 r49 №6 слово владельца, ячейка следует за словарём RU-04 |
 | runner-up cell | `Финалистка` |
 | locked cell | `Ещё нет` |
 
-`Победительница` and `Финалистка` deliberately reuse RU-04's finish vocabulary. `Чемпионка` and
+`Победитель` (12.10 r49 №6) and `Финалистка` deliberately reuse RU-04's finish vocabulary. `Чемпионка` and
 `Серебро` would be plausible in isolation but would create a second name for the same career fact.
 The cabinet has no bronze cell because the simulation has no third-place match; localization must
 not imply one.

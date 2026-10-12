@@ -36,7 +36,7 @@ compiles nowhere.
 | still owned holdings | `Still owned` | `Осталось в собственности` · ⚙ removed 07.10 (round 47 #6) · ⚙ 11.10 ключ умер, ряд исторический – в ячейке метка, живой английской строки под ней нет `QUESTION` |
 | current portfolio value | `Family's portfolio` | `Капитал семьи` |
 | seasons | `Seasons` | `Сезонов` |
-| best rank | `Best rank` | `Высшее место в рейтинге` |
+| best rank | `Best rank` | `Высший рейтинг` – ⚙ 12.10 r49 №10 слово владельца |
 | titles | `Titles` | `Титулов` |
 | one-more-year refrain | `You said one more year {count} time/times.` | `«Ещё один год», – говорили мы. Так было {count, plural, one {{count} раз} few {{count} раза} many {{count} раз} other {{count} раз}}.` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
 | resume college fallback | `Another year –` | `Ещё один год –` |
