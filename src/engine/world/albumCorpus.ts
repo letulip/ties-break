@@ -1,6 +1,6 @@
 // ⭐⭐⭐ THE ALBUM'S HANDWRITING – **GENERATED FROM `docs/specs/album-corpus-2026-09.md`, NEVER
 // RETYPED.** 38 occasions, 4 voices, 3 registers, every variant hand counted (r49 №7):
-// 456 strings, plus the arc's 16 across 8 cells – **472 authored strings in total.**
+// 636 strings, plus the arc's 16 across 8 cells – **652 authored strings in total.**
 //
 // ⭐⭐ THE THREE REGISTERS ARE THREE DIFFERENT THINGS A PARENT DOES ON A PAGE, and his 19.09
 // confirmation («всё верно») is what fixes them: the **note** speaks TO her («First day on court. You
@@ -21,7 +21,7 @@
 // ⚠ IT IS ORDINARY COMMITTED SOURCE AND NOT A BUILD STEP. Nothing in `npm run check`, `npm run build`
 // or the dev server generates it; the emitter is a one-off, as round 44 ruled for its sibling.
 //
-// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 472 authored strings. An agent retyping them produces
+// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 652 authored strings. An agent retyping them produces
 // typos that no test can catch, because a test written by the same agent compares against what was
 // typed. The document is the source of truth; this file is its projection.
 //
@@ -294,21 +294,53 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         note: 'A step up, and you were straight on the phone about the court and the noise and the food.',
         caption: 'A bigger court, and she noticed all of it.',
         line: 'She told me about the food.',
+      }, {
+        note: 'A title a step higher, and you described the lights and the towels and the tunnel before the tennis.',
+        caption: 'Lights, towels, then tennis.',
+        line: 'The venue got the longer report.',
+      }, {
+        note: 'A step up and a win, and your first story was about the crowd you could hear from your room.',
+        caption: 'The crowd reached her room.',
+        line: 'Bigger crowds carry further.',
       }],
       fiery: [{
         note: 'A step up. You said the draw had been harder and you wanted that on the record.',
         caption: 'She wanted the draw noted.',
         line: 'For the record, then.',
+      }, {
+        note: 'A step up. You rang to say it had been earned the hard way, and then listed the hard ways.',
+        caption: 'Earned, and itemised.',
+        line: 'Every hard way got named.',
+      }, {
+        note: 'You won at the next level up and asked us to stop sounding surprised. We were not surprised; we were loud.',
+        caption: 'She banned our surprise.',
+        line: 'We were loud, not surprised.',
       }],
       deep: [{
         note: 'A step up. You said it was the same game with more people watching, and then you went quiet.',
         caption: 'The same game, she said.',
         line: 'More people watching. Same girl.',
+      }, {
+        note: 'A step up. Afterwards you asked whether we had seen anything different in how you played, and meant it.',
+        caption: 'She asked what we had seen.',
+        line: 'The question was the headline.',
+      }, {
+        note: 'You took the step up without a word on the day, and said the court had sounded different, later.',
+        caption: 'The sound was different, she said.',
+        line: 'She noticed the sound first.',
       }],
       quiet: [{
         note: 'A step up. You sent the scoreline and nothing else.',
         caption: 'Just the scoreline.',
         line: 'She let the number do it.',
+      }, {
+        note: 'A step up, and what you sent was a photo of the scoreboard with your bag already on your shoulder.',
+        caption: 'The scoreboard, bag packed.',
+        line: 'In the photo she is already leaving.',
+      }, {
+        note: 'A step up. You asked whether your old racquet bag was still in the hall, the one from the start.',
+        caption: 'She asked about the old bag.',
+        line: 'The old bag is still in the hall.',
       }],
     },
   },
@@ -410,21 +442,53 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         note: 'You lost it and you still wanted to talk.',
         caption: 'She wanted to talk anyway.',
         line: 'She rang. That is the part.',
+      }, {
+        note: 'You lost the final and talked us through the good parts first, because there had been good parts.',
+        caption: 'The good parts came first.',
+        line: 'Losing did not cancel the week.',
+      }, {
+        note: 'A final lost, and you wanted to know everything about home before you would say a word about it.',
+        caption: 'Home news first, then the final.',
+        line: 'The final could wait its turn.',
       }],
       fiery: [{
         note: 'You lost it and you had already decided why by the time you rang.',
         caption: 'She had the reason ready.',
         line: 'The verdict arrived first.',
+      }, {
+        note: 'The final went the other way, and you spent the evening planning the next one out loud.',
+        caption: 'Planning the next one already.',
+        line: 'Next one already pencilled in.',
+      }, {
+        note: 'You lost it, and what made you angriest was how well you had played until the end.',
+        caption: 'Angry about playing well.',
+        line: 'That kind of anger passes slowly.',
       }],
       deep: [{
         note: 'You lost it, and later you told me the one point it had turned on.',
         caption: 'A while, then one point.',
         line: 'She had been holding that point for a while.',
+      }, {
+        note: 'You lost the final, and when you finally talked about it you started from the morning of it, not the end.',
+        caption: 'The story began at the morning.',
+        line: 'She needed the whole day said.',
+      }, {
+        note: 'A lost final. You said you already knew what you would do differently, and would not say what.',
+        caption: 'She knew, and kept it.',
+        line: 'The answer stayed hers.',
       }],
       quiet: [{
         note: 'You lost it. You asked about the garden.',
         caption: 'She asked about the garden.',
         line: 'We talked about the garden.',
+      }, {
+        note: 'A final lost, and the one thing you asked that night was whether the car had passed its inspection.',
+        caption: 'She asked about the car.',
+        line: 'The car passed. She moved on.',
+      }, {
+        note: 'The final went the other way. You packed, thanked the people at the desk, and sent us one line about the weather.',
+        caption: 'One line, about the weather.',
+        line: 'The weather got more words than the match.',
       }],
     },
   },
@@ -468,21 +532,53 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         note: 'The best year so far. You listed every week of it and then said you were tired.',
         caption: 'Tired, and pleased, in that order.',
         line: 'The tired bit was the true bit.',
+      }, {
+        note: 'The best year you have had, and you credited everybody but yourself before we could stop you.',
+        caption: 'Everyone got thanked but her.',
+        line: 'We said the missing name out loud.',
+      }, {
+        note: 'The best close so far. You talked about the courts you had liked best, and none of the numbers came up once.',
+        caption: 'Courts first, numbers never.',
+        line: 'The numbers can mind themselves.',
       }],
       fiery: [{
         note: 'The best year so far, and you spent the whole call on the weeks that went wrong.',
         caption: 'She only talked about the bad weeks.',
         line: 'The bad weeks, and that was the call.',
+      }, {
+        note: 'Your best year, and you called it a down payment. We were not allowed to celebrate yet.',
+        caption: 'A down payment, she called it.',
+        line: 'Celebration postponed, again.',
+      }, {
+        note: 'The best year so far, and your first sentence about it started with the word next.',
+        caption: 'Her first word about it: next.',
+        line: 'Next. The whole speech.',
       }],
       deep: [{
         note: 'The best year so far. You said it had felt like one long week, and I think that was the whole report.',
         caption: 'One long week, she called it.',
         line: 'One long week. That was the report.',
+      }, {
+        note: 'The best year yet. You said you knew the week it had turned, and named it, and it was not a week we would have guessed.',
+        caption: 'She knew the exact week.',
+        line: 'Not the week anyone would guess.',
+      }, {
+        note: 'Your best close. You asked us whether it had looked as hard as it felt, and waited for a real answer.',
+        caption: 'She wanted the real answer.',
+        line: 'It looked hard. We said so.',
       }],
       quiet: [{
         note: 'The best year so far. You asked whether we were coming at Christmas.',
         caption: 'She asked about Christmas.',
         line: 'Christmas mattered more.',
+      }, {
+        note: 'Your best season ended, and you went straight home and fixed the garden gate.',
+        caption: 'The gate finally got fixed.',
+        line: 'A good year for the gate too.',
+      }, {
+        note: 'Best close yet. You answered our congratulations with a question about the apple tree.',
+        caption: 'She asked about the apple tree.',
+        line: 'The tree is fine. So is she.',
       }],
     },
   },
@@ -497,21 +593,53 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         note: 'You came back up the table this year and you talked about the two weeks in the middle where it turned, not about the end of it.',
         caption: 'She talked about the middle of the year.',
         line: 'The turn was in the middle somewhere.',
+      }, {
+        note: 'Back up the table this year, and you gave the credit to the new morning routine, in detail.',
+        caption: 'The morning routine got the credit.',
+        line: 'The mornings did their part.',
+      }, {
+        note: 'You climbed back this year and rang us straight after the last match of it, talking faster than usual.',
+        caption: 'She talked faster than usual.',
+        line: 'Up the table, up the tempo.',
       }],
       fiery: [{
         note: 'Better than last year, and you said that was the least it could have been. You were pleased anyway and would not say so.',
         caption: 'The least it could have been, she said.',
         line: 'Pleased, and not admitting it.',
+      }, {
+        note: 'Better than last year, and you made us promise not to use the word comeback around you.',
+        caption: 'Not a comeback, she insists.',
+        line: 'Fine. Not a comeback.',
+      }, {
+        note: 'You came back up this season and declared the matter closed before anyone had opened it.',
+        caption: 'Closed before it was opened.',
+        line: 'No questions were being taken.',
       }],
       deep: [{
         note: 'You waited until the year was finished before you would call it a climb back, and then you said it in one sentence.',
         caption: 'One sentence, once the year was finished.',
         line: 'She waited for the year to end first.',
+      }, {
+        note: 'The year climbed, and you said the difference had been small and weekly and nobody else would have seen it.',
+        caption: 'Small, weekly, invisible.',
+        line: 'The invisible work shows last.',
+      }, {
+        note: 'You let the season finish before you trusted it, and even then you said it quietly, to one of us at a time.',
+        caption: 'Said quietly, one at a time.',
+        line: 'Trust came after the maths.',
       }],
       quiet: [{
         note: 'A year that went back up. You did not mention it at all, and next season\'s schedule arrived in the same week.',
         caption: 'Nothing said. A new schedule.',
         line: 'Straight back to the planning.',
+      }, {
+        note: 'The year went back up. Your only comment was a thumbs up under our message about it.',
+        caption: 'A thumbs up. That was the lot.',
+        line: 'Eloquent, for her.',
+      }, {
+        note: 'Back up the rankings. You renewed the court booking for the whole off-season without being asked.',
+        caption: 'The booking was renewed early.',
+        line: 'The off-season had plans already.',
       }],
     },
   },
@@ -526,21 +654,53 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         note: 'A year of holding on. You said the middle of it had blurred and I know exactly what you mean.',
         caption: 'The middle of it blurred.',
         line: 'A year she can\'t quite remember.',
+      }, {
+        note: 'You said the season felt like a rerun of last year, then spent the call on the one week that was different.',
+        caption: 'She called it a rerun.',
+        line: 'The one different week got the whole call.',
+      }, {
+        note: 'You held your place this year, and what you wanted to talk about was the new faces around the draw.',
+        caption: 'New faces, same place.',
+        line: 'The table stood still. She did not.',
       }],
       fiery: [{
         note: 'A year of holding on. You wanted it to be a jump, it wasn\'t, and you said so for a while.',
         caption: 'She wanted a jump.',
         line: 'Holding on was not the plan.',
+      }, {
+        note: 'You defended every point of it this year and wanted that called work, not standing still.',
+        caption: 'Defending is work, she said.',
+        line: 'Holding takes work too. Noted.',
+      }, {
+        note: 'The same rank at the end of it, and you blamed the calendar, the courts and the weather, with evidence for each.',
+        caption: 'The weather made the list too.',
+        line: 'Evidence was provided.',
       }],
       deep: [{
         note: 'A year of holding on. You said staying still takes more than it looks like it does.',
         caption: 'Staying still costs, she said.',
         line: 'She is right about that.',
+      }, {
+        note: 'Near the end of the year you said that staying put had been a decision, made weekly. Then you left it there.',
+        caption: 'Decided weekly, she said.',
+        line: 'Nobody notices that kind of work.',
+      }, {
+        note: 'You went quiet when the season closed, and later said the year had asked more than it showed.',
+        caption: 'More asked than shown, she said.',
+        line: 'The quiet after this one was longer.',
       }],
       quiet: [{
         note: 'A year of holding on. You sent next season\'s schedule not long after.',
         caption: 'Next season\'s schedule, not long after.',
         line: 'Straight on to the next one.',
+      }, {
+        note: 'The year closed where it started. You mentioned the racquets needed restringing and that was the call.',
+        caption: 'Restringing, and little else.',
+        line: 'Business as usual, then.',
+      }, {
+        note: 'Nothing moved this year. You sent us the same photo of the practice board as last year.',
+        caption: 'The same photo as last year.',
+        line: 'Even the photo held its place.',
       }],
     },
   },
@@ -555,21 +715,53 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         note: 'A year that went the wrong way. You said so out loud.',
         caption: 'She said it out loud.',
         line: 'Naming it is most of it.',
+      }, {
+        note: 'The year slipped, and you came home with a list of what to fix already written out.',
+        caption: 'She brought the list home.',
+        line: 'The list was long, and hers.',
+      }, {
+        note: 'You told us the year had gone the wrong way before the table said it, and you were right.',
+        caption: 'She said it before the table did.',
+        line: 'Right, and not glad about it.',
       }],
       fiery: [{
         note: 'The year went the wrong way and you had a reason for every week of it, and you meant every one.',
         caption: 'A reason for every week.',
         line: 'All of them true, probably.',
+      }, {
+        note: 'A wrong-way year. On the last call of it you were already naming the people you would prove wrong.',
+        caption: 'A list of people to prove wrong.',
+        line: 'The fire survived the year intact.',
+      }, {
+        note: 'You called the year a lesson, in the tone you use for referees.',
+        caption: 'A lesson, in that tone.',
+        line: 'Lessons were not taken gladly.',
       }],
       deep: [{
         note: 'A year that went the wrong way. You waited until January to tell me what you thought had happened.',
         caption: 'She waited until January.',
         line: 'She needed the distance first.',
+      }, {
+        note: 'A year that went backwards. You never said the word, and we learned not to say it either.',
+        caption: 'The word went unsaid.',
+        line: 'Some words help nobody.',
+      }, {
+        note: 'After the year fell away you asked what we had seen from the stands, and listened more than you spoke.',
+        caption: 'This time she asked us.',
+        line: 'Listening was new.',
       }],
       quiet: [{
         note: 'You told me about the schedules and the hotels all year, and never once about the year.',
         caption: 'Schedules, hotels, not the year.',
         line: 'Everything except the year.',
+      }, {
+        note: 'The year went down and your messages got shorter, and none of them mentioned the table.',
+        caption: 'Shorter messages, no table talk.',
+        line: 'Short answers can carry a lot.',
+      }, {
+        note: 'A down year. You reorganised the whole equipment shelf the week it ended, and told us about the shelf.',
+        caption: 'The shelf got the attention.',
+        line: 'The shelf has never been so neat.',
       }],
     },
   },
@@ -613,21 +805,69 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
         note: 'First week back. You said the ball came at you faster than you had remembered, and you laughed about it.',
         caption: 'The ball came faster than she remembered.',
         line: 'She laughed at it, which helped.',
+      }, {
+        note: 'First session back. You named everyone who had said hello before you said one word about the tennis.',
+        caption: 'The hellos came before the tennis.',
+        line: 'Half the call was the hellos.',
+      }, {
+        note: 'You rang from the car park after the first proper session, still out of breath and happy about it.',
+        caption: 'Out of breath, and pleased about it.',
+        line: 'Out of breath suits her.',
+      }, {
+        note: 'First week back, and you were straight back to complaining about the food at the courts. We were glad of it.',
+        caption: 'Complaints about the food again.',
+        line: 'Even the moaning was welcome.',
       }],
       fiery: [{
         note: 'First week back. You wanted all of it back at once, were told no, and I heard about that.',
         caption: 'All of it back at once, please.',
         line: 'They said no. I heard.',
+      }, {
+        note: 'First week back on court. You counted off everything they were still not letting you do, and you were loud about it.',
+        caption: 'Still a list of things not allowed.',
+        line: 'The list got shorter. The volume did not.',
+      }, {
+        note: 'You said the only thing you had missed about it was winning, and nobody in this house believed you.',
+        caption: 'Only the winning, she said.',
+        line: 'We did not believe a word.',
+      }, {
+        note: 'First week back, and you told us the forehand had never gone anywhere and dared anyone to say otherwise.',
+        caption: 'The forehand never left, she said.',
+        line: 'Nobody was going to argue with that.',
       }],
       deep: [{
         note: 'First week back. You said you had been more afraid of this week than of the injury.',
         caption: 'More afraid of this than of that.',
         line: 'She waited to say the true thing.',
+      }, {
+        note: 'You did not talk about the week until it was over, and then you said the hardest part had been walking in the first day.',
+        caption: 'Walking in was the hard part.',
+        line: 'The week ended before she spoke.',
+      }, {
+        note: 'You asked us not to come to the first session back. You told us why much later, and we understood.',
+        caption: 'No audience for the first one.',
+        line: 'Some weeks are for nobody to watch.',
+      }, {
+        note: 'You said the quietest part was the drive home after the first session, and that you had liked it.',
+        caption: 'The drive home was the good part.',
+        line: 'Quiet roads, after.',
       }],
       quiet: [{
         note: 'First week back. You sent the session time before anything else.',
         caption: 'She told me the time of the session.',
         line: 'The time came first.',
+      }, {
+        note: 'Your bag stood packed by the door the night before the first session back.',
+        caption: 'The bag was by the door early.',
+        line: 'Packed before anybody asked.',
+      }, {
+        note: 'You sent a photo of the empty practice court and no message with it.',
+        caption: 'A photo of the court. No words.',
+        line: 'The photo said it.',
+      }, {
+        note: 'First week back. You crossed the missed weeks off the calendar in one sitting, and said nothing about them.',
+        caption: 'The calendar caught up in one go.',
+        line: 'Crossed off, all at once.',
       }],
     },
   },

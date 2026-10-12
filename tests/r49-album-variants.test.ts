@@ -19,6 +19,8 @@ import { describe, expect, it } from 'vitest'
 import { assembleAlbum, createWorld, kidAgeAt, TEMPERAMENTS, type WorldState } from '../src/engine/world'
 import { assignAlbumOrdinals, albumHandOf, dedupeSheetCaptions } from '../src/engine/world/albumBook'
 import { ALBUM_CORPUS, type AlbumHand, type AlbumOccasion } from '../src/engine/world/albumCorpus'
+import { posedCareer, SWEEP_CAREERS } from './helpers/albumSweep'
+import type { AlbumBook } from '../src/shared/protocol'
 
 function weekAtAge(world: WorldState, age: number): number {
   for (let w = 0; w < 2000; w++) if (kidAgeAt(world, w) === age) return w
@@ -98,7 +100,7 @@ describe('r49 №4 – the per-sheet caption dedupe: «дважды на одн�
     expect(dedupeSheetCaptions([])).toEqual([])
   })
 
-  it('⭐⭐⭐ REPRODUCED AND DEAD: two layoffs put injury-return on one sheet twice – the first keeps A16\'s caption, the second goes captionless', () => {
+  it('⭐⭐⭐ REPRODUCED AND DEAD TWICE OVER: two layoffs put injury-return on one sheet twice – and since the content half, the page-mate carries a DIFFERENT sentence', () => {
     // His №4, posed the way `bodyCandidates` really builds it: one injury-return candidate PER
     // layoff (`world.injuryHistory`), the two returns ADJACENT in a populated adult chapter.
     // ⚠ THE CHAPTER MUST HOLD SIX, NOT TWO: the §5 thirds rule (`groupCapOf`) tightens to
@@ -106,6 +108,12 @@ describe('r49 №4 – the per-sheet caption dedupe: «дважды на одн�
     // measured on the first pose of this case. Six candidates make the cap 2 (his own save's shape),
     // and `spreadFrames(6, [2,3,2])` deals [2,2,2], so positions 2 and 3 – the returns – share the
     // middle sheet: the «дважды на одной странице».
+    // ⚠ RE-AIMED 12.10, THE SAME DAY, BY THE CONTENT HALF (r49 №4/№5/№7): with the mechanics alone
+    // (every pool 1) the second firing repeated A16's caption and the dedupe blanked it – the arm's
+    // first shape. Now `injury-return` holds FOUR hands per voice, so the second firing WALKS to the
+    // second variant: the page shows two different sentences, which is the owner's actual wish –
+    // variety, not a blank. The dedupe stays live for a literal repeat (the pure arm above, and the
+    // wrapped-walk shape the synthetic cases pin); this arm now pins the better answer.
     const world = createWorld('r49-dedupe-page')
     const base = weekAtAge(world, 24)
     world.week = base + 60
@@ -116,30 +124,130 @@ describe('r49 №4 – the per-sheet caption dedupe: «дважды на одн�
     world.assets.push({ id: 'house-first', boughtWeek: base + 40, paidCents: 0, valueCents: 0, entries: [] })
     world.assets.push({ id: 'merch-brand', boughtWeek: base + 44, paidCents: 0, valueCents: 0, entries: [] })
     const voice = world.temperament!
-    const caption = ALBUM_CORPUS.find((o) => o.id === 'injury-return')!.voices[voice][0].caption
+    const pool = ALBUM_CORPUS.find((o) => o.id === 'injury-return')!.voices[voice]
+    expect(pool.length, 'the content half grew A16 to four hands').toBe(4)
     const book = assembleAlbum(world)
-    const spoken = book.sheets.flatMap((s) => s.frames.map((f) => f.caption)).filter((c) => c === caption)
-    expect(spoken, 'A16 fired twice and prints ONCE – the page-mate is deduped').toHaveLength(1)
-    const sheet = book.sheets.find((s) => s.frames.some((f) => f.caption === caption))!
+    const spoken = book.sheets.flatMap((s) => s.frames.map((f) => f.caption)).filter((c) => c === pool[0].caption)
+    expect(spoken, 'the base caption prints ONCE – the second firing is no longer its copy').toHaveLength(1)
+    const sheet = book.sheets.find((s) => s.frames.some((f) => f.caption === pool[0].caption))!
     expect(sheet.frames, 'both returns share the sheet – the complaint\'s own shape').toHaveLength(2)
-    expect(sheet.frames[0].caption, 'the first firing keeps the corpus caption').toBe(caption)
-    expect(sheet.frames[0].captionC, 'and its ref').toEqual({ k: caption })
-    expect(sheet.frames[1].caption, 'the repeat renders NO caption – the filler photos\' own captionless path').toBe('')
-    expect(sheet.frames[1].captionC, 'no caption, no ref').toBeUndefined()
-    // and the book is deterministic with the dedupe in it: same world, same book
+    expect(sheet.frames[0].caption, 'the first firing keeps the base hand').toBe(pool[0].caption)
+    expect(sheet.frames[0].captionC, 'and its ref').toEqual({ k: pool[0].caption })
+    expect(sheet.frames[1].caption, 'the second firing walks to the SECOND variant – two sentences on the page').toBe(pool[1].caption)
+    expect(sheet.frames[1].captionC, 'a written caption keeps its ref').toEqual({ k: pool[1].caption })
+    expect(sheet.frames[1].caption, 'and the two are different, so the dedupe has nothing to blank').not.toBe(sheet.frames[0].caption)
+    // and the book is deterministic with the walk in it: same world, same book
     expect(assembleAlbum(world), 'two calls on the same world return deep-equal books').toEqual(book)
   })
 })
 
-describe('r49 №7 – the ratchet the content half re-aims', () => {
-  it('⚠ RATCHET (12.10): every real pool is exactly 1 until the owner\'s variant hands land', () => {
-    // The mechanics ship ahead of the words, so TODAY the walk is `[0]` on every firing and the
-    // album is byte-identical – which the album suites prove by staying green untouched. The content
-    // half (№4/№5/№7's sentences, the owner's) re-aims this arm to the pools it grows.
+describe('r49 №7 – the pool table (the ratchet, re-aimed by the content half)', () => {
+  // ⚠ RE-AIMED 12.10, THE SAME DAY: B9a's ratchet pinned every pool at 1 until the owner's variant
+  // hands landed; the content half (B9b) landed them. The seven multi-firing occasions – his
+  // «вообще про повторы … много чего есть написать в альбом для разнообразия» – now hold the sizes
+  // below, and EVERY OTHER occasion still holds exactly one hand per voice: a pool grows by
+  // authoring, in the document, never by accident, so the whole corpus is walked against the table.
+  const POOLS: Readonly<Record<string, number>> = {
+    'injury-return': 4, // fires once per layoff – 127 measured against 95 titles in the recon
+    'title-step-up': 3, // once per true step up the tier ladder
+    'final-lost': 3, // once per lost final
+    'season-best': 3, // the four season closes fire once per season close each
+    'season-recovery': 3,
+    'season-held': 3,
+    'season-down': 3,
+  }
+
+  it('⚠ every pool is the table\'s size – the seven named occasions grew, the other 31 still hold one hand', () => {
     for (const o of ALBUM_CORPUS) {
       for (const voice of TEMPERAMENTS) {
-        expect(o.voices[voice].length, `${o.id}/${voice}: a pool grew – re-aim this ratchet with the content half`).toBe(1)
+        expect(o.voices[voice].length, `${o.id}/${voice}: the pool is not the table's – author the document, re-emit, and re-aim this table`).toBe(POOLS[o.id] ?? 1)
       }
     }
+    expect(ALBUM_CORPUS.filter((o) => (POOLS[o.id] ?? 1) > 1), 'all seven grown occasions exist in the corpus').toHaveLength(7)
+  })
+})
+
+describe('r49 №4/№5/№7 – THE VARIETY IS MEASURED, NOT ASSERTED (predicted vs measured, the house law)', () => {
+  /** Every caption the occasion can speak, any voice, any variant – the corpus's global uniqueness
+   *  (album-corpus-roundtrip) is what makes a caption string identify its occasion. */
+  function captionsOf(id: string): Set<string> {
+    const o = ALBUM_CORPUS.find((x) => x.id === id)!
+    const out = new Set<string>()
+    for (const voice of TEMPERAMENTS) for (const hand of o.voices[voice]) out.add(hand.caption)
+    return out
+  }
+
+  /** Per book: how many frames the occasion printed and the worst identical-caption run; the maxima over the set. */
+  function measured(books: readonly AlbumBook[], id: string): { maxSame: number; maxPrints: number; total: number } {
+    const captions = captionsOf(id)
+    let maxSame = 0
+    let maxPrints = 0
+    let total = 0
+    for (const b of books) {
+      const counts = new Map<string, number>()
+      let prints = 0
+      for (const s of b.sheets) {
+        for (const f of s.frames) {
+          if (!captions.has(f.caption)) continue
+          prints++
+          counts.set(f.caption, (counts.get(f.caption) ?? 0) + 1)
+        }
+      }
+      maxPrints = Math.max(maxPrints, prints)
+      total += prints
+      for (const n of counts.values()) maxSame = Math.max(maxSame, n)
+    }
+    return { maxSame, maxPrints, total }
+  }
+
+  /** The r45 sweep career, laid up SEVEN times across ages 15-30 – the owner's own count of the
+   *  repeated caption. `posedCareer` holds no layoffs of its own (measured: 0 injury-return frames
+   *  across its 48 books), so the returns are posed here, spread so the chapter caps keep several. */
+  function laidUpCareer(i: number): WorldState {
+    const world = posedCareer(i)
+    const ages = [15, 17, 19, 21, 24, 27, 30]
+    ages.forEach((age, k) => {
+      world.injuryHistory.push({ kind: 'ankle soreness', severity: 'moderate', week: weekAtAge(world, age) + ((i + k) % 40), weeksOut: 3 + (k % 5) })
+    })
+    world.week = Math.max(world.week, weekAtAge(world, 31) + 10)
+    return world
+  }
+
+  it('⭐⭐ injury-return: the owner counted SEVEN identical captions in one book – the 7-layoff posed set now measures 2 (predicted ≤ 2 = ceil(7/4))', () => {
+    // Predicted: with pool 4 and the deterministic walk, N printed firings hold at most ceil(N/4)
+    // identical captions – the owner's 7 gives 2. Measured 12.10 over 48 posed careers with seven
+    // layoffs each: the chapter caps keep at most 5 returns per book, 159 across the set, and the
+    // worst identical run is exactly 2 (= ceil(5/4)). Before the pools, every print in a book was
+    // the same sentence – «фраза … повторяется 7 раз в альбоме».
+    const laidUp = Array.from({ length: SWEEP_CAREERS }, (_, i) => assembleAlbum(laidUpCareer(i)))
+    const m = measured(laidUp, 'injury-return')
+    expect(m.total, 'the posed set really fires the occasion – a zero here is a vacuous measurement').toBe(159)
+    expect(m.maxPrints, 'a book keeps up to five returns after the chapter caps').toBe(5)
+    expect(m.maxSame, 'predicted ≤ 2 (ceil(7/4), the owner\'s seven) – measured exactly 2').toBe(2)
+  })
+
+  it('⭐ season-held: a flat-rank posed set measures 2 (predicted ceil(4/3) = 2)', () => {
+    // The plain sweep set almost never holds a rank inside the narrow band (random closes: 2 prints
+    // across its 48 books, measured 12.10), so the denominator is posed: every season close given
+    // the SAME rank routes every close after the first to `season-held`. Measured: up to 4 held
+    // frames per book after the caps, 152 across the set, worst identical run 2 = ceil(4/3).
+    const flat = Array.from({ length: SWEEP_CAREERS }, (_, i) => {
+      const world = posedCareer(i)
+      for (const m of world.milestones) if (m.type === 'season-rank') m.rank = 100
+      return assembleAlbum(world)
+    })
+    const m = measured(flat, 'season-held')
+    expect(m.total, 'the flat set really fires the occasion').toBe(152)
+    expect(m.maxSame, `predicted ceil(${m.maxPrints}/3) = 2 – measured exactly 2`).toBe(2)
+  })
+
+  it('⭐ final-lost: the plain r45 sweep set measures 2 (predicted ceil(4/3) = 2)', () => {
+    // The sweep careers lose finals on their own (3-6 `final` milestones, mostly without a
+    // same-week title). Measured 12.10: up to 4 lost-final frames per book, 100 across the set,
+    // worst identical run 2 = ceil(4/3). Before the pools that 4 was four identical sentences.
+    const m = measured(Array.from({ length: SWEEP_CAREERS }, (_, i) => assembleAlbum(posedCareer(i))), 'final-lost')
+    expect(m.total, 'the sweep set really fires the occasion').toBe(100)
+    expect(m.maxPrints, 'a book keeps up to four lost finals').toBe(4)
+    expect(m.maxSame, 'predicted ceil(4/3) = 2 – measured exactly 2').toBe(2)
   })
 })

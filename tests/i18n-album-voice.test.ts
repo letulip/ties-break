@@ -78,9 +78,10 @@ describe('r49 №3 – the Russian album is one voice: «ты/тебя», never 
     }
 
     expect(offenders, 'third-person daughter references left in the compiled album Russian').toEqual([])
-    // ⚠ Anti-vacuity: the whole corpus is translated as of r49 (472 of 472 – import report, 12.10).
+    // ⚠ Anti-vacuity: the whole corpus is translated as of r49 (652 of 652 – import report, 12.10,
+    // after №4/№5/№7's content half grew the seven multi-firing pools by 180 variant strings).
     // Fewer checked strings means album Russian silently fell out of ru.json, not a smaller task.
-    expect(checked, 'the compiled album Russian shrank below the 12.10 full-coverage mark').toBeGreaterThanOrEqual(472)
+    expect(checked, 'the compiled album Russian shrank below the 12.10 full-coverage mark').toBeGreaterThanOrEqual(652)
     expect([...ALLOWED.keys()].filter((k) => !used.has(k)), 'allowlist entries that matched no compiled row').toEqual([])
   })
 

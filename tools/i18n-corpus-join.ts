@@ -109,16 +109,20 @@ const mapValues = <T, U>(o: Readonly<Record<string, T>>, f: (v: T) => U): Record
 export function liveCorpora(): Corpora {
   return {
     album: {
-      occasions: ALBUM_CORPUS.map((o) => ({
-        id: o.id,
-        // ⚠ r49 №7 – the RU tables and this join still speak ONE hand per voice. The throw is a
-        // ratchet: the content half that grows a pool must extend the fixture grammar and this
-        // shape together, not silently translate variants[0] and drop the rest.
-        voices: mapValues(o.voices, (pool) => {
-          if (pool.length !== 1) throw new Error(`r49 №7: «${o.id}» grew ${pool.length} variant hands – extend the i18n join and the RU fixture grammar before growing a pool`)
-          return { note: pool[0].note, caption: pool[0].caption, line: pool[0].line }
-        }),
-      })),
+      occasions: ALBUM_CORPUS.map((o) => {
+        // ⭐ r49 №7 – a voice is a POOL of variant hands now, and the join's ordinal axis keys the
+        // k-th hand by the SAME spelling both corpus documents write: the base hand is the bare
+        // voice (`sunny`), a variant is `sunny#2`, `sunny#3`, dense. `resolveAlbum` stays a lookup
+        // by name, so a reordering on either side still cannot cross two hands – and a RU row whose
+        // ordinal the live pool does not hold is a named orphan, never the nearest neighbour.
+        const voices: Record<string, Readonly<Record<string, string>>> = {}
+        for (const [voice, pool] of Object.entries(o.voices)) {
+          pool.forEach((hand, k) => {
+            voices[k === 0 ? voice : `${voice}#${k + 1}`] = { note: hand.note, caption: hand.caption, line: hand.line }
+          })
+        }
+        return { id: o.id, voices }
+      }),
       arc: mapValues(ALBUM_ARC, (vs) => mapValues(vs, (h) => ({ note: h.note, line: h.line }))),
     },
     gifts: { day: BIRTHDAY_DAY_TOGETHER, bands: BIRTHDAY_BANDS.filter((b) => b !== BIRTHDAY_COLLEGE_BAND), college: BIRTHDAY_COLLEGE_BAND },
@@ -267,6 +271,20 @@ const OCCASION = /^(A\d+) · `([^`]+)`/
 const ARC = /^Arc towards `([^`]+)`/
 const FACT_SOURCE = /^`[^`]+`$/
 
+/** r49 №7 – the live pool size per BASE voice of one occasion, counted off the ordinal-keyed
+ *  voices (`sunny`, `sunny#2`, …); null when the occasion is not in the live corpus (its cells
+ *  already orphan one by one, with the id named). */
+function livePoolSizes(c: Corpora, id: string): Record<string, number> | null {
+  const o = c.album.occasions.find((x) => x.id === id)
+  if (o === undefined) return null
+  const out: Record<string, number> = {}
+  for (const key of Object.keys(o.voices)) {
+    const base = key.includes('#') ? key.slice(0, key.indexOf('#')) : key
+    out[base] = (out[base] ?? 0) + 1
+  }
+  return out
+}
+
 function resolveAlbum(id: string, voice: string, field: string): (c: Corpora) => Resolved {
   return (c) => {
     const o = c.album.occasions.find((x) => x.id === id)
@@ -289,7 +307,14 @@ function resolveArc(direction: string, voice: string, field: string): (c: Corpor
   }
 }
 
-export function parseAlbumDoc(doc: string, text: string): ParsedDoc {
+/** ⭐ r49 №7 – THE ORDINAL AXIS. A RU voice row may repeat with a dense ordinal – `sunny#2` – and
+ *  the join key is (id, voice#k, field): the base row is the bare voice (ordinal 0 of the pool, and
+ *  a written `#1` is refused as a second spelling of it, the spec grammar's own rule), variants are
+ *  dense from `#2`, and a VARIANT row must carry all three registers or the row refuses with the
+ *  missing field named – a half-authored variant hand must be loud, never three silent holes.
+ *  `corpora` (passed by the join, absent in a bare parse) arms the pool-size law: for every voice
+ *  of a live occasion the RU pool and the live pool must be the SAME size, both sides named. */
+export function parseAlbumDoc(doc: string, text: string, corpora?: Corpora): ParsedDoc {
   const out = fresh()
   let occasion: { n: string; id: string } | null = null
   let arc: string | null = null
@@ -323,6 +348,8 @@ export function parseAlbumDoc(doc: string, text: string): ParsedDoc {
       continue
     }
     out.tables++
+    // r49 №7 – what the occasion's table declared per BASE voice, for the density and pool-size laws
+    const seen = new Map<string, { base: boolean; ordinals: number[]; line: number }>()
     for (const r of item.rows) {
       const cells = rowCells(out, factTable ? 'album-facts' : 'album', doc, item, r)
       if (cells === null) continue
@@ -336,11 +363,61 @@ export function parseAlbumDoc(doc: string, text: string): ParsedDoc {
         continue
       }
       const voice = bare(cells[0] ?? '').toLowerCase()
+      if (voiceTable && occasion !== null) {
+        // ⭐ r49 №7 – the ordinal axis: `sunny` is the base hand, `sunny#2` the second, dense
+        const vm = /^([a-z]+)(?:#(\d+))?$/.exec(voice)
+        const base = vm?.[1] ?? voice
+        const at = seen.get(base) ?? { base: false, ordinals: [], line: r.line }
+        if (vm?.[2] !== undefined && Number(vm[2]) < 2) {
+          out.unreadable.push({ family: 'album', doc, line: r.line, coord: `${occasion.n} ${occasion.id} · ${voice}`, kind: 'unreadable', why: `r49 №7: the base row is unnumbered – «#${vm[2]}» is a second spelling of the base hand`, ru: null })
+          continue
+        }
+        if (vm?.[2] !== undefined) {
+          // ⚠ a VARIANT carries all three registers: a variant row with an empty cell is refused
+          // whole, with the missing field named – never three holes the census has to chase
+          const empty = [...Array(header.length - 1).keys()].map((k) => k + 1).filter((k) => literalOf(cells[k] ?? '').text === null).map((k) => header[k] ?? '')
+          if (empty.length > 0) {
+            out.unreadable.push({ family: 'album', doc, line: r.line, coord: `${occasion.n} ${occasion.id} · ${voice}`, kind: 'unreadable', why: `r49 №7: a variant row carries all three registers – its «${empty.join('», «')}» cell${empty.length > 1 ? 's are' : ' is'} empty`, ru: null })
+            at.ordinals.push(Number(vm[2]))
+            seen.set(base, at)
+            continue
+          }
+          at.ordinals.push(Number(vm[2]))
+        } else at.base = true
+        seen.set(base, at)
+      }
       for (let k = 1; k < header.length; k++) {
         const field = header[k] ?? ''
         const raw = cells[k] ?? ''
         if (voiceTable && occasion !== null) out.cells.push({ family: 'album', doc, line: r.line, coord: `${occasion.n} ${occasion.id} · ${voice} · ${field}`, raw, resolve: resolveAlbum(occasion.id, voice, field) })
         else if (arc !== null) out.cells.push({ family: 'album', doc, line: r.line, coord: `arc ${arc} · ${voice} · ${field}`, raw, resolve: resolveArc(arc, voice, field) })
+      }
+    }
+    if (voiceTable && occasion !== null) {
+      // r49 №7 – the density law (dense from #2, base present) and, with the live corpora in hand,
+      // the pool-size law: both sides named, so a half-grown pool is one loud line, not a hunt.
+      // ⚠ Only voices the table DECLARES are sized: a voice with no readable row at all is the
+      // census's business (its keys have no Russian), and a refused row is already named above –
+      // a second orphan for the same defect would be noise, not a second fact.
+      const pools = corpora === undefined ? null : livePoolSizes(corpora, occasion.id)
+      for (const [v, s] of seen) {
+        const sorted = [...s.ordinals].sort((a, b) => a - b)
+        if (s.ordinals.length > 0 && !s.base) {
+          out.unreadable.push({ family: 'album', doc, line: s.line, coord: `${occasion.n} ${occasion.id} · ${v}`, kind: 'unreadable', why: `r49 №7: «${v}#${sorted[0]}» has no base «${v}» row`, ru: null })
+        }
+        for (let i = 0; i < sorted.length; i++) {
+          if (sorted[i] !== i + 2) {
+            out.unreadable.push({ family: 'album', doc, line: s.line, coord: `${occasion.n} ${occasion.id} · ${v}`, kind: 'unreadable', why: `r49 №7: «${v}»'s variant ordinals are not dense – expected #${i + 2}, found #${sorted[i]}`, ru: null })
+            break
+          }
+        }
+        const live = pools?.[v] ?? 0
+        if (pools !== null && live > 0) {
+          const ru = (s.base ? 1 : 0) + s.ordinals.length
+          if (ru !== live) {
+            out.unreadable.push({ family: 'album', doc, line: s.line, coord: `${occasion.n} ${occasion.id} · ${v}`, kind: 'moved', why: `r49 №7: the RU table holds ${ru} hand(s) for «${v}», the live corpus holds ${live} – the two pools must be the same size (base row + dense #2… variants)`, ru: null })
+          }
+        }
       }
     }
   }
@@ -627,7 +704,8 @@ export function joinCorpora(docs: readonly string[], dir: string, corpora: Corpo
   const join_ = emptyJoin()
   const readDoc = (name: string): string | null => (docs.includes(name) && existsSync(join(dir, name)) ? readFileSync(join(dir, name), 'utf8') : null)
   const sources: [string, (t: string) => ParsedDoc][] = [
-    [CORPUS_DOCS.album, (t) => parseAlbumDoc(CORPUS_DOCS.album, t)],
+    // r49 №7 – the album parse takes the live corpora so the pool-size law can name both sides
+    [CORPUS_DOCS.album, (t) => parseAlbumDoc(CORPUS_DOCS.album, t, corpora)],
     [CORPUS_DOCS.gifts, (t) => parseGiftsDoc(CORPUS_DOCS.gifts, t)],
     [CORPUS_DOCS['week-notes'], (t) => parseWeekNotesDoc(CORPUS_DOCS['week-notes'], t, corpora)],
   ]

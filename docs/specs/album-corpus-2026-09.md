@@ -359,12 +359,19 @@ the commit»), and the anti-vacuity half, because a comparison of two empty list
 | written | count |
 | --- | ---: |
 | occasions | **38** |
-| notes (38 × 4 voices) | **152** |
-| captions (38 × 4 voices) | **152** |
-| lines (38 × 4 voices) | **152** |
+| notes (every variant hand of 38 × 4 voices) | **212** |
+| captions (every variant hand) | **212** |
+| lines (every variant hand) | **212** |
 | arc cells (2 directions × 4 voices) | **8** |
 | arc strings (8 × note + line) | **16** |
-| ⭐ authored strings in total | **472** |
+| ⭐ authored strings in total | **652** |
+
+⚠ **THE COUNTS MOVED AT ROUND 49 №4/№5/№7 (12.10, the content half)** – the seven occasions that
+fire more than once per career grew variant pools, against the owner's «много чего есть написать в
+альбом для разнообразия»: `injury-return` holds **4** hands per voice; `title-step-up`, `final-lost`,
+`season-best`, `season-recovery`, `season-held` and `season-down` hold **3** each. That is 60 new
+hands – 180 authored strings, all DRAFT – and every figure above is still the parser's own count of
+this file (`albumCounts`), asserted by the round-trip test.
 
 ⚠ **THE TABLE ABOVE IS RE-DERIVED AT ROUND 45 #5** – it had stood at 34 / 424 since wave 8b and had not followed
 the heirloom (`A-L1`, wave 10 T6a) or the two first-number-one occasions (`A35`, `A36`, 24 strings, all DRAFT).
@@ -579,23 +586,47 @@ character. They are the anchor the rest of this corpus was written against, and 
 | voice | note |
 | --- | --- |
 | `sunny` | `A step up, and you were straight on the phone about the court and the noise and the food.` |
+| `sunny#2` | `A title a step higher, and you described the lights and the towels and the tunnel before the tennis.` |
+| `sunny#3` | `A step up and a win, and your first story was about the crowd you could hear from your room.` |
 | `fiery` | `A step up. You said the draw had been harder and you wanted that on the record.` |
+| `fiery#2` | `A step up. You rang to say it had been earned the hard way, and then listed the hard ways.` |
+| `fiery#3` | `You won at the next level up and asked us to stop sounding surprised. We were not surprised; we were loud.` |
 | `deep` | `A step up. You said it was the same game with more people watching, and then you went quiet.` |
+| `deep#2` | `A step up. Afterwards you asked whether we had seen anything different in how you played, and meant it.` |
+| `deep#3` | `You took the step up without a word on the day, and said the court had sounded different, later.` |
 | `quiet` | `A step up. You sent the scoreline and nothing else.` |
+| `quiet#2` | `A step up, and what you sent was a photo of the scoreboard with your bag already on your shoulder.` |
+| `quiet#3` | `A step up. You asked whether your old racquet bag was still in the hall, the one from the start.` |
 
 | voice | caption |
 | --- | --- |
 | `sunny` | `A bigger court, and she noticed all of it.` |
+| `sunny#2` | `Lights, towels, then tennis.` |
+| `sunny#3` | `The crowd reached her room.` |
 | `fiery` | `She wanted the draw noted.` |
+| `fiery#2` | `Earned, and itemised.` |
+| `fiery#3` | `She banned our surprise.` |
 | `deep` | `The same game, she said.` |
+| `deep#2` | `She asked what we had seen.` |
+| `deep#3` | `The sound was different, she said.` |
 | `quiet` | `Just the scoreline.` |
+| `quiet#2` | `The scoreboard, bag packed.` |
+| `quiet#3` | `She asked about the old bag.` |
 
 | voice | line |
 | --- | --- |
 | `sunny` | `She told me about the food.` |
+| `sunny#2` | `The venue got the longer report.` |
+| `sunny#3` | `Bigger crowds carry further.` |
 | `fiery` | `For the record, then.` |
+| `fiery#2` | `Every hard way got named.` |
+| `fiery#3` | `We were loud, not surprised.` |
 | `deep` | `More people watching. Same girl.` |
+| `deep#2` | `The question was the headline.` |
+| `deep#3` | `She noticed the sound first.` |
 | `quiet` | `She let the number do it.` |
+| `quiet#2` | `In the photo she is already leaving.` |
+| `quiet#3` | `The old bag is still in the hall.` |
 
 ### A7 · `title-after-injury` · title · teen, adult, lateCareer · **gate: `first-title-after-a-layoff`**
 **The occasion:** the first title after time out.
@@ -685,23 +716,47 @@ it too, so this occasion cannot assume she lost – or won.
 | voice | note |
 | --- | --- |
 | `sunny` | `You lost it and you still wanted to talk.` |
+| `sunny#2` | `You lost the final and talked us through the good parts first, because there had been good parts.` |
+| `sunny#3` | `A final lost, and you wanted to know everything about home before you would say a word about it.` |
 | `fiery` | `You lost it and you had already decided why by the time you rang.` |
+| `fiery#2` | `The final went the other way, and you spent the evening planning the next one out loud.` |
+| `fiery#3` | `You lost it, and what made you angriest was how well you had played until the end.` |
 | `deep` | `You lost it, and later you told me the one point it had turned on.` |
+| `deep#2` | `You lost the final, and when you finally talked about it you started from the morning of it, not the end.` |
+| `deep#3` | `A lost final. You said you already knew what you would do differently, and would not say what.` |
 | `quiet` | `You lost it. You asked about the garden.` |
+| `quiet#2` | `A final lost, and the one thing you asked that night was whether the car had passed its inspection.` |
+| `quiet#3` | `The final went the other way. You packed, thanked the people at the desk, and sent us one line about the weather.` |
 
 | voice | caption |
 | --- | --- |
 | `sunny` | `She wanted to talk anyway.` |
+| `sunny#2` | `The good parts came first.` |
+| `sunny#3` | `Home news first, then the final.` |
 | `fiery` | `She had the reason ready.` |
+| `fiery#2` | `Planning the next one already.` |
+| `fiery#3` | `Angry about playing well.` |
 | `deep` | `A while, then one point.` |
+| `deep#2` | `The story began at the morning.` |
+| `deep#3` | `She knew, and kept it.` |
 | `quiet` | `She asked about the garden.` |
+| `quiet#2` | `She asked about the car.` |
+| `quiet#3` | `One line, about the weather.` |
 
 | voice | line |
 | --- | --- |
 | `sunny` | `She rang. That is the part.` |
+| `sunny#2` | `Losing did not cancel the week.` |
+| `sunny#3` | `The final could wait its turn.` |
 | `fiery` | `The verdict arrived first.` |
+| `fiery#2` | `Next one already pencilled in.` |
+| `fiery#3` | `That kind of anger passes slowly.` |
 | `deep` | `She had been holding that point for a while.` |
+| `deep#2` | `She needed the whole day said.` |
+| `deep#3` | `The answer stayed hers.` |
 | `quiet` | `We talked about the garden.` |
+| `quiet#2` | `The car passed. She moved on.` |
+| `quiet#3` | `The weather got more words than the match.` |
 
 ## The seasons – five, because they are the largest kind in the pool
 
@@ -741,23 +796,47 @@ CONTRACT fix rather than more writing – see `A33`.
 | voice | note |
 | --- | --- |
 | `sunny` | `The best year so far. You listed every week of it and then said you were tired.` |
+| `sunny#2` | `The best year you have had, and you credited everybody but yourself before we could stop you.` |
+| `sunny#3` | `The best close so far. You talked about the courts you had liked best, and none of the numbers came up once.` |
 | `fiery` | `The best year so far, and you spent the whole call on the weeks that went wrong.` |
+| `fiery#2` | `Your best year, and you called it a down payment. We were not allowed to celebrate yet.` |
+| `fiery#3` | `The best year so far, and your first sentence about it started with the word next.` |
 | `deep` | `The best year so far. You said it had felt like one long week, and I think that was the whole report.` |
+| `deep#2` | `The best year yet. You said you knew the week it had turned, and named it, and it was not a week we would have guessed.` |
+| `deep#3` | `Your best close. You asked us whether it had looked as hard as it felt, and waited for a real answer.` |
 | `quiet` | `The best year so far. You asked whether we were coming at Christmas.` |
+| `quiet#2` | `Your best season ended, and you went straight home and fixed the garden gate.` |
+| `quiet#3` | `Best close yet. You answered our congratulations with a question about the apple tree.` |
 
 | voice | caption |
 | --- | --- |
 | `sunny` | `Tired, and pleased, in that order.` |
+| `sunny#2` | `Everyone got thanked but her.` |
+| `sunny#3` | `Courts first, numbers never.` |
 | `fiery` | `She only talked about the bad weeks.` |
+| `fiery#2` | `A down payment, she called it.` |
+| `fiery#3` | `Her first word about it: next.` |
 | `deep` | `One long week, she called it.` |
+| `deep#2` | `She knew the exact week.` |
+| `deep#3` | `She wanted the real answer.` |
 | `quiet` | `She asked about Christmas.` |
+| `quiet#2` | `The gate finally got fixed.` |
+| `quiet#3` | `She asked about the apple tree.` |
 
 | voice | line |
 | --- | --- |
 | `sunny` | `The tired bit was the true bit.` |
+| `sunny#2` | `We said the missing name out loud.` |
+| `sunny#3` | `The numbers can mind themselves.` |
 | `fiery` | `The bad weeks, and that was the call.` |
+| `fiery#2` | `Celebration postponed, again.` |
+| `fiery#3` | `Next. The whole speech.` |
 | `deep` | `One long week. That was the report.` |
+| `deep#2` | `Not the week anyone would guess.` |
+| `deep#3` | `It looked hard. We said so.` |
 | `quiet` | `Christmas mattered more.` |
+| `quiet#2` | `A good year for the gate too.` |
+| `quiet#3` | `The tree is fine. So is she.` |
 
 ### A33 · `season-recovery` · season-rank · teen, adult, lateCareer · **gate: `rank-better-than-the-previous-close-but-not-a-best`**
 **The occasion:** the climb back – a year better than the one before it and still short of her own best.
@@ -775,23 +854,47 @@ nobody could review.
 | voice | note |
 | --- | --- |
 | `sunny` | `You came back up the table this year and you talked about the two weeks in the middle where it turned, not about the end of it.` |
+| `sunny#2` | `Back up the table this year, and you gave the credit to the new morning routine, in detail.` |
+| `sunny#3` | `You climbed back this year and rang us straight after the last match of it, talking faster than usual.` |
 | `fiery` | `Better than last year, and you said that was the least it could have been. You were pleased anyway and would not say so.` |
+| `fiery#2` | `Better than last year, and you made us promise not to use the word comeback around you.` |
+| `fiery#3` | `You came back up this season and declared the matter closed before anyone had opened it.` |
 | `deep` | `You waited until the year was finished before you would call it a climb back, and then you said it in one sentence.` |
+| `deep#2` | `The year climbed, and you said the difference had been small and weekly and nobody else would have seen it.` |
+| `deep#3` | `You let the season finish before you trusted it, and even then you said it quietly, to one of us at a time.` |
 | `quiet` | `A year that went back up. You did not mention it at all, and next season's schedule arrived in the same week.` |
+| `quiet#2` | `The year went back up. Your only comment was a thumbs up under our message about it.` |
+| `quiet#3` | `Back up the rankings. You renewed the court booking for the whole off-season without being asked.` |
 
 | voice | caption |
 | --- | --- |
 | `sunny` | `She talked about the middle of the year.` |
+| `sunny#2` | `The morning routine got the credit.` |
+| `sunny#3` | `She talked faster than usual.` |
 | `fiery` | `The least it could have been, she said.` |
+| `fiery#2` | `Not a comeback, she insists.` |
+| `fiery#3` | `Closed before it was opened.` |
 | `deep` | `One sentence, once the year was finished.` |
+| `deep#2` | `Small, weekly, invisible.` |
+| `deep#3` | `Said quietly, one at a time.` |
 | `quiet` | `Nothing said. A new schedule.` |
+| `quiet#2` | `A thumbs up. That was the lot.` |
+| `quiet#3` | `The booking was renewed early.` |
 
 | voice | line |
 | --- | --- |
 | `sunny` | `The turn was in the middle somewhere.` |
+| `sunny#2` | `The mornings did their part.` |
+| `sunny#3` | `Up the table, up the tempo.` |
 | `fiery` | `Pleased, and not admitting it.` |
+| `fiery#2` | `Fine. Not a comeback.` |
+| `fiery#3` | `No questions were being taken.` |
 | `deep` | `She waited for the year to end first.` |
+| `deep#2` | `The invisible work shows last.` |
+| `deep#3` | `Trust came after the maths.` |
 | `quiet` | `Straight back to the planning.` |
+| `quiet#2` | `Eloquent, for her.` |
+| `quiet#3` | `The off-season had plans already.` |
 
 ### A13 · `season-held` · season-rank · teen, adult, lateCareer · **gate: `rank-inside-a-narrow-band-of-the-previous-close`**
 **The occasion:** a year that neither climbed nor fell – the ordinary one, and the commonest.
@@ -805,23 +908,47 @@ where nothing moved and that is now the only year that reaches them.
 | voice | note |
 | --- | --- |
 | `sunny` | `A year of holding on. You said the middle of it had blurred and I know exactly what you mean.` |
+| `sunny#2` | `You said the season felt like a rerun of last year, then spent the call on the one week that was different.` |
+| `sunny#3` | `You held your place this year, and what you wanted to talk about was the new faces around the draw.` |
 | `fiery` | `A year of holding on. You wanted it to be a jump, it wasn't, and you said so for a while.` |
+| `fiery#2` | `You defended every point of it this year and wanted that called work, not standing still.` |
+| `fiery#3` | `The same rank at the end of it, and you blamed the calendar, the courts and the weather, with evidence for each.` |
 | `deep` | `A year of holding on. You said staying still takes more than it looks like it does.` |
+| `deep#2` | `Near the end of the year you said that staying put had been a decision, made weekly. Then you left it there.` |
+| `deep#3` | `You went quiet when the season closed, and later said the year had asked more than it showed.` |
 | `quiet` | `A year of holding on. You sent next season's schedule not long after.` |
+| `quiet#2` | `The year closed where it started. You mentioned the racquets needed restringing and that was the call.` |
+| `quiet#3` | `Nothing moved this year. You sent us the same photo of the practice board as last year.` |
 
 | voice | caption |
 | --- | --- |
 | `sunny` | `The middle of it blurred.` |
+| `sunny#2` | `She called it a rerun.` |
+| `sunny#3` | `New faces, same place.` |
 | `fiery` | `She wanted a jump.` |
+| `fiery#2` | `Defending is work, she said.` |
+| `fiery#3` | `The weather made the list too.` |
 | `deep` | `Staying still costs, she said.` |
+| `deep#2` | `Decided weekly, she said.` |
+| `deep#3` | `More asked than shown, she said.` |
 | `quiet` | `Next season's schedule, not long after.` |
+| `quiet#2` | `Restringing, and little else.` |
+| `quiet#3` | `The same photo as last year.` |
 
 | voice | line |
 | --- | --- |
 | `sunny` | `A year she can't quite remember.` |
+| `sunny#2` | `The one different week got the whole call.` |
+| `sunny#3` | `The table stood still. She did not.` |
 | `fiery` | `Holding on was not the plan.` |
+| `fiery#2` | `Holding takes work too. Noted.` |
+| `fiery#3` | `Evidence was provided.` |
 | `deep` | `She is right about that.` |
+| `deep#2` | `Nobody notices that kind of work.` |
+| `deep#3` | `The quiet after this one was longer.` |
 | `quiet` | `Straight on to the next one.` |
+| `quiet#2` | `Business as usual, then.` |
+| `quiet#3` | `Even the photo held its place.` |
 
 ### A14 · `season-down` · season-rank · adult, lateCareer · **gate: `rank-worse-than-the-previous-close`**
 **The occasion:** a year that went the wrong way.
@@ -830,23 +957,47 @@ where nothing moved and that is now the only year that reaches them.
 | voice | note |
 | --- | --- |
 | `sunny` | `A year that went the wrong way. You said so out loud.` |
+| `sunny#2` | `The year slipped, and you came home with a list of what to fix already written out.` |
+| `sunny#3` | `You told us the year had gone the wrong way before the table said it, and you were right.` |
 | `fiery` | `The year went the wrong way and you had a reason for every week of it, and you meant every one.` |
+| `fiery#2` | `A wrong-way year. On the last call of it you were already naming the people you would prove wrong.` |
+| `fiery#3` | `You called the year a lesson, in the tone you use for referees.` |
 | `deep` | `A year that went the wrong way. You waited until January to tell me what you thought had happened.` |
+| `deep#2` | `A year that went backwards. You never said the word, and we learned not to say it either.` |
+| `deep#3` | `After the year fell away you asked what we had seen from the stands, and listened more than you spoke.` |
 | `quiet` | `You told me about the schedules and the hotels all year, and never once about the year.` |
+| `quiet#2` | `The year went down and your messages got shorter, and none of them mentioned the table.` |
+| `quiet#3` | `A down year. You reorganised the whole equipment shelf the week it ended, and told us about the shelf.` |
 
 | voice | caption |
 | --- | --- |
 | `sunny` | `She said it out loud.` |
+| `sunny#2` | `She brought the list home.` |
+| `sunny#3` | `She said it before the table did.` |
 | `fiery` | `A reason for every week.` |
+| `fiery#2` | `A list of people to prove wrong.` |
+| `fiery#3` | `A lesson, in that tone.` |
 | `deep` | `She waited until January.` |
+| `deep#2` | `The word went unsaid.` |
+| `deep#3` | `This time she asked us.` |
 | `quiet` | `Schedules, hotels, not the year.` |
+| `quiet#2` | `Shorter messages, no table talk.` |
+| `quiet#3` | `The shelf got the attention.` |
 
 | voice | line |
 | --- | --- |
 | `sunny` | `Naming it is most of it.` |
+| `sunny#2` | `The list was long, and hers.` |
+| `sunny#3` | `Right, and not glad about it.` |
 | `fiery` | `All of them true, probably.` |
+| `fiery#2` | `The fire survived the year intact.` |
+| `fiery#3` | `Lessons were not taken gladly.` |
 | `deep` | `She needed the distance first.` |
+| `deep#2` | `Some words help nobody.` |
+| `deep#3` | `Listening was new.` |
 | `quiet` | `Everything except the year.` |
+| `quiet#2` | `Short answers can carry a lot.` |
+| `quiet#3` | `The shelf has never been so neat.` |
 
 ## The body – two, and the second is the one that matters
 
@@ -888,23 +1039,59 @@ does not use it.
 | voice | note |
 | --- | --- |
 | `sunny` | `First week back. You said the ball came at you faster than you had remembered, and you laughed about it.` |
+| `sunny#2` | `First session back. You named everyone who had said hello before you said one word about the tennis.` |
+| `sunny#3` | `You rang from the car park after the first proper session, still out of breath and happy about it.` |
+| `sunny#4` | `First week back, and you were straight back to complaining about the food at the courts. We were glad of it.` |
 | `fiery` | `First week back. You wanted all of it back at once, were told no, and I heard about that.` |
+| `fiery#2` | `First week back on court. You counted off everything they were still not letting you do, and you were loud about it.` |
+| `fiery#3` | `You said the only thing you had missed about it was winning, and nobody in this house believed you.` |
+| `fiery#4` | `First week back, and you told us the forehand had never gone anywhere and dared anyone to say otherwise.` |
 | `deep` | `First week back. You said you had been more afraid of this week than of the injury.` |
+| `deep#2` | `You did not talk about the week until it was over, and then you said the hardest part had been walking in the first day.` |
+| `deep#3` | `You asked us not to come to the first session back. You told us why much later, and we understood.` |
+| `deep#4` | `You said the quietest part was the drive home after the first session, and that you had liked it.` |
 | `quiet` | `First week back. You sent the session time before anything else.` |
+| `quiet#2` | `Your bag stood packed by the door the night before the first session back.` |
+| `quiet#3` | `You sent a photo of the empty practice court and no message with it.` |
+| `quiet#4` | `First week back. You crossed the missed weeks off the calendar in one sitting, and said nothing about them.` |
 
 | voice | caption |
 | --- | --- |
 | `sunny` | `The ball came faster than she remembered.` |
+| `sunny#2` | `The hellos came before the tennis.` |
+| `sunny#3` | `Out of breath, and pleased about it.` |
+| `sunny#4` | `Complaints about the food again.` |
 | `fiery` | `All of it back at once, please.` |
+| `fiery#2` | `Still a list of things not allowed.` |
+| `fiery#3` | `Only the winning, she said.` |
+| `fiery#4` | `The forehand never left, she said.` |
 | `deep` | `More afraid of this than of that.` |
+| `deep#2` | `Walking in was the hard part.` |
+| `deep#3` | `No audience for the first one.` |
+| `deep#4` | `The drive home was the good part.` |
 | `quiet` | `She told me the time of the session.` |
+| `quiet#2` | `The bag was by the door early.` |
+| `quiet#3` | `A photo of the court. No words.` |
+| `quiet#4` | `The calendar caught up in one go.` |
 
 | voice | line |
 | --- | --- |
 | `sunny` | `She laughed at it, which helped.` |
+| `sunny#2` | `Half the call was the hellos.` |
+| `sunny#3` | `Out of breath suits her.` |
+| `sunny#4` | `Even the moaning was welcome.` |
 | `fiery` | `They said no. I heard.` |
+| `fiery#2` | `The list got shorter. The volume did not.` |
+| `fiery#3` | `We did not believe a word.` |
+| `fiery#4` | `Nobody was going to argue with that.` |
 | `deep` | `She waited to say the true thing.` |
+| `deep#2` | `The week ended before she spoke.` |
+| `deep#3` | `Some weeks are for nobody to watch.` |
+| `deep#4` | `Quiet roads, after.` |
 | `quiet` | `The time came first.` |
+| `quiet#2` | `Packed before anybody asked.` |
+| `quiet#3` | `The photo said it.` |
+| `quiet#4` | `Crossed off, all at once.` |
 
 ## Money and the road – three, one apiece
 
