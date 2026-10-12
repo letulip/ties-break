@@ -163,12 +163,12 @@ Two are not repetition but disagreement with a line on the same page:
 | RU21-ENS-01 | `Her academy is begun –` | `Строительство её академии началось: построено` |
 | RU21-ENS-02 | `Her academy stands –` | `Её академия работает: построено` |
 | RU21-ENS-03 | `The {0} deal never ran out –` | `Договор с брендом «{0}» не закончился вместе с карьерой:` |
-| RU21-ENS-04 | `You said one more year` | `«Ещё один год», – говорили мы. Сколько раз:` |
+| RU21-ENS-04 | `You said one more year` | `«Ещё один год», – говорили мы. Сколько раз:` – ⚙ 12.10 r49 №9: строка удалена с экрана, ключ умер `QUESTION` |
 | RU21-ENS-05 | `a week.` | `в неделю.` |
 | RU21-ENS-06 | `a year,` | `в год,` |
 | RU21-ENS-07 | `for life` | `пожизненно` |
 | RU21-ENS-08 | `of` | `из` |
 | RU21-ENS-09 | `stages built – and it earns` | `этапов, доход –` |
 | RU21-ENS-10 | `stages built.` | `этапов.` |
-| RU21-ENS-11 | `time.` | `.` |
-| RU21-ENS-12 | `times.` | `.` |
+| RU21-ENS-11 | `time.` | `.` – ⚙ 12.10 r49 №9: строка удалена с экрана, ключ умер `QUESTION` |
+| RU21-ENS-12 | `times.` | `.` – ⚙ 12.10 r49 №9: строка удалена с экрана, ключ умер `QUESTION` |

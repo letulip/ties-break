@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "count": 5868,
+  "count": 5865,
   "keys": {
     " (+{0} banked – a ranking needs {1} events with points, or {2})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["points"],["RANKABLE_MIN.tournaments"],["RANKABLE_MIN.points"]],"wrapped":true},
     " (does not improve best {0})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["bestN"]],"wrapped":true},
@@ -4971,7 +4971,6 @@
     "You own nothing yet. The cheapest thing here is {0}, from {1}.": {"home":["src/components/ShopPanel.vue"],"area":["screens"],"wrapped":true},
     "You read the whole thing before you told anybody. The one that doesn't run out.": {"home":["src/engine/world/albumCorpus.ts"],"area":["album"],"wrapped":true,"seat":["album.corpus"]},
     "You said almost nothing for a week and I have never seen you so certain.": {"home":["src/engine/world/albumCorpus.ts"],"area":["album"],"wrapped":true,"seat":["album.corpus"]},
-    "You said one more year": {"home":["src/components/EndingScreen.vue"],"area":["screens"],"wrapped":true},
     "You said one sentence to me before it started and I have not repeated it to anybody.": {"home":["src/engine/world/albumCorpus.ts"],"area":["album"],"wrapped":true,"seat":["album.corpus"]},
     "You said the money made the whole thing real in a way the results hadn't. The first time it paid.": {"home":["src/engine/world/albumCorpus.ts"],"area":["album"],"wrapped":true,"seat":["album.corpus"]},
     "You still have to decide where she goes and who teaches her.": {"home":["src/prologue/cards.ts"],"area":["engine"],"wrapped":true},
@@ -5433,8 +5432,6 @@
     "tile|Together for": {"home":["src/i18n/words.ts"],"area":["engine"],"wrapped":true},
     "tile|it seems": {"home":["src/i18n/words.ts"],"area":["engine"],"wrapped":true},
     "tile|together {0}": {"home":["src/i18n/words.ts"],"area":["engine"],"wrapped":true},
-    "time.": {"home":["src/components/EndingScreen.vue"],"area":["screens"],"wrapped":true},
-    "times.": {"home":["src/components/EndingScreen.vue"],"area":["screens"],"wrapped":true},
     "total|Banked": {"home":["src/components/CollegeDoneDialog.vue"],"area":["screens"],"wrapped":true},
     "two local tournaments": {"home":["src/prologue/handover.ts"],"area":["engine"],"wrapped":true},
     "undo|Cancel": {"home":["src/components/screens/SeasonScreen.vue"],"area":["screens"],"wrapped":true},
@@ -5736,7 +5733,7 @@
     "{0}'s share of the brand – {1} into her own account": {"home":["src/engine/world/phaseFinance.ts"],"area":["engine","ledger"],"ph":[["world.profile.kidName"],["formatCents(herCents)"]],"wrapped":true},
     "{0}'s share of the prize money – {1} into her own account": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine","ledger"],"ph":[["world.profile.kidName"],["formatCents(herShare)"]],"wrapped":true},
     "{0}'s share of the sponsor money – {1} into her own account": {"home":["src/engine/world/sponsors.ts"],"area":["engine","ledger"],"ph":[["world.profile.kidName"],["formatCents(herCents)"]],"wrapped":true},
-    "{0}, aged {1} – {2}": {"home":["src/engine/world/album.ts"],"area":["album"],"ph":[["seasonLabel(ending.week)"],["ending.ageYears"],["endingDetailRef(ending)"]],"wrapped":true},
+    "{0}, aged {1} – {2}": {"home":["src/engine/world/album.ts"],"area":["album"],"ph":[["seasonLabel(ending.week, world.startYear)"],["ending.ageYears"],["endingDetailRef(ending)"]],"wrapped":true},
     "{0}, and no coach buys that back.": {"home":["src/engine/world/coachMarket.ts"],"area":["engine"],"ph":[["left"]],"wrapped":true},
     "{0}, and nobody had to ask her": {"home":["src/engine/ending.ts"],"area":["engine"],"ph":[["age"]],"wrapped":true},
     "{0}, and we have been following her results. We would like her face in our campaign – her photograph beside our name, and the fee below is hers.": {"home":["src/components/OfferLetter.vue"],"area":["letters"],"wrapped":true},

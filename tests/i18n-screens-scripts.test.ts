@@ -88,16 +88,19 @@ describe('§1 THE CENSUS – zero keys without Russian, and the road to zero is 
     for (const dead of ['Load', 'Import', 'Stats', 'Training', 'def.']) expect(CAT.keys[dead], `${dead} died with its last caller`).toBeUndefined()
   })
 
-  it('the parked Russian moved onto the tagged heirs the same day; only the historic def. row keeps its QUESTION', () => {
+  it('the parked Russian moved onto the tagged heirs the same day; the QUESTION rows left are the historic def. and round 49 №9\'s three', () => {
     // ⚠ RE-AIMED 11.10: Import and Stats re-pointed to btn|Import / heading|Stats and compile; def. died into the existing poster| pair.
-    expect([...WAVE.parked].sort()).toEqual(['def.'])
+    // ⚠ RE-AIMED 12.10 (round 49 №9, «убрать всю строку»): the one-more-year note left EndingScreen and its three keys
+    // (`You said one more year`, `time.`, `times.`) died with their only caller – the rows stay in the table as the
+    // owner's record, parked QUESTION the way the historic def. row is.
+    expect([...WAVE.parked].sort()).toEqual(['You said one more year', 'def.', 'time.', 'times.'])
   })
 })
 
 // ---- §2 the wave renders ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 describe('§2 THE WAVE – 681 keys, every value rendered under the real ru.json', () => {
   it('681 keys were added by this wave: 628 new rows and 53 scaffold cells', () => {
-    expect(WAVE.keys.size).toBe(683) /* ⚠ 11.10: +2 – the Import/Stats rows re-pointed to their tagged heirs the same day */
+    expect(WAVE.keys.size).toBe(680) /* ⚠ 11.10: +2 – the Import/Stats rows re-pointed to their tagged heirs the same day. ⚠ 12.10 round 49 №9: −3 – the one-more-year note left EndingScreen; its three rows are parked QUESTION above */
     expect(WAVE.scaffold).toBe(53)
   })
 

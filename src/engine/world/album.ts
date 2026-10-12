@@ -442,7 +442,10 @@ export function slotLastWeek(world: WorldState): AlbumPage {
     7,
     ENDING_TITLE[ending.type],
     ending.type === 'college' ? 'See you in four years' : 'The last week',
-    `${seasonLabel(ending.week)}, aged ${ending.ageYears} – ${ending.detail}`,
+    // ⚠ r49 №15 exposed this (12.10): with the screen's own date line gone, this fact's label IS the
+    // page's only date – and it was built with the formatter's DEFAULT year, not the career's. Every
+    // other dated line in this file passes `world.startYear`; now both ending calls do too.
+    `${seasonLabel(ending.week, world.startYear)}, aged ${ending.ageYears} – ${ending.detail}`,
     ending.week,
     EMOTION_BY_ENDING[ending.type],
     false,
@@ -450,7 +453,7 @@ export function slotLastWeek(world: WorldState): AlbumPage {
     {
       why: endingTitleRef(ending.type),
       caption: ending.type === 'college' ? cp`See you in four years` : cp`The last week`,
-      fact: cp`${seasonLabel(ending.week)}, aged ${ending.ageYears} – ${endingDetailRef(ending)}`,
+      fact: cp`${seasonLabel(ending.week, world.startYear)}, aged ${ending.ageYears} – ${endingDetailRef(ending)}`,
     },
   )
 }

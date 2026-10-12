@@ -194,7 +194,9 @@ describe('⭐⭐⭐ round 47 #2 – every money figure of a million or more is t
     expect(notes.join(' | ')).toContain('The Baseline Athletic deal never ran out – $2.5M a year, for life.')
     // ⭐ RE-AIMED 07.10 BY HIS ROUND 48 #4: it read «She said one more year 5 times.» – and it was not her who said it, it was
     // the parent who proposed it. The sentence is the draft R47-S4 of round 47's ledger, and the pluralisation is as it was.
-    expect(notes.join(' | ')).toContain('You said one more year 5 times.')
+    // ⚠ RE-AIMED AGAIN 12.10 (round 49 №9, «убрать всю строку»): the refrain left the page whole, so the compact-money
+    // claim rests on the two notes above and this arm now pins the absence among the notes.
+    expect(notes.join(' | ')).not.toContain('one more year')
     w.unmount()
   })
 })
@@ -265,8 +267,10 @@ describe('⭐⭐⭐ round 47 #4/#5/#7 – one grid, two shapes, and every figure
     // `b.ending-fig` and no longer a bare `b`: «for life» is a plain `<b>` (round 48 #5) – WORDS, not a figure – and this
     // arm is about FIGURES being Sora, so it must not be asked to turn a word into a number. This fixture carries no
     // lifetime deal, so it never met that `<b>`; the narrowing keeps the next fixture that does from tripping on it.
+    // ⚠ RE-AIMED 12.10 (round 49 №9): the one-more-year count left the page with its note, so the notes carry the
+    // academy's three figures and the floor is nine.
     const figures = [...document.querySelectorAll('.ending-totals dd, .ending-note b.ending-fig')]
-    expect(figures.length, 'six in the grid, four in the notes').toBeGreaterThanOrEqual(10)
+    expect(figures.length, 'six in the grid, three in the notes').toBeGreaterThanOrEqual(9)
     for (const fig of figures) {
       const cs = getComputedStyle(fig)
       // ⚠⚠ THE ARM. Drop \`font-family\` from \`.ending-fig\`, or set it back to the body face, and this goes red

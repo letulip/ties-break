@@ -429,8 +429,11 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         <p v-if="blurb" class="album-blurb">{{ blurb }}</p>
 
         <!-- POINT 3: one hard fact off the milestone itself, never a computed summary. -->
+        <!-- ⚠ ROUND 49 №15 (12.10): the second week line is GONE by his word – «второй W50 '50 на
+             отдельной строке убрать, он лишний». The date already rides inside `closing.fact`
+             (album.ts slot 7 opens the fact with the week label), so this `album-when` repeat was
+             the same week said twice. The element and its CSS left together. -->
         <p v-if="closing.fact" class="album-fact">{{ eventText({ text: closing.fact, c: closing.factC }) }}</p>
-        <p v-if="closing.week !== null" class="album-when">{{ weekLabel(closing.week, startYear) }}</p>
       </div>
 
       <!-- THE HAND-OFF (section 5.6): an OFFER, not a credits roll. -->
@@ -524,16 +527,11 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
             <div><dt>{{ t('Seasons') }}</dt><dd class="ending-fig">{{ view.seasonsPlayed }}</dd></div>
           </dl>
         </div>
-        <!-- ⭐⭐⭐ ROUND 48 #4 – THE VOICE FLIPPED TO THE PARENT, AND THIS IS THE LINE THAT WAS SHOWN TO HIM. It read
-             «She said one more year N times.» The owner, 07.10 (translated – no Cyrillic may appear in a template):
-             it was not her who said it, it was us who proposed it, so reword it. «One more year» is the button the
-             PARENT presses on the retirement card and `oneMoreYearCount` counts those presses, so the line credits
-             the one who said it. The sentence is the draft R47-S4 of round 47's ledger – the one marked as his own
-             reading – verbatim, and the pluralisation is as it was. ⚠ THE FINAL OFFER IS NOT HERE: «Nobody asked
-             her this time. She said it herself» lives in engine/ending.ts and is truly hers. -->
-        <p v-if="view.oneMoreYearCount > 0" class="ending-note">
-          {{ t('You said one more year') }} <b class="ending-fig">{{ view.oneMoreYearCount }}</b> {{ view.oneMoreYearCount === 1 ? t('time.') : t('times.') }}
-        </p>
+        <!-- ⭐⭐⭐ ROUND 49 №9 (12.10) – THE ONE-MORE-YEAR NOTE IS GONE BY HIS WORD: «еще один год
+             говорили мы... убрать всю строку». It arrived in round 47 (R47-S4), flipped voice in
+             round 48 #4, and leaves whole here – the element, not a v-if. `oneMoreYearCount` stays
+             on the wire: the natural-ending blurb still reads it to decide whether its own sentence
+             is true (the 10.10 «при 0 надо починить» ruling above). -->
 
         <!-- ⭐ ROUND 29 PART TWO #10 – THE ACADEMY LINE, the-shop §10.4 settled by the owner (his
              ruling is quoted on `AcademyEpilogue` in shared/protocol/career.ts – a template may
@@ -777,14 +775,6 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
   font-size: 14px;
   line-height: 1.45;
   color: var(--ink-soft);
-}
-
-.album-when {
-  margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-dim);
 }
 
 .ending-foot {

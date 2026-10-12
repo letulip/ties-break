@@ -176,11 +176,14 @@ describe('⭐ 10.10 §1 – every ending draws its own paragraph, the engine\'s 
 // 2. WHERE IT SITS
 // =================================================================================================
 describe('⭐ 10.10 §2 – under the title, over the fact, over the figures: the one child the page gained', () => {
-  const ORDER = ['album-photo', 'album-why', 'album-blurb', 'album-fact', 'album-when']
+  // ⚠ RE-AIMED 12.10 (round 49 №15, «второй W50 … убрать»): the `album-when` date line left the page by the owner's
+  // word – the week already rides inside the fact (album.ts slot 7 opens the fact with the week label) – so the page
+  // ends on the fact now and the walk below follows.
+  const ORDER = ['album-photo', 'album-why', 'album-blurb', 'album-fact']
   const namesOf = (w: VueWrapper): string[] =>
     Array.from(w.get('.album-page').element.children).map((el) => ORDER.find((c) => el.classList.contains(c)) ?? el.tagName)
 
-  it('photograph, title, PARAGRAPH, fact, date – in that order, and nothing else is a child of the page', () => {
+  it('photograph, title, PARAGRAPH, fact – in that order, and nothing else is a child of the page (the date line left 12.10, round 49 №15)', () => {
     for (const type of TYPES) {
       setActivePinia(createPinia())
       document.body.innerHTML = ''
@@ -201,7 +204,9 @@ describe('⭐ 10.10 §2 – under the title, over the fact, over the figures: th
     const w = mountEnding(viewOf('natural', { oneMoreYearCount: 4 }))
     const blurb = w.get('.album-blurb').element
     expect(w.get('.ending-foot').element.contains(blurb), 'not in the footer').toBe(false)
-    for (const selector of ['.ending-door-album', '.ending-totals', '.ending-money', '.ending-facts', '.ending-note', '.ending-doors']) {
+    // ⚠ RE-AIMED 12.10 (round 49 №9): `.ending-note` left the list – the one-more-year note is removed and this
+    // fixture builds no academy or deal, so the mounted page holds no note at all.
+    for (const selector of ['.ending-door-album', '.ending-totals', '.ending-money', '.ending-facts', '.ending-doors']) {
       expect(blurb.compareDocumentPosition(w.get(selector).element) & Node.DOCUMENT_POSITION_FOLLOWING, `${selector} comes after the paragraph`).toBeTruthy()
     }
     w.unmount()
@@ -225,26 +230,30 @@ describe('⭐ 10.10 §3 – one rung under the title: the notes\' own size, the 
   /** The brightest stop of the takeover's own ground (`--celebration-bg`) – the weakest ground for light text. Held against the stylesheet below. */
   const BRIGHTEST_GROUND: [number, number, number] = [0x16, 0x28, 0x3b]
 
-  it('14px like the notes, smaller than the title and larger than the date, at the title\'s measure', () => {
-    const w = mountEnding(viewOf('natural', { oneMoreYearCount: 4 }))
+  it('14px like the notes, smaller than the title, at the title\'s measure', () => {
+    // ⚠ RE-AIMED 12.10 (round 49): №9 took the one-more-year note and №15 took the date line. The «notes' own size»
+    // claim survives – the academy and deal notes still wear `.ending-note` – so the fixture mounts a BUILT ACADEMY to
+    // keep a real note on the page rather than retyping its 14px as a constant; the «over the date» arm died with
+    // `.album-when`, whose CSS left the component with the element.
+    const w = mountEnding(viewOf('natural', { oneMoreYearCount: 4, academy: { stagesBuilt: 3, totalStages: 5, weeklyIncomeCents: 150_000_00 } }))
     const cs = (selector: string): CSSStyleDeclaration => getComputedStyle(w.get(selector).element)
     // ⚠⚠ ARM F (the paragraph given a size past the title's) goes red on the second line.
     expect(cs('.album-blurb').fontSize, 'the notes\' own size').toBe(cs('.ending-note').fontSize)
     expect(px(cs('.album-blurb').fontSize), 'under the title').toBeLessThan(px(cs('.album-why').fontSize))
-    expect(px(cs('.album-blurb').fontSize), 'over the date').toBeGreaterThan(px(cs('.album-when').fontSize))
     expect(cs('.album-blurb').maxWidth, 'the title\'s own measure').toBe(cs('.album-why').maxWidth)
     w.unmount()
   })
 
-  it('the ink steps down one rung at a time – title, paragraph, fact, date – and the paragraph reads on the brightest ground', () => {
+  it('the ink steps down one rung at a time – title, paragraph, fact – and the paragraph reads on the brightest ground', () => {
+    // ⚠ RE-AIMED 12.10 (round 49 №15): the date line left the page by the owner's word, so the ladder's last rung and
+    // the `fact > date` arm died with `.album-when`.
     const w = mountEnding(viewOf('stopped'))
     // the ground the measurement assumes is the one the stylesheet declares (a moved ground must move this constant with it)
     expect(getComputedStyle(document.documentElement).getPropertyValue('--celebration-bg').toLowerCase(), 'the ground\'s brightest stop').toContain('#16283b')
     const ratio = (selector: string): number => contrastRatio(effectiveColor(w.get(selector).element).slice(0, 3) as [number, number, number], BRIGHTEST_GROUND)
-    const [title, blurb, fact, date] = ['.album-why', '.album-blurb', '.album-fact', '.album-when'].map(ratio)
+    const [title, blurb, fact] = ['.album-why', '.album-blurb', '.album-fact'].map(ratio)
     expect(title, 'the title is the loudest ink').toBeGreaterThan(blurb)
     expect(blurb, 'the paragraph reads before the record\'s terse line').toBeGreaterThan(fact)
-    expect(fact).toBeGreaterThan(date)
     expect(blurb, 'AAA for body text on the brightest ground').toBeGreaterThanOrEqual(7)
     w.unmount()
   })
