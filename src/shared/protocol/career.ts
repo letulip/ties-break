@@ -588,6 +588,13 @@ export interface EndingView {
   oneMoreYearCount: number
   /** ⭐ round 29 part two #10 – the academy line, or null if no stage was ever built */
   academy: AcademyEpilogue | null
+  /** ⭐ round 50 №5 – her personal brand's line, or null if the brand was never delivered. OPTIONAL
+   *  on the wire (absent and null read the same: no line), so fixtures and saves that predate it
+   *  stand unedited – computed at snapshot time like the academy above, never persisted. ⚠ The
+   *  figure is the FAMILY'S weekly take, not gross: the brand is hers and its week is split
+   *  (`merchFamilyWeeklyIncomeCents`), unlike the academy, the parent's unsplit business. It may be
+   *  0 while the brand stands and nothing sells – the facts-never-adjectives rule two fields up. */
+  brand?: { weeklyIncomeCents: number } | null
   /** ⭐ ROUND 39 #3 – the lifetime deal, or null if none was ever signed. The smallest honest hook
    *  for «пожизненный контракт переживает карьеру»: an ended world no longer ticks, so nothing can
    *  BANK after the ending – what survives is the FACT, stated the way the academy line states its

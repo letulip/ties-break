@@ -216,6 +216,35 @@ describe('L2-10a parity – the last page as it shipped, with no catalog', () =>
     college.unmount()
   })
 
+  it('round 50 №5 – the brand note stands BETWEEN the academy\'s and the deal\'s when the brand is hers at the end; without one the page holds exactly the old two', () => {
+    // ⚠ The absent pose goes FIRST: `patchEnding` is a `$patch`, which MERGES – a later view with no
+    // `brand` key would inherit the previous mount's brand and this arm would count a ghost note.
+    const absent = mountEnding(endingView())
+    expect(absent.findAll('.ending-note'), 'no brand on the view – the old two notes exactly').toHaveLength(2)
+    expect(noteOf(absent, 'brand')).toBe('')
+    absent.unmount()
+    const BRAND_TAKE = 76_669_00 // the family's weekly TAKE in cents (never gross – the brand's week is split with her)
+    const w = mountEnding(endingView({ brand: { weeklyIncomeCents: BRAND_TAKE } }))
+    const notes = w.findAll('.ending-note')
+    expect(notes).toHaveLength(3)
+    expect(flat(notes[0]!.text())).toContain('Her academy')
+    expect(flat(notes[1]!.text()), 'the brand note, second of three').toBe(`Her brand runs – and it earns ${formatCentsCompact(BRAND_TAKE)} a week.`)
+    expect(flat(notes[2]!.text())).toContain('deal')
+    // the figure is the academy's idiom: its own b.ending-fig, the compact form
+    expect(notes[1]!.findAll('b.ending-fig').map((b) => b.text())).toEqual([formatCentsCompact(BRAND_TAKE)])
+    w.unmount()
+    // the standing arm – delivered, earning nothing this week: a fact, no figure drawn
+    const zero = mountEnding(endingView({ brand: { weeklyIncomeCents: 0 } }))
+    expect(zero.findAll('.ending-note')).toHaveLength(3)
+    expect(noteOf(zero, 'brand')).toBe('Her brand stands – no income this week.')
+    expect(zero.findAll('.ending-note')[1]!.findAll('b.ending-fig')).toHaveLength(0)
+    zero.unmount()
+    // the engine's explicit none – null overwrites where an absent key would merge: the old two again
+    const nulled = mountEnding(endingView({ brand: null }))
+    expect(nulled.findAll('.ending-note')).toHaveLength(2)
+    nulled.unmount()
+  })
+
   it('the record layer: heading, return link, the season\'s age line and the empty note', async () => {
     const view = endingView({ scroll: [{ seasonIndex: 3, year: 2030, ageYears: 17, rows: [{ week: 160, label: 'engine row label', detail: 'engine row detail' }] }] })
     const w = mountEnding(view)
@@ -246,6 +275,8 @@ describe('L2-10a completeness – the chrome is wired, the engine\'s page and re
       "{{ t('stages built – and it earns') }}",
       "{{ t('Her academy is begun –') }}",
       "{{ t('stages built.') }}",
+      "{{ t('Her brand runs – and it earns') }}",
+      "{{ t('Her brand stands – no income this week.') }}",
       "t('The {0} deal never ran out –', [view.lifetimeDeal.brand])",
       "{{ t('a year,') }} <b>{{ t('for life') }}</b>.",
       "t('#{rank}', { rank: view.bestRank })",

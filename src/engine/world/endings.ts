@@ -52,8 +52,8 @@ import type { AcademyEpilogue, AdOfferTerms, CareerEnding, CollegeTier, DebtView
 // ⭐ ROUND 29 PART TWO #10 – the epilogue's academy line reads the LEAVES, never `world/shop.ts`
 // (shop imports THIS file, so the leaf split in `world/assets.ts`' header is what makes this legal):
 // the delivered stages off `./assets`, the income off `./business` (assets + fame, both leaves).
-import { deliveredAssets, shopCatalogue } from './assets'
-import { academyWeeklyIncomeCents } from './business'
+import { deliveredAssets, ownsDeliveredOfFamily, shopCatalogue } from './assets'
+import { academyWeeklyIncomeCents, merchFamilyWeeklyIncomeCents } from './business'
 import type { LadderTrack, TierId } from '../season/types'
 import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 import { careerMoney } from './reckoning'
@@ -1328,6 +1328,10 @@ export function buildEndingView(world: WorldState): EndingView | null {
     // cannot quote two figures. Null when nothing was ever built: the epilogue says nothing rather
     // than naming an absence, which is also why 0-of-N is not a state this field can carry.
     academy: academyEpilogueOf(world),
+    // ⭐ ROUND 50 №5 – her brand's line, the academy's division of labour: null unless the brand is
+    // delivered, and the figure is the FAMILY'S weekly take, never gross – the brand's week is
+    // split with her, the academy's is not (the why lives on `brandEpilogueOf`).
+    brand: brandEpilogueOf(world),
     // ⭐ ROUND 39 #3 – the lifetime deal SURVIVES the retirement, and this line is the whole of the
     // survival: an ended world no longer ticks, so nothing banks after the ending for ANY source –
     // the academy included, whose line above states income the same way. What outlives the career
@@ -1595,6 +1599,23 @@ export function academyEpilogueOf(world: WorldState): AcademyEpilogue | null {
     totalStages: shopCatalogue().filter((i) => i.family === 'academy').length,
     weeklyIncomeCents: academyWeeklyIncomeCents(world),
   }
+}
+
+/** ⭐ ROUND 50 №5 – HER BRAND'S LINE beside the academy's, by the owner's ask («можно сделать такую
+ *  же надпись про ее личный бренд, при его наличии на момент окончания»). Null unless the brand is
+ *  DELIVERED – `ownsDeliveredOfFamily('business')`, the academy line's own «a contract is not a
+ *  business» gate, and the brand is that family's only item (`world/business.ts` relies on it).
+ *
+ *  ⚠ THE FIGURE IS THE FAMILY'S TAKE, NOT GROSS. The academy line above quotes gross because the
+ *  academy is the PARENT's business and is never split; the brand is HERS, its week is split with
+ *  her (round 35 #9: «в недельном доходе будет семье на руки сумма меньше»), and `business.ts`'
+ *  own law says every weekly-income surface reads `merchFamilyWeeklyIncomeCents` – so the epilogue
+ *  cannot quote a figure the till never banked. It may be 0 at the end (merch sells while she is
+ *  talked about); the template has an arm for that. Zero draws, pure read – and an ended world no
+ *  longer ticks, so this view-time read IS the state at the end. */
+export function brandEpilogueOf(world: WorldState): { weeklyIncomeCents: number } | null {
+  if (!ownsDeliveredOfFamily(world, 'business')) return null
+  return { weeklyIncomeCents: merchFamilyWeeklyIncomeCents(world) }
 }
 
 /** The debt strip's numbers, or null while she is solvent. */

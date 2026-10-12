@@ -556,6 +556,24 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
           </template>
         </p>
 
+        <!-- ⭐ ROUND 50 №5 – HER BRAND'S LINE, the academy note's own division of labour one paragraph
+             up, by the owner's ask (his words are on `brandEpilogueOf` in engine/world/endings.ts – a
+             template may carry no Cyrillic): the engine hands the fact (`EndingView.brand`, absent
+             unless the merch brand is DELIVERED at the end), the template writes the fixed sentence,
+             and it renders only when there is a brand to name. ⚠ The figure is the FAMILY'S weekly
+             take, never gross – the brand's week is split with her, the academy's above is not. Two
+             arms because the truth has two shapes: a brand that sells (fame feeds it), and a brand
+             standing that earns nothing this week (merch sells while she is talked about). DRAFT
+             copy under the 11.10 blanket. -->
+        <p v-if="view.brand" class="ending-note">
+          <template v-if="view.brand.weeklyIncomeCents > 0">
+            {{ t('Her brand runs – and it earns') }} <b class="ending-fig">{{ formatCentsCompact(view.brand.weeklyIncomeCents) }}</b> {{ t('a week.') }}
+          </template>
+          <template v-else>
+            {{ t('Her brand stands – no income this week.') }}
+          </template>
+        </p>
+
         <!-- ⭐ ROUND 39 #3 – THE LIFETIME DEAL'S LINE, the academy note's own division of labour one
              paragraph up: the engine hands the signed paper's frozen facts (`EndingView.lifetimeDeal`,
              null when none was signed), the template writes the fixed sentence, and it renders only

@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "count": 6075,
+  "count": 6077,
   "keys": {
     " (+{0} banked – a ranking needs {1} events with points, or {2})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["points"],["RANKABLE_MIN.tournaments"],["RANKABLE_MIN.points"]],"wrapped":true},
     " (does not improve best {0})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["bestN"]],"wrapped":true},
@@ -1867,6 +1867,8 @@
     "Her birthday. She blew out the candles and asked the physio how long.": {"home":["src/engine/diary/weekNotes.ts"],"area":["diary"],"wrapped":true,"seat":["diary.weekNotes"]},
     "Her birthday. She chose the time; we kept the cake ready.": {"home":["src/engine/diary/weekNotes.ts"],"area":["diary"],"wrapped":true,"seat":["diary.weekNotes"]},
     "Her birthday. {0}, opened before the cake.": {"home":["src/engine/world/birthday.ts"],"area":["engine","ledger"],"ph":[["given.label","{ k: given.label }"]],"wrapped":true},
+    "Her brand runs – and it earns": {"home":["src/components/EndingScreen.vue"],"area":["screens"],"wrapped":true},
+    "Her brand stands – no income this week.": {"home":["src/components/EndingScreen.vue"],"area":["screens"],"wrapped":true},
     "Her calendar said rest. She said errands counted.": {"home":["src/engine/diary/pool.ts"],"area":["diary"],"wrapped":true,"seat":["diary.pool"]},
     "Her case for a phone of her own now has headings. Annoyingly, most of them are good.": {"home":["src/engine/world/birthday.ts"],"area":["engine"],"wrapped":true,"seat":["birthday.gifts"]},
     "Her chance to win a first match at this level: {pct} percent. The draw has not been made yet.": {"home":["src/composables/eventCard.ts"],"area":["scripts"],"wrapped":true},
