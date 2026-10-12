@@ -44,10 +44,16 @@ export function formatCentsSigned(cents: number): string {
  *  ⚠ THE ONE PLACE A DECIMAL POINT APPEARS ON MONEY, and it is the owner's own call – the header's «nothing
  *  in the UI ever shows a decimal point on money» is true of every figure except this abbreviation.
  *  ⚠ THE BOUNDARY IS READ OFF THE ROUNDED DOLLARS (the same -0 edge as the two forms above), so $999,999.60
- *  prints "$1.0M" and never "$1,000,000" beside an M column. */
-export function formatCentsCompact(cents: number): string {
+ *  prints "$1.0M" and never "$1,000,000" beside an M column.
+ *
+ *  ⭐ R49 №16 – `fromCents` lets a surface raise WHERE the abbreviation starts, never what it looks like:
+ *  the owner asked the Home budget tile (and the rail card that must agree with it) to abbreviate only from
+ *  $10M, while the ending page keeps the default $1M. The threshold is read off the same ROUNDED dollars as
+ *  the boundary above – one law, not two – and the $1M floor stays, because below it the format itself
+ *  ("$0.5M") does not exist in this app. With the default argument the function is what it was, byte for byte. */
+export function formatCentsCompact(cents: number, fromCents = 100_000_000): string {
   const dollars = Math.round(cents / 100)
-  if (Math.abs(dollars) < 1_000_000) return formatCents(cents)
+  if (Math.abs(dollars) < 1_000_000 || Math.abs(dollars) < fromCents / 100) return formatCents(cents)
   return `${dollars < 0 ? '-' : ''}$${millionsOf(dollars)}M`
 }
 

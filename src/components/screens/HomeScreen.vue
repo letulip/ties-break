@@ -41,7 +41,7 @@ import { psychologistFocusNudge } from '../../shared/protocol'
 import type { TierId } from '../../engine/season/types'
 import { weekLabel, weekRange } from '../../shared/dates'
 import { formatShortName } from '../../shared/format'
-import { formatCents } from '../../shared/money'
+import { formatCents, formatCentsCompact } from '../../shared/money'
 import { KID_ID, flipScore, practiceCaution } from '../../engine/world'
 // ⭐ ROUND 27 #2 – the fixture's own name for the bottom control's fifth label. One place spells it
 // (`collegeLeague.ts`), so this button and the takeover it opens cannot disagree about the name.
@@ -465,7 +465,11 @@ const nextVenue = computed(() => {
 // folds (snapshot.finance.weekly12 – see world.ts financeSeries). Card and wallet read one ledger,
 // so they can never disagree about a week. The whole card opens the wallet.
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
-const funds = computed(() => formatCents(fundsCents.value))
+// ⭐ R49 №16 – his ask: «если больше 10, например, писать 10М (10.2М и т.д. как на "последней
+// странице")». From $10M the tile abbreviates with the ending page's own compact form; below that it
+// prints exactly what the wallet's big number prints. The rail's «In the account» card makes the
+// same call – round 36's agreement pin holds the two to one spelling.
+const funds = computed(() => formatCentsCompact(fundsCents.value, 10_000_000_00))
 
 // THE BUDGET SPARKLINE. The export draws a lime polyline with a soft area under it and one dot per
 // point, and the owner ruled we take it (A2, 28.07) over slice A's paired bars. Geometry is the

@@ -25,9 +25,10 @@
 // number is this repo's named recurring disease (see `HouseholdStrip.vue`'s header for the version of
 // it that actually shipped). So:
 //
-//   In the account   `snapshot.fundsCents` through `formatCents` – the app's ONE money formatter
-//                    (shared/money.ts), the same two lines Home's Family-budget card and the Family
-//                    Budget screen's own «… in the account» line are made of. No arithmetic at all.
+//   In the account   `snapshot.fundsCents` through `formatCentsCompact(…, $10M)` – the app's ONE
+//                    money formatter (shared/money.ts), the very call Home's Family-budget card
+//                    makes (r49 №16: from $10M both abbreviate, below it both print the Family
+//                    Budget screen's full figure). No arithmetic at all.
 //   Team budget      `useCoachingBudget().freeCents` – the SAME computed the Coach Market's meter
 //                    prints beside the tile's own name. Moved into a composable by this phase
 //                    precisely so the rail cannot drift from the meter. ⚠ ROUND 42 #23: this line
@@ -56,7 +57,7 @@
 // docs/specs/responsive-decisions-2026-09.md puts that reading to him with the offer to cut it.
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
-import { formatCents } from '../shared/money'
+import { formatCents, formatCentsCompact } from '../shared/money'
 import { weekLabel } from '../shared/dates'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
@@ -70,7 +71,9 @@ const startYear = useStartYear()
 const game = useGameStore()
 
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
-const funds = computed(() => formatCents(fundsCents.value))
+// ⭐ R49 №16 – the same call Home's tile makes (see its comment), or the desktop shows two spellings
+// of one balance side by side – the exact drift §2 of round36-rail-dashboard.test.ts exists to catch.
+const funds = computed(() => formatCentsCompact(fundsCents.value, 10_000_000_00))
 
 // ⭐ REVIEW #9 – THE OTHER THREE OF THE METER'S FOUR, and every one of them comes out of the SAME
 // composable the free figure does. There is no arithmetic in this file, which is the property the
