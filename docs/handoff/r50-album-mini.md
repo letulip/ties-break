@@ -31,8 +31,9 @@ last-reviewed: 2026-10-12
 
 ## Gates
 All verdicts from sentinel files, clean worktree `../tb-r50-gate`:
-- check: GREEN at the PR head (`r50-final-check.log`, `R50_FINAL_CHECK_EXIT=0`)
+- check: GREEN at the PR head `108ee832` (`r50-final2.log`, `R50_FINAL2_EXIT=0`, 309 files; the first closing run caught one copy-rule tail, fixed in `108ee832` itself)
 - sim: GREEN 13/389 s (`r50-sim.log`) · e2e: GREEN 139/49 s · lqa:ru: GREEN 0 English keys
 - container twin: GREEN 6/6 on committed fixtures (`r50-container-verify.log`)
-- The commits after the chain's head are the six-tail fix (`7d0c76b2`) and this file – outside
-  sim/e2e/lqa/twin inputs; the closing check covers both.
+- The commits after the chain's head are the six-tail fix (`7d0c76b2`, tests + one comment-only
+  .vue), this file, and the copy-rule comment move (`108ee832`) – all outside sim/e2e/lqa/twin
+  rendered inputs; the closing check covers them.
