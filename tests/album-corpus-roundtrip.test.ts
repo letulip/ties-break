@@ -155,16 +155,20 @@ describe('the committed album corpus IS the document', () => {
     // variant pools – `injury-return` to 4 hands per voice, the other six to 3 – so the document and the
     // catalogue move together by 60 hands and 180 strings (all DRAFT). The occasion count does not move:
     // a variant is more handwriting on the same page, never a new page. NOT WEAKENED: still exact.
-    expect(counts, 'the document parses completely – 38 occasions, 212 notes, 212 captions, 212 lines, 8 arc cells, 16 arc strings').toEqual({
-      occasions: 38,
-      notes: 212,
-      captions: 212,
-      lines: 212,
+    // ⚠ RE-AIMED r50 №1 (12.10): `A38` `pregnancy` is the thirty-ninth occasion – the announcement
+    // week, derived from the `'expecting'` lifeLog row matched to the child that followed – so the
+    // document and the catalogue move together by one occasion and its twelve strings (all DRAFT).
+    // NOT WEAKENED: every count is still exact and still the document's own arithmetic.
+    expect(counts, 'the document parses completely – 39 occasions, 216 notes, 216 captions, 216 lines, 8 arc cells, 16 arc strings').toEqual({
+      occasions: 39,
+      notes: 216,
+      captions: 216,
+      lines: 216,
       arcCells: 8,
       arcStrings: 16,
     })
-    expect(counts.notes + counts.captions + counts.lines + counts.arcStrings, '652 authored strings').toBe(652)
-    expect(ALBUM_CORPUS.length, 'and the committed catalogue holds the same 38').toBe(38)
+    expect(counts.notes + counts.captions + counts.lines + counts.arcStrings, '664 authored strings').toBe(664)
+    expect(ALBUM_CORPUS.length, 'and the committed catalogue holds the same 39').toBe(39)
     expect(DOC.arc.length, 'the arc has two directions and no third').toBe(2)
     expect(Object.keys(ALBUM_ARC).sort(), 'and the committed arc has the same two').toEqual([...ALBUM_ARC_DIRECTIONS].sort())
     expect(ALBUM_VOICES.length, 'four voices').toBe(4)
@@ -202,7 +206,7 @@ describe('the committed album corpus IS the document', () => {
         compared += row.voices[voice].length
       }
     }
-    expect(compared, 'all 212 notes were compared, not a subset (212 since r49 №7\'s variant pools)').toBe(212)
+    expect(compared, 'all 216 notes were compared, not a subset (216 since r50 №1 – the pregnancy occasion)').toBe(216)
   })
 
   it('⭐⭐⭐ every one of the 152 captions is the document\'s, character for character', () => {
@@ -215,7 +219,7 @@ describe('the committed album corpus IS the document', () => {
         compared += row.voices[voice].length
       }
     }
-    expect(compared, 'all 212 captions were compared, not a subset (212 since r49 №7\'s variant pools)').toBe(212)
+    expect(compared, 'all 216 captions were compared, not a subset (216 since r50 №1 – the pregnancy occasion)').toBe(216)
   })
 
   it('⭐⭐⭐ every one of the 152 loose lines is the document\'s, character for character', () => {
@@ -228,7 +232,7 @@ describe('the committed album corpus IS the document', () => {
         compared += row.voices[voice].length
       }
     }
-    expect(compared, 'all 212 loose lines were compared, not a subset (212 since r49 №7\'s variant pools)').toBe(212)
+    expect(compared, 'all 216 loose lines were compared, not a subset (216 since r50 №1 – the pregnancy occasion)').toBe(216)
   })
 
   it('⭐⭐ the arc is the document\'s too, in both directions and all four voices', () => {
@@ -331,8 +335,8 @@ describe('the committed album corpus IS the document', () => {
         others++
       }
     }
-    expect(notes, 'all 220 notes were checked (212 occasion hands + 8 arc, r49 №7)').toBe(220)
-    expect(others, 'and all 432 captions and lines').toBe(432)
+    expect(notes, 'all 224 notes were checked (216 occasion hands + 8 arc, r50 №1)').toBe(224)
+    expect(others, 'and all 440 captions and lines').toBe(440)
   })
 
   it('⭐ a caption is the photograph\'s lip: short, and shorter than its own note', () => {
@@ -370,8 +374,8 @@ describe('the committed album corpus IS the document', () => {
       expect(written, `Cyrillic on a screen: ${written}`).not.toMatch(/[Ѐ-ӿ]/)
       swept++
     }
-    expect(swept, 'all 652 strings were swept, not a subset (652 since r49 №7\'s variant pools)').toBe(652)
-    expect(new Set(every).size, 'no two of the 652 are the same string – an album that repeats itself reads as a copy-paste').toBe(652)
+    expect(swept, 'all 664 strings were swept, not a subset (664 since r50 №1 – the pregnancy occasion)').toBe(664)
+    expect(new Set(every).size, 'no two of the 664 are the same string – an album that repeats itself reads as a copy-paste').toBe(664)
   })
 
   it('⚠ no occasion names the `jun` band – chapter 1 is the prologue, measured at 0 of 9', () => {

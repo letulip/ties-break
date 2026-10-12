@@ -575,7 +575,7 @@ The parent-written `note`, `caption` and loose `line` corpus is drafted separate
 
 ⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.
 
-15 keys of `engine/world/album.ts` and `albumBook.ts`: the seven alternative page captions, the age labels, the break-even and school milestone details and the two college-league lines. `#{0}` is the rank of the season-close detail (`№{0}`; it shares its English with `#{rank}`, so the row names `album.ts`). The two league lines receive the competition label (`the College League`) and the exit stage (`semifinal`) in English from the code; both sit in a bracket / after a dash and are not inflected.
+16 keys of `engine/world/album.ts` and `albumBook.ts` (the sixteenth – the pregnancy page's alt, r50 №1, 12.10): the alternative page captions, the age labels, the break-even and school milestone details and the two college-league lines. `#{0}` is the rank of the season-close detail (`№{0}`; it shares its English with `#{rank}`, so the row names `album.ts`). The two league lines receive the competition label (`the College League`) and the exit stage (`semifinal`) in English from the code; both sit in a bracket / after a dash and are not inflected.
 
 | id | English | Russian |
 | --- | --- | --- |
@@ -594,3 +594,4 @@ The parent-written `note`, `caption` and loose `line` corpus is drafted separate
 | RU21-ALB-13 | `The week the baby came home` | `Неделя, когда малыш приехал домой` |
 | RU21-ALB-14 | `Year {0}, {1}: Went out in the {2}` | `Год {0}, {1}: выбыла (стадия – {2})` |
 | RU21-ALB-15 | `Year {0}, {1}: Won it` | `Год {0}, {1}: победа` |
+| RU21-ALB-16 | `The week she told us` | `Неделя, когда ты нам сказала` |
