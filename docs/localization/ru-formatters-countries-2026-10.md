@@ -144,7 +144,7 @@ Not covered by the ruling, so left as drafted: the word rows (`взнос`, `б�
 | RU21-FMT-14 | `June {day}` | `{day} июня` |
 | RU21-FMT-15 | `March` | `Март` |
 | RU21-FMT-16 | `March {day}` | `{day} марта` |
-| RU21-FMT-17 | `May` | `Май` |
+| RU21-FMT-17 | `May` | `Май` · ⚙ 12.10 r49 №2: the hint `identityCopy.ts` names the month-picker's own key – «May» is the one month whose axis twin (`mon\|May`, the r49 №2 table below) strips to the same English, so the bare row has to say whose surface it is |
 | RU21-FMT-18 | `May {day}` | `{day} мая` |
 | RU21-FMT-19 | `November` | `Ноябрь` |
 | RU21-FMT-20 | `November {day}` | `{day} ноября` |
@@ -152,3 +152,39 @@ Not covered by the ruling, so left as drafted: the word rows (`взнос`, `б�
 | RU21-FMT-22 | `October {day}` | `{day} октября` |
 | RU21-FMT-23 | `September` | `Сентябрь` |
 | RU21-FMT-24 | `September {day}` | `{day} сентября` |
+
+## ⚙ 12.10 agent-authored (r49 №2) – the display module's own keys
+
+⚙ 12.10 agent-authored under the blanket ruling; his live edit follows.
+
+Round-49 item 2 (phase 1) built the date rows' missing formatter: `src/i18n/dates.ts`, the display
+twin of `shared/dates.ts` – under `en` it delegates byte-for-byte, under `ru` it assembles the forms
+of the table above from `weekSpanParts` (numbers, never a parsed string). The `⚙ 11.10 формат даты`
+rows above are therefore implemented, not compiled: their English column stays a formatter OUTPUT and
+never becomes a catalog key (tests/component/i18n-l2-11 pins that). What DOES compile is below – the
+genitive months were already RU21-FMT-01..24; these are the three assemblies that had no key. The
+twelve axis abbreviations are the table's own list (:после числа / ось), verbatim; the tag `mon|`
+keeps the three-letter English token a key spelling rather than a word of any reader class.
+
+| id | English | Russian |
+| --- | --- | --- |
+| R49N2-FMT-01 | `mon\|Jan` | `янв.` |
+| R49N2-FMT-02 | `mon\|Feb` | `февр.` |
+| R49N2-FMT-03 | `mon\|Mar` | `март` |
+| R49N2-FMT-04 | `mon\|Apr` | `апр.` |
+| R49N2-FMT-05 | `mon\|May` | `май` |
+| R49N2-FMT-06 | `mon\|Jun` | `июнь` |
+| R49N2-FMT-07 | `mon\|Jul` | `июль` |
+| R49N2-FMT-08 | `mon\|Aug` | `авг.` |
+| R49N2-FMT-09 | `mon\|Sep` | `сент.` |
+| R49N2-FMT-10 | `mon\|Oct` | `окт.` |
+| R49N2-FMT-11 | `mon\|Nov` | `нояб.` |
+| R49N2-FMT-12 | `mon\|Dec` | `дек.` |
+| R49N2-FMT-13 | `W{week} {year}` | `Неделя {week} · {year}` |
+| R49N2-FMT-14 | `{span}, {year}` | `{span} {year} года` |
+
+`W{week} {year}` is the week half of `weekDateLine` (the table's «Неделя 27 · 2033 · 3–9 июня» row):
+the same facts `weekYearLabel` prints, so phase 2 (week-only labels) can reuse the row. `{span},
+{year}` is `weekRange`'s year tail – exactly how the English composes in all three branches – so
+«года» is the translator's word, never typed in code; the cross-year span carries its first year
+bare inside `{span}`, as the table's «29 декабря 2031 – 4 января 2032 года» row spells.

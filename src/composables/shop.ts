@@ -12,7 +12,8 @@
 import { computed, ref, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import type { ShopPricePoint, ShopPurchaseView, ShopRowView } from '../shared/protocol'
-import { monthLabel, weekLabel } from '../shared/dates'
+import { weekLabel } from '../shared/dates'
+import { monthLabel } from '../i18n/dates'
 import { formatCents } from '../shared/money'
 import { t } from '../i18n'
 // ⭐ ROUND 30 #5 / ROUND 35 #3 – the paintings' own module. `shelfArtUrl` is what decides whether a

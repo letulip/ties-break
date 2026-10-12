@@ -95,7 +95,8 @@ import { enterActionName } from '../../composables/eventName'
 import { TIER_SHORT } from '../../composables/weekAhead'
 import { layoffHoldsWeek, layoffNoteFor } from '../../composables/weekDays'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
-import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
+import { WEEKS_IN_SEASON, seasonWeekRange, seasonYear, weekLabel, weekNumberLabel } from '../../shared/dates'
+import { weekRange } from '../../i18n/dates'
 import { formatCents } from '../../shared/money'
 import { entryFeeText } from '../../composables/entryFee'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
@@ -277,10 +278,12 @@ function weekTitle(row: CalendarRow): string {
 }
 
 /** "W8" - the week number alone. The date beside it already names the year, and `weekLabel` would
- *  print it a second time as "'38". Sliced off the shared formatter rather than re-derived, so the
- *  two can never disagree about which week it is. */
+ *  print it a second time as "'38". ⭐ r49 №2 (12.10): it used to SLICE `weekLabel`'s output
+ *  (`.split(' ')[0]`) – a parse of a formatter's string, which breaks the week that label is
+ *  localized. The number's spelling is the shared formatter's own now (`weekNumberLabel`), so the
+ *  two still can never disagree about which week it is. */
 function weekOnly(w: number): string {
-  return weekLabel(w, startYear.value).split(' ')[0]
+  return weekNumberLabel(w)
 }
 
 // ⚠ `dominantSurface()` MOVED TO engine/season/calendar.ts, next to the SURFACE_BLOCKS table it
@@ -288,11 +291,11 @@ function weekOnly(w: number): string {
 // colour, and a one-line reduce copied into a second screen is a line that drifts by an argument.
 // Nothing about what this screen renders changed - same function, same call site, one import.
 /** The season's own year, the same one weekLabel prints – never the calendar year (they diverge at
- *  season 5, which is what week-numbering.test.ts exists to remember). */
-const seasonYearLabel = computed(() => {
-  const short = weekLabel(week.value, startYear.value).match(/'(\d{2})$/)?.[1] ?? ''
-  return short ? `20${short}` : ''
-})
+ *  season 5, which is what week-numbering.test.ts exists to remember). ⭐ r49 №2 (12.10): it used to
+ *  REGEX the two-digit tail out of `weekLabel`'s output (`.match(/'(\d{2})$/)`) and re-prefix «20» –
+ *  a parse of a formatter's string, broken the week the label is localized. `seasonYear` IS the
+ *  primitive that sentence means (the season's identity off its index), so it is asked directly. */
+const seasonYearLabel = computed(() => String(seasonYear(Math.floor(week.value / WEEKS_IN_SEASON), startYear.value)))
 
 // ⚠ THE PAINTED COURT is `venueUrl` off `useEventCard` (destructured at the top). It was written out
 // here and again on the Calendar screen, both wrapping `venueArtUrl` with the snapshot's seed – and

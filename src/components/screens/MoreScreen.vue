@@ -223,7 +223,11 @@ onBeforeUnmount(() => {
 })
 
 function fmtDate(ts: number) {
-  return new Date(ts).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+  // ⭐ r49 №2 (12.10): the saved / last-played stamps follow the ACTIVE locale – «12 окт., 14:30»
+  // under ru. Any other locale (en, the xx probe) keeps the en-GB form the rows have always had:
+  // only the two shipped languages have a ruled date form, and the probe must keep measuring the
+  // English layout.
+  return new Date(ts).toLocaleString(locale.value === 'ru' ? 'ru' : 'en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
 
 /** HOW OLD SHE IS on a career the player has not loaded – the Careers list's own copy of the one

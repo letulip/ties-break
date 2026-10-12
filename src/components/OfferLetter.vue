@@ -57,7 +57,8 @@ import { ladderName } from '../composables/kidIdentity'
 import { finishLabel } from '../engine/world/labels'
 import { formatCents } from '../shared/money'
 import { t } from '../i18n'
-import { WEEKS_IN_SEASON, seasonYear, weekLabel, weekRange } from '../shared/dates'
+import { WEEKS_IN_SEASON, seasonYear, weekLabel } from '../shared/dates'
+import { weekRange } from '../i18n/dates'
 // ⭐⭐ T4.2 · E-07 – `isOfferLive` rides this same import: the engine's own «is this letter still a
 // decision», which the foot's two controls are gated on. See the `live` computed for what it replaced.
 import { adCampaignCutShort, apparelBondCost, dealUntilWeek, isOfferLive, sponsorTierOfBrand, staffAskPer } from '../engine/offers'

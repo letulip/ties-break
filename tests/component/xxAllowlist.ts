@@ -29,8 +29,6 @@ import { SPARRING_LOCKED_DETAIL } from '../../src/engine/world/sparring'
 import { LADDER_LABEL } from '../../src/shared/protocol'
 import { DEFAULT_ALLOW } from './pseudoloc'
 
-const MONTH = '(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)'
-
 /** Shapes, each with the arm that first needed it. DEFAULT_ALLOW (numbers/punctuation, the product mark, `ITF 25k`, `W14`) comes first. */
 export const SHAPES: readonly RegExp[] = [
   ...DEFAULT_ALLOW,
@@ -39,9 +37,12 @@ export const SHAPES: readonly RegExp[] = [
   /^· W\d+$/,
   /^W\d+(?:-\d+)?(?: · .+)?$/,
   /^W\d+ ['’]\d{2} \((?:last week|\d+ weeks? left)\)$/,
-  // dates – `monthLabel`, the week range, a locale date-time on a save row: L2-3, L2-4, L2-6b, L2-11
-  new RegExp(`^${MONTH}[a-z]* \\d+(?: ?[–-] ?(?:[A-Za-z]+ )?\\d+)?(?:, \\d{4})?$`),
-  new RegExp(`^${MONTH} ['’]\\d\\d$`),
+  // ⭐ r49 №2 (12.10) – THE MONTH SHAPES LEFT THIS LIST («Jun 3 – Jun 9», «Jan '31», «Jan 6–12, 2031»):
+  // month-bearing dates render through the display module (`src/i18n/dates.ts`) now, so under `xx`
+  // they come back bracketed and an ENGLISH month on a screen is a LEAK the carpet must report.
+  // Week-only labels (above) are phase 2 and still absolved. The save-row stamp (below) STAYS: under
+  // the `xx` probe `fmtDate` deliberately keeps its en-GB form (only `ru` re-tags it – MoreScreen.vue),
+  // so the carpet still meets the English stamp and must still absolve it.
   /^\d{2} [A-Z][a-z]{2},? \d{2}:\d{2}$/,
   // money and its compact form, a price span: L2-3, L2-6, L2-10 (`formatCentsCompact`). ⭐ RU-22 (11.10): the physio band (`$54-91/wk`) and the fee pill (`entry $40`, `no entry fee`) left this list when their
   // unit words went through the catalogue (`{0}/wk`, `entryFeeText`) – a raw one on a surface is a leak again.

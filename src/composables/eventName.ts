@@ -17,7 +17,7 @@
 // accessible name does not CONTAIN its visible label breaks speech input: a user who says "Enter"
 // must reach the button that reads Enter. So the name is the visible label plus what it acts on,
 // in that order – never a replacement for it.
-import { weekRange } from '../shared/dates'
+import { weekRange } from '../i18n/dates'
 import { t } from '../i18n'
 
 /** Just enough of an event to name a control about it. Deliberately structural rather than

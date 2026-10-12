@@ -527,8 +527,11 @@ describe('L2-11 completeness – the chrome is wired; the date formatter and the
 
   it('left raw on purpose, and asserted raw: the date formatter, the store\'s error text, and no engine edge – and the shared dialog\'s defaults are read through t()', () => {
     const more = SRC('src/components/screens/MoreScreen.vue')
-    // the last-played and saved dates keep ONE form across locales until the formatter rows are approved (§9.6)
-    expect(more).toContain("toLocaleString('en-GB'")
+    // ⭐ r49 №2 (12.10) RE-AIM, NOT RELAXED: «keep ONE form across locales until the formatter rows are
+    // approved» was the pre-display-module world. The month-bearing stamps follow the ACTIVE locale now
+    // («12 окт., 14:30» under ru); every locale that is not ru – en AND the xx probe – keeps the en-GB
+    // form the rows have always had, which is the half this pin still holds.
+    expect(more).toContain("toLocaleString(locale.value === 'ru' ? 'ru' : 'en-GB'")
     // the error text is a HOLE of the frame, not a key of its own – ⭐ L3-7 (10.10) RE-AIM, NOT RELAXED: it used to be the store's raw English («RU-13A asks for typed error codes: a classifier, not this wave»);
     // this is that wave, so the hole is now read THROUGH THE SENTENCE'S CODE (`errorText`): a code the build knows is the `t()` of that very sentence, any other is the raw message as before
     // (tests/i18n-l3-7-errors.test.ts holds each key equal to the engine's / the store's own spelling; tests/component/i18n-l3-7-errors-display.test.ts mounts it)
@@ -622,9 +625,14 @@ describe('L2-11 seams – a flip re-labels a mounted More and a blocking confirm
       ['DELETE-B', `DEL-CAREER<${NAMES.other}>`],
     ])
     expect(w.find(`[aria-label="Load save ${NAMES.saveOne}"]`).exists()).toBe(true) // no catalog row in the stand-in for this one: still English, and still carrying the player's save name
-    // what the player and the engine wrote is exactly as it was: save names, saved-at dates, week labels, career names and flags
+    // what the player and the engine wrote is exactly as it was: save names, week labels, career names and flags
+    // ⭐ r49 №2 (12.10) RE-AIM, NOT RELAXED: the saved-at stamps now FOLLOW the locale (MoreScreen's
+    // `fmtDate` re-tags `ru`; any other locale keeps en-GB), so the one column that moved is asserted
+    // as the ru form of the SAME timestamps – the player's names and the phase-2 week labels still hold.
+    const ruDate = (ts: number): string => new Date(ts).toLocaleString('ru', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
     expect(texts(w, 'table tbody td:first-child')).toEqual(before.nameCells)
-    expect(texts(w, 'table tbody td:nth-child(2)')).toEqual(before.dates)
+    expect(texts(w, 'table tbody td:nth-child(2)')).toEqual([ruDate(f.slots[2]!.savedAt), ruDate(f.slots[3]!.savedAt)])
+    expect(texts(w, 'table tbody td:nth-child(2)')).not.toEqual(before.dates)
     expect(texts(w, 'table tbody td:nth-child(3)')).toEqual(before.weeks)
     expect(before.weeks[0]).toBe(weekLabel(2, yr))
     expect(w.findAll('.career-name').map((n) => words(n.element).replace('ACTIVE-PILL', 'Active'))).toEqual(before.names.map((n) => n))
@@ -1171,6 +1179,12 @@ describe('L2-11b completeness – the names are wired; the formatters and the da
     expect(SRC('src/shared/countries.ts')).not.toMatch(/\bt\(|from '[^']*i18n'/)
   })
 
+  // ⭐ r49 №2 (12.10) – A DATED RE-READ, EVERY ASSERTION SURVIVES: the month-bearing dates ARE wired now,
+  // in the DISPLAY twin `src/i18n/dates.ts` (en delegates byte-for-byte; ru assembles RU-13D's forms
+  // through the catalog). What this case holds is unchanged and still on purpose: the SHARED formatters
+  // stay engine-importable and `t()`-free, their English output is frozen, and no formatter OUTPUT ever
+  // becomes a catalog key – the display module's keys are `mon|…`, `Month {day}`, `W{week} {year}` and
+  // `{span}, {year}`, never these shapes. The week-only labels (`W14 '31`, `W1-10`) are phase 2.
   it('⚠ THE FORMATTERS ARE NOT WIRED, ON PURPOSE: `shared/dates.ts` and `shared/money.ts` are engine-importable and call no `t()`, and every English shape still prints as it did', () => {
     for (const f of ['src/shared/dates.ts', 'src/shared/money.ts']) expect(SRC(f), f).not.toMatch(/\bt\(|from '[^']*i18n'/)
     const FORMS: [string, string][] = [

@@ -96,7 +96,8 @@ import { vacationPackage } from '../engine/economy'
 // W2-LADDER §4: the two-type feed and the stacked-week pick - the SAME two rules the Season screen
 // reads, so the look-ahead markers and the season rows cannot disagree about which events exist.
 import { feedContext, feedShows, preferredWeekEvent } from './tierState'
-import { weekLabel, weekSpan } from '../shared/dates'
+import { weekLabel } from '../shared/dates'
+import { weekSpan } from '../i18n/dates'
 import type { Surface } from '../engine/match/types'
 import type { TierDef, TierId } from '../engine/season/types'
 import type { SessionKind, Snapshot, UpcomingEvent } from '../shared/protocol'
