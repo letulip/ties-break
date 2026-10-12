@@ -85,7 +85,8 @@ const pct = (r: number): string => `${(r * 100).toFixed(0)}%`
 
 /** What the §6 allowlist says plus two shapes of NUMBER the sweep must not charge: the compact money figure (`$40.6M` – locale-invariant by ruling,
  *  §9.6, and a letter in it is the unit) and the formatter's week label (RU-13D's). The chrome around them is still charged. */
-const ALLOW: readonly RegExp[] = [...DEFAULT_ALLOW, /^\$[\d.,]+[KMB]$/, /^W\d+ '\d\d$/]
+// ⭐ r49 №2 ф2 (12.10): the week labels fill the FORMAT REGISTRY under xx now (src/i18n/formats.ts), so the registry's form joins the English one (still printed under en arms)
+const ALLOW: readonly RegExp[] = [...DEFAULT_ALLOW, /^\$[\d.,]+[KMB]$/, /^W\d+ '\d\d$/, /^Нед\. \d+ · ’\d{2}$/]
 
 /** The rows of every table whose clean English cell is exactly `english`, with the importer's own reader. */
 const rowsFor = (english: string) => ROWS.filter((r) => r.english === english)
@@ -182,27 +183,29 @@ describe('L2-10a parity – the last page as it shipped, with no catalog', () =>
     w.unmount()
   })
 
-  it('the three notes that carry a bold figure read character for character, and the markup around the figures is where it was', () => {
+  it('the two notes that carry a bold figure read character for character, and the markup around the figures is where it was', () => {
+    // ⚠ RE-AIMED 12.10 (round 49 №9, «убрать всю строку»): the one-more-year note left the template by the owner's
+    // word, so the notes are TWO now and the first index is the academy's. The absence is asserted, not just skipped.
     const w = mountEnding()
-    expect(noteOf(w, 'one more year')).toBe('You said one more year 4 times.')
+    expect(noteOf(w, 'one more year'), 'the refrain left with №9').toBe('')
     expect(noteOf(w, 'academy')).toBe(`Her academy stands – 3 of 5 stages built – and it earns ${formatCentsCompact(ACADEMY_INCOME)} a week.`)
     expect(noteOf(w, 'deal')).toBe(`The Acme deal never ran out – ${formatCentsCompact(DEAL_CASH)} a year, for life.`)
     // the figures are `b.ending-fig`; «for life» is the one PLAIN `b` (round 48 #5 – words, not a figure)
     const notes = w.findAll('.ending-note')
-    expect(notes).toHaveLength(3)
-    expect(notes[0]!.findAll('b.ending-fig').map((b) => b.text())).toEqual(['4'])
-    expect(notes[1]!.findAll('b.ending-fig').map((b) => b.text())).toEqual(['3', '5', formatCentsCompact(ACADEMY_INCOME)])
-    expect(notes[2]!.findAll('b.ending-fig').map((b) => b.text())).toEqual([formatCentsCompact(DEAL_CASH)])
-    const plain = notes[2]!.findAll('b').filter((b) => !b.classes('ending-fig'))
+    expect(notes).toHaveLength(2)
+    expect(notes[0]!.findAll('b.ending-fig').map((b) => b.text())).toEqual(['3', '5', formatCentsCompact(ACADEMY_INCOME)])
+    expect(notes[1]!.findAll('b.ending-fig').map((b) => b.text())).toEqual([formatCentsCompact(DEAL_CASH)])
+    const plain = notes[1]!.findAll('b').filter((b) => !b.classes('ending-fig'))
     expect(plain.map((b) => b.text())).toEqual(['for life'])
     w.unmount()
   })
 
-  it('the variants: one time, an academy that does not earn yet, an unranked career, the other dynasty label, and the college ending\'s lone door', () => {
+  it('the variants: an academy that does not earn yet, an unranked career, the other dynasty label, and the college ending\'s lone door', () => {
     const one = mountEnding(endingView({ oneMoreYearCount: 1, academy: { stagesBuilt: 2, totalStages: 5, weeklyIncomeCents: 0 }, lifetimeDeal: null, bestRank: null }))
-    expect(noteOf(one, 'one more year')).toBe('You said one more year 1 time.')
+    // ⚠ RE-AIMED 12.10 (round 49 №9): the «one time» variant died with the note – count 1 draws no line either.
+    expect(noteOf(one, 'one more year'), 'the refrain left with №9').toBe('')
     expect(noteOf(one, 'academy')).toBe('Her academy is begun – 2 of 5 stages built.')
-    expect(one.findAll('.ending-note')).toHaveLength(2)
+    expect(one.findAll('.ending-note')).toHaveLength(1)
     expect(textsOf(one, '.ending-facts dd')[0]).toBe('–')
     one.unmount()
     const lived = mountEnding(endingView({ dynasty: dynastyOf({ raisedOnTour: true }) }))
@@ -236,9 +239,9 @@ describe('L2-10a completeness – the chrome is wired, the engine\'s page and re
     const open = Object.entries(CATALOG.keys).filter(([, v]) => v.home.includes(FILE) && !v.wrapped).map(([k]) => k)
     expect(open).toEqual([])
     const source = SRC(FILE)
+    // ⚠ RE-AIMED 12.10 (round 49 №9): the refrain's three t() calls left the template with its line – the keys
+    // `You said one more year`, `time.` and `times.` died, their rows parked QUESTION in the owner's table.
     for (const call of [
-      "{{ t('You said one more year') }}",
-      "view.oneMoreYearCount === 1 ? t('time.') : t('times.')",
       "{{ t('Her academy stands –') }}",
       "{{ t('stages built – and it earns') }}",
       "{{ t('Her academy is begun –') }}",
@@ -253,8 +256,8 @@ describe('L2-10a completeness – the chrome is wired, the engine\'s page and re
     ]) {
       expect(source, call).toContain(call)
     }
-    // the markup is still elements, not message text
-    expect(source).toContain('<b class="ending-fig">{{ view.oneMoreYearCount }}</b>')
+    // the markup is still elements, not message text (№9 took the refrain's bold 12.10; the academy's stands)
+    expect(source).toContain('<b class="ending-fig">{{ view.academy.stagesBuilt }}</b>')
   })
 
   // ⭐ RE-AIMED 10.10 BY L3-6 (the endings and the album): this pin said «they are L3» and held the page's five engine strings BARE in the template. They are drawn through `eventText({ text, c })` now –
@@ -287,9 +290,6 @@ describe('L2-10a seams – a flip re-labels a MOUNTED last page; the engine\'s w
       Dynasty: 'DY-DOOR',
       'View the album': 'VA-DOOR',
       '#{rank}': 'NO.{rank}',
-      'time.': 'TM.',
-      'times.': 'TMS.',
-      'You said one more year': 'YSOMY',
       'for life': 'FL-BOLD',
       'The {0} deal never ran out –': 'DEAL<{0}>',
       'a year,': 'AY,',
@@ -304,7 +304,8 @@ describe('L2-10a seams – a flip re-labels a MOUNTED last page; the engine\'s w
     expect(flat(w.get('.ending-line').text())).toBe('DY-DOOR')
     expect(flat(w.get('.ending-door-album').text())).toBe('VA-DOOR')
     expect(w.get('[role="dialog"]').attributes('aria-label')).toBe('EPI')
-    expect(noteOf(w, 'YSOMY')).toBe('YSOMY 4 TMS.')
+    // ⚠ RE-AIMED 12.10 (round 49 №9): the one-more-year note and its three keys (the YSOMY / TM. / TMS. stand-ins)
+    // left the page with the owner's removal; the deal note below is the flip's remaining chained-note witness.
     expect(noteOf(w, 'DEAL')).toBe(`DEAL<Acme> ${formatCentsCompact(DEAL_CASH)} AY, FL-BOLD.`)
     // the structure survived the flip: the same bold elements around the same figures
     expect(w.findAll('.ending-note b').filter((b) => !b.classes('ending-fig')).map((b) => b.text())).toEqual(['FL-BOLD'])

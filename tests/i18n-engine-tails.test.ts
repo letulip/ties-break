@@ -104,6 +104,9 @@ describe('§2 every producer, rendered under the real ru.json', () => {
   })
 
   it('the tournament summary: the plain result and the three ranking clauses, each with and without the injury clause', () => {
+    // ⚠ RE-AIMED 12.10 r49 №2 ф2 – a dated note, no assertion moved: the summary's week hole («W14 '31») used to pass through untranslated (a week
+    // label is no vocabulary word, so `russian()` never objected); the `week` hole class re-spells it through the format registry now, and the
+    // Russian form is pinned in phase 2's home (tests/component/i18n-r49-2-dates-display.test.ts). This sweep's own three claims are unchanged.
     const r = rig()
     for (const notRanked of [false, true]) {
       for (const delta of [-3, 0, 4, 22]) {
@@ -320,6 +323,8 @@ describe('§5 the display boundary reads the engine-born words', () => {
   })
 
   it('the tournament summary: the finish, the surface and the stage read in Russian', () => {
+    // ⚠ RE-AIMED 12.10 r49 №2 ф2 – a dated note, no assertion moved: the week hole's «W14 '31» renders as the registry form under the hook now
+    // (`week` class, src/i18n/wordHoles.ts); the names and words this arm holds are untouched, and the Russian week form is pinned in phase 2's home.
     const ref = tournamentSummaryRef({ tier: 'World Tour 500', surface: 'clay', week: "W14 '31", kid: 'M. Larsen', finish: 'Quarterfinalist', points: 40, delta: 40, bestN: 18, notRanked: false, retired: false })
     const out = withHook(ref)
     expect(out).toContain(read('finish|Quarterfinalist'))

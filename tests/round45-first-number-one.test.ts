@@ -113,8 +113,10 @@ function voiceOf(world: WorldState) {
 function pages(world: WorldState, book: AlbumBook = assembleAlbum(world)): string[] {
   const voice = voiceOf(world)
   return book.sheets.flatMap((s) =>
-    s.frames.map((f) => {
-      const row = ALBUM_CORPUS.find((o) => o.voices[voice].caption === f.caption)
+    // ⚠ r49 №4 – a captionless frame is the sheet dedupe's own (a second same-occasion frame on one
+    // sheet prints no caption), so the reverse lookup skips it rather than naming a page it cannot.
+    s.frames.filter((f) => f.caption !== '').map((f) => {
+      const row = ALBUM_CORPUS.find((o) => o.voices[voice].some((h) => h.caption === f.caption))
       if (!row) throw new Error(`no corpus occasion renders the caption «${f.caption}»`)
       return row.id
     }),
@@ -245,7 +247,7 @@ describe('B · the page – once per latched table, never otherwise', () => {
     expect(pages(world, book), 'one frame, and it is this occasion').toEqual(['first-number-one'])
     const sheet = book.sheets[0]
     const row = ALBUM_CORPUS.find((o) => o.id === 'first-number-one')!
-    expect(sheet.note?.text, 'the note is the occasion\'s, in her voice').toBe(row.voices[voiceOf(world)].note)
+    expect(sheet.note?.text, 'the note is the occasion\'s, in her voice').toBe(row.voices[voiceOf(world)][0].note)
     expect(sheet.note?.dateLabel, 'dated at the week the latch names').toBe(weekSpan(week))
   })
 
@@ -299,7 +301,7 @@ describe('B · the page – once per latched table, never otherwise', () => {
     const junior = ALBUM_CORPUS.find((o) => o.id === 'first-number-one-junior')!
     expect(world.kind).toBe('rare')
     expect(junior.kind).toBe('rare')
-    expect(world.voices.sunny.note, 'the two tables are two sentences, never one with a noun swapped').not.toBe(junior.voices.sunny.note)
+    expect(world.voices.sunny[0].note, 'the two tables are two sentences, never one with a noun swapped').not.toBe(junior.voices.sunny[0].note)
     expect([...junior.bands], 'a junior #1 can fall in her early teens').toContain('young')
     expect([...world.bands], 'a world #1 is never a thirteen-year-old\'s').not.toContain('young')
   })
@@ -315,9 +317,9 @@ describe('B · the page – once per latched table, never otherwise', () => {
     expect([...combined.bands], 'and the title page\'s bands').toEqual([...title.bands])
     for (const voice of Object.keys(combined.voices) as Array<keyof typeof combined.voices>) {
       for (const plain of [title, world]) {
-        expect(combined.voices[voice].note, voice + ': the combined note is not the note of ' + plain.id).not.toBe(plain.voices[voice].note)
-        expect(combined.voices[voice].caption, voice + ': nor its caption').not.toBe(plain.voices[voice].caption)
-        expect(combined.voices[voice].line, voice + ': nor its line').not.toBe(plain.voices[voice].line)
+        expect(combined.voices[voice][0].note, voice + ': the combined note is not the note of ' + plain.id).not.toBe(plain.voices[voice][0].note)
+        expect(combined.voices[voice][0].caption, voice + ': nor its caption').not.toBe(plain.voices[voice][0].caption)
+        expect(combined.voices[voice][0].line, voice + ': nor its line').not.toBe(plain.voices[voice][0].line)
       }
     }
   })
@@ -359,7 +361,7 @@ describe('B · the page – once per latched table, never otherwise', () => {
     expect(book.sheets.flatMap((s) => s.frames).length, 'ONE frame in the whole book – the week is not printed twice').toBe(1)
     expect(pages(world, book), 'and it is the combined page, with neither the title\'s page nor the first #1\'s beside it').toEqual([COMBINED])
     const sheet = book.sheets[0]
-    expect(sheet.note?.text, 'the note is the combined occasion\'s, in her voice').toBe(ALBUM_CORPUS.find((o) => o.id === COMBINED)!.voices[voiceOf(world)].note)
+    expect(sheet.note?.text, 'the note is the combined occasion\'s, in her voice').toBe(ALBUM_CORPUS.find((o) => o.id === COMBINED)!.voices[voiceOf(world)][0].note)
     expect(sheet.note?.dateLabel, 'dated at the one week the two share').toBe(weekSpan(week))
   })
 
@@ -453,7 +455,7 @@ describe('B · the page – once per latched table, never otherwise', () => {
       frames: s.frames.map((f) => ({ ...f, caption: '', captionC: undefined })),
     })
     expect(wordless(combined), 'everything but the words is the title\'s sheet\'s: layout, tag, date, age, art').toEqual(wordless(titleOnly))
-    expect(combined.note?.text, 'and the words are the combined occasion\'s').toBe(ALBUM_CORPUS.find((o) => o.id === COMBINED)!.voices[voiceOf(build(true))].note)
+    expect(combined.note?.text, 'and the words are the combined occasion\'s').toBe(ALBUM_CORPUS.find((o) => o.id === COMBINED)!.voices[voiceOf(build(true))][0].note)
     expect(combined.note?.text).not.toBe(titleOnly.note?.text)
   })
 
@@ -480,7 +482,8 @@ describe('B · the page – once per latched table, never otherwise', () => {
 
 describe('C · the migration – a latch only where the cached rank is 1 as the save is written', () => {
   it('C1 · the head is v91 and the golden fixture is the real migration\'s own output on v90.json', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(93)
+    // ⚠ AND AGAIN AT v94 (12.10, round 49 №8 – the wedding-milestone net): the head moved, the v91 recipe below did not.
+    expect(SAVE_SCHEMA_VERSION).toBe(94)
     expect((read(91) as { schemaVersion: number }).schemaVersion).toBe(91)
     // ⚠ RE-AIMED 06.10 BY v92 (SUCCESSION S1, the calendar's start year): the head moved, so migrating v90.json now arrives at v92 – the recipe is unchanged.
     // v91.json is its output MINUS the two things the later step adds (`startYear` and the version number), and v92.json is the whole of it.
@@ -494,7 +497,8 @@ describe('C · the migration – a latch only where the cached rank is 1 as the 
       Array.isArray(events) ? events.map((e: Record<string, unknown>) => { const { c: _c, ...rest } = e; return rest }) : events
     expect(stripped(migrateSave(read(90))), 'the recipe every fixture since v25 uses – v91.json is its output minus what v92 and v93 add').toEqual(stripped(read(91)))
     expect(stripped(migrateSave(read(90))), 'and the v92 fixture is the same recipe one rung up, minus what v93 adds').toEqual(stripped(read(92)))
-    expect(migrateSave(read(90)), 'and the head fixture is the same recipe two rungs up').toEqual(read(93))
+    // ⚠ RE-AIMED 12.10 BY v94 (round 49 №8 – the wedding-milestone net): the head moved one more rung; v94's step writes nothing on this fixture (no latched episode), so the head fixture is still the same recipe, now three rungs up.
+    expect(migrateSave(read(90)), 'and the head fixture is the same recipe three rungs up').toEqual(read(94))
     expect('firstNo1' in migrateSave(read(90)), 'a save whose cached ranks are not 1 gains no key').toBe(false)
   })
 

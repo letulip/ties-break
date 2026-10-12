@@ -39,6 +39,7 @@ export type WordClass =
   | 'hurt' // a severity descriptor (SEVERITY_DESCRIPTOR)
   | 'kind' // the injury's `kind` – a part and a descriptor in one string
   | 'court' // the court row's venue and booking clause (`phaseFinance.ts`)
+  | 'week' // ⭐ r49 №2 ф2 (12.10) – an engine-baked week label («W14 '31» / «W27 2033», `weekLabel`/`weekYearLabel` of shared/dates.ts): the reader is `localizedWeekLabel` (src/i18n/formats.ts), which re-spells the one rigid shape through the format REGISTRY, never the catalog – an unparseable label passes unchanged
   | 'eco' // a label the economy owns (shop asset, vacation package, kit grade …) – a key of the catalog already
   | 'ecoLower' // …lowercased by the code before it was handed in
   // ⭐ RU-23 – the Kid screen's tile vocabularies: words the TILE MATCHER reads (`tile` in `words.ts`), not holes of a message – so no row of the table below names them, and the carpet's ru arm hunts them raw
@@ -369,6 +370,41 @@ export const HOLE_TABLE: Readonly<Record<WordClass, readonly HoleRow[]>> = {
     ["The masseur's week is re-cut – {0} on the table from the next bill.", 0],
     ['The weekly call changes hands – {0} from the next bill.', 0],
   ],
+  // ⭐ r49 №2 ф2 (12.10) – THE WEEK HOLES: every stored ref (and the two shoot-clash prompts the UI formats) whose hole the engine fills with a `weekLabel` string.
+  // Written from the call sites (entries, bookings, planner, shop, endings, shootClash, tournamentClose) and held complete by tests/i18n-display-words.test.ts §1's census rule.
+  week: [
+    ['Entry fee: {0} ({1})', 1],
+    ['Entered {0} – {1} ({2})', 1],
+    ['Withdrew from {0} – {1}', 1],
+    ['Taken out of {0} – {1}, she is not fit for that week.', 1],
+    ['Released from {0} – {1}, she is taking the scholarship.', 1],
+    ['Cancelled {0} – {1}, entry fee forfeited.', 1],
+    ['Court rental refunded – {0}', 0],
+    ['Practice match called off – {0} (she is hurt)', 0],
+    ['Practice match called off – {0} (not cleared to play)', 0],
+    ['Cancelled the practice match – {0}', 0],
+    ['Booked: {0} – {1}', 1],
+    ['Family vacation booked – {0} ({1})', 0],
+    ['Cancelled the family vacation – {0}', 0],
+    ['Court rental + coach – practice match {0}', 0],
+    ['Court rental – practice match {0}', 0],
+    ['Practice match booked – {0}', 0],
+    ['{0} is on order – due {1}', 1],
+    ['A college place is reserved. She leaves when the academic year starts – {0} – and plays until then.', 0],
+    ['{0} shoot moved to {1} – the {2} week stands.', 1],
+    ['Two things at once – {0}', 0],
+    ['Move the shoot to {0}', 0],
+    ['Injured – back {0}', 0],
+    // the tournament summary family – the week sits at {2} in all of them (`tournamentSummaryRef`)
+    ['{0} ({1}, {2}): {3} – {4} (+{5} pts)', 2],
+    ['{0} ({1}, {2}): {3} – {4} (+{5} pts) (+{6} banked – a ranking needs {7} events with points, or {8})', 2],
+    ['{0} ({1}, {2}): {3} – {4} (+{5} pts) (+{6} banked – a ranking needs {7} events with points, or {8}) – she retired hurt', 2],
+    ['{0} ({1}, {2}): {3} – {4} (+{5} pts) (does not improve best {6})', 2],
+    ['{0} ({1}, {2}): {3} – {4} (+{5} pts) (does not improve best {6}) – she retired hurt', 2],
+    ['{0} ({1}, {2}): {3} – {4} (+{5} pts) (ranking total +{6})', 2],
+    ['{0} ({1}, {2}): {3} – {4} (+{5} pts) (ranking total +{6}) – she retired hurt', 2],
+    ['{0} ({1}, {2}): {3} – {4} (+{5} pts) – she retired hurt', 2],
+  ],
   // ⭐ RU-23 – the tile vocabularies are read by the tile matcher, which holds its own shapes; there is no message with a hole of these classes
   trait: [],
   relLead: [],
@@ -403,4 +439,5 @@ export const NAMED_HOLES: readonly NamedHole[] = [
   ['Where she is at {age}', 'age', 'ageYears'],
   ['She is {age}', 'age', 'age'],
   ['Out with the {injury} – back {week}.', 'injury', 'kind'],
+  ['Out with the {injury} – back {week}.', 'week', 'week'], // ⭐ r49 №2 ф2 – the diary row's week label, the same reader as the positional holes above
 ]

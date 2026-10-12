@@ -204,10 +204,10 @@
     0.10872006509453058,
     0.37577401218004525
    ],
-   "world": "575addaa6268",
-   "snapshot": "e19672423bf3",
+   "world": "71a681cae315",
+   "snapshot": "bf5011251cba",
    "worldFields": {
-    "schemaVersion": "08a35293e09f",
+    "schemaVersion": "215bb47da8fa",
     "careerId": "dd8f797b8a8c",
     "seed": "9b68e6cd6e13",
     "week": "e26973e6ee8a",
@@ -312,7 +312,7 @@
     "medicalWithdrawalWeek": "267b976f6f33"
    },
    "snapshotFields": {
-    "schemaVersion": "08a35293e09f",
+    "schemaVersion": "215bb47da8fa",
     "careerId": "dd8f797b8a8c",
     "seed": "9b68e6cd6e13",
     "week": "e26973e6ee8a",
@@ -447,10 +447,10 @@
     0.30679384991526604,
     0.533905585296452
    ],
-   "world": "82de6c9ceba5",
-   "snapshot": "0ce88fbb47a1",
+   "world": "4b27436047ef",
+   "snapshot": "45c7427074ab",
    "worldFields": {
-    "schemaVersion": "08a35293e09f",
+    "schemaVersion": "215bb47da8fa",
     "careerId": "ee58d00eaa2f",
     "seed": "48ea91fa1ba6",
     "week": "e26973e6ee8a",
@@ -555,7 +555,7 @@
     "medicalWithdrawalWeek": "2952aeca0fe1"
    },
    "snapshotFields": {
-    "schemaVersion": "08a35293e09f",
+    "schemaVersion": "215bb47da8fa",
     "careerId": "ee58d00eaa2f",
     "seed": "48ea91fa1ba6",
     "week": "e26973e6ee8a",
@@ -690,10 +690,10 @@
     0.42566752806305885,
     0.06560832215473056
    ],
-   "world": "507e561d5c71",
-   "snapshot": "82ab23d3dbd2",
+   "world": "d291126c4b0a",
+   "snapshot": "2cb1d527b08e",
    "worldFields": {
-    "schemaVersion": "08a35293e09f",
+    "schemaVersion": "215bb47da8fa",
     "careerId": "889bef910f8d",
     "seed": "ecdb77036b6c",
     "week": "e26973e6ee8a",
@@ -799,7 +799,7 @@
     "spotlightKeepSeason": "ac3478d69a3c"
    },
    "snapshotFields": {
-    "schemaVersion": "08a35293e09f",
+    "schemaVersion": "215bb47da8fa",
     "careerId": "889bef910f8d",
     "seed": "ecdb77036b6c",
     "week": "e26973e6ee8a",
@@ -934,10 +934,10 @@
     0.10872006509453058,
     0.37577401218004525
    ],
-   "world": "610a26f8598e",
-   "snapshot": "92aff3b2b684",
+   "world": "4c5e0daa12dd",
+   "snapshot": "9f39cd2fb7fb",
    "worldFields": {
-    "schemaVersion": "08a35293e09f",
+    "schemaVersion": "215bb47da8fa",
     "careerId": "dd8f797b8a8c",
     "seed": "9b68e6cd6e13",
     "week": "e26973e6ee8a",
@@ -1044,7 +1044,7 @@
     "spotlightKeepSeason": "ac3478d69a3c"
    },
    "snapshotFields": {
-    "schemaVersion": "08a35293e09f",
+    "schemaVersion": "215bb47da8fa",
     "careerId": "dd8f797b8a8c",
     "seed": "9b68e6cd6e13",
     "week": "e26973e6ee8a",
@@ -1179,10 +1179,10 @@
     0.10872006509453058,
     0.37577401218004525
    ],
-   "world": "e6f09842ed79",
-   "snapshot": "8e83a847114e",
+   "world": "459819142f26",
+   "snapshot": "2748713e8172",
    "worldFields": {
-    "schemaVersion": "08a35293e09f",
+    "schemaVersion": "215bb47da8fa",
     "careerId": "dd8f797b8a8c",
     "seed": "9b68e6cd6e13",
     "week": "e26973e6ee8a",
@@ -1287,7 +1287,7 @@
     "spotlightKeepSeason": "ac3478d69a3c"
    },
    "snapshotFields": {
-    "schemaVersion": "08a35293e09f",
+    "schemaVersion": "215bb47da8fa",
     "careerId": "dd8f797b8a8c",
     "seed": "9b68e6cd6e13",
     "week": "e26973e6ee8a",
@@ -1423,10 +1423,10 @@
     0.6604983219876885
    ],
    "weeks": 364,
-   "world": "d54e479f5466",
-   "snapshot": "434c08d7836f",
+   "world": "9f43abe611dd",
+   "snapshot": "8b37e449aba8",
    "worldFields": {
-    "schemaVersion": "08a35293e09f",
+    "schemaVersion": "215bb47da8fa",
     "careerId": "1fde16c8132c",
     "seed": "b48967110b4e",
     "week": "56e43ae4ca93",
@@ -1529,7 +1529,7 @@
     "ageCurve": "706ff1317ac8"
    },
    "snapshotFields": {
-    "schemaVersion": "08a35293e09f",
+    "schemaVersion": "215bb47da8fa",
     "careerId": "1fde16c8132c",
     "seed": "b48967110b4e",
     "week": "56e43ae4ca93",
@@ -1663,10 +1663,10 @@
     0.3359662333969027
    ],
    "weeks": 260,
-   "world": "1d00d2853043",
-   "snapshot": "4a1059593283",
+   "world": "b4cb20484424",
+   "snapshot": "3e4e5e666cab",
    "worldFields": {
-    "schemaVersion": "08a35293e09f",
+    "schemaVersion": "215bb47da8fa",
     "careerId": "b7c113c71c39",
     "seed": "31e3c9466084",
     "week": "09d66f6e5482",
@@ -1769,7 +1769,7 @@
     "ageCurve": "5b562a631b06"
    },
    "snapshotFields": {
-    "schemaVersion": "08a35293e09f",
+    "schemaVersion": "215bb47da8fa",
     "careerId": "b7c113c71c39",
     "seed": "31e3c9466084",
     "week": "09d66f6e5482",

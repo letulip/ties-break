@@ -236,7 +236,7 @@ function showOffer(offer: RetirementOffer, over: Record<string, unknown> = {}): 
   })
 }
 
-describe('⭐⭐⭐ round 48 #4 – the page line is the parent\'s: «You said one more year N times.»', () => {
+describe('⭐⭐⭐ round 48 #4, re-aimed by round 49 №9 – the parent\'s one-more-year line left the page by his word («убрать всю строку», 12.10)', () => {
   beforeEach(() => setActivePinia(createPinia()))
   afterEach(() => {
     document.body.innerHTML = ''
@@ -244,29 +244,21 @@ describe('⭐⭐⭐ round 48 #4 – the page line is the parent\'s: «You said o
 
   const noteOf = (w: ReturnType<typeof mountEnding>) => w.findAll('.ending-note').find((p) => p.text().includes('one more year'))
 
-  it('⭐⭐⭐ the line reads «You said one more year N times.», with `time` / `times` kept', () => {
-    for (const [count, noun] of [
-      [1, 'time'],
-      [2, 'times'],
-      [5, 'times'],
-      [27, 'times'],
-    ] as const) {
+  // ⚠ RE-AIMED 12.10 (round 49 №9, «убрать всю строку»): the line this block pinned verbatim – R47-S4's «You said one
+  // more year N times.», voice-flipped by round 48 #4 – is removed from the template by the owner's own order. The arms
+  // below now pin the ABSENCE at every count; `oneMoreYearCount` itself stays on the wire (the natural blurb's v-if
+  // reads it, the 10.10 «при 0 надо починить» ruling). The bold-figure case died with the element – the surviving
+  // notes' figures are pinned in i18n-l2-10-endings-college-fork and r47-b1-ending-figures.
+  it('⭐⭐⭐ NO count draws the line – the note is deleted, not hidden', () => {
+    for (const count of [1, 2, 5, 27] as const) {
       setActivePinia(createPinia())
       const w = mountEnding(endingView({ oneMoreYearCount: count }))
-      // ⚠⚠ THE ARM. Put «She said» back in the template and this goes red on its first count: measured 07.10, RED
-      // [2 tests here – this one and the no-credit tripwire below – plus 1 in endings-ui and 1 in r47-b1-ending-figures].
-      // The sentence is the draft R47-S4 he blessed – «You said one more year N times.» – verbatim.
-      expect(noteOf(w)?.text(), `count ${count}`).toBe(`You said one more year ${count} ${noun}.`)
+      // ⚠⚠ THE ARM, re-pointed: put the round-48 `<p>` back in the template and this goes red on its first count
+      // (mutation-measured 12.10: the restored element reddened exactly this arm and the beside-the-blurb case below).
+      expect(noteOf(w), `count ${count}: a one-more-year note survived №9`).toBeUndefined()
       w.unmount()
       document.body.innerHTML = ''
     }
-  })
-
-  it('⭐ ...and the number is still a figure – bold, in the display face – inside the sentence', () => {
-    const w = mountEnding(endingView({ oneMoreYearCount: 5 }))
-    const figure = noteOf(w)!.get('b.ending-fig')
-    expect(figure.text()).toBe('5')
-    w.unmount()
   })
 
   it('⭐ a career that never said it prints no such line, as before', () => {
@@ -293,10 +285,12 @@ describe('⭐⭐⭐ round 48 #4 – the page line is the parent\'s: «You said o
   // ⚠ 11.10 – the OPEN exception case retired per its own protocol («the cleanup is then two edits»):
   // the owner moved the wording to «she agreed to one more», no paragraph credits her with SAYING it,
   // and the case above now holds the whole page.
-  it('the natural paragraph stands beside the parent\'s own line, both in the ruled voices', () => {
+  it('the natural paragraph stands, and the parent\'s own line is gone from beside it (round 49 №9)', () => {
     const w = mountEnding(endingView({ oneMoreYearCount: 5 }))
     expect(w.get('.album-blurb').text()).toBe(ENDING_BLURB.natural)
-    expect(w.findAll('.ending-note').some((n) => n.text().includes('You said one more year')), 'the parent\'s line is there too').toBe(true)
+    // ⚠ RE-AIMED 12.10 (round 49 №9): this arm used to prove the line stood BESIDE the paragraph; the owner removed
+    // the line, so it now proves the removal reached the mounted page.
+    expect(w.findAll('.ending-note').some((n) => n.text().includes('You said one more year')), 'the parent\'s line left with №9').toBe(false)
     w.unmount()
   })
 })

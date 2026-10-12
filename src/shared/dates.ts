@@ -188,7 +188,11 @@ export function weekMonth(week: number, startYear: number = DEFAULT_START_YEAR):
  *  ⚠ ONE NUMBER RATHER THAN THE WHOLE `Ymd`, deliberately. The internal shape is frozen and shared
  *  between every formatter in this file; handing it out would make the module's public surface a
  *  struct that callers could come to depend on the layout of. Three scalar readers compose into a
- *  date wherever one is genuinely needed, and nowhere else has needed one in eleven waves. */
+ *  date wherever one is genuinely needed, and nowhere else has needed one in eleven waves.
+ *  ⭐ r49 №2 (12.10) – ONE caller now genuinely needs the whole span: the display module
+ *  (`src/i18n/dates.ts`) re-spells these dates in the player's language and cannot parse a
+ *  formatted string to do it. `weekSpanParts` below is that decision – a NEW frozen object per
+ *  call, never the memo's own row, so the internal shape stays this file's. */
 export function weekStartDay(week: number, startYear: number = DEFAULT_START_YEAR): number {
   return weekStart(week, startYear).day
 }
@@ -362,6 +366,19 @@ export function weekLabel(week: number, startYear: number = DEFAULT_START_YEAR):
   return `W${inSeason} '${String(((year % 100) + 100) % 100).padStart(2, '0')}`
 }
 
+/** "W8" – the in-season week number alone, for a row whose date already names the year beside it
+ *  (SeasonScreen's week column, which sits next to `weekRange`'s output).
+ *
+ *  ⭐ r49 №2 (12.10): the screen used to SLICE `weekLabel`'s output (`.split(' ')[0]`) – honest while
+ *  every label was English, and a silent lie the week the label is localized («Нед. 14 · ’31» slices
+ *  to «Нед.»). The number's own spelling moves HERE, beside every other week label and for the same
+ *  reason: this is the one file allowed to write `W${...}`, and the screen must never parse a
+ *  formatter's output for logic. No `startYear`: the in-season number is pure modulo arithmetic and
+ *  the epoch cannot move it. */
+export function weekNumberLabel(week: number): string {
+  return `W${weekParts(week, DEFAULT_START_YEAR).inSeason}`
+}
+
 /** "Jan '31" – the CALENDAR MONTH a career week falls in, with the season year two digits wide.
  *
  *  ⭐ ROUND 34 #19 – the fund chart's time axis. Its shape is `weekLabel`'s deliberately («W14 '31»):
@@ -462,6 +479,36 @@ export function weekRange(week: number, startYear: number = DEFAULT_START_YEAR):
     return `${MONTHS[start.month]} ${start.day} – ${MONTHS[end.month]} ${end.day}, ${end.year}`
   }
   return `${MONTHS[start.month]} ${start.day}–${end.day}, ${end.year}`
+}
+
+/** ⭐ r49 №2 (12.10) – THE WEEK'S SPAN AS DATA, for the display module (`src/i18n/dates.ts`), which
+ *  re-spells month-bearing dates in the player's language. This file cannot reach the catalog (it is
+ *  engine-importable – CLAUDE.md invariant 1, pinned by the l2-11 purity case), and the display side
+ *  must never parse a formatted string, so the facts travel as numbers: the same `weekStart`/`weekEnd`
+ *  pair every formatter above reads, so the two sides can never disagree about which days a week
+ *  covers. `startYear`/`endYear` are the SPAN's calendar years (they differ across New Year), not the
+ *  career's epoch – that one is the parameter. A fresh frozen object per call: the memo's rows stay
+ *  private (see the note on `weekStartDay`). */
+export interface WeekSpanParts {
+  readonly startDay: number
+  readonly startMonth: number // 0-11
+  readonly startYear: number
+  readonly endDay: number
+  readonly endMonth: number // 0-11
+  readonly endYear: number
+}
+
+export function weekSpanParts(week: number, startYear: number = DEFAULT_START_YEAR): WeekSpanParts {
+  const start = weekStart(week, startYear)
+  const end = weekEnd(week, startYear)
+  return Object.freeze({
+    startDay: start.day,
+    startMonth: start.month,
+    startYear: start.year,
+    endDay: end.day,
+    endMonth: end.month,
+    endYear: end.year,
+  })
 }
 
 /** A SEASON-RELATIVE week range, for the surface-block strip: "W1-10" from zero-based offsets.

@@ -1,6 +1,6 @@
 // ⭐⭐⭐ THE ALBUM'S HANDWRITING – **GENERATED FROM `docs/specs/album-corpus-2026-09.md`, NEVER
-// RETYPED.** 38 occasions × 4 voices × 3 registers = 456 strings, plus the arc's 16 across
-// 8 cells: **472 authored strings in total.**
+// RETYPED.** 38 occasions, 4 voices, 3 registers, every variant hand counted (r49 №7):
+// 636 strings, plus the arc's 16 across 8 cells – **652 authored strings in total.**
 //
 // ⭐⭐ THE THREE REGISTERS ARE THREE DIFFERENT THINGS A PARENT DOES ON A PAGE, and his 19.09
 // confirmation («всё верно») is what fixes them: the **note** speaks TO her («First day on court. You
@@ -21,7 +21,7 @@
 // ⚠ IT IS ORDINARY COMMITTED SOURCE AND NOT A BUILD STEP. Nothing in `npm run check`, `npm run build`
 // or the dev server generates it; the emitter is a one-off, as round 44 ruled for its sibling.
 //
-// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 472 authored strings. An agent retyping them produces
+// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 652 authored strings. An agent retyping them produces
 // typos that no test can catch, because a test written by the same agent compares against what was
 // typed. The document is the source of truth; this file is its projection.
 //
@@ -65,7 +65,11 @@ export interface AlbumOccasion {
   bands: readonly AlbumBand[]
   /** `null` where the kind alone is the occasion; otherwise the named condition, resolved engine-side. */
   gate: string | null
-  voices: Record<Temperament, AlbumHand>
+  /** ⭐ r49 №7 – AN ARRAY OF VARIANT HANDS per voice. The book walks a pool deterministically –
+   *  the occasion's N-th firing in a career takes `variants[N % pool]`, a choice, never a draw –
+   *  so a pool of one reads exactly as the single hand always did. The document declares a variant
+   *  with a dense `#2`/`#3` ordinal on the voice row; today every pool is 1. */
+  voices: Record<Temperament, AlbumHand[]>
 }
 
 /** ⭐ THE ARC – «сначала она была такой-то, а потом стала такой-то» (his addition, 19.09). The voice
@@ -112,26 +116,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['prologue'],
     gate: 'dynasty-record',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'I kept a box of it. You found it before I could show you, and you wanted to wear all of it at once.',
         caption: 'She tried everything on.',
         line: 'She found the box first.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'I kept a box of it. You went through the whole thing and then asked me which ones I lost.',
         caption: 'She asked about the losses.',
         line: 'She wanted the whole record.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'I kept a box of it. You looked at every single thing and put it all back exactly as it was.',
         caption: 'She put it all back.',
         line: 'She looked at all of it.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'I kept a box of it. You sat with it a long time, and then you asked what the last one had felt like.',
         caption: 'She asked how it felt.',
         line: 'She asked about the last one.',
-      },
+      }],
     },
   },
   // A1 · first-court
@@ -141,26 +145,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['prologue'],
     gate: 'first-pick-on-court',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'First day on court. You were so excited.',
         caption: 'She asked if she could try.',
         line: 'Some journeys start with a simple "Can I?"',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'First day on court. You wanted to know why the net was in the way.',
         caption: 'She asked whose court it was.',
         line: 'She argued with a net.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'You stood at the fence a long time before you went in. Then you didn\'t want to come off.',
         caption: 'She watched the whole hour first.',
         line: 'She watched first. She still does.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'First day on court. You didn\'t say anything about it until we were in the car.',
         caption: 'She carried the racquet all the way home.',
         line: 'She took it home with her.',
-      },
+      }],
     },
   },
   // A2 · first-tournament
@@ -170,26 +174,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['prologue'],
     gate: 'first-open-played',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'Your first tournament. You told everybody in the queue that it was your first tournament.',
         caption: 'She made friends in the queue.',
         line: 'A whole weekend, and she never sat down.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'Your first tournament, and you wanted to know who decides the order of play.',
         caption: 'She read the draw sheet twice.',
         line: 'Somebody had to explain the draw.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'You didn\'t eat breakfast and you didn\'t say why until the drive home. Your first tournament.',
         caption: 'She was quiet all morning.',
         line: 'She held it in until the car.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'Your first tournament. You put your shoes by the door the night before.',
         caption: 'Shoes by the door the night before.',
         line: 'She was ready before we were.',
-      },
+      }],
     },
   },
   // A3 · first-win
@@ -199,26 +203,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['prologue'],
     gate: 'first-open-with-a-win',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'You won one. You told me about the point, not the score.',
         caption: 'She wanted to tell somebody.',
         line: 'She led with the point.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'You won one, and you were furious about how you had played it.',
         caption: 'Furious about how she had played it.',
         line: 'First win, first complaint.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'You won one. You said one sentence about it and then wanted to go home.',
         caption: 'She said it once, quietly.',
         line: 'She keeps the good ones somewhere I can\'t see.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'You won one. You asked what time we were leaving.',
         caption: 'She asked about the drive home.',
         line: 'She never once said the word.',
-      },
+      }],
     },
   },
   // A4 · first-cup
@@ -228,26 +232,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['prologue'],
     gate: 'first-open-won-outright',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'You won the whole thing. You carried it to the car with both hands.',
         caption: 'Both hands, all the way to the car.',
         line: 'She wouldn\'t let go of it.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'You won the whole thing and announced it before the handshake had finished.',
         caption: 'She told the car park.',
         line: 'The handshake was still going.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'You won the whole thing. You looked at it for a long time before you picked it up.',
         caption: 'She looked at it a long time.',
         line: 'She kept turning it over in her hands.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'You won the whole thing. You put it in the boot yourself.',
         caption: 'She carried it herself.',
         line: 'Nobody else was allowed to carry it.',
-      },
+      }],
     },
   },
   // A5 · first-title
@@ -257,26 +261,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['young', 'teen', 'adult'],
     gate: 'first-of-kind',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'Your first. You rang before you had left the court and I couldn\'t hear a word of it.',
         caption: 'She rang from the court.',
         line: 'I heard the crowd before I heard her.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'Your first. You said you were owed this one already.',
         caption: 'She said she was owed it.',
         line: 'Nothing is ever on time for her.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'Your first. You called late, and the first thing you said was about the second set.',
         caption: 'She called after midnight.',
         line: 'Late, and exact, as usual.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'Your first. You told me when you would be home, and then at the end you told me.',
         caption: 'She mentioned it last.',
         line: 'The plan first, the news last.',
-      },
+      }],
     },
   },
   // A6 · title-step-up
@@ -286,26 +290,58 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['young', 'teen', 'adult', 'lateCareer'],
     gate: 'tier-above-every-previous-title',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'A step up, and you were straight on the phone about the court and the noise and the food.',
         caption: 'A bigger court, and she noticed all of it.',
         line: 'She told me about the food.',
-      },
-      fiery: {
+      }, {
+        note: 'A title a step higher, and you described the lights and the towels and the tunnel before the tennis.',
+        caption: 'Lights, towels, then tennis.',
+        line: 'The venue got the longer report.',
+      }, {
+        note: 'A step up and a win, and your first story was about the crowd you could hear from your room.',
+        caption: 'The crowd reached her room.',
+        line: 'Bigger crowds carry further.',
+      }],
+      fiery: [{
         note: 'A step up. You said the draw had been harder and you wanted that on the record.',
         caption: 'She wanted the draw noted.',
         line: 'For the record, then.',
-      },
-      deep: {
+      }, {
+        note: 'A step up. You rang to say it had been earned the hard way, and then listed the hard ways.',
+        caption: 'Earned, and itemised.',
+        line: 'Every hard way got named.',
+      }, {
+        note: 'You won at the next level up and asked us to stop sounding surprised. We were not surprised; we were loud.',
+        caption: 'She banned our surprise.',
+        line: 'We were loud, not surprised.',
+      }],
+      deep: [{
         note: 'A step up. You said it was the same game with more people watching, and then you went quiet.',
         caption: 'The same game, she said.',
         line: 'More people watching. Same girl.',
-      },
-      quiet: {
+      }, {
+        note: 'A step up. Afterwards you asked whether we had seen anything different in how you played, and meant it.',
+        caption: 'She asked what we had seen.',
+        line: 'The question was the headline.',
+      }, {
+        note: 'You took the step up without a word on the day, and said the court had sounded different, later.',
+        caption: 'The sound was different, she said.',
+        line: 'She noticed the sound first.',
+      }],
+      quiet: [{
         note: 'A step up. You sent the scoreline and nothing else.',
         caption: 'Just the scoreline.',
         line: 'She let the number do it.',
-      },
+      }, {
+        note: 'A step up, and what you sent was a photo of the scoreboard with your bag already on your shoulder.',
+        caption: 'The scoreboard, bag packed.',
+        line: 'In the photo she is already leaving.',
+      }, {
+        note: 'A step up. You asked whether your old racquet bag was still in the hall, the one from the start.',
+        caption: 'She asked about the old bag.',
+        line: 'The old bag is still in the hall.',
+      }],
     },
   },
   // A7 · title-after-injury
@@ -315,26 +351,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['teen', 'adult', 'lateCareer'],
     gate: 'first-title-after-a-layoff',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'The first one back. You said you had forgotten how much of it is just standing about waiting.',
         caption: 'She had forgotten the waiting.',
         line: 'All that standing about.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'The first one back, and you said nobody asks about the time off when you win.',
         caption: 'Nobody asks now, she said.',
         line: 'They only ask when she loses.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'You had been afraid of the first serve, you told me, and then you weren\'t. The first one back.',
         caption: 'Afraid of the first serve, then not.',
         line: 'She named the fear once it was over.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'The first one back. You said everything was fine. You said it twice.',
         caption: 'She said it twice.',
         line: 'Twice is how I knew.',
-      },
+      }],
     },
   },
   // A8 · title-last
@@ -344,26 +380,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['adult', 'lateCareer'],
     gate: 'last-title-of-the-career',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'Nobody told us it was the last one. You would have made more of it, and so would I.',
         caption: 'Nobody knew it was the last.',
         line: 'We would have made more of it.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'Nobody told us it was the last one. You would have had a great deal to say about that.',
         caption: 'She would have had words about it.',
         line: 'No speech. She would have hated that.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'You always knew which ones mattered. I think you knew this one was the last before I did.',
         caption: 'She may have known.',
         line: 'She knew which ones mattered.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'It was the last one and nobody knew. You packed the same as always.',
         caption: 'She packed the same as always.',
         line: 'Same bag, same folding.',
-      },
+      }],
     },
   },
   // A9 · first-final
@@ -373,26 +409,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['young', 'teen', 'adult'],
     gate: 'first-of-kind',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'Your first final. You told me who was in the stands and what the walk out was like, and I had to ask for the score.',
         caption: 'I had to ask for the score.',
         line: 'The stands came first.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'Your first final. You wanted to be there again next week and you said so before you had sat down.',
         caption: 'Again next week, she said.',
         line: 'Already booking the next one.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'Your first final. You said the walk out was longer than you had expected.',
         caption: 'The walk out was longer than she expected.',
         line: 'She counted the steps out.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'Your first final. You told me about the clock at the side of the court.',
         caption: 'She noticed the clock.',
         line: 'The clock, of all things.',
-      },
+      }],
     },
   },
   // A10 · final-lost
@@ -402,26 +438,58 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['young', 'teen', 'adult', 'lateCareer'],
     gate: 'final-with-no-title-that-week',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'You lost it and you still wanted to talk.',
         caption: 'She wanted to talk anyway.',
         line: 'She rang. That is the part.',
-      },
-      fiery: {
+      }, {
+        note: 'You lost the final and talked us through the good parts first, because there had been good parts.',
+        caption: 'The good parts came first.',
+        line: 'Losing did not cancel the week.',
+      }, {
+        note: 'A final lost, and you wanted to know everything about home before you would say a word about it.',
+        caption: 'Home news first, then the final.',
+        line: 'The final could wait its turn.',
+      }],
+      fiery: [{
         note: 'You lost it and you had already decided why by the time you rang.',
         caption: 'She had the reason ready.',
         line: 'The verdict arrived first.',
-      },
-      deep: {
+      }, {
+        note: 'The final went the other way, and you spent the evening planning the next one out loud.',
+        caption: 'Planning the next one already.',
+        line: 'Next one already pencilled in.',
+      }, {
+        note: 'You lost it, and what made you angriest was how well you had played until the end.',
+        caption: 'Angry about playing well.',
+        line: 'That kind of anger passes slowly.',
+      }],
+      deep: [{
         note: 'You lost it, and later you told me the one point it had turned on.',
         caption: 'A while, then one point.',
         line: 'She had been holding that point for a while.',
-      },
-      quiet: {
+      }, {
+        note: 'You lost the final, and when you finally talked about it you started from the morning of it, not the end.',
+        caption: 'The story began at the morning.',
+        line: 'She needed the whole day said.',
+      }, {
+        note: 'A lost final. You said you already knew what you would do differently, and would not say what.',
+        caption: 'She knew, and kept it.',
+        line: 'The answer stayed hers.',
+      }],
+      quiet: [{
         note: 'You lost it. You asked about the garden.',
         caption: 'She asked about the garden.',
         line: 'We talked about the garden.',
-      },
+      }, {
+        note: 'A final lost, and the one thing you asked that night was whether the car had passed its inspection.',
+        caption: 'She asked about the car.',
+        line: 'The car passed. She moved on.',
+      }, {
+        note: 'The final went the other way. You packed, thanked the people at the desk, and sent us one line about the weather.',
+        caption: 'One line, about the weather.',
+        line: 'The weather got more words than the match.',
+      }],
     },
   },
   // A11 · season-first
@@ -431,26 +499,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['young', 'teen'],
     gate: 'first-season-closed',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'Your first season, closed. You wanted to know whether the number was good and I didn\'t know either.',
         caption: 'Neither of us knew if it was good.',
         line: 'A number with nothing to compare it to.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'Your first season closed on a number you said was wrong and would fix.',
         caption: 'She intends to fix it.',
         line: 'Wrong, apparently.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'Your first season, closed. You looked at the number for a while and then put the phone down.',
         caption: 'She sat with the number a while.',
         line: 'She read it more than once.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'You wrote the number on the calendar in pencil. That was your first season, closed.',
         caption: 'On the calendar, in pencil.',
         line: 'In pencil, so it could move.',
-      },
+      }],
     },
   },
   // A12 · season-best
@@ -460,26 +528,58 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['young', 'teen', 'adult', 'lateCareer'],
     gate: 'rank-better-than-every-previous-close',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'The best year so far. You listed every week of it and then said you were tired.',
         caption: 'Tired, and pleased, in that order.',
         line: 'The tired bit was the true bit.',
-      },
-      fiery: {
+      }, {
+        note: 'The best year you have had, and you credited everybody but yourself before we could stop you.',
+        caption: 'Everyone got thanked but her.',
+        line: 'We said the missing name out loud.',
+      }, {
+        note: 'The best close so far. You talked about the courts you had liked best, and none of the numbers came up once.',
+        caption: 'Courts first, numbers never.',
+        line: 'The numbers can mind themselves.',
+      }],
+      fiery: [{
         note: 'The best year so far, and you spent the whole call on the weeks that went wrong.',
         caption: 'She only talked about the bad weeks.',
         line: 'The bad weeks, and that was the call.',
-      },
-      deep: {
+      }, {
+        note: 'Your best year, and you called it a down payment. We were not allowed to celebrate yet.',
+        caption: 'A down payment, she called it.',
+        line: 'Celebration postponed, again.',
+      }, {
+        note: 'The best year so far, and your first sentence about it started with the word next.',
+        caption: 'Her first word about it: next.',
+        line: 'Next. The whole speech.',
+      }],
+      deep: [{
         note: 'The best year so far. You said it had felt like one long week, and I think that was the whole report.',
         caption: 'One long week, she called it.',
         line: 'One long week. That was the report.',
-      },
-      quiet: {
+      }, {
+        note: 'The best year yet. You said you knew the week it had turned, and named it, and it was not a week we would have guessed.',
+        caption: 'She knew the exact week.',
+        line: 'Not the week anyone would guess.',
+      }, {
+        note: 'Your best close. You asked us whether it had looked as hard as it felt, and waited for a real answer.',
+        caption: 'She wanted the real answer.',
+        line: 'It looked hard. We said so.',
+      }],
+      quiet: [{
         note: 'The best year so far. You asked whether we were coming at Christmas.',
         caption: 'She asked about Christmas.',
         line: 'Christmas mattered more.',
-      },
+      }, {
+        note: 'Your best season ended, and you went straight home and fixed the garden gate.',
+        caption: 'The gate finally got fixed.',
+        line: 'A good year for the gate too.',
+      }, {
+        note: 'Best close yet. You answered our congratulations with a question about the apple tree.',
+        caption: 'She asked about the apple tree.',
+        line: 'The tree is fine. So is she.',
+      }],
     },
   },
   // A33 · season-recovery
@@ -489,26 +589,58 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['teen', 'adult', 'lateCareer'],
     gate: 'rank-better-than-the-previous-close-but-not-a-best',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'You came back up the table this year and you talked about the two weeks in the middle where it turned, not about the end of it.',
         caption: 'She talked about the middle of the year.',
         line: 'The turn was in the middle somewhere.',
-      },
-      fiery: {
+      }, {
+        note: 'Back up the table this year, and you gave the credit to the new morning routine, in detail.',
+        caption: 'The morning routine got the credit.',
+        line: 'The mornings did their part.',
+      }, {
+        note: 'You climbed back this year and rang us straight after the last match of it, talking faster than usual.',
+        caption: 'She talked faster than usual.',
+        line: 'Up the table, up the tempo.',
+      }],
+      fiery: [{
         note: 'Better than last year, and you said that was the least it could have been. You were pleased anyway and would not say so.',
         caption: 'The least it could have been, she said.',
         line: 'Pleased, and not admitting it.',
-      },
-      deep: {
+      }, {
+        note: 'Better than last year, and you made us promise not to use the word comeback around you.',
+        caption: 'Not a comeback, she insists.',
+        line: 'Fine. Not a comeback.',
+      }, {
+        note: 'You came back up this season and declared the matter closed before anyone had opened it.',
+        caption: 'Closed before it was opened.',
+        line: 'No questions were being taken.',
+      }],
+      deep: [{
         note: 'You waited until the year was finished before you would call it a climb back, and then you said it in one sentence.',
         caption: 'One sentence, once the year was finished.',
         line: 'She waited for the year to end first.',
-      },
-      quiet: {
+      }, {
+        note: 'The year climbed, and you said the difference had been small and weekly and nobody else would have seen it.',
+        caption: 'Small, weekly, invisible.',
+        line: 'The invisible work shows last.',
+      }, {
+        note: 'You let the season finish before you trusted it, and even then you said it quietly, to one of us at a time.',
+        caption: 'Said quietly, one at a time.',
+        line: 'Trust came after the maths.',
+      }],
+      quiet: [{
         note: 'A year that went back up. You did not mention it at all, and next season\'s schedule arrived in the same week.',
         caption: 'Nothing said. A new schedule.',
         line: 'Straight back to the planning.',
-      },
+      }, {
+        note: 'The year went back up. Your only comment was a thumbs up under our message about it.',
+        caption: 'A thumbs up. That was the lot.',
+        line: 'Eloquent, for her.',
+      }, {
+        note: 'Back up the rankings. You renewed the court booking for the whole off-season without being asked.',
+        caption: 'The booking was renewed early.',
+        line: 'The off-season had plans already.',
+      }],
     },
   },
   // A13 · season-held
@@ -518,26 +650,58 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['teen', 'adult', 'lateCareer'],
     gate: 'rank-inside-a-narrow-band-of-the-previous-close',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'A year of holding on. You said the middle of it had blurred and I know exactly what you mean.',
         caption: 'The middle of it blurred.',
         line: 'A year she can\'t quite remember.',
-      },
-      fiery: {
+      }, {
+        note: 'You said the season felt like a rerun of last year, then spent the call on the one week that was different.',
+        caption: 'She called it a rerun.',
+        line: 'The one different week got the whole call.',
+      }, {
+        note: 'You held your place this year, and what you wanted to talk about was the new faces around the draw.',
+        caption: 'New faces, same place.',
+        line: 'The table stood still. She did not.',
+      }],
+      fiery: [{
         note: 'A year of holding on. You wanted it to be a jump, it wasn\'t, and you said so for a while.',
         caption: 'She wanted a jump.',
         line: 'Holding on was not the plan.',
-      },
-      deep: {
+      }, {
+        note: 'You defended every point of it this year and wanted that called work, not standing still.',
+        caption: 'Defending is work, she said.',
+        line: 'Holding takes work too. Noted.',
+      }, {
+        note: 'The same rank at the end of it, and you blamed the calendar, the courts and the weather, with evidence for each.',
+        caption: 'The weather made the list too.',
+        line: 'Evidence was provided.',
+      }],
+      deep: [{
         note: 'A year of holding on. You said staying still takes more than it looks like it does.',
         caption: 'Staying still costs, she said.',
         line: 'She is right about that.',
-      },
-      quiet: {
+      }, {
+        note: 'Near the end of the year you said that staying put had been a decision, made weekly. Then you left it there.',
+        caption: 'Decided weekly, she said.',
+        line: 'Nobody notices that kind of work.',
+      }, {
+        note: 'You went quiet when the season closed, and later said the year had asked more than it showed.',
+        caption: 'More asked than shown, she said.',
+        line: 'The quiet after this one was longer.',
+      }],
+      quiet: [{
         note: 'A year of holding on. You sent next season\'s schedule not long after.',
         caption: 'Next season\'s schedule, not long after.',
         line: 'Straight on to the next one.',
-      },
+      }, {
+        note: 'The year closed where it started. You mentioned the racquets needed restringing and that was the call.',
+        caption: 'Restringing, and little else.',
+        line: 'Business as usual, then.',
+      }, {
+        note: 'Nothing moved this year. You sent us the same photo of the practice board as last year.',
+        caption: 'The same photo as last year.',
+        line: 'Even the photo held its place.',
+      }],
     },
   },
   // A14 · season-down
@@ -547,26 +711,58 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['adult', 'lateCareer'],
     gate: 'rank-worse-than-the-previous-close',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'A year that went the wrong way. You said so out loud.',
         caption: 'She said it out loud.',
         line: 'Naming it is most of it.',
-      },
-      fiery: {
+      }, {
+        note: 'The year slipped, and you came home with a list of what to fix already written out.',
+        caption: 'She brought the list home.',
+        line: 'The list was long, and hers.',
+      }, {
+        note: 'You told us the year had gone the wrong way before the table said it, and you were right.',
+        caption: 'She said it before the table did.',
+        line: 'Right, and not glad about it.',
+      }],
+      fiery: [{
         note: 'The year went the wrong way and you had a reason for every week of it, and you meant every one.',
         caption: 'A reason for every week.',
         line: 'All of them true, probably.',
-      },
-      deep: {
+      }, {
+        note: 'A wrong-way year. On the last call of it you were already naming the people you would prove wrong.',
+        caption: 'A list of people to prove wrong.',
+        line: 'The fire survived the year intact.',
+      }, {
+        note: 'You called the year a lesson, in the tone you use for referees.',
+        caption: 'A lesson, in that tone.',
+        line: 'Lessons were not taken gladly.',
+      }],
+      deep: [{
         note: 'A year that went the wrong way. You waited until January to tell me what you thought had happened.',
         caption: 'She waited until January.',
         line: 'She needed the distance first.',
-      },
-      quiet: {
+      }, {
+        note: 'A year that went backwards. You never said the word, and we learned not to say it either.',
+        caption: 'The word went unsaid.',
+        line: 'Some words help nobody.',
+      }, {
+        note: 'After the year fell away you asked what we had seen from the stands, and listened more than you spoke.',
+        caption: 'This time she asked us.',
+        line: 'Listening was new.',
+      }],
+      quiet: [{
         note: 'You told me about the schedules and the hotels all year, and never once about the year.',
         caption: 'Schedules, hotels, not the year.',
         line: 'Everything except the year.',
-      },
+      }, {
+        note: 'The year went down and your messages got shorter, and none of them mentioned the table.',
+        caption: 'Shorter messages, no table talk.',
+        line: 'Short answers can carry a lot.',
+      }, {
+        note: 'A down year. You reorganised the whole equipment shelf the week it ended, and told us about the shelf.',
+        caption: 'The shelf got the attention.',
+        line: 'The shelf has never been so neat.',
+      }],
     },
   },
   // A15 · injury
@@ -576,26 +772,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['young', 'teen', 'adult', 'lateCareer'],
     gate: null,
     voices: {
-      sunny: {
+      sunny: [{
         note: 'The week it stopped. You went straight on to what you could still do, which frightened me more than crying would have.',
         caption: 'Straight on to what she could still do.',
         line: 'I would have preferred the crying.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'The week it stopped. You were angry at the floor, the shoes, the schedule and me, in that order.',
         caption: 'Angry at the floor first.',
         line: 'The shoes got it worst.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'The week it stopped. You asked how long, and when I said I didn\'t know, you said nothing for a while.',
         caption: 'She asked how long.',
         line: 'She asked once, then stopped asking.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'The week it stopped. You asked for a pen and wrote the dates on the calendar.',
         caption: 'Dates on the calendar, in pen.',
         line: 'In pen this time.',
-      },
+      }],
     },
   },
   // A16 · injury-return
@@ -605,26 +801,74 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['young', 'teen', 'adult', 'lateCareer'],
     gate: 'first-week-back-after-a-layoff',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'First week back. You said the ball came at you faster than you had remembered, and you laughed about it.',
         caption: 'The ball came faster than she remembered.',
         line: 'She laughed at it, which helped.',
-      },
-      fiery: {
+      }, {
+        note: 'First session back. You named everyone who had said hello before you said one word about the tennis.',
+        caption: 'The hellos came before the tennis.',
+        line: 'Half the call was the hellos.',
+      }, {
+        note: 'You rang from the car park after the first proper session, still out of breath and happy about it.',
+        caption: 'Out of breath, and pleased about it.',
+        line: 'Out of breath suits her.',
+      }, {
+        note: 'First week back, and you were straight back to complaining about the food at the courts. We were glad of it.',
+        caption: 'Complaints about the food again.',
+        line: 'Even the moaning was welcome.',
+      }],
+      fiery: [{
         note: 'First week back. You wanted all of it back at once, were told no, and I heard about that.',
         caption: 'All of it back at once, please.',
         line: 'They said no. I heard.',
-      },
-      deep: {
+      }, {
+        note: 'First week back on court. You counted off everything they were still not letting you do, and you were loud about it.',
+        caption: 'Still a list of things not allowed.',
+        line: 'The list got shorter. The volume did not.',
+      }, {
+        note: 'You said the only thing you had missed about it was winning, and nobody in this house believed you.',
+        caption: 'Only the winning, she said.',
+        line: 'We did not believe a word.',
+      }, {
+        note: 'First week back, and you told us the forehand had never gone anywhere and dared anyone to say otherwise.',
+        caption: 'The forehand never left, she said.',
+        line: 'Nobody was going to argue with that.',
+      }],
+      deep: [{
         note: 'First week back. You said you had been more afraid of this week than of the injury.',
         caption: 'More afraid of this than of that.',
         line: 'She waited to say the true thing.',
-      },
-      quiet: {
+      }, {
+        note: 'You did not talk about the week until it was over, and then you said the hardest part had been walking in the first day.',
+        caption: 'Walking in was the hard part.',
+        line: 'The week ended before she spoke.',
+      }, {
+        note: 'You asked us not to come to the first session back. You told us why much later, and we understood.',
+        caption: 'No audience for the first one.',
+        line: 'Some weeks are for nobody to watch.',
+      }, {
+        note: 'You said the quietest part was the drive home after the first session, and that you had liked it.',
+        caption: 'The drive home was the good part.',
+        line: 'Quiet roads, after.',
+      }],
+      quiet: [{
         note: 'First week back. You sent the session time before anything else.',
         caption: 'She told me the time of the session.',
         line: 'The time came first.',
-      },
+      }, {
+        note: 'Your bag stood packed by the door the night before the first session back.',
+        caption: 'The bag was by the door early.',
+        line: 'Packed before anybody asked.',
+      }, {
+        note: 'You sent a photo of the empty practice court and no message with it.',
+        caption: 'A photo of the court. No words.',
+        line: 'The photo said it.',
+      }, {
+        note: 'First week back. You crossed the missed weeks off the calendar in one sitting, and said nothing about them.',
+        caption: 'The calendar caught up in one go.',
+        line: 'Crossed off, all at once.',
+      }],
     },
   },
   // A17 · first-prize
@@ -634,26 +878,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['young', 'teen'],
     gate: 'first-of-kind',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'The first time it paid. You wanted to spend it on all of us and we had to talk you out of it.',
         caption: 'She wanted to spend it on us.',
         line: 'We talked her out of it.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'The first time it paid you said it wasn\'t very much, and then you kept saying the number.',
         caption: 'Not very much, she said. Repeatedly.',
         line: 'She said the number a lot.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'You said the money made the whole thing real in a way the results hadn\'t. The first time it paid.',
         caption: 'Realer than the results, she said.',
         line: 'Money made it real. Not the winning.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'The first time it paid. You asked what the tax on it was.',
         caption: 'She asked about the tax.',
         line: 'Straight to the tax.',
-      },
+      }],
     },
   },
   // A18 · first-international
@@ -663,26 +907,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['young', 'teen'],
     gate: 'first-of-kind',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'Your first one abroad. You sent a photograph of the ceiling where you were waiting, of all things.',
         caption: 'A photograph of the ceiling she waited under.',
         line: 'The ceiling. Not the court.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'You had a full opinion on the place before you had unpacked. Your first one abroad.',
         caption: 'An opinion before the bags.',
         line: 'Decided before the bag was open.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'Your first one abroad. You said everything sounded different and that you liked it, and that was the message.',
         caption: 'Everything sounded different.',
         line: 'She liked the sound of it.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'Your first one abroad. You sent the arrival time.',
         caption: 'Just the arrival time.',
         line: 'Arrived. That was the message.',
-      },
+      }],
     },
   },
   // A19 · break-even
@@ -692,26 +936,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['teen', 'adult', 'lateCareer'],
     gate: null,
     voices: {
-      sunny: {
+      sunny: [{
         note: 'The week it paid for itself. You said we could stop doing sums at the kitchen table and I said we would see.',
         caption: 'No more sums at the kitchen table.',
         line: 'We would see, I said.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'It paid for itself, and you said you had told us it would, and you had, more than once.',
         caption: 'She had told us. She reminded us.',
         line: 'She had told us. Twice.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'The week it paid for itself. You knew what it had cost. You had always known.',
         caption: 'She never once asked what it had cost.',
         line: 'She had been carrying that quietly.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'You asked, in a roundabout way, whether we were all right now. That was the week it paid for itself.',
         caption: 'She asked, in her way, if we were all right.',
         line: 'It took her a while to ask.',
-      },
+      }],
     },
   },
   // A20 · school-done
@@ -721,26 +965,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['young', 'teen'],
     gate: null,
     voices: {
-      sunny: {
+      sunny: [{
         note: 'School finished. You came home and told us everybody else\'s plans before your own.',
         caption: 'Everybody else\'s plans first.',
         line: 'Her own plans came last.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'School finished. You said you had been waiting years for it, and then stood in the hall not leaving.',
         caption: 'She stood in the hall a while.',
         line: 'Years of waiting, and then she waited.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'School finished. You said you would miss the mornings, which nobody expected, least of all you.',
         caption: 'She will miss the mornings.',
         line: 'Nobody expected the mornings.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'School finished. You cleared the desk that evening and didn\'t mention it again.',
         caption: 'The desk was cleared that evening.',
         line: 'Cleared, and never mentioned.',
-      },
+      }],
     },
   },
   // A21 · wedding
@@ -750,26 +994,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['adult', 'lateCareer'],
     gate: null,
     voices: {
-      sunny: {
+      sunny: [{
         note: 'You talked to everybody. You have always talked to everybody, and it was the right day for it.',
         caption: 'She talked to everybody.',
         line: 'The right day for it.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'You cried at the wrong moment and were cross about it afterwards.',
         caption: 'Cross about the crying, later.',
         line: 'The wrong moment, she says.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'You said one sentence to me before it started and I have not repeated it to anybody.',
         caption: 'One sentence, before it started.',
         line: 'I am keeping that one.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'You checked the time of everything, and then you let the day happen without running it.',
         caption: 'She let somebody else run it.',
         line: 'She stopped checking the time.',
-      },
+      }],
     },
   },
   // A34 · birth
@@ -779,26 +1023,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['adult', 'lateCareer'],
     gate: null,
     voices: {
-      sunny: {
+      sunny: [{
         note: 'You were talking before we were through the door, and none of it was about tennis.',
         caption: 'Talking before she was through the door.',
         line: 'None of it was about tennis.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'You had a list. By the second day the list was somewhere under the pram.',
         caption: 'The list did not last two days.',
         line: 'Somewhere under the pram.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'You said almost nothing for a week and I have never seen you so certain.',
         caption: 'Almost nothing, all week.',
         line: 'I have never seen her so certain.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'You let the house fill up with people and did not once look at the clock.',
         caption: 'She did not look at the clock once.',
         line: 'The clock could wait.',
-      },
+      }],
     },
   },
   // A22 · first-house
@@ -808,26 +1052,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['teen', 'adult'],
     gate: 'first-home-bought',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'Your own front door. You rang from the empty hall so that I could hear the echo.',
         caption: 'She rang from the empty hall.',
         line: 'I heard the echo.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'Your own front door. You had already decided what was wrong with the kitchen.',
         caption: 'The kitchen was already wrong.',
         line: 'Wrong kitchen, right house.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'Your own front door. You said it was strange that a key could do that.',
         caption: 'Strange, what a key can do.',
         line: 'A key, and a different life.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'Your own front door. You sent one photograph, of the door.',
         caption: 'One photograph. The door.',
         line: 'Just the door.',
-      },
+      }],
     },
   },
   // A23 · brand
@@ -837,26 +1081,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['teen', 'adult'],
     gate: 'brand-founded',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'The first sample arrived with your name on the label. You laughed at the size of the box it came in.',
         caption: 'She thought it was funny.',
         line: 'Funny, and enormous.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'They sent the first sample with your name on the label, and you had the colour changed, because of course you did.',
         caption: 'She had the colour changed.',
         line: 'They changed the colour.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'Your own name, printed on the label of the first sample. You said it didn\'t feel like yours yet.',
         caption: 'It didn\'t feel like hers yet.',
         line: 'Not hers yet, she said.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'The first sample came. You sent one photograph, of the label, and said nothing else about it.',
         caption: 'Just the label, in focus.',
         line: 'The label, and not the thing.',
-      },
+      }],
     },
   },
   // A24 · academy-land
@@ -866,26 +1110,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['teen', 'adult', 'lateCareer'],
     gate: 'academy-land-bought',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'A field, and you walked us round all of it describing courts that weren\'t there.',
         caption: 'She showed us courts that weren\'t there.',
         line: 'All of it, twice round.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'A field, and you were already annoyed about how long everything was going to take.',
         caption: 'Too slow already.',
         line: 'Nothing moves fast enough.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'A field. You stood at one end of it for a while and didn\'t say what you were seeing.',
         caption: 'She stood at one end of it.',
         line: 'Long enough that we stopped asking.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'A field. You had measured it before you told us about it.',
         caption: 'She had measured it first.',
         line: 'Measured, then mentioned.',
-      },
+      }],
     },
   },
   // A25 · academy-courts
@@ -895,26 +1139,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['adult', 'lateCareer'],
     gate: 'academy-courts-built',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'The courts went in. You hit on the first one before the lines were dry, you said, and I believe you.',
         caption: 'She hit on the first one straight away.',
         line: 'Before the lines were dry.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'The courts went in. You found a fault with the surface on day one and made them come back.',
         caption: 'They came back and did it again.',
         line: 'She made them come back.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'The courts went in. You said the sound was wrong, and then a week later that it was right.',
         caption: 'The sound was wrong, then right.',
         line: 'She was listening to it.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'The courts went in. You sent a photograph with nobody in it.',
         caption: 'A photograph with nobody in it.',
         line: 'Empty courts, on purpose.',
-      },
+      }],
     },
   },
   // A26 · academy-built
@@ -924,26 +1168,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['adult', 'lateCareer'],
     gate: 'academy-building-finished',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'The building is up. You gave us the tour twice and told us who each room was going to be for.',
         caption: 'The tour, twice, room by room.',
         line: 'A room for everything.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'The building is up. You said the sign was too small and had a bigger one made.',
         caption: 'The sign was too small.',
         line: 'A bigger sign, then.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'The building is up. You said your name looked too big on the front of it.',
         caption: 'Her name looked too big.',
         line: 'Too big, she said. It isn\'t.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'The building is up. You had already worked out where the children would wait.',
         caption: 'She knew where they would wait.',
         line: 'She thought about the waiting.',
-      },
+      }],
     },
   },
   // A27 · lifetime-sponsor
@@ -953,26 +1197,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['adult', 'lateCareer'],
     gate: 'lifetime-contract-signed',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'The one that doesn\'t run out. You said you would finally stop being nervous every winter, and then you were nervous anyway.',
         caption: 'Nervous anyway, every winter.',
         line: 'The worry has a habit.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'They offered you the one that doesn\'t run out. You said it should have come long before, and signed it without hesitating.',
         caption: 'Long overdue, and signed without hesitating.',
         line: 'Late, and signed anyway.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'The one that doesn\'t run out. You said it was strange to be planned for that far ahead.',
         caption: 'Strange, being planned for.',
         line: 'Somebody planned that far ahead.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'You read the whole thing before you told anybody. The one that doesn\'t run out.',
         caption: 'She read all of it first.',
         line: 'All of it, before a word.',
-      },
+      }],
     },
   },
   // A28 · top-tier-title
@@ -982,26 +1226,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['teen', 'adult', 'lateCareer'],
     gate: 'title-at-the-highest-step',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'The big one. You rang and couldn\'t finish a sentence, and neither could I.',
         caption: 'Neither of us finished a sentence.',
         line: 'No sentences, at either end.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'The big one. You said you had been telling people for years and that nobody had listened.',
         caption: 'She had been saying so for years.',
         line: 'Nobody listened. They do now.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'The big one. You said the last game had felt like it belonged to somebody else.',
         caption: 'The last game belonged to somebody else.',
         line: 'That was the only part she mentioned.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'The big one. You asked whether we had seen it. We had seen it.',
         caption: 'She asked whether we had seen it.',
         line: 'We had seen it.',
-      },
+      }],
     },
   },
   // A29 · years-at-the-top
@@ -1011,26 +1255,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['adult', 'lateCareer'],
     gate: 'a-run-of-seasons-inside-the-threshold',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'Years of it now. You still ring about the food and the courts and the crowd, exactly as you did the first time.',
         caption: 'The same phone calls as the first year.',
         line: 'She hasn\'t changed the call.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'Years of it now. You said staying there is harder than getting there and dared anybody to argue.',
         caption: 'Harder to stay, she says.',
         line: 'Nobody argued.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'Years of it now. You said you had stopped noticing it, and then you noticed that.',
         caption: 'She had stopped noticing.',
         line: 'Then she noticed that.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'Years of it now. You still send next week before you mention this one.',
         caption: 'Next week first, this week later.',
         line: 'I hear about the next one first. Always have.',
-      },
+      }],
     },
   },
   // A35 · first-number-one
@@ -1040,26 +1284,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['teen', 'adult', 'lateCareer'],
     gate: 'first-time-at-the-top-of-the-world-list',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'Number one in the world. You rang to read me the list down the phone, and then you read it again to be sure.',
         caption: 'She read us the list, and then read it again.',
         line: 'Top of the list, and she still checked.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'Number one in the world. You said you had never doubted it, and dared me to say that I had.',
         caption: 'She never doubted it, she says.',
         line: 'She never doubted it. She will say so.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'Number one in the world. You said you kept waiting to feel different, and that you mostly felt the same.',
         caption: 'She waited to feel different.',
         line: 'Mostly the same, she said.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'Number one in the world. You mentioned it after the practical things, and only because I asked.',
         caption: 'She mentioned it last, and only when asked.',
         line: 'After the practical things.',
-      },
+      }],
     },
   },
   // A36 · first-number-one-junior
@@ -1069,26 +1313,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['young', 'teen'],
     gate: 'first-time-at-the-top-of-the-junior-list',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'Top of the junior list. You rang to tell me, and I could hear you smiling the whole way through.',
         caption: 'First on the junior list, and smiling.',
         line: 'I heard the smile before the news.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'Top of the junior list. You said it was about time, and then asked what the next one was.',
         caption: 'About time, she says.',
         line: 'Already asking what comes next.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'Top of the junior list. You said it was odd to be first at something and not know what to do with your hands.',
         caption: 'First, and not sure what to do with her hands.',
         line: 'First on a list, and fidgeting.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'Top of the junior list. You sent it as one line at the bottom of a message about something else.',
         caption: 'She put it at the bottom of the message.',
         line: 'Bottom of the message. Top of the list.',
-      },
+      }],
     },
   },
   // A37 · first-number-one-title
@@ -1098,26 +1342,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['teen', 'adult', 'lateCareer'],
     gate: 'highest-title-and-first-time-at-the-top-of-the-world-list-in-one-week',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'The big one, and number one in the world with it. You rang with both at once, and laughed at how it sounded.',
         caption: 'She told us both at once, and laughed.',
         line: 'One would have been plenty. She brought both.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'The big one, and number one in the world with it. You said both had always been the plan, and asked who wanted to argue now.',
         caption: 'Both were the plan, she says.',
         line: 'A title and a list. Not much left to argue with.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'The big one, and number one in the world with it. You said it felt like a single thing, and you couldn\'t tell which part was louder.',
         caption: 'She said it felt like a single thing.',
         line: 'I heard the title and the list. She heard one thing.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'The big one, and number one in the world with it. You asked whether we had eaten, and told us the news afterwards, almost in passing.',
         caption: 'She asked if we had eaten, then told us.',
         line: 'Both of them, and her first question was about us.',
-      },
+      }],
     },
   },
   // A30 · graduated
@@ -1127,26 +1371,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['teen', 'adult'],
     gate: 'college-finished',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'You finished it. You said the hat was ridiculous and then wore it all afternoon.',
         caption: 'The hat was ridiculous. She kept it on.',
         line: 'All afternoon in that hat.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'You finished it. You said nobody had believed you could do both, and you were right, and we were among them.',
         caption: 'Nobody believed she would do both.',
         line: 'We were among the doubters.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'You finished it. You said the last week of it was the hardest week of the year, and you have had some weeks.',
         caption: 'The hardest week of the year.',
         line: 'And she has had some weeks.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'You finished it. You told us the date, and then the time, and then eventually that you had passed.',
         caption: 'The date, the time, then the news.',
         line: 'The news came third.',
-      },
+      }],
     },
   },
   // A31 · farewell
@@ -1156,26 +1400,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['adult', 'lateCareer'],
     gate: 'the-last-match',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'The last one. You came off talking about the heat and the food and the long ride back, and not about the tennis at all.',
         caption: 'She talked about everything except the tennis.',
         line: 'She saved that part for later, I think.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'The last one. You had a view on it before the bags were packed, and I got all of it on the phone that night.',
         caption: 'A view on it before the bags were packed.',
         line: 'She always did have the last word.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'The last one. You stayed on the court after everybody had gone, and I let you.',
         caption: 'She stayed after everybody had gone.',
         line: 'I let her have the court.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'The last one. You folded everything into the bag the same way you always have.',
         caption: 'The bag, packed the usual way.',
         line: 'Same folding. Last time.',
-      },
+      }],
     },
   },
   // A32 · career-ended
@@ -1185,26 +1429,26 @@ export const ALBUM_CORPUS: readonly AlbumOccasion[] = [
     bands: ['adult', 'lateCareer'],
     gate: 'the-career-ended',
     voices: {
-      sunny: {
+      sunny: [{
         note: 'That is the album. You will tell it better than I have written it, and louder.',
         caption: 'She will tell it louder.',
         line: 'Her version is better.',
-      },
-      fiery: {
+      }],
+      fiery: [{
         note: 'You will disagree with some of this, and I have left room. That is the album.',
         caption: 'She will disagree with some of it.',
         line: 'I left room for the argument.',
-      },
-      deep: {
+      }],
+      deep: [{
         note: 'That is the album. You will find the one week I have got wrong, and you will be right.',
         caption: 'She will find the week I got wrong.',
         line: 'She will be right, too.',
-      },
-      quiet: {
+      }],
+      quiet: [{
         note: 'You will read it all the way through and say very little, and I will know. That is the album.',
         caption: 'She will read it all and say little.',
         line: 'I will know what it meant.',
-      },
+      }],
     },
   },
 ]

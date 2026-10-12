@@ -45,9 +45,23 @@ function refsIn(value: unknown, acc: CopyRef[] = []): CopyRef[] {
   return acc
 }
 
+// ⭐ r49 №2 (12.10): the baked «Jun 3 – Jun 9» is no longer a bare field – `albumText.ts` re-spells it
+// through the twelve `Month {day}` keys (src/i18n/dates.ts), so the probe marks those keys too, and the
+// expected re-rendering restates RU-13D's rule from the ENGLISH label's own tokens: a same-month week
+// collapses («Jun<3–9>»), a cross-month one gives each month its key («Jun<30> – Jul<6>»). An
+// unparseable label passes through bare, which is still what the display module promises.
+const MONTH_OF = { Jan: 'January', Feb: 'February', Mar: 'March', Apr: 'April', May: 'May', Jun: 'June', Jul: 'July', Aug: 'August', Sep: 'September', Oct: 'October', Nov: 'November', Dec: 'December' } as const
+const monthProbe = (): Record<string, string> => Object.fromEntries(Object.entries(MONTH_OF).map(([mon, full]) => [`${full} {day}`, `${mon}<{day}>`]))
+const SPAN = /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d+) – (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d+)$/
+function probedSpan(label: string): string {
+  const m = SPAN.exec(label)
+  if (!m) return label
+  return m[1] === m[3] ? `${m[1]}<${m[2]}–${m[4]}>` : `${m[1]}<${m[2]}> – ${m[3]}<${m[4]}>`
+}
+
 /** a catalog that marks every key the book can ask for: `K<index>`, the holes kept so the params are visible */
 function probeOf(book: AlbumBook): { catalog: Record<string, string>; render: (c: CopyRef) => string } {
-  const catalog: Record<string, string> = {}
+  const catalog: Record<string, string> = monthProbe()
   for (const ref of refsIn(book)) {
     if (catalog[ref.k] !== undefined) continue
     const holes = [...new Set([...ref.k.matchAll(/\{(\d+)\}/g)].map((m) => m[1]!))]
@@ -122,7 +136,8 @@ describe('L3-6 – the album draws the refs the engine sends', () => {
         s.frames.forEach((f) => add(f.caption, f.captionC))
         if (s.note) {
           add(s.note.text, s.note.textC)
-          add(s.note.dateLabel, undefined)
+          // ⭐ r49 №2: the date line re-renders through the Month {day} keys (see probedSpan above)
+          if (s.note.dateLabel) expectedProbe.add(probedSpan(s.note.dateLabel))
           add(s.note.ageLabel, s.note.ageLabelC)
           s.note.lines.forEach((l, i) => add(l, s.note!.linesC?.[i] ?? undefined))
         }
@@ -130,7 +145,7 @@ describe('L3-6 – the album draws the refs the engine sends', () => {
           add(s.ticket.gate, s.ticket.gateC)
           add(s.ticket.row, s.ticket.rowC)
           add(s.ticket.seat, s.ticket.seatC)
-          add(s.ticket.dateLabel, undefined)
+          if (s.ticket.dateLabel) expectedProbe.add(probedSpan(s.ticket.dateLabel))
         }
         if (s.tag) {
           add(s.tag.place, undefined)
@@ -208,16 +223,21 @@ describe('L3-6 – the album draws the refs the engine sends', () => {
     }
   })
 
-  it('a field with no ref draws as the engine wrote it under any locale: the date line, the venue and the tier on a pass', async () => {
+  it('a field with no ref draws as the engine wrote it under any locale (the venue and the tier on a pass) – and the baked date line re-renders through the month keys', async () => {
+    // ⭐ r49 №2 (12.10) RE-AIM, NOT RELAXED: «the date line draws as the engine wrote it» was the
+    // pre-display-module world. The baked «Jun 3 – Jun 9» now re-spells through the Month {day} keys
+    // at display (albumText.ts -> src/i18n/dates.ts); the venue, the tier and the patch stay bare.
     const book = posedBooks().find((b) => b.label === 'ended natural / lean 1')!.book
     const sheet = book.sheets.find((s) => s.ticket)!
-    installCatalog('ru', { [sheet.ticket!.gateC!.k]: 'GATE<{0}>' })
+    installCatalog('ru', { [sheet.ticket!.gateC!.k]: 'GATE<{0}>', ...monthProbe() })
     await setLocale('ru')
     const mapped = shownSheet(sheet)
     expect(mapped.ticket!.gate).toBe(`GATE<${sheet.ticket!.gateC!.p![0]}>`)
     expect(mapped.ticket!.venue).toBe(sheet.ticket!.venue)
     expect(mapped.ticket!.tier).toBe(sheet.ticket!.tier)
-    expect(mapped.ticket!.dateLabel).toBe(sheet.ticket!.dateLabel)
+    expect(sheet.ticket!.dateLabel, 'the posed pass carries a real baked date').toMatch(SPAN)
+    expect(mapped.ticket!.dateLabel).toBe(probedSpan(sheet.ticket!.dateLabel))
+    expect(mapped.ticket!.dateLabel).not.toBe(sheet.ticket!.dateLabel)
     expect(mapped.patch?.name).toBe(sheet.patch?.name)
   })
 

@@ -7,7 +7,7 @@ import { computed } from 'vue'
 import { TIERS } from '../engine/season/calendar'
 import type { TierId } from '../engine/season/types'
 import type { CountingResult } from '../shared/protocol'
-import { weekLabel } from '../shared/dates'
+import { weekLabel } from '../i18n/dates'
 import { useStartYear } from '../composables/startYear'
 import { t } from '../i18n'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.

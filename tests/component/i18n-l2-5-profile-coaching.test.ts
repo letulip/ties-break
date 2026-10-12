@@ -566,6 +566,8 @@ describe('L2-5 xx sweep – no unwrapped literal in the frames, and the phone st
     // ⚠ NO NAME-SHAPED PATTERNS HERE (a «First Last» regex swallows «Coach Market» and a «Word» regex swallows «Skills» – the first mutation run of this
     // file proved it): a name is allowed because the SNAPSHOT carries it (see `ENGINE_PROSE`), never because it is capitalised.
     /^W\d+( \d{4}| ’\d{2})?$/, /^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d+(?: – (?:[A-Za-z]+ )?\d+)?(?:, \d{4})?$/, /^\$[\d,.]+[KMB]?$/, /^[−-]?\$[\d,.]+/,
+    // ⭐ r49 №2 ф2 (12.10): the week labels fill the FORMAT REGISTRY under xx now (src/i18n/formats.ts)
+    /^Нед\. \d+ · ’\d{2}$/, /^Неделя \d+ · \d{4}$/,
     /^(?:Local|Regional|National|Junior|Pro|W\d+|J\d+|WTA|ITF)\b/, /^\d+°?$/, /^#\d+$/, /^[\d,]+$/, /^\d+(?:-\d+)*$/, /^[—–-]$/, /^\?$/, /^%$/, /^\d+(?:\.\d+)?%$/,
     // the market's headline is the kid's NAME and the separator that follows it: a text node, not copy
     /^[A-Z][a-z]+ [A-Z][a-z]+ ·$/,

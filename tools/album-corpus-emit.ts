@@ -78,7 +78,9 @@ const ARRAY_OPEN = 'export const ALBUM_CORPUS: readonly AlbumOccasion[] = ['
 /** The emitter's own one-line comment: written when nothing is carried, so it is re-derived and never carried. */
 const GENERATED_STUB = /^ {2}\/\/ A\d+ · [a-z][a-z0-9-]*$/
 const ID_LINE = /^ {4}id: '([^']*)',$/
-const VOICE_LINE = /^ {6}(sunny|fiery|deep|quiet): \{$/
+/** ⚠ r49 №7 – the head of a voice's VARIANT ARRAY (`sunny: [{`). The bare-brace spelling is still
+ *  accepted so the one migration run could read the pre-variant module it was replacing. */
+const VOICE_LINE = /^ {6}(sunny|fiery|deep|quiet): \[?\{$/
 
 /** ⭐ THE COMMITTED MODULE, READ FOR THE TWO THINGS IT HOLDS THAT THE DOCUMENT DOES NOT, keyed by occasion id.
  *  ⚠ It throws on a shape it does not recognise, for the parser's reason: a module the emitter cannot read is
@@ -151,12 +153,17 @@ function emitOccasion(row: AlbumRow, carried: Carried | undefined): string[] {
   out.push(`    gate: ${row.gate === null ? 'null' : q(row.gate)},`)
   out.push('    voices: {')
   for (const voice of carried?.voices ?? ALBUM_VOICES) {
-    const hand = row.voices[voice]
-    out.push(`      ${voice}: {`)
-    out.push(`        note: ${q(hand.note)},`)
-    out.push(`        caption: ${q(hand.caption)},`)
-    out.push(`        line: ${q(hand.line)},`)
-    out.push('      },')
+    // ⭐ r49 №7 – a voice is an ARRAY of variant hands now; `[{` … `}],` keeps a pool of one at the
+    // same five lines a single hand always took, so the migration diff reads as brackets, not a move.
+    const pool = row.voices[voice]
+    out.push(`      ${voice}: [{`)
+    pool.forEach((hand, k) => {
+      if (k > 0) out.push('      }, {')
+      out.push(`        note: ${q(hand.note)},`)
+      out.push(`        caption: ${q(hand.caption)},`)
+      out.push(`        line: ${q(hand.line)},`)
+    })
+    out.push('      }],')
   }
   out.push('    },')
   out.push('  },')
@@ -185,8 +192,8 @@ export function emit(corpus: AlbumCorpus = readAlbumCorpus(), existing: string =
   const counts = albumCounts(corpus)
   const authored = counts.notes + counts.captions + counts.lines + counts.arcStrings
   const head = `// ⭐⭐⭐ THE ALBUM'S HANDWRITING – **GENERATED FROM \`docs/specs/album-corpus-2026-09.md\`, NEVER
-// RETYPED.** ${counts.occasions} occasions × ${ALBUM_VOICES.length} voices × 3 registers = ${counts.notes + counts.captions + counts.lines} strings, plus the arc's ${counts.arcStrings} across
-// ${counts.arcCells} cells: **${authored} authored strings in total.**
+// RETYPED.** ${counts.occasions} occasions, ${ALBUM_VOICES.length} voices, 3 registers, every variant hand counted (r49 №7):
+// ${counts.notes + counts.captions + counts.lines} strings, plus the arc's ${counts.arcStrings} across ${counts.arcCells} cells – **${authored} authored strings in total.**
 //
 // ⭐⭐ THE THREE REGISTERS ARE THREE DIFFERENT THINGS A PARENT DOES ON A PAGE, and his 19.09
 // confirmation («всё верно») is what fixes them: the **note** speaks TO her («First day on court. You
@@ -251,7 +258,11 @@ export interface AlbumOccasion {
   bands: readonly AlbumBand[]
   /** \`null\` where the kind alone is the occasion; otherwise the named condition, resolved engine-side. */
   gate: string | null
-  voices: Record<Temperament, AlbumHand>
+  /** ⭐ r49 №7 – AN ARRAY OF VARIANT HANDS per voice. The book walks a pool deterministically –
+   *  the occasion's N-th firing in a career takes \`variants[N % pool]\`, a choice, never a draw –
+   *  so a pool of one reads exactly as the single hand always did. The document declares a variant
+   *  with a dense \`#2\`/\`#3\` ordinal on the voice row; today every pool is 1. */
+  voices: Record<Temperament, AlbumHand[]>
 }
 
 /** ⭐ THE ARC – «сначала она была такой-то, а потом стала такой-то» (his addition, 19.09). The voice

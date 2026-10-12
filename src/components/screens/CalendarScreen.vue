@@ -86,7 +86,9 @@ import { useDayCrossSweep } from '../../composables/dayCrossSweep'
 // ⭐⭐ ROUND 42 #20 (ruled B) – the leave-anyway guard and its one DRAFT line, shared with the shell
 // so the two projections of the week press cannot drift (see the composable's header).
 import { softLeaveLine, useSoftLeaveGuard } from '../../composables/softLeave'
-import { weekDateLine, weekDayNumbers, weekLabel, weekRange } from '../../shared/dates'
+import { weekDayNumbers } from '../../shared/dates'
+import { weekLabel } from '../../i18n/dates'
+import { weekDateLine, weekRange } from '../../i18n/dates'
 import { formatCents } from '../../shared/money'
 import { entryFeeText } from '../../composables/entryFee'
 // D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with Season.

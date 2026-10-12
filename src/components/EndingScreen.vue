@@ -21,7 +21,8 @@ import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { portraitUrl } from '../art/preload'
-import { weekLabel, seasonYear } from '../shared/dates'
+import { seasonYear } from '../shared/dates'
+import { weekLabel } from '../i18n/dates'
 import { formatCentsCompact } from '../shared/money'
 import { t, eventText } from '../i18n'
 import { ENDING_BLURB } from '../engine/ending'
@@ -429,8 +430,12 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         <p v-if="blurb" class="album-blurb">{{ blurb }}</p>
 
         <!-- POINT 3: one hard fact off the milestone itself, never a computed summary. -->
+        <!-- ⚠ ROUND 49 №15 (12.10): the second week line is GONE by his word (the verbatim quote
+             lives beside the retired `.album-when` block in this file's style section – templates
+             carry no Cyrillic by the copy rule). The date already rides inside `closing.fact`
+             (album.ts slot 7 opens the fact with the week label), so this `album-when` repeat was
+             the same week said twice. The element and its CSS left together. -->
         <p v-if="closing.fact" class="album-fact">{{ eventText({ text: closing.fact, c: closing.factC }) }}</p>
-        <p v-if="closing.week !== null" class="album-when">{{ weekLabel(closing.week, startYear) }}</p>
       </div>
 
       <!-- THE HAND-OFF (section 5.6): an OFFER, not a credits roll. -->
@@ -524,16 +529,12 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
             <div><dt>{{ t('Seasons') }}</dt><dd class="ending-fig">{{ view.seasonsPlayed }}</dd></div>
           </dl>
         </div>
-        <!-- ⭐⭐⭐ ROUND 48 #4 – THE VOICE FLIPPED TO THE PARENT, AND THIS IS THE LINE THAT WAS SHOWN TO HIM. It read
-             «She said one more year N times.» The owner, 07.10 (translated – no Cyrillic may appear in a template):
-             it was not her who said it, it was us who proposed it, so reword it. «One more year» is the button the
-             PARENT presses on the retirement card and `oneMoreYearCount` counts those presses, so the line credits
-             the one who said it. The sentence is the draft R47-S4 of round 47's ledger – the one marked as his own
-             reading – verbatim, and the pluralisation is as it was. ⚠ THE FINAL OFFER IS NOT HERE: «Nobody asked
-             her this time. She said it herself» lives in engine/ending.ts and is truly hers. -->
-        <p v-if="view.oneMoreYearCount > 0" class="ending-note">
-          {{ t('You said one more year') }} <b class="ending-fig">{{ view.oneMoreYearCount }}</b> {{ view.oneMoreYearCount === 1 ? t('time.') : t('times.') }}
-        </p>
+        <!-- ⭐⭐⭐ ROUND 49 №9 (12.10) – THE ONE-MORE-YEAR NOTE IS GONE BY HIS WORD (the verbatim
+             quote lives beside the №15 record in this file's style section – templates carry no
+             Cyrillic by the copy rule). It arrived in round 47 (R47-S4), flipped voice in round 48
+             #4, and leaves whole here – the element, not a v-if. `oneMoreYearCount` stays on the
+             wire: the natural-ending blurb still reads it to decide whether its own sentence is
+             true (the 10.10 ruling above). -->
 
         <!-- ⭐ ROUND 29 PART TWO #10 – THE ACADEMY LINE, the-shop §10.4 settled by the owner (his
              ruling is quoted on `AcademyEpilogue` in shared/protocol/career.ts – a template may
@@ -706,9 +707,18 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
    480 IS THE NUMBER THE CONTENT ALREADY ASKED FOR, not a taste: `.ending-totals` below caps itself
    at 460, `.ending-fork` at 360, `.album-photo` at `min(280px, 78vw)` and the three prose blocks at
    34–36ch. Nothing on this screen wants to be wider than 460, so the column is that plus the room
-   the arrows sit in. ⚠ Below 768 there is no rule at all, so the phone is untouched. */
+   the arrows sit in. ⚠ Below 768 there is no rule at all, so the phone is untouched.
+
+   ⭐ ROUND 49 №13 (12.10): THE BOOK IS THE NAMED EXCEPTION – `:not(.ending-book)`. «Nothing on this
+   screen wants to be wider than 460» stopped being true the day the real album was laid over this
+   takeover (R46 #18): `section.ending-book` hosts the in-career ladder, 600 / 640 / 700 from
+   768 / 1024 / 1280 since №13's regrade, and 480 < 600 before the two 12px column-gaps its grid
+   pays are even counted – the cap was squeezing the book below its own first wide rung. Excluded
+   at the selector rather than overridden, because the book takes NONE of this rule: it is `bare`
+   and full-bleed like the in-career album, `.ending` is a flex column that stretches it anyway,
+   and a centred-480 declaration that is always beaten is a rule lying about itself. */
 @media (min-width: 768px) {
-  .ending > section {
+  .ending > section:not(.ending-book) {
     width: 100%;
     max-width: 480px;
     margin-inline: auto;
@@ -779,13 +789,12 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
   color: var(--ink-soft);
 }
 
-.album-when {
-  margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-dim);
-}
+/* ⚠ ROUND 49 №15 (12.10): `.album-when` stood here and is GONE with its element, by the owner's
+   word – «второй W50 '50 на отдельной строке убрать, он лишний». The fact line above already opens
+   with the same week label, so the date was said twice.
+   ⭐⭐⭐ AND №9, THE SAME DAY (the template's one-more-year record keeps its quote here): «еще один
+   год говорили мы... убрать всю строку» – his words, verbatim; the 10.10 half of that ruling was
+   «при 0 надо починить». */
 
 .ending-foot {
   margin-top: 26px;

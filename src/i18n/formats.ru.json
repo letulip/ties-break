@@ -1,4 +1,5 @@
 {
+  "dates.seasonWeekRange": "Нед. {a}–{b}",
   "dates.weekLabel": "Нед. {week} · ’{yy}",
   "dates.weekYearLabel": "Неделя {week} · {year}"
 }

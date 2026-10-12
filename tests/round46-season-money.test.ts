@@ -258,6 +258,19 @@ describe('⭐ round 46 #19 – the compact form: millions in «M», everything s
     expect(formatCentsCompact(1_250_000_00)).toBe('$1.3M')
     expect(formatCentsCompact(1_249_999_00)).toBe('$1.2M')
   })
+
+  // ⭐ R49 №16 (12.10) – the optional `fromCents` threshold: the Home budget tile (and the rail card
+  // round36-rail-dashboard.test.ts holds to it) abbreviates only from $10M, while the ending page
+  // keeps the default. The default arm is the parameter's own proof that it changed nothing.
+  it('takes an optional threshold – where the abbreviation starts moves, what it looks like does not', () => {
+    expect(formatCentsCompact(1_200_000_00), 'the default is untouched: compact from $1M').toBe('$1.2M')
+    expect(formatCentsCompact(9_990_000_00, 10_000_000_00), '$9.99M under a $10M threshold: the full form').toBe('$9,990,000')
+    expect(formatCentsCompact(10_000_000_00, 10_000_000_00), 'exactly $10M compacts').toBe('$10.0M')
+    expect(formatCentsCompact(-10_200_000_00, 10_000_000_00), 'a debt past the threshold keeps its sign').toBe('-$10.2M')
+    // The threshold rides the same ROUNDED-dollars law as the $1M boundary above – one law, not two.
+    expect(formatCentsCompact(9_999_999_60, 10_000_000_00)).toBe('$10.0M')
+    expect(formatCentsCompact(9_999_999_49, 10_000_000_00)).toBe('$9,999,999')
+  })
 })
 
 // ⭐⭐⭐ ROUND 46, MORNING ITEM 4 (06.10) – A SALE THAT FIXED A LOSS IS A REAL EXPENSE, AND ONLY A LOSS.

@@ -256,7 +256,9 @@ describe('the album', () => {
       // ⭐ RE-AIMED 07.10 BY HIS ROUND 48 #4: it read «She said one more year 4 times» and the failure message said the count
       // «is not hers» – and it was not her who said it, it was the parent who proposed it (the owner's ruling, the draft
       // R47-S4 of round 47's ledger). The page line is the parent's now; the count is the same count.
-      expect(w.text(), `${type}: the count on the foot is not the parent's`).toContain('You said one more year 4 times')
+      // ⚠ RE-AIMED AGAIN 12.10 (round 49 №9, «убрать всю строку»): the line itself left the page by the owner's word,
+      // so the sweep asserts its absence on every ending type. The count stays on the wire for the natural blurb's v-if.
+      expect(w.text(), `${type}: the one-more-year note survived №9`).not.toContain('You said one more year')
       w.unmount()
     }
   })

@@ -47,7 +47,7 @@ import { UPCOMING_WEEKS } from '../engine/world/constants'
 // the fold: the domestic table is a season race and the other two roll 52 weeks. Read, never
 // restated – see `tierOpensWhen`'s points clause.
 import { WINDOW_BY_TRACK } from '../engine/season/ranking'
-import { weekRange } from '../shared/dates'
+import { weekRange } from '../i18n/dates'
 import { t } from '../i18n'
 import { LADDER_POINTS_LABEL, type EntryCapUsage, type TierRefusal } from '../shared/protocol'
 import type { LadderTrack, TierId } from '../engine/season/types'

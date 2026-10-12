@@ -3403,6 +3403,40 @@ export function migrateSave(raw: unknown): WorldState {
     v = 93
   }
 
+  // ⭐⭐⭐ v93 -> v94 – THE WEDDING-MILESTONE NET (round 49 №8, 12.10 – «всё ещё не вижу свадебной
+  // фото в альбоме», a REOPENED owner complaint). NO new key anywhere: the step REPAIRS one row
+  // class. The album's ONLY source for the wedding page is the `type: 'wedding'` milestone
+  // (`albumBook.ts` onceCandidates), and that milestone's one writer is `landWedding` – which has
+  // stamped it in the same breath as the latch since both were born in ONE commit (eccbd578, the
+  // wedding itself, v83). So an ENGINE-BORN save cannot hold a married row without its milestone,
+  // and on every such save this step is the identity – the v88/v90/v91 shape. It exists for the save
+  // OUTSIDE that guarantee (a hand-carried world, an unknown intermediate build – №8 is exactly a
+  // long-lived real save this repo cannot read): married-state with no wedding milestone is a career
+  // whose album never hears of the wedding at all, forever.
+  // ⚠⚠ THE BACKFILL IS EXACT, NOT APPROXIMATED – the source field is `episode.latchedWeek`.
+  // `landWedding` sets `episode.latchedWeek = world.week` and captures
+  // `{ type: 'wedding', week: world.week, kind: episode.id }` in adjacent lines, so the latch IS the
+  // wedding week and the episode id IS the `kind`: the backfilled row is byte-identical to the one
+  // the landing would have captured. No engagement-week arithmetic is needed or used.
+  // ⚠ IDEMPOTENT PER EPISODE, by `milestoneKey`'s own identity for the type (`wedding:<episodeId>`):
+  // the row is written only where `latchedWeek` is a number AND no wedding milestone carries that
+  // episode's id – a second run, or a run over an engine-born save, adds nothing. The walk is
+  // row-level for v77's stated reason: a top-level `??=` can never reach inside `loveEpisodes`.
+  // ⚠ ZERO DRAWS, no sub-stream: pure state – the frozen MAIN capture (41550 / e6b0c709) is
+  // untouched by construction. Crafted witnesses (the backfill, the idempotency, both identities):
+  // tests/r49-wedding-album.test.ts.
+  if (v === 93) {
+    const rows = Array.isArray(save.milestones) ? (save.milestones as Milestone[]) : []
+    if (!Array.isArray(save.milestones)) save.milestones = rows
+    for (const episode of Array.isArray(save.loveEpisodes) ? (save.loveEpisodes as Partial<LoveEpisode>[]) : []) {
+      if (typeof episode.latchedWeek !== 'number' || typeof episode.id !== 'string') continue
+      const id = episode.id
+      if (rows.some((m) => m.type === 'wedding' && m.kind === id)) continue
+      rows.push({ type: 'wedding', week: episode.latchedWeek, kind: id })
+    }
+    v = 94
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

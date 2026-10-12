@@ -48,7 +48,7 @@ import { careerSnapshot } from '../helpers/career'
 import { TEAM_BUDGET_LABEL } from '../../src/composables/coachingBudget'
 import { createWorld, enterEvent, toSnapshot } from '../../src/engine/world'
 import type { SeasonEvent } from '../../src/engine/season/types'
-import { formatCents } from '../../src/shared/money'
+import { formatCents, formatCentsCompact } from '../../src/shared/money'
 import { weekLabel } from '../../src/shared/dates'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 import { DESKTOP, PHONE, TABLET, setViewport } from './fits'
@@ -235,8 +235,15 @@ describe('round 36 phase 6 – each card prints what the screen it shortcuts to 
 
     const onHome = home.find('.budget-total').text()
     // ⚠ REBUILT FROM THE SNAPSHOT rather than read back off the other component, so this cannot pass
-    // by comparing a thing with itself: the claim is that BOTH render `formatCents(fundsCents)`.
-    expect(onHome, "Home's Family-budget card prints the balance").toBe(formatCents(snap.fundsCents))
+    // by comparing a thing with itself: the claim is that BOTH render the same one formatter call.
+    // ⚠ RE-AIMED, R49 №16 (12.10) – that call is `formatCentsCompact(fundsCents, $10M)` now: from
+    // $10M the tile abbreviates («$10.2M», the ending page's own form), and below the threshold the
+    // compact form IS `formatCents`, byte for byte, so this career's figure did not move. The
+    // agreement claim beneath – the rail prints Home's exact string – is untouched; §2b holds the
+    // threshold itself with hand-written literals on both sides of $10M.
+    expect(onHome, "Home's Family-budget card prints the balance").toBe(
+      formatCentsCompact(snap.fundsCents, 10_000_000_00),
+    )
     expect(
       figure(dash)[0],
       'the rail card and the Family-budget card disagree about the balance',
@@ -325,6 +332,57 @@ describe('round 36 phase 6 – each card prints what the screen it shortcuts to 
     dash.unmount()
     season.unmount()
   })
+})
+
+// =================================================================================================
+// §2b – R49 №16: FROM $10M THE BALANCE ABBREVIATES, ON BOTH SURFACES AT ONCE
+// =================================================================================================
+// THE OWNER: «на домашнем экране в плитке бюджета надо наверное тоже сделать миллионы в сокращенном
+// варианте для отображения, если больше 10, например, писать 10М (10.2М и т.д. как на "последней
+// странице")». Below $10M the tile keeps the full sum; from $10M it is the ending page's own compact
+// form. The ending page itself (compact from $1M) is NOT moved by this – its figures are pinned in
+// r47-b1-ending-figures / r48-b1-ending-page, untouched.
+//
+// ⚠ THE EXPECTED STRINGS ARE HAND-WRITTEN LITERALS, never the formatter re-run, so a formatter that
+// drifted with its reader could not pass (round46-season-money's own rule); the SHARING claim – the
+// rail prints Home's exact string – rides each arm, which is what nets a threshold that moves on one
+// surface only: the §2 funds arm's fixture sits far below $10M and cannot see that drift.
+//
+// ⚠ MUTATION-VERIFIED (12.10): with the threshold argument dropped in HomeScreen.vue alone (compact
+// from $1M again), the $9.99M arm reddened on the tile's own string – expected '$9,990,000',
+// rendered '$10.0M' – while the two ≥$10M arms and §2's funds arm (fixture under $1M, where every
+// threshold agrees) stayed green: exactly the arm that tells «the tile compacts from $10M» from
+// «the tile compacts». Restored; all fourteen green.
+describe('r49 №16 – the budget tile abbreviates from $10M, and the rail moves with it', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    backing.clear()
+    document.body.innerHTML = ''
+  })
+  afterEach(() => setViewport(PHONE))
+
+  for (const [name, cents, text] of [
+    ['⭐ a $12.34M balance abbreviates to one decimal', 12_340_000_00, '$12.3M'],
+    ['⭐ a $9.99M balance is still the full figure', 9_990_000_00, '$9,990,000'],
+    ['⚠ a $10.2M DEBT abbreviates and keeps its sign', -10_200_000_00, '-$10.2M'],
+  ] as const) {
+    it(name, () => {
+      const snap = { ...careerSnapshot(4, 'r49-16-compact-tile'), fundsCents: cents }
+      const dash = mountDash(snap)
+      const home = mount(HomeScreen, {
+        props: { recapFresh: false },
+        global: { stubs: { teleport: true } },
+      })
+      const onHome = home.find('.budget-total').text()
+      expect(onHome, 'the tile prints the r49 №16 spelling').toBe(text)
+      expect(
+        figure(dash)[0],
+        'the rail card and the Family-budget card disagree about the balance',
+      ).toBe(onHome)
+      dash.unmount()
+      home.unmount()
+    })
+  }
 })
 
 // =================================================================================================

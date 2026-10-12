@@ -59,7 +59,7 @@ import {
 } from '../../src/feedback'
 import { request } from '../../src/worker/client'
 import { guardDeclaredShape, guardDeclaredVersion, SaveFileError } from '../../src/engine/saveGuard'
-import { isCopyRef, type CopyRef } from '../../src/shared/i18n'
+import { formatMessage, isCopyRef, type CopyRef } from '../../src/shared/i18n'
 import { careerSnapshot } from '../helpers/career'
 import { buildCatalog } from '../../tools/i18n-extract'
 import { listDocs, readRows, splitRow } from '../../tools/i18n-import'
@@ -79,6 +79,9 @@ const requestMock = vi.mocked(request)
 
 /** His approved Russian, as the importer compiled it. Every Russian expectation below is read from here by key. */
 const RU = JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string, string>
+/** ⭐ r49 №2 ф2 (12.10) – his compiled REGISTRY pattern (formats.ru.json), filled: the one way a Russian week form enters an expectation here. */
+const FORMATS = JSON.parse(readFileSync('src/i18n/formats.ru.json', 'utf8')) as Record<string, string>
+const weekPat = (week: number, yy: string): string => formatMessage(FORMATS['dates.weekLabel']!, { week, yy }, { locale: 'ru' })
 /** The LIVE catalog – the extractor walking the source as it stands, not the committed file (which `i18n:check` holds equal to it): a key the code stopped asking for must redden here. */
 const CATALOG = buildCatalog().catalog
 const SRC = (path: string): string => readFileSync(path, 'utf8')
@@ -527,8 +530,11 @@ describe('L2-11 completeness – the chrome is wired; the date formatter and the
 
   it('left raw on purpose, and asserted raw: the date formatter, the store\'s error text, and no engine edge – and the shared dialog\'s defaults are read through t()', () => {
     const more = SRC('src/components/screens/MoreScreen.vue')
-    // the last-played and saved dates keep ONE form across locales until the formatter rows are approved (§9.6)
-    expect(more).toContain("toLocaleString('en-GB'")
+    // ⭐ r49 №2 (12.10) RE-AIM, NOT RELAXED: «keep ONE form across locales until the formatter rows are
+    // approved» was the pre-display-module world. The month-bearing stamps follow the ACTIVE locale now
+    // («12 окт., 14:30» under ru); every locale that is not ru – en AND the xx probe – keeps the en-GB
+    // form the rows have always had, which is the half this pin still holds.
+    expect(more).toContain("toLocaleString(locale.value === 'ru' ? 'ru' : 'en-GB'")
     // the error text is a HOLE of the frame, not a key of its own – ⭐ L3-7 (10.10) RE-AIM, NOT RELAXED: it used to be the store's raw English («RU-13A asks for typed error codes: a classifier, not this wave»);
     // this is that wave, so the hole is now read THROUGH THE SENTENCE'S CODE (`errorText`): a code the build knows is the `t()` of that very sentence, any other is the raw message as before
     // (tests/i18n-l3-7-errors.test.ts holds each key equal to the engine's / the store's own spelling; tests/component/i18n-l3-7-errors-display.test.ts mounts it)
@@ -622,10 +628,21 @@ describe('L2-11 seams – a flip re-labels a mounted More and a blocking confirm
       ['DELETE-B', `DEL-CAREER<${NAMES.other}>`],
     ])
     expect(w.find(`[aria-label="Load save ${NAMES.saveOne}"]`).exists()).toBe(true) // no catalog row in the stand-in for this one: still English, and still carrying the player's save name
-    // what the player and the engine wrote is exactly as it was: save names, saved-at dates, week labels, career names and flags
+    // what the player and the engine wrote is exactly as it was: save names, week labels, career names and flags
+    // ⭐ r49 №2 (12.10) RE-AIM, NOT RELAXED: the saved-at stamps now FOLLOW the locale (MoreScreen's
+    // `fmtDate` re-tags `ru`; any other locale keeps en-GB), so the one column that moved is asserted
+    // as the ru form of the SAME timestamps – the player's names and the phase-2 week labels still hold.
+    const ruDate = (ts: number): string => new Date(ts).toLocaleString('ru', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
     expect(texts(w, 'table tbody td:first-child')).toEqual(before.nameCells)
-    expect(texts(w, 'table tbody td:nth-child(2)')).toEqual(before.dates)
-    expect(texts(w, 'table tbody td:nth-child(3)')).toEqual(before.weeks)
+    expect(texts(w, 'table tbody td:nth-child(2)')).toEqual([ruDate(f.slots[2]!.savedAt), ruDate(f.slots[3]!.savedAt)])
+    expect(texts(w, 'table tbody td:nth-child(2)')).not.toEqual(before.dates)
+    // ⚠ RE-AIMED 12.10 r49 №2 ф2 – the wiring round the pin was waiting for (spec :198): the week column is OUR
+    // formatter's output, never the player's data, so under ru it follows the locale through the FORMAT REGISTRY
+    // (src/i18n/formats.ts fills formats.ru.json – a stand-in catalog cannot move it, a pattern is not a key).
+    // The expectation is composed from the compiled file (`weekPat`), never typed; the en column stays pinned above.
+    const yy = String((yr ?? 2031) % 100).padStart(2, '0')
+    expect(texts(w, 'table tbody td:nth-child(3)')).toEqual([weekPat(3, yy), weekPat(4, yy)])
+    expect(texts(w, 'table tbody td:nth-child(3)')).not.toEqual(before.weeks)
     expect(before.weeks[0]).toBe(weekLabel(2, yr))
     expect(w.findAll('.career-name').map((n) => words(n.element).replace('ACTIVE-PILL', 'Active'))).toEqual(before.names.map((n) => n))
     // the status row: the operation noun is the `op|` key, the failure text stays the store's own words
@@ -986,8 +1003,10 @@ function widest(root: Element, vp: Viewport): { boxes: number; chars: number; li
 }
 
 /** What the §6 allowlist says, plus the shapes this screen prints that are DATA: a week label, a one-decimal size in the unit-less cell, the schema tag, and the
- *  date formatter's English form (§9.6: dates keep one form). The chrome around them is still charged. */
-const ALLOW: readonly RegExp[] = [...DEFAULT_ALLOW, /^W\d+ '\d\d$/, /^v\d+$/, /^\d{2} [A-Z][a-z]{2},? \d{2}:\d{2}$/]
+ *  date formatter's English form (§9.6: dates keep one form). The chrome around them is still charged.
+ *  ⚠ RE-AIMED 12.10 r49 №2 ф2: the week label fills the FORMAT REGISTRY under any non-English locale now (src/i18n/formats.ts), so under `xx` the shape is the
+ *  registry's form – an ENGLISH `W3 '31` here would be a leak, which is exactly what phase 2 makes it. */
+const ALLOW: readonly RegExp[] = [...DEFAULT_ALLOW, /^Нед\. \d+ · ’\d{2}$/, /^v\d+$/, /^\d{2} [A-Z][a-z]{2},? \d{2}:\d{2}$/]
 /** What the player and the engine wrote onto this screen: names, save names, the seed. */
 const WRITTEN = new Set(['Mira', 'Mira 🇺🇸', NAMES.other, `${NAMES.other} 🇪🇸`, NAMES.saveOne, NAMES.saveTwo, SEED])
 
@@ -1171,6 +1190,18 @@ describe('L2-11b completeness – the names are wired; the formatters and the da
     expect(SRC('src/shared/countries.ts')).not.toMatch(/\bt\(|from '[^']*i18n'/)
   })
 
+  // ⭐ r49 №2 (12.10) – A DATED RE-READ, EVERY ASSERTION SURVIVES: the month-bearing dates ARE wired now,
+  // in the DISPLAY twin `src/i18n/dates.ts` (en delegates byte-for-byte; ru assembles RU-13D's forms
+  // through the catalog). What this case holds is unchanged and still on purpose: the SHARED formatters
+  // stay engine-importable and `t()`-free, their English output is frozen, and no formatter OUTPUT ever
+  // becomes a catalog key – the display module's keys are `mon|…`, `Month {day}` and `{span}, {year}`,
+  // never these shapes. ⚠ RE-AIMED 12.10 r49 №2 ф2 – the wiring round the pin was waiting for (spec
+  // :198): the week-only labels ride the FORMAT REGISTRY now (src/i18n/formats.ts fills
+  // formats.ru.json's patterns; `W{week} {year}` RETIRED into `dates.weekYearLabel` – one home per
+  // fact), and `weeksLeftBracket` alone went the catalog way – Russian pluralises the noun AND the
+  // verb, which one pattern sample cannot carry, so its two FIXED branch texts («(last week)»,
+  // «(1 week left)») are keys now and leave the formatter-output loop below; «(14 weeks left)» is
+  // still no key (the counted branch's key is `({weeks} weeks left)` – a hole, never a number).
   it('⚠ THE FORMATTERS ARE NOT WIRED, ON PURPOSE: `shared/dates.ts` and `shared/money.ts` are engine-importable and call no `t()`, and every English shape still prints as it did', () => {
     for (const f of ['src/shared/dates.ts', 'src/shared/money.ts']) expect(SRC(f), f).not.toMatch(/\bt\(|from '[^']*i18n'/)
     const FORMS: [string, string][] = [
@@ -1189,13 +1220,19 @@ describe('L2-11b completeness – the names are wired; the formatters and the da
       [weeksLeftBracket(6, 6), '(last week)'],
     ]
     for (const [got, expected] of FORMS) expect(got).toBe(expected)
-    // …and these ARE the English column of RU-13D's date rows – formatter OUTPUTS, not literals: no key in the catalog carries any of them, which is why those rows
-    // stay `dead` (and the APPROVED short-year row `W14 '31` stays `unmatched`: no key can be spelled with a number in it). The importer would need a hint cell or a pattern row.
-    for (const [, shape] of FORMS.filter(([, e]) => e !== 'W27 2031 · Jul 7 – Jul 13' && e !== 'Jul 7 – Jul 13' && e !== 'W27 2031')) expect(CATALOG.keys[shape], `«${shape}»`).toBeUndefined()
+    // …and these ARE the English column of RU-13D's date rows – formatter OUTPUTS, not literals: no key in the catalog carries any of them. ⚠ RE-AIMED 12.10 r49 №2 ф2: the two
+    // FIXED weeksLeftBracket branches left this loop – their whole texts are catalog keys now (see the note above); every other shape still compiles nowhere as a key.
+    for (const [, shape] of FORMS.filter(([, e]) => e !== 'W27 2031 · Jul 7 – Jul 13' && e !== 'Jul 7 – Jul 13' && e !== 'W27 2031' && e !== '(last week)' && e !== '(1 week left)')) {
+      expect(CATALOG.keys[shape], `«${shape}»`).toBeUndefined()
+    }
+    for (const branch of ['(last week)', '(1 week left)'] as const) expect(CATALOG.keys[branch], `«${branch}» is the bracket's own key since r49 №2 ф2`).toBeDefined()
     const approved = rowsFor("W14 '31").filter((r) => r.status === 'APPROVED') // RU-03 writes the same form too, as a DRAFT; RU-13D's row is the one APPROVED (§9.9d)
     expect(approved).toHaveLength(1)
     expect(approved[0]!.doc).toContain('formatters-countries')
-    expect(RU["W14 '31"], 'the approved short-year row compiles nowhere today').toBeUndefined()
+    // ⚠ RE-AIMED 12.10 r49 №2 ф2 (note updated in place, the assertion unchanged): the short-year row's route is the REGISTRY – it compiles into formats.ru.json
+    // (`dates.weekLabel`, read by src/i18n/formats.ts) and must NEVER appear in ru.json, because a formatter's output is not a catalog key. The undefined is now the
+    // proof of the ROUTE, not of an absence of wiring.
+    expect(RU["W14 '31"], 'the short-year row rides the registry, never the catalog').toBeUndefined()
   })
 
   it('the only UI-authored date words are already wired (L2-1 / L2-2): the twelve month names and the month-day shell read through `t()`; none is left over for this wave', () => {

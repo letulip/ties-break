@@ -170,7 +170,7 @@ voice in RU-05.
 | RU04-N11 | `Prize money` | `Призовые` |
 | RU04-N12 | winner-cheque title | `Чек победительницы на этом уровне` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом иначе `QUESTION` |
 | RU04-N13 | `The junior tour pays no prize money at any level` · junior zero title | `На юниорском туре призовых нет ни на одном уровне` |
-| RU04-N14 | `Winner` (`NextTournamentPanel.vue`) | `Победительница` |
+| RU04-N14 | `Winner` (`NextTournamentPanel.vue`) | `Победитель` – ⚙ 12.10 r49 №6 слово владельца |
 | RU04-N15 | `Spectators` | `Зрители` |
 | RU04-N16 | `About {spectators} people around the courts – atmosphere, not a factor in play` · crowd title | `Около {spectators} зрителей у кортов – это атмосфера, а не фактор матча` |
 | RU04-N17 | `First round` | `Первый круг` |
@@ -417,7 +417,7 @@ Finish labels use the same semantic source:
 
 | finish index | English | Russian |
 | --- | --- | --- |
-| 0 | `Champion` | `Победительница` |
+| 0 | `Champion` | `Победитель` – ⚙ 12.10 r49 №6 |
 | 1 | `Runner-up` | `Финалистка` |
 | 2 | `Semifinalist` | `Полуфиналистка` |
 | 3 | `Quarterfinalist` | `Четвертьфиналистка` |
@@ -440,9 +440,9 @@ feed a national placing through the knockout formatter.
 | RU04-T03 | unresolved-draw exit | `Skip all rounds` | `Пропустить все раунды` |
 | RU04-T04 | fact | `Surface` | `Покрытие` |
 | RU04-T05 | fact | `Prize money` | `Призовые` |
-| RU04-T06 | fact | `splash\|Winner` | `Победительнице` |
+| RU04-T06 | fact | `splash\|Winner` | `Победителю` – ⚙ 12.10 r49 №6 падеж следует за словом |
 | RU04-T07 | fact | `Spectators` | `Зрители` |
-| RU04-T08 | winner cheque title | `The winner's cheque at this tier` | `Приз победительнице на этом уровне` |
+| RU04-T08 | winner cheque title | `The winner's cheque at this tier` | `Приз победителю на этом уровне` – ⚙ 12.10 r49 №6 падеж следует за словом |
 | RU04-T09 | junior zero-prize title | `The junior tour pays no prize money at any level` | `На юниорском туре призовых нет ни на одном уровне` |
 | RU04-T10 | student zero-points title | `A student field awards no ranking points` | `Студенческий турнир не даёт рейтинговых очков` |
 | RU04-T11 | crowd title | `About {n} people around the courts – atmosphere, not a factor in play` | `Около {people} у кортов – это атмосфера, а не фактор матча` – ⚙ 11.10 ключ умер, ряд исторический – ключ уже переведён другим рядом (ряд с подписью зрителей выше по файлу) `QUESTION` |
@@ -576,7 +576,7 @@ rest of the field.
 
 | id | surface | English | Russian |
 | --- | --- | --- | --- |
-| RU04-T54 | champion status | `Champion` | `Победительница` |
+| RU04-T54 | champion status | `Champion` | `Победитель` – ⚙ 12.10 r49 №6 |
 | RU04-T55 | runner-up status | `Runner-up` | `Финалистка` |
 | RU04-T56 | champion line | `def. {opponent} in the Final` | `Обыграла {opponent} в финале` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
 | RU04-T57 | runner-up line | `lost to {opponent} in the Final` | `Уступила {opponent} в финале` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |

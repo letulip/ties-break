@@ -13,7 +13,7 @@
 //   §7 the pick keys              – the sub-stream keys of the touched files, pinned (nothing here may move a draw)
 //   §8 a career played to its end – natural ending off the bench, row by row
 //
-// WHAT THE WAVE DID, ALBUM HALF (commit 2): every string of the album BOOK has a ref beside it (the fields ending in `C` in shared/protocol/album.ts) and `composables/albumText.ts` draws them; the corpus's 456
+// WHAT THE WAVE DID, ALBUM HALF (commit 2): every string of the album BOOK has a ref beside it (the fields ending in `C` in shared/protocol/album.ts) and `composables/albumText.ts` draws them; the corpus's 636 (r49 №7 grew 456 → 636)
 // cells and the walls arc's 16 are seats (the string is the key), the chapter titles, the age labels, the ticket words and the checklist are `cp` keys; the finished book is also the heirloom, so on a
 // generation-two career the refs are stored beside the strings.
 //   §9  the posed set, English        – 129 books, 903 sheets, 28 epilogues: the digest of every string equals the PRE-WAVE tree's
@@ -678,8 +678,19 @@ describe('§8 a career played to a natural ending off the bench', () => {
 /** The pre-wave tree's (a083ebed) readings of the posed set, refs stripped: recomputed by tests/helpers/l3-6-album-set.ts on a throwaway worktree of that commit and on this tree - the same two values.
  *  ⚠ 10.10 – VIEWS moved by the owner's own ruling (the strong-repeat trim: four door receipts lost
  *  the clause their blurb tells; «берём все четыре» in chat, decisions.md). The diff behind the new
- *  value is ONLY those four strings – the books digest did not move, which is the cross-check. */
-const PRE_WAVE_BOOKS_DIGEST = '7e885813'
+ *  value is ONLY those four strings – the books digest did not move, which is the cross-check.
+ *  ⚠ 12.10 – BOOKS moved by r49 №4 (the owner: «дважды на одной странице»): the per-sheet caption
+ *  dedupe blanks a caption that literally repeats an earlier frame's on the SAME sheet, and the
+ *  posed set holds such sheets. The diff behind the new value is ONLY those blanked captions –
+ *  MEASURED, not asserted: with `dedupeSheetCaptions` mutated to identity this digest reads
+ *  `7e885813` (the 10.10 value) again, byte for byte, so nothing else in the books moved (the r49 №7
+ *  variant walk is `[0]` on every pool of one).
+ *  ⚠ 12.10 AGAIN, SAME DAY – BOOKS moved by r49 №7's CONTENT half (`1dd6672d`): seven occasions grew
+ *  real variant pools (injury-return 4, six others 3), so the walk now lands #2/#3 texts on repeat
+ *  firings and a same-sheet repeat takes the next variant instead of a blank. B10's control run in a
+ *  clean worktree WITHOUT its own diff reproduced this value byte for byte – the move belongs to the
+ *  pool growth, nothing later. */
+const PRE_WAVE_BOOKS_DIGEST = 'ab2195f5'
 const PRE_WAVE_VIEWS_DIGEST = '3d0366fb'
 
 describe('§9 the posed set of books, in English, is the pre-wave tree\'s byte for byte', () => {
@@ -832,12 +843,16 @@ describe('§10 every ref renders to its string; a field without one is exactly a
 // §11 – the corpus
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 describe('§11 the corpus: 38 occasions x 4 voices x (note, caption, line), and the walls arc', () => {
-  const cells = ALBUM_CORPUS.flatMap((o) => Object.entries(o.voices).flatMap(([voice, h]) => [`${o.id}/${voice}/note`, `${o.id}/${voice}/caption`, `${o.id}/${voice}/line`].map((id, i) => ({ id, text: [h.note, h.caption, h.line][i]! }))))
+  // r49 №7 – every variant hand is a cell; the ordinal joins the id from the second hand on (today every pool is 1, so no id moved)
+  const cells = ALBUM_CORPUS.flatMap((o) => Object.entries(o.voices).flatMap(([voice, pool]) => pool.flatMap((h, k) => [`${o.id}/${voice}${k > 0 ? `#${k + 1}` : ''}/note`, `${o.id}/${voice}${k > 0 ? `#${k + 1}` : ''}/caption`, `${o.id}/${voice}${k > 0 ? `#${k + 1}` : ''}/line`].map((id, i) => ({ id, text: [h.note, h.caption, h.line][i]! })))))
   const arc = Object.entries(ALBUM_ARC).flatMap(([dir, voices]) => Object.entries(voices).flatMap(([voice, h]) => [{ id: `arc/${dir}/${voice}/note`, text: h.note }, { id: `arc/${dir}/${voice}/line`, text: h.line }]))
 
-  it('the corpus is the size the report says: 38 ids, 456 cells, 16 arc cells - every one a plain string', () => {
+  it('the corpus is the size the report says: 38 ids, 636 cells, 16 arc cells - every one a plain string', () => {
+    // ⚠ RE-STAMPED 12.10 r49 №7: 456 → 636 – seven occasions grew variant pools (212 hands × 3
+    // registers; the pool table lives in tests/r49-album-variants.test.ts), and every variant cell
+    // is swept by the same plain-string law as the base ones.
     expect(ALBUM_CORPUS).toHaveLength(38)
-    expect(cells).toHaveLength(456)
+    expect(cells).toHaveLength(636)
     expect(arc).toHaveLength(16)
     for (const c of [...cells, ...arc]) expect(typeof c.text, c.id).toBe('string')
   })
@@ -862,7 +877,7 @@ describe('§11 the corpus: 38 occasions x 4 voices x (note, caption, line), and 
         expect(c, `${b.label} ${s.id}: ${text}`).toEqual({ k: text })
       }
     }
-    // the posed set reaches this many of the 456 corpus cells (a floor: the occasions a posed career can earn)
+    // the posed set reaches this many of the 636 corpus cells (456 before r49 №7) (a floor: the occasions a posed career can earn)
     expect(reached.size).toBeGreaterThan(150)
     console.log(`[L3-6] the posed set reaches ${reached.size} of ${cells.length} corpus cells (+ ${arc.length} arc cells, 8 of them in the set)`)
   })

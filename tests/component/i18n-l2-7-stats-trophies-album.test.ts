@@ -486,7 +486,8 @@ describe('L2-7 Russian smoke – ru.json read by key, no Cyrillic typed here', (
 describe('L2-7 xx sweep – no unwrapped literal in the stats frames, and the phone still holds longer words', () => {
   /** What is NOT frame copy and is allow-listed by SHAPE: week labels, ranks and bare numbers. ⚠ NO NAME-SHAPED PATTERNS (L2-5's rule): a name or an engine
    *  word is allowed because the SNAPSHOT or an engine table carries it – see `engineProse`. */
-  const ENGINE_BORN: RegExp[] = [/^W\d+( \d{4}| ['’]\d{2})?$/, /^[−-]?\$[\d,.]+[KMB]?$/, /^[−-]?\$[\d,.]+/, /^#\d+$/, /^\d+$/, /^\d+–\d+$/, /^[—–-]$/, /^…$/, /^\d{4}$/]
+  // ⭐ r49 №2 ф2 (12.10): the week labels fill the FORMAT REGISTRY under xx now (src/i18n/formats.ts)
+  const ENGINE_BORN: RegExp[] = [/^W\d+( \d{4}| ['’]\d{2})?$/, /^Нед\. \d+ · ’\d{2}$/, /^Неделя \d+ · \d{4}$/, /^[−-]?\$[\d,.]+[KMB]?$/, /^[−-]?\$[\d,.]+/, /^#\d+$/, /^\d+$/, /^\d+–\d+$/, /^[—–-]$/, /^…$/, /^\d{4}$/]
   const engineProse = (snap: Snapshot): ((leak: string) => boolean) => {
     const shorts = Array.from(JSON.stringify(snap).matchAll(/"([A-Z][a-z]+ [A-Z][a-z]+)"/g), (m) => formatShortName(m[1]!))
     const corpus = [JSON.stringify(snap), ...shorts, JSON.stringify(Object.values(TIERS).map((x) => x.label)), JSON.stringify(TIER_SHORT)].join('\n')
@@ -848,7 +849,8 @@ describe('L2-7b Russian smoke – the cabinet and the album chrome from the REAL
 })
 
 describe('L2-7b xx sweep – the cabinet and the album chrome', () => {
-  const ENGINE_BORN: RegExp[] = [/^W\d+( \d{4}| ['’]\d{2})?$/, /^[−-]?\$[\d,.]+/, /^#\d+$/, /^\d+$/, /^\d+–\d+$/, /^[—–-]$/, /^\+\d+$/, /^[x×]\d+$/, /^\d+x['’]\d\d$/]
+  // ⭐ r49 №2 ф2 (12.10): the week labels fill the FORMAT REGISTRY under xx now (src/i18n/formats.ts)
+  const ENGINE_BORN: RegExp[] = [/^W\d+( \d{4}| ['’]\d{2})?$/, /^Нед\. \d+ · ’\d{2}$/, /^Неделя \d+ · \d{4}$/, /^[−-]?\$[\d,.]+/, /^#\d+$/, /^\d+$/, /^\d+–\d+$/, /^[—–-]$/, /^\+\d+$/, /^[x×]\d+$/, /^\d+x['’]\d\d$/]
   const allow = [...DEFAULT_ALLOW, ...ENGINE_BORN]
   /** Every string leaf of an object, raw – NOT `JSON.stringify`, which escapes the quotation marks inside the album's handwriting. */
   const leaves = (v: unknown): string[] => (typeof v === 'string' ? [v] : v && typeof v === 'object' ? Object.values(v).flatMap(leaves) : [])

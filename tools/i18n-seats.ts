@@ -370,7 +370,7 @@ export const DECLARED_SEATS: readonly Seat[] = [
       {
         home: 'src/engine/world/albumCorpus.ts',
         keys: uniq([
-          ...ALBUM_CORPUS.flatMap((o) => Object.values(o.voices).flatMap((h) => [h.note, h.caption, h.line])),
+          ...ALBUM_CORPUS.flatMap((o) => Object.values(o.voices).flat().flatMap((h) => [h.note, h.caption, h.line])),
           ...Object.values(ALBUM_ARC).flatMap((d) => Object.values(d).flatMap((h) => [h.note, h.line])),
         ]),
       },

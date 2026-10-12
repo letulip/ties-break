@@ -45,13 +45,24 @@ afterEach(() => {
 
 describe('the allowlist – a shape is never a word, an engine word is an exact value', () => {
   it('no shape matches a heading, a name or a button (the L2-5 lesson: a capitalised unwrapped heading must not pass)', () => {
-    for (const word of ['Season Planner', 'Marco Ricci', 'Local Open', 'Continue', 'Quarterfinal', 'Professional', 'National Unranked', 'Close', 'Regional Championship – locked']) {
+    // ⭐ r49 №2 (12.10): «Oct 20–26, 2031» and «Jan '38» moved INTO this list from the one below – the
+    // month-bearing dates render through the display module (src/i18n/dates.ts) now, so an English month
+    // under xx/ru is a LEAK the carpet must report, and no shape may absolve it.
+    // ⭐ r49 №2 ф2 (12.10): «W45 '31» and «W45 2031» joined them – the week labels ride the format
+    // registry (src/i18n/formats.ts) now, so an ENGLISH week label is a leak too; a bare «W45» stays a
+    // tier-code shape (DEFAULT_ALLOW's `[WMT]\d+` – W15 is a tier), which phase 2 does not touch.
+    for (const word of ['Season Planner', 'Marco Ricci', 'Local Open', 'Continue', 'Quarterfinal', 'Professional', 'National Unranked', 'Close', 'Regional Championship – locked', 'Oct 20–26, 2031', "Jan '38", "W45 '31", 'W45 2031', "W45 '31 (last week)"]) {
       expect(SHAPES.filter((re) => re.test(word)).map(String), `«${word}» is copy`).toEqual([])
     }
   })
 
-  it('the shapes it does carry: week labels, dates, money, ranks, tier codes, the product mark', () => {
-    for (const shape of ['W12', "W45 '31", 'W45 2031', '$1,234', '-$86', '$254.4M', '#34', 'Oct 20–26, 2031', "Jan '38", 'x8', 'WTA 250', 'Ties Break', '12', '+3']) {
+  it('the shapes it does carry: the registry week forms, the save-row stamp, money, ranks, tier codes, the product mark', () => {
+    // ⭐ r49 №2 (12.10): the month shapes left the carried list (see above); the save-row stamp stays –
+    // under the xx probe `fmtDate` deliberately keeps its en-GB form (only ru re-tags it, MoreScreen.vue).
+    // ⭐ r49 №2 ф2 (12.10): the ENGLISH week forms left too (leaks now, list above); what a localized
+    // screen prints is the REGISTRY's forms, so «Нед. 45 · ’31», «Неделя 45 · 2031» and «Нед. 1–10»
+    // are the carried week shapes – formatter output whose words are his compiled cells', never copy.
+    for (const shape of ['W12', 'Нед. 45 · ’31', 'Неделя 45 · 2031', 'Нед. 1–10', '$1,234', '-$86', '$254.4M', '#34', '12 Oct, 14:30', 'x8', 'WTA 250', 'Ties Break', '12', '+3']) {
       expect(SHAPES.some((re) => re.test(shape)), `«${shape}» is not copy`).toBe(true)
     }
     expect(WORDS).toEqual(['hard', 'clay', 'grass', 'carpet'])

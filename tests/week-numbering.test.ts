@@ -220,9 +220,13 @@ const NOT_A_WEEK_LABEL = [
 ]
 
 describe('R11-6 guard – no surface prints a raw absolute week', () => {
-  it('the formatter is defined exactly once, in shared/dates.ts', () => {
-    const definitions = FILES.filter((f) => /export function weekLabel\b/.test(read(f)))
-    expect(definitions).toEqual(['shared/dates.ts'])
+  it('the formatter is defined exactly twice: the shape in shared/dates.ts, its display twin in i18n/formats.ts', () => {
+    // ⚠ RE-AIMED 12.10 r49 №2 ф2 – the wiring round the pin was waiting for (spec :198): the display twin
+    // (src/i18n/formats.ts, re-exported by i18n/dates.ts) DELEGATES to the shared formatter under `en` and fills
+    // the format registry's pattern under ru – so the English SHAPE is still decided exactly once, in
+    // shared/dates.ts, and the guard's claim widens by the one file whose job is the other locale's spelling.
+    const definitions = FILES.filter((f) => /export function weekLabel\b/.test(read(f))).sort()
+    expect(definitions).toEqual(['i18n/formats.ts', 'shared/dates.ts'])
   })
 
   it('no view file hand-rolls a "W<week>" label', () => {

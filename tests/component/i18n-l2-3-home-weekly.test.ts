@@ -386,6 +386,8 @@ describe('L2-3 xx sweep – no unwrapped literal in the frames, and the phone st
   const ENGINE_BORN: RegExp[] = [
     /^[A-Z][a-z]+ [A-Z]\.?$/, /^[A-Z][a-z]+$/, /^[A-Z][a-z]+ [A-Z][a-z]+$/,
     /^W\d+ \d{4}$/, /^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d+(?: – [A-Za-z]+ \d+)?(?:, \d{4})?$/, /^\$[\d,.]+[KMB]?$/, /^[−-]?\$[\d,.]+/,
+    // ⭐ r49 №2 ф2 (12.10): the week labels fill the FORMAT REGISTRY under xx now (src/i18n/formats.ts), so the shapes on screen are the registry's forms
+    /^Нед\. \d+ · ’\d{2}$/, /^Неделя \d+ · \d{4}$/,
     /^(?:hard|clay|grass|carpet)$/i, /^(?:Local|Regional|National|Junior|Pro|W\d+|J\d+|WTA|ITF)\b/,
     // the formatter's short names («P. Mansouri» – `formatShortName`), which is the engine's data shaped by shared/format.ts
     /^[A-Z]\. [A-Z][a-z]+$/,

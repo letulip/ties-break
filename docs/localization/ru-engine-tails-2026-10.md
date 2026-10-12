@@ -139,7 +139,7 @@ After the tails, 688 catalogue keys still had no Russian: 216 of the `screens` a
 | The twelve months (`RU21-FMT`) | [ru-formatters-countries-2026-10.md](ru-formatters-countries-2026-10.md) | 24 |
 | Injured-part week notes (`RU21-DWN`) | [ru-diary-week-notes-corpus-2026-10.md](ru-diary-week-notes-corpus-2026-10.md) | 10 |
 | Memory-card lines, weekly phrase pool (`RU21-DIA`) | [ru-diary-birthday-2026-10.md](ru-diary-birthday-2026-10.md) | 78 |
-| **New rows** (628 compile, 3 are `QUESTION`: `Import`, `Stats`, `def.`) | | **631** |
+| **New rows** (the compile/QUESTION split has moved twice since this record – the 11.10 re-points and r49 №9 on 12.10 – so it is not restated here: the live census is `tests/i18n-screens-scripts.test.ts` §1) | | **631** |
 | Scaffold cells filled in place (`SeasonSummaryDialog` 21, `WeekSpanReport` 3, `RankHelpDialog` 11, `ShootClashDialog` 14, `LocalePrompt` 2, `RailDashboard` 1, `Language` 1) | the 10.10 №40 sections of RU-04, RU-07, RU-01 and the sponsor ledger | **53** |
 
 ### What these rows keep from the earlier drafts

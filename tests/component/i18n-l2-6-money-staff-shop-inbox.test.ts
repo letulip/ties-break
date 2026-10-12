@@ -651,6 +651,8 @@ describe('L2-6 xx sweep – no unwrapped literal in the frames, and the phone st
     /^\d+(?:\.\d+)?%$/, /^\d+°?$/, /^#\d+$/, /^[\d,]+$/, /^\d+(?:-\d+)*$/, /^[—–-]$/, /^\?$/, /^%$/, /^·$/,
     // the week label with the bracket after a contract term: «W45 '34 (36 weeks left)» (`weekLabel` + `weeksLeftBracket`, shared/dates.ts – RU-13D's formatters)
     /^W\d+ ['’]\d{2} \((?:last week|\d+ weeks? left)\)$/,
+    // ⭐ r49 №2 ф2 (12.10): the week labels fill the FORMAT REGISTRY under xx now (src/i18n/formats.ts); the bracket beside them is a catalog key and brackets itself
+    /^Нед\. \d+ · ’\d{2}$/, /^Неделя \d+ · \d{4}$/,
   ]
   const ENGINE_PROSE = (snap: Snapshot): ((leak: string) => boolean) => {
     // everything the ENGINE wrote: the snapshot it handed over, plus what the screens read straight from engine tables and constants
@@ -1176,6 +1178,8 @@ describe('L2-6b Russian smoke – the shop and the inbox from the REAL ru.json',
 describe('L2-6b xx sweep – the shop, the inbox and the letter shell', () => {
   const ENGINE_BORN: RegExp[] = [
     /^W\d+( \d{4}| ['’]\d{2})?$/, /^[−-]?\$[\d,.]+[KMB]?$/, /^[−-]?\$[\d,.]+/, /^\d+(?:\.\d+)?%$/, /^\d+°?$/, /^#\d+$/, /^[\d,]+$/, /^\d+(?:-\d+)*$/, /^[—–-]$/, /^\?$/, /^%$/, /^·$/,
+    // ⭐ r49 №2 ф2 (12.10): the week labels fill the FORMAT REGISTRY under xx now (src/i18n/formats.ts) – the inbox meta and the letters' filed lines carry its forms
+    /^Нед\. \d+ · ’\d{2}$/, /^Неделя \d+ · \d{4}$/, /^Нед\. \d+ · ’\d{2} · .+$/,
     // the month axis of a chart («Jan '38») and its price span («$6,688 – $7,147»): `monthLabel` and money, formatters
     /^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ['’]\d\d$/, /^\$[\d,.]+ – \$[\d,.]+$/,
     // the units figure the shelf prints in the unit's own spelling («12.5»)

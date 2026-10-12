@@ -39,9 +39,9 @@ import type { PlayStyle, WorldEvent, WorldMatch } from '../../shared/protocol'
 // Market's Support-staff tab so the two entries on one path cannot disagree.
 import { psychologistFocusNudge } from '../../shared/protocol'
 import type { TierId } from '../../engine/season/types'
-import { weekLabel, weekRange } from '../../shared/dates'
+import { localizedWeekLabel, weekLabel, weekRange } from '../../i18n/dates'
 import { formatShortName } from '../../shared/format'
-import { formatCents } from '../../shared/money'
+import { formatCents, formatCentsCompact } from '../../shared/money'
 import { KID_ID, flipScore, practiceCaution } from '../../engine/world'
 // ⭐ ROUND 27 #2 – the fixture's own name for the bottom control's fifth label. One place spells it
 // (`collegeLeague.ts`), so this button and the takeover it opens cannot disagree about the name.
@@ -262,9 +262,11 @@ const conditionNote = computed(() => {
 })
 // The Memory card (D10): a past milestone + the painting from the band she was in THEN.
 const memory = computed(() => game.snapshot?.diary.memory ?? null)
-// ⭐ L3-4: the card's line and its date label, each drawn from its ref. The week label ("W14 '31") has none – it is a formatter's output – and prints as the text.
+// ⭐ L3-4: the card's line and its date label, each drawn from its ref. The week label ("W14 '31") has none – it is a formatter's
+// output – ⭐ r49 №2 ф2 (12.10): and is re-spelled at display through the format registry (`localizedWeekLabel`), the same boundary
+// the album's baked dates cross; «one year ago» rides its own ref and passes the parser unchanged.
 const memoryLine = computed(() => (memory.value ? eventText({ text: memory.value.line, c: memory.value.lineC }) : ''))
-const memoryWhen = computed(() => (memory.value ? eventText({ text: memory.value.whenLabel, c: memory.value.whenLabelC }) : ''))
+const memoryWhen = computed(() => (memory.value ? localizedWeekLabel(eventText({ text: memory.value.whenLabel, c: memory.value.whenLabelC })) : ''))
 const memoryArt = computed(() =>
   memory.value ? portraitArtUrl(memory.value.stage, memory.value.emotion) : '',
 )
@@ -465,7 +467,11 @@ const nextVenue = computed(() => {
 // folds (snapshot.finance.weekly12 – see world.ts financeSeries). Card and wallet read one ledger,
 // so they can never disagree about a week. The whole card opens the wallet.
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
-const funds = computed(() => formatCents(fundsCents.value))
+// ⭐ R49 №16 – his ask: «если больше 10, например, писать 10М (10.2М и т.д. как на "последней
+// странице")». From $10M the tile abbreviates with the ending page's own compact form; below that it
+// prints exactly what the wallet's big number prints. The rail's «In the account» card makes the
+// same call – round 36's agreement pin holds the two to one spelling.
+const funds = computed(() => formatCentsCompact(fundsCents.value, 10_000_000_00))
 
 // THE BUDGET SPARKLINE. The export draws a lime polyline with a soft area under it and one dot per
 // point, and the owner ruled we take it (A2, 28.07) over slice A's paired bars. Geometry is the

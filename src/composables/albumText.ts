@@ -7,13 +7,19 @@
 // Under English the result is the input, field for field - `eventText` renders a ref to the very characters it sits beside (tests/i18n-l3-6-endings-album.test.ts proves it for every sheet of the posed set).
 // It is a pure function of a sheet and the locale; it reads the locale through `eventText`, so a computed that calls it re-evaluates when the language flips.
 import { eventText } from '../i18n'
+import { localizedDateSpanLabel } from '../i18n/dates'
 import type { AlbumChapter, AlbumFrame, AlbumNote, AlbumSheetModel, AlbumTag, AlbumTicket } from '../shared/protocol'
 
 const frameOf = (f: AlbumFrame): AlbumFrame => ({ ...f, alt: eventText({ text: f.alt, c: f.altC }), caption: eventText({ text: f.caption, c: f.captionC }) })
 
+// ⭐ r49 №2 (12.10) – the baked «Jun 3 – Jun 9» (`albumBook.ts`'s `dateLabel`, a plain string on the
+// snapshot, no ref) is re-spelled here, the display boundary: the placement resolver measures the
+// MAPPED sheet (AlbumScreen maps before anything else sees one), so the geometry wraps the very
+// string the card draws. An unparseable label passes through unchanged.
 const noteOf = (n: AlbumNote): AlbumNote => ({
   ...n,
   text: eventText({ text: n.text, c: n.textC }),
+  dateLabel: n.dateLabel === null ? null : localizedDateSpanLabel(n.dateLabel),
   ageLabel: n.ageLabel === null ? null : eventText({ text: n.ageLabel, c: n.ageLabelC }),
   lines: n.lines.map((line, i) => eventText({ text: line, c: n.linesC?.[i] ?? undefined })),
 })
@@ -23,6 +29,7 @@ const ticketOf = (t: AlbumTicket): AlbumTicket => ({
   gate: eventText({ text: t.gate, c: t.gateC }),
   seat: eventText({ text: t.seat, c: t.seatC }),
   row: eventText({ text: t.row, c: t.rowC }),
+  dateLabel: localizedDateSpanLabel(t.dateLabel),
 })
 
 const tagOf = (t: AlbumTag): AlbumTag => ({ ...t, ageLabel: eventText({ text: t.ageLabel, c: t.ageLabelC }) })

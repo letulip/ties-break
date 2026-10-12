@@ -52,7 +52,7 @@ import { useDialogFocus } from '../composables/dialogFocus'
 import { onRadioGroupKey } from '../composables/radioGroupKeys'
 import StoreError from './ui/StoreError.vue'
 import { playSfx } from '../audio/sfx'
-import { weekLabel } from '../shared/dates'
+import { weekLabel } from '../i18n/dates'
 import { useStartYear } from '../composables/startYear'
 import { eventText, t, type CopyRef } from '../i18n'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.

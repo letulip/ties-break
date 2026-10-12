@@ -159,9 +159,13 @@ describe('E · the v92 -> v93 golden', () => {
   const v92 = load('v92.json') as WorldState
   const v93 = load('v93.json') as WorldState
   it('is the head, and the fixture is the real migration\'s own output on v92.json (the recipe every fixture since v25 uses)', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(93)
+    // ⚠ RE-AIMED 12.10 BY v94 (round 49 №8 – the wedding-milestone net): the head moved, so migrating v92.json now arrives
+    // at v94 – and the v94 step writes NOTHING on this fixture (its one episode was never latched), so the output is
+    // v93.json plus the version number alone. The claim this case was born for is unchanged: the v93 fixture is the real
+    // v92 -> v93 conversion, byte for byte.
+    expect(SAVE_SCHEMA_VERSION).toBe(94)
     expect(v93.schemaVersion).toBe(93)
-    expect(migrateSave(structuredClone(v92))).toEqual(v93)
+    expect(migrateSave(structuredClone(v92))).toEqual({ ...v93, schemaVersion: 94 })
   })
   it('converts EVERY row of the 403-row v92 corpus, and each converted row renders back to its stored text in English', () => {
     const migrated = migrateSave(structuredClone(v92)) as WorldState
@@ -186,7 +190,8 @@ describe('E · the v92 -> v93 golden', () => {
   it('migrating twice is migrating once', () => {
     const once = migrateSave(structuredClone(v92))
     expect(migrateSave(structuredClone(once))).toEqual(once)
-    expect(migrateSave(structuredClone(v93))).toEqual(v93)
+    // ⚠ RE-AIMED 12.10 BY v94 (round 49 №8): migrating the v93 fixture now takes the version-only v94 step (its one episode was never latched), so «once» lands one number higher and nothing else moves.
+    expect(migrateSave(structuredClone(v93))).toEqual({ ...v93, schemaVersion: 94 })
   })
   it('draws nothing: rngMain is the input\'s, and neither the matcher nor the step imports a dice or a clock', () => {
     const migrated = migrateSave(structuredClone(v92))

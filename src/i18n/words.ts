@@ -20,6 +20,11 @@
 // `tools/i18n-seats.ts` names that set from the real constants.
 import type { MessageParams } from '../shared/i18n'
 import { HOLE_TABLE, NAMED_HOLES, type HoleRow, type NamedHole, type WordClass } from './wordHoles'
+// ⭐ r49 №2 ф2 (12.10) – the `week` class reads the FORMAT REGISTRY, not the catalog: a week label's
+// Russian is his compiled pattern (`formats.ru.json`), so the reader is the display module's own
+// `localizedWeekLabel`. Imported from the LEAF (`./formats`) and never from `./dates`, which imports
+// `./index` – that path would close the cycle words → dates → index → words (tests/import-cycles).
+import { localizedWeekLabel } from './formats'
 
 export type Translate = (key: string, params?: MessageParams) => string
 /** An English word in, the word the player reads out – unchanged when the reader does not know it. */
@@ -491,6 +496,7 @@ export function createWordReaders(t: Translate, tables: WordTables = { holes: HO
     countOpen: spelled(false, true),
     digits,
     countF: spelled(true, false),
+    week: localizedWeekLabel,
     part: partWord,
     hurt: hurtWord,
     kind,

@@ -186,7 +186,9 @@ describe('L2-9a seams – a flip re-labels a MOUNTED dialog, and leaves the engi
     installCatalog('ru', { 'Her birthday – {0}': 'BDAY* {0}', Proceed: 'GO*' })
     await setLocale('ru')
     await nextTick()
-    expect(flat(w.get('.season-summary-kicker').text())).toMatch(/^BDAY\* W\d+ '\d\d$/)
+    // ⚠ RE-AIMED 12.10 r49 №2 ф2 – the wiring round the pin was waiting for (spec :198): the kicker's week label is OUR formatter's output, not an
+    // engine word, so under ru it follows the locale through the FORMAT REGISTRY (src/i18n/formats.ts) – the shape is the registry pattern's fill.
+    expect(flat(w.get('.season-summary-kicker').text())).toMatch(/^BDAY\* Нед\. \d+ · ’\d\d$/)
     expect(w.get('.birthday-proceed').text()).toBe('GO*')
     expect(w.get('button.birthday-choice').attributes('aria-checked'), 'the choice survived the flip').toBe('true')
     const after = [w.get('.season-summary-title').text(), w.get('.birthday-ask').text(), ...w.findAll('.birthday-choice-label').map((n) => n.text())].map(flat)
