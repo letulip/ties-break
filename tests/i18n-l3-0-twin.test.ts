@@ -39,7 +39,8 @@ describe('the 150-week twin – a played career migrated as a v92 save', () => {
       asV92.schemaVersion = 92
       const migrated = migrateSave(structuredClone(asV92) as never) as unknown as Played
 
-      expect(migrated.schemaVersion).toBe(93)
+      // ⚠ RE-AIMED 12.10 BY v94 (round 49 №8 – the wedding-milestone net): the head moved; the v94 step writes nothing on an engine-born career (its weddings already carry their milestones), so everything below this line is the same claim it was at 93.
+      expect(migrated.schemaVersion).toBe(94)
       expect(migrated.rngMain, 'the step draws nothing').toEqual(played.rngMain)
       let converted = 0
       migrated.events.forEach((e, i) => {

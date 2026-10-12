@@ -364,7 +364,8 @@ describe('§6 the schema move – v80', () => {
     // ⚠ AND AGAIN AT v91 (02.10, round 45 #5 – the first-touch latch `firstNo1`), NOT WEAKENED, for the same reason: the head moved, the
     // form half below did not.
     // ⚠ AND AGAIN AT v93 (09.10, the localization rig L3-0): the head moved, the form half below did not.
-    expect(SAVE_SCHEMA_VERSION).toBe(93)
+    // ⚠ AND AGAIN AT v94 (12.10, round 49 №8 – the wedding-milestone net): the head moved, the form half below did not.
+    expect(SAVE_SCHEMA_VERSION).toBe(94)
     expect(createWorld('form-schema', DEFAULT_PROFILE).form).toBe(0)
   })
 

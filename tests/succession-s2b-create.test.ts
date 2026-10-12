@@ -126,7 +126,8 @@ describe('S2b 0 – the walked mother and the constants are what this file says 
     expect(DEFAULT_PROFILE.background).toBe('middle')
     expect(START_AGE_YEARS, 'a prologue hands a girl to the world at fourteen – the age the calendar arithmetic adds').toBe(14)
     // ⚠ RE-AIMED 09.10 BY v93 (the localization rig L3-0): S2b still moves no schema – the head moved under it, by another wave's step.
-    expect(SAVE_SCHEMA_VERSION, 'S2b moves no schema (the head is v93: the localization rig, not S2b)').toBe(93)
+    // ⚠ AND AGAIN AT v94 (12.10, round 49 №8 – the wedding-milestone net): the head moved again, by another wave's step; S2b still moves nothing.
+    expect(SAVE_SCHEMA_VERSION, 'S2b moves no schema (the head is v94: the wedding-milestone net, not S2b)').toBe(94)
   })
 })
 

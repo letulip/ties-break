@@ -594,9 +594,21 @@ function onceCandidates(world: WorldState): AlbumCandidate[] {
   // reconstructed afterwards. The common week-crossing is bulk the representatives rule prunes.
   const crossed = world.milestones.find((m) => m.type === 'break-even' && m.kind === 'career')
   if (crossed) out.push(candidate(world, 'break-even', crossed.week, 75))
-  // A21 the wedding – per EPISODE, so a second marriage reaches the occasion again
+  // A21 the wedding – per EPISODE, so a second marriage reaches the occasion again.
+  // ⭐⭐ ROUND 49 №8 (12.10, «всё ещё не вижу свадебной фото в альбоме» – REOPENED): 102, ABOVE EVERY
+  // RARE, because `selectRepresentatives` keeps ONE frame per week and the higher priority names it –
+  // at the old 90 a rare (96–101) sharing the wedding's week silently deleted the once-per-career
+  // wedding photo, and nothing anywhere said so. 102 sits one above `first-number-one-title`'s 101,
+  // the ladder's highest non-closer, and below nothing but the closers' 1000 (which are
+  // eviction-exempt anyway), so the lift can evict only a same-week rare – which is the point.
+  // ⚠ THE BIRTH'S 92 IS DELIBERATELY LEFT UNDER IT AND THE ORDERING IS NEVER EXERCISED: a birth
+  // cannot share a wedding's week – conception needs the latch (`pregnancyEligible` reads
+  // `latchedEpisode`), the term is `motherhood.termTotalWeeks` = 39, and a SECOND wedding needs
+  // `wedding.minEpisodeWeeks` 52 + `weeksAfterEngagement` 8 after the divorce that frees the slot –
+  // so every birth lands ≥ 39 weeks after its own wedding and ≥ 21 weeks before any next one.
+  // `tests/r49-wedding-album.test.ts` carries the red→green arm (90: evicted; 102: survives).
   for (const m of world.milestones.filter((row) => row.type === 'wedding')) {
-    out.push(candidate(world, 'wedding', m.week, 90))
+    out.push(candidate(world, 'wedding', m.week, 102))
   }
   // ⭐⭐⭐ A34 THE BIRTH (wave 8b T6, E2 – RULED 21.09, «да, получает, картинка теперь есть»). Per
   // WEEK rather than per episode, which is `milestoneKey`'s own identity for this type and its own
@@ -608,6 +620,10 @@ function onceCandidates(world: WorldState): AlbumCandidate[] {
   // it is the calibration: the closers sit at 1000, the wedding at 90, break-even at 75, the first
   // prize at 70. One step above the wedding says «larger than the marriage that produced it» without
   // reaching past the career's own closing frames, which is as much as an ordering can honestly say.
+  // ⚠ ROUND 49 №8 (12.10) lifted the wedding to 102 – the eviction law at A21 – so «one above the
+  // wedding» is the 21.09 calibration kept as the record of why 92 was chosen, not today's ladder.
+  // Nothing between the two is ever exercised: a birth and a wedding cannot share a week (A21's own
+  // arithmetic – conception needs the latch, term 39 < the 52+8 any next wedding costs).
   // ⚠ IT DOES NOT MAKE THE PAGE CERTAIN: the selector's own representatives rule still caps one kind
   // at a third of a chapter's sheets, and priority decides ORDER inside a band rather than admission.
   for (const m of world.milestones.filter((row) => row.type === 'birth')) {

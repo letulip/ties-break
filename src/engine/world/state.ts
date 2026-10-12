@@ -351,7 +351,10 @@ import type { AcademySupport } from '../academy'
 // ⚠⚠ v93: THE BACKFILL IS A RECOGNITION, NOT A RECONSTRUCTION: a row gains `c` only if a template in `migrations/legacyTemplates.v92.ts` matches its text AND the resulting ref renders back to the same bytes in English; otherwise it is left alone and COUNTED (the remainder is stored nowhere).
 // ⚠ v93: ONLY `world.events` – letters, the diary and the album are separate prose classes and any move they need is a later wave's own.
 // ⚠ v93: ZERO DRAWS – pure string work against a frozen table; the frozen MAIN capture (41550 / e6b0c709) is untouched by construction. Nothing WRITES `c` yet, so a live career serialises as its v92 self plus the version number.
-export const SAVE_SCHEMA_VERSION = 93
+// v94 – THE WEDDING-MILESTONE NET (round 49 №8, 12.10, «всё ещё не вижу свадебной фото в альбоме»): NO new key – the step backfills a `type: 'wedding'` milestone from `episode.latchedWeek` + `episode.id` wherever a married row has none.
+// ⚠⚠ v94: THE BACKFILL IS EXACT – `landWedding` writes the latch and the milestone in adjacent lines (one commit, v83), so the latch IS the wedding week; engine-born saves are the identity, the net is for saves outside that guarantee.
+// ⚠ v94: ZERO DRAWS – pure state; the frozen MAIN capture (41550 / e6b0c709) is untouched by construction. A played career gains no key, so the frozen careers re-stamp for the version number alone (the v88/v90/v91 shape).
+export const SAVE_SCHEMA_VERSION = 94
 
 
 

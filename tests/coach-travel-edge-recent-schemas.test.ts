@@ -59,9 +59,27 @@ import {
   PRE_V91,
   PRE_V92,
   PRE_V93,
+  PRE_V94,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v94: rolling the schema back to 93 – with nothing to drop, because the step adds no key and no frozen career ever marries – returns the v93 CAREER on all three', () => {
+    // ⭐⭐⭐ A RUNG WHOSE PEEL DOES NOTHING, AND THE REASON IS ITS OWN (the v88/v90/v91 shape). v94 (round 49 №8, 12.10 – the wedding-milestone
+    // net) adds NO key anywhere: its step backfills a `type: 'wedding'` milestone only where a latched episode lacks one, and an engine-born
+    // career cannot lack one – `landWedding` has written the latch and the milestone in adjacent lines since both were born in one commit
+    // (eccbd578, v83). No frozen career marries inside its 156 weeks anyway, so the serialised world gains neither key nor row,
+    // `careerHashAtSchema`'s ternary chain gains no rung, and a rollback to 93 is the live world with the version number alone changed.
+    //
+    // ⚠⚠ SO THIS CASE PROVES WHERE THE SCHEMA MOVE LANDED: write a wedding milestone on every world, or a key beside it, and all three lines
+    // go red at once – and neither change would fail anything else in this repo.
+    //
+    // ⚠ THE MEASUREMENT is in the block over `PRE_V94` in tests/coachTravelEdgeFixtures.ts: the three values below are the three `FROZEN`
+    // constants this branch held at v93, reproduced character for character by the re-stamp probe before the constants moved.
+    expect(careerHashAtSchema(5, 0, 93), '25k · middle coach · grinder – the verbatim v93 value').toBe(PRE_V94.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 93), '120k · elite coach · grinder – the verbatim v93 value').toBe(PRE_V94.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 93), '8k · self-coached · player – the verbatim v93 value').toBe(PRE_V94.selfTravelling)
+  })
+
   it('⭐⭐⭐ v93: rolling the schema back to 92 – dropping `c` from every ledger row – returns the v92 CAREER on all three', () => {
     // ⭐ v93 (the localization rig, L3-0, 09.10) added `WorldEvent.c?` and NOTHING WROTE IT, so until L3-1 this rung's peel was an identity – the fifth in a row.
     // ⭐⭐ L3-1 (10.10) IS THE WRITER THE NOTE HERE PROMISED: every ledger / receipt row of a played career now carries `c` beside its `text`, so the rung's peel
