@@ -170,5 +170,21 @@ const emit = defineEmits<{ pick: [number] }>()
   .album-rail-title {
     white-space: normal;
   }
+
+  /* ⭐ r50 №2 – UNDER THE LANDSCAPE FIT THE GRID HANDS THE ROW BACK. The grid is ≈134px of chrome
+     where the strip is 66, and on a height-fitted screen that difference comes straight out of the
+     sheet – the recon's biggest single decision, decided: the strip whenever the album is fitting.
+     Portrait ≥1024 keeps the grid («все 6 глав сеткой под листом» stands where height is no bound).
+     The 768 strip's snap, touch and overscroll declarations are still in force from the block above
+     – only the four rules the grid changed are handed back. */
+  .album--fit .album-rail-list {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .album--fit .album-rail-title {
+    white-space: nowrap;
+  }
 }
 </style>

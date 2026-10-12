@@ -97,7 +97,9 @@
 
 /* THE 470-SPACE. Square, positioned (so a layout's `inset: 0` means THIS box and not the page), and
    scaled from its top-left corner so that the scaled edge lands exactly on the page's edge:
-   470 × 1.1489 = 540, 470 × 1.183 = 556. Below 768 the scale is 1 and this element is the page.
+   470 × 1.2766 = 600, × 1.3617 = 640, × 1.4894 = 700 (r49 №13's rungs; the landscape fit of r50 №2
+   writes the same pair inline on :root, scale × 470 = sheet at whatever height fitted). Below 768
+   the scale is 1 and this element is the page.
    ⚠ `transform-origin` IS LOAD-BEARING. The default is the centre, which would grow the leaf
    outwards in both directions and hang 35px of collage off the left edge of the page under the
    `overflow: hidden` above – a page that looks right on the right and is cropped on the left. */

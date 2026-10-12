@@ -7,10 +7,16 @@
 // the screen can hold at once:
 //
 //   390   the screen is NARROWER than the page, so the page pans – everything below.
-//   768   the page fits whole at 540px. The film's window narrows to exactly one sheet, the pan
-//         affordance goes (there is nothing left to pan to), and the chapters come out from behind
-//         their button as a strip that scrolls sideways.
-//   1024  the same, at 556px, with the chapters as a grid.
+//   768   the page fits whole at 600px (r49 №13's regrade, 12.10 – the README's 540/556 are
+//         history). The film's window narrows to exactly one sheet, the pan affordance goes (there
+//         is nothing left to pan to), and the chapters come out from behind their button as a strip
+//         that scrolls sideways.
+//   1024  the same, at 640px, with the chapters as a grid; from 1280 a fourth rung, 700px.
+//
+//   ⭐ r50 №2 (12.10): ON LANDSCAPE TABLET/DESKTOP THE RUNG IS ONLY A CAP. `applyFit` below fits the
+//   sheet to the viewport HEIGHT (`composables/albumFit.ts` is the arithmetic), so the whole column
+//   ends at the bottom of the screen and the chapters return to the strip; portrait and phones keep
+//   the ladder untouched and only gain air under the frame.
 //
 // ⚠ AND THE WIDTHS ARE CSS's, NOT THIS FILE'S. The breakpoints are the app's own ladder in
 // src/style.css (768 / 1024, the owner's 03.09 ruling), the three page sizes are `--album-sheet` on
@@ -71,14 +77,15 @@
 // sections and the same product lockup and tagline, and they are deferred at all three widths for the
 // one reason: of the four, `Career Summary` does not exist as a screen at all, so three quarters of a
 // shell is not a smaller version of it. The album keeps its own header until that section is built.
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import IconButton from '../ui/IconButton.vue'
 import AlbumSheet from '../album/AlbumSheet.vue'
 import AlbumChapterRail from '../album/AlbumChapterRail.vue'
 import AlbumChaptersSheet from '../album/AlbumChaptersSheet.vue'
 import { useGameStore } from '../../stores/game'
-import { SHEET_GAP_PX, SHEET_STEP_PX } from '../../shared/protocol'
+import { LEAF_PX, SHEET_GAP_PX, SHEET_STEP_PX } from '../../shared/protocol'
 import type { AlbumBook } from '../../shared/protocol'
+import { sheetFor } from '../../composables/albumFit'
 import { t } from '../../i18n'
 // ⭐ L3-6 (10.10): the book's strings are mapped through their refs HERE, once, before any layout, rail or placement sees a sheet - so everything below reads (and measures) what is drawn.
 import { shownChapter, shownSheet } from '../../composables/albumText'
@@ -138,8 +145,6 @@ function readStep(): void {
   step.value = Number.isFinite(declared) && declared > 0 ? declared : SHEET_STEP_PX
 }
 
-onMounted(readStep)
-
 const current = computed(() => {
   if (sheets.value.length === 0) return 0
   const i = Math.round(scrolled.value / step.value)
@@ -149,6 +154,63 @@ const current = computed(() => {
 const sheet = computed(() => sheets.value[current.value] ?? null)
 /** Even index = the left-hand page of a spread, odd = the right-hand one facing it. */
 const onRightHalf = computed(() => current.value % 2 === 1)
+
+const root = ref<HTMLElement | null>(null)
+
+/** ⭐ r50 №2 – true while the landscape fit owns the frame (the shell host only). The class is the
+ *  CSS half of the mechanism: the chapter strip, the reclaimed shell bottom, the portrait air gone. */
+const fitting = ref(false)
+
+const FIT_TOKENS = ['--album-sheet', '--album-scale', '--album-step'] as const
+
+/** ⭐⭐ r50 №2 – THE LANDSCAPE FIT. A JS predicate and not an orientation media query: happy-dom's
+ *  support for those is unverified, and one brain must own both the class and the tokens (the
+ *  precedents are OnboardingTour's window resize listener and weekPager's ResizeObserver). The
+ *  tokens are written as INLINE PLAIN px on `document.documentElement`, which is the readStep
+ *  contract – happy-dom resolves custom properties only on :root and evaluates no calc(). */
+function applyFit(): void {
+  // The epilogue hosts this same screen inside its fixed takeover (`.ending > section.ending-book`);
+  // it pays its own chrome and gets the SIZE CEILING only – content continues below the book there,
+  // so it is never pinned to the bottom and `fitting` (the class) stays off.
+  const host = root.value?.closest('.ending') ? 'ending' : 'shell'
+  const fitted = sheetFor(window.innerWidth, window.innerHeight, host)
+  // ⚠⚠ THE RE-REGISTER RECIPE, IN ORDER: capture `current` → write the tokens → `readStep()` →
+  // re-scroll to `current × newStep`. Before this handler existed, a window dragged across a rung
+  // boundary left `scrollLeft` in OLD-pitch units until the next arrow press, so `current` named a
+  // sheet the picture was not on – the latent cross-rung drag bug. It is fixed here for the
+  // media-query rungs too, because the handler re-registers on EVERY resize, fit or not.
+  const was = current.value
+  const rootStyle = document.documentElement.style
+  if (fitted === null) {
+    for (const token of FIT_TOKENS) rootStyle.removeProperty(token)
+  } else {
+    // Scale at full float precision: the album-wide pin holds round(scale × leaf) = page, and
+    // `--album-leaf` itself never changes – the collage frame is scaled, never resized.
+    rootStyle.setProperty('--album-sheet', `${fitted}px`)
+    rootStyle.setProperty('--album-scale', `${fitted / LEAF_PX}`)
+    rootStyle.setProperty('--album-step', `${fitted + SHEET_GAP_PX}px`)
+  }
+  fitting.value = fitted !== null && host === 'shell'
+  readStep()
+  const el = pan.value
+  if (el) el.scrollLeft = was * step.value
+  scrolled.value = was * step.value
+}
+
+onMounted(() => {
+  // `applyFit` subsumes the old bare-`readStep` mount hook: it always ends in one, and at mount the
+  // re-register is a no-op (sheet 0 at scroll 0).
+  applyFit()
+  window.addEventListener('resize', applyFit)
+})
+
+// ⚠⚠ CLEANUP IS MANDATORY: the tokens live on `document.documentElement`, which outlives every
+// mount (album-wide's own measured note) – a leftover inline rung would poison the next screen,
+// the next career and the next test alike.
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', applyFit)
+  for (const token of FIT_TOKENS) document.documentElement.style.removeProperty(token)
+})
 
 function goTo(index: number): void {
   const i = Math.min(Math.max(index, 0), Math.max(sheets.value.length - 1, 0))
@@ -216,7 +278,7 @@ watch(
 </script>
 
 <template>
-  <div class="album">
+  <div ref="root" class="album" :class="{ 'album--fit': fitting }">
     <header class="album-head">
       <IconButton
         class="back-link album-back"
@@ -411,6 +473,9 @@ watch(
 .album-stage {
   position: relative;
   margin-inline: calc(-1 * var(--app-pad-x));
+  /* r50 №2, his second sentence: «немного элементы управления нижние отодвинуть еще ниже, чуть
+     больше воздуха дать до фрейма альбома» – air under the frame, on top of the column's own gap. */
+  margin-bottom: 10px;
 }
 
 /* R49 №1: the film and its edge share a frame of their own, so the edge's fade spans exactly the
@@ -689,6 +754,20 @@ watch(
     /* The phone cancels the frame's gutter because its page is wider than the screen; here the page
        is narrower than the column and the gutter is simply the inset it sits in. */
     margin-inline: 0;
+    /* r50 №2: the portrait tablet's share of «чуть больше воздуха» – a step up from the phone's 10.
+       Under the landscape fit it goes (below): there the column ends at the viewport bottom. */
+    margin-bottom: 12px;
+  }
+
+  /* ⭐⭐ r50 №2 – THE LANDSCAPE FIT's CSS HALF (`applyFit` in the script owns the predicate, the
+     class and the tokens – one brain). The fitted sheet arrives through `--album-sheet` inline on
+     :root, so every rule reading the token already follows; the class itself changes little:
+       · the air under the frame goes – «прибиты к низу» means the column ends at the screen,
+       · the shell's bottom reserve is reclaimed in src/style.css (the `:has(.album--fit)` rules,
+         kept beside the 96px reserve they cancel),
+       · the chapter rail returns to its one-row strip (AlbumChapterRail.vue, beside its grid). */
+  .album--fit .album-stage {
+    margin-bottom: 0;
   }
 
   /* ⭐⭐ THE WINDOW IS EXACTLY ONE PAGE WIDE, AND THAT IS WHAT REPLACES THE PAN. A film whose window

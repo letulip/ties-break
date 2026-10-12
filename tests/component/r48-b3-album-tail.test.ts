@@ -31,7 +31,7 @@ import { dynastyOf } from '../helpers/dynastyHandover'
 import { posedCareer } from '../helpers/albumSweep'
 import { contrastRatio, effectiveBackground, parseColor } from './contrast'
 import { NARROW_PHONE, PHONE, setViewport } from './fits'
-import { SHEET_DESKTOP_PX } from '../../src/shared/protocol'
+import { sheetFor } from '../../src/composables/albumFit'
 import { hand, sheetOf } from './albumFixture'
 import { readFileSync } from 'node:fs'
 import type { AlbumBook, AlbumSheetModel, AlbumTicket, EndingView, Snapshot } from '../../src/shared/protocol'
@@ -364,13 +364,18 @@ describe('round 48 #1a · a wide strip is drawn with two different snapshots', (
 // MUTATION (12.10): `:not(.ending-book)` taken back off the selector -> 1 RED, this arm, failing
 // first on «the book is still capped (max-width: 480px)»; all 16 round-48 arms in this file stay
 // green, which is why the arm exists. Restored, 17 green.
-describe('⭐ r49 №13 · at 1024 the ending-book escapes the epilogue cap and draws the in-career rung', () => {
+describe('⭐ r49 №13 · at 1024 the ending-book escapes the epilogue cap and draws past it (the vh ceiling since r50 №2)', () => {
   beforeEach(() => setActivePinia(createPinia()))
   afterEach(() => {
     document.body.innerHTML = ''
   })
 
-  it('the book section is uncapped, its page is SHEET_DESKTOP_PX, and the prose sections keep 480', async () => {
+  // ⭐ RE-AIMED r50 №2 (12.10): 1024x850 is LANDSCAPE, and the epilogue host now takes the vh SIZE
+  // CEILING – its own chrome (`.ending`'s 24/48 paddings over the album's chrome; the twin's table
+  // says 544 here), never bottom-pinning, since content continues below the book. The arm's point is
+  // unchanged: 544 is far past the 480 epilogue cap, so the `:not(.ending-book)` escape still has to
+  // hold for the page to measure it.
+  it('the book section is uncapped, its page is the ending ceiling, and the prose sections keep 480', async () => {
     const w = await mountEndingWithBook({ width: 1024, height: 850 })
     const book = w.find('.ending-book')
     expect(book.exists(), 'the album layer is open').toBe(true)
@@ -378,8 +383,8 @@ describe('⭐ r49 №13 · at 1024 the ending-book escapes the epilogue cap and 
     expect(['', 'none'], `the book is still capped (max-width: ${capped})`).toContain(capped)
     expect(
       px(getComputedStyle(w.find('.ending-book .album-paper').element).width),
-      'the epilogue album does not draw the in-career 1024 rung',
-    ).toBe(SHEET_DESKTOP_PX)
+      'the epilogue album does not draw the ending host\'s fitted ceiling',
+    ).toBe(sheetFor(1024, 850, 'ending')!)
     // the control: the cap itself still stands on the sections that asked for it
     await w.find('.album-back').trigger('click')
     const section = w.find('.ending > section')

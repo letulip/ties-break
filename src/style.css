@@ -919,11 +919,14 @@ body {
 /* ⭐ ROUND 49 №13 (12.10) – THE ALBUM'S FOURTH RUNG, new with the regrade: «места много, давай
    сделаем крупнее шириной», and the top of the band has the most of it. From 1280 the reading
    column is 948px, so a 700px page leaves (948 − 700) / 2 − 12 of column-gap = 112px of table a
-   side. 700 / 470 = 1.489361… ⚠ HEIGHT IS THE BINDING SIDE OF THIS RUNG, counted rather than
-   hoped: the page is square, so 700 of page plus the album's chrome ≈ 790px – an 800-high desktop
-   (`fits.ts`'s own DESKTOP is 1280x800) holds it with nothing to spare, and a taller sheet would
-   not fit it. Plain px as everywhere on this ladder: `readStep` parses the token and happy-dom
-   evaluates no calc(). */
+   side. 700 / 470 = 1.489361… ⚠ HEIGHT IS NOT ANSWERED BY THIS RUNG (r50 №2, 12.10 – this note
+   used to claim «700 + chrome ≈ 790 fits an 800-high desktop», and that arithmetic had ignored the
+   rail, the dots and the shell: the real column measured ≈1170px at 1280x800, controls below the
+   fold). The true answer is the vh CEILING: on landscape tablet/desktop `AlbumScreen.vue`'s
+   `applyFit` clamps the sheet to the viewport height (`composables/albumFit.ts`) and writes the
+   three tokens INLINE on :root, overriding this ladder – these rungs are the CAP it clamps to, and
+   portrait reads them unchanged. Plain px as everywhere on this ladder: `readStep` parses the
+   token and happy-dom evaluates no calc(). */
 @media (min-width: 1280px) {
   :root {
     --album-sheet: 700px;
@@ -2613,6 +2616,21 @@ button.primary.risky {
    other screen gets its space back – which is most of a card's height on a 390px phone. */
 .app-content.with-next-week-bar {
   padding-bottom: 96px;
+}
+
+/* ⭐ r50 №2 – THE SHELL'S BOTTOM RESERVE IS RECLAIMED UNDER THE ALBUM'S LANDSCAPE FIT. The fitted
+   album budgets the whole viewport height (`composables/albumFit.ts`; `AlbumScreen.vue`'s `applyFit`
+   owns the predicate and sets the class), so the 96px above and `#app`'s own 48 of bottom padding
+   would force exactly the scroll the fit exists to remove. Kept HERE, beside the reserve they
+   cancel, so the two cannot drift apart unseen. ⚠ The floating `.next-week-bar` itself keeps
+   floating – while a week is pending it may overlay the album's counter, which is today's behavior,
+   left alone. Portrait and phones never carry `.album--fit`, so nothing below 768-landscape moves. */
+.app-content.with-next-week-bar:has(> .album.album--fit) {
+  padding-bottom: 0;
+}
+
+#app:has(.album.album--fit) {
+  padding-bottom: 0;
 }
 
 .app-content.with-next-week-bar.home {
