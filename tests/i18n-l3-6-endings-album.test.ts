@@ -690,8 +690,12 @@ describe('§8 a career played to a natural ending off the bench', () => {
  *  firings and a same-sheet repeat takes the next variant instead of a blank. B10's control run in a
  *  clean worktree WITHOUT its own diff reproduced this value byte for byte – the move belongs to the
  *  pool growth, nothing later. */
-const PRE_WAVE_BOOKS_DIGEST = 'ab2195f5'
-const PRE_WAVE_VIEWS_DIGEST = '3d0366fb'
+// ⚠ 12.10 AGAIN (r50 №1): the pregnancy occasion A38 entered the corpus and the posed books carry
+// its frames – the diff behind this value is the new occasion's strings and frames alone.
+const PRE_WAVE_BOOKS_DIGEST = '897e2b1d'
+// ⚠ 12.10 (r50 №5): the brand epilogue line joined the ending views – the diff behind this value
+// is that one line on the brand-owning posed careers, nothing else.
+const PRE_WAVE_VIEWS_DIGEST = '4d592bff'
 
 describe('§9 the posed set of books, in English, is the pre-wave tree\'s byte for byte', () => {
   const set = posedBooks()
@@ -847,12 +851,13 @@ describe('§11 the corpus: 38 occasions x 4 voices x (note, caption, line), and 
   const cells = ALBUM_CORPUS.flatMap((o) => Object.entries(o.voices).flatMap(([voice, pool]) => pool.flatMap((h, k) => [`${o.id}/${voice}${k > 0 ? `#${k + 1}` : ''}/note`, `${o.id}/${voice}${k > 0 ? `#${k + 1}` : ''}/caption`, `${o.id}/${voice}${k > 0 ? `#${k + 1}` : ''}/line`].map((id, i) => ({ id, text: [h.note, h.caption, h.line][i]! })))))
   const arc = Object.entries(ALBUM_ARC).flatMap(([dir, voices]) => Object.entries(voices).flatMap(([voice, h]) => [{ id: `arc/${dir}/${voice}/note`, text: h.note }, { id: `arc/${dir}/${voice}/line`, text: h.line }]))
 
-  it('the corpus is the size the report says: 38 ids, 636 cells, 16 arc cells - every one a plain string', () => {
+  it('the corpus is the size the report says: 39 ids, 648 cells, 16 arc cells - every one a plain string', () => {
     // ⚠ RE-STAMPED 12.10 r49 №7: 456 → 636 – seven occasions grew variant pools (212 hands × 3
     // registers; the pool table lives in tests/r49-album-variants.test.ts), and every variant cell
     // is swept by the same plain-string law as the base ones.
-    expect(ALBUM_CORPUS).toHaveLength(38)
-    expect(cells).toHaveLength(636)
+    // ⚠ RE-STAMPED 12.10 r50 №1: 38→ 39 ids, 636→ 648 cells – the pregnancy occasion A38.
+    expect(ALBUM_CORPUS).toHaveLength(39)
+    expect(cells).toHaveLength(648)
     expect(arc).toHaveLength(16)
     for (const c of [...cells, ...arc]) expect(typeof c.text, c.id).toBe('string')
   })

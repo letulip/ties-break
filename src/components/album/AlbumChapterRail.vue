@@ -180,6 +180,14 @@ const emit = defineEmits<{ pick: [number] }>()
   .album--fit .album-rail-list {
     display: flex;
     overflow-x: auto;
+    /* ⚠ r50 №2 (12.10): the SAME THREE the 768 strip carries above – this override re-opens a
+       horizontal scroller at ≥1024, and a scroller without its chain drags the page at its end
+       (tests/touch-and-scroll.test.ts, the rail's own shipped lesson). */
+    touch-action: pan-x pan-y;
+    overscroll-behavior-x: contain;
+    user-select: none;
+    -webkit-user-select: none;
+    scroll-snap-type: x proximity;
     padding-bottom: 4px;
   }
 
