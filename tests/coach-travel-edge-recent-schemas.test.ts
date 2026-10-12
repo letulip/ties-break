@@ -49,7 +49,6 @@
 import { describe, it, expect } from 'vitest'
 import {
   careerHashAtSchema,
-  PRE_V84,
   PRE_V85,
   PRE_V86,
   PRE_V87,

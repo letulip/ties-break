@@ -17,7 +17,7 @@
 import { describe, expect, it } from 'vitest'
 import { firstWeekAtAge } from './helpers/career'
 
-import { assembleAlbum, createWorld, kidAgeAt, TEMPERAMENTS, type WorldState } from '../src/engine/world'
+import { assembleAlbum, createWorld, TEMPERAMENTS, type WorldState } from '../src/engine/world'
 import { assignAlbumOrdinals, albumHandOf, dedupeSheetCaptions } from '../src/engine/world/albumBook'
 import { ALBUM_CORPUS, type AlbumHand, type AlbumOccasion } from '../src/engine/world/albumCorpus'
 import { posedCareer, SWEEP_CAREERS } from './helpers/albumSweep'
