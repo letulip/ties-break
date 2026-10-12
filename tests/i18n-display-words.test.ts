@@ -142,6 +142,8 @@ describe('§1 the hole table is a claim about the code, and the catalog holds it
       // RU-22 (booth): the commentary spells its counts in English (`numberWord(n)`, `Num(n)`), and the pooled lines receive them as the lambda's `n`
       ['count', /^(numberWord|Num)\(.*\)$/],
       ['count', /^n$/, 'src/viz/commentary.ts'],
+      // ⭐ r49 №2 ф2 (12.10): an engine-baked week label – `weekLabel(...)` at the template, or the summary ref's `a.week` (`tournamentSummaryRef`)
+      ['week', /^(weekLabel\(.*\)|a\.week)$/],
     ]
     // a hole claimed by the table under ANY class counts: the hint says «a word is here», the table says which kind
     const claimed = new Set(rows.flatMap(({ row }) => row.slice(1).map((h) => `${row[0]}#${h}`)))
@@ -291,6 +293,9 @@ const CASES: Case[] = [
   { from: 'SupportStaffTab', key: 'Hire a masseur for {0} a week ({1})? You can end the arrangement any week, like the coach.', params: ['$300', 'twice a week'], words: ['twice a week'] },
   { from: 'SupportStaffTab', key: 'On retainer – {0}', params: ['the year goes on the big points – the head she takes into them.'], words: ['the year goes on the big points'] },
   { from: 'planner (stored ref)', key: 'Family vacation – {0}: +{1} condition.', params: ['Staycation with friends', 12], words: ['Staycation with friends'] },
+  // ⚠ RE-AIMED 12.10 r49 №2 ф2 – the wiring round the pin was waiting for (spec :198): the week holes of these rows («W33 '31», «W4 '31») no longer pass through
+  // untranslated – the `week` class (src/i18n/wordHoles.ts) re-spells them through the format registry; the Russian form is held in phase 2's home
+  // (tests/component/i18n-r49-2-dates-display.test.ts, the engine-hole arm). The rows' own `words` arms are untouched (a week label was never a vocabulary word).
   { from: 'planner (stored ref)', key: 'Booked: {0} – {1}', params: ['Camping road-trip', "W33 '31"], words: ['Camping road-trip'] },
   { from: 'planner (stored ref)', key: 'Family vacation booked – {0} ({1})', params: ["W33 '31", 'Grandma\'s village'], words: ["Grandma's village"] },
   { from: 'sponsors (stored ref)', key: '{0} travel to {1} – one additional fare', params: ['Hitting partner', 'Regional Championship'], words: ['Hitting partner'] },

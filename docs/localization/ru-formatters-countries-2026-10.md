@@ -31,9 +31,10 @@ last-reviewed: 2026-10-06
 | `Jan 27 – Feb 2, 2031` | `27 января – 2 февраля 2031 года` – ⚙ 11.10 формат даты: форматтера в реестре ещё нет – ряд ждёт его, не ключ каталога `QUESTION` | Диапазон через границу месяцев. |
 | `Dec 29, 2031 – Jan 4, 2032` | `29 декабря 2031 – 4 января 2032 года` – ⚙ 11.10 формат даты: форматтера в реестре ещё нет – ряд ждёт его, не ключ каталога `QUESTION` | Оба года обязательны. |
 | `12 June` | `12 июня` – ⚙ 11.10 формат даты: форматтера в реестре ещё нет – ряд ждёт его, не ключ каталога `QUESTION` | День рождения: без года и номера недели. |
-| `W1-10` | `Нед. 1–10` – ⚙ 11.10 формат даты: форматтера в реестре ещё нет – ряд ждёт его, не ключ каталога `QUESTION` | Номера недель внутри сезона, не абсолютные недели. |
-| `(last week)` | `(последняя неделя)` | Никогда не `(0 недель)`. |
-| `(1 week left)` / `(14 weeks left)` | `(осталась 1 неделя)` / `(осталось 14 недель)` · ⚙ 11.10 формат даты: форматтера в реестре ещё нет – ряд ждёт его, не ключ каталога `QUESTION` | Число меняет существительное и глагол. |
+| `W1-10` | `Нед. 1–10` – ⚙ 12.10 r49 №2 ф2: реестр `dates.seasonWeekRange` (tools/i18n-formats.ts), читает дисплейный модуль src/i18n/formats.ts – формат, не ключ каталога | Номера недель внутри сезона, не абсолютные недели. |
+| `(last week)` | `(последняя неделя)` – ⚙ 12.10 r49 №2 ф2: ключ каталога – ветка left <= 0 в weeksLeftBracket (src/i18n/dates.ts) | Никогда не `(0 недель)`. |
+| `(1 week left)` | `(осталась 1 неделя)` – ⚙ 12.10 r49 №2 ф2: ключ каталога – ветка left === 1 в weeksLeftBracket (src/i18n/dates.ts); его образец, дословно | Число меняет существительное и глагол. |
+| `({weeks} weeks left)` | `{weeks, plural, one {(осталась {weeks} неделя)} few {(осталось {weeks} недели)} many {(осталось {weeks} недель)} other {(осталось {weeks} недели)}}` – ⚙ 12.10 r49 №2 ф2: ICU по его образцам «(осталась 1 неделя)» / «(осталось 14 недель)»; формы few/other дописаны агентом под бланкет 11.10 | Число меняет существительное и глагол. |
 
 Кандидат RU-06 `14-я неделя · 2031` предварительный; основной вариант для реализации –
 RU-03 F01–F04 и таблица выше. До одобрения владельца это не окончательный выбор.
@@ -180,11 +181,15 @@ keeps the three-letter English token a key spelling rather than a word of any re
 | R49N2-FMT-10 | `mon\|Oct` | `окт.` |
 | R49N2-FMT-11 | `mon\|Nov` | `нояб.` |
 | R49N2-FMT-12 | `mon\|Dec` | `дек.` |
-| R49N2-FMT-13 | `W{week} {year}` | `Неделя {week} · {year}` |
+| R49N2-FMT-13 | `W{week} {year}` | `Неделя {week} · {year}` – ⚙ 12.10 r49 №2 ф2: ключ ушёл в реестр `dates.weekYearLabel` – один дом на факт; `weekDateLine` берёт половину недели у `weekYearLabel` (src/i18n/formats.ts), ключа больше нет в каталоге `QUESTION` |
 | R49N2-FMT-14 | `{span}, {year}` | `{span} {year} года` |
 
-`W{week} {year}` is the week half of `weekDateLine` (the table's «Неделя 27 · 2033 · 3–9 июня» row):
-the same facts `weekYearLabel` prints, so phase 2 (week-only labels) can reuse the row. `{span},
+`W{week} {year}` WAS the week half of `weekDateLine` (the table's «Неделя 27 · 2033 · 3–9 июня» row) –
+⚙ 12.10 r49 №2 ф2 retired it: phase 2 wired the registry (`src/i18n/formats.ts`, the one reader of
+`formats.ru.json`), so the week half now rides the registry's `dates.weekYearLabel` like
+`weekYearLabel` itself, one home per fact. The week-only labels (`weekLabel`, `weekYearLabel`,
+`seasonWeekRange`) are registry patterns; `weeksLeftBracket` alone stays on catalog keys (the three
+bracket rows of the table above), because a one-sample pattern cannot pluralise. `{span},
 {year}` is `weekRange`'s year tail – exactly how the English composes in all three branches – so
 «года» is the translator's word, never typed in code; the cross-year span carries its first year
 bare inside `{span}`, as the table's «29 декабря 2031 – 4 января 2032 года» row spells.

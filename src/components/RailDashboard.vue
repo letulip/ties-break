@@ -58,7 +58,7 @@
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents, formatCentsCompact } from '../shared/money'
-import { weekLabel } from '../shared/dates'
+import { weekLabel } from '../i18n/dates'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
 import { teamBudgetLabel, useCoachingBudget } from '../composables/coachingBudget'

@@ -480,6 +480,9 @@ describe('L2-4 xx sweep – no unwrapped literal in the frames, and the phone st
     // phase ranges and the week-range rows (`W1-10`, `W42 · Oct 20–26, 2031` – `weekRange`, the same formatter, anchored on the `W<digits>` it starts
     // with, so it cannot swallow a heading). ⭐ RU-22 (11.10): the card's fee pill is not on this list any more – `entryFeeText` (composables/entryFee.ts) says its word through the catalogue.
     /^· W\d+$/, /^W\d+(?:-\d+)?(?: · .+)?$/,
+    // ⭐ r49 №2 ф2 (12.10): `weekLabel` and `seasonWeekRange` fill the FORMAT REGISTRY under xx now (src/i18n/formats.ts) – the strip's ranges and the
+    // card labels are the registry's forms; the bare `W\d+` above stays for `weekNumberLabel` (not in phase 2's scope) and the `W\d+ · …` joins.
+    /^Нед\. \d+ · ’\d{2}$/, /^Неделя \d+ · \d{4}$/, /^Нед\. \d+–\d+$/, /^Нед\. \d+(?:–\d+)? · .+$/,
     /^\d+°?$/, /^#\d+$/, /^[\d,]+$/, /^\d+(?:-\d+)*$/, /^[—–-]$/, /^\?$/, /^%$/, /^\d+(?:\.\d+)?%$/,
   ]
 

@@ -16,7 +16,7 @@ import { join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
 import { globSync } from 'tinyglobby'
 import { formatMessage, SOURCE_LOCALE } from '../src/shared/i18n'
-import { weekLabel, weekYearLabel } from '../src/shared/dates'
+import { seasonWeekRange, weekLabel, weekYearLabel } from '../src/shared/dates'
 import { BIRTHDAY_BANDS, BIRTHDAY_DAY_TOGETHER } from '../src/engine/world'
 import { callKeys, callStats, certain, dynamicSites, likely, scanTs, scanVue } from '../tools/copy-census-walk'
 import { lintFormats, lintRu, lintScoreTailTable, runGate, SCORE_TAIL_KEYS } from '../tools/i18n-check'
@@ -425,8 +425,9 @@ describe('§5 a row whose English is what a formatter prints compiles into a pat
   const live = (): Live => ({ catalog: committed, seen: seenLiterals })
 
   it('the registry is code-backed: each example IS the formatter\'s output for its documented sample, each part appears in it exactly once, and the ids and examples are unique', () => {
-    expect(FORMAT_EXAMPLES.map((d) => d.example)).toEqual([weekLabel(13, 2031), weekYearLabel(26, 2033)])
-    expect(FORMAT_EXAMPLES.map((d) => d.example)).toEqual(["W14 '31", 'W27 2033'])
+    // ⚠ RE-AIMED 12.10 r49 №2 ф2 – the wiring round the pin was waiting for (spec :198): 2 -> 3, `seasonWeekRange`'s row joins (`dates.seasonWeekRange`, offsets 0..9 -> «W1-10»)
+    expect(FORMAT_EXAMPLES.map((d) => d.example)).toEqual([weekLabel(13, 2031), weekYearLabel(26, 2033), seasonWeekRange(0, 9)])
+    expect(FORMAT_EXAMPLES.map((d) => d.example)).toEqual(["W14 '31", 'W27 2033', 'W1-10'])
     expect(new Set(FORMAT_EXAMPLES.map((d) => d.id)).size).toBe(FORMAT_EXAMPLES.length)
     expect(formatIndex().size).toBe(FORMAT_EXAMPLES.length)
     for (const d of FORMAT_EXAMPLES) for (const [name, token] of Object.entries(d.parts)) expect(d.example.match(new RegExp(`(?<![0-9])${token}(?![0-9])`, 'g'))?.length, `${d.id}.${name}`).toBe(1)
@@ -439,14 +440,19 @@ describe('§5 a row whose English is what a formatter prints compiles into a pat
       const year = y + Math.floor(Math.floor(w) / 52)
       return { week: inSeason, year, yy: pad2(year) }
     }
-    const [short, long] = FORMAT_EXAMPLES
+    const [short, long, range] = FORMAT_EXAMPLES
     expect(englishPattern(short!)).toBe("W{week} '{yy}")
     expect(englishPattern(long!)).toBe('W{week} {year}')
+    // ⚠ RE-AIMED 12.10 r49 №2 ф2 – the wiring round the pin was waiting for (spec :198): the third pattern, over season OFFSETS
+    expect(englishPattern(range!)).toBe('W{a}-{b}')
     for (const w of [-60, -1, 0, 1, 13, 51, 52, 53, 103, 104, 1133]) {
       for (const y of [1999, 2031, 2099, 2100]) {
         expect(formatMessage(englishPattern(short!), parts(w, y), EN), `weekLabel(${w}, ${y})`).toBe(weekLabel(w, y))
         expect(formatMessage(englishPattern(long!), parts(w, y), EN), `weekYearLabel(${w}, ${y})`).toBe(weekYearLabel(w, y))
       }
+    }
+    for (const [a, b] of [[0, 9], [0, 0], [9, 33], [41, 51]] as const) {
+      expect(formatMessage(englishPattern(range!), { a: a + 1, b: b + 1 }, EN), `seasonWeekRange(${a}, ${b})`).toBe(seasonWeekRange(a, b))
     }
   })
 
@@ -471,7 +477,8 @@ describe('§5 a row whose English is what a formatter prints compiles into a pat
     expect(compiled.outcomes.filter((x) => x.disposition === 'unmatched')).toEqual([])
     // ⭐ RE-AIMED 11.10 (the blanket ruling, owner: «всё должно быть переведено»): 1 -> 2 – while only APPROVED compiled the table held the short year alone; his DRAFT «W27 2033» row now
     // compiles beside it, as the long header's pattern (`dates.weekYearLabel`). Both are READ from his cells – the pin names the two ids, never their Russian.
-    expect([...compiled.formats.keys()].sort()).toEqual(['dates.weekLabel', 'dates.weekYearLabel'])
+    // ⚠ RE-AIMED 12.10 r49 №2 ф2 – the wiring round the pin was waiting for (spec :198): 2 -> 3, the surface-block strip's «W1-10» row compiles as `dates.seasonWeekRange`.
+    expect([...compiled.formats.keys()].sort()).toEqual(['dates.seasonWeekRange', 'dates.weekLabel', 'dates.weekYearLabel'])
     expect(serializeFormats(compiled.formats), 'run npm run i18n:import').toBe(readFileSync(FORMATS_PATH, 'utf8'))
     // ru.json did not move for it: a pattern is not a catalog key
     expect(serializeRu(compiled.entries)).toBe(readFileSync('src/i18n/ru.json', 'utf8'))
@@ -526,14 +533,16 @@ describe('§5 a row whose English is what a formatter prints compiles into a pat
     expect(patternFromExample(def, "'31 STAND 14")).toEqual({ pattern: "'{yy} STAND {week}" })
   })
 
-  it('`--mark-landed` leaves a format row APPROVED and says why (no display shell reads the table yet)', () => {
+  it('`--mark-landed` leaves a format row APPROVED and says why (the shell reads the whole table; the write-back stays his)', () => {
+    // ⚠ RE-AIMED 12.10 r49 №2 ф2 – the wiring round the pin was waiting for (spec :198): the display shell (src/i18n/formats.ts) reads the table now, so the skip
+    // names the reader instead of denying one; the APPROVED -> LANDED flip is still not taken by the tool, which this arm keeps pinned.
     const dir = tmp()
     writeFileSync(join(dir, 'ru-fixture-2026-10.md'), `${FIXTURE("| `W14 '31` | `STAND 14 · '31` | `APPROVED` |")}\n`)
     const lv = live()
     const compiled = compile(readRows(['ru-fixture-2026-10.md'], dir).rows, lv)
     const plan = planLanded(compiled, lv, {}, dir)
     expect(plan.changes).toEqual([])
-    expect(plan.skipped.join('\n')).toContain('no display shell consults formats.ru.json yet')
+    expect(plan.skipped.join('\n')).toContain('read live by the display shell (src/i18n/formats.ts)')
   })
 
   it('lintFormats: an orphan id, a dropped or invented part, a long dash and a pattern that does not parse are each red; the committed file is clean', () => {
@@ -557,10 +566,15 @@ describe('§5 a row whose English is what a formatter prints compiles into a pat
     writeFileSync(path, '{}\n')
     expect(runGate({ formatsPath: path }).problems.map((p) => p.rule)).toEqual(['formats-stale'])
     // ⭐ RE-AIMED 11.10 (the blanket ruling): 1 -> 2 patterns of 2 registered – see the real-row arm above
-    expect(runGate().lines.join('\n')).toMatch(/formats {3}2 formatter pattern\(s\) of 2 registered/)
+    // ⚠ RE-AIMED 12.10 r49 №2 ф2 – the wiring round the pin was waiting for (spec :198): 2 -> 3 (`dates.seasonWeekRange` joined)
+    expect(runGate().lines.join('\n')).toMatch(/formats {3}3 formatter pattern\(s\) of 3 registered/)
   })
 
-  it('formats.ru.json is NEVER shipped by the lazy glob (it matches ru.json / es.json by name), and nothing under src/ imports it yet', () => {
+  it('formats.ru.json is NEVER shipped by the lazy glob (it matches ru.json / es.json by name), and exactly ONE module under src/ imports it: the display shell', () => {
+    // ⚠ RE-AIMED 12.10 r49 №2 ф2 – the wiring round the pin was waiting for (spec :198). The reader is `src/i18n/formats.ts`, the display module's
+    // week core: `src/i18n/dates.ts` re-exports its names (one caller-facing home) and `src/i18n/words.ts` reads `localizedWeekLabel` from the LEAF,
+    // because a value import of `dates` from `words` would close the cycle words -> dates -> index -> words (tests/import-cycles.test.ts refuses it).
+    // The LAZY-catalog half SURVIVES as written: `catalog.ts` still never ships the registry, and `index.ts` still never touches it.
     const source = readFileSync('src/i18n/catalog.ts', 'utf8')
     const glob = /import\.meta\.glob<[^>]*>\(\s*'([^']+)'/.exec(source)?.[1]
     expect(glob).toBeTruthy()
@@ -569,5 +583,11 @@ describe('§5 a row whose English is what a formatter prints compiles into a pat
     expect(globSync('./*.json', { cwd: 'src/i18n' }), 'the control: a sweep WOULD have shipped it').toContain('formats.ru.json')
     expect(readFileSync('src/i18n/index.ts', 'utf8')).not.toContain('formats.ru')
     expect(source).not.toContain('formats.ru')
+    // the positive arm: the one reader exists, imports the registry statically, and nothing else under src/ does
+    // (an IMPORT statement, not a mention – the neighbours' comments may and do NAME the file while never reading it)
+    const IMPORT_RE = /from\s+'[^']*formats\.ru\.json'/
+    const readers = globSync('src/**/*.{ts,vue}', { cwd: '.' }).filter((f) => IMPORT_RE.test(readFileSync(f, 'utf8'))).sort()
+    expect(readers).toEqual(['src/i18n/formats.ts'])
+    expect(readFileSync('src/i18n/formats.ts', 'utf8')).toMatch(/import patterns from '\.\/formats\.ru\.json'/)
   })
 })

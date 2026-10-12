@@ -53,7 +53,7 @@ import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
 import { formatCents } from '../shared/money'
-import { weekLabel } from '../shared/dates'
+import { weekLabel } from '../i18n/dates'
 // ⚙ L2-10b (08.10) – THE CARD'S OWN WORDS ARE CATALOG KEYS (docs/localization/ru-school-fork-2026-10.md, RU-12E): the kicker, the lede, the five facts, the quotes' frames, the three
 // answers and the summary under the one that commits her. The college places' names (`COLLEGE_TIER_NAME`), the tier short (`TIER_SHORT`) and the week label are the ENGINE'S words
 // and stay holes. The table of funding bands is GETTERS over `t()` and keeps its type; the ladder's name is the chip's own (`ladderName`), lowercased where English lowercased it.

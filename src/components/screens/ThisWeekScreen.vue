@@ -36,7 +36,7 @@ const dismissedRecapKey = moduleRef<string | null>(null)
 import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { WEEK_PLAN_PRESETS, type WorldMatch } from '../../shared/protocol'
-import { weekLabel } from '../../shared/dates'
+import { weekLabel } from '../../i18n/dates'
 import { weekDateLine } from '../../i18n/dates'
 import { KID_ID, flipScore } from '../../engine/world'
 import { recapExists } from '../../composables/weekRecap'

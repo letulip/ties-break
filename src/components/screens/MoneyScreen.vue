@@ -84,7 +84,8 @@ import type {
   WorldEvent,
   WorldEventCategory,
 } from '../../shared/protocol'
-import { seasonYear, weekLabel, weeksLeftBracket } from '../../shared/dates'
+import { seasonYear } from '../../shared/dates'
+import { weekLabel, weeksLeftBracket } from '../../i18n/dates'
 import { formatCents, formatCentsSigned } from '../../shared/money'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl } from '../../art/weeks'

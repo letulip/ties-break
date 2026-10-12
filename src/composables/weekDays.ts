@@ -96,7 +96,7 @@ import { vacationPackage } from '../engine/economy'
 // W2-LADDER §4: the two-type feed and the stacked-week pick - the SAME two rules the Season screen
 // reads, so the look-ahead markers and the season rows cannot disagree about which events exist.
 import { feedContext, feedShows, preferredWeekEvent } from './tierState'
-import { weekLabel } from '../shared/dates'
+import { weekLabel } from '../i18n/dates'
 import { weekSpan } from '../i18n/dates'
 import type { Surface } from '../engine/match/types'
 import type { TierDef, TierId } from '../engine/season/types'
@@ -472,7 +472,10 @@ export function layoffHoldsWeek(snap: Pick<Snapshot, 'week' | 'injury'>, week: n
  */
 export function layoffNoteFor(snap: (Pick<Snapshot, 'week' | 'injury'> & Partial<Pick<Snapshot, 'startYear'>>) | null | undefined): string {
   const back = snap ? layoffReturnWeek(snap) : null
-  return back === null ? '' : `Injured – back ${weekLabel(back, snap?.startYear)}`
+  // ⭐ r49 №2 ф2 (12.10): the last whole English sentence of the week surfaces outside `t()` – wrapped. English is
+  // byte-identical (the key IS the sentence); the week hole rides the display `weekLabel` and, were an engine-English
+  // label ever handed in instead, the `week` hole class (src/i18n/wordHoles.ts) re-spells it the same way.
+  return back === null ? '' : t('Injured – back {0}', [weekLabel(back, snap?.startYear)])
 }
 
 /** ⭐ ROUND 28 #1 – WHICH DAYS THE MASSEUR'S TABLE LANDS ON, given how many sessions the rung buys.

@@ -664,3 +664,17 @@ tournament flow.
 | RU21-HOM-29 | `Wednesday` | `Среда` |
 | RU21-HOM-30 | `{sessions} sessions over {days} days – {doubled} of them two sessions a day.` | `{sessions, plural, one {{sessions} тренировка} few {{sessions} тренировки} many {{sessions} тренировок} other {{sessions} тренировки}} за {days, plural, one {{days} день} few {{days} дня} many {{days} дней} other {{days} дня}}; из них {doubled, plural, one {{doubled} день} few {{doubled} дня} many {{doubled} дней} other {{doubled} дня}} – по две тренировки.` |
 | RU21-HOM-31 | `{sessions} sessions – {court} on court, {gym} in the gym.` | `{sessions, plural, one {{sessions} тренировка} few {{sessions} тренировки} many {{sessions} тренировок} other {{sessions} тренировки}}: на корте – {court}, в зале – {gym}.` |
+
+## ⚙ 12.10 agent-authored (r49 №2 ф2) – the injured-lock sentence wrapped
+
+⚙ 12.10 agent-authored under the blanket ruling; his live edit follows.
+
+One key: `layoffNoteFor` (src/composables/weekDays.ts) was the last whole English sentence of the
+week surfaces outside `t()` – «Injured – back W23 '32» on the tournament card's lock, the plan
+sheet and the season grid. The sentence is now a key; the week label in its hole is the engine's
+English (`weekLabel`) and reads through the display boundary's `week` class
+(src/i18n/wordHoles.ts), the diary's «вернётся {week}» manner.
+
+| id | English | Russian |
+| --- | --- | --- |
+| R49N2-HOM-01 | `Injured – back {0}` | `Травма – вернётся {0}` |

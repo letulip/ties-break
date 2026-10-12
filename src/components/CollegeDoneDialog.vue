@@ -41,7 +41,7 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
-import { weekLabel } from '../shared/dates'
+import { weekLabel } from '../i18n/dates'
 // ⚙ L2-10b (08.10) – the graduation card's own words are catalog keys (RU-12D). `Banked` here is the SIGNED total over every year, the year card's is the year the balance ROSE: two
 // Russians in one table, so this one carries the tag `total|Banked` and the card keeps the bare key.
 import { t } from '../i18n'

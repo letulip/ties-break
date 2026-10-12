@@ -42,7 +42,7 @@ let spanSeq = 0
 import { computed, useTemplateRef } from 'vue'
 import type { SpanWeek } from '../engine/world/multiWeek'
 import { useDialogFocus } from '../composables/dialogFocus'
-import { weekLabel } from '../shared/dates'
+import { weekLabel } from '../i18n/dates'
 import { formatCentsSigned } from '../shared/money'
 import { useStartYear } from '../composables/startYear'
 // v93 (L3-0): a ledger row's sentence is `c` rendered under the locale when the row has one, its stored `text` otherwise.

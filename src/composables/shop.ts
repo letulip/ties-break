@@ -12,7 +12,7 @@
 import { computed, ref, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import type { ShopPricePoint, ShopPurchaseView, ShopRowView } from '../shared/protocol'
-import { weekLabel } from '../shared/dates'
+import { weekLabel } from '../i18n/dates'
 import { monthLabel } from '../i18n/dates'
 import { formatCents } from '../shared/money'
 import { t } from '../i18n'

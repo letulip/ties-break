@@ -15,22 +15,30 @@
 //     typed here (words.ts's law). Under the `xx` probe the same calls return bracketed pseudo, which
 //     is how the carpet proves a date went through the catalog.
 //
-// ⚠ WEEK-ONLY labels (`weekLabel`, `weekYearLabel`, `seasonWeekRange`, `weeksLeftBracket`) are
-// phase 2 – they stay on the shared module and still print English under ru, on purpose.
+// ⭐ r49 №2 PHASE 2 (12.10) – the WEEK-ONLY labels joined: `weekLabel`, `weekYearLabel` and
+// `seasonWeekRange` ride the FORMAT REGISTRY (`./formats`, the one reader of `formats.ru.json` –
+// his cells compiled to patterns, spec :198's wiring round), re-exported here so callers keep one
+// display-module home; `weeksLeftBracket` cannot be a pattern (Russian pluralises both the noun and
+// the verb) and goes the phase-1 way, catalog `t()`-keys. `localizedWeekLabel` (also `./formats`)
+// is the week twin of `localizedDateSpanLabel` below, for labels the engine baked into strings.
 // ⚠ NO IMPORT CYCLE: `./index` does not import this module; callers import both, which is fine.
+// `./words` reads `localizedWeekLabel` from the LEAF (`./formats`), never from here – this module
+// imports `./index`, and words → dates → index → words would be the cycle the leaf exists to avoid.
 import { locale } from './locale'
 import { t } from './index'
+import { weekYearLabel } from './formats'
 import {
   birthDateLabel as birthDateLabelEn,
   daysInBirthMonth,
   monthLabel as monthLabelEn,
-  seasonYear,
   weekDateLine as weekDateLineEn,
   weekRange as weekRangeEn,
   weekSpan as weekSpanEn,
   weekSpanParts,
-  WEEKS_IN_SEASON,
+  weeksLeftBracket as weeksLeftBracketEn,
 } from '../shared/dates'
+
+export { localizedWeekLabel, seasonWeekRange, weekLabel, weekYearLabel } from './formats'
 
 /** The twelve `Month {day}` keys (RU21-FMT-01..24 compiled «{day} января» …) as LITERAL `t()` calls,
  *  one per entry – words.ts's law: the extractor recognises a call by the literal, so every entry is
@@ -101,15 +109,12 @@ export function weekSpan(week: number, startYear?: number): string {
 }
 
 /** "W27 2033 · Jun 3 – Jun 9" / «Неделя 27 · 2033 · 3–9 июня» – the Home/Calendar header line. The
- *  week half rides its own key (`W{week} {year}` – the same facts `weekYearLabel` prints, so phase 2
- *  can reuse the row); the arithmetic is `weekParts`'s own (total modulo + `seasonYear`), restated
- *  here because the shared pair is private – the `en` delegation above is what keeps the two honest. */
+ *  week half IS `weekYearLabel` (the registry's `dates.weekYearLabel` – phase 2 retired the catalog
+ *  key `W{week} {year}` that stood in for it: one home per fact), joined to the span exactly as the
+ *  shared line joins its own halves. */
 export function weekDateLine(week: number, startYear?: number): string {
   if (locale.value === 'en') return weekDateLineEn(week, startYear)
-  const w = Math.floor(week)
-  const inSeason = ((w % WEEKS_IN_SEASON) + WEEKS_IN_SEASON) % WEEKS_IN_SEASON + 1
-  const year = seasonYear(Math.floor(w / WEEKS_IN_SEASON), startYear)
-  return `${t('W{week} {year}', { week: inSeason, year })} · ${weekSpan(week, startYear)}`
+  return `${weekYearLabel(week, startYear)} · ${weekSpan(week, startYear)}`
 }
 
 /** "Jan 6–12, 2031" / «6–12 января 2031 года» – the self-contained range. The year tail is one key
@@ -126,6 +131,19 @@ export function weekRange(week: number, startYear?: number): string {
         ? `${dayMonth(p.startMonth, p.startDay)} – ${dayMonth(p.endMonth, p.endDay)}`
         : dayMonth(p.startMonth, `${p.startDay}–${p.endDay}`)
   return t('{span}, {year}', { span, year: p.endYear })
+}
+
+/** "(14 weeks left)" / «(осталось 14 недель)» – the remaining-term bracket (round 41 #14). NOT a
+ *  registry pattern on purpose: the Russian pluralises the noun AND the verb («осталась 1 неделя» /
+ *  «осталось 14 недель», his rows), which a one-sample pattern cannot carry – so the three branches
+ *  the shared twin builds are three catalog keys, ICU plural on the counted one, every word the
+ *  translator's (phase 1's way). The `left <= 0` boundary and the `=== 1` split are the SHARED
+ *  twin's own branches, restated so each English byte stays a literal key the extractor sees. */
+export function weeksLeftBracket(untilWeek: number, atWeek: number): string {
+  if (locale.value === 'en') return weeksLeftBracketEn(untilWeek, atWeek)
+  const left = untilWeek - atWeek
+  if (left <= 0) return t('(last week)')
+  return left === 1 ? t('(1 week left)') : t('({weeks} weeks left)', { weeks: left })
 }
 
 /** The ONE shape the engine bakes into an album `dateLabel` – `weekSpan`'s English, which always

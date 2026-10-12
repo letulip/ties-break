@@ -34,7 +34,7 @@ import { ASSET_NAME_MAX_CHARS } from '../engine/world'
 // ⭐ ROUND 34 #19 – the chart's four windows are a VALUE from the protocol, so the picker here and
 // the series length in `shopView` read one table.
 import { SHOP_PRICE_RANGE_MONTHS } from '../shared/protocol'
-import { weekLabel } from '../shared/dates'
+import { weekLabel } from '../i18n/dates'
 import { monthLabel } from '../i18n/dates'
 import { formatCents, formatCentsSigned } from '../shared/money'
 // ⭐ ROUND 30 #5 – one picture per card. `shelfArtUrl`'s header carries the whole contract: a key with

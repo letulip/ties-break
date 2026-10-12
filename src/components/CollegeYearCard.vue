@@ -29,7 +29,7 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
 import { formatShortName } from '../shared/format'
-import { weekLabel } from '../shared/dates'
+import { weekLabel } from '../i18n/dates'
 // ⚙ L2-10b (08.10) – EVERY SENTENCE THIS CARD AUTHORS IS A CATALOG KEY NOW (docs/localization/ru-college-year-2026-10.md, RU-12D); the engine's words inside them
 // – the place names, the league and squad labels, the league exit label, the round labels, the opponents – are holes or raw, and the engine's receipts are L3.
 // A sentence that English builds from a counted clause is a whole message per shape (the same count fork the old template literals made), so nothing here

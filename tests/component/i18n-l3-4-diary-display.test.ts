@@ -4,7 +4,9 @@
 //   · English: a line with a ref and the same line with only its text are the same bytes on the screen (the formatter's identity path) – the 0-risk half of the wave;
 //   · Russian with a catalog: the ref is looked up and the TRANSLATION is drawn, the English is not – the half that makes the wave worth having;
 //   · the greeting's collision rule keeps reading the ENGLISH caption (the tag it searches for a time word), whatever the caption shown is;
-//   · a week label ("W14 '31") has no ref – it is a formatter's output – and prints as text under every language.
+//   · a week label ("W14 '31") has no ref – it is a formatter's output – ⚠ RE-AIMED 12.10 r49 №2 ф2, the wiring round the pin was waiting for
+//     (spec :198): under Russian it is re-spelled through the FORMAT REGISTRY (`localizedWeekLabel`, src/i18n/formats.ts), so the arm now
+//     expects the registry pattern's fill, composed from formats.ru.json – still no ref, still never the catalog, never Cyrillic typed here.
 //
 // ⚠ FIXTURE SENTENCES AND ASCII MARKERS ON PURPOSE (CLAUDE.md invariant 4): nothing here asserts a shipped sentence, so no wording change can move this file; the "translations" are
 // marker strings, never Russian.
@@ -22,6 +24,8 @@ import { createWorld, decideKnock, pendingBirthday, pendingKnock, tickWeek, toSn
 import { rngFromSeed } from '../../src/engine/rng'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 import { installCatalog, missCount, resetI18nForTests, setLocale } from '../../src/i18n'
+import { formatMessage } from '../../src/shared/i18n'
+import { readFileSync } from 'node:fs'
 import { installMemoryStorage } from './setup'
 
 installMemoryStorage()
@@ -106,13 +110,21 @@ describe('L3-4 – Home draws the diary through its refs', () => {
     expect(text(w, '.diary-greeting'), 'the collision still fired on the English caption, and the fallback is the ref\'s translation').toBe('GREETING*')
   })
 
-  it('a week label has no ref and prints as text under every language', async () => {
+  it('a week label has no ref and is re-spelled through the format registry under ru (an unparseable label prints as text)', async () => {
+    // ⚠ RE-AIMED 12.10 r49 №2 ф2 – the wiring round the pin was waiting for (spec :198): the expectation is the registry pattern's
+    // fill, read from formats.ru.json (his compiled cell – no Cyrillic typed here), never a catalog key.
     installCatalog('ru', RU)
     await setLocale('ru')
     const d = fixtureDiary(base())
     const w = openHome({ ...d, memory: { ...d.memory!, whenLabel: "W14 '31", whenLabelC: undefined } })
     await nextTick()
-    expect(text(w, '.memory-when')).toBe("W14 '31")
+    const patterns = JSON.parse(readFileSync('src/i18n/formats.ru.json', 'utf8')) as Record<string, string>
+    expect(text(w, '.memory-when')).toBe(formatMessage(patterns['dates.weekLabel']!, { week: 14, yy: '31' }, { locale: 'ru' }))
+    expect(text(w, '.memory-when')).not.toBe("W14 '31")
+    // the pass-through half: a label the registry cannot re-spell («one year ago» has its own ref; a bare marker has nothing) prints as text
+    const odd = openHome({ ...d, memory: { ...d.memory!, whenLabel: 'MARKER* when', whenLabelC: undefined } })
+    await nextTick()
+    expect(text(odd, '.memory-when')).toBe('MARKER* when')
   })
 
   it('a ref the catalog does not know falls back to the English KEY\'s sentence and is COUNTED, never thrown', async () => {

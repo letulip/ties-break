@@ -505,7 +505,7 @@ export function compile(rows: readonly Row[], live: Live, opts: { includeDrafts?
       formats.set(fmt.id, made.pattern)
       formatProv.set(fmt.id, { doc: row.doc, line: row.line, status: row.status, identity: made.pattern === row.english })
       fclaimed.set(fmt.id, outcomes.length)
-      out('format', { format: fmt.id, value: made.pattern, why: `a pattern over {${Object.keys(fmt.parts).join('}, {')}} for ${fmt.formatter.name} – no display shell consults formats.ru.json yet` })
+      out('format', { format: fmt.id, value: made.pattern, why: `a pattern over {${Object.keys(fmt.parts).join('}, {')}} for ${fmt.formatter.name} – read live by the display shell (src/i18n/formats.ts, r49 №2 ф2)` })
       continue
     }
 
@@ -611,8 +611,9 @@ export function planLanded(
   const texts = new Map<string, string[]>()
   for (const o of compiled.outcomes) {
     if (o.disposition === 'format' && o.row.status === 'APPROVED' && !(onlyDocs && !onlyDocs.includes(o.row.doc))) {
-      // L3-T: a pattern is wired the day a display shell next to the formatter reads formats.ru.json – none does yet, so the row stays APPROVED and says why.
-      skipped.push(`${o.row.doc}:${o.row.line} «${o.format}» – a formatter-locale pattern: no display shell consults formats.ru.json yet`)
+      // ⚠ RE-AIMED 12.10 r49 №2 ф2 – the wiring round the pin was waiting for (spec :198): the display shell (src/i18n/formats.ts) reads the table now.
+      // The row still stays APPROVED under --mark-landed: the write-back is per-row evidence and stays his to run, so the skip names the reader instead of denying one.
+      skipped.push(`${o.row.doc}:${o.row.line} «${o.format}» – a formatter-locale pattern: read live by the display shell (src/i18n/formats.ts) since r49 №2 ф2; the APPROVED mark stays his`)
       continue
     }
     if (o.disposition !== 'compiled' || o.row.status !== 'APPROVED' || o.key === undefined) continue

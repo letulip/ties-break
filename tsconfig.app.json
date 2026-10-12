@@ -8,6 +8,10 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client", "vite-plugin-pwa/client", "node"],
     "strict": true,
+    // ⭐ r49 №2 ф2 (12.10): the display module's week core (src/i18n/formats.ts) statically imports
+    // the compiled format registry `formats.ru.json` – the typed import is what keeps a pattern id a
+    // compile-time fact (`keyof typeof patterns`) instead of a string a typo can invent.
+    "resolveJsonModule": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,

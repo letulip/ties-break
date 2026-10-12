@@ -85,7 +85,8 @@ const pct = (r: number): string => `${(r * 100).toFixed(0)}%`
 
 /** What the §6 allowlist says plus two shapes of NUMBER the sweep must not charge: the compact money figure (`$40.6M` – locale-invariant by ruling,
  *  §9.6, and a letter in it is the unit) and the formatter's week label (RU-13D's). The chrome around them is still charged. */
-const ALLOW: readonly RegExp[] = [...DEFAULT_ALLOW, /^\$[\d.,]+[KMB]$/, /^W\d+ '\d\d$/]
+// ⭐ r49 №2 ф2 (12.10): the week labels fill the FORMAT REGISTRY under xx now (src/i18n/formats.ts), so the registry's form joins the English one (still printed under en arms)
+const ALLOW: readonly RegExp[] = [...DEFAULT_ALLOW, /^\$[\d.,]+[KMB]$/, /^W\d+ '\d\d$/, /^Нед\. \d+ · ’\d{2}$/]
 
 /** The rows of every table whose clean English cell is exactly `english`, with the importer's own reader. */
 const rowsFor = (english: string) => ROWS.filter((r) => r.english === english)

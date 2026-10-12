@@ -21,10 +21,11 @@
 // call site asks for. A separate file keeps both statements true, costs the bundle NOTHING until a consumer imports it (the lazy glob in `catalog.ts` matches `ru.json` / `es.json` by name
 // and cannot match `formats.ru.json` – tests/i18n-l3-t-tooling.test.ts proves it), and is where the L4 display shells will look.
 //
-// ⚠ THE CONSUMERS ARE NOT BUILT HERE. Nothing reads `formats.ru.json` yet: `weekLabel` still prints English under every locale, and the row stays APPROVED (not LANDED) until a shell
-// next to `dates.ts` consults the table – `--mark-landed` says so. This file builds the carrier; the round that wires `weekLabel` (RU-13D) builds the reader.
+// ⚠ RE-AIMED 12.10 r49 №2 ф2 – the wiring round the pin was waiting for (spec :198): the consumers ARE built now. `src/i18n/formats.ts` – the display module's week core, re-exported by
+// `src/i18n/dates.ts` – is the one reader of `formats.ru.json`: `weekLabel`, `weekYearLabel` and `seasonWeekRange` fill the patterns under ru. A row still stays APPROVED (not LANDED)
+// under `--mark-landed`: the mark is per-row evidence and the shell reads the whole table, so the write-back stays his to run (the message names the reader now).
 import { normKey } from './copy-text'
-import { weekLabel, weekYearLabel } from '../src/shared/dates'
+import { seasonWeekRange, weekLabel, weekYearLabel } from '../src/shared/dates'
 
 export const FORMATS_PATH = 'src/i18n/formats.ru.json'
 
@@ -41,9 +42,11 @@ export interface FormatDef {
 
 // «W14 '31»: absolute week 13 of a career that starts in 2031 – the in-season week is 14, the season year 2031.
 // «W27 2033»: absolute week 26, start year 2033 – the full-year header form.
+// «W1-10»: season-relative OFFSETS 0..9 – never absolute weeks (r49 №2 ф2, 12.10: the surface-block strip's row joins the registry with its reader).
 export const FORMAT_EXAMPLES: readonly FormatDef[] = [
   { id: 'dates.weekLabel', formatter: { file: 'src/shared/dates.ts', name: 'weekLabel' }, example: weekLabel(13, 2031), parts: { week: '14', yy: '31' } },
   { id: 'dates.weekYearLabel', formatter: { file: 'src/shared/dates.ts', name: 'weekYearLabel' }, example: weekYearLabel(26, 2033), parts: { week: '27', year: '2033' } },
+  { id: 'dates.seasonWeekRange', formatter: { file: 'src/shared/dates.ts', name: 'seasonWeekRange' }, example: seasonWeekRange(0, 9), parts: { a: '1', b: '10' } },
 ]
 
 export function formatIndex(defs: readonly FormatDef[] = FORMAT_EXAMPLES): Map<string, FormatDef> {

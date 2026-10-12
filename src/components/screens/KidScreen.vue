@@ -56,7 +56,7 @@ import { useKidEmotion } from '../../composables/kidEmotion'
 // the scale IN the call: this number is a 0..100 percentage, not a 0..1 share, and the signature
 // will not let the two be confused.
 import { readingColor } from '../../composables/readingColor'
-import { weekLabel } from '../../shared/dates'
+import { weekLabel } from '../../i18n/dates'
 import { birthDateLabel } from '../../i18n/dates'
 // ⚠ MERGE: `FamilyBackground` left with the Family tile (screen C now draws the export's six, and
 // family background lives on the Money screen where it prices things). `PortraitEmotion`, not
