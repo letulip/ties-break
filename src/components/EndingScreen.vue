@@ -430,8 +430,9 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         <p v-if="blurb" class="album-blurb">{{ blurb }}</p>
 
         <!-- POINT 3: one hard fact off the milestone itself, never a computed summary. -->
-        <!-- ⚠ ROUND 49 №15 (12.10): the second week line is GONE by his word – «второй W50 '50 на
-             отдельной строке убрать, он лишний». The date already rides inside `closing.fact`
+        <!-- ⚠ ROUND 49 №15 (12.10): the second week line is GONE by his word (the verbatim quote
+             lives beside the retired `.album-when` block in this file's style section – templates
+             carry no Cyrillic by the copy rule). The date already rides inside `closing.fact`
              (album.ts slot 7 opens the fact with the week label), so this `album-when` repeat was
              the same week said twice. The element and its CSS left together. -->
         <p v-if="closing.fact" class="album-fact">{{ eventText({ text: closing.fact, c: closing.factC }) }}</p>
@@ -528,11 +529,12 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
             <div><dt>{{ t('Seasons') }}</dt><dd class="ending-fig">{{ view.seasonsPlayed }}</dd></div>
           </dl>
         </div>
-        <!-- ⭐⭐⭐ ROUND 49 №9 (12.10) – THE ONE-MORE-YEAR NOTE IS GONE BY HIS WORD: «еще один год
-             говорили мы... убрать всю строку». It arrived in round 47 (R47-S4), flipped voice in
-             round 48 #4, and leaves whole here – the element, not a v-if. `oneMoreYearCount` stays
-             on the wire: the natural-ending blurb still reads it to decide whether its own sentence
-             is true (the 10.10 «при 0 надо починить» ruling above). -->
+        <!-- ⭐⭐⭐ ROUND 49 №9 (12.10) – THE ONE-MORE-YEAR NOTE IS GONE BY HIS WORD (the verbatim
+             quote lives beside the №15 record in this file's style section – templates carry no
+             Cyrillic by the copy rule). It arrived in round 47 (R47-S4), flipped voice in round 48
+             #4, and leaves whole here – the element, not a v-if. `oneMoreYearCount` stays on the
+             wire: the natural-ending blurb still reads it to decide whether its own sentence is
+             true (the 10.10 ruling above). -->
 
         <!-- ⭐ ROUND 29 PART TWO #10 – THE ACADEMY LINE, the-shop §10.4 settled by the owner (his
              ruling is quoted on `AcademyEpilogue` in shared/protocol/career.ts – a template may
@@ -786,6 +788,13 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
   line-height: 1.45;
   color: var(--ink-soft);
 }
+
+/* ⚠ ROUND 49 №15 (12.10): `.album-when` stood here and is GONE with its element, by the owner's
+   word – «второй W50 '50 на отдельной строке убрать, он лишний». The fact line above already opens
+   with the same week label, so the date was said twice.
+   ⭐⭐⭐ AND №9, THE SAME DAY (the template's one-more-year record keeps its quote here): «еще один
+   год говорили мы... убрать всю строку» – his words, verbatim; the 10.10 half of that ruling was
+   «при 0 надо починить». */
 
 .ending-foot {
   margin-top: 26px;

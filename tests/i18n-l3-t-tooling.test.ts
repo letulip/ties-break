@@ -136,7 +136,7 @@ const SEAT_KEYS: Record<string, number> = {
   'diary.travel': 78, //            the travel notes + the coach's five
   'smallTalk.corpus': 820, //       204 openers + 612 replies + 4 shared second beats (L3-5 §6)
   'smallTalk.frames': 18, //        9 per presence
-  'album.corpus': 472, //           456 cells + 16 arc cells (L3-6 §11)
+  'album.corpus': 652, //           636 cells + 16 arc cells (L3-6 §11) – ⚠ RE-STAMPED 12.10 r49 №7: seven occasions grew variant pools (+180)
   // ⚠ 10.10 – the LQA runner's four not-in-catalog keys and their whole families (L4-GATE row):
   'ledger.tournamentRow': 8, //     4 clause shapes x retired on/off, read off the REAL joiner – the first braced ref-seat keys
   'spirit.exposure': 1, //          EXPOSURE_ROW, written by identity (`text: EXPOSURE_ROW`)
@@ -311,7 +311,8 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     // ⭐ RE-AIMED 10.10: 16 seats / 2,275 keys -> 17 / 2,284 (+ `ending.blurb`, nine keys)
     // ⭐ RE-AIMED 11.10 (RU-22): 17 / 2,284 -> 19 / 2,537 (+ `form.eye` 2 keys, + `engine.text` 251 keys – some of which another seat or the census already reached)
     // ⭐ RE-AIMED 11.10 (RU-23): 19 / 2,537 -> 20 / 2,589 (+ `coach.room` 12 keys, + 40 `engine.text` keys for the coach market's prose)
-    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 2589 catalog keys/)
+    // ⚠ RE-STAMPED 12.10 r49 №7: 2589 → 2769 – album.corpus grew +180 variant keys.
+    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 2769 catalog keys/)
   })
 })
 

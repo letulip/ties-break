@@ -238,11 +238,11 @@ watch(
     <div class="album-stage">
       <!-- ⭐ ROUND 49 №1 (12.10): THE PILL STANDS ABOVE THE FILM, IN FLOW. It sat absolute over the
            sheet's bottom-right corner – the mockup's placement – and on his phone it painted over
-           the photographs and the handwriting: «он сейчас перекрывает и картинки и записки». Of his
-           two alternatives («вниз под "Главы"», «наверх») this is the one that moves no pin: the
-           parity suite holds this pill as `.album-stage`'s DIRECT child, and above the film it can
-           cover nothing at any pan position. Everything inside it is untouched – the words are his
-           (invariant 4). -->
+           the photographs and the handwriting (his words, quoted verbatim beside `.album-half`'s
+           CSS below – templates carry no Cyrillic by the copy rule). Of his two alternatives this
+           is the one that moves no pin: the parity suite holds this pill as `.album-stage`'s DIRECT
+           child, and above the film it can cover nothing at any pan position. Everything inside it
+           is untouched – the words are his (invariant 4). -->
       <div v-if="sheets.length" class="album-half">
         <span class="album-half-label">{{ onRightHalf ? t('Right half') : t('Left half') }}</span>
         <span class="album-half-track" :class="{ 'is-right': onRightHalf }" aria-hidden="true">

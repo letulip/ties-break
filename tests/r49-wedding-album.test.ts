@@ -22,6 +22,7 @@
 // purpose-scoped `seed:life:wedding:<week>` sub-stream, exactly as the engine does.
 
 import { describe, it, expect } from 'vitest'
+import { firstWeekAtAge } from './helpers/career'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
@@ -71,11 +72,7 @@ function firstHit(seed: string, from: number): number {
   throw new Error('no wedding hit inside 2000 weeks')
 }
 
-/** The first week she IS `age` – the album's own clock (`kidAgeAt`), scanned rather than assumed. */
-function weekAtAge(world: WorldState, age: number): number {
-  for (let w = 0; w < 2000; w++) if (kidAgeAt(world, w) === age) return w
-  throw new Error(`no week reaches age ${age}`)
-}
+
 
 /** A career whose wedding LANDED through the real path: the hazard hit on its own sub-stream, the
  *  beat was answered, and `landWedding` latched `weeksAfterEngagement` later – the one writer of
@@ -86,7 +83,7 @@ function engineWedding(): WorldState {
   for (let i = 0; i < 50; i++) {
     const seed = `r49-wed-${i}`
     const probe = createWorld(seed)
-    const gate = weekAtAge(probe, WEDDING.ageGate)
+    const gate = firstWeekAtAge(probe, WEDDING.ageGate)
     const hit = firstHit(seed, gate)
     const landing = hit + WEDDING.weeksAfterEngagement
     if (kidAgeAt(probe, landing) > 30) continue

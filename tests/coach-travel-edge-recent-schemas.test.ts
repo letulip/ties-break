@@ -1,4 +1,4 @@
-// THE FROZEN CAREERS, THE RUNGS AT THE TOP – v93 down to v84 (v83's rung moved to -late-schemas on 09.10, when v93 made this the eleventh).
+// THE FROZEN CAREERS, THE RUNGS AT THE TOP – v94 down to v85 (v84's rung moved to -late-schemas on 12.10, when r49 №8's v94 made this the eleventh; v83's went the same way on 09.10).
 //
 // ⚠⚠ WHY THIS FILE EXISTS, AND IT IS THE THIRD TIME THIS FAMILY HAS BEEN CUT FOR THE SAME REASON.
 // birpc's RPC window is a hard 60 s and it is not raisable; a file whose tests cross it fails the job
@@ -255,27 +255,5 @@ describe('the byte-identity of a career that does not travel', () => {
     expect(careerHashAtSchema(0, 1, 84), '8k · self-coached · player – the verbatim v84 value').toBe(PRE_V85.selfTravelling)
   })
 
-  it('⭐⭐⭐ v84: rolling the schema back to 83 – dropping `prologueTrace` – returns the v83 CAREER on all three', () => {
-    // ⭐⭐ AN IDENTITY, v83's OWN KIND, AND THE CASE NAME SAYS SO because the measurement proved it
-    // before a constant was touched. v84 appends ONE world key – `prologueTrace`, the childhood's
-    // own record (the album spec §3, ruled path (а) 19.09) – written ONCE at `createWorld` FROM THE
-    // HANDOVER's optional `trace`, and `walkFrozenCareer` hands over no prologue, so every career
-    // in this file carries the literal `null` for the whole of its life.
-    //
-    // ⚠⚠ THE WRITER'S OWN SIGNATURE IS THE WHOLE ARGUMENT, a stronger one than v83's calendar: no
-    // tick, however long, writes this key – its one writer takes its value from an argument no
-    // career in this file is ever given, and its one reader (the album assembly) is on demand and
-    // never inside a walk. So unlike the v83 rung, no future lengthening of `FREEZE_WEEKS` can
-    // re-anchor this one; a red HERE beside a green freeze means something started writing the
-    // trace after birth, which the state.ts block above the key forbids in as many words.
-    //
-    // ⚠ THE MEASUREMENT is in the v84 block over `PRE_V84` in tests/coachTravelEdgeFixtures.ts –
-    // `careerHashAtSchema(·, ·, 83)` reproduced the three shipped v83 `FROZEN` constants character
-    // for character with the bump in the tree, and `rngMain` cannot have moved by construction
-    // (the step and the writer draw nothing; the album's flavour sub-stream is assembly-time).
-    expect(careerHashAtSchema(5, 0, 83), '25k · middle coach · grinder – the verbatim v83 value').toBe(PRE_V84.middleGrinder)
-    expect(careerHashAtSchema(8, 0, 83), '120k · elite coach · grinder – the verbatim v83 value').toBe(PRE_V84.eliteGrinder)
-    expect(careerHashAtSchema(0, 1, 83), '8k · self-coached · player – the verbatim v83 value').toBe(PRE_V84.selfTravelling)
-  })
 
 })

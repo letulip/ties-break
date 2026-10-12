@@ -15,6 +15,7 @@
 //   ARM A  the ordinal hardcoded (`c.ordinal = 0` in `assignAlbumOrdinals`)  → red (the walk case:
 //          firings 3 and 4 answer variants 0 and 1, a frozen walk answers variant 0 five times)
 import { describe, expect, it } from 'vitest'
+import { firstWeekAtAge } from './helpers/career'
 
 import { assembleAlbum, createWorld, kidAgeAt, TEMPERAMENTS, type WorldState } from '../src/engine/world'
 import { assignAlbumOrdinals, albumHandOf, dedupeSheetCaptions } from '../src/engine/world/albumBook'
@@ -22,10 +23,7 @@ import { ALBUM_CORPUS, type AlbumHand, type AlbumOccasion } from '../src/engine/
 import { posedCareer, SWEEP_CAREERS } from './helpers/albumSweep'
 import type { AlbumBook } from '../src/shared/protocol'
 
-function weekAtAge(world: WorldState, age: number): number {
-  for (let w = 0; w < 2000; w++) if (kidAgeAt(world, w) === age) return w
-  throw new Error(`no week reaches age ${age}`)
-}
+
 
 /** A synthetic hand – TEST data, never corpus copy (`tests/component/albumFixture.ts`'s rule holds:
  *  nothing here reaches a screen, and no sentence here is the owner's). */
@@ -115,7 +113,7 @@ describe('r49 №4 – the per-sheet caption dedupe: «дважды на одн�
     // variety, not a blank. The dedupe stays live for a literal repeat (the pure arm above, and the
     // wrapped-walk shape the synthetic cases pin); this arm now pins the better answer.
     const world = createWorld('r49-dedupe-page')
-    const base = weekAtAge(world, 24)
+    const base = firstWeekAtAge(world, 24)
     world.week = base + 60
     world.milestones.push({ type: 'break-even', week: base + 2, kind: 'career' })
     world.milestones.push({ type: 'wedding', week: base + 6, kind: 'p:1' })
@@ -207,9 +205,9 @@ describe('r49 №4/№5/№7 – THE VARIETY IS MEASURED, NOT ASSERTED (predicte
     const world = posedCareer(i)
     const ages = [15, 17, 19, 21, 24, 27, 30]
     ages.forEach((age, k) => {
-      world.injuryHistory.push({ kind: 'ankle soreness', severity: 'moderate', week: weekAtAge(world, age) + ((i + k) % 40), weeksOut: 3 + (k % 5) })
+      world.injuryHistory.push({ kind: 'ankle soreness', severity: 'moderate', week: firstWeekAtAge(world, age) + ((i + k) % 40), weeksOut: 3 + (k % 5) })
     })
-    world.week = Math.max(world.week, weekAtAge(world, 31) + 10)
+    world.week = Math.max(world.week, firstWeekAtAge(world, 31) + 10)
     return world
   }
 

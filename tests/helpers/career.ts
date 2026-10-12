@@ -12,6 +12,7 @@
 // must be of scheme file" at COLLECT time – the whole file then reports "no tests" rather than one
 // red assertion. Nothing here touches the filesystem; keep it that way.
 import { createWorld, tickWeek, toSnapshot, skipTournament, closeTournament, kidAgeExact } from '../../src/engine/world'
+import { kidAgeAt } from '../../src/engine/world/age'
 import { rngFromSeed } from '../../src/engine/rng'
 import { DEFAULT_PROFILE, type PlayerProfile, type Snapshot } from '../../src/shared/protocol'
 import type { Rng } from '../../src/engine/rng'
@@ -115,4 +116,14 @@ export function weekAtAge(world: WorldState, years: number): number {
     if (kidAgeExact(w, world.profile.birthMonth, world.profile.birthDay) >= years) return w
   }
   throw new Error(`no week reaches age ${years}`)
+}
+
+/** The FIRST WEEK OF THE YEAR she IS `age` – `kidAgeAt(world, w) === age` – where `weekAtAge` above
+ *  answers «the first week she has REACHED years» (`>=`). Two answers, two names – F-02's own cure.
+ *  Extracted 12.10 (r49): two new album tests had pasted the `===` body verbatim and T5.14 rightly
+ *  refused the third and fourth copies; `albumBook.test.ts` + `college-scene-album.test.ts` keep
+ *  their named local pair (the grandfathered KNOWN_IDENTICAL entry) until a wave migrates them. */
+export function firstWeekAtAge(world: WorldState, age: number): number {
+  for (let w = 0; w < 2000; w++) if (kidAgeAt(world, w) === age) return w
+  throw new Error(`no week reaches age ${age}`)
 }
