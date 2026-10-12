@@ -6,8 +6,10 @@
 // только окно просмотра, но не порядок, размер и количество страниц» – so every claim below is one
 // of two kinds:
 //
-//   THE WINDOW MOVED   the page is 540 / 556 and fits whole, the pan affordance is gone, the
-//                      chapters came out from behind their button;
+//   THE WINDOW MOVED   the page is 600 / 640 / 700 and fits whole (r49 №13, 12.10: regraded from
+//                      the README's 540 / 556 on the owner's «давай сделаем крупнее шириной», and
+//                      1280 became a rung of its own), the pan affordance is gone, the chapters
+//                      came out from behind their button;
 //   THE BOOK DID NOT   the same sheets in the same order, the pager counting the same real number,
 //                      `Back` present and `Career summary` absent, at all three widths.
 //
@@ -45,15 +47,19 @@ import {
   SHEET_STEP_PX,
   SHEET_TABLET_PX,
   SHEET_TABLET_STEP_PX,
+  SHEET_WIDE_PX,
+  SHEET_WIDE_STEP_PX,
 } from '../../src/shared/protocol'
 import { DESKTOP, TABLET, setViewport, type Viewport } from './fits'
 import { bookOf, chapterOf } from './albumFixture'
 
-/** ⚠ 1024 EXACTLY, AND IT IS NOT `fits.ts`'s DESKTOP. That one is 1280 – the top of the band, where
- *  the width cap is read – and this one is the BOTTOM of it, which is the number mockup AW is drawn
- *  at and the only place where «556 of page plus two arrows fits in the reading column» is tight
- *  enough to be a claim. Both are exercised below: the ladder is asserted at 1024 and at 1280, so a
- *  rule that only holds at one end of the desktop band is caught. */
+/** ⚠ 1024 EXACTLY, AND IT IS NOT `fits.ts`'s DESKTOP. That one is 1280 – the top of the band, and
+ *  since r49 №13 (12.10) a rung of its own (`SHEET_WIDE_PX`, 700) – and this one is the BOTTOM of
+ *  it, which is the number mockup AW is drawn at and the only place where «640 of page plus two
+ *  arrows fits in the reading column» is tight enough to be a claim (54px of strip past the
+ *  column-gap – №13's regrade, counted beside the token). Both are exercised below: the ladder is
+ *  asserted at 1024 and at 1280, so a rule that only holds at one end of the desktop band is
+ *  caught. */
 const DESKTOP_1024: Viewport = { width: 1024, height: 850 }
 const MOBILE: Viewport = { width: 390, height: 844 }
 
@@ -62,7 +68,8 @@ const LADDER = [
   { name: '390', vp: MOBILE, sheet: SHEET_PX, step: SHEET_STEP_PX },
   { name: '768', vp: TABLET, sheet: SHEET_TABLET_PX, step: SHEET_TABLET_STEP_PX },
   { name: '1024', vp: DESKTOP_1024, sheet: SHEET_DESKTOP_PX, step: SHEET_DESKTOP_STEP_PX },
-  { name: '1280', vp: DESKTOP, sheet: SHEET_DESKTOP_PX, step: SHEET_DESKTOP_STEP_PX },
+  // ⭐ r49 №13 (12.10): 1280 stops wearing the 1024 rung – it has its own, `SHEET_WIDE_PX`.
+  { name: '1280', vp: DESKTOP, sheet: SHEET_WIDE_PX, step: SHEET_WIDE_STEP_PX },
 ] as const
 
 /** The two wide ones – what this file is about. */
@@ -89,10 +96,12 @@ describe('the ladder is the README\'s three widths, and nothing drifts off it', 
   // 1. THE PAGE IS THE SIZE HIS README SAYS, AT EACH WIDTH
   // ===============================================================================================
   //
-  // «AW / AX: квадратный лист виден целиком (556px / 540px)», and at 390 it stays 470 and pans. The
-  // width is read off the mounted paper through the real cascade for the reason the phone's own file
-  // gives: this layer is all layout, and a stylesheet pin cannot see the rule that cancels it.
-  it('⚠⚠ the page measures 470 / 540 / 556 at 390 / 768 / 1024', () => {
+  // «AW / AX: квадратный лист виден целиком (556px / 540px)» – and since r49 №13 (12.10) the wide
+  // rungs are 600 / 640 / 700, regraded past the mockups' numbers on the owner's «давай сделаем
+  // крупнее шириной»; at 390 it stays 470 and pans. The width is read off the mounted paper through
+  // the real cascade for the reason the phone's own file gives: this layer is all layout, and a
+  // stylesheet pin cannot see the rule that cancels it.
+  it('⚠⚠ the page measures 470 / 600 / 640 / 700 at 390 / 768 / 1024 / 1280', () => {
     for (const { name, vp, sheet } of LADDER) {
       const w = mountAlbum(vp)
       const paper = w.find('.album-paper')
@@ -157,6 +166,26 @@ describe('the ladder is the README\'s three widths, and nothing drifts off it', 
       ).toBe(SHEET_GAP_PX)
       w.unmount()
     }
+  })
+
+  // ⭐ r49 №13 (12.10) – THE FOURTH RUNG, NAMED. The loops above already walk 1280 with the rest of
+  // the LADDER, but the rung is NEW – before №13 the top of the band wore the 1024 numbers – and a
+  // deleted `@media (min-width: 1280px)` block deserves a red that says which rung died rather than
+  // only a row inside a loop that mostly guards the old three.
+  // MUTATION (12.10): the rung made dead (`min-width` -> 1281, so 1280 wears the 1024 numbers) ->
+  // 6 RED, this arm among them; «scale × leaf is the page» stays green, correctly – a 640 page at
+  // 1.3617 is the 1024 rung agreeing with itself, which is why that loop alone could not have
+  // guarded the new rung. Restored, 22 green.
+  it('⚠ r49 №13 – at 1280 the page is SHEET_WIDE_PX and the pitch pays one gutter over it', () => {
+    const w = mountAlbum(DESKTOP)
+    expect(
+      px(getComputedStyle(w.find('.album-paper').element).width),
+      'the 1280 rung is not read – the page wears a lower rung',
+    ).toBe(SHEET_WIDE_PX)
+    const step = px(getComputedStyle(document.documentElement).getPropertyValue('--album-step'))
+    expect(step, 'the film pitch did not climb with the page').toBe(SHEET_WIDE_STEP_PX)
+    expect(step - SHEET_WIDE_PX, 'the file\'s own law: step − sheet = one gutter').toBe(SHEET_GAP_PX)
+    w.unmount()
   })
 
   // ===============================================================================================

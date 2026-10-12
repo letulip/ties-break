@@ -224,13 +224,22 @@ export const SHEET_PX = 470
 export const SHEET_GAP_PX = 16
 export const SHEET_STEP_PX = SHEET_PX + SHEET_GAP_PX
 
-/** The other two widths (spec §6): past 768 the window is exactly one sheet across. These are the
- *  spec's numbers; the cascade's own copy is `--album-sheet` on `:root`, and the mounted tests hold
- *  the ladder to both. */
-export const SHEET_TABLET_PX = 540
-export const SHEET_DESKTOP_PX = 556
+/** The wide widths (spec §6): past 768 the window is exactly one sheet across. The spec's own
+ *  540 / 556 are where this ladder started; r49 №13 (12.10) regraded it on the owner's ask –
+ *  «альбом на планшете и десктоп очень узкий и не тянется, нет ощущения, что он альбом, места
+ *  много, давай сделаем крупнее шириной» – to 600 / 640, plus a new 700 rung at 1280 below. The
+ *  cascade's own copy is `--album-sheet` on `:root` (the strip arithmetic per rung is beside the
+ *  tokens there), and the mounted tests hold the ladder to both spellings. */
+export const SHEET_TABLET_PX = 600
+export const SHEET_DESKTOP_PX = 640
 export const SHEET_TABLET_STEP_PX = SHEET_TABLET_PX + SHEET_GAP_PX
 export const SHEET_DESKTOP_STEP_PX = SHEET_DESKTOP_PX + SHEET_GAP_PX
+
+/** r49 №13 (12.10) – the ladder's NEW fourth rung, from 1280: the reading column is 948px there,
+ *  so a 700px page still leaves (948 − 700) / 2 − 12 of column-gap = 112px of table per side
+ *  strip. Named WIDE rather than a second DESKTOP because 1024 keeps its own rung above. */
+export const SHEET_WIDE_PX = 700
+export const SHEET_WIDE_STEP_PX = SHEET_WIDE_PX + SHEET_GAP_PX
 
 /** The 470-pixel space the three collages are drawn in, and it never steps – a page grows by
  *  SCALING this frame, not by re-laying the furniture out. */

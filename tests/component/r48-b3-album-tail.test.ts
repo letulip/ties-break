@@ -31,6 +31,7 @@ import { dynastyOf } from '../helpers/dynastyHandover'
 import { posedCareer } from '../helpers/albumSweep'
 import { contrastRatio, effectiveBackground, parseColor } from './contrast'
 import { NARROW_PHONE, PHONE, setViewport } from './fits'
+import { SHEET_DESKTOP_PX } from '../../src/shared/protocol'
 import { hand, sheetOf } from './albumFixture'
 import { readFileSync } from 'node:fs'
 import type { AlbumBook, AlbumSheetModel, AlbumTicket, EndingView, Snapshot } from '../../src/shared/protocol'
@@ -348,6 +349,46 @@ describe('round 48 #1a · a wide strip is drawn with two different snapshots', (
     expect(count(strip(pair))).toBe(2)
     expect(count({ ...sheetOf({ layout: 'B' }), filler: pair }), 'the pass is drawn: no gap').toBe(0)
     expect(count({ ...sheetOf({ layout: 'C' }), tag: null, filler: pair }), 'C\'s column holds one').toBe(1)
+  })
+})
+
+// ---- r49 №13 (12.10) · the epilogue's book is out from under the 480px column cap ---------------
+//
+// «альбом на планшете и десктоп очень узкий и не тянется…» – №13 regraded the wide rungs to
+// 600 / 640 / 700, and the one host that silently refused them was HERE: from 768 up EndingScreen
+// caps `.ending > section` at 480px (the epilogue column, R36 Phase 4), and `section.ending-book`
+// is the album's host (R46 #18), so the book sat in a 480 column under pages that start at 600 –
+// before the two 12px column-gaps the album grid pays are even counted. The fix is the selector,
+// `:not(.ending-book)`, and this arm reads both of its sides: the book uncapped AND the prose
+// sections still wearing their 480, so a fix that killed the cap outright cannot pass.
+// MUTATION (12.10): `:not(.ending-book)` taken back off the selector -> 1 RED, this arm, failing
+// first on «the book is still capped (max-width: 480px)»; all 16 round-48 arms in this file stay
+// green, which is why the arm exists. Restored, 17 green.
+describe('⭐ r49 №13 · at 1024 the ending-book escapes the epilogue cap and draws the in-career rung', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  it('the book section is uncapped, its page is SHEET_DESKTOP_PX, and the prose sections keep 480', async () => {
+    const w = await mountEndingWithBook({ width: 1024, height: 850 })
+    const book = w.find('.ending-book')
+    expect(book.exists(), 'the album layer is open').toBe(true)
+    const capped = getComputedStyle(book.element).maxWidth
+    expect(['', 'none'], `the book is still capped (max-width: ${capped})`).toContain(capped)
+    expect(
+      px(getComputedStyle(w.find('.ending-book .album-paper').element).width),
+      'the epilogue album does not draw the in-career 1024 rung',
+    ).toBe(SHEET_DESKTOP_PX)
+    // the control: the cap itself still stands on the sections that asked for it
+    await w.find('.album-back').trigger('click')
+    const section = w.find('.ending > section')
+    expect(section.exists(), 'the last page has sections').toBe(true)
+    expect(
+      getComputedStyle(section.element).maxWidth,
+      'the 480 cap on the prose sections died with the fix – that is a different screen, not this ask',
+    ).toBe('480px')
+    w.unmount()
   })
 })
 

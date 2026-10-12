@@ -779,8 +779,11 @@ body {
      stylesheets in two SFCs; a custom property declared in one of them does not reach the other, and
      a number spelled in both is the `--app-pad-x` lesson waiting to happen.
 
-     THE THREE WIDTHS ARE THE OWNER'S README (`album_responsive/README.md`, spec §6), not a ladder we
-     chose: 470 on a phone, 540 at 768, 556 at 1024. ⚠ 470 IS THE ONE THAT NEEDS ITS REASON WRITTEN
+     THE LADDER STARTED AS THE OWNER'S README (`album_responsive/README.md`, spec §6): 470 on a
+     phone, 540 at 768, 556 at 1024. ⭐ ROUND 49 №13 (12.10) REGRADED THE WIDE RUNGS, on his own ask
+     – «альбом на планшете и десктоп очень узкий и не тянется, нет ощущения, что он альбом, места
+     много, давай сделаем крупнее шириной» – so the ladder is now 470 on a phone, 600 at 768, 640
+     at 1024 and a NEW fourth rung, 700 from 1280. ⚠ 470 IS THE ONE THAT NEEDS ITS REASON WRITTEN
      DOWN – it is what the sheet does NOT do, which is shrink to the screen: «при сжатии до 342px
      рукописные подписи упали бы до 9–10px». So below 768 the phone is narrower than the page and the
      page pans; at 768 and 1024 the page fits whole and there is nothing to pan.
@@ -845,12 +848,15 @@ body {
     /* ⭐ ROUND 41 #11 – THE CARD'S PADDING, STEP ONE. His words in full are beside the base 14px
        above and beside the 1024 step below. */
     --tb-card-pad: 16px;
-    /* ⭐ THE ALBUM'S PAGE AT 768 – the README's own 540px, whole on the screen for the first time.
-       540 / 470 = 1.148936…, so the collage is 1.1489 of the size it is drawn at, and the handwriting
-       goes UP rather than down – which is the whole argument the 470 was defended with. */
-    --album-sheet: 540px;
-    --album-scale: 1.1489;
-    --album-step: 556px;
+    /* ⭐ THE ALBUM'S PAGE AT 768 – whole on the screen for the first time. 600px since r49 №13
+       (12.10), up from the README's 540: «нет ощущения, что он альбом, места много». 600 / 470 =
+       1.276595…, so the collage is 1.2766 of the size it is drawn at, and the handwriting goes UP
+       rather than down – which is the whole argument the 470 was defended with. The strips hold:
+       the reading column at 768 is 736px, and (736 − 600) / 2 − 12 of column-gap = 56px a side ≥
+       the 52 that №14's 44px arrow plus its 8px inset stands in. */
+    --album-sheet: 600px;
+    --album-scale: 1.2766;
+    --album-step: 616px;
   }
 }
 
@@ -897,14 +903,32 @@ body {
        14px (`:root` above), 16px past 768, 18px past 1024 – a step at each of the two widths he
        named, read by every card that takes the default (`Card.vue`'s `var(--tb-card-pad, 14px)`). */
     --tb-card-pad: 18px;
-    /* ⭐ THE ALBUM'S PAGE AT 1024 – 556px, mockup AW's own number. 556 / 470 = 1.182978…
+    /* ⭐ THE ALBUM'S PAGE AT 1024 – 640px since r49 №13 (12.10), up from mockup AW's 556: «альбом
+       на планшете и десктоп очень узкий и не тянется». 640 / 470 = 1.361702…
        ⚠ IT FITS INSIDE THE RAIL'S COLUMN WITH ROOM FOR THE TWO ARROWS, measured rather than hoped:
        past 1024 the reading column is 772px at the bottom of the band (the note on `#app`'s grid
-       below records that measurement), so 556 of page leaves 108px of table on each side and the
-       `‹ ›` stand in it exactly as AW draws them. */
-    --album-sheet: 556px;
-    --album-scale: 1.183;
-    --album-step: 572px;
+       below records that measurement), so 640 of page leaves (772 − 640) / 2 − 12 of column-gap =
+       54px of table a side – past the 52 that №14's 44px arrow plus its 8px inset stands in, tight
+       and counted rather than hoped. */
+    --album-sheet: 640px;
+    --album-scale: 1.3617;
+    --album-step: 656px;
+  }
+}
+
+/* ⭐ ROUND 49 №13 (12.10) – THE ALBUM'S FOURTH RUNG, new with the regrade: «места много, давай
+   сделаем крупнее шириной», and the top of the band has the most of it. From 1280 the reading
+   column is 948px, so a 700px page leaves (948 − 700) / 2 − 12 of column-gap = 112px of table a
+   side. 700 / 470 = 1.489361… ⚠ HEIGHT IS THE BINDING SIDE OF THIS RUNG, counted rather than
+   hoped: the page is square, so 700 of page plus the album's chrome ≈ 790px – an 800-high desktop
+   (`fits.ts`'s own DESKTOP is 1280x800) holds it with nothing to spare, and a taller sheet would
+   not fit it. Plain px as everywhere on this ladder: `readStep` parses the token and happy-dom
+   evaluates no calc(). */
+@media (min-width: 1280px) {
+  :root {
+    --album-sheet: 700px;
+    --album-scale: 1.4894;
+    --album-step: 716px;
   }
 }
 

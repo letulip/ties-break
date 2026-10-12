@@ -203,6 +203,8 @@ export {
   SHEET_DESKTOP_PX,
   SHEET_TABLET_STEP_PX,
   SHEET_DESKTOP_STEP_PX,
+  SHEET_WIDE_PX,
+  SHEET_WIDE_STEP_PX,
   LEAF_PX,
 } from './protocol/album'
 

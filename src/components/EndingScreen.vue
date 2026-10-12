@@ -704,9 +704,18 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
    480 IS THE NUMBER THE CONTENT ALREADY ASKED FOR, not a taste: `.ending-totals` below caps itself
    at 460, `.ending-fork` at 360, `.album-photo` at `min(280px, 78vw)` and the three prose blocks at
    34–36ch. Nothing on this screen wants to be wider than 460, so the column is that plus the room
-   the arrows sit in. ⚠ Below 768 there is no rule at all, so the phone is untouched. */
+   the arrows sit in. ⚠ Below 768 there is no rule at all, so the phone is untouched.
+
+   ⭐ ROUND 49 №13 (12.10): THE BOOK IS THE NAMED EXCEPTION – `:not(.ending-book)`. «Nothing on this
+   screen wants to be wider than 460» stopped being true the day the real album was laid over this
+   takeover (R46 #18): `section.ending-book` hosts the in-career ladder, 600 / 640 / 700 from
+   768 / 1024 / 1280 since №13's regrade, and 480 < 600 before the two 12px column-gaps its grid
+   pays are even counted – the cap was squeezing the book below its own first wide rung. Excluded
+   at the selector rather than overridden, because the book takes NONE of this rule: it is `bare`
+   and full-bleed like the in-career album, `.ending` is a flex column that stretches it anyway,
+   and a centred-480 declaration that is always beaten is a rule lying about itself. */
 @media (min-width: 768px) {
-  .ending > section {
+  .ending > section:not(.ending-book) {
     width: 100%;
     max-width: 480px;
     margin-inline: auto;

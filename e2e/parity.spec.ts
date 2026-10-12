@@ -2099,7 +2099,8 @@ test.describe("the album's chapter door and pan pill are exempt – and the exem
     // the sheet's own box against the window's, width by width, and the pill must follow it in BOTH
     // directions.
     //
-    // ⚠ MEASURED AND NEVER RE-DERIVED, for `weekRowsAt`'s reason. `--album-sheet` is 470 / 540 / 556
+    // ⚠ MEASURED AND NEVER RE-DERIVED, for `weekRowsAt`'s reason. `--album-sheet` is 470 / 600 /
+    // 640 / 700 (r49 №13, 12.10 – regraded from the README's 540 / 556)
     // down the ladder and the window is the film's own width; re-computing either here would be this
     // arm asserting the stylesheet against a copy of itself.
     await boot(page, careerAt)
