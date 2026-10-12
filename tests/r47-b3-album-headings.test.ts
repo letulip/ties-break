@@ -127,7 +127,7 @@ describe('round 47 #9 · the sweep – the heading box meets no content box on a
 })
 
 describe('round 47 #9 · the worst words – the longest note, caption and loose line under each of the five names', () => {
-  const voices = ALBUM_CORPUS.flatMap((o) => Object.values(o.voices))
+  const voices = ALBUM_CORPUS.flatMap((o) => Object.values(o.voices).flat())
   const longest = (key: 'note' | 'caption' | 'line'): string => voices.reduce((a, v) => (v[key].length > a.length ? v[key] : a), '')
   const crowded = (layout: AlbumLayout, chapterTitle: string): AlbumSheetModel => {
     const s = sheetOf({ layout, chapterTitle })

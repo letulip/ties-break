@@ -325,6 +325,20 @@ occasion nobody notices. An occasion is:
 
     …then the same table for `caption`, then for `line`.
 
+**Variants (r49 №7, 12.10)** – a voice row may repeat with an ordinal, giving the occasion more than
+one hand in that voice:
+
+    | `sunny` | `…` |
+    | `sunny#2` | `…` |
+
+`#2` is read as the voice's second variant (`variants[1]`); the base row is unnumbered – there is no
+`#1`, for the reason two spellings of `any` were refused. Ordinals are dense (`#2`, then `#3`, no
+gaps) and a variant carries all three registers: a voice with two notes declares two captions and
+two lines in the same order, or the parser refuses the row. The book walks a pool deterministically
+– the occasion's N-th firing in a career takes `variants[N mod pool]`, a choice, never a draw – so
+every pool of one reads exactly as it always did, and a load resumes to the identical album. **The
+ARC takes no variants**: it fires once, on the one closing sheet.
+
 **The four voices are in the small-talk corpus's own order** – `sunny`, `fiery`, `deep`, `quiet` –
 so the two documents read down the page the same way. `TEMPERAMENTS` in `src/engine/spirit.ts`
 happens to list them `sunny, fiery, quiet, deep`; the emitted catalogue is a `Record`, which has no

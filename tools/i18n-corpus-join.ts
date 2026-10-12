@@ -109,7 +109,16 @@ const mapValues = <T, U>(o: Readonly<Record<string, T>>, f: (v: T) => U): Record
 export function liveCorpora(): Corpora {
   return {
     album: {
-      occasions: ALBUM_CORPUS.map((o) => ({ id: o.id, voices: mapValues(o.voices, (h) => ({ note: h.note, caption: h.caption, line: h.line })) })),
+      occasions: ALBUM_CORPUS.map((o) => ({
+        id: o.id,
+        // ⚠ r49 №7 – the RU tables and this join still speak ONE hand per voice. The throw is a
+        // ratchet: the content half that grows a pool must extend the fixture grammar and this
+        // shape together, not silently translate variants[0] and drop the rest.
+        voices: mapValues(o.voices, (pool) => {
+          if (pool.length !== 1) throw new Error(`r49 №7: «${o.id}» grew ${pool.length} variant hands – extend the i18n join and the RU fixture grammar before growing a pool`)
+          return { note: pool[0].note, caption: pool[0].caption, line: pool[0].line }
+        }),
+      })),
       arc: mapValues(ALBUM_ARC, (vs) => mapValues(vs, (h) => ({ note: h.note, line: h.line }))),
     },
     gifts: { day: BIRTHDAY_DAY_TOGETHER, bands: BIRTHDAY_BANDS.filter((b) => b !== BIRTHDAY_COLLEGE_BAND), college: BIRTHDAY_COLLEGE_BAND },

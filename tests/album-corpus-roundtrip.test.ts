@@ -191,8 +191,10 @@ describe('the committed album corpus IS the document', () => {
       const o = builtFor(row)
       for (const voice of ALBUM_VOICES) {
         expect(o.voices[voice], `${row.ref}/${voice}: the committed occasion has no column`).toBeDefined()
-        expect(o.voices[voice].note, `${row.ref}/${voice}: the note`).toBe(row.voices[voice].note)
-        compared++
+        // ⚠ r49 №7 – a voice is a POOL of variant hands now, compared pool against pool so every
+        // variant is a compared string; with every pool at 1 the count stands at 152.
+        expect(o.voices[voice].map((h) => h.note), `${row.ref}/${voice}: the notes`).toEqual(row.voices[voice].map((h) => h.note))
+        compared += row.voices[voice].length
       }
     }
     expect(compared, 'all 152 notes were compared, not a subset').toBe(152)
@@ -203,8 +205,9 @@ describe('the committed album corpus IS the document', () => {
     for (const row of DOC.occasions) {
       const o = builtFor(row)
       for (const voice of ALBUM_VOICES) {
-        expect(o.voices[voice].caption, `${row.ref}/${voice}: the caption`).toBe(row.voices[voice].caption)
-        compared++
+        // r49 №7 – pool against pool (see the notes sweep)
+        expect(o.voices[voice].map((h) => h.caption), `${row.ref}/${voice}: the captions`).toEqual(row.voices[voice].map((h) => h.caption))
+        compared += row.voices[voice].length
       }
     }
     expect(compared, 'all 152 captions were compared, not a subset').toBe(152)
@@ -215,8 +218,9 @@ describe('the committed album corpus IS the document', () => {
     for (const row of DOC.occasions) {
       const o = builtFor(row)
       for (const voice of ALBUM_VOICES) {
-        expect(o.voices[voice].line, `${row.ref}/${voice}: the loose line`).toBe(row.voices[voice].line)
-        compared++
+        // r49 №7 – pool against pool (see the notes sweep)
+        expect(o.voices[voice].map((h) => h.line), `${row.ref}/${voice}: the loose lines`).toEqual(row.voices[voice].map((h) => h.line))
+        compared += row.voices[voice].length
       }
     }
     expect(compared, 'all 152 loose lines were compared, not a subset').toBe(152)
@@ -255,10 +259,16 @@ describe('the committed album corpus IS the document', () => {
       const o = builtFor(row)
       expect(Object.keys(o.voices).sort(), `${row.ref}: not four-voiced`).toEqual([...TEMPERAMENTS].slice().sort())
       for (const voice of ALBUM_VOICES) {
-        for (const register of ALBUM_REGISTERS) {
-          const written = o.voices[voice][register]
-          expect(typeof written, `${row.ref}/${voice}/${register}: missing`).toBe('string')
-          expect(written.length, `${row.ref}/${voice}/${register}: empty`).toBeGreaterThan(0)
+        // ⚠ r49 №7 – a pool is never empty, and the committed pool is the document's own size: the
+        // parser already refuses a variant that misses a register, and this holds the catalogue to it.
+        expect(o.voices[voice].length, `${row.ref}/${voice}: an empty pool`).toBeGreaterThan(0)
+        expect(o.voices[voice].length, `${row.ref}/${voice}: the pool size is the document's`).toBe(row.voices[voice].length)
+        for (const [k, hand] of o.voices[voice].entries()) {
+          for (const register of ALBUM_REGISTERS) {
+            const written = hand[register]
+            expect(typeof written, `${row.ref}/${voice}#${k + 1}/${register}: missing`).toBe('string')
+            expect(written.length, `${row.ref}/${voice}#${k + 1}/${register}: empty`).toBeGreaterThan(0)
+          }
         }
       }
     }
@@ -298,11 +308,14 @@ describe('the committed album corpus IS the document', () => {
     for (const row of DOC.occasions) {
       const o = builtFor(row)
       for (const voice of ALBUM_VOICES) {
-        expect(o.voices[voice].note, `${row.ref}/${voice}: a note that does not address her`).toMatch(SECOND_PERSON)
-        expect(o.voices[voice].caption, `${row.ref}/${voice}: a caption is ABOUT her, never to her`).not.toMatch(SECOND_PERSON)
-        expect(o.voices[voice].line, `${row.ref}/${voice}: a loose line is the parent thinking, addressed to nobody`).not.toMatch(SECOND_PERSON)
-        notes++
-        others += 2
+        // r49 №7 – the register law binds every VARIANT hand, not only the first
+        for (const hand of o.voices[voice]) {
+          expect(hand.note, `${row.ref}/${voice}: a note that does not address her`).toMatch(SECOND_PERSON)
+          expect(hand.caption, `${row.ref}/${voice}: a caption is ABOUT her, never to her`).not.toMatch(SECOND_PERSON)
+          expect(hand.line, `${row.ref}/${voice}: a loose line is the parent thinking, addressed to nobody`).not.toMatch(SECOND_PERSON)
+          notes++
+          others += 2
+        }
       }
     }
     for (const row of DOC.arc) {
@@ -321,9 +334,11 @@ describe('the committed album corpus IS the document', () => {
     for (const row of DOC.occasions) {
       const o = builtFor(row)
       for (const voice of ALBUM_VOICES) {
-        const { caption, note } = o.voices[voice]
-        expect(caption.length, `${row.ref}/${voice}: a caption over 60 characters is a note in the wrong place`).toBeLessThanOrEqual(60)
-        expect(caption.length, `${row.ref}/${voice}: the caption is not shorter than its note`).toBeLessThan(note.length)
+        // r49 №7 – the bound holds variant by variant, each caption against ITS OWN hand's note
+        for (const { caption, note } of o.voices[voice]) {
+          expect(caption.length, `${row.ref}/${voice}: a caption over 60 characters is a note in the wrong place`).toBeLessThanOrEqual(60)
+          expect(caption.length, `${row.ref}/${voice}: the caption is not shorter than its note`).toBeLessThan(note.length)
+        }
       }
     }
   })
@@ -335,7 +350,11 @@ describe('the committed album corpus IS the document', () => {
     let swept = 0
     const every: string[] = []
     for (const o of ALBUM_CORPUS) {
-      for (const voice of ALBUM_VOICES) every.push(o.voices[voice].note, o.voices[voice].caption, o.voices[voice].line)
+      // r49 №7 – every variant hand is swept; the uniqueness claim below is exactly №4's complaint
+      // («an album that repeats itself reads as a copy-paste») made structural.
+      for (const voice of ALBUM_VOICES) {
+        for (const hand of o.voices[voice]) every.push(hand.note, hand.caption, hand.line)
+      }
     }
     for (const direction of ALBUM_ARC_DIRECTIONS) {
       for (const voice of ALBUM_VOICES) every.push(ALBUM_ARC[direction][voice].note, ALBUM_ARC[direction][voice].line)
@@ -384,8 +403,8 @@ describe('the committed album corpus IS the document', () => {
     // here, never imported – an import would make this compare the catalogue with itself.
     const firstCourt = BUILT.get('first-court')
     expect(firstCourt, 'the occasion his mockups named exists').toBeDefined()
-    expect(firstCourt!.voices.sunny.note).toBe('First day on court. You were so excited.')
-    expect(firstCourt!.voices.sunny.caption).toBe('She asked if she could try.')
-    expect(firstCourt!.voices.sunny.line).toBe('Some journeys start with a simple "Can I?"')
+    expect(firstCourt!.voices.sunny[0].note).toBe('First day on court. You were so excited.')
+    expect(firstCourt!.voices.sunny[0].caption).toBe('She asked if she could try.')
+    expect(firstCourt!.voices.sunny[0].line).toBe('Some journeys start with a simple "Can I?"')
   })
 })

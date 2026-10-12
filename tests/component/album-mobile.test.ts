@@ -582,7 +582,7 @@ describe('every sentence on a sheet comes from the corpus', () => {
     // Every string the corpus holds, in all three registers and all four voices.
     const strings = new Set<string>()
     for (const occasion of ALBUM_CORPUS) {
-      for (const voice of Object.values(occasion.voices)) {
+      for (const voice of Object.values(occasion.voices).flat()) {
         strings.add(voice.note)
         strings.add(voice.caption)
         strings.add(voice.line)

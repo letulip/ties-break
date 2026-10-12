@@ -157,7 +157,7 @@ describe('wave 8b T6 B – the album holds a birth page, with the painting on it
     const world = walkedToABirth('w8b-t6-page')
     const voice = world.temperament ?? 'sunny'
     const captions = assembleAlbum(world).sheets.flatMap((s) => s.frames.map((f) => f.caption))
-    expect(captions, 'the birth reached a page').toContain(A34.voices[voice].caption)
+    expect(captions, 'the birth reached a page').toContain(A34.voices[voice][0].caption)
   })
 
   it('⭐⭐⭐ the frame wears the BIRTH PAINTING, and the file is on disk', () => {
@@ -165,7 +165,7 @@ describe('wave 8b T6 B – the album holds a birth page, with the painting on it
     const voice = world.temperament ?? 'sunny'
     const frame = assembleAlbum(world).sheets
       .flatMap((s) => s.frames)
-      .find((f) => f.caption === A34.voices[voice].caption)
+      .find((f) => f.caption === A34.voices[voice][0].caption)
     expect(frame, 'the page is there to have art at all').toBeDefined()
     expect(frame!.art, 'the painting T5 shipped').toBe(BIRTH_ART)
     expect(existsSync(`${PUBLIC}/${frame!.art}`), 'and it really is on disk').toBe(true)
@@ -178,7 +178,7 @@ describe('wave 8b T6 B – the album holds a birth page, with the painting on it
     const world = walkedToABirth('w8b-t6-band')
     const voice = world.temperament ?? 'sunny'
     const book = assembleAlbum(world)
-    const sheet = book.sheets.find((s) => s.frames.some((f) => f.caption === A34.voices[voice].caption))
+    const sheet = book.sheets.find((s) => s.frames.some((f) => f.caption === A34.voices[voice][0].caption))
     expect(sheet, 'the page exists').toBeDefined()
     // ⚠ THE WIRE CARRIES THE CHAPTER'S TITLE AND NOT ITS BAND (`AlbumSheetModel`), so the band is
     // read back through `ALBUM_CHAPTER_TITLES` – the one table that joins the two – rather than
@@ -219,7 +219,7 @@ describe('wave 8b T6 D – A34 names no partner, and that is the acceptance crit
     // named him would be false on exactly the careers that ruling exists to protect.
     // ⚠ WORD BOUNDARIES, NOT SUBSTRINGS – «the» contains «he», «other» contains «her».
     const BAN = /\b(he|him|his|husband|wife|spouse|partner|married|marriage|father|dad)\b/i
-    const every = Object.values(A34.voices).flatMap((v) => [v.note, v.caption, v.line])
+    const every = Object.values(A34.voices).flat().flatMap((v) => [v.note, v.caption, v.line])
     expect(every.length, 'four voices x three registers').toBe(12)
     for (const text of every) {
       expect(BAN.test(text), `⚠ «${text}» names a partner`).toBe(false)
@@ -235,7 +235,7 @@ describe('wave 8b T6 D – A34 names no partner, and that is the acceptance crit
   it('⚠ the note speaks TO her, the caption and the line do not – A34 keeps the register law', () => {
     // The corpus's §1, asserted for the new row specifically rather than trusted to the round-trip
     // sweep: a note that stopped addressing her would be a fourth register nobody declared.
-    for (const v of Object.values(A34.voices)) {
+    for (const v of Object.values(A34.voices).flat()) {
       expect(/\byou\b/i.test(v.note), `the note addresses her: «${v.note}»`).toBe(true)
       expect(/\byou\b/i.test(v.caption), `the caption does not: «${v.caption}»`).toBe(false)
       expect(/\byou\b/i.test(v.line), `the line does not: «${v.line}»`).toBe(false)
@@ -257,6 +257,6 @@ describe('wave 8b T6 E – a career with no birth has no birth page', () => {
     expect(world.milestones.some((m) => m.type === 'birth'), 'and no milestone').toBe(false)
     const voice = world.temperament ?? 'sunny'
     const captions = assembleAlbum(world).sheets.flatMap((s) => s.frames.map((f) => f.caption))
-    expect(captions, 'so no page speaks A34').not.toContain(A34.voices[voice].caption)
+    expect(captions, 'so no page speaks A34').not.toContain(A34.voices[voice][0].caption)
   })
 })

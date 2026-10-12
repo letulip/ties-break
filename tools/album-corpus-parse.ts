@@ -107,7 +107,11 @@ export interface AlbumRow {
   bands: AlbumBand[]
   /** `null` where the heading says `any`; otherwise the named condition beyond the kind. */
   gate: string | null
-  voices: Record<AlbumVoice, AlbumHand>
+  /** ⭐ r49 №7 – AN ARRAY OF VARIANT HANDS per voice, walked deterministically by the book
+   *  (`variants[firing ordinal % pool]`, zero draws). A voice row repeats with a dense ordinal –
+   *  `| \`sunny#2\` | …` – and a variant carries all three registers or the parser refuses the row.
+   *  Today every pool is 1; the content half grows them. */
+  voices: Record<AlbumVoice, AlbumHand[]>
 }
 
 export interface AlbumArcRow {
@@ -142,7 +146,10 @@ const GATE = /^\*\*gate: `([a-z-]+)`\*\*$/
 const ARC_HEADING = /^### ARC · `([a-z]+)` – (.+)$/
 const TABLE_HEAD = /^\| voice \| (note|caption|line) \|$/
 const SEPARATOR = /^\| ---+ \| ---+ \|$/
-const TABLE_ROW = /^\| `(sunny|fiery|deep|quiet)` \| (.+) \|$/
+/** ⭐ r49 №7 – the optional `#<n>` after the voice is the VARIANT ORDINAL: `sunny` is the base hand,
+ *  `sunny#2` the second, dense from there. The base row is unnumbered on purpose – a `#1` would be a
+ *  second spelling of the same thing, which §6's `any` note already refuses for gates. */
+const TABLE_ROW = /^\| `(sunny|fiery|deep|quiet)(?:#(\d+))?` \| (.+) \|$/
 /** ⚠ AN ID IS READ BACK BY THE ALBUM AND NAMED IN THE SELECTOR, so it is a machine key rather than a
  *  sentence: lower case, digits and hyphens. Round 44 learned this from an apostrophe that had to be
  *  normalised at the door; this corpus refuses the character instead of stripping it, which is the
@@ -168,15 +175,17 @@ export function parseAlbumCorpus(markdown: string): AlbumCorpus {
 }
 
 /** The three register tables of one row, in the document's order, each read strictly: head,
- *  separator, then exactly four voices in the document's order. Returns them by register. */
+ *  separator, then the four voices in the document's order – each voice's base row first, then its
+ *  variant rows (`#2`, `#3`, … – r49 №7), dense or refused. Returns the pools by register. */
 function parseTables(
   lines: string[],
   head: number,
   end: number,
   ref: string,
   want: readonly string[],
-): Record<string, Record<AlbumVoice, string>> {
-  const out: Record<string, Record<AlbumVoice, string>> = {}
+  allowVariants: boolean,
+): Record<string, Record<AlbumVoice, string[]>> {
+  const out: Record<string, Record<AlbumVoice, string[]>> = {}
   let t = head + 1
   for (const register of want) {
     while (t < end && !TABLE_HEAD.test(lines[t])) t++
@@ -188,16 +197,32 @@ function parseTables(
     // exactly that.
     if (found !== register) fail(t, `${ref}'s tables are out of order: expected ${register}, found ${found}`)
     if (!SEPARATOR.test(lines[t + 1] ?? '')) fail(t + 1, `${ref}'s ${register} table has no separator row`)
-    const cells = {} as Record<AlbumVoice, string>
+    const cells = {} as Record<AlbumVoice, string[]>
+    let at = t + 2
     for (let v = 0; v < ALBUM_VOICES.length; v++) {
-      const at = t + 2 + v
       const row = TABLE_ROW.exec(lines[at] ?? '')
-      if (row === null) fail(at, `${ref}'s ${register} row ${v + 1} is unreadable: ${lines[at]}`)
+      if (row === null) fail(at, `${ref}'s ${register} row for ${ALBUM_VOICES[v]} is unreadable: ${lines[at]}`)
       if (row[1] !== ALBUM_VOICES[v]) fail(at, `${ref}'s ${register} table is out of order: expected ${ALBUM_VOICES[v]}, found ${row[1]}`)
-      cells[row[1] as AlbumVoice] = unticked(row[2], at, `${ref} ${row[1]} ${register}`)
+      // ⚠ the BASE row is unnumbered: a stray `#1` (or a variant row whose base went missing) is a
+      // document defect to report, not a synonym to accept.
+      if (row[2] !== undefined) fail(at, `${ref}'s ${register}: ${row[1]}'s first row carries an ordinal (#${row[2]}) – the base row is unnumbered`)
+      const pool = [unticked(row[3], at, `${ref} ${row[1]} ${register}`)]
+      at++
+      // ⭐ r49 №7 – the voice's variant rows, dense from `#2`. A variant row of ANOTHER voice breaks
+      // here and is then refused above as that voice's mis-numbered base row.
+      for (;;) {
+        const more = TABLE_ROW.exec(lines[at] ?? '')
+        if (more === null || more[1] !== ALBUM_VOICES[v] || more[2] === undefined) break
+        if (!allowVariants) fail(at, `${ref}'s ${register}: the arc fires once and takes no variants (found ${more[1]}#${more[2]})`)
+        const ordinal = Number(more[2])
+        if (ordinal !== pool.length + 1) fail(at, `${ref}'s ${register}: ${more[1]}'s variants are not dense – expected #${pool.length + 1}, found #${ordinal}`)
+        pool.push(unticked(more[3], at, `${ref} ${more[1]}#${ordinal} ${register}`))
+        at++
+      }
+      cells[ALBUM_VOICES[v]] = pool
     }
     out[register] = cells
-    t = t + 2 + ALBUM_VOICES.length
+    t = at
   }
   return out
 }
@@ -223,14 +248,18 @@ function parseOccasion(lines: string[], head: number, end: number): AlbumRow {
     gate = g[1]
   }
 
-  const tables = parseTables(lines, head, end, ref, ALBUM_REGISTERS)
-  const voices = {} as Record<AlbumVoice, AlbumHand>
+  const tables = parseTables(lines, head, end, ref, ALBUM_REGISTERS, true)
+  const voices = {} as Record<AlbumVoice, AlbumHand[]>
   for (const voice of ALBUM_VOICES) {
-    voices[voice] = {
-      note: tables.note[voice],
-      caption: tables.caption[voice],
-      line: tables.line[voice],
+    const notes = tables.note[voice]
+    const captions = tables.caption[voice]
+    const looseLines = tables.line[voice]
+    // ⚠ r49 №7 – A VARIANT CARRIES ALL THREE REGISTERS: a voice with two notes and one caption is a
+    // hand with a register missing, which is the partial row §7's completeness pin exists to refuse.
+    if (captions.length !== notes.length || looseLines.length !== notes.length) {
+      fail(head, `${ref}/${voice}: a variant carries all three registers – ${notes.length} notes, ${captions.length} captions, ${looseLines.length} lines`)
     }
+    voices[voice] = notes.map((note, k) => ({ note, caption: captions[k], line: looseLines[k] }))
   }
   return { ref, id, kind: kind as AlbumKind, bands: bands as AlbumBand[], gate, voices }
 }
@@ -242,9 +271,11 @@ function parseArc(lines: string[], head: number, end: number): AlbumArcRow {
   if (!(ALBUM_ARC_DIRECTIONS as readonly string[]).includes(direction)) {
     fail(head, `the arc has no direction called ${direction}`)
   }
-  const tables = parseTables(lines, head, end, `ARC/${direction}`, ALBUM_ARC_REGISTERS)
+  // ⚠ r49 №7 – THE ARC STAYS SINGLE: it fires once, on the one closing sheet, so a variant row in an
+  // arc table is refused where it is read (`allowVariants: false`).
+  const tables = parseTables(lines, head, end, `ARC/${direction}`, ALBUM_ARC_REGISTERS, false)
   const voices = {} as Record<AlbumVoice, { note: string; line: string }>
-  for (const voice of ALBUM_VOICES) voices[voice] = { note: tables.note[voice], line: tables.line[voice] }
+  for (const voice of ALBUM_VOICES) voices[voice] = { note: tables.note[voice][0], line: tables.line[voice][0] }
   return { direction: direction as AlbumArcDirection, gloss: gloss.trim(), voices }
 }
 
@@ -273,9 +304,13 @@ export function albumCounts(corpus: AlbumCorpus): {
   let lines = 0
   for (const row of corpus.occasions) {
     for (const voice of ALBUM_VOICES) {
-      if (row.voices[voice].note.length > 0) notes++
-      if (row.voices[voice].caption.length > 0) captions++
-      if (row.voices[voice].line.length > 0) lines++
+      // ⭐ r49 №7 – every VARIANT hand is an authored string and is counted; today every pool is 1,
+      // so the figures stand exactly where they stood.
+      for (const hand of row.voices[voice]) {
+        if (hand.note.length > 0) notes++
+        if (hand.caption.length > 0) captions++
+        if (hand.line.length > 0) lines++
+      }
     }
   }
   let arcCells = 0

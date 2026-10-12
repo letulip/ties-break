@@ -678,8 +678,14 @@ describe('§8 a career played to a natural ending off the bench', () => {
 /** The pre-wave tree's (a083ebed) readings of the posed set, refs stripped: recomputed by tests/helpers/l3-6-album-set.ts on a throwaway worktree of that commit and on this tree - the same two values.
  *  ⚠ 10.10 – VIEWS moved by the owner's own ruling (the strong-repeat trim: four door receipts lost
  *  the clause their blurb tells; «берём все четыре» in chat, decisions.md). The diff behind the new
- *  value is ONLY those four strings – the books digest did not move, which is the cross-check. */
-const PRE_WAVE_BOOKS_DIGEST = '7e885813'
+ *  value is ONLY those four strings – the books digest did not move, which is the cross-check.
+ *  ⚠ 12.10 – BOOKS moved by r49 №4 (the owner: «дважды на одной странице»): the per-sheet caption
+ *  dedupe blanks a caption that literally repeats an earlier frame's on the SAME sheet, and the
+ *  posed set holds such sheets. The diff behind the new value is ONLY those blanked captions –
+ *  MEASURED, not asserted: with `dedupeSheetCaptions` mutated to identity this digest reads
+ *  `7e885813` (the 10.10 value) again, byte for byte, so nothing else in the books moved (the r49 №7
+ *  variant walk is `[0]` on every pool of one). */
+const PRE_WAVE_BOOKS_DIGEST = '188070d8'
 const PRE_WAVE_VIEWS_DIGEST = '3d0366fb'
 
 describe('§9 the posed set of books, in English, is the pre-wave tree\'s byte for byte', () => {
@@ -832,7 +838,8 @@ describe('§10 every ref renders to its string; a field without one is exactly a
 // §11 – the corpus
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 describe('§11 the corpus: 38 occasions x 4 voices x (note, caption, line), and the walls arc', () => {
-  const cells = ALBUM_CORPUS.flatMap((o) => Object.entries(o.voices).flatMap(([voice, h]) => [`${o.id}/${voice}/note`, `${o.id}/${voice}/caption`, `${o.id}/${voice}/line`].map((id, i) => ({ id, text: [h.note, h.caption, h.line][i]! }))))
+  // r49 №7 – every variant hand is a cell; the ordinal joins the id from the second hand on (today every pool is 1, so no id moved)
+  const cells = ALBUM_CORPUS.flatMap((o) => Object.entries(o.voices).flatMap(([voice, pool]) => pool.flatMap((h, k) => [`${o.id}/${voice}${k > 0 ? `#${k + 1}` : ''}/note`, `${o.id}/${voice}${k > 0 ? `#${k + 1}` : ''}/caption`, `${o.id}/${voice}${k > 0 ? `#${k + 1}` : ''}/line`].map((id, i) => ({ id, text: [h.note, h.caption, h.line][i]! })))))
   const arc = Object.entries(ALBUM_ARC).flatMap(([dir, voices]) => Object.entries(voices).flatMap(([voice, h]) => [{ id: `arc/${dir}/${voice}/note`, text: h.note }, { id: `arc/${dir}/${voice}/line`, text: h.line }]))
 
   it('the corpus is the size the report says: 38 ids, 456 cells, 16 arc cells - every one a plain string', () => {

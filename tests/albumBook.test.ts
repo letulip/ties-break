@@ -120,7 +120,7 @@ function frames(book: AlbumBook): { sheet: AlbumSheetModel; caption: string; art
  *  through, since the wire deliberately carries WORDS and not ids. */
 function occasionsOf(book: AlbumBook, voice: 'sunny' | 'fiery' | 'quiet' | 'deep'): string[] {
   return frames(book).map(({ caption }) => {
-    const row = ALBUM_CORPUS.find((o) => o.voices[voice].caption === caption)
+    const row = ALBUM_CORPUS.find((o) => o.voices[voice].some((h) => h.caption === caption))
     if (!row) throw new Error(`no corpus occasion renders the caption «${caption}»`)
     return row.id
   })
@@ -497,7 +497,7 @@ describe('the arc – displacing the closing sheet\'s words when the lean moved,
     world.milestones.push(title(w - 10, 'wta250'))
     world.ending = { type: 'natural', week: w, ageYears: 31, detail: 'probe', resumesWeek: null }
     const closing = assembleAlbum(world).sheets.at(-1)!
-    const retired = ALBUM_CORPUS.find((o) => o.id === 'career-ended')!.voices[world.temperament!]
+    const retired = ALBUM_CORPUS.find((o) => o.id === 'career-ended')!.voices[world.temperament!][0]
     expect(closing.note!.text, 'the ordinary closing note is A32\'s own').toBe(retired.note)
     expect(closing.line).toBe(retired.line)
   })
@@ -511,7 +511,7 @@ describe('the arc – displacing the closing sheet\'s words when the lean moved,
     world.wallsLean = { open: 3, reg: 0 }
     const book = assembleAlbum(world)
     const closing = book.sheets.at(-1)!
-    const retired = ALBUM_CORPUS.find((o) => o.id === 'career-ended')!.voices[world.temperament!]
+    const retired = ALBUM_CORPUS.find((o) => o.id === 'career-ended')!.voices[world.temperament!][0]
     expect(closing.note!.text, 'the arc displaced the ordinary note').not.toBe(retired.note)
     expect(closing.line).not.toBe(retired.line)
     // ...and ONLY the closing sheet carries it: every other sheet keeps its own occasion's words
@@ -558,7 +558,7 @@ describe('the arc – displacing the closing sheet\'s words when the lean moved,
     world.milestones.push(title(w - 10, 'wta250'))
     world.ending = { type: 'natural', week: w, ageYears: 31, detail: 'probe', resumesWeek: null }
     const closing = assembleAlbum(world).sheets.at(-1)!
-    const retired = ALBUM_CORPUS.find((o) => o.id === 'career-ended')!.voices.fiery
+    const retired = ALBUM_CORPUS.find((o) => o.id === 'career-ended')!.voices.fiery[0]
     expect(closing.note!.text, 'no arc: the corpus has no words for the regulation axis').toBe(retired.note)
     expect(closing.line).toBe(retired.line)
 
@@ -883,7 +883,7 @@ describe('⭐⭐ the four scenarios: a sentence is only printed where its own fa
 /** The caption `academy-courts` renders in this world's voice – the reverse of `occasionsOf`, for a
  *  case that needs the SHEET rather than the list of occasions. */
 function courtsCaption(world: WorldState): string {
-  return ALBUM_CORPUS.find((o) => o.id === 'academy-courts')!.voices[world.temperament!].caption
+  return ALBUM_CORPUS.find((o) => o.id === 'academy-courts')!.voices[world.temperament!][0].caption
 }
 
 // =================================================================================================

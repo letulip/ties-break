@@ -73,7 +73,8 @@ const COMMITTED = readFileSync(MODULE, 'utf8')
 
 /** The first line of the one hand-written block the module carries: `the-line`'s heirloom (A-L1, wave 10 T6a). */
 const HEIRLOOM = '// ⭐⭐⭐ A-L1 · the-line – THE HEIRLOOM'
-const VOICE_HEAD = /^ {6}(sunny|fiery|deep|quiet): \{$/
+/** r49 №7 – a voice holds an ARRAY of variant hands now, so its head is `sunny: [{`. */
+const VOICE_HEAD = /^ {6}(sunny|fiery|deep|quiet): \[\{$/
 
 const linesOf = (text: string): string[] => text.split('\n')
 
@@ -152,7 +153,7 @@ describe('the album emitter is a fixed point of the module it wrote (B16, 02.10)
   })
 
   it('⚠ a comment INSIDE an occasion\'s block cannot be carried, so it is REFUSED rather than silently dropped', () => {
-    const inside = COMMITTED.replace('    voices: {\n      sunny: {', '    voices: {\n      // a hand-written aside\n      sunny: {')
+    const inside = COMMITTED.replace('    voices: {\n      sunny: [{', '    voices: {\n      // a hand-written aside\n      sunny: [{')
     expect(inside, 'the arm changed the module').not.toBe(COMMITTED)
     expect(() => emit(DOC, inside), 'the one slot for hand-written comments is directly above the `{`').toThrow(/INSIDE its block/)
   })

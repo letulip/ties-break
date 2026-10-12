@@ -697,7 +697,7 @@ describe('the corpus joiner – coordinates join by position, orphans are named,
     expect(real.id).toBe('first-court')
     const realDoc = ALBUM_DOC.replace('`[ru] sunny note`', '`[ru] cell`')
     writeFileSync(join(dir, CORPUS_DOCS.album), `${realDoc}\n`)
-    writeFileSync(join(dir, 'ru-fixture-2026-10.md'), `${TABLE(`| R1 | | \`${real.voices.sunny.note}\` | \`[ru] table\` | |`)}\n`)
+    writeFileSync(join(dir, 'ru-fixture-2026-10.md'), `${TABLE(`| R1 | | \`${real.voices.sunny[0].note}\` | \`[ru] table\` | |`)}\n`)
     const rules = runGate({ tablesDir: dir, ruPath: join(dir, 'ru.json') }).problems.filter((p) => p.rule === 'conflict')
     expect(rules.map((p) => p.where).sort()).toEqual([`${CORPUS_DOCS.album}:${realDoc.split('\n').findIndex((l) => l.includes('[ru] cell')) + 1}`, 'ru-fixture-2026-10.md:3'].sort())
   })
@@ -800,8 +800,8 @@ describe('the corpus joiner – coordinates join by position, orphans are named,
     // album: first-court · sunny · note/caption/line and deep · note
     const court = ALBUM_CORPUS.find((o) => o.id === 'first-court')!
     const sunny = cellsOf(CORPUS_DOCS.album, /^### A1 · `first-court`/, /^\| `sunny` \|/)
-    expect([ru[court.voices.sunny.note], ru[court.voices.sunny.caption], ru[court.voices.sunny.line]]).toEqual([sunny[1], sunny[2], sunny[3]])
-    expect(ru[court.voices.deep.note]).toBe(cellsOf(CORPUS_DOCS.album, /^### A1 · `first-court`/, /^\| `deep` \|/)[1])
+    expect([ru[court.voices.sunny[0].note], ru[court.voices.sunny[0].caption], ru[court.voices.sunny[0].line]]).toEqual([sunny[1], sunny[2], sunny[3]])
+    expect(ru[court.voices.deep[0].note]).toBe(cellsOf(CORPUS_DOCS.album, /^### A1 · `first-court`/, /^\| `deep` \|/)[1])
     // the arc: open · deep
     const arc = cellsOf(CORPUS_DOCS.album, /^### Arc towards `open`/, /^\| `deep` \|/)
     expect([ru[ALBUM_ARC.open.deep.note], ru[ALBUM_ARC.open.deep.line]]).toEqual([arc[1], arc[2]])

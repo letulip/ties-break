@@ -396,6 +396,11 @@ interface AlbumCandidate {
   lines?: readonly string[]
   /** ⭐ L3-6 – the refs of `lines`, index for index (`null` where a line is a proper name and has none). Absent exactly when `lines` is. */
   linesC?: readonly (CopyRef | null)[]
+  /** ⭐ r49 №4/№7 – THE OCCASION'S FIRING ORDINAL in this career: 0-based, the order candidates of
+   *  this occasion id appear in the book (`assignAlbumOrdinals`). The variant walk reads it –
+   *  `variants[ordinal % pool]` – so the seventh injury-return takes a different hand from the
+   *  first once the corpus grows pools. Absent (= 0) on hand-built candidates in tests. */
+  ordinal?: number
 }
 
 const TOP_RANK = 10
@@ -1446,13 +1451,69 @@ export function pickDistinct(options: readonly (readonly string[])[]): { picks: 
   return best ?? { picks: options.map(() => 0), clashes: 0 }
 }
 
+// =================================================================================================
+// ⭐⭐ r49 №4/№5/№7 – THE VARIANT WALK, AND THE PER-SHEET CAPTION DEDUPE
+// =================================================================================================
+//
+// THE OWNER, round 49: «фраза "она сообщила время тренировки" повторяется 7 раз в альбоме, причем
+// один раз дважды на одной странице» (№4), the first-week-back note three times over (№5), and the
+// standing wish for variety (№7). The corpus's answer is VARIANTS – a voice holds an ARRAY of hands
+// now (`albumCorpus.ts`, r49 №7) – and this file's answer is the walk below plus the dedupe in
+// `distinctFramesOf`. The words stay the corpus's; nothing here writes one (invariant 4).
+//
+// ⚠⚠ A CHOICE, NEVER A DRAW – the LB-note law, and the walk is inside it. The variant an occasion's
+// N-th firing takes is `variants[N % pool]`: arithmetic over the firing ordinal, which is itself the
+// order candidates stand in the assembled book. No MAIN draw, no sub-stream, nothing persisted – the
+// same world assembles the same book, and a load resumes to the identical album. With every pool at
+// 1 (today) the walk is `[0]` on every firing, so the book is byte-identical to what it was.
+
+/** ⭐ r49 №7 – the firing ordinal of every candidate: 0-based per occasion id, in BOOK order (the
+ *  chapters in order, each chapter's candidates in the order its frames are dealt). Derived where
+ *  the book is assembled and threaded on the candidate – the snapshot still carries finished
+ *  strings, so nothing of this reaches the wire or a save. */
+export function assignAlbumOrdinals(chapters: readonly { candidates: readonly { occasion: { id: string }; ordinal?: number }[] }[]): void {
+  const fired = new Map<string, number>()
+  for (const chapter of chapters) {
+    for (const c of chapter.candidates) {
+      const n = fired.get(c.occasion.id) ?? 0
+      c.ordinal = n
+      fired.set(c.occasion.id, n + 1)
+    }
+  }
+}
+
+/** ⭐ r49 №7 – THE WALK: the hand an occasion's firing takes in `voice`. A pool of one – every pool,
+ *  today – answers its single hand on every firing, which is what keeps the book byte-identical
+ *  until the content half grows the corpus. */
+export function albumHandOf(c: { occasion: Pick<AlbumOccasion, 'voices'>; ordinal?: number }, voice: Temperament): AlbumHand {
+  const pool = c.occasion.voices[voice]
+  return pool[(c.ordinal ?? 0) % pool.length]
+}
+
+/** ⭐ r49 №4 – «дважды на одной странице»: a caption that would repeat an earlier frame's caption on
+ *  the SAME sheet is not printed – the later frame goes captionless, the path every filler photo
+ *  already renders (`Polaroid.vue` draws no lip for an empty caption; `albumPlacement.ts` wraps it
+ *  to zero lines). It runs AFTER variant selection, so two firings whose hands differ both keep
+ *  their words, and only a literal duplicate sentence is suppressed. Pure over the texts it is
+ *  given – no draw, no clock. */
+export function dedupeSheetCaptions(written: readonly string[]): string[] {
+  const spoken = new Set<string>()
+  return written.map((text) => {
+    const caption = spoken.has(text) ? '' : text
+    spoken.add(text)
+    return caption
+  })
+}
+
 /** The frames of ONE page, no two of them the same picture where the ladder has a way to say so. */
 function distinctFramesOf(world: WorldState, own: readonly AlbumCandidate[], voice: Temperament): AlbumFrame[] {
   const options = own.map((c) => frameArtOptions(world, c))
   const { picks } = pickDistinct(options.map((row) => row.map((o) => o.art)))
-  return own.map((c, i) => {
+  // r49 №4/№7 – the variant walk picks each frame's hand, then the sheet suppresses literal repeats
+  const captions = dedupeSheetCaptions(own.map((c) => albumHandOf(c, voice).caption))
+  return own.map((_c, i) => {
     const { art, alt } = options[i][picks[i]]
-    const caption = c.occasion.voices[voice].caption
+    const caption = captions[i]
     const altC = ALT_REF_BY_TEXT.get(alt)
     // ⭐ L3-6: the refs ride beside the strings; a caption that is empty (not every frame is written under) has no ref, and an alt the table does not know would draw as it was.
     return { art, alt, caption, ...(altC ? { altC } : {}), ...(caption !== '' ? { captionC: selfKey(caption) } : {}) }
@@ -1754,7 +1815,9 @@ function sheetsOf(
     // (the corpus's §5: «this is what the closing sheet says»): farewell may lead it chronologically,
     // and the book's last word is still the handing over, not the last match.
     const speaker = own.find((c) => c.occasion.id === 'career-ended') ?? lead
-    const hand = speaker.occasion.voices[voice]
+    // ⭐ r49 №5/№7 – the note and the loose line walk the SPEAKER's own firing ordinal, so a third
+    // first-week-back sheet will speak a different hand once A16's pool grows past one.
+    const hand = albumHandOf(speaker, voice)
     // the sheet's own tournament fact, if it holds one – an honest sheet carries no invented trip.
     // A fact WITH a finish (a title, a final) makes the better pass than a cheque or an entry.
     const facts = own.filter((c) => c.tier !== undefined)
@@ -1926,6 +1989,9 @@ export function assembleAlbum(world: WorldState): AlbumBook {
     const picked = selectRepresentatives(own, MAX_CHAPTER_FRAMES)
     if (picked.length > 0) chapters.push({ band, candidates: picked })
   }
+  // ⭐ r49 №4/№7 – the variant walk's input: every candidate learns its occasion's firing ordinal,
+  // in book order, after the book's census is final and before a sheet is dealt.
+  assignAlbumOrdinals(chapters)
 
   const sheets: AlbumSheetModel[] = []
   const chapterRows: AlbumChapter[] = []

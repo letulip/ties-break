@@ -47,8 +47,12 @@ describe('r49 №3 – the Russian album is one voice: «ты/тебя», never 
   it('⭐⭐ no compiled album string refers to the daughter in the third person', () => {
     const entries: { coord: string; en: string }[] = []
     for (const o of ALBUM_CORPUS) {
-      for (const [voice, hand] of Object.entries(o.voices)) {
-        for (const field of REGISTERS) entries.push({ coord: `${o.id} · ${voice} · ${field}`, en: hand[field] })
+      // ⚠ r49 №7 – a voice is a pool of variant hands now; every variant is swept, coordinates
+      // naming the ordinal from the second hand on (today every pool is 1, so no coord moved).
+      for (const [voice, pool] of Object.entries(o.voices)) {
+        for (const [k, hand] of pool.entries()) {
+          for (const field of REGISTERS) entries.push({ coord: `${o.id} · ${voice}${k > 0 ? `#${k + 1}` : ''} · ${field}`, en: hand[field] })
+        }
       }
     }
     for (const [direction, voices] of Object.entries(ALBUM_ARC)) {

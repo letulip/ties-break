@@ -27,7 +27,7 @@ export function hand(id: string, voice: Temperament = 'sunny') {
   // empty handwriting that every assertion below then passes on – the `-1` family of failure this
   // repo keeps paying for.
   if (!occasion) throw new Error(`no occasion '${id}' in ALBUM_CORPUS – the fixture is out of date`)
-  return occasion.voices[voice]
+  return occasion.voices[voice][0]
 }
 
 interface SheetOver {

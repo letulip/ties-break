@@ -117,7 +117,7 @@ function fourYears(world: WorldState): CollegeYear[] {
  *  the book the same way round). */
 function graduatedSheet(world: WorldState): AlbumSheetModel {
   const voice = world.temperament!
-  const caption = ALBUM_CORPUS.find((o) => o.id === 'graduated')!.voices[voice].caption
+  const caption = ALBUM_CORPUS.find((o) => o.id === 'graduated')!.voices[voice][0].caption
   const sheet = assembleAlbum(world).sheets.find((s) => s.frames.some((f) => f.caption === caption))
   if (!sheet) throw new Error('the posed graduate has no graduation sheet – the gate, not the checklist, is broken')
   return sheet
@@ -155,7 +155,7 @@ describe('the college scene T3 – the championship record on the graduate\'s pa
     const world = graduate('college-album-note', [])
     world.college!.years = fourYears(world)
     const voice = world.temperament!
-    const hand = ALBUM_CORPUS.find((o) => o.id === 'graduated')!.voices[voice]
+    const hand = ALBUM_CORPUS.find((o) => o.id === 'graduated')!.voices[voice][0]
     const sheet = graduatedSheet(world)
     expect(sheet.note!.text, 'A30\'s own note for her voice').toBe(hand.note)
     expect(sheet.line, 'A30\'s own margin line').toBe(hand.line)
@@ -184,7 +184,7 @@ describe('the college scene T3 – the championship record on the graduate\'s pa
     const sheet = graduatedSheet(shared)
     expect(sheet.frames.length, 'the degree now shares its sheet').toBeGreaterThan(1)
     expect(sheet.frames[0].caption, 'and it does not lead it – the junior title is the earlier week').not.toBe(
-      ALBUM_CORPUS.find((o) => o.id === 'graduated')!.voices[shared.temperament!].caption,
+      ALBUM_CORPUS.find((o) => o.id === 'graduated')!.voices[shared.temperament!][0].caption,
     )
     expect(sheet.note!.lines, 'the record is the SHEET\'s, not the lead frame\'s').toHaveLength(3)
   })

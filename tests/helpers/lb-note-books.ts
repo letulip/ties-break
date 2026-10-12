@@ -60,7 +60,7 @@ export function dynastyOf(seed: string, over: Partial<DynastyHandover['motherCar
 
 /** The caption the occasion wears in the world's voice – how the checklist frame is found on the wire. */
 export const captionOf = (occasion: 'graduated' | 'the-line', world: WorldState): string =>
-  ALBUM_CORPUS.find((o) => o.id === occasion)!.voices[world.temperament!].caption
+  ALBUM_CORPUS.find((o) => o.id === occasion)!.voices[world.temperament!][0].caption
 
 /** A chapter as the planner reads it: `size` candidates, those at `pins` carrying a checklist. */
 export function chapter(size: number, pins: readonly number[] = []): { candidates: { lines?: string[] }[] } {

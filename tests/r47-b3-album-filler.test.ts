@@ -177,7 +177,7 @@ describe('round 47 #14 · the sweep – where a snapshot is carried, and where i
 
 describe('round 47 #14 · a crowded gap – the snapshot steps aside for the portrait\'s long caption, and goes without when nothing is free', () => {
   const art = { art: 'images/weeks/vac-sea.webp' }
-  const LONG = ALBUM_CORPUS.flatMap((o) => Object.values(o.voices)).reduce((a, v) => (v.caption.length > a.length ? v.caption : a), '')
+  const LONG = ALBUM_CORPUS.flatMap((o) => Object.values(o.voices).flat()).reduce((a, v) => (v.caption.length > a.length ? v.caption : a), '')
   // no note, so no window gives a rung: the right-hand portrait keeps its full height and hangs a long caption into the strip
   const crowded = (): AlbumSheetModel => {
     const s = sheetOf({ layout: 'B' })
