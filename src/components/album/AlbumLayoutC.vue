@@ -70,7 +70,8 @@ const cupStyle = computed(() => {
     />
 
     <!-- ⭐ r50 №3 – the chapter's best cup in the sheet's free corner: frameless transparent art whose shadow
-         is a drop-shadow along the alpha edge («без рамки, просто прозрачный фон и картинка с тенюшкой»).
+         is a drop-shadow along the alpha edge (his words, quoted verbatim beside `.album-c-cup`'s CSS
+         below – templates carry no Cyrillic by the copy rule).
          Decoration like the snapshot – no alt, no copy; which cup is the engine's (`sheet.cup`), where is the
          resolver's (`placed.cup`), and a sheet with no clear corner shows none. -->
     <img
@@ -153,6 +154,8 @@ const cupStyle = computed(() => {
 /* r50 №3 – the trophy lies on the paper with only its shadow anchoring it: no card and no border, the
    drop-shadow follows the cut-out's alpha edge, which is what makes it read as an object on the page
    rather than a pasted rectangle. */
+/* ⚠ r50 №3 (12.10), the owner's words verbatim (the template comment points here): «без рамки,
+   просто прозрачный фон и картинка с тенюшкой». */
 .album-c-cup {
   position: absolute;
   filter: drop-shadow(2px 3px 4px rgba(0, 0, 0, 0.3));
