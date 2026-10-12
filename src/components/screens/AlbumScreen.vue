@@ -236,31 +236,13 @@ watch(
 
     <!-- THE WINDOW. Narrower than the page on purpose; see the header. -->
     <div class="album-stage">
-      <!-- ⚠⚠ `tabindex="0"` IS AN ACCESSIBILITY FIX AND NOT DECORATION (19.09, found by the e2e axe
-           pass the moment this screen got a station). WCAG's `scrollable-region-focusable`, impact
-           SERIOUS: a box that scrolls must be reachable from a keyboard, either because something
-           inside it can take focus or because it can itself. THIS FILM IS THE ONE SCROLLER IN THE APP
-           WHERE NEITHER WAS TRUE – every other horizontal scroller here holds buttons or links, so
-           the rule has never fired before; a sheet of this album holds photographs and handwriting
-           and not one focusable thing, so without this the whole page was pannable by finger and by
-           mouse and by nothing else. One attribute makes the film a tab stop whose arrow keys scroll
-           it, which is the browser's own behaviour and needs no handler from us.
-           ⚠ NO `aria-label` WITH IT, DELIBERATELY: that would be a new sentence in the product, and
-           the copy is the owner's (invariant 4). The rule asks for reachability, not for a name. -->
-      <div
-        ref="pan"
-        class="album-pan"
-        tabindex="0"
-        :style="{ '--album-step': `${SHEET_STEP_PX}px`, '--album-gap': `${SHEET_GAP_PX}px` }"
-        @scroll.passive="onScroll"
-      >
-        <AlbumSheet v-for="s in sheets" :key="s.id" :sheet="s" />
-      </div>
-
-      <!-- The affordance that the page continues sideways. `aria-hidden`: it says nothing a screen
-           reader cannot already discover by moving through the sheets. -->
-      <span v-if="!atFilmEnd" class="album-edge" aria-hidden="true"></span>
-
+      <!-- ⭐ ROUND 49 №1 (12.10): THE PILL STANDS ABOVE THE FILM, IN FLOW. It sat absolute over the
+           sheet's bottom-right corner – the mockup's placement – and on his phone it painted over
+           the photographs and the handwriting: «он сейчас перекрывает и картинки и записки». Of his
+           two alternatives («вниз под "Главы"», «наверх») this is the one that moves no pin: the
+           parity suite holds this pill as `.album-stage`'s DIRECT child, and above the film it can
+           cover nothing at any pan position. Everything inside it is untouched – the words are his
+           (invariant 4). -->
       <div v-if="sheets.length" class="album-half">
         <span class="album-half-label">{{ onRightHalf ? t('Right half') : t('Left half') }}</span>
         <span class="album-half-track" :class="{ 'is-right': onRightHalf }" aria-hidden="true">
@@ -279,6 +261,36 @@ watch(
         >
           &rsaquo;
         </IconButton>
+      </div>
+
+      <!-- The film and its edge share this positioning frame so the edge's fade spans exactly the
+           film: with the pill standing in flow above (r49 №1), `top: 0` against the stage would
+           stretch it over the pill's row as well. -->
+      <div class="album-window">
+        <!-- ⚠⚠ `tabindex="0"` IS AN ACCESSIBILITY FIX AND NOT DECORATION (19.09, found by the e2e axe
+             pass the moment this screen got a station). WCAG's `scrollable-region-focusable`, impact
+             SERIOUS: a box that scrolls must be reachable from a keyboard, either because something
+             inside it can take focus or because it can itself. THIS FILM IS THE ONE SCROLLER IN THE APP
+             WHERE NEITHER WAS TRUE – every other horizontal scroller here holds buttons or links, so
+             the rule has never fired before; a sheet of this album holds photographs and handwriting
+             and not one focusable thing, so without this the whole page was pannable by finger and by
+             mouse and by nothing else. One attribute makes the film a tab stop whose arrow keys scroll
+             it, which is the browser's own behaviour and needs no handler from us.
+             ⚠ NO `aria-label` WITH IT, DELIBERATELY: that would be a new sentence in the product, and
+             the copy is the owner's (invariant 4). The rule asks for reachability, not for a name. -->
+        <div
+          ref="pan"
+          class="album-pan"
+          tabindex="0"
+          :style="{ '--album-step': `${SHEET_STEP_PX}px`, '--album-gap': `${SHEET_GAP_PX}px` }"
+          @scroll.passive="onScroll"
+        >
+          <AlbumSheet v-for="s in sheets" :key="s.id" :sheet="s" />
+        </div>
+
+        <!-- The affordance that the page continues sideways. `aria-hidden`: it says nothing a screen
+             reader cannot already discover by moving through the sheets. -->
+        <span v-if="!atFilmEnd" class="album-edge" aria-hidden="true"></span>
       </div>
     </div>
 
@@ -401,6 +413,12 @@ watch(
   margin-inline: calc(-1 * var(--app-pad-x));
 }
 
+/* R49 №1: the film and its edge share a frame of their own, so the edge's fade spans exactly the
+   film – anchored to the stage, its `top: 0` would stretch over the pill's row now standing above. */
+.album-window {
+  position: relative;
+}
+
 .album-pan {
   display: flex;
   gap: var(--album-gap);
@@ -459,15 +477,19 @@ watch(
   background: linear-gradient(90deg, transparent, var(--bg));
 }
 
-/* THE INDICATOR, BOTTOM RIGHT, exactly where the mockup puts it: over the page's own bottom-right
-   corner rather than under it, because the sheet already fills the width. */
+/* THE INDICATOR – ROUND 49 №1 (12.10): ABOVE THE FILM, IN FLOW. The mockup had it absolute over the
+   page's own bottom-right corner, and on his phone that painted over the photographs and the
+   handwriting («он сейчас перекрывает и картинки и записки»); of his two alternatives this ships
+   «наверх», where it can cover nothing at any pan position. */
 .album-half {
-  position: absolute;
-  right: 10px;
-  bottom: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
+  width: fit-content;
+  /* The stage is full-bleed (it cancels the app's gutter above), so the pill pays the gutter back
+     itself: `auto` pushes it right, and the end margin stands it on the app's content edge. */
+  margin-inline: auto var(--app-pad-x);
+  margin-bottom: 8px;
   padding: 6px 8px 6px 12px;
   border-radius: var(--radius-pill);
   /* The page's own colour at 82%, mixed rather than re-typed – same reason as the edge above. */
@@ -636,11 +658,12 @@ watch(
   .album {
     display: grid;
     /* ⚠ THE PAGE TAKES WHAT IT NEEDS AND THE TWO STRIPS OF TABLE SPLIT THE REST, which is not the
-       obvious `auto 1fr auto` – that one gives the whole surplus to the middle and parks the arrows
-       against the edges of the screen. Measured against AW at 1024: the page starts 228px in and the
-       `‹` sits at 120, i.e. in the MIDDLE of the 228px strip beside it, not at its far end. Equal
-       side tracks plus `justify-self: center` below is that placement, and it holds at any width
-       because it is expressed as the strip rather than as a number. */
+       obvious `auto 1fr auto` – that one gives the whole surplus to the middle. The strips used to
+       CENTRE the arrows (mockup AW's placement – measured at 1024, the `‹` at 120 in a 228px strip);
+       round 49 №14 is his ruling over that mockup: «листалки влево-вправо … сделать крупнее немного
+       и вынести дальше, дать больше воздуха» – so the arrows now stand at the strips' FAR ENDS
+       (`justify-self` below), and the equal tracks are what keeps the air between arrow and page
+       growing with the screen rather than fixed by a number. */
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     grid-template-areas:
       'head head head'
@@ -708,14 +731,26 @@ watch(
   /* ⚠ `:first-of-type` / `:last-of-type` COUNT BUTTONS AMONG THEIR SIBLINGS, and `display: contents`
      changes boxes rather than the tree – so these still mean "the first and last button inside
      `.album-pager`", which is the prev and the next arrow with the dots between them. */
+  /* R49 №14: «крупнее немного» is the box and the glyph – a 44px plate (the touch floor) with a
+     24px chevron, up from the kit's 32/20. Class+pseudo-class outranks the plate's single class, so
+     unlike the 20px base above these do not lean on stylesheet order. The margin keeps the plate
+     off the viewport's very edge at 768, where the side strip is at its narrowest. */
   .album-step:first-of-type {
     grid-area: prev;
-    justify-self: center;
+    justify-self: start;
+    width: 44px;
+    height: 44px;
+    font-size: 24px;
+    margin-inline-start: 8px;
   }
 
   .album-step:last-of-type {
     grid-area: next;
-    justify-self: center;
+    justify-self: end;
+    width: 44px;
+    height: 44px;
+    font-size: 24px;
+    margin-inline-end: 8px;
   }
 
   .album-dots {

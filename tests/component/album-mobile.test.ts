@@ -224,6 +224,53 @@ describe('the album at 390 – the sheet, the pan and the chrome', () => {
     w.unmount()
   })
 
+  // ⭐ ROUND 49 №1 (12.10): «переключатель страниц надо опустить вниз на телефоне под "Главы", либо
+  // поднять наверх, он сейчас перекрывает и картинки и записки». The second alternative shipped: the
+  // pill stands ABOVE the film, in normal flow, where it can cover nothing at any pan position – and
+  // it stays `.album-stage`'s DIRECT child, the shape the parity suite pins (`#app .album-stage >
+  // .album-half`). happy-dom runs no layout, so «covers nothing» is asserted as the law that makes it
+  // true: not pulled out of the flow, and standing before the film in the stage's own order.
+  // MUTATION (12.10): `position: absolute; right: 10px; bottom: 12px;` re-applied to `.album-half`
+  // -> 1 RED, this test's own position arm («the pill is pulled out of the flow again…»); the order
+  // arms alone cannot see that shape, which is why the position arm leads.
+  it('⚠⚠ r49 №1 – the half-pill stands above the film, in flow, and paints over nothing', () => {
+    setViewport(PHONE)
+    const w = mount(AlbumScreen, { props: { book: bookOf(3) }, attachTo: document.body })
+    const stage = w.find('.album-stage')
+    const pill = w.find('.album-half')
+    const pan = w.find('.album-pan')
+    expect(pill.exists() && pan.exists(), 'the pill and the film are both drawn at 375').toBe(true)
+
+    // The law's first half: the pill is IN FLOW. Absolute with a bottom offset is the r48 shape that
+    // painted over the photographs and the handwriting.
+    expect(
+      getComputedStyle(pill.element).position,
+      'the pill is pulled out of the flow again – over the page it covers the pictures',
+    ).not.toMatch(/absolute|fixed/)
+
+    // Second half: ABOVE the film – «наверх». Still the stage's direct child (the parity selector's
+    // own shape), and it comes before whichever stage child carries the film.
+    expect(pill.element.parentElement, 'the pill left the stage – the parity selector would go dark').toBe(
+      stage.element,
+    )
+    const children = Array.from(stage.element.children)
+    const filmAt = children.findIndex((el) => el === pan.element || el.contains(pan.element))
+    expect(filmAt, 'the film is not in the stage').toBeGreaterThanOrEqual(0)
+    expect(children.indexOf(pill.element), 'the pill is not above the film').toBeLessThan(filmAt)
+
+    // And the edge's fade spans the FILM, not the stage: its positioning frame holds the pan and not
+    // the pill, so `top: 0` cannot stretch the gradient over the pill's row.
+    const edge = w.find('.album-edge')
+    expect(edge.exists(), 'the edge is drawn at 375').toBe(true)
+    const frame = edge.element.parentElement!
+    expect(frame, "the edge is anchored to the stage – its fade would span the pill's row too").not.toBe(
+      stage.element,
+    )
+    expect(getComputedStyle(frame).position, 'the edge has no positioning frame of its own').toBe('relative')
+    expect(frame.contains(pan.element), 'the edge and the film do not share a frame').toBe(true)
+    w.unmount()
+  })
+
   it('⚠ the pager arrows and the dots drive the same scroller, not a second counter', async () => {
     const w = mountAlbum(bookOf(5))
     const pan = w.find('.album-pan').element as HTMLElement

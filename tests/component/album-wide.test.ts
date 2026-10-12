@@ -297,6 +297,42 @@ describe('at 768 and 1024 the page fits, and the window says so', () => {
     )
     w.unmount()
   })
+
+  // ⭐ ROUND 49 №14 (12.10): «листалки влево-вправо в альбоме на планшете и десктоп сделать крупнее
+  // немного и вынести дальше, дать больше воздуха». Bigger is the box and the glyph – a 44px plate
+  // with a 24px chevron, up from the kit's 32/20 – and further out is `justify-self`: the arrows
+  // leave the MIDDLE of the side strips (mockup AW's placement) for their far ends, so the whole
+  // strip becomes the air between arrow and page, at every rung of the band. `WIDE` holds 768, 1024
+  // AND 1280, so the claim is read at both ends of the desktop band as well as on the tablet.
+  // MUTATION (12.10): `justify-self` put back to `center` and the three size lines deleted from both
+  // ≥768 rules -> 1 RED, this test, failing first on the ‹ plate's width at 768; the phone arm and
+  // the grid-area test above stay green, which is why this arm exists at all.
+  it("⚠ r49 №14 – the arrows are 44px plates with a 24px glyph, standing at the strips' far ends", () => {
+    for (const { name, vp } of WIDE) {
+      const w = mountAlbum(vp)
+      const arrows = w.findAll('.album-pager .album-step')
+      const [prev, next] = arrows.map((a) => getComputedStyle(a.element))
+      for (const [arrow, cs] of [
+        ['‹', prev],
+        ['›', next],
+      ] as const) {
+        expect(cs.width, `the ${arrow} plate did not grow at ${name}`).toBe('44px')
+        expect(cs.height, `the ${arrow} plate is not square at ${name}`).toBe('44px')
+        expect(cs.fontSize, `the ${arrow} glyph did not grow at ${name}`).toBe('24px')
+      }
+      expect(prev.justifySelf, `the ‹ arrow is not pushed outward at ${name}`).toBe('start')
+      expect(next.justifySelf, `the › arrow is not pushed outward at ${name}`).toBe('end')
+      w.unmount()
+    }
+
+    // …and the phone keeps its 20px glyph in the row under the page – №14 is a wide-widths ask.
+    const w = mountAlbum(MOBILE)
+    expect(
+      getComputedStyle(w.find('.album-pager .album-step').element).fontSize,
+      "the phone's chevron grew – №14 is about 768 and up",
+    ).toBe('20px')
+    w.unmount()
+  })
 })
 
 describe('the chapters change shape three times and stay the same list', () => {
