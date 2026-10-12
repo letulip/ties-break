@@ -50,6 +50,7 @@ import type {
   AlbumTag,
   AlbumClubPatch,
   AlbumFiller,
+  AlbumChapterCup,
   AlbumTicket,
   AlbumTierStep,
   BuildLetterTerms,
@@ -1921,6 +1922,16 @@ function sheetsOf(
       doodles: [DOODLE_BY_KIND[lead.occasion.kind] ?? DOODLES[flavour.doodle]],
     })
   }
+  // ⭐ r50 №3 – ONE cup per chapter, on the chapter's FIRST C sheet: C is the layout with the open corners
+  // he pointed at, and the engine says WHICH cup while WHETHER a corner has room is the resolver's
+  // (`placeCup`), so a page too busy to hold it goes without – the tail's own rule. ⚠ No fallback to the
+  // chapter's next C sheet, deliberately: the engine may not import the UI (invariant 1), so it cannot know
+  // a sheet refused – and a cup on every C sheet would double the trophy in the rare chapter that holds two.
+  const cup = chapterCupOf(world, band)
+  if (cup) {
+    const at = sheets.findIndex((s) => s.layout === 'C')
+    if (at >= 0) sheets[at] = { ...(sheets[at] as AlbumSheetModel), cup }
+  }
   return sheets
 }
 
@@ -1929,6 +1940,30 @@ function sheetsOf(
 function bandOfAge(age: number): AlbumBand {
   const stage = portraitStage(age)
   return stage === 'jun' ? 'young' : stage
+}
+
+/** ⭐⭐ ROUND 50 №3 – THE CHAPTER'S BEST SILVERWARE (owner, 12.10: «какие-то из фото наград-кубков ставить
+ *  соответственно периоду и занятому месту»). THE RANKING RULE, the architect's decision: walk `TIER_LADDER`
+ *  from the TOP – the first rung whose cabinet holds a title OR a lost final inside the band wins, and at
+ *  that rung a title (gold) beats a final (silver). A higher rung's silver therefore outranks a lower rung's
+ *  gold: «занятое место» reads inside the period's BEST tournament, not across the whole shelf. A band whose
+ *  best is a semi gets NO cup – semis never enter `trophiesByTier` – and the corner stays empty: truth over
+ *  décor, the same standard the tail holds itself to (`hangTail`'s gate).
+ *
+ *  ⚠ THE WEEKS ARE BANDED BY THE SAME MAP THE CHAPTERS ARE BUILT ON – `bandOfAge(kidAgeAt(…))` – never by
+ *  label arithmetic: the chapter heading «26 – 30» is the adult band 23-30, and a cup dated off the label
+ *  would drift the day the bands do. A pure read of the never-pruned cabinet: zero draws, zero writes; the
+ *  prologue band owns no career week, so it answers null without a special case. */
+export function chapterCupOf(world: WorldState, band: AlbumBand): AlbumChapterCup | null {
+  const inBand = (weeks: readonly number[]): boolean => weeks.some((w) => bandOfAge(kidAgeAt(world, w)) === band)
+  for (let i = TIER_LADDER.length - 1; i >= 0; i--) {
+    const tier = TIER_LADDER[i] as TierId
+    const cabinet = world.trophiesByTier?.[tier]
+    if (!cabinet) continue
+    if (inBand(cabinet.titles)) return { tier, metal: 'gold' }
+    if (inBand(cabinet.finals)) return { tier, metal: 'silver' }
+  }
+  return null
 }
 
 // =================================================================================================

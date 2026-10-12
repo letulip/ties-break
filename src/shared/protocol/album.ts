@@ -29,6 +29,7 @@
 // What has NO ref, on purpose: the tier and the stage on a pass or a tag (engine-born words), the venue and the patch (invented proper nouns, Latin by spec §9.5), the date lines (a formatter's
 // output) and the mother's name on the heirloom's checklist.
 import type { CopyRef } from '../i18n'
+import type { TierId } from '../../engine/season/types'
 
 /** The three arrangements of the same square sheet (spec §3, mockups AW and AZ). `A` and `C` open
  *  a chapter; `B` is the ordinary sheet with the boarding pass. */
@@ -149,6 +150,21 @@ export interface AlbumClubPatch {
   step: AlbumTierStep
 }
 
+/** ⭐ r50 №3 – THE CHAPTER'S BEST SILVERWARE, for layout C's free corner (owner, 12.10: «справа сверху в углу
+ *  и слева внизу есть место … какие-то из фото наград-кубков ставить соответственно периоду и занятому
+ *  месту? Без рамки, просто прозрачный фон и картинка с тенюшкой»). The engine ships the FACT – the rung and
+ *  the metal – and the rendering side builds the art path through `art/trophies.ts`'s `trophyArtUrl`, the one
+ *  builder (its own header: a second spelling of that url is how the finale splash once 404'd). ⚠ A `TierId`
+ *  and NOT a label, deliberately – the url is keyed on the rung's id, and a label would need the forbidden
+ *  `tierFromLabel` walk back (`AlbumTierStep`'s note above). The metal union is `TrophyMetal`'s own closed
+ *  two – gold = she won it, silver = she lost the final; there is no third (that file's header says why) –
+ *  so a period whose best is a semi ships NO cup at all. WHERE it stands on the page is the placement
+ *  resolver's (`placeCup`), so a sheet can carry one and show none. Optional and wire-only – nothing persists. */
+export interface AlbumChapterCup {
+  tier: TierId
+  metal: 'gold' | 'silver'
+}
+
 /** ⭐ ROUND 47 #14 – A SMALL SNAPSHOT OF HER RESTING OR ON HOLIDAY, hung in the gap a sheet leaves where its ticket or its side tag would
  *  have been («чтобы пустоту немного заполнить»). It is a PICTURE AND NOTHING ELSE: no caption and no alt, because both are strings and the
  *  owner's copy is his (invariant 4) – the page draws it as decoration. `art` is base-relative like `AlbumFrame.art` (`images/weeks/…`, the app's
@@ -189,6 +205,9 @@ export interface AlbumSheetModel {
    *  a tag or a patch of its OWN – ⭐ ROUND 48: except that a sheet the book's tail hung a `tail` ticket or tag on keeps its snapshot too, and the resolver draws
    *  whichever the gap can hold (the hung object first; `placeSheet`). */
   filler: AlbumFiller | null
+  /** ⭐ r50 №3 – the chapter's best trophy, on the chapter's FIRST C sheet only (one cup per chapter,
+   *  `albumBook.ts`'s `chapterCupOf`); absent everywhere else. Optional so nothing shipped moves. */
+  cup?: AlbumChapterCup
   doodles: readonly AlbumDoodle[]
 }
 
