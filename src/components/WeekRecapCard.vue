@@ -1383,9 +1383,17 @@ const practiceWeekLabel = computed(() => weekLabel(week.value, startYear.value))
   color: var(--paper-ink);
 }
 
+/* R51 №1b – THE TWO COLUMNS MAY SHRINK BELOW THEIR TILES' MIN-CONTENT. `1fr` is `minmax(auto, 1fr)`, so a column never gets narrower than its widest
+   tile's longest unbreakable word. MEASURED (e2e/r51-overflow-sweep.spec.ts + a one-off probe, Russian, `pro`): the Mood tile asks 150 px
+   (its uppercase eyebrow word) and the Highlights tile 162 px (a 16-letter word in a highlight), so the second row alone needs 322 px of a
+   grid that is 288 px wide at 320 and 318 at 350 – the page grew 18 px at 320 and 2 px at 336, Chromium widened the layout viewport to
+   match, and the fixed bottom bar and the week button left the glass. `minmax(0, 1fr)` is the "min-width drop": the columns stay equal
+   halves at every width that fits today (nothing from 354 px up moves), and below that the words run into the tile's own 14 px padding
+   instead of the page. ⚠ KNOWN RESIDUE, NOT HIDDEN: at 320 the longest highlight word is up to 10 px wider than the tile's content box and
+   is still inside its card; stacking the tiles into one column under ~354 px would remove it and is a layout decision, not a fix. */
 .recap-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 14px;
 }

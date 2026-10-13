@@ -7,7 +7,7 @@
 // ⚠ `onMounted` IS GONE FROM THIS LIST (D-05, 28.09) – the careers refresh it carried is a
 // `watch(…, { immediate: true })` now, and `immediate` IS the mount half. Nothing else here mounts.
 import { LIFE_EVENT_BOOST_FACTOR } from '../../engine/world/lifeBoost'
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
 import { useGameStore, type SaveOpKind } from '../../stores/game'
 import { sanitizeName } from '../../db/saves'
 import type { CareerMeta, SavePeek, SlotMeta } from '../../shared/protocol'
@@ -20,6 +20,7 @@ import StoreError from '../ui/StoreError.vue'
 import FeedbackDialog from '../FeedbackDialog.vue'
 import { FEEDBACK_LABEL } from '../../feedback'
 import SegmentedRow from '../ui/SegmentedRow.vue'
+import { useRevealActivePill } from '../../composables/stripReveal'
 import { isMuted, setMuted } from '../../audio/sfx'
 import { AUDIO_COPY } from '../../composables/audioCopy'
 import { isMusicMuted, setMusicMuted } from '../../audio/music'
@@ -631,6 +632,10 @@ const TAB_OPTIONS = computed(() => [
   { value: 'saves', label: t('Saves'), title: t('Careers, save slots, import and export') },
   { value: 'about', label: t('About'), title: t('Version, seed and privacy') },
 ])
+// R51 №1b – the chapter strip scrolls INSIDE itself (see `.more-tabs` below), so a chapter that is pressed from outside the strip's own
+// reach still brings its pill into sight. The same composable, for the same reason, as the Family budget's strip (№1a).
+const moreStrip = useTemplateRef<InstanceType<typeof SegmentedRow>>('moreStrip')
+useRevealActivePill(() => moreStrip.value?.$el as HTMLElement | undefined, screenTab)
 </script>
 
 <template>
@@ -638,6 +643,7 @@ const TAB_OPTIONS = computed(() => [
        costs rather than by subject, is argued at TAB_OPTIONS in the script. -->
   <SegmentedRow
     v-model="screenTab"
+    ref="moreStrip"
     appearance="chapter"
     class="more-tabs"
     :options="TAB_OPTIONS"
@@ -1092,7 +1098,7 @@ const TAB_OPTIONS = computed(() => [
   <section v-if="screenTab === 'about'">
     <h2>{{ t('About') }}</h2>
     <!-- D8, the screen's second table. See the note beside the saves table above. -->
-    <table :aria-label="t('About this app')">
+    <table class="about-table" :aria-label="t('About this app')">
       <tbody>
         <tr>
           <th>{{ t('App') }}</th>
@@ -1181,6 +1187,59 @@ const TAB_OPTIONS = computed(() => [
    carries no top margin of its own, so without this the first heading sits on the pills. */
 .more-tabs {
   margin-bottom: 14px;
+  /* R51 №1b – THE FAMILY BUDGET'S RULING (№1a), APPLIED HERE BECAUSE THE SWEEP FOUND THIS STRIP TOO: the pills scroll inside their own
+     strip and the page never does. MEASURED (e2e/r51-overflow-sweep.spec.ts, Russian, 320 px): Play / Saves / About ask 322 px of the 288
+     the row has, so the page grew 2 px, Chromium widened the layout viewport to match, and the fixed bottom bar left the glass. The
+     argument for each declaration lives at `.money-tabs` in MoneyScreen.vue; it is not copied here a second time. SCOPED TO THIS STRIP,
+     never to the shared `.tab-row`: the others fit, and a global `overflow` would turn every row into a scroll container. */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.more-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* A pill keeps the width its own word asks for (no squeeze-then-scroll), and the focus ring is drawn INSIDE it because a scroll container
+   clips outlines. The compound `.more-tabs.as-chapter` is the specificity the sheet's `.tab-row.as-chapter .tab-pill` needs beaten. */
+.more-tabs.as-chapter :deep(.tab-pill) {
+  flex: 0 0 auto;
+}
+
+.more-tabs.as-chapter :deep(.tab-pill:focus-visible) {
+  outline-offset: -3px;
+}
+
+.more-tabs.as-chapter :deep(.tab-pill.active:focus-visible) {
+  outline-color: var(--on-lime);
+}
+
+/* R51 №1b – A SETTING WHOSE PILLS CANNOT SIT BESIDE ITS LABEL DROPS THEM UNDER IT. MEASURED, Russian, 320–352 px: the playback rows put
+   a label on the left and a row of pills (about 229 px, three words that do not break) on the right; the label can shrink to its longest
+   word and no further, so below ~360 px the sum outgrew the screen (+37 px at 320) and the page scrolled sideways.
+   ⚠ `flex-basis: min-content` ON THE LABEL IS THE WHOLE TRICK, AND `wrap` ALONE WAS REJECTED. Wrapping decides by each item's
+   max-content, and a label with a hint sentence under it is wider than any phone, so a bare `flex-wrap: wrap` would put the pills under the
+   label at EVERY width – 375 and 414 included, where the row fits today. With the basis at min-content the line breaks exactly when
+   "longest word + gap + pills" no longer fits, which is the overflow condition itself, and every width that fits keeps its present look.
+   `row-gap: 0` because `.option-row` already carries its own 12 px top margin. */
+.career-row:has(> .option-row) {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
+.career-row:has(> .option-row) > :first-child {
+  flex: 1 1 min-content;
+}
+
+/* R51 №1b – THE ABOUT TABLE'S VALUE COLUMN MAY BREAK A WORD AS A LAST RESORT. MEASURED, Russian, 320–360 px: the privacy link's longest
+   word (14 px, about 130 px) plus the label column's longest uppercase word made the table 49 px wider than the screen at 320. The value
+   cells take `anywhere`, the label cells do NOT: `anywhere` lowers a column's minimum, and a table shares its spare room by (max – min), so
+   giving it to the labels as well would have shrunk them at 375 – where the table fits today. With only the values, the labels stay at
+   their own longest word and the values give way, and nothing that fits today moves. */
+.about-table td {
+  overflow-wrap: anywhere;
 }
 
 /* THE BUILD LINE (round 29 #19). Muted caption treatment - the same colour and size `.hint` uses in
