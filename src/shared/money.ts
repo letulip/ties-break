@@ -67,3 +67,24 @@ export function formatCentsSignedCompact(cents: number): string {
 function millionsOf(dollars: number): string {
   return (Math.abs(dollars) / 1_000_000).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 }
+
+/** ⭐⭐⭐ ROUND 51 #19 (13.10 EVENING) – WHAT A PART SALE TAKES OUT OF A POSITION, THE BANK'S WAY: THE PROFIT FIRST.
+ *
+ *  THE OWNER: «была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова
+ *  осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята.»
+ *
+ *  A sale of `saleCents` from a position that cost `paidCents` and is worth `valueCents` is the PROFIT the position has made, up to what was asked
+ *  for, and the rest is PRINCIPAL coming back. An underwater position (value under cost) has no profit to take, so the whole sale is principal and the
+ *  loss stays on what is left. Integer cents in, integer cents out: `profitCents + principalCents === saleCents`, always.
+ *
+ *  ⚠ ONE FUNCTION, TWO CALLERS, BECAUSE A SCREEN THAT RESTATES AN ENGINE VERDICT IS THE PARITY CLASS: `sellAsset` (shop.ts) takes `principalCents` off
+ *  the row's `paidCents` and carries `profitCents` into its ledger sentence and season memo, and the sell-confirm dialog quotes the same `profitCents`
+ *  before the family presses the button. Pure: no world, no clock, no draw. */
+export function bankSaleSplit(
+  paidCents: number,
+  valueCents: number,
+  saleCents: number,
+): { profitCents: number; principalCents: number } {
+  const profitCents = Math.min(saleCents, Math.max(0, valueCents - paidCents))
+  return { profitCents, principalCents: saleCents - profitCents }
+}

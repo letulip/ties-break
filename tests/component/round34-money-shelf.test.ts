@@ -204,18 +204,17 @@ describe('⭐ #15 – the sentence on the savings card does not fall when money 
   // WHICH of the card's three numbers he was reading. This is the other half and it is a different
   // claim: the string a person sees is the string the engine wrote, before and after the withdrawal.
   // A screen that formatted the figure itself, or held a stale copy, would pass there and fail here.
-  it('the printed gain and percentage survive a part sale', async () => {
+  // ⚠⚠ RE-AIMED 14.10 BY ROUND 51 #19, THE TITLE TOO. It pinned «the same sentence, word for word» across a withdrawal. THE OWNER, 13.10 evening, on seeing the folded figure in
+  // play («Индексный фонд всё ещё не пересчитывается после продажи долей, см. скриншот, +62673 показывается всё еще…»): «была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята.» The card is the position that is LEFT.
+  // The engine half is tests/round51-bank-model-sale.test.ts; the posed live row and the owner's own example, mounted, are tests/component/round51-bank-model-card.test.ts.
+  it('the printed gain and percentage are the position that is LEFT after a part sale (round 51 #19)', async () => {
     const world = owning('deposit', 100_000_00)
     world.week += 52 * 10
     revalueAssets(world)
     const wrapper = await mountShop(toSnapshot(world))
     const before = (await shelfRow(wrapper, 'A savings deposit')).find('.shop-row-change').text()
-    // ⚠ RE-AIMED AT THE ROUND-34 / PROLOGUE MERGE (03.09): this was written as «since they bought
-    // it» against the pre-merge copy, and `prologue/wave` shipped the owner's second-person pass
-    // («в Shop - They own nothing yet. Кто "they"?», round 33) in the same window. The shipped guard
-    // `tests/template-copy-rules.test.ts` now FORBIDS `they bought`, so the old expectation asserted
-    // a string the app is no longer allowed to render. Second person is the truth; the assertion is
-    // as strict as it was.
+    // ⚠ RE-AIMED AT THE ROUND-34 / PROLOGUE MERGE (03.09): second person is the truth («since you bought it»); the shipped guard `tests/template-copy-rules.test.ts`
+    // forbids `they bought`. The assertion is as strict as it was.
     expect(before, 'ten years of interest, on screen').toMatch(/^\+\$[\d,]+ since you bought it \(\d+%\)$/)
 
     // Take half out through the engine's own command, then re-render from the new snapshot.
@@ -224,8 +223,9 @@ describe('⭐ #15 – the sentence on the savings card does not fall when money 
     await nextTick()
 
     const after = (await shelfRow(wrapper, 'A savings deposit')).find('.shop-row-change').text()
-    expect(after, 'the same sentence, word for word').toBe(before)
-    // ...and the card really did change around it, so this is not a screen that failed to re-render.
+    // half the account is more than the whole profit (about $36,626 of $136,626), so the profit left first: the position that remains has earned nothing yet
+    expect(after, 'the profit was taken: the sentence is about what is left').toBe('+$0 since you bought it (0%)')
+    expect(after).not.toBe(before)
     const worth = (await shelfRow(wrapper, 'A savings deposit')).find('.money-row').text()
     expect(worth, 'the holding on screen is half of what it was').not.toContain('$136,626')
   })

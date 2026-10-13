@@ -107,8 +107,10 @@ describe('#14 – a re-entry that outweighs what is left starts the fund card ov
     // «изъятие почти всех денег» – 98.5% out, a residue stays
     sellAsset(world, FUND, Math.round(grown.valueCents! * 0.985))
     const residue = fundRow(world)
-    // round 34's ruling holds until the re-entry: the lifetime sum did not move on the withdrawal
-    expect(residue.changeCents, 'a withdrawal does not shrink what it earned').toBe(grown.changeCents)
+    // ⚠⚠ RE-AIMED 14.10 BY ROUND 51 #19. This read «round 34's ruling holds until the re-entry: the lifetime sum did not move on the withdrawal». THE OWNER, 13.10 evening: «была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята.»
+    // 98.5% of the account is far more than its whole gain, so the profit left first and the residue has earned nothing yet; the lifetime sum lives in the memory.
+    expect(residue.changeCents, 'the residue has earned nothing yet: the profit left first').toBe(0)
+    expect(heldFund(world).realisedGainCents, 'and the memory holds exactly the profit that was taken').toBe(grown.changeCents)
 
     // a few weeks pass, then «зашёл на 80млн»
     ageWeeks(world, 6)
@@ -149,7 +151,7 @@ describe('#14 – a re-entry that outweighs what is left starts the fund card ov
     expect(held.realisedCostCents).toBeUndefined()
   })
 
-  it('⭐ ROUND 34 IS UNTOUCHED: a part sale keeps the lifetime sum, and a SMALLER top-up keeps the memory', () => {
+  it('⭐ a part sale records the memory, and a SMALLER top-up keeps it (round 51 #19: the card no longer folds the memory in)', () => {
     const world = holdingWithMemory('r46-14-keep')
     const held = heldFund(world)
     const memory = { gain: held.realisedGainCents!, cost: held.realisedCostCents! }
@@ -160,9 +162,8 @@ describe('#14 – a re-entry that outweighs what is left starts the fund card ov
     const card = fundRow(world)
     expect(held.realisedGainCents, 'under half the new holding is new money: memory stays').toBe(memory.gain)
     expect(held.realisedCostCents).toBe(memory.cost)
-    expect(card.changeCents, 'the lifetime identity of round 34').toBe(
-      held.valueCents - held.paidCents + memory.gain,
-    )
+    // ⚠ RE-AIMED 14.10 BY ROUND 51 #19: the card is the position that is left (`valueCents - paidCents`); the memory that a smaller top-up keeps is asserted above.
+    expect(card.changeCents, 'the card is the position that is left').toBe(held.valueCents - held.paidCents)
   })
 
   it('⭐ ...AND THE BOUNDARY IS HALF: a top-up that outweighs the holding retires the memory', () => {
@@ -177,9 +178,13 @@ describe('#14 – a re-entry that outweighs what is left starts the fund card ov
     expect(held.realisedCostCents).toBeUndefined()
     expect(card.changeCents, 'the gain is the current holding\'s own').toBe(held.valueCents - held.paidCents)
     // and the next withdrawal starts a fresh memory, so round 34's ruling applies to the new holding
-    const before = fundRow(world).changeCents
-    sellAsset(world, FUND, Math.round(held.valueCents / 2))
-    expect(fundRow(world).changeCents, 'a withdrawal still does not shrink the sum').toBe(before)
+    const before = fundRow(world).changeCents!
+    const half = Math.round(held.valueCents / 2)
+    sellAsset(world, FUND, half)
+    // ⚠ RE-AIMED 14.10 BY ROUND 51 #19 (it read «a withdrawal still does not shrink the sum»): the new holding's withdrawal takes ITS profit first, whatever that is.
+    const profit = Math.min(half, Math.max(0, before))
+    expect(fundRow(world).changeCents, 'a withdrawal takes the profit first').toBe(before - profit)
+    expect(held.realisedGainCents, 'and the fresh memory is exactly that profit').toBe(profit)
   })
 
   it('⭐ CONSERVATION: across a walked sequence the basis is only ever moved, so realised + unrealised is the total gained', () => {
@@ -238,18 +243,25 @@ describe('#14 – a re-entry that outweighs what is left starts the fund card ov
     check('a withdrawal from the new holding')
   })
 
-  it('⭐ A PART SALE RELEASES THE BASIS PROPORTIONALLY: half out, half the cost, the same average', () => {
+  // ⚠⚠ RE-AIMED 14.10 BY ROUND 51 #19, THE TITLE TOO. It pinned «half out, half the cost, the same average». THE OWNER, 13.10 evening: «была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята.» The units still leave pro rata;
+  // the cost leaves only once the profit is out, so the average the family came in at RISES to the honest basis of what remains.
+  it('⭐ A PART SALE TAKES THE PROFIT FIRST (round 51 #19): the principal gives up only what the profit could not cover, the units leave pro rata, the average rises', () => {
     const world = family('r46-14-half')
     buyAsset(world, FUND, usd(10_000_000))
     ageWeeks(world, WEEKS_PER_YEAR * 3)
+    // posed: a fund 50% up, so the profit is real and smaller than the withdrawal – the walk's own sign at year 3 is not this arm's business
+    heldFund(world).valueCents = Math.round(heldFund(world).paidCents * 1.5)
     const before = { ...heldFund(world) }
     const avgBefore = avgUnitPriceCents(before)!
 
-    sellAsset(world, FUND, Math.round(before.valueCents / 2))
+    const half = Math.round(before.valueCents / 2)
+    sellAsset(world, FUND, half)
     const after = heldFund(world)
-    expect(Math.abs(after.paidCents - before.paidCents / 2), 'half the cost left with the half').toBeLessThanOrEqual(2)
-    expect(Math.abs(after.units! / (before.units! / 2) - 1), 'and half the units').toBeLessThan(1e-6)
-    expect(Math.abs(avgUnitPriceCents(after)! / avgBefore - 1), 'the average entry price did not move').toBeLessThan(1e-6)
+    const profit = before.valueCents - before.paidCents
+    expect(profit, 'the fixture has a profit smaller than the withdrawal').toBeLessThan(half)
+    expect(after.paidCents, 'the principal gave up only what the profit could not cover').toBe(before.paidCents - (half - profit))
+    expect(Math.abs(after.units! / (before.units! / 2) - 1), 'and half the units, as before').toBeLessThan(1e-6)
+    expect(avgUnitPriceCents(after)! / avgBefore, 'the average entry price rose to the basis of what remains').toBeCloseTo(1.5, 5)
   })
 })
 

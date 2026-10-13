@@ -88,7 +88,11 @@ describe('part two #4 – a part sale takes money out and leaves the rest workin
     expect(held.valueCents, 'worth what is left').toBe(grown - 30_000_00)
     // ⚠ THE COST OF WHAT LEFT, ONE ROUNDING – and the cost of what stayed is the subtraction, so the
     // two re-add to the original stake to the cent.
-    const costSold1 = Math.round((100_000_00 * 30_000_00) / grown)
+    // ⚠⚠ RE-AIMED 14.10 BY ROUND 51 #19 – THE WITHDRAWAL TAKES THE PROFIT FIRST. THE OWNER, 13.10 evening: «была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята.»
+    // The cost that leaves is the PRINCIPAL part, `proceeds - min(proceeds, profit)`, and not `round(paid x proceeds / value)`: this fixture's whole gain is
+    // far under the $30,000 asked for, so the gain goes first and the principal gives up the rest. The two halves still re-add to the original stake to the cent.
+    const profit1 = Math.min(30_000_00, gain)
+    const costSold1 = 30_000_00 - profit1
     expect(held.paidCents).toBe(100_000_00 - costSold1)
     // ⭐ THE P&L: the realised half is on the ledger row, the unrealised half is on the holding, and
     // they add back up to the gain the family actually had. That identity is the whole item.
@@ -109,7 +113,10 @@ describe('part two #4 – a part sale takes money out and leaves the rest workin
     sellAsset(world, 'deposit', 20_000_00)
     expect(world.fundsCents).toBe(wallet1 + 20_000_00)
     expect(held.valueCents).toBe(valueBefore2 - 20_000_00)
-    const costSold2 = Math.round((paidBefore2 * 20_000_00) / valueBefore2)
+    // ⚠ ROUND 51 #19: sale one took the whole profit, so this holding stands AT COST and the second sale is all principal.
+    const profit2 = Math.min(20_000_00, Math.max(0, valueBefore2 - paidBefore2))
+    expect(profit2, 'sale one took the whole profit: nothing is left to take').toBe(0)
+    const costSold2 = 20_000_00 - profit2
     expect(held.paidCents).toBe(paidBefore2 - costSold2)
     // ...and the identity holds a second time, against the gain that was still on the holding.
     expect(20_000_00 - costSold2 + (held.valueCents - held.paidCents)).toBe(valueBefore2 - paidBefore2)
@@ -126,7 +133,12 @@ describe('part two #4 – a part sale takes money out and leaves the rest workin
     const row = shopView(world).rows.find((r) => r.id === 'deposit')!
     expect(row.valueCents).toBe(held.valueCents)
     expect(row.paidCents).toBe(held.paidCents)
-    expect(row.changeCents).toBe(held.valueCents - held.paidCents + (held.realisedGainCents ?? 0))
+    // ⚠⚠ RE-AIMED AGAIN 14.10, BY ROUND 51 #19, AND THIS IS THE ROUND-34 FOLD COMING BACK OUT. The owner on seeing it in play: «Индексный фонд всё ещё не
+    // пересчитывается после продажи долей, см. скриншот, +62673 показывается всё еще хотя там явно написано сколько стоит и сколько заплачено». The card is the
+    // position that is LEFT – `valueCents - paidCents`, nothing folded in – and the realised half lives on the row as the lifetime memory.
+    expect(row.changeCents).toBe(held.valueCents - held.paidCents)
+    expect(row.changeCents, 'the first sale took the whole profit, so the card reads nothing: the gain is the memory\'s now').toBe(0)
+    expect(held.realisedGainCents, 'and the memory holds exactly the profit that was taken').toBe(gain)
     // ⭐ AND THE REALISED TERM IS REAL ON THIS FIXTURE, so the assertion above cannot pass by both
     // sides being zero – which is the way a re-aimed identity quietly stops testing anything.
     expect(held.realisedGainCents, 'two sales have been realised on this holding').toBeGreaterThan(0)
@@ -210,7 +222,8 @@ describe('part two #4 – a part sale takes money out and leaves the rest workin
     const valueBefore = held.valueCents
     const paidBefore = held.paidCents
     sellAsset(world, 'deposit', out)
-    const costSold = Math.round((paidBefore * out) / valueBefore)
+    // ⚠ RE-AIMED 14.10 BY ROUND 51 #19 (profit first: была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята.) – the gain here is a few thousand against $40,000 out.
+    const costSold = out - Math.min(out, Math.max(0, valueBefore - paidBefore))
     expect(held.paidCents).toBe(paidBefore - costSold)
     expect(out - costSold + (held.valueCents - held.paidCents), 'nothing is lost between the halves').toBe(gainBefore)
     // ⚠ AND `boughtWeek` IS STILL THE WEEK THEY OPENED IT – neither writer touches it.

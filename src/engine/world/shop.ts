@@ -72,7 +72,7 @@ import { WEEKS_PER_YEAR } from '../season/calendar'
 // `./season/calendar` and `./world/ledger`, and not one of those imports this file; everything else
 // it takes from here is a type. So shop -> offers is a leaf edge in both directions that matters.
 import { expireSaleOffers, raiseBuildLetter, raiseSaleLetter, raiseSaleStaleLetter, saleOfferId, saleStaleId } from '../offers'
-import { formatCents } from '../../shared/money'
+import { bankSaleSplit, formatCents } from '../../shared/money'
 import { weekLabel } from '../../shared/dates'
 import type { Offer, OwnedAsset, ShopRowView, ShopView } from '../../shared/protocol'
 // ⭐ ROUND 34 #19 – a VALUE import: the four chart windows, whose largest decides how long a series
@@ -510,6 +510,12 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
       // as «none recorded» when absent, so no save needs anything and no card's arithmetic changed.
       // A row without `units` is not a unit holding at all, so there is nothing to compare – it
       // keeps its memory. Zero draws; integer cents throughout.
+      //
+      // ⭐ ROUND 51 #19 (14.10) – THIS DELETE'S VISIBLE ROLE ON THE CARD IS NOW NIL, AND IT STAYS AS IT WAS (the brief: «as is»). The card no longer folds the memory in
+      // (`shopView` prints `valueCents - paidCents` of the position that is left, on the 13.10 evening ruling), so the $80M-beside-+$47.6M picture above is cured by the
+      // display alone and a dominating top-up changes nothing a player reads. What the delete still does is bookkeeping: it retires the memory so it describes the holding
+      // the card is about, at the price `careerMoney` already names as its residual (1) – cost sold before such a top-up is forgotten there. Not removed here: that is the
+      // architect's call, and tests/round46-fund-reentry.test.ts still pins the boundary.
       if (held.units !== undefined && paidCents >= Math.round(held.units * price)) {
         delete held.realisedGainCents
         delete held.realisedCostCents
@@ -676,6 +682,33 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
  *  the old one – it is the old one, read in units. That is why `paidCents`' rounding is unchanged to
  *  the cent and every part-sale figure round 29 measured still holds.
  *
+ *  ⭐⭐⭐ ROUND 51 #19 (13.10 EVENING) – THE PARAGRAPHS ABOVE DESCRIBE THE PRO-RATA SALE, AND THE OWNER HAS RULED THAT A WITHDRAWAL IS A BANK'S.
+ *  THE ITEM: «Индексный фонд всё ещё не пересчитывается после продажи долей, см. скриншот, +62673 показывается всё еще хотя там явно написано
+ *  сколько стоит и сколько заплачено». THE RULING: «была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность
+ *  видна, мы сняли со счета 50к, там снова осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята. … мы должны пересчитывать
+ *  тоже в момент добавления (это кстати есть, доходность размывается) и в момент снятия (а этого нет)».
+ *
+ *  So a part sale of S from a row at (paid P, value V) takes the PROFIT FIRST:
+ *      profitPart = min(S, max(0, V - P))        principalPart = S - profitPart
+ *      paid' = P - principalPart                 value' = V - S                 units' = units x (1 - S / V), as before
+ *      realisedGain += profitPart                realisedCost += principalPart
+ *  His own example is the test: 100k put in, 150k worth, 50k out => paid 100k, value 100k, gain 0. A sale that outruns the profit dips into the
+ *  principal for the rest, and an UNDERWATER row (V < P) has no profit to take, so the whole sale is principal and the absolute loss stays
+ *  exactly where it was.
+ *
+ *  ⚠ THE INVARIANT THAT MAKES IT SAFE: `profitPart + principalPart = S`, so realised + (V - P) is the same number before and after any sale at
+ *  a fixed price, and `paidCents + realisedCostCents` – the cash that ever went in, which `careerMoney` reads – is the same too. The wallet
+ *  and the reckoning cannot tell the two models apart; what moved is what `paidCents` MEANS afterwards (the cost of the position that
+ *  is LEFT, not a fraction of the old one) and so what the card prints: `shopView` shows `V - P` of the row as it stands, with nothing folded in.
+ *  ⚠ THE AVERAGE ENTRY PRICE MOVES NOW: a profit-first sale leaves `paidCents` where it was and releases units, so «bought at» RISES to the
+ *  honest per-unit basis of what remains. Round 30's «the average must not move» (above) is superseded for the display, on the same ruling.
+ *  ⭐ THE LEDGER'S NUMBER FOLLOWS, BECAUSE IT HAS TO: the sale's own result – the tail of its sentence and its season memo (`accrueRealised`) – is
+ *  `proceeds - principalPart`, i.e. `profitPart`, since the cost a sale CONSUMES is the amount `paidCents` gives up. Leave the pair on the old average
+ *  cost and the memos of a row's part sales plus its closing sale's `value - paid` stop adding up to the family's true profit or loss (measured in
+ *  tests/round51-bank-model-sale.test.ts; round 46's season-money arms measure the memo off the row's own paid drop for the same reason). The three
+ *  sentence templates are the shipped ones, byte for byte – only the figure inside them is the bank's. A PART sale therefore never names a LOSS: an
+ *  underwater withdrawal is returned principal («exactly what it cost») and the loss is named when the position is closed.
+ *
  *  ⚠ ITS `boughtWeek` IS NOT TOUCHED: they have owned this holding since they opened it, and selling
  *  part of it does not change when that was.
  *
@@ -747,27 +780,32 @@ export function sellAsset(world: WorldState, itemId: string, amountCents?: numbe
     return
   }
   const proceedsCents = asked
-  // ONE ROUNDING (see the header): the cost of the part that left. The part that stays is the
-  // subtraction, so the two can never disagree with `paidCents` by a penny.
-  const costSoldCents = Math.round((owned.paidCents * proceedsCents) / owned.valueCents)
-  const deltaCents = proceedsCents - costSoldCents
+  // ⭐⭐⭐ ROUND 51 #19 – A WITHDRAWAL TAKES THE PROFIT FIRST (the header: his words, the formulas and the invariant). `bankSaleSplit` is the ONE primitive – the
+  // sell-confirm dialog asks the same function for the figure it quotes – and it is integer cents in and integer cents out, so there is no rounding to disagree
+  // about: `profitPartCents + principalPartCents` IS `proceedsCents` to the cent. ⚠ ASKED BEFORE ANYTHING BELOW MOVES: it reads the row as the card showed it to
+  // the family a moment ago. An UNDERWATER row has no profit to take, so the whole sale is principal and `V - P` (the loss) carries over unchanged.
+  const { profitCents: profitPartCents, principalCents: principalPartCents } = bankSaleSplit(owned.paidCents, owned.valueCents, proceedsCents)
+  // THE SALE'S OWN RESULT, for its ledger sentence and its season memo: what it fetched against the cost it CONSUMED – the principal part, exactly the amount
+  // `paidCents` gives up below – which is `profitPartCents`. The shipped average-cost pair (`round(paid x S / V)`) is gone on purpose: left in place it would
+  // stop the memos of a row's part sales plus its closing sale's `value - paid` from adding up to the family's true profit once `paidCents` no longer falls by
+  // that amount (tests/round51-bank-model-sale.test.ts measures it). The name stays because the sentence below reads it.
+  const deltaCents = profitPartCents
 
   // ⭐ ROUND 30 #14 – THE UNITS GO WITH THE MONEY. `owned.units` is present on exactly the rungs a
   // part sale is offered on (an 'open' rung carries `unitBaseCents`; a 'fixed' one refused the
   // amount at the third guard above), so this is the only shape a partial row can be in.
   if (owned.units !== undefined) owned.units -= (owned.units * proceedsCents) / owned.valueCents
-  owned.paidCents -= costSoldCents
+  owned.paidCents -= principalPartCents
   owned.valueCents -= proceedsCents
-  // ⭐⭐⭐ ROUND 34 #15 – AND WHAT LEFT IS REMEMBERED, WHICH IS THE WHOLE ITEM. His words and the
-  // measured reproduction are on `OwnedAsset.realisedGainCents`. Both halves of the part that went
-  // are kept – the gain it had made and what it had cost – so the card can say what the holding
-  // has EARNED instead of what is left on it. ⚠ These are the two figures this function ALREADY
-  // computed for the ledger sentence three lines down; nothing new is derived and nothing is
-  // rounded a second time, so the realised and unrealised halves still re-add to the cent.
+  // ⭐⭐⭐ ROUND 34 #15 – AND WHAT LEFT IS REMEMBERED. His words and the measured reproduction are on `OwnedAsset.realisedGainCents`. The memory STAYS
+  // under round 51 – it is the lifetime truth, and `careerMoney` reads `realisedCostCents` – but ⚠ IT IS SPLIT THE BANK'S WAY NOW: the PROFIT that
+  // left and the PRINCIPAL that left, not the average-cost gain and cost of the units. `shopView` no longer folds it into the card (the 13.10 ruling:
+  // the card is the position that is LEFT), so its job here is the sum: realised + (V - P) does not move across a sale, and `paidCents +
+  // realisedCostCents` is the cash that ever went in.
   // ⚠ `??= 0` RATHER THAN A MIGRATION: a save from before this field means «none recorded», and
   // the first withdrawal after the update is where the record starts.
-  owned.realisedGainCents = (owned.realisedGainCents ?? 0) + deltaCents
-  owned.realisedCostCents = (owned.realisedCostCents ?? 0) + costSoldCents
+  owned.realisedGainCents = (owned.realisedGainCents ?? 0) + profitPartCents
+  owned.realisedCostCents = (owned.realisedCostCents ?? 0) + principalPartCents
   world.fundsCents += proceedsCents
 
   addEvent(world, {
@@ -1065,21 +1103,16 @@ export function shopView(world: WorldState): ShopView {
     .filter((item) => !item.retired || owned.some((a) => a.id === item.id))
     .map((item) => {
     const mine = owned.find((a) => a.id === item.id)
-    // ⭐⭐⭐ ROUND 34 #15 – THE GAIN IS WHAT THE HOLDING HAS EARNED, NOT WHAT IS LEFT ON IT. His words
-    // and the measured reproduction are on `OwnedAsset.realisedGainCents`; `tools/r34-savings-income.ts`
-    // is the walk. The unrealised half is `valueCents - paidCents`, exactly as it always was; the
-    // realised half is what previous withdrawals took out with them, and adding the two is what makes
-    // «+$36,626 since they bought it» stop falling to «+$18,313» the week half the money is taken out.
-    // ⚠ ZERO WHEN NOTHING WAS EVER SOLD, which is every holding in the game until somebody sells part
-    // of one, and every save written before this field existed – so the figure is unchanged to the
-    // cent for a family that has not taken money out.
-    const realisedGainCents = mine?.realisedGainCents ?? 0
-    const changeCents = mine ? mine.valueCents - mine.paidCents + realisedGainCents : null
-    // ⚠⚠ AND THE DENOMINATOR CARRIES THE SAME HISTORY, or the fix would move the percentage instead
-    // of the sum. `paidCents` is the cost of what is STILL HELD (its own note says so), so a lifetime
-    // gain divided by it would read against half a cost and double on a half sale. The lifetime cost
-    // is what is still in plus what previous sales took out.
-    const lifetimeCostCents = mine ? mine.paidCents + (mine.realisedCostCents ?? 0) : 0
+    // ⭐⭐⭐ ROUND 51 #19 (13.10 EVENING) – THE CARD'S GAIN IS THE POSITION THAT IS LEFT: `valueCents - paidCents`, NOTHING FOLDED IN. Round 34 #15
+    // (02.09, «Сумма дохода на savings меняется вниз если деньги вывести. Мне кажется она не должна меняться») folded `realisedGainCents` into this
+    // figure and the realised cost into the percentage's base; the owner reversed that on seeing it in play: «Индексный фонд всё ещё не
+    // пересчитывается после продажи долей, см. скриншот, +62673 показывается всё еще хотя там явно написано сколько стоит и сколько заплачено».
+    // His bank: «была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова
+    // осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята.» So `sellAsset` now takes the profit first (its header has the
+    // formulas), and this line is just the honest subtraction of the two figures the card prints beside it – the card reconciles with its own
+    // «Worth now» and «paid» lines by construction. ⚠ The realised memory STAYS on the row (the lifetime truth, and `careerMoney`'s sold cost); it
+    // is simply not this figure any more. A row nobody ever sold from reads exactly what it always read.
+    const changeCents = mine ? mine.valueCents - mine.paidCents : null
     // §3g – the stage under it, hoisted because `nameOptions` below has to read it too: a naming
     // control on a stage that cannot be bought yet is a control the player cannot use.
     const requirementMet = !item.requiresId || owned.some((a) => a.id === item.requiresId)
@@ -1143,8 +1176,10 @@ export function shopView(world: WorldState): ShopView {
       paidCents: mine ? mine.paidCents : null,
       valueCents: mine ? mine.valueCents : null,
       changeCents,
+      // ⭐⭐⭐ ROUND 51 #19 – THE BASE IS THE REMAINING POSITION'S COST (`paidCents`), the same row the sum above is the gain of: a top-up dilutes the
+      // percentage by adding to it (as it always did) and a profit-first withdrawal reads 0% once the profit is out. Null on a zero-paid row.
       changePct:
-        mine && lifetimeCostCents > 0 && changeCents !== null ? Math.round((changeCents / lifetimeCostCents) * 100) : null,
+        mine && mine.paidCents > 0 && changeCents !== null ? Math.round((changeCents / mine.paidCents) * 100) : null,
       boughtWeek: mine ? mine.boughtWeek : null,
       // ⭐⭐⭐ ROUND 30 #14 – THE THREE NUMBERS A DECISION NEEDS, and the reason the item is not
       // finished at the engine's edge. «Зашёл, когда доля стоила 4к… или зашёл на пике при цене 7-8к

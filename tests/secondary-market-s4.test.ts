@@ -350,8 +350,12 @@ function asItStood(world: WorldState, itemId: string, amountCents?: number): voi
     settleAssetSale(world, itemId, owned.valueCents, [owned])
     return
   }
-  const costSoldCents = Math.round((owned.paidCents * amountCents) / owned.valueCents)
-  const deltaCents = amountCents - costSoldCents
+  // ⚠⚠ RE-TYPED 14.10 FOR ROUND 51 #19 – THE YARDSTICK MOVES WITH THE RULING, AND IT STILL SHARES NO LINE WITH THE ENGINE (no `bankSaleSplit`, the min/max spelled out).
+  // THE OWNER, 13.10 evening, on a withdrawal: «была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята.» The part sale of a money rung takes the profit first;
+  // the whole sale and everything else below are the S3 body as it stood. The shipped pro-rata pair that stood here was `round(paid x amount / value)`.
+  const profitPartCents = Math.min(amountCents, Math.max(0, owned.valueCents - owned.paidCents))
+  const costSoldCents = amountCents - profitPartCents
+  const deltaCents = profitPartCents
   if (owned.units !== undefined) owned.units -= (owned.units * amountCents) / owned.valueCents
   owned.paidCents -= costSoldCents
   owned.valueCents -= amountCents
@@ -418,6 +422,10 @@ describe('S4 · parked cash is BIT FOR BIT what it was (ruling §5.1: «parked c
       ledgerAmount: lastEvent(world).amountCents,
     }
     if (process.env.S4_REPORT) console.info(`S4_GOLDEN ${JSON.stringify(observed)}`)
+    // ⚠⚠ RE-CAPTURED 14.10 UNDER ROUND 51 #19 (the owner, 13.10 evening: была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята.). The 30.09 figures below were the pro-rata sale: paidAfter 4828852, realisedGain 63419,
+    // realisedCost 1171148, text '… $634 more than it cost'. The fund here is 324,909 cents up and the withdrawal is 1,234,567, so the whole profit leaves first and the
+    // principal gives up the other 909,658: paid 6,000,000 -> 5,090,342, which is also the worth that stays (the profit is exhausted). The units are untouched
+    // (still pro rata), and there is no rounding left in the cost split at all. The arithmetic is derived by hand here, then confirmed by the twin above.
     // ⚠ CAPTURED 30.09 AT b9ffdbb6, THE COMMIT BEFORE THE ENGINE EDIT (`git diff -- src` was empty when this ran). A figure here that moves is a money rung whose
     // arithmetic moved – re-derive it from the twin above before touching the number, never the other way round. `units` are the exact floats the walk produced.
     expect(observed).toEqual({
@@ -427,11 +435,11 @@ describe('S4 · parked cash is BIT FOR BIT what it was (ruling §5.1: «parked c
       amount: 1234567,
       proceeds: 1234567,
       valueAfter: 5090342,
-      paidAfter: 4828852,
+      paidAfter: 5090342,
       unitsAfter: 12.36393495961432,
-      realisedGain: 63419,
-      realisedCost: 1171148,
-      text: 'Sold $12,346 of: An index fund – $634 more than it cost',
+      realisedGain: 324909,
+      realisedCost: 909658,
+      text: 'Sold $12,346 of: An index fund – $3,249 more than it cost',
       ledgerAmount: 1234567,
     })
     // round 34's arithmetic, re-added to the cent: what left and what stayed are the whole, in cost and in value

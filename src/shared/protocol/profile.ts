@@ -794,7 +794,13 @@ export interface OwnedAsset {
    *
    *  ⚠⚠ ROUND 34 #15 DID NOT TOUCH THIS FIELD EITHER, and that is the point of the two below: what
    *  a part sale takes out of `paidCents` is now REMEMBERED beside it rather than forgotten, so the
-   *  lifetime gain can be stated without this field having to mean two things at once. */
+   *  lifetime gain can be stated without this field having to mean two things at once.
+   *
+   *  ⭐⭐⭐ ROUND 51 #19 (13.10 EVENING) – A PART SALE NOW TAKES THE PROFIT FIRST, so the «scales it PROPORTIONALLY» and «the average must not move»
+   *  sentences above are superseded: `sellAsset` subtracts only the PRINCIPAL part of the proceeds (`proceeds - min(proceeds, max(0, value - paid))`),
+   *  so a profitable withdrawal leaves this field untouched and `changeCents` (`valueCents - paidCents`) reads 0 once the profit is out – his
+   *  «Мне кажется 0, прибыль изъята.» Units still leave pro rata, hence `avgUnitPriceCents` (this field over units) RISES after such a sale:
+   *  it is the honest per-unit basis of what remains. A top-up still ADDS the cash, unchanged. */
   paidCents: number
   /** what it is worth THIS week, in cents, whole. Written by `revalueAssets` on every tick. */
   valueCents: number
@@ -818,7 +824,15 @@ export interface OwnedAsset {
    *  RECORDED, so `changeCents` falls back to `valueCents - paidCents` and an in-flight career reads
    *  the figure it read yesterday, to the cent. It starts remembering from the next withdrawal on.
    *  ⚠ A WHOLE sale deletes the row, so nothing accumulates there and nothing needs to: there is no
-   *  card left to put a number on. */
+   *  card left to put a number on.
+   *
+   *  ⭐⭐⭐ ROUND 51 #19 (13.10 EVENING) – THE OWNER REVERSED THE DISPLAY HALF OF ALL OF THE ABOVE, AND THE FIELD STAYS AS THE LIFETIME MEMORY.
+   *  «была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова осталось
+   *  100к - какая теперь доходность? Мне кажется 0, прибыль изъята.» The card (`shopView`) now prints `valueCents - paidCents` of the position that is
+   *  LEFT and does not read this field at all. What `sellAsset` writes here changed with it: no longer the average-cost gain of the units that left
+   *  but the PROFIT part of the withdrawal – `min(proceeds, max(0, value - paid))`, a bank taking the profit first. Realised + (value - paid)
+   *  is unchanged across any sale at a fixed price, which is what the field is for now. A save written before this round holds the old
+   *  average-cost figures here and needs no migration: nothing on a card reads them. */
   realisedGainCents?: number
   /** ⭐⭐⭐ ROUND 34 #15 – ...AND WHAT THAT REALISED GAIN COST, in cents: the `costSoldCents` the
    *  same part sale took out of `paidCents`.
@@ -830,7 +844,11 @@ export interface OwnedAsset {
    *  at 37% across the sale, which is what «она не должна меняться» asks of the whole sentence.
    *
    *  ⚠ SAME OPTIONALITY, SAME REASON: absent is a save that never recorded one, and the fallback is
-   *  the shipped arithmetic. */
+   *  the shipped arithmetic.
+   *
+   *  ⭐⭐⭐ ROUND 51 #19 (13.10 EVENING) – NO LONGER THE PERCENTAGE'S DENOMINATOR (`changePct` divides by the remaining `paidCents`), AND THE FIELD STAYS.
+   *  It now accumulates the PRINCIPAL part of each withdrawal (`proceeds - profitPart`), so `paidCents + realisedCostCents` is the cash that ever went in
+   *  – the sum `careerMoney` reads as `soldCostCents` – and `realisedGainCents + realisedCostCents` is everything ever taken out. */
   realisedCostCents?: number
   /** ⭐⭐⭐ THE SECONDARY MARKET (v90; docs/specs/secondary-market-2026-09.md §2a and §2i) – THE WEEK THE THING WENT ON
    *  THE MARKET. Absent = not listed: every row a save from before this version holds, and every row the family has
