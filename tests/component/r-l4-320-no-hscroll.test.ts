@@ -35,6 +35,12 @@
 // dropped, so the fix leaks to 375 – 3; a shorthand `padding` that also shortens the pill – 2; the tile caption reflowed instead of the row
 // wrapped – 1; the Family-budget selector without its compound – 1 (the arm above).
 //
+// ⚠⚠ RE-AIMED 14.10 (R51 №1a, owner 13.10: «нужен скролл самих пилюль горизонтальный в этом случае без горизонтального скролла страницы»). The
+// Family-budget row no longer WRAPS under 360 px – it never wraps, at any width; the guarantee under the look is now the strip's own scroll, and
+// `r51-money-tabs-strip.test.ts` carries that contract. ONE arm below read `flex-wrap: wrap` for the budget row and now reads `nowrap` +
+// `overflow-x: auto`. The 12 px sides under 360 STAY (they are why English still stands on one line at 320, 268 of 288 px), so every other arm of
+// this file is unchanged. The mutation table above is the 10.10 one as it was: its «every `flex-wrap` dropped – 4» no longer includes the budget row.
+//
 // ⚠ NO USER-FACING WORDING IS TOUCHED OR ASSERTED HERE (CLAUDE.md invariant 4): the fix is CSS in two scoped blocks, and the one rule that looks like
 // the culprit – `.stats-tile-label { white-space: nowrap }` – is deliberately LEFT as it is, with its «DO NOT "FIX" IT» note: the label is a caption
 // that stays on one line, and at 320 the ROW is what gives (it wraps a tile to a second line instead of pushing the page sideways).
@@ -174,7 +180,10 @@ describe('R-L4 – the Family budget at 320x568', () => {
     const pills = pillsOf(w, '.money-tabs')
     expect(pills.map((p) => p.textContent?.trim()), 'the chapters the golden career shows').toEqual(['Spending', 'Bills', 'History', 'Shop'])
     assertInlineRowFits(row, pills, NARROW_PHONE, 'Family budget › the chapter switcher')
-    expect(getComputedStyle(row).flexWrap, 'the switcher may wrap rather than overflow').toBe('wrap')
+    // ⚠ RE-AIMED 14.10 (R51 №1a): this line read `.toBe('wrap')` – «the switcher may wrap rather than overflow». The owner's 13.10 ruling
+    // replaced the wrap with the strip's own scroll, so the guarantee under the look is `overflow-x: auto` and the row NEVER wraps.
+    expect(getComputedStyle(row).flexWrap, 'the switcher never wraps – the guarantee is the strip\'s own scroll').toBe('nowrap')
+    expect(getComputedStyle(row).overflowX, 'a longer word scrolls the strip, never the page').toBe('auto')
     w.unmount()
   })
 
