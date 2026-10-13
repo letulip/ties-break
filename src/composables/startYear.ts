@@ -3,6 +3,9 @@
 // S1 made `startYear` an optional LAST argument of every year-dependent date call (shared/dates.ts) and put it on `Snapshot`; a call that
 // leaves it out answers 2031, which is right for every generation-1 career and WRONG for a 2048-born generation-2 one. This is the one
 // place the UI reads it from, so a screen writes `weekLabel(week, startYear)` and never asks where the year came from.
+// ⚠ ONE DOCUMENTED EXCEPTION since r51 B5 (14.10): a row of ANOTHER career – the careers list and the import confirm in MoreScreen –
+// dates itself in ITS OWN epoch (`rowStartYear(c)` / the decoded file's `peek.startYear`), because the active snapshot's year is the
+// very defect r51 №3 reported ('85 for a 2031 mother under a 2066 daughter). The S2e sweep carries three dated exemptions for it.
 //
 // ⚠ IT READS THE STORE'S SNAPSHOT, NOT A PROP. The store is the single career the player is in; a screen that took the year from a prop
 // could be handed a different one than the snapshot it renders. And ⚠ IT ANSWERS 2031 WHEN THERE IS NO STORE OR NO SNAPSHOT YET –
