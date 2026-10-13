@@ -352,6 +352,8 @@ export const HOLE_TABLE: Readonly<Record<WordClass, readonly HoleRow[]>> = {
     ['Family vacation – {0}: +{1} condition.', 0],
     ['Ordered: {0}', 0],
     ['Put on the market: {0}', 0],
+    // ⭐ r51 №2 (13.10) – the Specialists tab's ask before a year's work is set: hole 0 is `PSY_FOCUS_LABEL[f]`, the English label of the year pressed (a catalog key of the engine.text seat)
+    ["Set the psychologist's work for this season to {0}? The year's work is chosen once a season, and the next choice comes in the next off-season.", 0],
     ['Sold: {0} – exactly what it cost', 0],
     ['Sold: {0} – {1} less than it cost', 0],
     ['Sold: {0} – {1} more than it cost', 0],

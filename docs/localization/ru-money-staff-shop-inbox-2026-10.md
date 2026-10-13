@@ -1992,3 +1992,21 @@ These are the 81 catalogue keys of `src/engine/economy/shop.ts`, `equipment.ts` 
 | RU21-MON-119 | `{0} less than it cost` | `на {0} дешевле цены покупки` |
 | RU21-MON-120 | `{0} more than it cost` | `на {0} дороже цены покупки` |
 | RU21-MON-121 | `{0}% built – ready {1}` | `Построено на {0}%, готово: {1}` |
+
+## ⚙ 13.10 agent-authored (бланкет) – r51 B3, item №2: the Specialists tab's engine sentences, as whole keys
+
+⚙ 13.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's item №2: «На Экране Специалистов остались английские надписи в русской версии».
+
+Seven of the engine's own sentences reached this tab as they came, English under ru: the three locked lines (`MASSEUR_LOCKED_DETAIL`, `PSYCHOLOGIST_LOCKED_DETAIL`, `SPARRING_LOCKED_DETAIL`, shown while a seat is closed) and the four states of the masseur's room note (`masseurRoomNote`, shown under his name once he is hired). They are keys of the seat `engine.text` now, and `SupportStaffTab.vue` reads them through `engineText`. The masseur's four notes are enumerated by posing a world and calling the real function (`tools/i18n-seats.ts`), so a fifth state joins by existing.
+
+⚠ Only the three locked lines needed a new row. The four room-note sentences have carried RU-06 drafts since the support-staff table above (the four rows that open `active injury, time saved`, `active injury, no save yet`, `recent saved weeks` and `ordinary hired week`); they never compiled because no key asked for them. They start compiling the day the seat makes them keys, so this section adds no second row for them – a duplicate would be a conflict the gate refuses, and it is his to choose between the two readings if he wants a different one.
+
+Eight more sentences needed no row at all, only a wired reader: the psychologist's five year-lines and the three refusals a hired card can show under the year's row (the season, the joint decline, the not-ready one). Their Russian rows were compiled long ago; the note under the row printed the English next to them. The ask before a year is set carries the year's name in a hole, which now reads through the hole table (class `eco`), so `«{0}»` is the Russian name of the year pressed.
+
+Vocabulary is the tab's own: `серия W`, `массажист`, `психолог`, `спарринг-партнёр`.
+
+| id | English | Russian | Status |
+| --- | --- | --- | --- |
+| RU21-STF-01 | `Her first counting W-series result opens a place for a masseur.` | `Её первый зачётный результат на турнире серии W откроет место для массажиста.` | `DRAFT` |
+| RU21-STF-02 | `Her first counting W-series result opens a place for a psychologist.` | `Её первый зачётный результат на турнире серии W откроет место для психолога.` | `DRAFT` |
+| RU21-STF-03 | `Her first counting W-series result opens a place for a hitting partner.` | `Её первый зачётный результат на турнире серии W откроет место для спарринг-партнёра.` | `DRAFT` |
