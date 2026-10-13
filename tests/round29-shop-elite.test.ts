@@ -294,14 +294,19 @@ describe('§3 – delivered: it arrives, it starts falling, and the bill starts'
     hireMasseur(control, true)
     sellAsset(control, 'boat-launch')
     const bare = householdWeekly(control, training)
-    // ⚠ SELLING THE BOAT REMOVES TWO TERMS AND THE CASE NAMES BOTH, or it would be asserting the
-    // sum of a valuation and a bill and calling it a bill. `shelfCents` is round 28 #8's own field
-    // (what one more week of holding does to the VALUE, never cash); `upkeepCents` is round 29 #5's
-    // (what really leaves the wallet). The boat has both and they are different sizes.
+    // ⚠⚠⚠ RE-AIMED AT ROUND 51 #6 (13.10), ON THE OWNER'S RULING: «вообще не должно его быть на экране
+    // тренеров, мы им не оперируем там никак, он только заблуждает». SELLING THE BOAT USED TO REMOVE
+    // TWO TERMS FROM OUT – its upkeep (cash) and its week of lost VALUE (paper, `shelfCents`) – and
+    // this arm named both, so as not to assert the sum of a valuation and a bill and call it a bill.
+    // The ruling takes the valuation out of the strip's totals, so the sale now removes ONE term, the
+    // upkeep, which really leaves the wallet. ⚠ `shelfLoss` stays computed as the WITNESS that keeps
+    // the claim non-vacuous: the launch still depreciates and the memo still says so, and the
+    // difference of OUT must be the upkeep ALONE – not upkeep plus that loss, the pre-ruling figure.
     const shelfLoss = Math.max(0, -house.shelfCents)
-    expect(shelfLoss, 'the launch really is depreciating, or the split below is vacuous').toBeGreaterThan(0)
+    expect(shelfLoss, 'the launch really is depreciating, or the claim below is vacuous').toBeGreaterThan(0)
     expect(shelfLoss).not.toBe(weekly)
-    expect(house.outgoingCents - bare.outgoingCents).toBe(weekly + shelfLoss)
+    expect(house.outgoingCents - bare.outgoingCents, 'only the cash leaves OUT with the boat').toBe(weekly)
+    expect(house.outgoingCents - bare.outgoingCents, 'and the paper does not').not.toBe(weekly + shelfLoss)
     expect(bare.upkeepCents).toBe(0)
     expect(bare.shelfCents).toBe(0)
     // ...and the snapshot the strip actually reads carries it.

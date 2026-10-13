@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "count": 6098,
+  "count": 6096,
   "keys": {
     " (+{0} banked – a ranking needs {1} events with points, or {2})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["points"],["RANKABLE_MIN.tournaments"],["RANKABLE_MIN.points"]],"wrapped":true},
     " (does not improve best {0})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["bestN"]],"wrapped":true},
@@ -4530,8 +4530,6 @@
     "The shelf": {"home":["src/components/ShopPanel.vue"],"area":["screens"],"wrapped":true},
     "The shelf got the attention.": {"home":["src/engine/world/albumCorpus.ts"],"area":["album"],"wrapped":true,"seat":["album.corpus"]},
     "The shelf has never been so neat.": {"home":["src/engine/world/albumCorpus.ts"],"area":["album"],"wrapped":true,"seat":["album.corpus"]},
-    "The shelf is in that – it adds {0} a week at today's rates.": {"home":["src/components/HouseholdStrip.vue"],"area":["screens"],"wrapped":true},
-    "The shelf is in that – it costs {0} a week at today's rates.": {"home":["src/components/HouseholdStrip.vue"],"area":["screens"],"wrapped":true},
     "The shoes got it worst.": {"home":["src/engine/world/albumCorpus.ts"],"area":["album"],"wrapped":true,"seat":["album.corpus"]},
     "The shop": {"home":["src/components/screens/MoneyScreen.vue"],"area":["scripts"],"wrapped":true},
     "The sign was too small.": {"home":["src/engine/world/albumCorpus.ts"],"area":["album"],"wrapped":true,"seat":["album.corpus"]},

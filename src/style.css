@@ -5469,7 +5469,9 @@ tr.kid-row td {
   font-style: normal;
   opacity: 0.5;
 }
-.budget-shelf {
+/* The first hint under the figures keeps the breathing room the shelf's sentence used to give it
+   (round 51 #6, 13.10: that sentence is gone; the spacing of the lines that remain is not lost). */
+.budget-household + .hint {
   margin: 6px 0 0;
 }
 

@@ -981,8 +981,9 @@ export function familyWeeklyIncomeCents(world: WorldState): number {
   // consult the budget at all (`overBudgetCents` colours a card and nothing else), which is what
   // keeps this inside «мы ни за что не наказываем». The honest answer to the re-opened complaint is
   // the shelf, not a restored wage on the current account: a family that puts the million into the
-  // index fund is earning again, deliberately, and `householdWeekly` already shows that money in the
-  // household's week.
+  // index fund is earning again, deliberately, and `householdWeekly` showed that money in the
+  // household's week until round 51 #6 (13.10), when the owner ruled the shelf's paper drift off the
+  // coach screens – see the note at its return.
   const deal = activeKitDeal(world.offers, world.week)
   const retainerCents = deal ? ((deal.terms as KitOfferTerms).retainerCents ?? 0) : 0
   // ⚠ THE SPLIT COMES OFF THE CHEQUE BEFORE IT IS PRO-RATED, and in that order, because that is the
@@ -1076,6 +1077,12 @@ export function supportPayrollWeeklyCents(world: WorldState): number {
  *  будущем), и даже на магазин растянуть». The block on screen T showed the COACH's line and called
  *  it the week's spending; his masseur was $525 a week of it and was nowhere in the figure.
  *
+ *  ⚠⚠⚠ ROUND 51 #6 (13.10) – CASH ONLY, ON THE OWNER'S RULING: «вообще не должно его быть на экране
+ *  тренеров, мы им не оперируем там никак, он только заблуждает». The shelf's weekly VALUATION drift
+ *  is no longer summed into `incomeCents` / `outgoingCents`; the paragraphs below still describe how
+ *  that memo is DERIVED (unchanged), and where they speak of the `Math.max(0, ±shelfCents)` split
+ *  they are history – the note at the return has the account. The upkeep, being cash, stays in OUT.
+ *
  *  ⚠ THE INCOME SIDE IS `familyWeeklyIncomeCents` AND NOT A SECOND SUM OF THE SAME STREAMS. That
  *  function is the one definition of "what arrives every week", the cap the meter draws and the
  *  denominator every `overBudgetCents` is cut from; a household total that re-derived the parents'
@@ -1145,8 +1152,24 @@ export function householdWeekly(world: WorldState, trainingCents: number): House
   // banks». Her cut comes off before the strip sees it, for the same reason and by the same rule.
   const merchCents = merchFamilyWeeklyIncomeCents(world)
   const academyIncomeCents = academyWeeklyIncomeCents(world)
-  const incomeCents = familyWeeklyIncomeCents(world) + Math.max(0, shelfCents)
-  const outgoingCents = trainingCents + staffCents + Math.max(0, -shelfCents) + upkeepCents
+  // ⭐⭐⭐ ROUND 51 #6 (13.10) – THE HOUSEHOLD'S WEEK IS CASH, AND THE SHELF'S PAPER IS NOT IN IT.
+  // THE OWNER, 13.10, once the figure he could not find on the coaches screen was traced: «вообще не
+  // должно его быть на экране тренеров, мы им не оперируем там никак, он только заблуждает». His
+  // save read «$1,814 in – $627 out – $1,187 left over» while the cash that really arrives was $425
+  // a week against the same $627, i.e. $202 SHORT: the other $1,389 was the houses and the fund
+  // getting dearer on paper (`revalueAssets` writes only `valueCents`; no cash moves until a sale).
+  // Until today `Math.max(0, shelfCents)` rode into income and `Math.max(0, -shelfCents)` into
+  // outgoings – round 28 #8 stretching the strip over the shop, which was right for the UPKEEP (cash,
+  // above) and wrong for the VALUATION: the one place this function summed paper with money. Both
+  // terms are gone. IN is what `familyWeeklyIncomeCents` says arrives; OUT is what the till charges –
+  // training, the payroll, the upkeep.
+  // ⚠ `shelfCents` IS STILL COMPUTED AND RETURNED, as a MEMO that sits in none of the three totals.
+  // No screen reads it any more (the strip's sentence went with this ruling); it stays on the wire
+  // because the engine's market tests measure the shelf's week through it (`round29p3-market`,
+  // `round29-shop-topup`, `round29p5-business`), and repointing them is churn that buys no
+  // behaviour. A consumer that ADDS it to a total has put the defect back.
+  const incomeCents = familyWeeklyIncomeCents(world)
+  const outgoingCents = trainingCents + staffCents + upkeepCents
   return { incomeCents, outgoingCents, netCents: incomeCents - outgoingCents, shelfCents, upkeepCents, merchCents, academyIncomeCents }
 }
 
