@@ -514,7 +514,7 @@ const showGo = computed(() => !game.snapshot?.pending)
       <section v-if="weddingMark" class="bare cal-wedding">
         <img v-if="brideArt" class="cal-wedding-art" :src="brideArt" alt="" />
         <p class="cal-wedding-body">
-          <span class="cal-wedding-name">Her wedding</span>
+          <span class="cal-wedding-name">{{ t('Her wedding') }}</span>
           <span class="hint">{{ weddingMark.label }}, {{ weddingMark.dates }}</span>
         </p>
       </section>

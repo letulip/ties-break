@@ -17,7 +17,7 @@
 // reasoning IS the record, and the record now lives in two places rather than one.
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { eventText, localizedList, t } from '../../i18n'
+import { engineText, eventText, localizedList, t } from '../../i18n'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import MatchReplay from '../MatchReplay.vue'
 import MatchViewer from '../MatchViewer.vue'
@@ -787,7 +787,15 @@ const calendarRows = computed<CalendarRow[]>(() => {
   return rows
 })
 
+// The label is a catalog key the economy owns (a closed engine set, words.ts `text`), read through engineText so the feed, the planner's
+// pane and both confirms speak the player's language; an id the economy does not know is no label and shows as it came.
 function packageLabel(packageId: string): string {
+  const pkg = vacationPackage(packageId)
+  return pkg ? engineText(pkg.label) : packageId
+}
+// The economy's English label, UNREAD: for the one message whose `{package}` hole the display boundary reads itself (wordHoles.ts, `Family vacation – {package}`, class eco).
+// Handing that hole a label already read through engineText would look the finished Russian up a second time as a key: it renders, and it counts as a miss.
+function packageEnglish(packageId: string): string {
   return vacationPackage(packageId)?.label ?? packageId
 }
 
@@ -968,7 +976,7 @@ function lockLabel(e: UpcomingEvent): string {
     // generic sentence. Everything else now prints the engine's own words rather than a guess.
     case 'unavailable': {
       const vacation = vacations.value.find((v) => v.week === e.week)
-      if (vacation) return t('Family vacation – {package}', { package: packageLabel(vacation.packageId) })
+      if (vacation) return t('Family vacation – {package}', { package: packageEnglish(vacation.packageId) })
       // ⚠ AND THE FALLBACK IS NOT A SECOND GUESS. An old fixture with no detail on the wire gets the
       // one word that is true of all five – it is unavailable – rather than a reason it invented.
       return e.ineligibleDetail ?? t('Not available this week')
@@ -1187,7 +1195,8 @@ function confirmVacation(v: { week: number; packageId: string; label: string; pr
   pendingConfirm.value = {
     message:
       t('{label} in {week} – {price}, +{gain} condition. No tournaments that week.', {
-        label: v.label,
+        // the planner sheet hands over the engine's English label as data; this is where it becomes the sentence
+        label: engineText(v.label),
         week: weekLabel(v.week, startYear.value),
         price: v.priceCents === 0 ? t('price|free') : formatCents(v.priceCents),
         gain: v.gain,
