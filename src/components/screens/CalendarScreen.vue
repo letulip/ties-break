@@ -94,7 +94,7 @@ import { entryFeeText } from '../../composables/entryFee'
 // D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with Season.
 import { enterActionName } from '../../composables/eventName'
 // The upcoming-event card's shared parts, owned once and drawn by the Season feed too.
-import { fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
+import { coachCautionText, fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
 // The app's one red-to-green ramp, shared with the three condition rings. `{ fraction }` names the
 // scale IN the call: this number is a 0..1 chance, not a 0..100 percentage, and the signature will
 // not let the two be confused.
@@ -691,7 +691,7 @@ const showGo = computed(() => !game.snapshot?.pending)
         <p v-if="marker.cautionReason === 'fatigued'" class="caution-note">
           {{ marker.cautionDetail ?? t('Exhausted – racing risks injury.') }}
         </p>
-        <p v-if="marker.coachCaution" class="coach-note">{{ marker.coachCaution }}</p>
+        <p v-if="marker.coachCaution" class="coach-note">{{ coachCautionText(marker) }}</p>
 
         <!-- ⚠ P4's COLLEGE NOTE WAS HERE AND IS REMOVED (owner, 16.08). This card is its own
              confirmation, so it carried the same sentence the Season confirm did - a result here can

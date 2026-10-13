@@ -126,7 +126,7 @@ import { arrivalStatus, entryStatus, layoffCoveringAsPlayed, projectedConditionA
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
-import { coachBilling, coachDeclineNoteRef, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachNoteText, coachRoomNoteRef, coachRoomShortRef, coachTravelsWithHer, handoverBaseBand, handoverRoomBand, lastWinterIn } from './coachMarket'
+import { coachBilling, coachDeclineNoteRef, coachEdgeView, coachEntryLineRef, coachLadderNoteRef, coachMarket, coachNoteText, coachRoomNoteRef, coachRoomShortRef, coachTravelsWithHer, handoverBaseBand, handoverRoomBand, lastWinterIn } from './coachMarket'
 import { masseurRehabWeeksAhead, masseurRoomNote, masseurRungOf, masseurSessionCents, masseurUnlocked, masseurWeeklyCents } from './masseur'
 // ⭐⭐⭐ v80, WAVE F2 – the third seat's two derivations, from the leaf that owns them.
 import { sparringRungWeeklyCents, sparringStoodDown, sparringUnlocked, sparringWeeklyCents } from './sparring'
@@ -653,16 +653,18 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
         gate.level !== 'blocked' &&
         coachLoad !== null &&
         coachWarnsEntry({ ...coachLoad, condition: projected }, ECONOMY.availability.minConditionToEnter[e.tier])
-          ? coachEntryLine(e.tier, projected)
+          ? coachEntryLineRef(e.tier, projected)
           : null
       // The same "only about trips she can take" rule the body arm has always had, and the same
       // "nobody is being paid to have a view" one: a self-coached career hears nothing, from either.
       const ladderSay =
         bodySay === null && gate.level !== 'blocked' && coachLoad !== null
-          ? coachLadderNote(world, e, coachTier)
+          ? coachLadderNoteRef(world, e, coachTier)
           : null
       const say = bodySay ?? ladderSay
-      const coachSay = say !== null ? { coachCaution: say } : {}
+      // ⭐ r51 №7 (13.10) – ONE REF, TWO WIRES: `say` is the CopyRef the coach's builders return, `coachCaution` is that ref's English (the string every test and every "did he speak" predicate has always read) and
+      // `coachCautionC` is the ref itself, which the four screens that print the sentence render under the player's locale. Present together or not at all; class (b) – derived here, persisted nowhere.
+      const coachSay = say !== null ? { coachCaution: coachNoteText(say), coachCautionC: say } : {}
       return {
         id: e.id,
         week: e.week,

@@ -1498,3 +1498,28 @@ The sixteen names are localized data (RU-05 §6): the nominative for `{0} next d
 | RU23-KID-34 | `with\|Elif` | `Элиф` |
 | RU23-KID-35 | `with\|Hana` | `Ханой` |
 | RU23-KID-36 | `with\|Aida` | `Аидой` |
+
+## ⚙ 13.10 agent-authored (бланкет) – r51 B4, item №7: what the hired coach says about a trip, as whole keys
+
+⚙ 13.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's item №7: «Your coach would save her... нет перевода ни в попапе при заявке, ни на самой карточке в Сезоне».
+
+The hired coach's opinion about a trip was the last English printed as a finished sentence on a tournament card: eight sentences, written by the engine (`coachEntryLine` – how tired she is; `coachLadderNote` – which tournament he would rather she played), shown in four places – the entry confirm, the Season card, the next-tournament panel and the Calendar's marker card. They are `CopyRef`s now, beside the English string on the card (`UpcomingEvent.coachCautionC`; class (b): derived at snapshot time, persisted nowhere, no schema move), and the four places render the ref. English is unchanged to the byte: the string is the ref rendered under the source locale.
+
+- **A tournament's name inside a sentence stays as it is** (`«{0}»`). Names are untranslated everywhere in the app today; this sentence does not decide otherwise, only the words around the name are Russian.
+- **`{1}` in the first of the three «this week» sentences is the table's compact name** – `страна`, `юниоры`, `профи`, the words the Stats tiles already print (hole-table class `ladder`) – in the shape the ranking rows already use (`рейтинг (страна)`).
+- **The counted tail of the last sentence is two keys of its own** (`when|next week`, `when|in {0} weeks`), the shape of `gap|{0} places`: the plural lives in the Russian row, not in an English number the engine spelled. The `when|` tag is stripped before English is shown; it only keeps these fragments from ever being the translation of a stand-alone «next week».
+- **The coach's register is the rest of this file's**: plain, dry, a claim about her. No verb names the coach's sex (`советует`, `говорит`, `считает` – present tense – never `повёз бы`, `приберёг бы`), the same rule the knock's coach read follows (§19.4).
+- **Vocabulary is the card's own**: `уровень пройден` is the chip the Season card already prints for an outgrown tournament; `титул` is `phrase|title`; `повлиять на её рейтинг` is the row `{0} could not move her {1} ranking`.
+
+| id | English | Russian | Status |
+| --- | --- | --- | --- |
+| RU23-CMK-49 | `Your coach would not take her. She is empty.` | `Тренер не советует брать её на этот турнир. Сил у неё не осталось.` | `DRAFT` |
+| RU23-CMK-50 | `Your coach would skip this one and get her legs back.` | `Тренер советует пропустить этот турнир и вернуть ногам лёгкость.` | `DRAFT` |
+| RU23-CMK-51 | `Your coach thinks she is a week short of her best for this.` | `Тренер считает, что для этого турнира ей не хватает недели до лучшей формы.` | `DRAFT` |
+| RU23-CMK-52 | `Your coach says the {0} is the week – this pays {1} points, not the table she is climbing.` | `Тренер говорит, что на этой неделе стоит играть «{0}» – здесь очки идут в другой рейтинг ({1}), а не в тот, по которому она поднимается.` | `DRAFT` |
+| RU23-CMK-53 | `Your coach says the {0} is the week – this one will not move anything.` | `Тренер говорит, что на этой неделе стоит играть «{0}» – этот турнир ничего не изменит.` | `DRAFT` |
+| RU23-CMK-54 | `Your coach says the {0} is the week – she has outgrown this one.` | `Тренер говорит, что на этой неделе стоит играть «{0}» – этот уровень она уже прошла.` | `DRAFT` |
+| RU23-CMK-55 | `Your coach says even a title here would not move her ranking.` | `Тренер говорит, что даже титул здесь не повлияет на её рейтинг.` | `DRAFT` |
+| RU23-CMK-56 | `Your coach would save her for the {0} {1}.` | `Тренер советует приберечь её для «{0}» {1}.` | `DRAFT` |
+| RU23-CMK-57 | `when\|next week` | `на следующей неделе` | `DRAFT` |
+| RU23-CMK-58 | `when\|in {0} weeks` | `через {0, plural, one {{0} неделю} few {{0} недели} many {{0} недель} other {{0} недели}}` | `DRAFT` |

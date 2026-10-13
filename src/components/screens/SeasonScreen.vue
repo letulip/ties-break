@@ -80,7 +80,7 @@ import { UPCOMING_WEEKS } from '../../engine/world/constants'
 // THE UPCOMING-EVENT CARD'S OWN PARTS, shared with the Calendar's marker card: the photograph, the
 // court's verdict for her build, the scholarship's share, and how an odds ring is NAMED. Its colour
 // is no longer one of them – that ramp is drawn on five surfaces, not two, so it lives a line below.
-import { fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, surfaceName, surfaceWord, useEventCard } from '../../composables/eventCard'
+import { coachCautionText, fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, surfaceName, surfaceWord, useEventCard } from '../../composables/eventCard'
 import { useWeekPager } from '../../composables/weekPager'
 // ⭐ ROUND 36 PHASE 6 – the «she is entered» predicate, shared with the rail dashboard's card. See
 // the note at `myEntries` below.
@@ -1104,7 +1104,10 @@ function askEnter(e: UpcomingEvent): void {
   // ...and if the family is paying somebody who would rather she skipped it, the confirm says so in HIS
   // words. Load slice: it is the one moment the advice can still change the decision, and a warning that
   // appears only on the card is a warning the player has already scrolled past by the time he taps.
-  const said = e.coachCaution ? `${e.coachCaution} ` : ''
+  // ⭐ r51 №7 (13.10) – HIS SENTENCE IS READ THROUGH ITS REF, ONCE, AND BOTH CONFIRM SHAPES BELOW SPLICE THAT: it used to be the engine's English string, so the popup was Russian around an English sentence. `e.coachCaution`
+  // stays the PREDICATE (did he speak at all – the button's verb below asks it); what is printed is `spoken`. The tournament's name inside it is raw like every name here.
+  const spoken = coachCautionText(e)
+  const said = spoken ? `${spoken} ` : ''
   const where = { event: e.label, week: weekLabel(e.week, startYear.value), surface: surfaceName(e.surface), fee: feeSentence(e.entryFeeCents) }
   pendingConfirm.value = {
     message: fatigued
@@ -1113,7 +1116,7 @@ function askEnter(e: UpcomingEvent): void {
           caution: `${said}${e.cautionDetail ?? t('Exhausted – racing risks injury.')}`,
         })
       : e.coachCaution
-        ? t('{caution} Enter {event} ({week}, {surface})? {fee}', { ...where, caution: e.coachCaution })
+        ? t('{caution} Enter {event} ({week}, {surface})? {fee}', { ...where, caution: spoken })
         : t('Enter {event} ({week}, {surface})? {fee}', where),
     // ⚠ TWO VERBS FOR TWO KINDS OF ADVICE (08.08). "Push through" is a BODY word – it is what you do
     // to tiredness – and since the coach also has an opinion about the SCHEDULE now, it would have
@@ -1916,7 +1919,7 @@ function closeExhibition(): void {
                      never instead of it: `cautionReason` is the RULE (she is under the tier's floor) and
                      this is a PERSON's read, so a card can carry one, both or neither. Quiet styling on
                      purpose - it is advice, the Enter stays active, and the card must not look locked. -->
-                <p v-if="ev.coachCaution" class="coach-note">{{ ev.coachCaution }}</p>
+                <p v-if="ev.coachCaution" class="coach-note">{{ coachCautionText(ev) }}</p>
               </template>
               <!-- She cannot enter this one (locked ahead, or the list has closed), so the week is
                    still hers to plan: a friendly or a family week. The aspirational card stays –

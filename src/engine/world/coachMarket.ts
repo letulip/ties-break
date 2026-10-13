@@ -3016,10 +3016,17 @@ const COACH_BLURB: Record<string, string> = {
  *  The J300 line names the stake because that is the honest argument at the top of the ladder: the
  *  entry fee and the flights are real money, and a first-round exit spends them for nothing. */
 export function coachEntryLine(tier: TierId, condition: number): string {
+  return en(coachEntryLineRef(tier, condition))
+}
+
+/** ⭐ r51 №7 (13.10) – THE REF BESIDE `coachEntryLine`, and the string above is its English: one decision, two spellings that cannot differ (the `coachDeclineNoteRef` shape; class (b) – derived at snapshot time,
+ *  persists nothing, owes no migration, draws nothing). The owner met these three under the Russian build as the engine's English on the card and in the entry confirm. The three sentences are whole keys with no hole, so
+ *  the Russian rows are the sentences. The threshold walk is untouched: the same `floor` and the same `- 5` margin pick the same line for the same body. */
+export function coachEntryLineRef(tier: TierId, condition: number): CopyRef {
   const floor = ECONOMY.availability.minConditionToEnter[tier]
-  if (condition < floor - 5) return 'Your coach would not take her. She is empty.'
-  if (condition < floor) return 'Your coach would skip this one and get her legs back.'
-  return 'Your coach thinks she is a week short of her best for this.'
+  if (condition < floor - 5) return cp`Your coach would not take her. She is empty.`
+  if (condition < floor) return cp`Your coach would skip this one and get her legs back.`
+  return cp`Your coach thinks she is a week short of her best for this.`
 }
 
 // =================================================================================================
@@ -3136,6 +3143,20 @@ export function coachReadsTheBook(tier: CoachTier): boolean {
  *  seed, and the caller already holds the answer (`toSnapshot` computes it once per snapshot for the
  *  body arm). Passing it in also makes whose opinion this is impossible to get wrong. */
 export function coachLadderNote(world: WorldState, event: SeasonEvent, coachTier: CoachTier): string | null {
+  const ref = coachLadderNoteRef(world, event, coachTier)
+  return ref === null ? null : en(ref)
+}
+
+/** ⭐ r51 №7 (13.10) – THE REF BESIDE `coachLadderNote`, which carries the whole argument above; the string is this ref's English, so a clause cannot be reworded on one wire and not the other (the owner met «Your coach
+ *  would save her for…» under the Russian build as English, in the entry confirm and on the Season card). Class (b): derived at snapshot time, persists nothing, draws nothing – the clause walk, the horizon and the
+ *  candidate picker are the function they always were; only what each clause RETURNS changed, from a finished sentence to its `cp` ref.
+ *
+ *  ⚠ THREE KINDS OF HOLE, EACH READ BY THE UI THE WAY ITS KIND IS READ ELSEWHERE. A TOURNAMENT'S LABEL (`alt`, the rung ahead) is passed raw – the app prints tournament names untranslated everywhere and this
+ *  sentence does not get to be the one place that decides otherwise; the Russian row quotes it and translates only the words around it. The TABLE (`currency`, `national | international | professional`) is
+ *  the hole-table's class `ladder` (`wordHoles.ts`), the same compact words the Stats tiles print. The COUNTED TAIL (`when`) is a ref of its own, the `placesRef` shape: one key per English form, so the Russian row
+ *  owns the plural of «in {0} weeks» instead of the engine pre-spelling a number into a string the catalog could not reach. The `when|` tag keeps these two fragments from ever becoming the translation of a
+ *  stand-alone «next week» elsewhere (the tag is stripped before English is shown). */
+export function coachLadderNoteRef(world: WorldState, event: SeasonEvent, coachTier: CoachTier): CopyRef | null {
   const horizon = COACH_HORIZON_WEEKS[coachTier]
   if (horizon < 0) return null
   if (!hasOutgrown(world, event.tier)) return null
@@ -3154,15 +3175,15 @@ export function coachLadderNote(world: WorldState, event: SeasonEvent, coachTier
     const alt = TIERS[sameWeek.tier].label
     if (!climbs(TIERS[event.tier].track)) {
       const currency = LADDER_LABEL[TIERS[event.tier].track].toLowerCase()
-      return `Your coach says the ${alt} is the week – this pays ${currency} points, not the table she is climbing.`
+      return cp`Your coach says the ${alt} is the week – this pays ${currency} points, not the table she is climbing.`
     }
-    if (shut) return `Your coach says the ${alt} is the week – this one will not move anything.`
-    return `Your coach says the ${alt} is the week – she has outgrown this one.`
+    if (shut) return cp`Your coach says the ${alt} is the week – this one will not move anything.`
+    return cp`Your coach says the ${alt} is the week – she has outgrown this one.`
   }
-  if (shut) return 'Your coach says even a title here would not move her ranking.'
+  if (shut) return cp`Your coach says even a title here would not move her ranking.`
   const ahead = horizon > 0 ? better(event.week + 1, event.week + horizon) : undefined
   if (!ahead) return null
   const weeks = ahead.week - event.week
-  const when = weeks === 1 ? 'next week' : `in ${weeks} weeks`
-  return `Your coach would save her for the ${TIERS[ahead.tier].label} ${when}.`
+  const when = weeks === 1 ? cp`when|next week` : cp`when|in ${weeks} weeks`
+  return cp`Your coach would save her for the ${TIERS[ahead.tier].label} ${when}.`
 }

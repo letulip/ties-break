@@ -21,4 +21,17 @@ export const COACH_CLASS_B_KEYS: readonly string[] = [
   "read|{0}{1}{2}",
   "{0} below her best season, and {1}.",
   "{0}, and no coach buys that back.",
+  // ⚠ ADDED 13.10 (r51 №7) – THE HIRED COACH'S SENTENCES ABOUT A TRIP, `coachEntryLineRef` and `coachLadderNoteRef`: class (b) as well – derived at snapshot time off the world and the card, shown on four screens and
+  // never stored, so no old save holds one and the frozen v92 table has no entry for them. They ride the wire as `UpcomingEvent.coachCautionC`, beside the `coachCaution` string that is their English. Ten keys: the eight
+  // sentences, and the two counted tails of «would save her for the…» (`when|`, the `gap|` shape). tests/i18n-coach-caution.test.ts is the question about each of them.
+  "Your coach would not take her. She is empty.",
+  "Your coach would skip this one and get her legs back.",
+  "Your coach thinks she is a week short of her best for this.",
+  "Your coach says the {0} is the week – this pays {1} points, not the table she is climbing.",
+  "Your coach says the {0} is the week – this one will not move anything.",
+  "Your coach says the {0} is the week – she has outgrown this one.",
+  "Your coach says even a title here would not move her ranking.",
+  "Your coach would save her for the {0} {1}.",
+  "when|next week",
+  "when|in {0} weeks",
 ]

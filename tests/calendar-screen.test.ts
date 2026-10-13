@@ -813,7 +813,10 @@ describe('the marker opens ONE event, with enter-or-close', () => {
       expect(template, `the card must print ${fact}`).toContain(fact)
     }
     // ...and both cautions are the ENGINE's own sentences, never re-worded here
-    expect(template).toContain('{{ marker.coachCaution }}')
+    // ⚠ RE-AIMED 13.10 (r51 №7), THE PROTECTED FACT UNCHANGED: the coach's sentence is still the engine's, printed on the same `v-if="marker.coachCaution"` line – but through `coachCautionText(marker)`
+    // (composables/eventCard.ts), the engine's `coachCautionC` ref rendered under the player's locale, because the old `{{ marker.coachCaution }}` printed the English string under the Russian build.
+    // This screen still words nothing: `tests/component/i18n-r51-b4-coach-caution.test.ts` mounts it in Russian and reads the sentence off the catalog by key.
+    expect(template).toContain('{{ coachCautionText(marker) }}')
     expect(template).toContain('marker.cautionDetail')
     // ⚠ RE-AIMED, NOT WEAKENED: the one-liner moved to `composables/eventCard.ts` as
     // `surfaceVerdict`, shared with the Season screen, which wrote out the identical call under the
