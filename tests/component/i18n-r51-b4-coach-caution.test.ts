@@ -13,7 +13,7 @@
 //   · ENGLISH IS BYTE-IDENTICAL on every surface, and a card with a string but no ref (an old snapshot) still prints the string.
 //
 // ⚠ NO CYRILLIC IS TYPED HERE: every Russian expectation is read from the real src/i18n/ru.json by key, so a re-worded row follows the screen instead of reddening it, and an absent row fails loudly.
-// ⚠ THE ENTRY CONFIRM'S FATIGUE HALF IS NOT UNDER TEST: `cautionDetail` is the fatigue gate's own English sentence (engine/world/medical.ts) printed raw after the coach's, a sibling leak this item did not touch (reported in the commit).
+// ⚠ RE-AIMED 13.10 (architect): the entry confirm's FATIGUE HALF is now under test too – `cautionDetail` (the fatigue gate's own sentence, engine/world/medical.ts) crosses through engineText at both sinks (SeasonScreen askEnter, CalendarScreen caution-note) since the same-day architect tail after B4 reported it raw.
 //   The arm below asserts the coach's half is Russian and says nothing about the half after it.
 // ⚠ MUTATION-VERIFIED 13.10 – see the commit message for the three runs (the three screens put back to `{{ x.coachCaution }}`; the snapshot putting `coachCautionC` back off the wire; the hole-table row removed).
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -220,6 +220,28 @@ describe('the tired-body sentence (the entry confirm\'s FIRST shape: she is unde
     const { text } = await SURFACES[1]![1](snap, card)
     expect(text).toContain(RU[LEGACY.empty] as string)
     expect(text, 'the engine\'s English sentence is gone').not.toContain(LEGACY.empty)
+    // ⚠ RE-AIMED 13.10 (architect, same day as B4): the fatigue HALF joined the net – the engine's
+    // own `cautionDetail` now crosses through engineText at both sinks, so the Russian row must be
+    // in the message and the raw English gone. Before that fix these two lines would be the red arm.
+    const detail = card.cautionDetail
+    expect(detail, 'precondition: the fatigue gate wrote its own sentence onto the card').toBeTruthy()
+    expect(RU[detail!], 'the fatigue sentence has a Russian row to render').toBeTruthy()
+    expect(text).toContain(RU[detail!] as string)
+    expect(text, 'the fatigue sentence no longer prints raw').not.toContain(detail!)
+  })
+
+  it('and the Calendar marker card\'s fatigue line prints the same Russian row', async () => {
+    await inRussian()
+    const { snap, card } = tiredCard()
+    useGameStore().snapshot = snap
+    const w = mount(CalendarScreen, { global: { stubs: { teleport: true } }, attachTo: document.body })
+    const markers = w.findAll('.cal-marker')
+    expect(markers.length, 'the look-ahead lists the tournament as a marker').toBeGreaterThan(0)
+    await markers[0]!.trigger('click')
+    const note = w.find('.caution-note')
+    expect(note.exists(), `the marker card for ${card.label} prints the fatigue line`).toBe(true)
+    expect(note.text()).toBe(RU[card.cautionDetail!] as string)
+    w.unmount()
   })
 
   it('and Season\'s card prints the same row under the pill', async () => {

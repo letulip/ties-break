@@ -117,7 +117,7 @@ import SurfaceMark from '../ui/SurfaceMark.vue'
 import type { UpcomingEvent } from '../../shared/protocol'
 import { useStartYear } from '../../composables/startYear'
 // L2-3 (08.10): RU-03 – the Calendar's frame, the day-kind words and the tournament marker card call `t()`.
-import { t } from '../../i18n'
+import { engineText, t } from '../../i18n'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
 
@@ -689,7 +689,7 @@ const showGo = computed(() => !game.snapshot?.pending)
              (she is under the tier's condition floor) and one is a person's read of her, so a card
              can carry either, both or neither. Neither is a block - the parent may push. -->
         <p v-if="marker.cautionReason === 'fatigued'" class="caution-note">
-          {{ marker.cautionDetail ?? t('Exhausted – racing risks injury.') }}
+          {{ marker.cautionDetail ? engineText(marker.cautionDetail) : t('Exhausted – racing risks injury.') }}
         </p>
         <p v-if="marker.coachCaution" class="coach-note">{{ coachCautionText(marker) }}</p>
 

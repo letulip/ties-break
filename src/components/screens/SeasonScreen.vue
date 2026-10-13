@@ -1113,7 +1113,7 @@ function askEnter(e: UpcomingEvent): void {
     message: fatigued
       ? t('{caution} Enter {event} ({week}, {surface}) anyway? {fee}', {
           ...where,
-          caution: `${said}${e.cautionDetail ?? t('Exhausted – racing risks injury.')}`,
+          caution: `${said}${e.cautionDetail ? engineText(e.cautionDetail) : t('Exhausted – racing risks injury.')}`,
         })
       : e.coachCaution
         ? t('{caution} Enter {event} ({week}, {surface})? {fee}', { ...where, caution: spoken })
