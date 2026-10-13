@@ -4012,7 +4012,15 @@ export const FROZEN = {
  *  85dfe452→0dcb293d · eG d5c9f4c8→9ccadfda · sT b81311d4→3df1244a. PRE_R28B mG 85dfe452→0dcb293d ·
  *  eG d5c9f4c8→9ccadfda · sT b81311d4→3df1244a · highPlayer 00ed7651→7a5efb4c · middlePlayer
  *  e601f304→ff2b160a. PRE_NAME_VERA mG b8a86452→ee905669 · eG 00d1f670→70c9ae1b · sT
- *  391818e4→d195fb5c. */
+ *  391818e4→d195fb5c.
+ *  ⚠ FOURTH PASS, the closing check's catch: the first extraction covered THREE of the SEVEN
+ *  family files, and prior-schemas (v75/76 rungs) went red inside `npm run check` – nine more
+ *  cells, PRE_V74..76 × all three careers, same cause, same harvest (all 72 sibling pins computed;
+ *  63 matched with zero swaps, which is mid/older/deepest proving themselves clean).
+ *  middleGrinder V74 aed72298→83161e91 · V75 5850a02f→f33d6689 · V76 1398496c→f865e5d0.
+ *  eliteGrinder V74 42a4f50f→d4dc0f06 · V75 b01baf0f→af04becc · V76 66bde856→5063f106.
+ *  selfTravelling V74 54b82391→262780ba · V75 c92e8b09→352db148 · V76 64ee599e→5817517e.
+ *  74 cells in all; the family's 47/47 green. */
 export const PRE_V77 = {
   middleGrinder: 'a397a4a0b2228262f24ef9c55370c21d588835149eb8f468150bcdd334f893d2',
   eliteGrinder: '0e0beb629f5fe87165e65957fa4dfff95a26ddf22e3306cdfa4211c95811f932',
@@ -4649,9 +4657,9 @@ export const PRE_V79 = {
  *  exactly what the union merge restored them for – and their two values differ from every other
  *  constant in this file, on this tree as on the last. */
 export const PRE_V76 = {
-  middleGrinder: '1398496c31675e00eebc04f0433978972447c991dce240bf237f7479dab1fdbb',
-  eliteGrinder: '66bde856c2287871e4947ae0e71b1fb16f8b6b7f427da36c83543dbc5d5f0b59',
-  selfTravelling: '64ee599ea2ca12d7b9ecaf8f9b1c493ee7b7f5e6e879a16cee676580b7a5472b',}
+  middleGrinder: 'f865e5d0d075b5b29bbf47c9fbf43fb375ff0c2280e594b100e0e91ff12af296',
+  eliteGrinder: '5063f1069968d380aa354bc71ce87899378dacb23ebf6a02d2f06ae661c93bfe',
+  selfTravelling: '5817517e11c7041277aeb3a4df631acd90cab69d6013ea64f021063ff983f9ae',}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v74 – the identity the v75 re-freeze rests on,
  *  and the wave-3 pattern (`PRE_V74` directly below) repeated one version up. These three values are
@@ -4703,9 +4711,9 @@ export const PRE_V76 = {
  *  from the LETTER rule, which is the thing it was written to prove. That predates this wave, is
  *  nothing T1 may repair under its own brief, and belongs to whoever re-reads that case. */
 export const PRE_V75 = {
-  middleGrinder: '5850a02fa9ad0a54b2394f06f65ac2235b67d9ced66a07d4f7456bdb4cbd5e46',
-  eliteGrinder: 'b01baf0f6c699fb6ff8ea6cf3bbc618b87270bed0f6a7c6eef822b91b7d533cb',
-  selfTravelling: 'c92e8b09bf18c653bfb45b1252f4b67524931c78deb492b572507a8c6c303473',}
+  middleGrinder: 'f33d6689d1edaaf418695fa13d4f9df060ef9e9b7b84eae99c49e5edeb5eccfd',
+  eliteGrinder: 'af04becc99c7208b75d87459b39eb8d6d4b920b8460a297246e24e2d715f49cb',
+  selfTravelling: '352db148fbd5e31e2ca25f4595190af011cbc6444b22909a560433d9e21ff760',}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v73 – the identity the v74 re-freeze rests on,
  *  and the wave-2 pattern (`PRE_V73` directly below) repeated one version up. These three values are
@@ -4747,9 +4755,9 @@ export const PRE_V75 = {
  *  ⚠ Per-key diff first, control = the lift reverted in place: 1 key of 79 on 8/0 (`spirit`), 0 keys
  *  on the other two. Value computed by RUNNING `careerHashAtSchema(8, 0, 73)`. */
 export const PRE_V74 = {
-  middleGrinder: 'aed722986a86671767dfb6caf9053c5d3368eb53cc1c0e73d860f957cd4439e3',
-  eliteGrinder: '42a4f50f35daf4cfe9808716f533b2d76465c87c95a6e682a980af5229f681de',
-  selfTravelling: '54b823915b12fae7983a37742404235302908ef09888336d5cc255b33062638d',}
+  middleGrinder: '83161e911f2997e178161cce5fb9cb6a079612f69c316d1e56e4d1b9c9f7c453',
+  eliteGrinder: 'd4dc0f06cf0cce99491b300fc9e723a2d1f2c9bbcdd9e14a559c739b80699dd3',
+  selfTravelling: '262780ba464b27c5ee7b401d4df0d0c54e0bfe38910307bf41a676f27315787a',}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v72 – the identity the v73 re-freeze rests on,
  *  and the wave-1 pattern (`PRE_V72` directly below) repeated one version up. These three values are
