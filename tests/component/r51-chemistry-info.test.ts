@@ -22,7 +22,8 @@
 //
 // ⚠⚠ MUTATION ARMS – each APPLIED to the real tree, RUN against this file, RED MEASURED, and the tree
 // restored (reverse-replace, so a concurrent edit is not clobbered) with its hash checked identical
-// before and after. 19 tests green on the unmutated tree; each arm's reds:
+// before and after. 20 tests green on the unmutated tree (the Russian case, the 20th, was added after
+// arms 1-8 ran and has its own arm 9 below); each arm's reds:
 //   ARM 1   the tap target moved INSIDE the row's button, no `.stop`        -> RED 3 (pointer: the hire
 //           confirm opens; keyboard: the same; structure) – the plan's «remove .stop -> the hire flow
 //           opens -> red», measured
@@ -38,6 +39,8 @@
 //           fit net fails on a too-tall version, and it is the content-dependent half
 //   ARM 8   `.replay-close` pushed above the screen (`top: -400px`)          -> RED 6 (the dismiss
 //           control's box is outside 375x667 / 320x568)
+//   ARM 9   the Russian row for the reading line deleted from src/i18n/ru.json -> RED 1 (the Russian
+//           case: the English fallback shows a Latin letter)
 //   MEASURE the floor bound tightened to 1% to print what each variant needs: 375x667 – never 285,
 //           unread 285, read 264 of 635px of room; 320x568 – 321, 341, 301 of 536px
 // ⚠ THE DISABLED-ROW CASE DOES NOT DISCRIMINATE IN THIS HARNESS AND IS NOT CLAIMED TO: it stayed green
