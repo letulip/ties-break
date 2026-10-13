@@ -217,9 +217,9 @@ export function windowFromWeek(currentWeek: number, window: RankingWindow): numb
  *  only (`ECONOMY.mandatory.maxRank`) where the real ones bind by acceptance; (b) our 500s are a
  *  quota of six from ten and are NOT reserved here, because the tour lets her pick which six and a
  *  reserved slot would take that choice away; (c) an obligation she could not have met is not an
- *  obligation (`mandatoryBinds`), so no zero is ever written for an injury, a suspension or an
- *  acceptance list that refused her - which means a reserved slot in this game can only ever be
- *  occupied by a zero she chose.
+ *  obligation (`mandatoryBinds`), so no zero is ever written for an injury, a suspension, an
+ *  acceptance list that refused her or a week the tour's own age cap had already shut (R51 item 20) -
+ *  which means a reserved slot in this game can only ever be occupied by a zero she chose.
  *
  *  ⚠ ORDERED, AND THE ORDER IS PART OF THE RULE: Slams are filled before 1000s, so a player short
  *  of the total spends her reservations on the family the tour cares most about. */

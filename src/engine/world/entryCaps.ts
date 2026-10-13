@@ -408,6 +408,47 @@ export function proSubCapRefusalDetail(ageYears: number, usage: EntryCapUsage, f
   )
 }
 
+/** WHICH ALLOWANCE, IF ANY, IS SPENT FOR THIS RUNG ON THIS WEEK – the DECISION of the three age caps and
+ *  the usage that made it, with no wording in it. `null` = every cap that applies to the rung still has
+ *  room on that week.
+ *
+ *  ⚠⚠ IT EXISTS BECAUSE THERE WERE TWO READERS AND MUST BE ONE SPELLING (R51 item 20, 14.10). The entry
+ *  door (`tierCapRefusal`, world/medical.ts) refuses an entry on exactly this, and the mandatory regime
+ *  (`mandatoryBinds`, world/mandatory.ts) stops obliging on it: a girl the tour's own age rule has shut
+ *  out of a week cannot owe that week to the tour. The regime could not simply call the door – medical.ts
+ *  imports mandatory.ts for the suspension window, so the reverse edge is a runtime cycle that
+ *  tests/import-cycles refuses – and copying the three conditions into mandatory.ts would have been the
+ *  parity defect (two predicates for one verdict, free to drift the first time a fourth allowance is
+ *  added). So the DECISION lives here, in the leaf both already read, and the door keeps only its
+ *  SENTENCES: `tierCapRefusal` maps the kind returned below onto the same three strings it always printed.
+ *
+ *  ⚠ THE ORDER IS THE DOOR'S ORDER – the junior year, then the pro age-year, then the pro sub-cap – because
+ *  the first allowance found shut is the one whose sentence the player reads. Nothing about which refusal
+ *  wins moved when the decision was lifted out.
+ *
+ *  ⚠ THE WEEK IS A PARAMETER, as it is at the door: every usage is scoped to the age-year that CONTAINS
+ *  `week`, so asking about an event's own week answers for the allowance that event would spend, and a
+ *  week after her birthday is asked against the next year's row. Zero draws on any stream – three folds
+ *  over persisted ledgers. */
+export interface TierCapClosure {
+  readonly cap: 'itf' | 'pro' | 'proSub'
+  readonly usage: EntryCapUsage
+}
+
+export function tierCapClosure(world: WorldState, tier: TierId, week: number): TierCapClosure | null {
+  if (isCappedTier(tier)) {
+    const usage = entryCapUsage(world, week)
+    if (usage.remaining <= 0) return { cap: 'itf', usage }
+  }
+  if (isCappedProTier(tier)) {
+    const usage = proEntryCapUsage(world, week)
+    if (usage.remaining <= 0) return { cap: 'pro', usage }
+    const sub = proSubCapUsage(world, week, tier)
+    if (sub && sub.remaining <= 0) return { cap: 'proSub', usage: sub }
+  }
+  return null
+}
+
 // =================================================================================================
 // JUNIOR ACCESS (P1, docs/specs/junior-access-2026-08.md) – how a JUNIOR gets onto the professional
 // ladder at all, which in the real sport is a completely different question from how an adult does.

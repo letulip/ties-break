@@ -1,3 +1,11 @@
+---
+type: spec
+status: current
+area: simulation-and-balance
+canonical: false
+last-reviewed: 2026-10-14
+---
+
 # Act two: the professional tour — design note (02.08.2026)
 
 Born from the owner's 02.08 message opening the pro-career design after Phase 1 (integrity) merged:
@@ -950,6 +958,25 @@ about a rulebook in the voice it keeps for her first title.
 `MANDATORY_SLOTS` (points-by-the-book, 05.08), of which eleven are reserved. The briefing reads
 `BEST_N_BY_TRACK.wta`, so it says 18 and cannot fall behind again; the sentence above is left as
 written because it is the record of what v38 shipped.
+
+### 13.5b The age cap and the obligation – round 51, item 20 (14.10)
+
+The owner, 14.10, verbatim: «Мне кажется я нащупал забавную несостыковку: девочка вошла в топ-50 в 17 лет, т.е. теперь обязана посещать все турниры, но у нее при этом кап 16 таких в год, а до дня рождения еще треть сезона».
+
+He had found a real collision, and it was paid for in points. A seventeen-year-old may enter 16 professional events in her age-year, birthday to birthday (§5). Full compliance with §6 is four Slams, eight 1000s and six of the ten 500s: 18 entries, so the obligation could not be met even if she spent no slot anywhere else. The regime did not know that. It wrote a due letter for weeks the entry door had already shut, charged 2 points and a counted zero for skipping them, and ten such points suspended her for four weeks. No test had ever put the cap and the obligation in one world.
+
+**The rule.** The docstring of `mandatoryBinds` already said that an obligation she could not have met is not an obligation, and listed the cases: injured, suspended, below the acceptance list, too young for the rung, entered somewhere else that week. The age allowance was the missing case. Now: an event does not bind her when the tour's age allowance is already spent for the age-year that contains the event's week.
+
+- It reads the same decision the entry door refuses with. That decision is `tierCapClosure` (`world/entryCaps.ts`), and `tierCapRefusal` is now only its sentence-writer: wording, order and precedence of the three refusals are unchanged. (The door could not be called directly, because `medical.ts` imports `mandatory.ts` and the reverse import would be a cycle.) The regime and the entry button cannot disagree about which weeks are shut.
+- A shut week writes no due letter, no 2-point skip, no zero in the 18-best window and no suspension points.
+- The 500 quota counts as offered only the 500s the allowance left open on their weeks. A 500 she played always counts, and the shortfall shrinks accordingly.
+- Nothing else in the regime moved: the point costs, the 10-in-52 suspension, the letters for open weeks, and the other excuses stay as they were. A girl of eighteen or older has no allowance and is untouched.
+
+**How the timing reads** (stated so it can be overruled). "Shut" is measured at the event's own week, on the ledger as it stands when the question is asked. The allowance belongs to the age-year, so slots she spent earlier on smaller events count against her later Slam: the clause is about whether she could enter at that moment, not about who spent the slots. An event after her birthday is asked against the next age-year, so the obligation comes back the week the allowance does.
+
+**Her own slot.** If the ledger already holds a slot on the event's week, the clause stays silent, because she took it and the door was open to her. Without this, a late withdrawal or a no-show from the event that used her last slot would read as shut by her own entry, and the 3- and 4-point charges would vanish in the very state they were written for. A forfeited slot of a different event on the same week is read the same way, strictly, as before.
+
+**Not touched.** No wording: the briefing, the letters and the refusal sentence are byte-identical. One question for the owner: the season briefing still says every Slam and 1000 is required, and for a girl whose allowance is spent that is now not enforced; the briefing does not say so. No save-schema change and no new random draw (the clause is a read of two persisted ledgers). Tests: `tests/mandatory-age-cap.test.ts` covers the shut week, the control that keeps the rule alive, the birthday, the quota, the sixteen-slot year, the held slot and an eighteen-year-old, with its mutation ledger in the header.
 
 ### 13.6 Sponsors above global (§7) — and §7's open question, answered
 

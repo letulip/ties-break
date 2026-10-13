@@ -33,12 +33,8 @@ import { weeksLostSoFar } from '../ending'
 import { kidAgeAt, kidAgeExact } from './age'
 import { alternateListPlace } from './ladder'
 import {
-  entryCapUsage,
-  proEntryCapUsage,
+  tierCapClosure,
   proSubCapRefusalDetail,
-  proSubCapUsage,
-  isCappedTier,
-  isCappedProTier,
   acceleratorRefusalDetail,
   acceleratorUsage,
   juniorReservedRank,
@@ -759,9 +755,20 @@ export function projectedConditionAt(world: WorldState, week: number): number {
  *
  *  ⚠ THE WEEK IS A PARAMETER AND NOT `world.week`: the event gate reads the EVENT's week (entries
  *  commit weeks ahead), and `tierVerdict` reads today's, exactly as it does for her age and her
- *  allowance. Zero draws on any stream – all three usages are folds over persisted ledgers. */
+ *  allowance. Zero draws on any stream – all three usages are folds over persisted ledgers.
+ *
+ *  ⭐ SINCE R51 ITEM 20 (14.10) THE DECISION IS NOT SPELLED HERE: `tierCapClosure` (world/entryCaps.ts)
+ *  says which allowance is spent and this function turns the answer into the sentence – the same answer
+ *  `mandatoryBinds` reads, so the door and the tour's obligations agree about which weeks are shut. */
 export function tierCapRefusal(world: WorldState, tier: TierId, week: number): AvailabilityStatus | null {
   const ageYears = kidAgeAt(world, week)
+  // ⭐ THE DECISION IS NOT SPELLED IN THIS FUNCTION ANY MORE (R51 item 20, 14.10). `tierCapClosure`
+  // (world/entryCaps.ts) says WHICH allowance is spent, and `mandatoryBinds` reads the very same
+  // answer – so the entry door and the tour's obligations cannot disagree about which weeks are shut.
+  // What stays here is the SENTENCES, byte for byte and in the same precedence (junior year -> pro
+  // age-year -> pro sub-cap); the notes below travel with the branch they were written for.
+  const closed = tierCapClosure(world, tier, week)
+  if (closed === null) return null
   // THE ITF ANNUAL ENTRY CAP – she has used her year's international allowance.
   //
   // Placed HERE, immediately after the tier's minimum age, because it is the same family of rule
@@ -781,22 +788,20 @@ export function tierCapRefusal(world: WorldState, tier: TierId, week: number): A
   //
   // Deliberately BELOW `injured`: a layoff is the fresher, more urgent news and it names a return
   // week, whereas the cap will still be there to report the moment she is fit again.
-  if (isCappedTier(tier)) {
-    const cap = entryCapUsage(world, week)
-    if (cap.remaining <= 0) {
-      return {
-        level: 'blocked',
-        reason: 'capped',
-        // Short dash only, and it must read as THIS YEAR rather than "never" – a parent who has
-        // spent all fourteen has to understand she is capped for the year, not shut out.
-        // ⚠ "ON HER NEXT BIRTHDAY" AND NO LONGER "NEXT SEASON" (P2). The allowance's window is her
-        // birthday year now, not the season block, so the old sentence named the wrong date – and a
-        // refusal that names the wrong date is worse than one that names none.
-        detail:
-          `Year limit reached – ${cap.used} of ${cap.limit} international events at ` +
-          `${ageYears}. A fresh allowance on her next birthday.`,
-        entryCap: cap,
-      }
+  if (closed.cap === 'itf') {
+    const cap = closed.usage
+    return {
+      level: 'blocked',
+      reason: 'capped',
+      // Short dash only, and it must read as THIS YEAR rather than "never" – a parent who has
+      // spent all fourteen has to understand she is capped for the year, not shut out.
+      // ⚠ "ON HER NEXT BIRTHDAY" AND NO LONGER "NEXT SEASON" (P2). The allowance's window is her
+      // birthday year now, not the season block, so the old sentence named the wrong date – and a
+      // refusal that names the wrong date is worse than one that names none.
+      detail:
+        `Year limit reached – ${cap.used} of ${cap.limit} international events at ` +
+        `${ageYears}. A fresh allowance on her next birthday.`,
+      entryCap: cap,
     }
   }
   // THE PRO AER (W2-LADDER §5) – the same family of rule one table up, in the same slot of the
@@ -814,33 +819,29 @@ export function tierCapRefusal(world: WorldState, tier: TierId, week: number): A
   // say a thing the refusal does not say and should not: a builder who obeyed the note would have
   // broken the sentence. The transparency requirement itself is unchanged – the refusal still names the
   // rule, the window and what stays open.
-  if (isCappedProTier(tier)) {
-    const cap = proEntryCapUsage(world, week)
-    if (cap.remaining <= 0) {
-      return {
-        level: 'blocked',
-        reason: 'capped',
-        detail:
-          `Tour age rule – ${cap.used} of ${cap.limit} pro entries at ${ageYears}. ` +
-          `A fresh allowance on her next birthday; the junior and national events stay open.`,
-        entryCap: cap,
-      }
-    }
-    // ...AND THE SUB-CAP INSIDE IT (P2): at most three of a fourteen-year-old's eight may be at W75
-    // or above (WTA §X.A.2). It sits immediately after its parent allowance because it is the same
-    // rule's second sentence, and it is a QUOTA rather than a door - it refuses this entry at this
-    // rung while the smaller ones stay open, which is what the copy says.
-    const subCap = proSubCapUsage(world, week, tier)
-    if (subCap && subCap.remaining <= 0) {
-      return {
-        level: 'blocked',
-        reason: 'capped',
-        detail: proSubCapRefusalDetail(ageYears, subCap, ECONOMY.entryCap.proSubCapByAge[ageYears].fromTier),
-        entryCap: subCap,
-      }
+  if (closed.cap === 'pro') {
+    const cap = closed.usage
+    return {
+      level: 'blocked',
+      reason: 'capped',
+      detail:
+        `Tour age rule – ${cap.used} of ${cap.limit} pro entries at ${ageYears}. ` +
+        `A fresh allowance on her next birthday; the junior and national events stay open.`,
+      entryCap: cap,
     }
   }
-  return null
+  // ...AND THE SUB-CAP INSIDE IT (P2): at most three of a fourteen-year-old's eight may be at W75
+  // or above (WTA §X.A.2). It sits immediately after its parent allowance because it is the same
+  // rule's second sentence, and it is a QUOTA rather than a door - it refuses this entry at this
+  // rung while the smaller ones stay open, which is what the copy says.
+  // `closed.cap` is 'proSub' here – the only arm left.
+  const subCap = closed.usage
+  return {
+    level: 'blocked',
+    reason: 'capped',
+    detail: proSubCapRefusalDetail(ageYears, subCap, ECONOMY.entryCap.proSubCapByAge[ageYears].fromTier),
+    entryCap: subCap,
+  }
 }
 
 export function availabilityStatus(
