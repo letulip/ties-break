@@ -311,7 +311,7 @@ export const LEGACY_FAMILY_BACKGROUND: FamilyBackground = 'middle'
  *                     to build her daughter's seed, and §7's temperament lean reads the mother's – so a door that dropped it would break the line
  *                     to add the money. The two blocks are written in the same instant off the same finished world (`legacyInputOf` reads
  *                     `dynastyHandoverOf`), so they cannot disagree at creation. `createWorld` also forces `profile.background` to the
- *                     handover's own `background`, so the door passes it already set to `LEGACY_FAMILY_BACKGROUND`.
+ *                     handover's own `background`, so the door passes the handover through untouched and the mother's band is the daughter's (r51 №5, 13.10 – until then it was forced to `middle` here; see the history note above `LegacyCreation`).
  *    `weightEnabled`  the creation ask's answer. */
 export interface LegacyCreation {
   prologue?: PrologueHandover
@@ -335,7 +335,7 @@ export interface LegacyCreation {
  *    THE MONEY     B x multiplier, ONE multiply, whole cents – and, when the nine childhood years ride along, the childhood's DEDUCTION on that
  *                  (below, W1). B is `STARTING_FUNDS_CENTS` for the profile's background – what `createWorld` seeds today. The wallet goes to
  *                  `createWorld` as the opening wallet (its eighth argument – the feed's first line states it) and into
- *                  `legacy.savingsSliceCents` as the amount GRANTED, so a later screen quotes the number the career really got and not a
+ *                  `legacy.savingsSliceCents` as the amount GRANTED, so a later screen quotes the number the career really got (r51 №5, 13.10: `Snapshot.openingFundsCents` is that screen's feed) and not a
  *                  recomputation off a table that may have been retuned since.
  *    THE ASSETS    the house and the car arrive owned (`arriveOwned`), each null-safe, house first.
  *    THE BLOCK     `world.legacy`, persisted, in the shape S1 declared – nothing is added to it.
