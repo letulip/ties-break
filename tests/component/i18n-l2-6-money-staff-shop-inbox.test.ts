@@ -27,9 +27,7 @@ import HouseholdStrip from '../../src/components/HouseholdStrip.vue'
 import SupportStaffTab from '../../src/components/SupportStaffTab.vue'
 import { useGameStore } from '../../src/stores/game'
 import { ECONOMY, staffResultShareBps } from '../../src/engine/economy'
-import { MASSEUR_LOCKED_DETAIL } from '../../src/engine/world/masseur'
-import { PSYCHOLOGIST_LOCKED_DETAIL, PSY_FOCUS_LABEL, PSY_FOCUS_LINE } from '../../src/engine/world/psychologist'
-import { SPARRING_LOCKED_DETAIL } from '../../src/engine/world/sparring'
+import { PSY_FOCUS_LABEL, PSY_FOCUS_LINE } from '../../src/engine/world/psychologist'
 import { formatShortName } from '../../src/shared/format'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 import { installCatalog, missCount, missedKeys, resetI18nForTests, resetMisses, setLocale, t } from '../../src/i18n'
@@ -663,9 +661,11 @@ describe('L2-6 xx sweep – no unwrapped literal in the frames, and the phone st
       JSON.stringify(ECONOMY.masseur),
       JSON.stringify(ECONOMY.psychologist),
       JSON.stringify(ECONOMY.sparring),
-      MASSEUR_LOCKED_DETAIL,
-      PSYCHOLOGIST_LOCKED_DETAIL,
-      SPARRING_LOCKED_DETAIL,
+      // ⚠ RE-AIMED 14.10 (r51, architect, B3's hand-back): the three LOCKED_DETAIL sentences LEFT
+      // this allowed-English corpus – since 7c1fa91b they render Russian through engineText, so a
+      // raw leak of them is a DEFECT the carpet must redden on, not a known engine string. The
+      // allowance was dead (this net poses no locked seat) and would have masked exactly that
+      // regression.
       JSON.stringify(PSY_FOCUS_LABEL),
       JSON.stringify(PSY_FOCUS_LINE),
     ].join('\n')

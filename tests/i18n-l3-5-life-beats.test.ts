@@ -541,7 +541,16 @@ describe('§7 every sentence a sink\'s seat can hold is a key of the frozen v92 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 /** per career: the digest of every string the player was shown (prompts, replies, cards – the English only), captured on the PRE-WAVE tree (0b60a1b3, a throwaway worktree) by the same
  *  driver: `tests/helpers/l3-5-life-play.ts`. Boosted life events, 300 weeks, every pending beat answered by rotating the offered options. */
-const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': 'cb62362', '0/1': '665c9a8d' }
+// ⚠ RE-STAMPED 14.10 (r51, architect), both tags, two causes one night:
+// '5/0' (was 'cb62362') moved with B12's four new small-talk situations (99d1e8ba, pool 51→55) –
+// a longer pool reads a different position on the purpose-scoped smalltalk sub-streams. Not a
+// MAIN draw (B12's twin arm compares rngMain across every step).
+// '0/1' (was '665c9a8d') was still green on B12's tree and moved with B14's soft hyphens
+// (c4440ab8): the digest hashes RENDERED Russian, and the two U+00AD marks in «Сосредоточена» /
+// «Восстанавливается» are bytes in it. Attribution by exclusion: ru.json's two rows are the only
+// content change between B12's green run and this red – B13/B14 touched CSS, tests and docs
+// otherwise. No draw anywhere near.
+const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': '38f6336d', '0/1': 'e5d188d9' }
 /** and the bench's MAIN stream, three draws on from the last week of each career, from the same pre-wave runs – the wave draws nothing, and the next draws prove the position is the pre-wave one */
 const PRE_WAVE_NEXT3: Record<string, number[]> = {
   '5/0': [0.18923983839340508, 0.10872006509453058, 0.37577401218004525],

@@ -468,7 +468,11 @@ function play(presetIdx: number, policyIdx: number, weeks: number): { recs: Rec[
 
 describe('§6 played careers', () => {
   // captured on the PRE-WAVE tree (054a73a2, a throwaway worktree) by the same loop: careers 5/0 and 0/1, 150 weeks, 102,977 bytes of canonical JSON
-  const PRE_WAVE_DIGEST = 0xaea42fda
+  // ⚠ RE-STAMPED 14.10 (r51, architect): moved with B11's staycation licences (f841b8f5) – the
+  // vacation week-note pool changed length, so the purpose-scoped weeknote sub-stream reads a
+  // different position on holiday weeks (career 1: exactly 7 weekNote fields, all holiday weeks,
+  // per B11's field diff). Not a MAIN draw. Was 0xaea42fda.
+  const PRE_WAVE_DIGEST = 0xd961a15a
   // played once, on first use, INSIDE a test – a ref that drifts from its text must fail a test by name, not take the whole file down at collection
   let played: Array<ReturnType<typeof play>> | null = null
   // careers 5/0 and 0/1 are the DIGEST's pair (captured on the pre-wave tree); 5/1 is a third, played for the families the first two never reach – the coach travels with her only there
