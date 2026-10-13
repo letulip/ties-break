@@ -2450,7 +2450,7 @@ hesitation.
 - `sunny` `"You can, can't you? Best seat in the place, and none of the paperwork."`
 - `fiery` `"Then you've got it. The most senior person on court, and it knew it."`
 - `deep` `"It sat very still, as if it had been there longer than us. It probably had."`
-- `quiet` `"It was very calm about it. Nobody argued."`
+- `quiet` `"It was very calm about it. No one argued."`
 
 **space** · *Say nothing and let her go on*
 - `sunny` `"Oh, and when it flew off, the umpire checked the seat very thoroughly."`

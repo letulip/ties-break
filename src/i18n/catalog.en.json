@@ -401,7 +401,7 @@
     "\"It was quite funny. You had to be there, holding a kettle.\"": {"home":["src/engine/world/smallTalkCorpus.ts"],"area":["smalltalk"],"wrapped":true,"seat":["smallTalk.corpus"]},
     "\"It was the right gate. We boarded a while after that.\"": {"home":["src/engine/world/smallTalkCorpus.ts"],"area":["smalltalk"],"wrapped":true,"seat":["smallTalk.corpus"]},
     "\"It was the right one. That's not the point. Nobody checked.\"": {"home":["src/engine/world/smallTalkCorpus.ts"],"area":["smalltalk"],"wrapped":true,"seat":["smallTalk.corpus"]},
-    "\"It was very calm about it. Nobody argued.\"": {"home":["src/engine/world/smallTalkCorpus.ts"],"area":["smalltalk"],"wrapped":true,"seat":["smallTalk.corpus"]},
+    "\"It was very calm about it. No one argued.\"": {"home":["src/engine/world/smallTalkCorpus.ts"],"area":["smalltalk"],"wrapped":true,"seat":["smallTalk.corpus"]},
     "\"It was, in the end. We all stood there for ages before anything actually happened.\"": {"home":["src/engine/world/smallTalkCorpus.ts"],"area":["smalltalk"],"wrapped":true,"seat":["smallTalk.corpus"]},
     "\"It was. I only know that because it was, not because anybody checked.\"": {"home":["src/engine/world/smallTalkCorpus.ts"],"area":["smalltalk"],"wrapped":true,"seat":["smallTalk.corpus"]},
     "\"It was. I'd been waiting for somebody else to be the somebody.\"": {"home":["src/engine/world/smallTalkCorpus.ts"],"area":["smalltalk"],"wrapped":true,"seat":["smallTalk.corpus"]},

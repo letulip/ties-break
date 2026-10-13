@@ -4281,7 +4281,7 @@ export const SMALL_TALK_CORPUS: readonly SmallTalkSituation[] = [
           },
           respond: {
             label: 'Say you can picture it',
-            said: '"It was very calm about it. Nobody argued."',
+            said: '"It was very calm about it. No one argued."',
           },
           space: {
             label: 'Say nothing and let her go on',

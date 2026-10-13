@@ -850,7 +850,7 @@ Subject `story`; stages `school`, `after-school`; no fact gate. `Судейск�
 | deep | respond | `"It sat very still, as if it had been there longer than us. It probably had."` | `«Она сидит совершенно неподвижно, будто здесь дольше нас. Наверное, так и есть.»` |
 | deep | space | `"After it flew off, the umpire checked the seat first. I respected that."` | `«Когда чайка улетает, судья сначала осматривает сиденье. Я это уважаю.»` |
 | quiet | invite | `"The whole next game. The umpire called the score from the step."` | `«Весь следующий гейм. Счёт объявляют со ступеньки.»` |
-| quiet | respond | `"It was very calm about it. Nobody argued."` | `«Она очень спокойна. Никто не спорит.»` |
+| quiet | respond | `"It was very calm about it. No one argued."` | `«Она очень спокойна. Никто не спорит.»` |
 | quiet | space | `"That's everything. When it left, the umpire checked the seat first."` | `«Вот и всё. Когда чайка улетает, судья сначала осматривает сиденье.»` |
 
 ## 22. Corpus progress (14.10)

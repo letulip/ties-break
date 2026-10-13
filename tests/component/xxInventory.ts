@@ -51,6 +51,7 @@ export const CONTAINED: Readonly<Record<string, string>> = {
 
 export const NOT_MOUNTED: Readonly<Record<string, string>> = {
   AlbumChaptersSheet: 'opened by the album foot\'s Chapters button (AlbumScreen.vue:353); no pose presses it',
+  ChemistryHelpDialog: 'opened by a tap on a coach row\'s chemistry ring (CoachMarketScreen, r51 B8); no pose presses it – its own RU/EN net with a Latin-word scan is tests/component/r51-chemistry-info.test.ts, and a carpet pose for the open card is queued',
   AlbumFillerPhoto: 'drawn on a sheet with a free slot (AlbumLayoutB.vue:86, AlbumLayoutC.vue:56); the fixture book\'s sheets all carry `filler: null`',
   BoxScoreTable: 'the post-match box score (PracticeFlow.vue:240, TournamentFlow.vue:1301); the flows are posed before the result is revealed',
   ConfettiBurst: 'the champion poster (TournamentFlow.vue:1398) and a birthday-week Home (HomeScreen.vue:1427); neither state is posed',
