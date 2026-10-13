@@ -68,7 +68,7 @@ import { BEST_N_BY_TRACK } from '../../engine/season/ranking'
 import type { PortraitEmotion } from '../../shared/avatarEmotion'
 import { COACH_TIER_WORD } from '../../composables/coachWords'
 import { ladderName } from '../../composables/kidIdentity'
-import { engineText, engineTile, t } from '../../i18n'
+import { engineText, engineTile, engineWord, t } from '../../i18n'
 // U0 - the shared components (docs/specs/ui-components.md).
 // ⭐⭐ ROUND 42 #10 – AND StatRow IS NOW ONE OF THEM. This line used to read «it is not used here: it
 // belongs to the Money screen, which is where it earned its shape», which was true until the owner
@@ -204,9 +204,13 @@ const playStyleLabel = computed(() => (game.snapshot ? PLAY_STYLE_LABEL[game.sna
 // on every week the engine hands no word. The two Mood tiles disagree on that one string (this
 // screen says `Angry`, WeekRecapCard says `Frustrated`), both spellings are the owner's, and a
 // single engine word rendered unconditionally would have renamed one of them by accident.
-const moodLabel = computed(
-  () => game.snapshot?.diary.facts.moodWord ?? MOOD_LABEL[emotion.value] ?? t('Steady'),
-)
+const moodLabel = computed(() => {
+  const engineMood = game.snapshot?.diary.facts.moodWord
+  // ⭐ r51 B2 (13.10, owner №15 «Bright», №22 «Heavy»): the engine's word is ENGLISH and used to reach this tile as it came, under Russian too – only the weeks the engine spoke leaked, the fallback
+  // map above was translated all along. It is read at the display boundary now (`words.ts`, class `mood`; the neutral `Steady` re-uses this tile's own `norm` row, so one state is one word).
+  // English renders itself, and a week the engine hands no word still prints the map's word untouched.
+  return engineMood != null ? engineWord('mood', engineMood) : (MOOD_LABEL[emotion.value] ?? t('Steady'))
+})
 
 // --- THE PERSONALITY / SCHOOL / FRIENDS TILES ------------------------------------------------
 // Three tiles, one field: `snapshot.life`, derived in engine/kidLife.ts. The screen chooses NONE of

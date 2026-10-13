@@ -47,6 +47,9 @@ export type WordClass =
   | 'relLead' // ⚠ 11.10 – the relationships tile's leads (Married, Engaged, Together for, On her own, it seems)
   | 'schoolNote' // the school tile's second line: the exam fortnight, the summer, the four standings in the class (`lifeStageTile`)
   | 'stageLine' // the lines after the last grade and the college lines with no number in them (`afterSchoolTile`)
+  // ⭐ r51 B2 (13.10) – the two Mood lines: the five words of `MOOD_WORD` (engine/spirit.ts) that a screen holds in `diary.facts.moodWord`. Not holes of a message either, so no row below names them. TWO classes over one vocabulary, because the neutral word is two Russian words (the Kid tile's `Steady`, the recap card's `recap|Steady`) – see `words.ts`
+  | 'mood' // the Kid screen's Mood tile: Glowing, Bright, Steady, Dimmed, Heavy
+  | 'moodRecap' // …and the recap card's Mood line – the same five words, where the neutral one is the card's own
 
 /** `[key, ...hole indexes]` – a positional message. */
 export type HoleRow = readonly [key: string, ...holes: number[]]
@@ -410,6 +413,9 @@ export const HOLE_TABLE: Readonly<Record<WordClass, readonly HoleRow[]>> = {
   relLead: [],
   schoolNote: [],
   stageLine: [],
+  // ⭐ r51 B2 – the Mood lines are read by the screen that holds the word (`engineWord`), not by a hole of a message
+  mood: [],
+  moodRecap: [],
 }
 
 /** The UI's own messages with named holes. */

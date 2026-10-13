@@ -57,7 +57,7 @@ import { activeLadderOfSnapshot } from '../shared/protocol'
 import type { TravelHomeMood, TravelHomeScene, WorldEvent, WorldMatch } from '../shared/protocol'
 import { useStartYear } from '../composables/startYear'
 // L2-3 (08.10): RU-03 §20–§23 – the recap's frame, labels, alts, finance rows and memos, mood words and the goal scrap call `t()`.
-import { engineText, eventText, localizedList, t } from '../i18n'
+import { engineText, engineWord, eventText, localizedList, t } from '../i18n'
 import { ladderName } from '../composables/kidIdentity'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
@@ -692,9 +692,12 @@ const MOOD_WORD: Record<PortraitEmotion, string> = {
 // its one emotion decision, and null otherwise. ⚠⚠ `MOOD_WORD` BELOW IS UNTOUCHED – `Frustrated`
 // included – and still renders every other week; the Kid screen's own map says `Angry` for the same
 // face, both are shipped strings of the owner's, and this layer changes neither.
-const moodWord = computed(
-  () => game.snapshot?.diary.facts.moodWord ?? MOOD_WORD[emotion.value],
-)
+const moodWord = computed(() => {
+  const engineMood = game.snapshot?.diary.facts.moodWord
+  // ⭐ r51 B2 (13.10, owner №15 «Bright», №22 «Heavy»): the same seam as the Kid tile – the engine's English word is read at the display boundary (`words.ts`, class `moodRecap`, whose neutral `Steady`
+  // is THIS card's own `recap|Steady` row); `MOOD_WORD` above was translated all along and is untouched.
+  return engineMood != null ? engineWord('moodRecap', engineMood) : MOOD_WORD[emotion.value]
+})
 
 // D's "Energy" bar under the face. `condition` IS that number in this game (0..100, 100 = fresh),
 // so the bar is the value and the word above it is the band – the same pair Home's condition ring
