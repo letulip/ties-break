@@ -104,7 +104,7 @@ docs/review/     2026-08 full review + P1–P9 proposals
 - **Boring TypeScript**: strict mode, no generic gymnastics, no enums, no decorators. Types document the save schema and engine parameters.
 - Comments explain **why**, not what — the codebase records owner rulings and non-obvious reasoning. Preserve them verbatim when moving code.
 - In prose and UI copy use the short dash `–`, never the long em-dash.
-- **Both languages at once** (owner, r51 №14): EN and its RU pair move in one commit;
+- **Both languages at once** (owner, r51 №14): EN and RU move in one commit;
   engine values reach templates only through display-boundary readers, never raw.
   Contract: [localization README §8](docs/localization/README.md).
 - Money is in **cents** everywhere in the engine. Formatting helpers take cents; check the unit before calling.
