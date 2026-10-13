@@ -3979,9 +3979,18 @@ export const FROZEN = {
  *  `PRE_V72` character for character before a constant was touched. ⚠⚠ AND THE RE-STAMP WAS APPLIED
  *  **BY NAME**, block-scoped, with each cell's old and new value printed – because
  *  `FROZEN.eliteGrinder` and `PRE_R28B.eliteGrinder` have been THE SAME STRING since v73 and this file
- *  has already lost that cell once to a positional pass (the T3 note at the head of this file). */
+ *  has already lost that cell once to a positional pass (the T3 note at the head of this file).
+ *
+ *  ⚠ RE-STAMPED 14.10 (r51, architect): EIGHT `middleGrinder` cells – PRE_V77..PRE_V84 – moved with
+ *  B12's small-talk corpus (99d1e8ba, pool 51→55): the (5,0) career's bond band rolls small talks,
+ *  and a longer pool reads a different position on the purpose-scoped smalltalk sub-streams, so its
+ *  walked lifeLog differs at every schema rung. `eliteGrinder` and `selfTravelling` did not move
+ *  (their worlds roll none inside the window). NOT a MAIN draw – the file's own rngMain identities
+ *  stayed green. Applied BY NAME via unique old-value replacement, each count asserted 1:
+ *  V77 1c4c9154→a397a4a0 · V78 470a31fd→ee8811c8 · V79 1783214a→540a8eed · V80 244d1413→47266888 ·
+ *  V81 9aa37db0→0c32f507 · V82 d8488444→700d20f9 · V83 dd80e943→1e46ec0c · V84 73c625d6→354d884d. */
 export const PRE_V77 = {
-  middleGrinder: '1c4c9154a9732b86dbecceca4ab10935c852bf2490556db680cbad89fc0c3293',
+  middleGrinder: 'a397a4a0b2228262f24ef9c55370c21d588835149eb8f468150bcdd334f893d2',
   eliteGrinder: '00d4408768aa730f5094e916c390678b054628965db94f0db6c1df0f35508c44',
   selfTravelling: '544e03467e5982d05c0345f7fc275898ea2604b9c0e3253545ac99904261deea',}
 
@@ -4046,7 +4055,7 @@ export const PRE_V77 = {
  *  new value printed – `FROZEN.eliteGrinder` and `PRE_R28B.eliteGrinder` have been THE SAME STRING
  *  since v73 and this file has already lost that cell once to a positional pass. */
 export const PRE_V78 = {
-  middleGrinder: '470a31fd2be94164390c4707bbbd99ad4a3ba164e2779138974230d8e69b440b',
+  middleGrinder: 'ee8811c8f5e5755ffa18069e8a7ed64069d1b24306cea83c6a2df73cb4e5f102',
   eliteGrinder: 'd4fe537035bfc098736598c9658c99ec3a9e58067a89aeee35d74f4f9fb476cb',
   selfTravelling: 'cc991c3283d8992efebddec3747692abf64f3ac0184d7abb45bda0858ffe63b5',
 }
@@ -4100,7 +4109,7 @@ export const PRE_V78 = {
  *  same split v78 and v79 named for their own inert keys, and the reason this block only talks about
  *  form. */
 export const PRE_V80 = {
-  middleGrinder: '244d1413a223dc50320e030acd7c59debae88e96f0d926e716af8d3909d662c7',
+  middleGrinder: '47266888e179203da0e28ea3c2e88d449b49f33cb08997815e8d4ae02c5610f7',
   eliteGrinder: 'fd5f20174ddf7d38b7fbc44bb8c993fb51c46c5ed484d09864479d992f77872f',
   selfTravelling: 'da99b6be6fbcaec0aae72e1117806917385d0afd73f704bc18dc172340c018ea',
 }
@@ -4127,7 +4136,7 @@ export const PRE_V80 = {
  *  hash a LIVE-shaped world moved – `FROZEN`, `PRE_R28B` and `PRE_NAME_VERA` – because those carry the
  *  new key and the new `schemaVersion`. Every `PRE_V*` rung peels both away and holds. */
 export const PRE_V81 = {
-  middleGrinder: '9aa37db0d6ae18294c1077ec5650e76fd4923d4ff6fc13d7826096f16ec03a9a',
+  middleGrinder: '0c32f507dc00e4cd03c81ee4b4af3a077df6e5afdf08abb28cdf44846219a510',
   eliteGrinder: 'eb76a25cc6cebb2b4a8bc5a804f257e98a373d3ba512f186009fd25f36c06ab1',
   selfTravelling: '8477d8eff5cad7e44e59007bce4e58b29135df498bd8ee5684bbc7a8330e5271',
 }
@@ -4165,7 +4174,7 @@ export const PRE_V81 = {
  *  integer arithmetic: **neither can take a draw**, so MAIN cannot have moved and the frozen capture
  *  (41550 / e6b0c709) is untouched. The per-key diff says so from the other side. */
 export const PRE_V82 = {
-  middleGrinder: 'd8488444277f1f34096c57975b8bc1828778d298db55297d0f1a30b145195195',
+  middleGrinder: '700d20f9c245190d042a4036d1c859baccad5d8d6794343b03d3516ccaeedb92',
   eliteGrinder: '81287f3ba8729beefa39b86317f23fba6c532b47dfd999d1eca5110af5f241c6',
   selfTravelling: '49436b3590cb86d5f9bb087e326a2440c60e77f8e8f9797d677b896b8c374a2e',
 }
@@ -4196,7 +4205,7 @@ export const PRE_V82 = {
  *  draws anywhere in the wave (the hazard and the name are purpose-scoped sub-streams, and neither
  *  exists on the T1 tree), so the frozen capture (41550 / e6b0c709) is untouched by construction. */
 export const PRE_V83 = {
-  middleGrinder: 'dd80e943ec86486083f00838182b9a69618aae79dd9f8ed100e9ec64f32dbfca',
+  middleGrinder: '1e46ec0cd500c6ce1635ff1e7139707f32061f1c768322934379a933bbd39a01',
   eliteGrinder: '9729305424ae47ae2b33357408762553550894e1f31a8b2da902246f76a81f04',
   selfTravelling: 'a7a23aa8d1892b933421d77d7b6857d67152b60ff9b6bc338c14f24b68f8ee4f',
 }
@@ -4219,7 +4228,7 @@ export const PRE_V83 = {
  *  `seed:album:flavour:<sheet>` sub-stream at assembly time – so the frozen MAIN capture
  *  (41550 / e6b0c709) is untouched, and the three canonical fingerprints stand un-re-pinned. */
 export const PRE_V84 = {
-  middleGrinder: '73c625d6115506642f2d0da51371d907fa898485fa64be24d47627bcbd33fbd4',
+  middleGrinder: '354d884dd398be40dd728f9b1040be8f6c5bdf60046f08d32b0c52a0771cd0e3',
   eliteGrinder: 'dc93eb1a95c1914f4ea55f4e4f27936fb7de779bc0a29b7ced8b976aaafe327c',
   selfTravelling: 'f39a7a7efef23b15f58f1873fa65e1a4b5701c91dad5c31b5f974bfc9651b3d9',
 }
@@ -4534,7 +4543,7 @@ export const PRE_V86 = {
  *  and the roster's one new draw is on the existing `seed:coaches` sub-stream, placed after every
  *  legacy draw so coach NAMES and `rateCents` are byte-identical on all five careers. */
 export const PRE_V79 = {
-  middleGrinder: '1783214a999b6ee9688aee4f20df76b20cb985b3e6c74127c43f25b8b7aa4df6',
+  middleGrinder: '540a8eed88dacb1ff071c2fab94baa468bd587c7a5792bbeed9688668a1793c0',
   eliteGrinder: '58acabd2b5a442c6c9331ce91bda35459334ba3b2b0bd7d1a418ba82ad022d85',
   /** ⭐⭐ THE VERBATIM v78 VALUE, and the only cell in this rung that is one. See the block above: no
    *  coach, no relationship, so the whole version is a key append for her and the peel is exact. */
