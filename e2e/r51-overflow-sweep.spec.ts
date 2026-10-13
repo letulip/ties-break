@@ -24,7 +24,7 @@
 // THE MATRIX: phones 320 / 336 / 352 / 360 / 375 / 390 / 414 / 430 (Chromium mobile emulation – `isMobile` + touch, because the layout-viewport
 // inflation only exists there) and 576 / 768 / 900 / 1024 / 1280 (tablet and desktop, plain – the emulation is a CONTEXT option and cannot
 // change mid-test, so the two classes are two contexts), in English and Russian, over the eleven stations of `e2e/stations.ts` PLUS the rows
-// inside them (34 states a width on `pro`). Four boots in all, each walking its widths in-page (`setViewportSize` then a fresh mount – the
+// inside them (35 states a width on `pro`, the last of them the week bar's forced span state). Four boots in all, each walking its widths in-page (`setViewportSize` then a fresh mount – the
 // idiom `parity.spec.ts` set). About 20 s for the lot, so it is cheap enough to be a habit and not an audit.
 //
 // WHAT IT FOUND ON ITS FIRST RUN (14.10, before any fix): English was clean at every width. Russian overflowed below 375 px, in four places –
@@ -44,7 +44,7 @@
 // a decision is dated: a row there carries the day it was taken, the reason and a ceiling in pixels, so a future exception can be audited
 // and cannot quietly grow.
 import { test, expect, TOUR_ANSWERED, type CareerAt } from './careerAt'
-import { DOOR, nameOf, ruCareer, tabButton, whyFailed } from './lqa/kit'
+import { DOOR, nameOf, renderings, ruCareer, tabButton, whyFailed } from './lqa/kit'
 import { SCREENS_ON_DISK, STATIONS } from './stations'
 import type { Locator, Page } from '@playwright/test'
 
@@ -183,13 +183,29 @@ function readPage(page: Page): Promise<Reading> {
     }
     const everything = Array.from(document.body.querySelectorAll('*'))
 
+    // ⚠ A FIXED BOX'S OWN EDGE IS NOT ENOUGH, AND THE FIRST VERSION OF THIS CHECK WAS BLIND TO EXACTLY THAT (found by mutating, not by reading): the
+    // week bar is `position: fixed` with insets, so ITS box always fits, while the buttons inside it can run past the screen's edge – and what a
+    // fixed subtree overflows is not part of the document's scrollable area either, so neither (1) nor the bar's own rectangle sees it. Every
+    // box in a fixed subtree is therefore asked, except one clipped by an ancestor that itself fits.
+    const fixedTree = new Set<Element>()
+    for (const root of everything) {
+      if (getComputedStyle(root).position !== 'fixed') continue
+      fixedTree.add(root)
+      for (const inner of Array.from(root.querySelectorAll('*'))) fixedTree.add(inner)
+    }
+    const clippedWithin = (el: Element): boolean => {
+      for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+        if (getComputedStyle(p).overflowX !== 'visible' && p.getBoundingClientRect().right <= cw + 0.5) return true
+      }
+      return false
+    }
     const fixedOut: Element[] = []
-    for (const el of everything) {
+    for (const el of fixedTree) {
       const style = getComputedStyle(el)
-      if (style.position !== 'fixed' || style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) continue
+      if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) continue
       const r = el.getBoundingClientRect()
       if (r.width === 0 || r.height === 0) continue
-      if (r.left < -1 || r.right > cw + 1) fixedOut.push(el)
+      if ((r.left < -1 || r.right > cw + 1) && !clippedWithin(el)) fixedOut.push(el)
     }
 
     let culprits: string[] = []
@@ -379,10 +395,47 @@ async function sweep(
       await visit(screen)
       for (const row of ROWS[screen] ?? []) await walkRow(page, row, screen, true, visit)
     }
+    // ⚠ THE WEEK BAR WITH ITS SPAN BUTTON – A FORCED STATE, AND LABELLED AS ONE. `weekAction.multi` is non-null only on a quiet week inside a
+    // long injury layoff, and no fixture the suite owns reaches one, so the real bar never draws `.span-weeks-btn` on `pro`. The bar's
+    // geometry is CSS (style.css: `.next-week-bar.with-span .next-week-btn { min-width: 0 }` exists because "206 + 8 + the span pill overflows
+    // a 320 px screen"), and CSS is what a forced state can honestly ask: the real bar, the real classes and the catalog's own label, injected for one
+    // measurement and removed. What it does NOT prove is that the engine ever offers the span – `round26-span-gate-ui` and r2-13 own that.
+    try {
+      await goHome(page)
+      // ⚠ THE RUSSIAN CATALOG VALUE IS AN ICU PLURAL TEMPLATE, NOT A SENTENCE (first attempt: a naive `{weeks}` swap injected the whole template, a
+      // 740 px pill, and flagged Russian at every width up to 1280 – an artifact, caught because 1280 cannot be a real offender). Six weeks is the
+      // widest the slot goes, and its branch is `many`; the English value has no plural and falls through unchanged.
+      const raw = renderings('Next {weeks} weeks')[locale === 'ru' ? 1 : 0] ?? 'Next {weeks} weeks'
+      const plural = /^(.*?)\{weeks, plural,.*?many \{(\{weeks\}[^{}]*)\}/.exec(raw)
+      const spanLabel = (plural ? `${plural[1]}${plural[2]}` : raw).replace(/\{weeks\}/g, '6')
+      const forced = await page.evaluate((label) => {
+        const bar = document.querySelector('.next-week-bar')
+        const week = bar?.querySelector('.next-week-btn')
+        if (!bar || !week) return false
+        const span = document.createElement('button')
+        span.className = 'span-weeks-btn'
+        span.setAttribute('data-sweep-forced', '1')
+        span.textContent = label
+        bar.classList.add('with-span')
+        bar.insertBefore(span, week)
+        return true
+      }, spanLabel)
+      expect.soft(forced, `[${locale} ${width}px] the week bar was not on Home, so its span state was not swept`).toBe(true)
+      if (forced) {
+        await settle(page)
+        judge(await readPage(page), { locale, width, screen: 'HomeScreen.vue', state: 'HomeScreen.vue › week bar with the span button (forced)' }, tally)
+        await page.evaluate(() => {
+          document.querySelector('[data-sweep-forced]')?.remove()
+          document.querySelector('.next-week-bar')?.classList.remove('with-span')
+        })
+      }
+    } catch (error) {
+      expect.soft(false, `[${locale} ${width}px] the forced span state could not be set up: ${whyFailed(error)}`).toBe(true)
+    }
     // The denominator: every station was reached at this width. A sweep that walked nothing reads as green, and this is what stops that.
     expect.soft(tally.stations, `[${locale} ${width}px] stations reached`).toBe(Object.keys(ROUTES).length)
     // The rows are the half of the denominator the station count cannot see: a child row that stops rendering (Bills' tabs, the shelf's) is
-    // skipped BY DESIGN – most chapters have none of them – so without a floor the sweep would quietly stop measuring it. 34 a width on `pro` (14.10).
+    // skipped BY DESIGN – most chapters have none of them – so without a floor the sweep would quietly stop measuring it. 35 a width on `pro` (14.10).
     expect.soft(tally.states, `[${locale} ${width}px] states measured – the rows inside the stations went missing`).toBeGreaterThanOrEqual(30)
   }
 
