@@ -66,6 +66,8 @@ import { MOOD_WORD, TEMPERAMENTS, type Temperament } from '../src/engine/spirit'
 import { BODY_REGIONS, bodyGroupOf, bodyPartOf, type BodyGroup } from '../src/engine/body'
 // v48: the birthday catalogue, so the scrap budget is measured on the longest noun it can produce.
 import { BIRTHDAY_BANDS, giftNoun, PARTNER_NAME_POOL } from '../src/engine/world'
+// R51 №13: the package catalogue, so the narrowing's id and the controls are read off the data and not retyped.
+import { vacation } from '../src/engine/economy/vacation'
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
 
@@ -260,6 +262,17 @@ function* sweepStages(): Generator<DiaryFacts> {
     { offSeasonWeek: true },
     { vacationWeek: true },
     { playedPractice: true },
+    // ⭐ R51 №13 – THE HOLIDAY'S TWO SIDES, ARMED FOR R2-18's REASON ONCE MORE: `homeWeek` holds
+    // `vacationPackageId` at null on every fixture of every sweep, so the staycation's three lines (licensed
+    // on the package) would be licensed in NONE of them, and the narrowed pair would be reached only through
+    // the null id. Three shapes, each arming a different half: the staycation at the default register is the
+    // one that catches a `bright` line which forgot its licence (it would be licensed at `level` and fail
+    // `HOLDS.register`); at `bright` it makes that line's TRUE state reachable; and the seaside gives the
+    // narrowed pair a real away id. All three run at all four stages, which is what catches a house line
+    // reaching a flat of her own (`HOLDS.domestic`).
+    { vacationWeek: true, vacationPackageId: 'staycation' },
+    { vacationWeek: true, vacationPackageId: 'staycation', moodRegister: 'bright' as const },
+    { vacationWeek: true, vacationPackageId: 'seaside' },
     // ⭐ v74 T6 – NOT A CALENDAR, AND IT IS HERE ANYWAY, for R2-18's reason in this list's own
     // paragraph above: `sweepWeeks` and `sweepVoices` both hold `partnerKnown` at false on every
     // fixture, so a line licensed on it would be licensed in NONE of them and its absence in ALL of
@@ -489,6 +502,14 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   injured: (f) => f.injured !== null,
   exams: (f) => f.examsWeek,
   vacation: (f) => f.vacationWeek,
+  // ⭐ R51 №13 – WHICH SIDE OF THE FRONT DOOR THE HOLIDAY WAS ON, re-derived off the PACKAGE ID and not off
+  // the `homeHoliday` / `awayHoliday` predicates in weekNotes.ts that produced the line: a second spelling,
+  // so a licence and its claim cannot be wrong together. VALUED – `'home'` is the staycation and `'away'` is
+  // anything else (a null id included, as the claim's own note explains) – and an unknown value fails, so a
+  // third value added to the claim cannot be waved through by a table that only knows two.
+  vacationAt: (f, value) =>
+    f.vacationWeek &&
+    (value === 'home' ? f.vacationPackageId === 'staycation' : value === 'away' && f.vacationPackageId !== 'staycation'),
   offSeason: (f) => f.offSeasonWeek,
   practice: (f) => f.playedPractice,
   fundsTight: (f) => f.fundsPressure === 'tight',
@@ -1748,6 +1769,206 @@ describe('the line – the four strokes', () => {
       const text = render(note, homeWeek({ lineageTitles: 1, lineageOpen: true, lineageEndedHurt: true }))
       expect(text, `a figure reached the scrap: ${text}`).not.toMatch(/\d/)
       expect(text, text).not.toMatch(/\bVera\b|\bKowalski\b/)
+    }
+  })
+})
+
+// =================================================================================================
+// R51 №13 — A STAYCATION WEEK IS NOT A JOURNEY
+// =================================================================================================
+//
+// The owner's item №13, verbatim: «Неделя дома "с подружками" в качестве отпуска закончилась запиской
+// "Неделя без корта. Вернулась загорелее и громче за ужином" - мне кажется здесь смыслово не очень подходит,
+// это к деревне или морю больше, надо для этого варианта что-то другое добавить и проверить в английском
+// чтобы тоже синхронизация была».
+//
+// FIVE THINGS ARE PINNED, and each is read off BOTH the licence and the draw, because a licence can be right
+// and the selection still walk the wrong pool:
+//   1. THE NARROWING. The two lines that were wrong at home («away as a family», «browner») are off on the
+//      staycation, at every stage and mood.
+//   2. THE CONTROL. The other six packages, and a booking the save no longer knows, still draw both – a
+//      narrowing that killed the lines it was meant to keep would pass (1) on its own.
+//   3. THE ADDITION. The staycation's three lines draw on a staycation week at a roof stage, and nowhere else.
+//   4. THE GENERIC LINES stay on every kind, the staycation included.
+//   5. BOTH LANGUAGES. The shipped English is byte-identical and each new line has its Russian row.
+describe('R51 №13 — a staycation week is not a journey', () => {
+  // The four lines that shipped BEFORE this change, copied here as data and not read back from the source:
+  // an oracle that moves with the string it checks is a pin that cannot fail (CLAUDE.md invariant 4).
+  const AWAY_LINES = [
+    'A week away as a family. Nobody mentioned rankings once.',
+    'A week off the court. She came back browner, and louder at dinner.',
+  ] as const
+  const GENERIC_HOLIDAY_LINES = [
+    'Seven days, no drills. She did not ask about the calendar once.',
+    'We planned her week off for her. She was not asked. We noticed too late.',
+  ] as const
+  const STAYCATION_LINES = [
+    'A week at home with her friends. The kitchen was never empty.',
+    'No court this week. Her friends were in and out, and the fridge paid for it.',
+    'Home all week. Louder at dinner, happier too.',
+  ] as const
+
+  const PACKAGE_IDS: string[] = vacation.packages.map((p) => p.id)
+  const NOT_STAYCATION: (string | null)[] = [...PACKAGE_IDS.filter((id) => id !== 'staycation'), null]
+  const ROOF_STAGES: DiaryLifeStage[] = ['school', 'after-school']
+
+  const stageOf = (lifeStage: DiaryLifeStage): Partial<DiaryFacts> => ({
+    lifeStage,
+    schoolOver: lifeStage !== 'school',
+    ageYears: lifeStage === 'school' ? 15 : 24,
+  })
+  /** A holiday week as the pool sees it. */
+  const holiday = (packageId: string | null, over: Partial<DiaryFacts> = {}): DiaryFacts =>
+    homeWeek({ vacationWeek: true, vacationPackageId: packageId, ...over })
+  /** Every text the pool LICENSES for a week, before any draw. */
+  const licensedTexts = (f: DiaryFacts): string[] => WEEK_NOTES.filter((n) => n.license(f)).map((n) => render(n, f))
+  /** Every text the pool actually DRAWS for a week shape: 24 careers x 60 weeks. A holiday band steps through
+   *  its pool week by week off a career-stable entry point, so 60 weeks visits every licensed line. */
+  function drawn(over: Partial<DiaryFacts>): Set<string> {
+    const out = new Set<string>()
+    for (let s = 0; s < 24; s++) {
+      for (let week = 1; week <= 60; week++) {
+        const t = weekNoteFor(homeWeek({ week, ...over }), `r51-13-career-${s}`)
+        if (t !== null) out.add(t)
+      }
+    }
+    return out
+  }
+
+  it('the narrowing has a reader: `staycation` is a real package id, and the six away packages are all in the control', () => {
+    expect(PACKAGE_IDS, 'a renamed id would leave the narrowing licensing nothing and no sweep would notice').toContain('staycation')
+    expect(NOT_STAYCATION).toEqual(expect.arrayContaining(['grandma', 'camping', 'seaside', 'resort', 'elite', 'yacht-week', null]))
+  })
+
+  it('1 – a staycation week is not LICENSED «away as a family» or «browner», at any stage or mood', () => {
+    let checked = 0
+    for (const stage of STAGES) {
+      for (const moodRegister of REGISTERS) {
+        const texts = licensedTexts(holiday('staycation', { ...stageOf(stage), moodRegister }))
+        expect(texts.length, 'the staycation week is licensed something').toBeGreaterThan(0)
+        for (const t of AWAY_LINES) expect(texts, `${stage}/${moodRegister}: "${t}" is licensed at home`).not.toContain(t)
+        checked++
+      }
+    }
+    expect(checked).toBe(STAGES.length * REGISTERS.length)
+  })
+
+  it('1 – ...and never DRAWS them, over 24 careers x 60 weeks, while the band still speaks', () => {
+    for (const moodRegister of REGISTERS) {
+      const seen = drawn({ vacationWeek: true, vacationPackageId: 'staycation', moodRegister })
+      expect(seen.size, `staycation/${moodRegister}: the denominator – the band has to speak`).toBeGreaterThanOrEqual(4)
+      for (const t of AWAY_LINES) expect(seen.has(t), `staycation/${moodRegister} drew "${t}"`).toBe(false)
+    }
+  })
+
+  it('2 CONTROL – every other package, and a booking the save no longer knows, still licenses AND draws both', () => {
+    for (const id of NOT_STAYCATION) {
+      const licensed = licensedTexts(holiday(id))
+      const seen = drawn({ vacationWeek: true, vacationPackageId: id })
+      for (const t of AWAY_LINES) {
+        expect(licensed, `${id}: "${t}" must still be licensed`).toContain(t)
+        expect(seen.has(t), `${id}: "${t}" must still be drawable`).toBe(true)
+      }
+    }
+  })
+
+  it('3 – the staycation lines draw on a staycation week at a roof stage, the bright one only at bright', () => {
+    for (const stage of ROOF_STAGES) {
+      const level = drawn({ vacationWeek: true, vacationPackageId: 'staycation', ...stageOf(stage) })
+      const bright = drawn({ vacationWeek: true, vacationPackageId: 'staycation', moodRegister: 'bright', ...stageOf(stage) })
+      for (const t of STAYCATION_LINES) expect(bright.has(t), `${stage}/bright never drew "${t}"`).toBe(true)
+      expect(level.has(STAYCATION_LINES[0]), `${stage}/level`).toBe(true)
+      expect(level.has(STAYCATION_LINES[1]), `${stage}/level`).toBe(true)
+      expect(level.has(STAYCATION_LINES[2]), `${stage}/level: «happier» needs a bright week`).toBe(false)
+    }
+  })
+
+  it('3 – ...and on NO other week: not another package, not a plain week, not a flat of her own', () => {
+    const elsewhere: [string, Partial<DiaryFacts>][] = [
+      ['plain week', {}],
+      ['exams', { examsWeek: true }],
+      ['off-season', { offSeasonWeek: true }],
+      ['practice', { playedPractice: true }],
+      ['birthday', { birthdayAge: 15 }],
+      ['the package id without the holiday', { vacationPackageId: 'staycation' }],
+      ...NOT_STAYCATION.map((id): [string, Partial<DiaryFacts>] => [`holiday/${id}`, { vacationWeek: true, vacationPackageId: id }]),
+      ...(['college', 'independent'] as const).map((s): [string, Partial<DiaryFacts>] => [
+        `staycation at ${s}`,
+        { vacationWeek: true, vacationPackageId: 'staycation', ...stageOf(s) },
+      ]),
+    ]
+    for (const [name, over] of elsewhere) {
+      const seen = drawn({ moodRegister: 'bright', ...over })
+      for (const t of STAYCATION_LINES) expect(seen.has(t), `${name} drew "${t}"`).toBe(false)
+    }
+  })
+
+  it('4 – the generic holiday lines stay on EVERY kind, the staycation included', () => {
+    for (const id of [...PACKAGE_IDS, null]) {
+      const licensed = licensedTexts(holiday(id))
+      for (const t of GENERIC_HOLIDAY_LINES) expect(licensed, `${id}: "${t}" must stay licensed`).toContain(t)
+    }
+    const seen = drawn({ vacationWeek: true, vacationPackageId: 'staycation' })
+    for (const t of GENERIC_HOLIDAY_LINES) expect(seen.has(t), `the staycation never drew "${t}"`).toBe(true)
+  })
+
+  it('the staycation band does not repeat itself in consecutive weeks, bright or level', () => {
+    for (const moodRegister of ['bright', 'level'] as const) {
+      for (const seed of ['step-a', 'step-b', 'step-c', 'step-d']) {
+        for (let week = 1; week < 60; week++) {
+          const over = { vacationWeek: true, vacationPackageId: 'staycation', moodRegister }
+          const a = weekNoteFor(homeWeek({ week, ...over }), seed)
+          const b = weekNoteFor(homeWeek({ week: week + 1, ...over }), seed)
+          expect(a, `staycation must speak (w${week})`).not.toBeNull()
+          expect(a, `staycation repeated across w${week}/w${week + 1} on ${seed}: "${a}"`).not.toBe(b)
+        }
+      }
+    }
+  })
+
+  it('⭐ and `HOLDS.vacationAt` is REACHED, per line, on both sides and with real package ids', () => {
+    const carriers = WEEK_NOTES.filter((n) => n.claims.vacationAt !== undefined)
+    expect(carriers.map((n) => n.claims.vacationAt), 'two away lines, three home lines').toEqual(['away', 'away', 'home', 'home', 'home'])
+    const reached = carriers.map(() => ({ n: 0, ids: new Set<string | null>(), moods: new Set<MoodRegister>() }))
+    for (const f of sweepAll()) {
+      if (!f.vacationWeek) continue
+      carriers.forEach((note, i) => {
+        if (!note.license(f)) return
+        reached[i].n++
+        reached[i].ids.add(f.vacationPackageId)
+        reached[i].moods.add(f.moodRegister)
+      })
+    }
+    carriers.forEach((note, i) => {
+      const r = reached[i]
+      expect(r.n, `"${note.text}" is licensed in no fixture – HOLDS.vacationAt proves nothing about it`).toBeGreaterThan(0)
+      if (note.claims.vacationAt === 'home') {
+        expect([...r.ids], `"${note.text}" reached outside the staycation`).toEqual(['staycation'])
+      } else {
+        expect(r.ids.has('seaside'), `"${note.text}" never reached through a real away id`).toBe(true)
+        expect(r.ids.has('staycation'), `"${note.text}" reached on the staycation`).toBe(false)
+      }
+    })
+    expect([...reached[4].moods], 'the «happier» line is reached at bright and only there').toEqual(['bright'])
+  })
+
+  it('5 ENGLISH – the shipped lines are byte-identical, once each, and the three new ones sit beside them', () => {
+    const statics = WEEK_NOTES.map((n) => n.text).filter((t): t is string => typeof t === 'string')
+    for (const t of [...AWAY_LINES, ...GENERIC_HOLIDAY_LINES, ...STAYCATION_LINES]) {
+      expect(statics.filter((x) => x === t), `"${t}" must be in the pool exactly once`).toHaveLength(1)
+    }
+  })
+
+  it('5 RUSSIAN – every line touched or added has a Russian row: Cyrillic, inside the scrap, the short dash only', () => {
+    const ru = JSON.parse(read('../src/i18n/ru.json')) as Record<string, unknown>
+    for (const t of [...AWAY_LINES, ...STAYCATION_LINES]) {
+      const r = ru[t]
+      expect(typeof r, `"${t}" has no Russian row`).toBe('string')
+      const s = r as string
+      expect(s, `"${t}" -> a row with no Russian in it`).toMatch(/[А-Яа-яЁё]/)
+      expect(s.length, `"${t}" -> "${s}" is over the 80-character scrap`).toBeLessThanOrEqual(80)
+      expect(s, `"${t}" -> the long dash`).not.toContain('—')
+      expect(s, `"${t}" -> an exclamation mark`).not.toContain('!')
     }
   })
 })

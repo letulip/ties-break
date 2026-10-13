@@ -78,6 +78,24 @@ export interface WeekClaims {
   injured?: true
   exams?: true
   vacation?: true
+  /** ⭐ R51 №13 – ASSERTS WHICH SIDE OF THE FRONT DOOR THE HOLIDAY WEEK WAS ON, and nothing else about
+   *  where she was. VALUED, `bodyGroup`'s test: «where the holiday was» is two mutually exclusive
+   *  things and the copy is written per outcome, so a bare boolean could not tell the lines apart.
+   *
+   *  `'home'` – the week was the staycation (economy/vacation.ts: no journey, her own bed, her own
+   *  friends), re-derived off `vacationPackageId`. A line carrying it may say she was HOME with her
+   *  friends; what the parent SAW there is the `domestic` claim's job and rides with it.
+   *  `'away'` – the week was NOT the staycation, which is all the data proves: that she went, never
+   *  WHERE. No village, no sea, no sun, no weather – the six packages that qualify are six different
+   *  places and the words would be guessing (W5 took the water out of «browner»; this is the other
+   *  half of the same finding). A null id is admitted as `'away'`, exactly as the photo caption's
+   *  generic «A week away» admits it: the fact's own doc says null means the save no longer knows
+   *  where she went, so it cannot say she was home either.
+   *
+   *  ⚠ BEFORE THIS MEMBER THE POOL COULD NOT TELL THE TWO APART: every holiday line was licensed on
+   *  `vacationWeek` alone, so «A week away as a family» and «She came back browner» printed at the end
+   *  of a week she spent in her own kitchen. */
+  vacationAt?: 'home' | 'away'
   offSeason?: true
   /** asserts a practice friendly this week */
   practice?: true
@@ -395,6 +413,15 @@ export const brightWeek = (f: DiaryFacts): boolean => f.moodRegister === 'bright
 const levelWeek = (f: DiaryFacts): boolean => f.moodRegister !== 'low'
 const lowWeek = (f: DiaryFacts): boolean => f.moodRegister === 'low'
 
+// --- R51 №13: WHICH SIDE OF THE FRONT DOOR THE HOLIDAY WAS ON, one predicate per answer ---------
+//
+// SAME DOCTRINE AS `underOneRoof` AND `inHerVoice`: written once, so five lines cannot carry five
+// spellings of «was she at home». `'staycation'` is the catalogue's own id (economy/vacation.ts, the
+// one package with no journey in it); tests/week-notes.test.ts pins that it still IS one, because a
+// renamed id would turn the narrowing below into a no-op that no sweep would notice.
+const homeHoliday = (f: DiaryFacts): boolean => f.vacationWeek && f.vacationPackageId === 'staycation'
+const awayHoliday = (f: DiaryFacts): boolean => f.vacationWeek && f.vacationPackageId !== 'staycation'
+
 export const plainTraining = (f: DiaryFacts): boolean =>
   notTravellingWeek(f) &&
   f.injured === null &&
@@ -462,8 +489,9 @@ const MOMENTS: Record<SpokenMoment, { claims: WeekClaims; license: (f: DiaryFact
     license: (f) => notTravellingWeek(f) && levelWeek(f) && f.examsWeek && f.injured === null,
   },
   vacation: {
-    // ⚠ NO PLACE, NO DESTINATION, NO WEATHER: `vacation` has no `WeekClaims` member for the package
-    // at all, so the words may not name one – the catalogue they would be guessing at holds no lake.
+    // ⚠ NO PLACE, NO DESTINATION, NO WEATHER: `vacation` has no `WeekClaims` member for the package's
+    // PLACE at all (R51 №13's `vacationAt` says home or away and nothing more, and this cell does not
+    // carry it), so the words may not name one – the catalogue they would be guessing at holds no lake.
     claims: { vacation: true, notTravellingWeek: true, register: 'level' },
     license: (f) => notTravellingWeek(f) && levelWeek(f) && f.vacationWeek && f.injured === null,
   },
@@ -1381,9 +1409,13 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
     license: (f) => notTravellingWeek(f) && f.examsWeek && f.injured === null,
   },
   {
+    // ⭐ R51 №13 NARROWED THIS LINE, THE TEXT UNTOUCHED. «Away» is false of the one package that has no
+    // journey in it: the staycation is her own bed and her own friends, and the line printed over it all
+    // the same because every holiday line here was licensed on `vacationWeek` alone. The other six
+    // packages, and a booking the save no longer knows, keep it exactly as it was.
     text: 'A week away as a family. Nobody mentioned rankings once.',
-    claims: { vacation: true, notTravellingWeek: true },
-    license: (f) => notTravellingWeek(f) && f.vacationWeek && f.injured === null,
+    claims: { vacation: true, notTravellingWeek: true, vacationAt: 'away' },
+    license: (f) => notTravellingWeek(f) && awayHoliday(f) && f.injured === null,
   },
   {
     // ⚠ W5 REWROTE THIS LINE, and the trace is what found it. It read «She swam every day and came back
@@ -1392,14 +1424,48 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
     // week was the generic off-season frame; now the frame is that package's own painting, so W50 of the
     // live trace showed hens by a village wall over a sentence about swimming. The band knows THAT she
     // was away, not WHERE – so the copy may not either.
+    //
+    // ⭐ R51 №13 – NARROWED TOO, THE TEXT STILL UNTOUCHED. W5 took the water out and left the sun:
+    // "browner" is a week out of doors, and the owner met it at the end of a week spent at home with her
+    // friends, where it belongs to a village or the sea and to nothing else. Only the package the data
+    // PROVES wrong is excluded; the others keep it, because the diary still knows THAT she went and not
+    // WHERE, which is the sentence W5 left standing for them.
     text: 'A week off the court. She came back browner, and louder at dinner.',
-    claims: { vacation: true, notTravellingWeek: true },
-    license: (f) => notTravellingWeek(f) && f.vacationWeek && f.injured === null,
+    claims: { vacation: true, notTravellingWeek: true, vacationAt: 'away' },
+    license: (f) => notTravellingWeek(f) && awayHoliday(f) && f.injured === null,
   },
   {
     text: 'Seven days, no drills. She did not ask about the calendar once.',
     claims: { vacation: true, notTravellingWeek: true },
     license: (f) => notTravellingWeek(f) && f.vacationWeek && f.injured === null,
+  },
+  // ⭐⭐ R51 №13 – THE STAYCATION'S OWN WORDS. Three lines on the one package whose week is spent AT HOME
+  // (`vacationAt: 'home'`): the two lines above are off for that week now, and the owner asked for something
+  // that fits it. The catalogue's row is «Staycation with friends – no travel, no drills, her own bed and her
+  // own people», and that is ALL these lines may rest on: friends, home, no court. No names, no head-count, no
+  // film night – the world holds none of it (the kitchen and the fridge are texture the way December's cousin
+  // is, not a fact anything reads).
+  //
+  // ⚠ ALL THREE ARE `domestic`. A kitchen, a fridge and a dinner table are things only a parent sharing the
+  // house can have watched, so each carries the knowledge claim and the `underOneRoof` licence: at college and
+  // independent a staycation week still draws the package-blind lines (the one above, «We planned her week
+  // off for her») and the voiced rows, and none of these. The third is `bright` as well, because «happier» is
+  // a statement about how her week went and a merely level week does not make it.
+  {
+    text: 'A week at home with her friends. The kitchen was never empty.',
+    claims: { vacation: true, notTravellingWeek: true, vacationAt: 'home', domestic: true },
+    license: (f) => underOneRoof(f) && notTravellingWeek(f) && homeHoliday(f) && f.injured === null,
+  },
+  {
+    text: 'No court this week. Her friends were in and out, and the fridge paid for it.',
+    claims: { vacation: true, notTravellingWeek: true, vacationAt: 'home', domestic: true },
+    license: (f) => underOneRoof(f) && notTravellingWeek(f) && homeHoliday(f) && f.injured === null,
+  },
+  {
+    text: 'Home all week. Louder at dinner, happier too.',
+    claims: { vacation: true, notTravellingWeek: true, vacationAt: 'home', domestic: true, register: 'bright' },
+    license: (f) =>
+      underOneRoof(f) && notTravellingWeek(f) && brightWeek(f) && homeHoliday(f) && f.injured === null,
   },
   {
     text: 'The season is over. She slept until nine and it was glorious.',

@@ -132,7 +132,7 @@ const SEAT_KEYS: Record<string, number> = {
   'birthday.gifts': 159, //         the gift catalogue (L3-4): labels, notes, repeat notes, asks, the means alternates
   'diary.pool': 95, //              95 static cells (L3-4 §2)
   'diary.debut': 4, //              the four opening-week lines
-  'diary.weekNotes': 298, //        298 static cells of the 324-cell corpus (L3-4 §8)
+  'diary.weekNotes': 301, //        301 static cells of the 327-cell corpus (L3-4 §8; +3 R51 №13)
   'diary.travel': 78, //            the travel notes + the coach's five
   'smallTalk.corpus': 820, //       204 openers + 612 replies + 4 shared second beats (L3-5 §6)
   'smallTalk.frames': 18, //        9 per presence
@@ -316,7 +316,8 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     // ⭐ RE-AIMED 11.10 (RU-23): 19 / 2,537 -> 20 / 2,589 (+ `coach.room` 12 keys, + 40 `engine.text` keys for the coach market's prose)
     // ⚠ RE-STAMPED 12.10 r49 №7 (2589 → 2769, +180 variants) and r50 №1 (→ 2781, +12 A38).
     // ⭐ RE-AIMED 13.10 (r51 №2): 2781 → 2791 (+10 `engine.text` keys: the Specialists tab's three locked lines, the masseur's four room notes, three refusals).
-    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 2791 catalog keys/)
+    // ⭐ RE-AIMED 14.10 (r51 №13): 2791 → 2794 (+3 `diary.weekNotes` keys: the staycation week's three lines).
+    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 2794 catalog keys/)
   })
 })
 

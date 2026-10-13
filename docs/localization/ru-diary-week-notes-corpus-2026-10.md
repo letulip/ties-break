@@ -656,3 +656,22 @@ may change claims, licences, chance gates or the persisted main RNG state.
 | RU21-DWN-08 | `The {0} decides how she sits, stands and sleeps this week.` | `На этой неделе от больного места ({0}) зависит, как она сидит, стоит и спит.` |
 | RU21-DWN-09 | `The {0} held. We watched her serve more closely than usual.` | `Больное место ({0}) выдержало. За подачей мы следили внимательнее обычного.` |
 | RU21-DWN-10 | `{0}. {1} again – a tradition since {2}.` | `{0}. Снова: {1} – традиция с {2}-летия.` |
+
+## ⚙ 14.10 agent-authored (бланкет) – r51 B11, item №13: what a staycation week says, as whole keys
+
+⚙ 14.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's item №13: «Неделя дома "с подружками" в качестве отпуска закончилась запиской "Неделя без корта. Вернулась загорелее и громче за ужином" - мне кажется здесь смыслово не очень подходит, это к деревне или морю больше, надо для этого варианта что-то другое добавить и проверить в английском чтобы тоже синхронизация была».
+
+Three new rows, printed only on a staycation week, and two old rows that no longer print there. Both languages in one change.
+
+- **The two narrowed rows keep their words.** RU09D-F038 (`Неделя семейной поездки…`) and RU09D-F039 (`…Вернулась загорелее…`) are the same English and the same Russian as in §18.2, byte for byte. They are now printed on the six other holiday kinds and not on the staycation. The note under §18.2 that F039 "must stay package-agnostic" is superseded by this section: it still names no place, but it is no longer shown for a week at home.
+- **The two general rows stay everywhere.** RU09D-F040 (`Семь дней без упражнений…`) and RU09D-F092 (`Мы распланировали её отдых сами…`) are printed on every kind of holiday, the staycation included.
+- **The new rows describe the house** (a kitchen, a fridge, a dinner table), so they are shown only while she lives at home – the two roof stages – like every other line that looks into the house. In a flat of her own the staycation falls back on the general rows and the voiced ones.
+- **Her friends are «подружки»** – the owner's own word for them in this item. The English says "her friends" and the in-app package label reads «Неделя дома с друзьями»; the note is the parent speaking, so it keeps his word.
+- **The third row is shown only on a bright week**: «веселее» says how the week went, and a merely level week does not say that.
+- **Counts.** §16's 132 and §27's 324 are the 07.10 inventory and stay as written; with these three rows the source holds 135 explicit rows and 327 cells.
+
+| id | English | Russian | Status |
+| --- | --- | --- | --- |
+| RU09D-STW-01 | `A week at home with her friends. The kitchen was never empty.` | `Неделя дома с подружками. Кухня не пустовала.` | `DRAFT` |
+| RU09D-STW-02 | `No court this week. Her friends were in and out, and the fridge paid for it.` | `Неделя без корта. Подружки то и дело заходили, а холодильник поплатился.` | `DRAFT` |
+| RU09D-STW-03 | `Home all week. Louder at dinner, happier too.` | `Всю неделю дома. За ужином громче – и веселее.` | `DRAFT` |

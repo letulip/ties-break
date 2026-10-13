@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "count": 6103,
+  "count": 6106,
   "keys": {
     " (+{0} banked – a ranking needs {1} events with points, or {2})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["points"],["RANKABLE_MIN.tournaments"],["RANKABLE_MIN.points"]],"wrapped":true},
     " (does not improve best {0})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["bestN"]],"wrapped":true},
@@ -1073,6 +1073,7 @@
     "A watch": {"home":["src/engine/world/birthday.ts"],"area":["engine"],"wrapped":true,"seat":["birthday.gifts"]},
     "A wedding is coming, and she has made up her mind": {"home":["src/engine/world/lifeBeat/weddingCopy.ts"],"area":["lifebeat"]},
     "A week at her grandmother's – slow food, slow days, and it shows.": {"home":["src/engine/diary/pool.ts"],"area":["diary"],"wrapped":true,"seat":["diary.pool"]},
+    "A week at home with her friends. The kitchen was never empty.": {"home":["src/engine/diary/weekNotes.ts"],"area":["diary"],"wrapped":true,"seat":["diary.weekNotes"]},
     "A week at home – nothing special, and it worked.": {"home":["src/engine/diary/pool.ts"],"area":["diary"],"wrapped":true,"seat":["diary.pool"]},
     "A week away as a family – no coaching billed": {"home":["src/engine/world/phaseFinance.ts"],"area":["engine","ledger"],"wrapped":true},
     "A week away as a family. Nobody mentioned rankings once.": {"home":["src/engine/diary/weekNotes.ts"],"area":["diary"],"wrapped":true,"seat":["diary.weekNotes"]},
@@ -2032,6 +2033,7 @@
     "Holds tension – the bed is still alive in week four.": {"home":["src/engine/economy.ts"],"area":["economy"],"wrapped":true,"seat":["engine.text"]},
     "Home": {"home":["src/App.vue","src/composables/weekGrid.ts"],"area":["scripts"],"wrapped":true},
     "Home all month": {"home":["src/engine/kidLife.ts"],"area":["ledger"],"wrapped":true,"seat":["engine.text"]},
+    "Home all week. Louder at dinner, happier too.": {"home":["src/engine/diary/weekNotes.ts"],"area":["diary"],"wrapped":true,"seat":["diary.weekNotes"]},
     "Home around six. Help yourself to anything.": {"home":["src/composables/fridgeNote.ts"],"area":["scripts"],"wrapped":true,"seat":["fridge.note"]},
     "Home between weeks, she took the sofa. \"Two mornings off, and I earned them.\"": {"home":["src/engine/diary/weekNotes.ts"],"area":["diary"],"wrapped":true,"seat":["diary.weekNotes"]},
     "Home day": {"home":["src/composables/weekGrid.ts"],"area":["scripts"],"wrapped":true},
@@ -2402,6 +2404,7 @@
     "No change to what you pay. Her afternoons stay hers.": {"home":["src/prologue/cards.ts"],"area":["engine"],"wrapped":true},
     "No counted results yet – enter a tournament to earn ranking points.": {"home":["src/components/CountingResultsTable.vue"],"area":["screens"],"wrapped":true},
     "No country matches that.": {"home":["src/composables/identityCopy.ts"],"area":["scripts"],"wrapped":true},
+    "No court this week. Her friends were in and out, and the fridge paid for it.": {"home":["src/engine/diary/weekNotes.ts"],"area":["diary"],"wrapped":true,"seat":["diary.weekNotes"]},
     "No entry fee – the trip is still yours to pay for.": {"home":["src/components/screens/SeasonScreen.vue"],"area":["scripts"],"wrapped":true},
     "No errors were recorded in this session.": {"home":["src/feedback.ts"],"area":["engine"],"wrapped":true},
     "No event – training week": {"home":["src/components/screens/ThisWeekScreen.vue"],"area":["screens"],"wrapped":true},
