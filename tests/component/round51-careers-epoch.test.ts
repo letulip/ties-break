@@ -30,21 +30,11 @@ import { kidAgeYears } from '../../src/engine/world'
 import type { CareerMeta, SavePeek, SlotMeta, Snapshot } from '../../src/shared/protocol'
 import { careerSnapshot } from '../helpers/career'
 
-// ⚠ THIS RUNNER HAS NO localStorage AND MoreScreen READS IT ON MOUNT – the shim round21-dialogs.test.ts installs, for the reason quoted there.
-const backing = new Map<string, string>()
-Object.defineProperty(globalThis, 'localStorage', {
-  configurable: true,
-  value: {
-    getItem: (k: string) => (backing.has(k) ? backing.get(k)! : null),
-    setItem: (k: string, v: string) => void backing.set(k, String(v)),
-    removeItem: (k: string) => void backing.delete(k),
-    clear: () => backing.clear(),
-    key: (i: number) => [...backing.keys()][i] ?? null,
-    get length() {
-      return backing.size
-    },
-  },
-})
+// ⚠ THIS RUNNER HAS NO localStorage AND MoreScreen READS IT ON MOUNT – the ONE shim home is
+// tests/component/setup.ts (T5.14 RULE A(a): a hand-spelled copy is a ratchet red – caught 14.10
+// on this very file, re-pointed the same night). `backing` keeps the old clear() call sites alive.
+import { installMemoryStorage } from './setup'
+const { backing } = installMemoryStorage()
 
 const DAUGHTER_ID = 'c-daughter'
 /** The daughter's epoch: the mother opened in 2031 and ended in 2050, the daughter was born in 2052 and starts at 14 (docs/specs/succession-2026-10.md §1.3). */
