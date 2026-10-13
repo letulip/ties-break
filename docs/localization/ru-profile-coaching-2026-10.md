@@ -63,10 +63,10 @@ These are compact descriptions of how she is now, not labels for her personality
 | norm | `Steady` (`KidScreen.vue`) | `Спокойна` |
 | happy | `Happy` (`KidScreen.vue`) | `Радуется` |
 | sad | `Low` | `Не в духе` |
-| serious | `Focused` (`KidScreen.vue`) | `Сосредоточена` |
+| serious | `Focused` (`KidScreen.vue`) | `Сосредо­точена` – ⚙ 14.10 (r51, №21, «надо бы сделать перенос») в слове один невидимый мягкий перенос (U+00AD) после «Сосредо»: на телефоне слово шире плашки, и без переноса оно рвалось бы посреди слога. Слово то же, меняется только место разрыва. |
 | tired | `Tired` (`KidScreen.vue`) | `Устала` |
 | injury | `Hurt` | `Травмирована` |
-| rehab | `On the mend` | `Восстанавливается` |
+| rehab | `On the mend` | `Восста­навли­вается` – ⚙ 14.10 (r51, №21) в слове два невидимых мягких переноса (U+00AD): после «Восста» и после «навли». Слово шире плашки даже в две строки, поэтому три строки по слогам: «Восста-», «навли-», «вается». Слово то же, меняется только место разрыва. Такая же запись стоит в таблице настроения экрана недели (ru-home-weekly, строка rehab): ключ общий, и если две записи разойдутся, ключ On the mend перестанет собираться (конфликт). |
 | angry | `Angry` | `Злится` |
 
 The private-life channel may override these with `diary.facts.moodWord`; those five lines belong to

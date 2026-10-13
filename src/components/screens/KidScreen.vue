@@ -492,7 +492,8 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              ⚠ IT IS THE ONE TILE LINE THAT WRAPS. «Unshakeable and single-minded» is 29 characters
              against the grid's 16-character `nowrap` budget, so this line has its own class and its
              own rule – see `.kid-tile-personality` in the style block, where the wrap is declared
-             and the measurement that licenses it is written down. -->
+             and the measurement that licenses it is written down.
+             ⚠ ROUND 51 #4 (14.10): IT IS NO LONGER THE ONLY LINE THAT WRAPS – the School, Friends and Coach lines wrap through the base class now, and this class stays as the tile's own hook. -->
         <Card class="kid-tile" pad="11px 9px">
           <p class="kid-tile-label">{{ t('Personality') }}</p>
           <p class="kid-tile-line kid-tile-personality">{{ personalityText }}</p>
@@ -536,7 +537,10 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              is null and every word above is exactly what it was.
              ⚠ THE SCREEN CHOOSES NOTHING: both lines are the engine's (`kidLife.relationshipsTile`), and they are
              the same `kid-tile-line` pair, so the `nowrap` rule and the 16-character budget below hold for them
-             unchanged. The owner's words are in that function's header: round13-nav bans Cyrillic in a template. -->
+             unchanged. The owner's words are in that function's header: round13-nav bans Cyrillic in a template.
+             ⚠⚠ ROUND 51 #4 (14.10) – EVERY `nowrap` CLAIMED IN THE NOTES OF THIS ROW IS SUPERSEDED (this one, the September note and the college note below): the tile lines WRAP now, see
+             `.kid-tile-line`. The 16-character budget (`TILE_LINE_MAX`) is still the ENGINE's generation budget; the two sentences below the grid stay below it because they are sentences,
+             not because a tile line could not hold them. -->
         <Card class="kid-tile" pad="11px 9px">
           <p class="kid-tile-label">{{ schoolTileLabel }}</p>
           <p class="kid-tile-line">{{ schoolLeadText }}</p>
@@ -968,6 +972,11 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
   color: var(--ink-soft);
 }
 
+/* ⭐ ROUND 51 #21 (14.10, owner: the Russian mood word did not fit its tile - make it wrap). `overflow-wrap: break-word` is the FLOOR: a word wider than the cell breaks rather than
+   being clipped by the tile's own `overflow: hidden`. It is not the whole fix, because CSS has no legible place to break ONE long word - the break the eye wants is a syllable, and
+   that comes from a SOFT HYPHEN in the string (U+00AD in the Russian rows of `Focused` and `On the mend`, flagged in docs/localization/ru-profile-coaching-2026-10.md section 3),
+   the same house fix as `Counterpuncher` above, where `hyphens: auto` is recorded as measured falling through to break-word. Words with a space already wrapped: this class never
+   had `nowrap`, so no declaration of that kind is undone here. */
 .kid-tile-lead {
   margin: 12px 0 0;
   font-size: 17px;
@@ -975,15 +984,24 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
   letter-spacing: -0.01em;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
 }
 
 /* The export's two 11.5px lines, 4px apart - on School, Friends and Coach, which is what the export
-   draws. `nowrap` is the export's own rule and it is load-bearing: a wrapped second line pushes the
+   draws. `nowrap` WAS the export's own rule and it was called load-bearing: a wrapped second line pushes the
    tile out of the row. It is also why every line engine/kidLife.ts can produce is held to
    TILE_LINE_MAX (16 characters) by a test - the cell is 115px wide and the eye is the wrong
    instrument for finding the line that outgrows it.
    ⚠ PERSONALITY LEFT THAT SET IN ROUND 42 #37. It is one WRAPPING line now rather than a pair of
-   labels, and it opts out of the `nowrap` half below - see `.kid-tile-personality`. */
+   labels, and it opted out of the `nowrap` half - see `.kid-tile-personality`.
+   ⭐⭐ ROUND 51 #4 (14.10, owner: in Russian both lines of the Friends tile ended in an ellipsis, and the line breaks can simply stay). THE THREE TILES THAT SHARE THIS CLASS WRAP
+   NOW - School, Friends and Coach - and the class takes the Personality precedent whole: `white-space: normal`, `overflow: visible`, `text-overflow: clip`, `overflow-wrap: break-word`.
+   The worry the old rule carried does not survive the grid: `.kid-tile` has a `min-height` and no `height`, so the row stretches to its tallest cell and a wrapped line costs the row a
+   few pixels and clips nothing (round 42 #37 measured exactly that for the Personality tile; the Condition ring is anchored to its own bottom corner, so it follows the stretched
+   row). Under the old rule 15 of the 22 Russian friend notes (the longest is 24 characters) were cut mid-phrase, and the school and coach lines were cut the same way.
+   ⚠ THE BUDGET IS NOT RELAXED, ONLY ITS READER CHANGED. TILE_LINE_MAX still bounds what engine/kidLife.ts WRITES in English - it is the engine's generation budget, and the English
+   tiles still hold one line each - but the DISPLAY no longer cuts what runs over it. `overflow-wrap: break-word` is the floor: a word wider than the cell breaks rather than being
+   clipped by the tile's own `overflow: hidden`, which stays the one clip. */
 .kid-tile-line {
   margin: 9px 0 0;
   font-size: 11.5px;
@@ -991,9 +1009,10 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
   line-height: 1.25;
   letter-spacing: -0.01em;
   color: var(--ink-2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: break-word;
 }
 
 .kid-tile-line + .kid-tile-line {
@@ -1005,7 +1024,10 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
   color: var(--ink-soft);
 }
 
-/* ⭐⭐⭐ ROUND 42 #37 – THE ONE TILE LINE THAT IS ALLOWED TO WRAP, and it is allowed because it is
+/* ⚠ ROUND 51 #4 (14.10): THE BASE `.kid-tile-line` WRAPS TOO NOW, so the four declarations below are what every tile line says and this block no longer opts out of anything. It
+   stays as the Personality tile's own hook - round 42's mutation arm A3 sets it back to `nowrap`, and round23-kid-page names the class - and goes with those. The note that follows is
+   the HISTORY of the measurement, and the measurement is the one that licensed the wrap for every line.
+   ⭐⭐⭐ ROUND 42 #37 – THE ONE TILE LINE THAT WAS ALLOWED TO WRAP, and it was allowed because it is
    the only one that is a PHRASE rather than a label. The `nowrap` rule above is the export's own and
    it stays for the three tiles it was written for; «Unshakeable and single-minded» is 29 characters
    against that rule's 16-character budget, so under it the line would be cut to «Unshakeable an…».
@@ -1040,9 +1062,11 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
 }
 
 
-.kid-tile-mood .kid-tile-lead {
-  max-width: 62%;
-}
+/* ⭐ ROUND 51 #21 (14.10): THE `max-width: 62%` THAT STOOD HERE IS GONE. It was a leftover of the 36px face crop the owner removed on 29.07 (the template note on the Mood tile): it kept
+   room beside the word for a picture that no longer exists, and in doing so held the word to 62% of the cell - 55px of an 89px inner box on a phone - so a long Russian mood word
+   overhung the tile and the tile's `overflow: hidden` cut it. The word has the whole inner box now, `.kid-tile-lead` carries the break-word floor, and the two Russian words whose
+   floor break reads badly (a syllable cut in half, an orphan letter) carry a soft hyphen in the catalog; a third, `Hurt`, is also wider than the box but breaks well on the floor alone and
+   is left as written. Nothing in this block replaces the rule: a width cap on the word is a decision about a picture. */
 
 /* --- 3-5. THE PANELS -------------------------------------------------------------------------- */
 

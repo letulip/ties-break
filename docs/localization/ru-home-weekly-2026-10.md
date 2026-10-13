@@ -560,7 +560,7 @@ The portrait's fallback words are compact states rather than diagnoses:
 | serious | `recap\|Focused` | `Собранная` |
 | tired | `recap\|Tired` | `Уставшая` |
 | injury | `Hurt` | `Травмирована` |
-| rehab | `On the mend` | `Восстанавливается` |
+| rehab | `On the mend` | `Восста­навли­вается` – ⚙ 14.10 (r51, №21) те же два невидимых мягких переноса (U+00AD), что в ru-profile-coaching, раздел 3: ключ общий, и обе записи обязаны совпадать. |
 | angry | `Frustrated` | `Раздражена` |
 
 On life-beat weeks, `diary.facts.moodWord` overrides this table with one of the five authored Mood

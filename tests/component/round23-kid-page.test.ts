@@ -444,6 +444,9 @@ describe('⭐⭐ ROUND 46 MORNING #3 – her relationships, in the School cell\'
     }
   }, 120_000)
 
+  // ⚠ RE-AIMED 14.10 (r51 B14, №4): «NOWRAP» IN THIS TITLE AND IN THE MESSAGES BELOW IS HISTORY – the School, Friends and Coach lines WRAP now (`.kid-tile-line`, held
+  // mounted in tests/component/r51-b14-kid-tile-wraps.test.ts). What this arm still holds is the ENGINE's side: the cell is the pair of plain tile lines (neither is the
+  // Personality hook) and each stays inside TILE_LINE_MAX, the English generation budget, which did not move.
   it('⚠ THE CELL KEEPS ITS TWO NOWRAP LINES – every form fits the budget, and the words form would not', () => {
     const world = worldAt(GROWN_WEEK)
     const row = attachment(world)

@@ -190,6 +190,8 @@ describe('#6a – the life-stage ladder past the last grade', () => {
     expect(lifeStageTile(justAfter).lead).toBe('Grown up')
   })
 
+  // ⚠ RE-AIMED 14.10 (r51 B14, №4): «nowrap» in this title is HISTORY – the tile lines wrap now (tests/component/r51-b14-kid-tile-wraps.test.ts). The budget below is the
+  // ENGINE's English generation budget and is unchanged.
   it('every line still fits the cell – the 115px nowrap budget the whole module is written to', () => {
     const lines: string[] = []
     for (const bm of [1, 6, 9, 12]) {
@@ -534,6 +536,7 @@ describe('⭐⭐ ROUND 46 MORNING #3 – the school cell hands over to her relat
     }
   })
 
+  // ⚠ RE-AIMED 14.10 (r51 B14, №4): «nowrap» in this title is HISTORY – the tile lines wrap now. The 16-character budget is the engine's generation budget and is unchanged.
   it('every line the cell can print fits the 16-character nowrap budget – to a hundred years together', () => {
     const lines = new Set<string>()
     const states: Array<Partial<Together>> = [{}, { engaged: true }, { married: true }]
