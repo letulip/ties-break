@@ -8,13 +8,11 @@ PWA tennis career sim where you play the **parent** raising a future star (WTA-f
 npm run check      # doc gates + registry + typecheck + check:tools + tests + build — the pre-push gate
 npm run check:tools # typechecks ALL of tools/, archival probes too – in `check` since 02.09
 npm run test:quiet # unit project, dot reporter — PREFER THIS: 5.6k chars of output vs 29k
-npm test           # unit project, full reporter – ~6 min (372s quiet, 02.09)
+npm test           # unit project, full reporter – ~6 min
 npm run test:sim   # sim project (~5 min, serialised) — exits 0 on green since the P6 wave
 npm run test:component # mounted Vue components (~45s) — the only real UI regression gate
 npm run build      # vue-tsc -b && vite build
 ```
-
-Use `test:quiet` unless you need to read individual test names — same signal, ~6k fewer tokens per run.
 
 Benches live in `tools/` (`bench:econ`, `bench:fatigue`, `bench:knock`, `bench:load`, `bench:radar`). Always `vue-tsc -b --force`: the incremental cache has hidden real type errors before.
 
@@ -23,9 +21,8 @@ Benches live in `tools/` (`bench:econ`, `bench:fatigue`, `bench:knock`, `bench:l
 `npm run graph` rebuilds the code graph (~10 s, 0 tokens); `npm run graph:check` exits 1 if it is
 stale. **A stale graph is worse than no graph**, and ⚠ **CODE ONLY – never point it at `docs/`**,
 where indexing costs model tokens rather than machine time. Use it for orientation (`god-nodes`,
-`path`, `explain`), not for impact analysis, and when it disagrees with a grep check the grep first.
-Setup, the benchmarks behind each of those rules, and the measured failure modes:
-[docs/context/graphify.md](docs/context/graphify.md).
+`path`, `explain`), not impact analysis; when it disagrees with a grep, the grep wins.
+Benchmarks and failure modes: [docs/context/graphify.md](docs/context/graphify.md).
 
 
 ## Token discipline
@@ -105,12 +102,11 @@ docs/review/     2026-08 full review + P1–P9 proposals
 ## Style
 
 - **Boring TypeScript**: strict mode, no generic gymnastics, no enums, no decorators. Types document the save schema and engine parameters.
-- Comments explain **why**, not what — this codebase deliberately records owner rulings and the reasoning behind non-obvious choices. Preserve them verbatim when moving code.
+- Comments explain **why**, not what — the codebase records owner rulings and non-obvious reasoning. Preserve them verbatim when moving code.
 - In prose and UI copy use the short dash `–`, never the long em-dash.
-- **Player copy ships in both languages at once** (owner, 13.10, r51 №14): an EN string added or
-  changed lands with its RU pair in the same commit (`npm run i18n:check` holds the census at zero
-  keys without Russian), and engine values cross into templates only through the display-boundary
-  readers (`t()`/`engineWord()`/`engineText()`), never as raw interpolations.
+- **Both languages at once** (owner, r51 №14): EN and its RU pair move in one commit;
+  engine values reach templates only through display-boundary readers, never raw.
+  Contract: [localization README §8](docs/localization/README.md).
 - Money is in **cents** everywhere in the engine. Formatting helpers take cents; check the unit before calling.
 - Tournament and organisation names are **fictional** (ITF/WTA/ATP are trademarks). Real player surnames must not be constructible.
 
