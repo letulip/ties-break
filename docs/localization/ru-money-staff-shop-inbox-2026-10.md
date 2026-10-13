@@ -163,12 +163,14 @@ must not be produced by lowercasing the tab label.
 | heading | `Household, every week` | `Семья за неделю` |
 | figures | `{in} in – {out} out – {net} short` | `доход {in} – расход {out} – не хватает {net}` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
 | positive figures | `{in} in – {out} out – {net} left over` | `доход {in} – расход {out} – остаётся {net}` – ⚙ 11.10 в коде фраза собрана из кусков: ряд целиком не ложится на один ключ `QUESTION` |
-| positive shelf | `The shelf is in that – it adds {money} a week at today's rates.` | `Имущество уже учтено: по текущим ставкам оно приносит {money} в неделю.` |
-| negative shelf | `The shelf is in that – it costs {money} a week at today's rates.` | `Имущество уже учтено: по текущим ставкам оно обходится в {money} в неделю.` |
 | upkeep | `Keeping what you own is {money} a week of that, and it is real money.` | `Содержание имущества уже стоит семье {money} в неделю – это реальные расходы.` |
 | businesses | `Their businesses bring in {total} a week of that – {parts}.` | `Семейные проекты уже приносят {total} в неделю: {parts}.` |
 | merch part | `merch {money}` | `бренд {money}` |
 | academy part | `the academy {money}` | `академия {money}` |
+
+⚙ 13.10 (r51 B7): the two shelf rows («The shelf is in that – it adds/costs {money} a week…»)
+retired with the owner's cash-only ruling for the coach-screen strip – the sentence left the
+product, so the pair died in both catalogs and the rows left this table (git history keeps them).
 
 The strip must render the positive and negative sentence as separate locale messages. Translating
 `short / left over` as a suffix would produce ungrammatical fragments and an inaccessible reading
