@@ -309,7 +309,7 @@ describe('round 51 №17 C – the four stories keep the document\'s rules', () 
       ['today', /\btoday\b/i],
       ['exclamation mark', /!/],
       ['digit', /\d/],
-      ['long dash', /—/],
+      ['long dash', /\u2014/],
     ]
     for (const { where, text } of copyLines()) {
       for (const [name, re] of rules) expect(re.test(text), `${where}: ${name} in «${text}»`).toBe(false)
