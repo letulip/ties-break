@@ -211,7 +211,7 @@ export type ToWorker =
       /** ⭐⭐⭐ SUCCESSION S2c – THE INHERITANCE THE DYNASTY DOOR CARRIES, optional through the whole wire on `prologue`'s, `dynasty`'s and
        *  `weightEnabled`'s precedent: absent is every career the game has ever created, byte for byte. Present, the worker builds the world with
        *  `createLegacyWorld` instead of `createWorld` (another calendar year, the multiplied wallet, the house and the car arriving owned, the
-       *  heirloom album) and sets the origins card aside – see `LEGACY_FAMILY_BACKGROUND`.
+       *  heirloom album); the family's band is the line's handover (`dynastyBackgroundOf`) and never the origins card – r51 №5, 13.10.
        *  ⚠ IT IS THE BLOB `legacyInput` ANSWERED AT THE DOOR, sent back whole, and the worker never trusts the wire for what only it knows: the
        *  multiplier's corridor, which rungs are a house and a car, and the profile's own law are re-validated engine-side. */
       legacy?: LegacyInput

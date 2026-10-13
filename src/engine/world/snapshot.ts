@@ -2130,6 +2130,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     startYear: world.startYear,
     // ⭐ SUCCESSION S2d – one bit of the mother's album, never the book (`Snapshot.hasHeirloom`).
     hasHeirloom: hasHeirloom(world),
+    // ⭐ r51 №5 (13.10) – the grant a dynasty career opened with, read straight off its persisted block (`Snapshot.openingFundsCents`, whose note says why the key is ABSENT
+    // – not `null`, not `undefined` – on a career with no legacy): the Money screen quotes the number the career really got, not its tier's base. The test is the BLOCK's
+    // presence and not the number's truthiness, so a legal grant of zero cents is still a grant.
+    ...(world.legacy ? { openingFundsCents: world.legacy.savingsSliceCents } : {}),
     devLifeBoost: lifeEventBoostOn(),
     // ⭐⭐⭐ v85 T10 – WHICH PREGNANCY PAINTING THE WEEK WEARS, and the ONE fact of `world.pregnancy`
     // that crosses to the UI. The record itself stays engine-side (T1's own ruling); the window is

@@ -315,6 +315,10 @@ describe('D-07 – the snapshot carries this week, and the world keeps the histo
     // SUCCESSION S2d (06.10): 117 -> 118, the one new key `hasHeirloom` – ONE derived bit per snapshot (the mother's book rides the `heirloomAlbum` query, never the weekly wire); nothing reordered or removed.
     // RU-23 (11.10): 118 -> 119, the one new key `coachNotesC` – the three refs beside the coach's room, decline and plate strings, grouped in ONE key and always present (a member is `null` where its string is '')
     // so the wire keeps one shape in one order; derived per snapshot, persisted nowhere, nothing reordered or removed.
+    // r51 №5 (13.10): NOT COUNTED, AND SAID HERE SO IT CANNOT SURPRISE THE NEXT READER. `openingFundsCents` is present only on a career that has a legacy block (the grant a dynasty career opened with,
+    // derived off `legacy.savingsSliceCents`), and the committed corpus holds no such career – so 119 stays the count of the keys EVERY career carries and the sameness half below stays true. Measured
+    // before it was made conditional: an always-present key with no value broke this file's per-key size census (`JSON.stringify(undefined)`), and a `null` moves every L3-7 digest. A dynasty career
+    // added to the manifest would make the sameness half red on purpose – that is the day to decide whether the field joins the count.
     expect(reference.length, 'D-P8: the wire`s top-level key count').toBe(119)
     for (const key of ['offers', 'offerOpen', 'newestLetterId'] as const) {
       expect(reference, `the wire must carry \`${key}\` – the count is about these three`).toContain(key)

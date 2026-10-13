@@ -273,7 +273,17 @@ function arriveOwned(world: WorldState, id: string): void {
   world.assets.push(row)
 }
 
-/** ⭐⭐⭐ S2c – THE ARCHITECT'S ORIGINS RULING (S2b finding 1): A LEGACY CREATION IGNORES THE ORIGINS CARD, and this is the band it sets in its
+/* ⭐⭐⭐ HISTORY, KEPT WHERE IT SAT – `LEGACY_FAMILY_BACKGROUND = 'middle'` WAS DEFINED RIGHT BELOW THIS NOTE AND IS GONE (r51 №5, 13.10).
+ *  WHY IT WENT: NO OWNER RULING EVER STOOD BEHIND THE CLAMP (the code called it the architect's; no owner-dated line for it exists – decisions.md and the specs
+ *  were searched on 13.10), and the owner's own words say the opposite. 05.10: «она по умолчанию в богатой карьере стартует вроде, может быть разве что можно
+ *  какой-то мультипликатор на начальные деньги … не все миллионы». 13.10 (item 5), over a millionaire mother's daughter who opened on $25k and $425 a week:
+ *  «Династия некорректно передалась в моем случае от миллионерши Алисы к новой со стартовыми 25к и доходом в неделю 425 долларов. Мы обсуждали, что должен быть
+ *  высший тир.» So the band wave 10 maps off the mother's own account (`dynastyBackgroundOf`) now reaches the profile AND the handover untouched, and the
+ *  multiplier STACKS on that band's base – docs/specs/succession-2026-10.md (the S2c closure note, 13.10) holds the ceiling that stacking reaches.
+ *  THE ORIGINAL NOTE FOLLOWS, VERBATIM, in the present tense it was written in on 06.10. Its second paragraph (what `profile.background` controls) is still exactly
+ *  true, and is why the owner met this defect as «$425 a week» and not as a wallet figure.
+ *
+ *  ⭐⭐⭐ S2c – THE ARCHITECT'S ORIGINS RULING (S2b finding 1): A LEGACY CREATION IGNORES THE ORIGINS CARD, and this is the band it sets in its
  *  place. The family's circumstance is §4's multiplier and nothing else – the owner's «просто новая карьера с небольшими бенефитами в начале» –
  *  so the door forces the ONE field every origin is read from, `profile.background`, to the ordinary family. That is what keeps a wealthy-origin
  *  daughter of a held champion from stacking 3.0 on $120,000.

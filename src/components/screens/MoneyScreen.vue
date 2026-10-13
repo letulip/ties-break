@@ -176,7 +176,16 @@ const funds = computed(() => formatCents(fundsCents.value))
 // here fed the one formatter in the app that took dollars instead of cents – the ×100 trap P6 was
 // written about – and its "must match world.ts" comment was the drift this screen now cannot have:
 // retune the engine, and this line retunes with it. tests/money-format.test.ts pins the wiring.
-const startingBudget = computed(() => (game.snapshot ? formatCents(STARTING_FUNDS_CENTS[game.snapshot.profile.background]) : ''))
+// ⭐ r51 №5 (13.10): A DYNASTY CAREER QUOTES THE GRANT IT REALLY RECEIVED. The tier base above is what an ordinary family opens on; a daughter of a champion opens on
+// the band's base times her mother's multiplier, with the childhood's deduction on it, so the base printed on this line was a number her career never held – the
+// screen restating a verdict the engine did not hold. The engine persists the grant (`legacy.savingsSliceCents`) and the snapshot carries it as
+// `openingFundsCents`; where it is absent the line is exactly what it always was. The sentence and its key are unchanged – only the number is the true one.
+const startingBudget = computed(() => {
+  const snap = game.snapshot
+  if (!snap) return ''
+  if (snap.openingFundsCents != null) return formatCents(snap.openingFundsCents)
+  return formatCents(STARTING_FUNDS_CENTS[snap.profile.background])
+})
 
 // =================================================================================================
 // ⭐⭐⭐ ROUND 26 #5b – HER SHARE, ON THE SCREEN THAT IS ABOUT MONEY

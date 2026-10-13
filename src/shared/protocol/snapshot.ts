@@ -419,6 +419,14 @@ export interface Snapshot {
    *  owns the book and this is its ONE-BIT view, so the book itself (1 to 9 KB) never rides the weekly snapshot: the album screen draws its control off
    *  this flag and asks for the book once, with the `heirloomAlbum` query, when that control is pressed. */
   hasHeirloom: boolean
+  /** ⭐ r51 №5 (13.10) – WHAT A DYNASTY CAREER REALLY OPENED WITH, in cents: `world.legacy.savingsSliceCents`, the grant the career was handed (the band's base times her
+   *  mother's multiplier, the childhood's deduction on it). The Money screen's starting-budget line quotes THIS and not the tier's base, which a daughter of a held
+   *  champion never held. ABSENT on a career with no legacy block – the line then quotes the tier base, as it always did. DERIVED (class b) off the
+   *  persisted block and persisted on the snapshot nowhere.
+   *  ⚠ THE KEY IS ABSENT – NOT `null`, NOT `undefined` – ON A CAREER WITH NO LEGACY BLOCK. Measured both ways on 13.10: a `null` moves the L3-7 twin's JSON digest of every
+   *  career in the corpus (a linux one that cannot be regenerated on a Mac included), and a key that is always present with no value breaks D-07's per-key size census
+   *  (`JSON.stringify(undefined)` is `undefined`). So the wire carries the keys every career carries, and this one more on a dynasty career. */
+  openingFundsCents?: number
   /** ⭐ ROUND 46 #22 – IS THE DEV LIFE-EVENT BOOST ON in the worker right now. Transient, never saved: the More
    *  screen's switch shows the worker's own state rather than a belief of its own. */
   devLifeBoost: boolean
