@@ -20,7 +20,7 @@
 // ⭐⭐ AND THE DOCUMENT IS NOW THE WHOLE CATALOGUE, not the part of it round 43 wrote. The EIGHT that
 // shipped before the corpus existed lived hand-written in `SMALL_TALK_SHIPPED`; they are rows
 // `R45`-`R52` of the same document since round 44, `SMALL_TALK_SHIPPED` is gone, and the arithmetic
-// this file re-derives on every read is **51 rows, 204 openers, 153 labels, 612 replies** plus the
+// this file re-derives on every read was **51 rows, 204 openers, 153 labels, 612 replies** (55 / 220 / 165 / 660 since 14.10, r51 №17 – four school-years stories) plus the
 // one two-beat row's **4 shared** lines. ⚠ THE EIGHT SIT FIRST AND THEIR REF NUMBERS DO NOT: a ref
 // is an allocation name and the ORDER of this file is a live career's situation draw (`pickInt` over
 // the filtered pool reads position), so renumbering `R1`-`R44` to make the two agree would move every
@@ -243,7 +243,7 @@ export function readCorpus(): CorpusRow[] {
 
 /** ⭐ WHAT THE ROUND OPENED ON, RE-ASSERTED ON EVERY READ – 43 rows, 172 openers, 129 labels, 516
  *  replies – and what it CLOSED on, after the eight that shipped first moved into the document:
- *  51 rows, 204 openers, 153 labels, 612 replies and 4 shared second beats. ⚠ These five are DERIVED
+ *  51 rows, 204 openers, 153 labels, 612 replies and 4 shared second beats – and 55, 220, 165, 660 and 20 since 14.10 (r51 №17: four school-years stories, each with a second beat). ⚠ These five are DERIVED
  *  from the parse and compared against the document's own stated arithmetic – «any number in a
  *  document that can be derived FROM that document is derived by script before the commit», the
  *  corpus's own §3a rule.

@@ -2277,6 +2277,189 @@ hesitation.
 
 ---
 
+## Addendum 14.10 – `story` for the school years: four more, because the cell held one (round 51, item 17)
+
+**The owner, 14.10:** «ситуация "Она подает, мяч задевает трос сетки - и падает в кофе одного папы." очень крутая. Но я ее видел уже 3 раза. Давай сделаем разнообразие этих юморных зарисовок и как-то сделаем, чтобы они более рандомно происходили?»
+
+**Why he saw it three times.** The draw was already random: the subject and then the situation are each drawn on their own sub-stream, and the last two conversations are kept off the table. What was missing was something to draw. In the school years the `story` cell held one situation that needs no career fact, `court-four` – the net cord and the coffee. Every other situation a school-age girl can reach is either another subject or waits on a fact (a match played, a coach hired, an entry open). On a career with none of those facts the ungated school pool is two situations, `practice-clicked` and `court-four`, so whenever the story subject came up it was `court-four` – and the rule that keeps the last two off the table then kept the story subject itself off the table for the next two conversations, which is why it came back in bursts. Measured on 120 careers over their school years (a close bond, no match played, no coach hired): `court-four` was every school story, 621 of 621, and a third of all school conversations, 33.2% of 1,870.
+
+**What this adds.** Four sketches in the same register as `court-four`, each told by all four voices: a teaser, then the incident, then three replies. The weekly chance, the season cap and the depth of the memory are untouched – the pool was the problem, and a bigger pool lets the same dice show more variety. The school `story` cell goes from one situation to five. The after-school `story` cell, which held six, goes to nine. Measured the same way after: `court-four` is 170 of the 914 school stories (18.6%) and 9.1% of all school conversations, and the other four are drawn 200, 199, 183 and 162 times. The school conversations are the same 1,870 – the cadence did not move. Stories are a larger part of them (914, up from 621) because the memory no longer empties the story subject; the subject weights are untouched.
+
+| row | stages | what happens |
+| --- | --- | --- |
+| R53 `the-gran-with-sunscreen` | school | a gran walks onto the court at a changeover and does both players' ears, then the umpire's neck |
+| R54 `the-rooster-ringtone` | school, after-school | a phone at the fence goes off mid-rally, the ringtone is a rooster, and a mum whispers so that three courts hear |
+| R55 `the-coin-and-the-drain` | school, after-school | the coin goes down a drain at the toss, so they spin a racket and cannot agree which end is up |
+| R56 `the-gull-in-the-chair` | school, after-school | a seagull takes the umpire's chair and the umpire sits on the bottom step |
+
+**Where they sit.** Last in this document, so the catalogue's first 51 rows keep their order. A situation is chosen by position in the filtered pool, so a pool of a different length reads a different position for the same seed: a career already under way may be shown a different situation next time than it would have been. That draw is on its own sub-stream (`seed:life:smalltalk:situation:<week>`), nothing is stored and the main stream does not move.
+
+**Stages.** A gran stepping onto the court is a junior event's scene, so R53 is school only. A phone at the fence, a coin and a gull do not depend on her age, so the other three reach both stages, the way `court-four` does.
+
+**What the lines were written against.**
+
+- Nothing a career could contradict: no result, score, placing, injury, money or coach. Nobody wins or loses anything in these four.
+- No masculine pronoun. The gran and the mum are «she», the gull is «it», and the umpire gets no pronoun at all. `court-four` stays the one masculine exception and its count is untouched.
+- No «today», no exclamation mark, and no number that the row does not hold itself: three courts, two minutes, a minute.
+- A two-beat story's three buttons appear under the teaser, before the incident is told, so each label names only what all four openers say – the changeover, the phone and the rally, the coin toss, the umpire's chair.
+- The facts are the same in all four voices. Each reply then adds one fact of its own, and no voice contradicts another's edition of the evening.
+
+**The arithmetic after these four**, derived by `tools/small-talk-corpus-parse.ts` rather than carried: 55 rows, 220 openers, 165 labels, 660 replies and 20 shared beats. The figures in the older sections are of the 51 and stay as the record of the passes that produced them.
+
+### R53 · `the-gran-with-sunscreen` · story · school · generated
+**Kernel:** At a changeover somebody's gran walked onto the court with a tube of sunscreen and did both players' ears, then the umpire's neck. Nobody stopped her. The umpire thanked her and called time. The girl smelled of coconut for the rest of the day.
+**Authoritative claims:** none – the gran and the umpire exist only inside the sentence and nothing else in the engine reads them.
+**Fixed in all four voices:** the tube, both players' ears, the umpire's neck, nobody stopping her. Each reply adds one fact: the umpire's thanks (invite), the girl holding in a laugh (respond), the coconut (space).
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Wait till you hear what happened at the changeover."` |
+| `fiery` | `"That changeover should not have been allowed."` |
+| `deep` | `"I keep thinking about the changeover. Not the tennis – the changeover."` |
+| `quiet` | `"The changeover went on a bit."` |
+
+**shared**
+- `sunny` `"Somebody's gran walked onto the court with a tube of sunscreen and did both our ears. Then the umpire's neck. Nobody stopped her."`
+- `fiery` `"A gran walks onto the court with a tube of sunscreen – both our ears, then the umpire's neck. Nobody stopped her."`
+- `deep` `"Somebody's gran came onto the court with a tube of sunscreen. Both our ears, then the umpire's neck. It didn't cross anyone's mind to stop her."`
+- `quiet` `"A gran came on with sunscreen. She did both our ears, and the umpire's neck. Nobody stopped her."`
+
+**Parent:** *Ask what happened at the changeover* · *Say you wish you had been there* · *Let her tell it*
+
+**invite** · *Ask what happened at the changeover*
+- `sunny` `"The umpire said thank you. Properly. Then called time, as if it was planned."`
+- `fiery` `"The umpire thanked her. THANKED her. Then called time like it was normal."`
+- `deep` `"The umpire thanked her. I think it was the only thing left to say."`
+- `quiet` `"The umpire said thank you. Then we played."`
+
+**respond** · *Say you wish you had been there*
+- `sunny` `"You'd have loved it. I looked at my shoes for a whole game."`
+- `fiery` `"You'd have laughed. I held it in with my whole face."`
+- `deep` `"I wish you had been. Would you have laughed, or stood very still?"`
+- `quiet` `"You'd have liked it. I kept very still."`
+
+**space** · *Let her tell it*
+- `sunny` `"Anyway. I smelled of coconut for the rest of the day. I didn't mind."`
+- `fiery` `"Anyway, I smelled of coconut until the last game. Nobody warns you."`
+- `deep` `"That's all of it. The coconut stayed with me until the last game."`
+- `quiet` `"That's all. I smelled of coconut for a while."`
+
+### R54 · `the-rooster-ringtone` · story · school, after-school · generated
+**Kernel:** A phone went off at the fence in the middle of a rally. The ringtone was a rooster. A mum answered it and whispered that she couldn't talk, she was at the tennis, and three courts heard. It rang again two minutes later, the same rooster and the same whisper. By the next changeover every parent along the fence had checked their phone.
+**Authoritative claims:** none – the mum exists only inside the sentence and is never named.
+**Fixed in all four voices:** the rooster, the mum's whisper, three courts hearing. Each reply adds one fact: the second call (invite), the girl turning away or staring at the net to keep from laughing (respond), the parents checking their phones (space).
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"A phone went off in the middle of a rally and I'm still not over it."` |
+| `fiery` | `"A phone went off in the middle of a rally. Of course it did."` |
+| `deep` | `"A phone went off in the middle of a rally, and I've been thinking about it since."` |
+| `quiet` | `"A phone went off during a rally."` |
+
+**shared**
+- `sunny` `"The ringtone was a rooster. A mum answered it and whispered that she couldn't talk, she was at the tennis. Three courts heard."`
+- `fiery` `"The ringtone's a rooster – and a mum answers it, whispering that she can't talk, she's at the tennis. Three courts heard."`
+- `deep` `"The ringtone was a rooster. A mum answered, whispering that she couldn't talk, she was at the tennis. Three courts heard every word."`
+- `quiet` `"It was a rooster. A mum answered and whispered that she was at the tennis. Three courts heard."`
+
+**Parent:** *Ask whose phone it was* · *Say you're already smiling* · *Let her tell the rest*
+
+**invite** · *Ask whose phone it was*
+- `sunny` `"No idea which mum. It rang again two minutes later. Same rooster, same whisper."`
+- `fiery` `"Somebody's mum. I never found out which. Two minutes later: same rooster, same whisper."`
+- `deep` `"I never found out which mum. Two minutes later: the same rooster, the same whisper."`
+- `quiet` `"I don't know which mum. It rang again two minutes later."`
+
+**respond** · *Say you're already smiling*
+- `sunny` `"Good. I was too. I had to turn my back and bounce a ball."`
+- `fiery` `"Good. I had to stare at the net like it owed me money."`
+- `deep` `"I was, a little. It was the whisper – so careful, and so loud."`
+- `quiet` `"It was funny. I looked at my strings."`
+
+**space** · *Let her tell the rest*
+- `sunny` `"Oh, and at the next changeover every parent along the fence checked their phone."`
+- `fiery` `"At the next changeover every parent along that fence checked their phone. Good."`
+- `deep` `"That's the whole of it. By the next changeover every parent had quietly checked their phone."`
+- `quiet` `"That's it. At the next changeover everyone checked their phones."`
+
+### R55 · `the-coin-and-the-drain` · story · school, after-school · generated
+**Kernel:** At the coin toss the coin bounced, rolled across the baseline and went down a drain. Nobody had another, so they spun a racket – hers – and it took a minute to agree which end was up. Afterwards she looked down the drain.
+**Authoritative claims:** none – the toss decides nothing the engine records, and no reply says who won it or what followed.
+**Fixed in all four voices:** the drain, no second coin, the spun racket. Each reply adds one fact: the minute spent on which end was up (invite), the girl looking down the drain (respond), that it was her racket (space).
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"The coin toss was the funniest part of the day. I'm not joking."` |
+| `fiery` | `"A coin toss. How hard can a coin toss be?"` |
+| `deep` | `"Something small went wrong at the coin toss and I haven't been able to let it go."` |
+| `quiet` | `"There was a problem with the coin toss."` |
+
+**shared**
+- `sunny` `"The coin bounced, rolled across the baseline and dropped straight down a drain. Nobody had another one. We spun a racket instead."`
+- `fiery` `"The coin lands, rolls across the baseline – and goes down a drain. Nobody had another. We spun a racket instead."`
+- `deep` `"The coin hit the court, rolled to the baseline and went down a drain. Nobody had another, so we spun a racket."`
+- `quiet` `"The coin went down a drain. Nobody had another, so we spun a racket."`
+
+**Parent:** *Ask what went wrong with the coin toss* · *Say you can tell this one is good* · *Let her carry on*
+
+**invite** · *Ask what went wrong with the coin toss*
+- `sunny` `"Then we spent a minute working out which end of the racket was up."`
+- `fiery` `"Then we argued about which end of a racket is up. A whole minute."`
+- `deep` `"Then we spent a minute agreeing which end was up. Strange what you forget."`
+- `quiet` `"Then we had to agree which end was up. It took a minute."`
+
+**respond** · *Say you can tell this one is good*
+- `sunny` `"It is. I looked down the drain afterwards, just in case."`
+- `fiery` `"It is. I looked down that drain afterwards. Nothing. I'm not climbing in."`
+- `deep` `"It is. I looked down the drain afterwards. I don't know what for."`
+- `quiet` `"It is. I looked down the drain afterwards. Nothing."`
+
+**space** · *Let her carry on*
+- `sunny` `"And it was my racket we spun. It's never had so much attention."`
+- `fiery` `"For the record, it was my racket we spun. Mine was the one nearest."`
+- `deep` `"That's the end of it. It was my racket, and I felt oddly responsible."`
+- `quiet` `"That's all, really. It was my racket, as it happens."`
+
+### R56 · `the-gull-in-the-chair` · story · school, after-school · generated
+**Kernel:** While the umpire was at the net a seagull walked up the steps and sat in the umpire's chair. The umpire came back and sat on the bottom step, and called the score from there for the whole of the next game. When the gull flew off, the umpire checked the seat before sitting down.
+**Authoritative claims:** none – the gull and the umpire exist only inside the sentence.
+**Fixed in all four voices:** the steps, the chair, the bottom step. Each reply adds one fact: the next game and the score called from the step (invite), the gull's calm (respond), the umpire checking the seat (space).
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"The umpire's chair got taken. I can't tell you how funny it was."` |
+| `fiery` | `"Someone else got the umpire's chair. I'm not exaggerating."` |
+| `deep` | `"Something unexpected took the umpire's chair, and I keep going back to it."` |
+| `quiet` | `"The umpire's chair was occupied."` |
+
+**shared**
+- `sunny` `"A seagull walked up the steps and sat in it while the umpire was at the net. The umpire came back and sat on the bottom step."`
+- `fiery` `"A seagull walks up the steps and takes it while the umpire's at the net. The umpire came back and sat on the bottom step."`
+- `deep` `"A seagull climbed the steps and sat down while the umpire was at the net. The umpire came back, looked at it, and sat on the bottom step."`
+- `quiet` `"A seagull sat in it while the umpire was at the net. The umpire sat on the bottom step."`
+
+**Parent:** *Ask who was in the umpire's chair* · *Say you can picture it* · *Say nothing and let her go on*
+
+**invite** · *Ask who was in the umpire's chair*
+- `sunny` `"It stayed the whole next game. The umpire called the score from the step, politely."`
+- `fiery` `"The whole next game. Score called from the step. The gull never looked up."`
+- `deep` `"The whole next game. The umpire called the score from the step, a little lower than usual."`
+- `quiet` `"The whole next game. The umpire called the score from the step."`
+
+**respond** · *Say you can picture it*
+- `sunny` `"You can, can't you? Best seat in the place, and none of the paperwork."`
+- `fiery` `"Then you've got it. The most senior person on court, and it knew it."`
+- `deep` `"It sat very still, as if it had been there longer than us. It probably had."`
+- `quiet` `"It was very calm about it. Nobody argued."`
+
+**space** · *Say nothing and let her go on*
+- `sunny` `"Oh, and when it flew off, the umpire checked the seat very thoroughly."`
+- `fiery` `"And when it finally left, the umpire inspected the chair before sitting. Wise."`
+- `deep` `"After it flew off, the umpire checked the seat first. I respected that."`
+- `quiet` `"That's everything. When it left, the umpire checked the seat first."`
+
+---
+
 ## P3.7 The corpus at 43, and the whole document at 51 – counted by script, not claimed
 
 ⚠⚠ **THIS SECTION SAID 44 UNTIL THE REPLIES PASS RE-RAN ITS OWN COUNT, AND IT WAS THE DOCUMENT'S OWN

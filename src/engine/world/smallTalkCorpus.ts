@@ -1,5 +1,5 @@
 // ⭐⭐⭐ THE SMALL-TALK CORPUS – **GENERATED FROM `docs/specs/small-talk-corpus-2026-09.md`,
-// NEVER RETYPED.** 51 situations × 4 voices: 204 openers, 153 stance labels, 612 replies, 4 shared second beats.
+// NEVER RETYPED.** 55 situations × 4 voices: 220 openers, 165 stance labels, 660 replies, 20 shared second beats.
 //
 // ⭐⭐ THIS IS THE WHOLE CATALOGUE AND NOT A SECOND HALF OF ONE. `SMALL_TALK_SHIPPED` – the eight
 // situations hand-written in `lifeBeat.ts` since wave 2 – was deleted in round 44 and those eight are
@@ -16,7 +16,7 @@
 // ⚠ IT IS ORDINARY COMMITTED SOURCE AND NOT A BUILD STEP (the round's own ruling). Nothing in
 // `npm run check`, `npm run build` or the dev server generates it; the emitter is a one-off.
 //
-// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 969 authored strings. An agent retyping them
+// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 1045 authored strings. An agent retyping them
 // produces typos that no test can catch, because a test written by the same agent compares against
 // what was typed. The document is the source of truth; this file is its projection.
 //
@@ -3962,6 +3962,330 @@ export const SMALL_TALK_CORPUS: readonly SmallTalkSituation[] = [
           space: {
             label: 'Say she can decide on the day',
             said: '"Fine. I\'ll leave it until then."',
+          },
+        },
+      },
+    },
+  },
+  // R53 · the-gran-with-sunscreen
+  {
+    id: 'the-gran-with-sunscreen',
+    subject: 'story',
+    stages: ['school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"Wait till you hear what happened at the changeover."',
+        shared: '"Somebody\'s gran walked onto the court with a tube of sunscreen and did both our ears. Then the umpire\'s neck. Nobody stopped her."',
+        branches: {
+          invite: {
+            label: 'Ask what happened at the changeover',
+            said: '"The umpire said thank you. Properly. Then called time, as if it was planned."',
+          },
+          respond: {
+            label: 'Say you wish you had been there',
+            said: '"You\'d have loved it. I looked at my shoes for a whole game."',
+          },
+          space: {
+            label: 'Let her tell it',
+            said: '"Anyway. I smelled of coconut for the rest of the day. I didn\'t mind."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"That changeover should not have been allowed."',
+        shared: '"A gran walks onto the court with a tube of sunscreen – both our ears, then the umpire\'s neck. Nobody stopped her."',
+        branches: {
+          invite: {
+            label: 'Ask what happened at the changeover',
+            said: '"The umpire thanked her. THANKED her. Then called time like it was normal."',
+          },
+          respond: {
+            label: 'Say you wish you had been there',
+            said: '"You\'d have laughed. I held it in with my whole face."',
+          },
+          space: {
+            label: 'Let her tell it',
+            said: '"Anyway, I smelled of coconut until the last game. Nobody warns you."',
+          },
+        },
+      },
+      deep: {
+        opener: '"I keep thinking about the changeover. Not the tennis – the changeover."',
+        shared: '"Somebody\'s gran came onto the court with a tube of sunscreen. Both our ears, then the umpire\'s neck. It didn\'t cross anyone\'s mind to stop her."',
+        branches: {
+          invite: {
+            label: 'Ask what happened at the changeover',
+            said: '"The umpire thanked her. I think it was the only thing left to say."',
+          },
+          respond: {
+            label: 'Say you wish you had been there',
+            said: '"I wish you had been. Would you have laughed, or stood very still?"',
+          },
+          space: {
+            label: 'Let her tell it',
+            said: '"That\'s all of it. The coconut stayed with me until the last game."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"The changeover went on a bit."',
+        shared: '"A gran came on with sunscreen. She did both our ears, and the umpire\'s neck. Nobody stopped her."',
+        branches: {
+          invite: {
+            label: 'Ask what happened at the changeover',
+            said: '"The umpire said thank you. Then we played."',
+          },
+          respond: {
+            label: 'Say you wish you had been there',
+            said: '"You\'d have liked it. I kept very still."',
+          },
+          space: {
+            label: 'Let her tell it',
+            said: '"That\'s all. I smelled of coconut for a while."',
+          },
+        },
+      },
+    },
+  },
+  // R54 · the-rooster-ringtone
+  {
+    id: 'the-rooster-ringtone',
+    subject: 'story',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"A phone went off in the middle of a rally and I\'m still not over it."',
+        shared: '"The ringtone was a rooster. A mum answered it and whispered that she couldn\'t talk, she was at the tennis. Three courts heard."',
+        branches: {
+          invite: {
+            label: 'Ask whose phone it was',
+            said: '"No idea which mum. It rang again two minutes later. Same rooster, same whisper."',
+          },
+          respond: {
+            label: 'Say you\'re already smiling',
+            said: '"Good. I was too. I had to turn my back and bounce a ball."',
+          },
+          space: {
+            label: 'Let her tell the rest',
+            said: '"Oh, and at the next changeover every parent along the fence checked their phone."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"A phone went off in the middle of a rally. Of course it did."',
+        shared: '"The ringtone\'s a rooster – and a mum answers it, whispering that she can\'t talk, she\'s at the tennis. Three courts heard."',
+        branches: {
+          invite: {
+            label: 'Ask whose phone it was',
+            said: '"Somebody\'s mum. I never found out which. Two minutes later: same rooster, same whisper."',
+          },
+          respond: {
+            label: 'Say you\'re already smiling',
+            said: '"Good. I had to stare at the net like it owed me money."',
+          },
+          space: {
+            label: 'Let her tell the rest',
+            said: '"At the next changeover every parent along that fence checked their phone. Good."',
+          },
+        },
+      },
+      deep: {
+        opener: '"A phone went off in the middle of a rally, and I\'ve been thinking about it since."',
+        shared: '"The ringtone was a rooster. A mum answered, whispering that she couldn\'t talk, she was at the tennis. Three courts heard every word."',
+        branches: {
+          invite: {
+            label: 'Ask whose phone it was',
+            said: '"I never found out which mum. Two minutes later: the same rooster, the same whisper."',
+          },
+          respond: {
+            label: 'Say you\'re already smiling',
+            said: '"I was, a little. It was the whisper – so careful, and so loud."',
+          },
+          space: {
+            label: 'Let her tell the rest',
+            said: '"That\'s the whole of it. By the next changeover every parent had quietly checked their phone."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"A phone went off during a rally."',
+        shared: '"It was a rooster. A mum answered and whispered that she was at the tennis. Three courts heard."',
+        branches: {
+          invite: {
+            label: 'Ask whose phone it was',
+            said: '"I don\'t know which mum. It rang again two minutes later."',
+          },
+          respond: {
+            label: 'Say you\'re already smiling',
+            said: '"It was funny. I looked at my strings."',
+          },
+          space: {
+            label: 'Let her tell the rest',
+            said: '"That\'s it. At the next changeover everyone checked their phones."',
+          },
+        },
+      },
+    },
+  },
+  // R55 · the-coin-and-the-drain
+  {
+    id: 'the-coin-and-the-drain',
+    subject: 'story',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"The coin toss was the funniest part of the day. I\'m not joking."',
+        shared: '"The coin bounced, rolled across the baseline and dropped straight down a drain. Nobody had another one. We spun a racket instead."',
+        branches: {
+          invite: {
+            label: 'Ask what went wrong with the coin toss',
+            said: '"Then we spent a minute working out which end of the racket was up."',
+          },
+          respond: {
+            label: 'Say you can tell this one is good',
+            said: '"It is. I looked down the drain afterwards, just in case."',
+          },
+          space: {
+            label: 'Let her carry on',
+            said: '"And it was my racket we spun. It\'s never had so much attention."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"A coin toss. How hard can a coin toss be?"',
+        shared: '"The coin lands, rolls across the baseline – and goes down a drain. Nobody had another. We spun a racket instead."',
+        branches: {
+          invite: {
+            label: 'Ask what went wrong with the coin toss',
+            said: '"Then we argued about which end of a racket is up. A whole minute."',
+          },
+          respond: {
+            label: 'Say you can tell this one is good',
+            said: '"It is. I looked down that drain afterwards. Nothing. I\'m not climbing in."',
+          },
+          space: {
+            label: 'Let her carry on',
+            said: '"For the record, it was my racket we spun. Mine was the one nearest."',
+          },
+        },
+      },
+      deep: {
+        opener: '"Something small went wrong at the coin toss and I haven\'t been able to let it go."',
+        shared: '"The coin hit the court, rolled to the baseline and went down a drain. Nobody had another, so we spun a racket."',
+        branches: {
+          invite: {
+            label: 'Ask what went wrong with the coin toss',
+            said: '"Then we spent a minute agreeing which end was up. Strange what you forget."',
+          },
+          respond: {
+            label: 'Say you can tell this one is good',
+            said: '"It is. I looked down the drain afterwards. I don\'t know what for."',
+          },
+          space: {
+            label: 'Let her carry on',
+            said: '"That\'s the end of it. It was my racket, and I felt oddly responsible."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"There was a problem with the coin toss."',
+        shared: '"The coin went down a drain. Nobody had another, so we spun a racket."',
+        branches: {
+          invite: {
+            label: 'Ask what went wrong with the coin toss',
+            said: '"Then we had to agree which end was up. It took a minute."',
+          },
+          respond: {
+            label: 'Say you can tell this one is good',
+            said: '"It is. I looked down the drain afterwards. Nothing."',
+          },
+          space: {
+            label: 'Let her carry on',
+            said: '"That\'s all, really. It was my racket, as it happens."',
+          },
+        },
+      },
+    },
+  },
+  // R56 · the-gull-in-the-chair
+  {
+    id: 'the-gull-in-the-chair',
+    subject: 'story',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"The umpire\'s chair got taken. I can\'t tell you how funny it was."',
+        shared: '"A seagull walked up the steps and sat in it while the umpire was at the net. The umpire came back and sat on the bottom step."',
+        branches: {
+          invite: {
+            label: 'Ask who was in the umpire\'s chair',
+            said: '"It stayed the whole next game. The umpire called the score from the step, politely."',
+          },
+          respond: {
+            label: 'Say you can picture it',
+            said: '"You can, can\'t you? Best seat in the place, and none of the paperwork."',
+          },
+          space: {
+            label: 'Say nothing and let her go on',
+            said: '"Oh, and when it flew off, the umpire checked the seat very thoroughly."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"Someone else got the umpire\'s chair. I\'m not exaggerating."',
+        shared: '"A seagull walks up the steps and takes it while the umpire\'s at the net. The umpire came back and sat on the bottom step."',
+        branches: {
+          invite: {
+            label: 'Ask who was in the umpire\'s chair',
+            said: '"The whole next game. Score called from the step. The gull never looked up."',
+          },
+          respond: {
+            label: 'Say you can picture it',
+            said: '"Then you\'ve got it. The most senior person on court, and it knew it."',
+          },
+          space: {
+            label: 'Say nothing and let her go on',
+            said: '"And when it finally left, the umpire inspected the chair before sitting. Wise."',
+          },
+        },
+      },
+      deep: {
+        opener: '"Something unexpected took the umpire\'s chair, and I keep going back to it."',
+        shared: '"A seagull climbed the steps and sat down while the umpire was at the net. The umpire came back, looked at it, and sat on the bottom step."',
+        branches: {
+          invite: {
+            label: 'Ask who was in the umpire\'s chair',
+            said: '"The whole next game. The umpire called the score from the step, a little lower than usual."',
+          },
+          respond: {
+            label: 'Say you can picture it',
+            said: '"It sat very still, as if it had been there longer than us. It probably had."',
+          },
+          space: {
+            label: 'Say nothing and let her go on',
+            said: '"After it flew off, the umpire checked the seat first. I respected that."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"The umpire\'s chair was occupied."',
+        shared: '"A seagull sat in it while the umpire was at the net. The umpire sat on the bottom step."',
+        branches: {
+          invite: {
+            label: 'Ask who was in the umpire\'s chair',
+            said: '"The whole next game. The umpire called the score from the step."',
+          },
+          respond: {
+            label: 'Say you can picture it',
+            said: '"It was very calm about it. Nobody argued."',
+          },
+          space: {
+            label: 'Say nothing and let her go on',
+            said: '"That\'s everything. When it left, the umpire checked the seat first."',
           },
         },
       },

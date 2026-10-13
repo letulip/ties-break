@@ -656,3 +656,207 @@ assigns fatigue, training or bond effects to resting.
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
 | 51 / 51 | 969 / 969 | 4 / 4 | all current generated situations complete as DRAFT |
+
+⚙ 14.10: four rows joined at the end of the catalogue – the current count is in §22.
+
+## 17. r51 №17 – four school-years story situations (14.10)
+
+⚙ 14.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's item №17: «ситуация "Она подает, мяч задевает трос сетки - и падает в кофе одного папы." очень крутая. Но я ее видел уже 3 раза. Давай сделаем разнообразие этих юморных зарисовок и как-то сделаем, чтобы они более рандомно происходили?»
+
+Four new `story` situations, R53–R56, appended last in the generated catalogue (English authority: the 14.10 addendum in `docs/specs/small-talk-corpus-2026-09.md`). Both languages in one change. Each is a teaser, a shared incident and three replies, in all four voices, like the court-four rows in [RU-10 life beats](ru-life-beats-small-talk-2026-10.md) §11. Row order, ids, stages and fact gates are locale-independent; nothing here is drawn differently in Russian.
+
+## 18. Situation R53 – `the-gran-with-sunscreen`
+
+Subject `story`; stages `school`; no fact gate. `Смена сторон` is the tennis changeover. The umpire is never given a gender in Russian: the thanks is a nominal sentence (`От судьи – „спасибо“`) and the sunscreen goes `судье` in the dative, the way `ru.json` already writes `пожала руку судье`. `Нам обеим` is the two players, both girls.
+
+### 18.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Wait till you hear what happened at the changeover."` | `«Подожди, сейчас расскажу, что было на смене сторон.»` |
+| fiery | `"That changeover should not have been allowed."` | `«Такое на смене сторон вообще нельзя было разрешать.»` |
+| deep | `"I keep thinking about the changeover. Not the tennis – the changeover."` | `«Всё думаю про смену сторон. Не про теннис – про смену сторон.»` |
+| quiet | `"The changeover went on a bit."` | `«Смена сторон немного затянулась.»` |
+
+### 18.2 Shared second beats
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Somebody's gran walked onto the court with a tube of sunscreen and did both our ears. Then the umpire's neck. Nobody stopped her."` | `«Чья-то бабушка вышла на корт с тюбиком солнцезащитного крема и намазала уши нам обеим. Потом шею судье. Её никто не остановил.»` |
+| fiery | `"A gran walks onto the court with a tube of sunscreen – both our ears, then the umpire's neck. Nobody stopped her."` | `«Бабушка выходит на корт с тюбиком солнцезащитного крема – уши нам обеим, потом шея судьи. Её никто не остановил.»` |
+| deep | `"Somebody's gran came onto the court with a tube of sunscreen. Both our ears, then the umpire's neck. It didn't cross anyone's mind to stop her."` | `«Чья-то бабушка пришла на корт с тюбиком солнцезащитного крема. Уши нам обеим, потом шея судьи. Никому и в голову не пришло её остановить.»` |
+| quiet | `"A gran came on with sunscreen. She did both our ears, and the umpire's neck. Nobody stopped her."` | `«Вышла бабушка с солнцезащитным кремом. Намазала нам обеим уши и судье шею. Её никто не остановил.»` |
+
+### 18.3 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what happened at the changeover` | `Спросить, что случилось на смене сторон` |
+| respond | `Say you wish you had been there` | `Сказать, что жаль, что вас там не было` |
+| space | `Let her tell it` | `Дать ей рассказать самой` |
+
+### 18.4 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"The umpire said thank you. Properly. Then called time, as if it was planned."` | `«От судьи – „спасибо“. Всерьёз. А потом нас позвали играть дальше, будто так и было задумано.»` |
+| sunny | respond | `"You'd have loved it. I looked at my shoes for a whole game."` | `«Тебе бы понравилось. Целый гейм я смотрела на свои кроссовки.»` |
+| sunny | space | `"Anyway. I smelled of coconut for the rest of the day. I didn't mind."` | `«В общем, до конца дня я пахла кокосом. Меня это не смущало.»` |
+| fiery | invite | `"The umpire thanked her. THANKED her. Then called time like it was normal."` | `«От судьи – „спасибо“. СПАСИБО. А потом нас позвали играть дальше, как будто так и надо.»` |
+| fiery | respond | `"You'd have laughed. I held it in with my whole face."` | `«Тебе было бы смешно. А я сдерживалась всем лицом.»` |
+| fiery | space | `"Anyway, I smelled of coconut until the last game. Nobody warns you."` | `«Короче, я пахла кокосом до последнего гейма. Про такое никто не предупреждает.»` |
+| deep | invite | `"The umpire thanked her. I think it was the only thing left to say."` | `«От судьи – „спасибо“. По-моему, больше ничего и не оставалось сказать.»` |
+| deep | respond | `"I wish you had been. Would you have laughed, or stood very still?"` | `«Жаль, что тебя там не было. Хотелось бы знать: смех или полная неподвижность?»` |
+| deep | space | `"That's all of it. The coconut stayed with me until the last game."` | `«Вот и всё. Кокос держался до последнего гейма.»` |
+| quiet | invite | `"The umpire said thank you. Then we played."` | `«От судьи – „спасибо“. И мы играли дальше.»` |
+| quiet | respond | `"You'd have liked it. I kept very still."` | `«Тебе бы понравилось. Я стояла не шелохнувшись.»` |
+| quiet | space | `"That's all. I smelled of coconut for a while."` | `«Вот и всё. Какое-то время я пахла кокосом.»` |
+
+## 19. Situation R54 – `the-rooster-ringtone`
+
+Subject `story`; stages `school`, `after-school`; no fact gate. `Розыгрыш` is the rally, `рингтон` is the word everyone says, and `слышали три корта` keeps the count of three. `Одна мама` follows `одного папы` in the court-four rows: a stranger the sentence never names.
+
+### 19.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"A phone went off in the middle of a rally and I'm still not over it."` | `«Посреди розыгрыша зазвонил телефон, и я до сих пор не отошла.»` |
+| fiery | `"A phone went off in the middle of a rally. Of course it did."` | `«Посреди розыгрыша зазвонил телефон. Ну конечно.»` |
+| deep | `"A phone went off in the middle of a rally, and I've been thinking about it since."` | `«Посреди розыгрыша зазвонил телефон, и я с тех пор об этом думаю.»` |
+| quiet | `"A phone went off during a rally."` | `«Во время розыгрыша зазвонил телефон.»` |
+
+### 19.2 Shared second beats
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"The ringtone was a rooster. A mum answered it and whispered that she couldn't talk, she was at the tennis. Three courts heard."` | `«Рингтоном был петух. Какая-то мама ответила и зашептала, что не может говорить, она на теннисе. Слышали три корта.»` |
+| fiery | `"The ringtone's a rooster – and a mum answers it, whispering that she can't talk, she's at the tennis. Three courts heard."` | `«Рингтон – петух. Одна мама отвечает шёпотом, что не может говорить, она на теннисе. Слышали три корта.»` |
+| deep | `"The ringtone was a rooster. A mum answered, whispering that she couldn't talk, she was at the tennis. Three courts heard every word."` | `«Рингтоном был петух. Одна мама ответила шёпотом, что говорить не может: она на теннисе. Каждое слово слышали три корта.»` |
+| quiet | `"It was a rooster. A mum answered and whispered that she was at the tennis. Three courts heard."` | `«Это был петух. Какая-то мама ответила шёпотом, что она на теннисе. Слышали три корта.»` |
+
+### 19.3 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask whose phone it was` | `Спросить, чей это был телефон` |
+| respond | `Say you're already smiling` | `Сказать, что вы уже улыбаетесь` |
+| space | `Let her tell the rest` | `Дать ей рассказать остальное` |
+
+### 19.4 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"No idea which mum. It rang again two minutes later. Same rooster, same whisper."` | `«Понятия не имею, какая мама. Через две минуты зазвонило снова. Тот же петух, тот же шёпот.»` |
+| sunny | respond | `"Good. I was too. I had to turn my back and bounce a ball."` | `«Вот и хорошо, я тоже. Пришлось отвернуться и постучать мячом об корт.»` |
+| sunny | space | `"Oh, and at the next changeover every parent along the fence checked their phone."` | `«Да, и на следующей смене сторон все родители вдоль ограды проверили телефоны.»` |
+| fiery | invite | `"Somebody's mum. I never found out which. Two minutes later: same rooster, same whisper."` | `«Чья-то мама. Чья – так и не узнала. Через две минуты снова: тот же петух, тот же шёпот.»` |
+| fiery | respond | `"Good. I had to stare at the net like it owed me money."` | `«Вот и славно. Мне пришлось смотреть на сетку так, будто она мне должна.»` |
+| fiery | space | `"At the next changeover every parent along that fence checked their phone. Good."` | `«На следующей смене сторон все родители вдоль той ограды проверили телефоны. Правильно.»` |
+| deep | invite | `"I never found out which mum. Two minutes later: the same rooster, the same whisper."` | `«Какая это была мама, я так и не узнала. Через две минуты – тот же петух, тот же шёпот.»` |
+| deep | respond | `"I was, a little. It was the whisper – so careful, and so loud."` | `«Немного, да. Дело было в шёпоте – таком осторожном и таком громком.»` |
+| deep | space | `"That's the whole of it. By the next changeover every parent had quietly checked their phone."` | `«Вот и вся история. К следующей смене сторон все родители тихо проверили телефоны.»` |
+| quiet | invite | `"I don't know which mum. It rang again two minutes later."` | `«Не знаю, какая мама. Через две минуты зазвонило снова.»` |
+| quiet | respond | `"It was funny. I looked at my strings."` | `«Было смешно. Я смотрела на струны.»` |
+| quiet | space | `"That's it. At the next changeover everyone checked their phones."` | `«Вот и всё. На следующей смене сторон все проверили телефоны.»` |
+
+## 20. Situation R55 – `the-coin-and-the-drain`
+
+Subject `story`; stages `school`, `after-school`; no fact gate. `Жеребьёвка` is the coin toss, `водосток` the drain, and the racket spin is told as which end is `верхний`. The respond label says the story will be good and all four replies open with `Хорошая`, which answers `история`.
+
+### 20.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"The coin toss was the funniest part of the day. I'm not joking."` | `«Жеребьёвка была самой смешной частью дня. Я не шучу.»` |
+| fiery | `"A coin toss. How hard can a coin toss be?"` | `«Жеребьёвка. Что сложного может быть в жеребьёвке?»` |
+| deep | `"Something small went wrong at the coin toss and I haven't been able to let it go."` | `«На жеребьёвке пошло не так что-то мелкое, и я никак не могу это отпустить.»` |
+| quiet | `"There was a problem with the coin toss."` | `«С жеребьёвкой вышла загвоздка.»` |
+
+### 20.2 Shared second beats
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"The coin bounced, rolled across the baseline and dropped straight down a drain. Nobody had another one. We spun a racket instead."` | `«Монетка подпрыгнула, прокатилась через заднюю линию и упала прямо в водосток. Другой ни у кого не нашлось. Вместо неё мы крутили ракетку.»` |
+| fiery | `"The coin lands, rolls across the baseline – and goes down a drain. Nobody had another. We spun a racket instead."` | `«Монетка падает, катится через заднюю линию – и в водосток. Другой ни у кого не было. Вместо неё мы крутили ракетку.»` |
+| deep | `"The coin hit the court, rolled to the baseline and went down a drain. Nobody had another, so we spun a racket."` | `«Монетка ударилась о корт, докатилась до задней линии и ушла в водосток. Другой ни у кого не было, так что мы крутили ракетку.»` |
+| quiet | `"The coin went down a drain. Nobody had another, so we spun a racket."` | `«Монетка ушла в водосток. Другой ни у кого не было, поэтому мы крутили ракетку.»` |
+
+### 20.3 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what went wrong with the coin toss` | `Спросить, что пошло не так с жеребьёвкой` |
+| respond | `Say you can tell this one is good` | `Сказать, что чувствуете: история будет хорошая` |
+| space | `Let her carry on` | `Дать ей продолжать` |
+
+### 20.4 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Then we spent a minute working out which end of the racket was up."` | `«Потом мы минуту выясняли, какой конец ракетки считается верхним.»` |
+| sunny | respond | `"It is. I looked down the drain afterwards, just in case."` | `«Хорошая. Потом я заглянула в водосток – на всякий случай.»` |
+| sunny | space | `"And it was my racket we spun. It's never had so much attention."` | `«А крутили мою ракетку. Столько внимания у неё ещё не было.»` |
+| fiery | invite | `"Then we argued about which end of a racket is up. A whole minute."` | `«Потом спорили, какой конец ракетки верхний. Целую минуту.»` |
+| fiery | respond | `"It is. I looked down that drain afterwards. Nothing. I'm not climbing in."` | `«Хорошая. Потом заглянула в тот водосток. Ничего. Лезть туда я не собираюсь.»` |
+| fiery | space | `"For the record, it was my racket we spun. Mine was the one nearest."` | `«Для протокола: крутили мою ракетку. Она просто оказалась ближе всех.»` |
+| deep | invite | `"Then we spent a minute agreeing which end was up. Strange what you forget."` | `«Потом минуту договаривались, какой конец верхний. Странно, что именно это забываешь.»` |
+| deep | respond | `"It is. I looked down the drain afterwards. I don't know what for."` | `«Хорошая. Потом я заглянула в водосток. Сама не знаю зачем.»` |
+| deep | space | `"That's the end of it. It was my racket, and I felt oddly responsible."` | `«Вот и конец истории. Ракетка была моя, и я почему-то чувствовала за неё ответственность.»` |
+| quiet | invite | `"Then we had to agree which end was up. It took a minute."` | `«Потом нам пришлось договариваться, какой конец верхний. Это заняло минуту.»` |
+| quiet | respond | `"It is. I looked down the drain afterwards. Nothing."` | `«Хорошая. Потом я заглянула в водосток. Ничего.»` |
+| quiet | space | `"That's all, really. It was my racket, as it happens."` | `«Вот и всё, в общем. Ракетка, кстати, была моя.»` |
+
+## 21. Situation R56 – `the-gull-in-the-chair`
+
+Subject `story`; stages `school`, `after-school`; no fact gate. `Судейская вышка` is the umpire's chair and the gull is `она`. The umpire's verbs are in the present tense (`садится`, `осматривает`) on purpose: a Russian past tense would have to say whether the umpire is a man or a woman, and the English never does. The scene is told in the present throughout so the two beats agree.
+
+### 21.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"The umpire's chair got taken. I can't tell you how funny it was."` | `«Судейскую вышку заняли. Не передать, как это было смешно.»` |
+| fiery | `"Someone else got the umpire's chair. I'm not exaggerating."` | `«Судейская вышка досталась кому-то другому. Я не преувеличиваю.»` |
+| deep | `"Something unexpected took the umpire's chair, and I keep going back to it."` | `«Судейскую вышку занял кто-то неожиданный, и я всё время к этому возвращаюсь.»` |
+| quiet | `"The umpire's chair was occupied."` | `«Судейская вышка была занята.»` |
+
+### 21.2 Shared second beats
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"A seagull walked up the steps and sat in it while the umpire was at the net. The umpire came back and sat on the bottom step."` | `«Чайка поднимается по ступенькам и садится на вышку, пока судья у сетки. Судья возвращается и садится на нижнюю ступеньку.»` |
+| fiery | `"A seagull walks up the steps and takes it while the umpire's at the net. The umpire came back and sat on the bottom step."` | `«Чайка поднимается по ступенькам и занимает вышку, пока судья у сетки. Судья возвращается и садится на нижнюю ступеньку.»` |
+| deep | `"A seagull climbed the steps and sat down while the umpire was at the net. The umpire came back, looked at it, and sat on the bottom step."` | `«Чайка поднимается по ступенькам и садится, пока судья у сетки. Судья возвращается, смотрит на неё и садится на нижнюю ступеньку.»` |
+| quiet | `"A seagull sat in it while the umpire was at the net. The umpire sat on the bottom step."` | `«Чайка садится на вышку, пока судья у сетки. Судья садится на нижнюю ступеньку.»` |
+
+### 21.3 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask who was in the umpire's chair` | `Спросить, кто сидел на судейской вышке` |
+| respond | `Say you can picture it` | `Сказать, что вы это прекрасно представляете` |
+| space | `Say nothing and let her go on` | `Ничего не говорить и дать ей продолжать` |
+
+### 21.4 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"It stayed the whole next game. The umpire called the score from the step, politely."` | `«Она сидит весь следующий гейм. Счёт объявляют со ступеньки, очень вежливо.»` |
+| sunny | respond | `"You can, can't you? Best seat in the place, and none of the paperwork."` | `«Можешь же себе представить? Лучшее место на корте и никакой бумажной работы.»` |
+| sunny | space | `"Oh, and when it flew off, the umpire checked the seat very thoroughly."` | `«Да, и когда чайка улетает, судья очень тщательно осматривает сиденье.»` |
+| fiery | invite | `"The whole next game. Score called from the step. The gull never looked up."` | `«Весь следующий гейм. Счёт объявляют со ступеньки. Чайка ни разу не поднимает голову.»` |
+| fiery | respond | `"Then you've got it. The most senior person on court, and it knew it."` | `«Тогда всё ясно. Главнее всех на корте она – и она это знает.»` |
+| fiery | space | `"And when it finally left, the umpire inspected the chair before sitting. Wise."` | `«А когда чайка наконец улетает, судья осматривает вышку, прежде чем сесть. Разумно.»` |
+| deep | invite | `"The whole next game. The umpire called the score from the step, a little lower than usual."` | `«Весь следующий гейм. Счёт объявляют со ступеньки, чуть ниже обычного.»` |
+| deep | respond | `"It sat very still, as if it had been there longer than us. It probably had."` | `«Она сидит совершенно неподвижно, будто здесь дольше нас. Наверное, так и есть.»` |
+| deep | space | `"After it flew off, the umpire checked the seat first. I respected that."` | `«Когда чайка улетает, судья сначала осматривает сиденье. Я это уважаю.»` |
+| quiet | invite | `"The whole next game. The umpire called the score from the step."` | `«Весь следующий гейм. Счёт объявляют со ступеньки.»` |
+| quiet | respond | `"It was very calm about it. Nobody argued."` | `«Она очень спокойна. Никто не спорит.»` |
+| quiet | space | `"That's everything. When it left, the umpire checked the seat first."` | `«Вот и всё. Когда чайка улетает, судья сначала осматривает сиденье.»` |
+
+## 22. Corpus progress (14.10)
+
+| rows | ordinary authored strings | shared second beats | state |
+| ---: | ---: | ---: | --- |
+| 55 / 55 | 1045 / 1045 | 20 / 20 | all current generated situations complete as DRAFT |
+
+The 11.10 line in §16 (51 / 51, 969 / 969, 4 / 4) is the record of the volume as it stood then; the four rows above join it, 76 ordinary strings and 16 shared beats more. Every English cell in §17–§21 is read from the parsed corpus by the generating script, not typed, and `npm run i18n:check` is the proof that no key is left without Russian.
