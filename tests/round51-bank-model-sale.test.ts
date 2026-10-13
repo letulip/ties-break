@@ -39,6 +39,9 @@
 //         engine claim. The mounted file's two dialog arms go RED alone.
 //   * M4  the `Math.max(0, ...)` underwater clamp removed from `bankSaleSplit`                                                      -> 5 RED: both underwater table rows, the
 //         underwater loss-carry arm and both underwater telescoping rows. Nothing profitable moves.
+//   * M5  the ledger sentence and season memo left on the OLD AVERAGE COST while `paidCents` releases principal (`delta = S - round(paid x S / V)`)          -> 10 RED / 23 green: the
+//         telescoping arms (the part-sale and closing-sale memos sum to 16,666.67 where the true profit is 50,000; to 40,000 where 50,000 past the profit; to -75,000 where the true
+//         loss is -50,000, a loss counted in the part sale and again in the closing sale) and the sentence arms. This is MEASURED, and it is why the ledger's figure follows the bank.
 //   Not mutated: the units line (`units x (1 - S / V)`) – it is the shipped round-30 line and this file only asserts that it did not move.
 import { describe, it, expect } from 'vitest'
 import {

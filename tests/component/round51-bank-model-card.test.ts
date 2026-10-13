@@ -28,6 +28,8 @@
 //     profit realised, the rest still on the card) and both dialog arms go RED on their LEDGER half.
 //   * the confirm-dialog preview back to a share of the row's gain (composables/shop.ts) -> the two dialog arms RED and nothing else (2 / 2): the engine files stay green.
 //   * the underwater clamp removed from `bankSaleSplit`                         -> the underwater dialog arm RED alone (1 / 3).
+//   * the ledger sentence left on the old average cost (paid still releasing principal) -> both dialog arms RED on their LEDGER half («$16,667 more than it cost» beside a
+//     dialog that says $50,000): 2 RED / 2 green. The two halves of one sale must name one figure.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
