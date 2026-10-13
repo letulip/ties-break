@@ -3,7 +3,7 @@ type: plan
 status: current
 area: localization
 canonical: true
-last-reviewed: 2026-10-07
+last-reviewed: 2026-10-13
 ---
 
 # Russian localization editorial stack
@@ -120,6 +120,13 @@ diary corpora → endings → metadata and final LQA.
    and an English accessible name is an unfinished unit.
 7. Copy that affects width, dialog height or button discovery receives rendered phone LQA when the
    technical localization branch can display Russian.
+8. ⚠⚠ ONE CHANGE, TWO LANGUAGES, ONE COMMIT (the owner's order, round 51 №14, 13.10: «теперь все
+   текстовые правки должно отражать в обоих языках синхронно»). Every edit to player-facing copy
+   lands EN and RU together: a new string is born with both columns, a changed sentence moves both,
+   a removed one dies in both. The mechanical half is `npm run i18n:check` (zero keys without
+   Russian); the half the census cannot see – an engine string or id printed raw past
+   `t()`/`engineWord()`/`engineText()` – is review law: /house-review's Pass 1 №7 treats a new raw
+   sink or a missing pair as a finding, and /pull-request stops on the gap while reading the diff.
 
 ## Status vocabulary
 

@@ -107,6 +107,10 @@ docs/review/     2026-08 full review + P1–P9 proposals
 - **Boring TypeScript**: strict mode, no generic gymnastics, no enums, no decorators. Types document the save schema and engine parameters.
 - Comments explain **why**, not what — this codebase deliberately records owner rulings and the reasoning behind non-obvious choices. Preserve them verbatim when moving code.
 - In prose and UI copy use the short dash `–`, never the long em-dash.
+- **Player copy ships in both languages at once** (owner, 13.10, r51 №14): an EN string added or
+  changed lands with its RU pair in the same commit (`npm run i18n:check` holds the census at zero
+  keys without Russian), and engine values cross into templates only through the display-boundary
+  readers (`t()`/`engineWord()`/`engineText()`), never as raw interpolations.
 - Money is in **cents** everywhere in the engine. Formatting helpers take cents; check the unit before calling.
 - Tournament and organisation names are **fictional** (ITF/WTA/ATP are trademarks). Real player surnames must not be constructible.
 

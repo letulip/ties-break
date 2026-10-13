@@ -28,6 +28,11 @@ Run in the target's worktree, exit codes from files, never through a pipe:
    `e2e/fixtures`) – a partial move is a finding.
 6. Copy rules on changed files: Cyrillic inside `<template>` (`[Ѐ-ӿ]`), the long dash `—`
    anywhere player-facing, money not in cents, gendered strings for professionals (R15-7's law).
+7. Both languages, one diff (owner, r51 №14, 13.10): a player-facing EN string added or changed
+   without its RU pair in the SAME range is a finding (the census `npm run i18n:check` is the
+   mechanical half). The half the census cannot see: a template printing an engine value raw –
+   `{{ x.label }}` / `{{ x.surface }}` / `moodWord` / `coachCaution` and kin past
+   `t()`/`engineWord()`/`engineText()` – is the round-51 leak class; a new raw sink is a finding.
 
 ## Pass 2 – the judgment law, read from the diff itself
 
