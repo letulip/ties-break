@@ -67,6 +67,17 @@ export interface CareerMeta {
    *  `careerAge` reads the day as the 1st for it – which is the month clock's own answer, so an old
    *  row keeps printing exactly what it printed rather than shifting under the reader. */
   birthDay?: number
+  /** ⭐ r51 №3 (13.10) – THE CALENDAR YEAR THIS CAREER'S WEEK 0 OPENED IN: `world.startYear`, carried so the Careers list can date ANOTHER career's week in ITS OWN epoch.
+   *
+   *  A dynasty makes the epochs differ (the mother opened in 2031, her daughter in 2066 – docs/specs/succession-2026-10.md §1.3), and the list used to print every row with the ACTIVE career's epoch, so the
+   *  mother's week 1037 read «'85» once the daughter was active instead of «'50». The epoch is a fact about the row, not about the player's current seat.
+   *
+   *  ⚠ ON THE INDEX ROW, NOT IN THE SAVE PAYLOAD, so this is NOT a schema change: no `SAVE_SCHEMA_VERSION` bump, no migration, no golden fixture – the same place `birthMonth` lives and for the same
+   *  reason. (The payload has carried `startYear` since v92; this is a COPY of it where the list can read it without decoding a world.)
+   *
+   *  ⚠ OPTIONAL, AND THE FALLBACK IS `DEFAULT_START_YEAR` (2031): a row written before this wave has none until that career's next autosave rebuilds it, and 2031 is EXACT for every generation-1 career –
+   *  which is every career that predates the field. */
+  startYear?: number
 }
 
 /** ⭐ ROUND-21 #1 – WHOSE CAREER IS IN THIS FILE, read WITHOUT importing it.
@@ -76,8 +87,9 @@ export interface CareerMeta {
  *  teaches him to dismiss it, and the difference is not knowable from a filename: `careerId` lives
  *  inside the gzipped payload. So the shell asks the worker what the bytes hold, matches the answer
  *  against the careers list it already has, and only then says which of the two things is about to
- *  happen. Three fields, deliberately – enough to name the career and date it, nothing that would
- *  make this a second way to read a world into the UI.
+ *  happen. Four fields, deliberately – enough to name the career and date it (the fourth, `startYear`,
+ *  is the epoch its week is dated in), nothing that would make this a second way to read a world into
+ *  the UI.
  *
  *  ⚠ IT IS THE "LOADING-FOR-INSPECTION" QUERY `ToWorker.restoreSlot` SAYS TO ADD WHEN A SURFACE
  *  NEEDS ONE, and it stays inside its own sentence: it reads bytes, commits nothing, adopts nothing
@@ -86,6 +98,10 @@ export interface SavePeek {
   careerId: string
   kidName: string
   week: number
+  /** ⭐ r51 №3 (13.10) – THE EPOCH OF THE CAREER IN THE FILE (`candidate.startYear`), so the confirm dates the file's week in the FILE's calendar and not in whichever career is active now. A file
+   *  holding the mother's career, picked while her daughter is active, would otherwise read «'85» for a week that is «'50».
+   *  Optional so every existing literal of this shape stays valid; a reply without it dates the file in 2031, which is exact for a generation-1 file. */
+  startYear?: number
 }
 
 /** W1-INTEGRITY-A: machine-readable error kinds the UI can dispatch on. Everything else stays a

@@ -12,6 +12,7 @@ import { useGameStore, type SaveOpKind } from '../../stores/game'
 import { sanitizeName } from '../../db/saves'
 import type { CareerMeta, SavePeek, SlotMeta } from '../../shared/protocol'
 import { weekLabel } from '../../i18n/dates'
+import { DEFAULT_START_YEAR } from '../../shared/dates'
 import { ageAtWeek, kidAgeYears } from '../../engine/world'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import IconButton from '../ui/IconButton.vue'
@@ -241,7 +242,22 @@ function fmtDate(ts: number) {
  *  wave on (shared/protocol.ts), so a career last saved before it has no birthday to read and the
  *  band is the honest best guess rather than an invented one. One autosave replaces it. */
 function careerAge(c: CareerMeta): number {
-  return c.birthMonth === undefined ? ageAtWeek(c.week) : kidAgeYears(c.week, c.birthMonth, c.birthDay ?? 1, startYear.value)
+  return c.birthMonth === undefined ? ageAtWeek(c.week) : kidAgeYears(c.week, c.birthMonth, c.birthDay ?? 1, rowStartYear(c))
+}
+
+/** ⭐ r51 №3 (13.10) – THE EPOCH A CAREERS-LIST ROW IS DATED IN: ITS OWN, never the active career's.
+ *
+ *  `startYear` (the composable) is the ACTIVE snapshot's epoch, which is right for anything about the career the player is in and wrong for a row that is ANOTHER career: after a dynasty handover the
+ *  mother (opened 2031) sat in a list dated in her daughter's 2066, so her week 1037 read «'85» instead of «'50». The row carries its own year now (`CareerMeta.startYear`).
+ *
+ *  ⚠ THE FALLBACK HAS TWO RUNGS, AND BOTH ARE EXACT. A row written before the field existed has none until that career's next autosave rebuilds it: for the ACTIVE career the true epoch is in hand
+ *  (the snapshot's – so the one row the player is looking at never goes wrong in the window between the update and its first autosave), and for any other row it is `DEFAULT_START_YEAR`, which is exact
+ *  for every generation-1 career, i.e. for every career that predates the field.
+ *
+ *  ⚠ ALSO THE AGE: `kidAgeYears` only uses the epoch to align weeks to calendar dates (the absolute year cancels inside it), so the age on a row was right everywhere except the one week a birthday
+ *  falls in – the same wrong input with a rarer symptom, and it is fed the row's epoch too. */
+function rowStartYear(c: { careerId: string; startYear?: number }): number {
+  return c.startYear ?? (c.careerId === activeCareerId.value ? startYear.value : DEFAULT_START_YEAR)
 }
 
 // Coarse relative time for the autosave row – doesn't need second-level precision.
@@ -299,6 +315,9 @@ const currentAutosave = computed<SlotMeta | undefined>(() => autoSlots.value[0])
 const previousAutosave = computed<SlotMeta | undefined>(() => autoSlots.value[1])
 
 const namedSlotPrefix = computed(() => `manual:${activeCareerId.value}:`)
+// ⚠ r51 №3 (13.10) – THE NAMED-SLOT TABLE DATES ITS WEEKS IN THE ACTIVE EPOCH (`startYear`), AND THAT IS RIGHT, NOT A MISSED SITE. `game.slots` is `listSlots(worldCareerId)`: the ACTIVE career's slots
+// only (the prefix above says so, and the worker refreshes it per career), so every row's epoch IS the snapshot's. Only the Careers list holds rows of OTHER careers, and it dates them per row
+// (`rowStartYear`); do not "make this symmetrical" – a slot record carries no epoch of its own to read.
 const namedSlots = computed(() =>
   game.slots
     .filter((s) => s.slot.startsWith('manual:'))
@@ -384,12 +403,12 @@ function importConfirmMessage(peek: SavePeek | null, existing: CareerMeta | unde
   if (existing) {
     return t(
       "Overwrite {0}'s career? You have her at {1} and this file is {2}. The file becomes the career you play from now on – there is no undo.",
-      [existing.kidName, weekLabel(existing.week, startYear.value), weekLabel(peek.week, startYear.value)],
+      [existing.kidName, weekLabel(existing.week, rowStartYear(existing)), weekLabel(peek.week, peek.startYear ?? DEFAULT_START_YEAR)],
     )
   }
   return t(
     "Import {0}'s career at {1}? It is not on this device, so nothing here is replaced – it is added alongside your careers and becomes the one you play. Your current career stays saved.",
-    [peek.kidName, weekLabel(peek.week, startYear.value)],
+    [peek.kidName, weekLabel(peek.week, peek.startYear ?? DEFAULT_START_YEAR)],
   )
 }
 
@@ -635,7 +654,7 @@ const TAB_OPTIONS = computed(() => [
           <span v-if="c.careerId === activeCareerId" class="pill ok">{{ t('Active') }}</span>
         </div>
         <div class="hint">
-          {{ t('{0} · age {1} · last played {2}', [weekLabel(c.week, startYear), careerAge(c), fmtDate(c.lastPlayedAt)]) }}
+          {{ t('{0} · age {1} · last played {2}', [weekLabel(c.week, rowStartYear(c)), careerAge(c), fmtDate(c.lastPlayedAt)]) }}
         </div>
       </div>
       <!-- D11 – TWO CONTROLS CALLED `Load` COEXIST ON THIS SCREEN, and two called `Delete`: one pair

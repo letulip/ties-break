@@ -881,7 +881,8 @@ async function handle(msg: ToWorker): Promise<ToUI> {
         id: msg.id,
         ok: true,
         type: 'peek',
-        peek: { careerId: candidate.careerId, kidName: candidate.profile.kidName, week: candidate.week },
+        // r51 №3 – `startYear` rides along so the confirm dates the file's week in the FILE's calendar (the candidate is the decoded world, which carries its own epoch).
+        peek: { careerId: candidate.careerId, kidName: candidate.profile.kidName, week: candidate.week, startYear: candidate.startYear },
         revision: committedRevision,
       }
     }
