@@ -478,6 +478,21 @@ His gradient carries **two facts in one component**: the DIRECTION is the hue fa
 is the position inside it. A pair at −15 is orange and a pair at −90 is red, and the player reads
 «going wrong» and «gone wrong» without a second glyph, a number or a legend.
 
+⭐ **AMENDED 13.10 (round 51 №10/№11) – THE RING STILL CARRIES NO LEGEND, BUT A TAP ON IT NOW OPENS ONE.**
+The stance above stands for the gauge itself: no glyph, no extra text, nothing on the card grew. The
+owner played 44 weeks on one save and the ring never moved («за 44 недели химия с тренером не
+сдвинулась ни на одно деление»), and asked for «какой-то небольшой информ попап» behind a tap on it,
+because the «?» without movement confused him. He was reading a healthy mechanism through a picture
+that hid it: the pair is recomputed **every week** a coach is hired (`accrueCoachPair`, 6.24 after 39
+weeks on his own save), the ring shows nothing until the pair clears its own reading bar (B12 below:
+median first reading at week 21, p90 at week 78), and a 6% arc is a few pixels. The «?» also meant two
+things – never worked together, and working but not readable yet – which the wire now tells apart
+(`CoachMarketRow.chemistryKnown`, derived from the pair row existing, no schema move, zero draws).
+The popup (`ChemistryHelpDialog.vue`, RankHelpDialog's shell) says what the ring is, that it moves
+every week, which of the three states this coach is in, and that letting a coach go pauses it without
+decay (§7). Copy is a DRAFT under the 11.10 blanket; the rates and thresholds are unchanged and stay
+the owner's to rule on separately.
+
 ⭐⭐ **AND THE FIGURE STAYS, WITH ITS SIGN – his ruling, and he struck the spec's own line to make it.**
 §8 said «no percentage anywhere» on the grounds that a number is a slider; he answered: «вполне можем
 оставить цифру как раз для тех, кто плохо считывает цвета или расположение шкалы. Не вижу ничего плохого

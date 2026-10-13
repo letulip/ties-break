@@ -11,6 +11,12 @@
 // ⚠ REFRESHED AGAIN 12.10 (r50 №5): the diff is EXACTLY TWO leaves – career 8/0's snapshot aggregate
 // and its `ending` field, the one bench career that owns the merch brand reading its new epilogue
 // line. The r50 №3 cup field moved nothing here – the digest never carried it.
+// ⚠ REFRESHED 13.10 (r51 №11, `chemistryKnown` on every coach-market row): the DARWIN fixture only, and
+// the field diff is EXACTLY 14 leaves – the `coachMarket` digest and the `snapshot` aggregate that
+// contains it, for each of the 7 careers (5 bench + 2 college) – with zero row, text or next-draw
+// digests moved: this twin saying the round added one boolean to one wire row and changed no English
+// and no draws. ⚠ THE LINUX FIXTURE IS NOT REFRESHED BY THAT COMMIT (no podman capture was run) and
+// will read red on the ubuntu runner until it is; its diff is the same 14 leaves.
 //
 // ⚠⚠ TWO PLATFORM FAMILIES, BOTH TRUE (10.10, the day-long hunt). The PR runner (ubuntu/x64,
 // node 22) produces snapshot digests no darwin/arm64 machine can – measured to the last cell: a

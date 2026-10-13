@@ -1353,6 +1353,12 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // nothing is cached: the two values below are what identifies the pair, and they are what this
       // line already had in its hands.
       chemistry: chemistryReading(world.coachPairs[coach.id], world.seed, coach.id),
+      // ⭐ ROUND 51 №11 – THE SECOND HALF OF THE «?» (shared/protocol/offers.ts has the reasoning):
+      // whether the pair is ON THE BOOKS, read off the same row `chemistry` above reads and with no
+      // gate of its own. A row exists from the first week she trains with this coach and is never
+      // deleted (leaving pauses, it does not reset – state.ts), so this is the one bit that tells
+      // «never worked together» from «working, nothing readable yet». ZERO DRAWS, nothing persisted.
+      chemistryKnown: world.coachPairs[coach.id] !== undefined,
     }
   })
 }

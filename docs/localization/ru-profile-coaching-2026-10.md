@@ -1523,3 +1523,24 @@ The hired coach's opinion about a trip was the last English printed as a finishe
 | RU23-CMK-56 | `Your coach would save her for the {0} {1}.` | `Тренер советует приберечь её для «{0}» {1}.` | `DRAFT` |
 | RU23-CMK-57 | `when\|next week` | `на следующей неделе` | `DRAFT` |
 | RU23-CMK-58 | `when\|in {0} weeks` | `через {0, plural, one {{0} неделю} few {{0} недели} many {{0} недель} other {{0} недели}}` | `DRAFT` |
+
+## ⚙ 13.10 agent-authored (бланкет) – r51 B8, items №10/№11: the chemistry info popup
+
+⚙ 13.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's item №11: «надо наверное при кликие на химию тренера какой-то небольшой информ попап показывать что там вообще, а то этот знак вопроса без движения несколько смущает» – and item №10 (44 weeks and the ring never moved) is answered by this card in the game: the pair is recomputed every week a coach is hired, and the «?» was hiding two different states.
+
+A tap on the chemistry ring of a coach card opens `ChemistryHelpDialog.vue`: a title, two lines about what the ring is, ONE state line (three keys – never worked together, working but not readable yet, the current reading) and a line about what letting a coach go does. Seven keys, all new.
+
+- **The term is the card's own**: `взаимопонимание` is what the ring's spoken label and the row's name already say (`Chemistry with her: {0}%`, `, chemistry {0}%`). The title is that word alone.
+- **«reading» is `значение`**, the figure the ring draws; the owner's own phrase for the unread state – «ещё не прочитано» – is kept in the unread line.
+- **The coach carries no sex in these rows** (`с тренером`, `этого тренера`, `расстаться` – an impersonal infinitive), the same rule the rest of this file follows; `она` is always the daughter.
+- **`{0}` in the reading line is the figure as the ring speaks it** – a bare number, with its short minus when the pairing is negative – so the row never adds a sign of its own.
+
+| id | English | Russian | Status |
+| --- | --- | --- | --- |
+| RU23-CHM-01 | `Chemistry` | `Взаимопонимание` | `DRAFT` |
+| RU23-CHM-02 | `How well she and a coach understand each other.` | `Насколько хорошо она и тренер понимают друг друга.` | `DRAFT` |
+| RU23-CHM-03 | `It shifts a little every week they work together – slowly, so a first reading can take months.` | `Взаимопонимание понемногу меняется каждую неделю, пока они работают вместе, – медленно, поэтому первое значение может появиться только через несколько месяцев.` | `DRAFT` |
+| RU23-CHM-04 | `She has not worked with this coach yet, so there is nothing to read.` | `Она ещё не работала с этим тренером, поэтому показывать пока нечего.` | `DRAFT` |
+| RU23-CHM-05 | `They have worked together, but it is not readable yet – it needs more time together.` | `Они уже работали вместе, но значение ещё не прочитано – нужно больше времени вместе.` | `DRAFT` |
+| RU23-CHM-06 | `Right now it reads {0}%.` | `Сейчас значение: {0}%.` | `DRAFT` |
+| RU23-CHM-07 | `When a coach is let go, it stays where it was – it does not fade – and carries on if you hire that coach again.` | `Если с тренером расстаться, взаимопонимание останется на месте – оно не угасает – и продолжится, если нанять этого тренера снова.` | `DRAFT` |

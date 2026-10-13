@@ -41,6 +41,7 @@
 //     which is the longread he is avoiding; the app has no accordion anywhere.
 import { computed, ref, watchEffect } from 'vue'
 import { useGameStore } from '../../stores/game'
+import ChemistryHelpDialog from '../ChemistryHelpDialog.vue'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import HerWeekTab from '../HerWeekTab.vue'
 import HouseholdStrip from '../HouseholdStrip.vue'
@@ -697,7 +698,12 @@ function rowLabel(r: Row): string {
 
 /** UP: light green into bright green. DOWN: orange into red. Both are two stops of one gradient, so
  *  the direction is the family and the STRENGTH is how far into it the arc has got - a pair at -15
- *  is orange and a pair at -90 is red, with no second glyph and no legend. */
+ *  is orange and a pair at -90 is red, with no second glyph and no legend.
+ *
+ *  ⭐ AMENDED 13.10 (round 51 №11), AND ONLY IN ONE PLACE: the RING still carries no glyph and no
+ *  legend – nothing on the card grew. What changed is that the owner asked for a small info popup
+ *  behind a tap on it («при кликие на химию тренера какой-то небольшой информ попап»), so the
+ *  explanation now lives one tap away instead of nowhere. See the block after `chemLabel`. */
 const CHEM_UP: [string, string] = ['var(--chem-up-from)', 'var(--chem-up-to)']
 const CHEM_DOWN: [string, string] = ['var(--chem-down-from)', 'var(--chem-down-to)']
 function chemGradient(level: number): [string, string] {
@@ -769,6 +775,40 @@ function chemSpoken(level: number): string {
  *  take a fourth. */
 function chemLabel(level: number | null): string {
   return level === null ? t('Chemistry with her: not known yet') : t('Chemistry with her: {0}%', [chemSpoken(level)])
+}
+
+// =================================================================================================
+// ⭐⭐ ROUND 51 №11 (13.10) – THE RING IS A TAP TARGET, AND THE CARD IT OPENS EXPLAINS THE «?»
+// =================================================================================================
+//
+// «надо наверное при кликие на химию тренера какой-то небольшой информ попап показывать что там
+// вообще, а то этот знак вопроса без движения несколько смущает» – and the mechanism behind the
+// stuck-looking ring was healthy (item 10: the pair is recomputed every week a coach is hired; his
+// own save held 6.24 after 39 weeks, unread). So the fix is to SAY it, in the game.
+//
+// ⚠⚠ THE CONTROL IS A SIBLING OF THE ROW'S BUTTON AND NOT A CHILD, which departs from the plan's «a
+// @click.stop inside the button» and is the reason this item restructures at all. Two facts decide it.
+// (1) THE COACH SHE HAS IS THE ROW THAT MATTERS AND IT IS `disabled`: a `current` or a points-locked
+// row is a disabled button, and what a click on a CHILD of a disabled button does is the browser's
+// call – the one row whose ring is most likely to carry a reading would be the one that cannot be
+// tapped on some engines. (2) INTERACTIVE CONTENT INSIDE A BUTTON IS INVALID HTML (a button's content
+// model forbids interactive descendants and any `tabindex`), so the plan's version buys the focus
+// stop with a content-model violation. A sibling button has neither problem: it works on every row,
+// takes focus on its own, and CANNOT press the hire flow, because nothing it does reaches the row.
+//
+// ⚠ THE RING ITSELF DID NOT MOVE. The gauge stays inside the row exactly as round 44/45 left it –
+// geometry, «?», every label and every net that finds it there – and the tap target is an invisible
+// button laid over its corner (style.css `.cm-chem-open`). It carries the ring's own spoken label,
+// byte for byte, plus `aria-haspopup`.
+//
+// ⚠ THE STATE IS READ OFF ROWS THE SCREEN ALREADY HAS: the reading decides «read», and the wire's
+// `chemistryKnown` splits the two «?» (see CoachMarketRow). The popup is handed the id so it follows
+// the live row; if the row vanishes while it is open, it goes with it.
+const chemInfoId = ref<string | null>(null)
+const chemInfo = computed<Row | null>(() => rows.value.find((r) => r.id === chemInfoId.value) ?? null)
+function chemInfoState(r: Row): 'never' | 'unread' | 'read' {
+  if (r.chemistry !== null) return 'read'
+  return r.chemistryKnown === true ? 'unread' : 'never'
 }
 
 // --- the budget meter ---------------------------------------------------------------------------
@@ -1282,9 +1322,12 @@ function scrollToTier(tier: CoachTier): void {
            as forbidden. `blocked` is now the POINTS LOCK alone, which is a real gate: a rung she has
            not earned cannot be bought at any price. The week's cost is on the row either way - the
            price line directly above the action, where it always was. -->
+      <!-- ⭐⭐ ROUND 51 №11 – THE CELL: the row's button and the ring's tap target side by side, so the
+           target is never inside a button (see the block after `chemLabel`). The row below is
+           deliberately NOT re-indented under it, so this item's diff is the size of the change and a
+           reviewer reads the cell's two edges and not 170 lines of whitespace. -->
+      <div v-for="r in g.rows" :key="r.id" class="cm-cell">
       <button
-        v-for="r in g.rows"
-        :key="r.id"
         class="cm-row"
         :class="{ current: r.current, blocked: !r.current && r.lockedPoints !== null }"
         :disabled="r.current || r.lockedPoints !== null"
@@ -1442,6 +1485,18 @@ function scrollToTier(tier: CoachTier): void {
           </span>
         </span>
       </button>
+      <!-- THE RING'S TAP TARGET, over the corner the gauge sits in. Its name is the ring's own spoken
+           label (`chemLabel`, byte for byte), and a tap opens the explainer for THIS row: on a hire
+           row, on the coach she has and on a locked one alike, because it is not a part of any of
+           them. -->
+      <button
+        type="button"
+        class="cm-chem-open"
+        :aria-label="chemLabel(r.chemistry)"
+        aria-haspopup="dialog"
+        @click="chemInfoId = r.id"
+      ></button>
+      </div>
     </section>
 
     <!-- The rung below the market: free, and always available. A family that cannot pay has to be
@@ -1476,6 +1531,14 @@ function scrollToTier(tier: CoachTier): void {
       :confirm-label="t('Coach her yourself')"
       @confirm="doRelease"
       @cancel="releasing = false"
+    />
+    <!-- ROUND 51 №11 – what the chemistry ring is. A plain explainer, not a decision: it closes on the
+         scrim, on its close control and on Escape, and it changes nothing. -->
+    <ChemistryHelpDialog
+      v-if="chemInfo"
+      :state="chemInfoState(chemInfo)"
+      :figure="chemInfo.chemistry === null ? undefined : chemSpoken(chemInfo.chemistry)"
+      @close="chemInfoId = null"
     />
   </template>
 </template>

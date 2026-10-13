@@ -6133,6 +6133,40 @@ tr.kid-row td {
 .cm-chem-mark {
   color: var(--accent);
 }
+/* ⭐⭐ ROUND 51 №11 (13.10) – THE RING IS A TAP TARGET, AND THE TARGET IS NOT INSIDE THE ROW'S BUTTON.
+   The owner asked for a small info popup behind a tap on the chemistry ring (the words are in
+   CoachMarketScreen.vue, beside `chemLabel`, where Cyrillic may live). The row is one `<button>`,
+   disabled for the coach she has and for a locked rung, so the control sits BESIDE it: `.cm-cell`
+   is the box both share, and `.cm-chem-open` is a transparent button laid over the corner the gauge
+   occupies. The gauge itself did not move – nothing about `.cm-right` or `.cm-chem` above changed.
+
+   ⚠ THE BOX IS THE GAUGE'S CORNER PLUS AIR, DERIVED AND NOT GUESSED. The ring is 36px wide and sits
+   13px in from the row's right edge (12px padding + the 1px border); the mark above it is 20px with
+   a 4px gap, so the corner is 36 x 60 and sits 10px up from the row's bottom edge (9px + 1px). 44 x 68
+   is that plus 4px of air on every side – 44px being the smallest comfortable thumb target – and the
+   offsets below are what centre it. Nothing here is wider than the price group above it, so the text
+   column keeps every pixel (round 44 §4's measurement stands).
+
+   ⚠ `.cm-cell` IS NOT A LAYOUT BOX. It holds one in-flow child, so at phone width the row's own
+   `margin-bottom` collapses through it and the stack is spaced exactly as before, and in the tablet
+   grid it is the grid item the row used to be (`.tier-block .cm-row` still zeroes the margin, so
+   the gap stays the grid's). The two global `button` rules that would show on a transparent control
+   are reset here: the padding and the hairline border. */
+.cm-cell {
+  position: relative;
+}
+.cm-chem-open {
+  position: absolute;
+  z-index: 1;
+  right: 9px;
+  bottom: 6px;
+  width: 44px;
+  height: 68px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-frame);
+  background: transparent;
+}
 .cm-price {
   font-size: 14.5px;
   font-weight: 800;

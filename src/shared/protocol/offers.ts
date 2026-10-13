@@ -1547,6 +1547,25 @@ export interface CoachMarketRow {
    *  ⚠ DERIVED AT SNAPSHOT TIME. `coachPairs` has been persisted since v79, so this owes no
    *  migration and moves no `SAVE_SCHEMA_VERSION`. */
   chemistry: number | null
+  /** ⭐ ROUND 51 №11 (13.10) – WHICH OF THE TWO «?» THIS IS. `true` when `coachPairs` holds a row for
+   *  this coach, i.e. she has trained with him at least one week; `false` when she never has.
+   *
+   *  ⚠⚠ THE QUESTION MARK ABOVE SAYS TWO THINGS AND THE WIRE COULD NOT TELL THEM APART. `chemistry`
+   *  is `null` both for a stranger and for a pair that has worked together for months and not yet
+   *  cleared its own bar (`chemistryReadableAt`: median first reading at week 21, p90 at week 78 –
+   *  spec the-chemistry-2026-09.md B12). The owner played 44 weeks, saw the same «?» all along and
+   *  concluded the number was stuck; it was moving every week, unread. The chemistry info popup needs
+   *  to say which of the two it is, and only the engine knows.
+   *
+   *  ⚠ A FACT ABOUT THE PAIR'S EXISTENCE AND NOT ABOUT ITS LEVEL. It does not leak what `chemistry`
+   *  hides: the row is written on the first week she trains with the man (the map is sparse, state.ts)
+   *  and is something the player did, so it says nothing the player has not already caused. Never
+   *  `true` for a coach she has not worked with, so hire-look-fire learns nothing from it either.
+   *
+   *  ⚠ OPTIONAL ON PURPOSE, AND ABSENT MEANS `false`: the engine always writes it, but a hand-built
+   *  row (a fixture, an older worker's snapshot) must still type-check and read as «never worked».
+   *  DERIVED AT SNAPSHOT TIME like `chemistry` – no save field, no schema move, zero draws. */
+  chemistryKnown?: boolean
 }
 
 /** Her academy scholarship as the UI needs it (schema v21). The engine keeps the level; the screens

@@ -205,7 +205,7 @@
     0.37577401218004525
    ],
    "world": "71a681cae315",
-   "snapshot": "bf5011251cba",
+   "snapshot": "445253c67765",
    "worldFields": {
     "schemaVersion": "215bb47da8fa",
     "careerId": "dd8f797b8a8c",
@@ -390,7 +390,7 @@
     "tierAcceptance": "0b43782deff6",
     "tierRefusal": "9514e9a95b89",
     "coachId": "a5794d1da2ee",
-    "coachMarket": "ded07cb86101",
+    "coachMarket": "5dfceea43192",
     "coachBilling": "516d0f94a1f3",
     "coachRoomNote": "79d884782e53",
     "coachDeclineNote": "dd29ecf524b0",
@@ -448,7 +448,7 @@
     0.533905585296452
    ],
    "world": "4b27436047ef",
-   "snapshot": "b9544b43341a",
+   "snapshot": "6216f4ed25da",
    "worldFields": {
     "schemaVersion": "215bb47da8fa",
     "careerId": "ee58d00eaa2f",
@@ -633,7 +633,7 @@
     "tierAcceptance": "0b43782deff6",
     "tierRefusal": "cfca8101d60d",
     "coachId": "9363eb0b1059",
-    "coachMarket": "bb1cc371cf4f",
+    "coachMarket": "25208fb9dd6b",
     "coachBilling": "6b430a5b4d05",
     "coachRoomNote": "79d884782e53",
     "coachDeclineNote": "dd29ecf524b0",
@@ -691,7 +691,7 @@
     0.06560832215473056
    ],
    "world": "d291126c4b0a",
-   "snapshot": "2cb1d527b08e",
+   "snapshot": "78503b6fa514",
    "worldFields": {
     "schemaVersion": "215bb47da8fa",
     "careerId": "889bef910f8d",
@@ -877,7 +877,7 @@
     "tierAcceptance": "0b43782deff6",
     "tierRefusal": "1dbd2307c05b",
     "coachId": "2be88ca4242c",
-    "coachMarket": "04ed46e7b9dd",
+    "coachMarket": "b64e63ecdd65",
     "coachBilling": "02d5708edb6f",
     "coachRoomNote": "fc25aecfd265",
     "coachDeclineNote": "dd29ecf524b0",
@@ -935,7 +935,7 @@
     0.37577401218004525
    ],
    "world": "4c5e0daa12dd",
-   "snapshot": "9f39cd2fb7fb",
+   "snapshot": "714567ca92c0",
    "worldFields": {
     "schemaVersion": "215bb47da8fa",
     "careerId": "dd8f797b8a8c",
@@ -1122,7 +1122,7 @@
     "tierAcceptance": "0b43782deff6",
     "tierRefusal": "6b2e129a3e43",
     "coachId": "5e8408c6b88c",
-    "coachMarket": "6c5f8d892518",
+    "coachMarket": "f5ac406600ab",
     "coachBilling": "b09cbab22bd4",
     "coachRoomNote": "79d884782e53",
     "coachDeclineNote": "dd29ecf524b0",
@@ -1180,7 +1180,7 @@
     0.37577401218004525
    ],
    "world": "459819142f26",
-   "snapshot": "2748713e8172",
+   "snapshot": "b91f5b8b73e9",
    "worldFields": {
     "schemaVersion": "215bb47da8fa",
     "careerId": "dd8f797b8a8c",
@@ -1365,7 +1365,7 @@
     "tierAcceptance": "0b43782deff6",
     "tierRefusal": "b073a3787486",
     "coachId": "a5794d1da2ee",
-    "coachMarket": "b8f3ad1b177f",
+    "coachMarket": "de27e72187a9",
     "coachBilling": "ad144c416341",
     "coachRoomNote": "79d884782e53",
     "coachDeclineNote": "dd29ecf524b0",
@@ -1424,7 +1424,7 @@
    ],
    "weeks": 364,
    "world": "9f43abe611dd",
-   "snapshot": "8b37e449aba8",
+   "snapshot": "561549d48dd0",
    "worldFields": {
     "schemaVersion": "215bb47da8fa",
     "careerId": "1fde16c8132c",
@@ -1607,7 +1607,7 @@
     "tierAcceptance": "0b43782deff6",
     "tierRefusal": "e8f8271c0ddf",
     "coachId": "a5794d1da2ee",
-    "coachMarket": "7aede643c200",
+    "coachMarket": "cc5c78e23bdc",
     "coachBilling": "00ad7c3395d6",
     "coachRoomNote": "79d884782e53",
     "coachDeclineNote": "dd29ecf524b0",
@@ -1664,7 +1664,7 @@
    ],
    "weeks": 260,
    "world": "b4cb20484424",
-   "snapshot": "3e4e5e666cab",
+   "snapshot": "85a4c3e9f64d",
    "worldFields": {
     "schemaVersion": "215bb47da8fa",
     "careerId": "b7c113c71c39",
@@ -1847,7 +1847,7 @@
     "tierAcceptance": "0b43782deff6",
     "tierRefusal": "bd40ae266553",
     "coachId": "a5794d1da2ee",
-    "coachMarket": "d983b95c7f85",
+    "coachMarket": "918b84580e33",
     "coachBilling": "312f7905cf6b",
     "coachRoomNote": "79d884782e53",
     "coachDeclineNote": "dd29ecf524b0",
