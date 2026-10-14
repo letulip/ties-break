@@ -15,7 +15,7 @@
 //   §6 played careers                 – every converted line carries a ref that renders to it; and THE PICK-STABILITY DIGEST (the strings of two 150-week careers, captured on the
 //                                       pre-wave tree 054a73a2, byte for byte – a changed sub-stream key, draw count or pool order moves it)
 //   §7 the pick keys                  – the sub-stream seed keys of the class-(b) files, as a list: this wave adds NONE
-//   §8 the week-note corpus           – the 327 authored cells, counted by structure: static / function, every one with its key
+//   §8 the week-note corpus           – the 337 authored cells, counted by structure: static / function, every one with its key
 import { describe, expect, it } from 'vitest'
 import ts from 'typescript'
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -531,13 +531,13 @@ describe('§7 the pick keys', () => {
 })
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
-// §8 – the week-note corpus: 327 authored cells (docs/localization/ru-diary-week-notes-corpus-2026-10.md: 148 core + 44 special + 135 explicit –
+// §8 – the week-note corpus: 337 authored cells (docs/localization/ru-diary-week-notes-corpus-2026-10.md: 148 core + 44 special + 145 explicit –
 // the 132 of the 07.10 inventory and R51 №13's three staycation rows, which the doc carries in its dated section at the tail)
 // ---------------------------------------------------------------------------------------------------------------------------------------------
-describe('§8 the 327 cells', () => {
+describe('§8 the 337 cells', () => {
   const leaves = (o: unknown): unknown[] => (typeof o === 'object' && o !== null ? Object.values(o as Record<string, unknown>).flatMap(leaves) : [o])
 
-  it('counted by structure: the voice matrix 128, exams 4, birthdays 8, off-season 8 (148), the special states 28 + 4 + 4 + 8 (44), and 135 explicit rows', () => {
+  it('counted by structure: the voice matrix 128, exams 4, birthdays 8, off-season 8 (148), the special states 28 + 4 + 4 + 8 (44), and 145 explicit rows', () => {
     expect(leaves(VOICE_LINES)).toHaveLength(128)
     expect(leaves(EXAM_LINES)).toHaveLength(4)
     expect(leaves(BIRTHDAY_LINES)).toHaveLength(8)
@@ -546,20 +546,20 @@ describe('§8 the 327 cells', () => {
     expect(leaves(BEREAVED_WORDS)).toHaveLength(4)
     expect(leaves(DIVORCED_WORDS)).toHaveLength(4)
     expect(leaves(FORK_AFTERMATH_WORDS)).toHaveLength(8)
-    expect(WEEK_NOTES.length - (148 + 44), 'explicit rows').toBe(135)
-    expect(WEEK_NOTES.length).toBe(327)
+    expect(WEEK_NOTES.length - (148 + 44), 'explicit rows').toBe(145)
+    expect(WEEK_NOTES.length).toBe(337)
   })
 
-  it('CONVERSION COVERAGE: 327 of 327 – 301 static cells (the seat `{ k: text }`) and 26 function cells (a ref of their own), none left unconverted, none forced', () => {
+  it('CONVERSION COVERAGE: 337 of 337 – 311 static cells (the seat `{ k: text }`) and 26 function cells (a ref of their own), none left unconverted, none forced', () => {
     const fn = WEEK_NOTES.filter((n) => typeof n.text === 'function')
     const st = WEEK_NOTES.filter((n) => typeof n.text === 'string')
-    expect([st.length, fn.length]).toEqual([301, 26])
+    expect([st.length, fn.length]).toEqual([311, 26])
     expect(fn.every((n) => typeof n.ref === 'function')).toBe(true)
     expect(st.every((n) => n.ref === undefined), 'a static cell carries no ref: its key is itself').toBe(true)
-    expect(new Set(st.map((n) => n.text)).size, 'the 301 static strings are distinct (a duplicate would be one key for two cells)').toBe(301)
+    expect(new Set(st.map((n) => n.text)).size, 'the 311 static strings are distinct (a duplicate would be one key for two cells)').toBe(311)
   })
 
-  it('the pool shapes the pick walks are unchanged: 105 photo / condition cells, 73 travel scraps, 5 coach lines, 327 week notes', () => {
-    expect([DIARY_POOL.length, TRAVEL_NOTES.length, COACH_TRIP_NOTES.length, WEEK_NOTES.length]).toEqual([105, 73, 5, 327])
+  it('the pool shapes the pick walks are unchanged: 105 photo / condition cells, 73 travel scraps, 5 coach lines, 337 week notes', () => {
+    expect([DIARY_POOL.length, TRAVEL_NOTES.length, COACH_TRIP_NOTES.length, WEEK_NOTES.length]).toEqual([105, 73, 5, 337])
   })
 })

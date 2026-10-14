@@ -14,7 +14,7 @@
 // purpose-scoped sub-stream. A snapshot cut ten times in a row, or before and after a reload, says the same thing.
 
 import { coachById, type Coach } from '../coach'
-import { affinityFor, coachFeelOf } from '../chemistry'
+import { COACH_FEEL, affinityFor, coachFeelOf } from '../chemistry'
 import type { CoachFeel } from '../../shared/protocol'
 import { ageAtWeek } from './age'
 import { coachSinceWeek } from './coachStint'
@@ -53,4 +53,27 @@ export function coachFeel(world: WorldState): CoachFeel | null {
     world.seed,
     coach.id,
   )
+}
+
+/** ⭐⭐ R52 F3 (14.10) – HER FEEL ON THE WEEK SHE WAS ASKED AGAIN: the step on exactly the weeks the diary may let the
+ *  parent hear it at the table, `null` on every other.
+ *
+ *  The owner chose the week notes as a channel for the hint and asked for it «изредка», not a line a week. So a note is
+ *  licensed once per PERIOD: `COACH_FEEL.periodWeeks`, the weeks her doubt is redrawn on (`coachFeelScore`'s `period`
+ *  is `floor(weeksTogether / periodWeeks)`, and this is the week that quotient turns over – read off the same
+ *  constant, never a retyped 4). That is also the week her feel was re-read.
+ *
+ *  ⚠ NOT THE WEEK OF THE HIRE (`weeksTogether` 0). The hire stamps `coach-since-<week>` on the week the parent signs;
+ *  the tick that follows is the first one this coach trains her in, so at 0 the week being told is the one BEFORE this
+ *  coach, and a line about her quoting the coach would be about a stranger. A coach hired back whose gauge already
+ *  speaks has a feel at 0 (F1b) and waits for the first week there was a practice to hear about.
+ *
+ *  ⚠ `too-early` IS NEVER READ: there is nothing to hint at yet, and a week that says nothing is the right note.
+ *
+ *  `feel` is passed IN rather than re-read: the snapshot has already asked `coachFeel(world)` once, and the tile, the
+ *  hunch and the note must be the same answer. Derived, nothing persisted, zero draws. */
+export function coachFeelRead(world: WorldState, feel: CoachFeel | null): Exclude<CoachFeel, 'too-early'> | null {
+  if (feel === null || feel === 'too-early') return null
+  const weeksTogether = world.week - coachSinceWeek(world)
+  return weeksTogether > 0 && weeksTogether % COACH_FEEL.periodWeeks === 0 ? feel : null
 }

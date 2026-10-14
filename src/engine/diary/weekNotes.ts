@@ -14,7 +14,7 @@ import { bodyGroupOf, bodyPartOf, type BodyGroup } from '../body'
 // ⭐ R2-09: the noun moved to an engine leaf; the FACTS shape is still the wire's (see the cycle
 // note in world/birthdayGift.ts – this module is inside world/birthday.ts's own import closure).
 import { BIRTHDAY_DAY_NOUN } from '../world/birthdayGift'
-import type { DiaryFacts, DiaryLifeStage, MoodRegister, MotherhoodBand } from '../../shared/protocol'
+import type { CoachFeel, DiaryFacts, DiaryLifeStage, MoodRegister, MotherhoodBand } from '../../shared/protocol'
 // ⭐ v72: who she is, type-only – the four ids and their physics live in engine/spirit.ts.
 import type { Temperament } from '../spirit'
 import { ageWord, capitalise, familyHomeVoice, independentVoice, underOneRoof, type DiaryLine } from './words'
@@ -96,6 +96,12 @@ export interface WeekClaims {
    *  `vacationWeek` alone, so «A week away as a family» and «She came back browner» printed at the end
    *  of a week she spent in her own kitchen. */
   vacationAt?: 'home' | 'away'
+  /** ⭐ R52 F3 – ASSERTS HOW SHE FELT ABOUT THE COACH on the one week of a period her feel was re-read, and nothing
+   *  else about her or about the coach. VALUED, `vacationAt`'s shape: the five steps that have a voice are mutually
+   *  exclusive things and the copy is written per step. `too-early` is not a value – it is never spoken. The fact is
+   *  `DiaryFacts.coachFeelRead`, present only on that week (world/coachFeel.ts), so a line carrying this claim is
+   *  unselectable on every other week by construction, which is what «изредка» means here. */
+  coachFeelRead?: Exclude<CoachFeel, 'too-early'>
   offSeason?: true
   /** asserts a practice friendly this week */
   practice?: true
@@ -430,6 +436,19 @@ export const plainTraining = (f: DiaryFacts): boolean =>
   !f.offSeasonWeek &&
   !f.vacationWeek &&
   !f.playedPractice
+
+// --- R52 F3: WHAT SHE SAID ABOUT PRACTICE, one predicate for ten lines ----------------------------------------
+//
+// SAME DOCTRINE AS `homeHoliday` AND `underOneRoof`: written once, so ten lines cannot carry ten spellings of «the week
+// her feel was re-read, at a table the parent sat at». It asks three things and each has a reason:
+//  - `f.coachFeelRead === step` – the fact is PRESENT only on the first week of a period with a coach employed, and
+//    only for a step that has a voice (world/coachFeel.ts): the equality picks the step, the presence is the period.
+//  - `plainTraining` – every line is about practice, so the week must be an ordinary training week: not a holiday, not
+//    an exam week, not the off-season, not a knock, not a friendly, not a journey, not a layoff. (That is also every
+//    licence the owner's brief named – no travelling week, no injury – and it puts the line under the pool's coin.)
+//  - `underOneRoof` – the parent hears it at dinner, in the hall; from 22 her life reaches the parent by calls.
+const heardAtTable = (f: DiaryFacts, step: Exclude<CoachFeel, 'too-early'>): boolean =>
+  plainTraining(f) && underOneRoof(f) && f.coachFeelRead === step
 
 // ⚠ R2-18: THE WARNING THAT USED TO SIT HERE IS NOW A FUNCTION. It read "Narrative distance only.
 // `notTravellingWeek` means 'not travelling'; it never proves that a grown woman spent the week in her parents'
@@ -1467,6 +1486,76 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
     license: (f) =>
       underOneRoof(f) && notTravellingWeek(f) && brightWeek(f) && homeHoliday(f) && f.injured === null,
   },
+  // ⭐⭐ R52 F3 (14.10) – HER FEEL FOR THE COACH, IN THE PARENT'S OWN HAND. The owner asked for a way for her to hint how
+  // it is with the coach, and chose this channel: «изредка строка в дневнике голосом родителя: "весь ужин рассказывала
+  // про тренировку" / "про тренировки – нормально, и всё" / "про тренировки молчит". Чистый намёк.» And, on how sure
+  // she is: «не "всё плохо" а "я пока не очень поняла" или "вроде нормально, но"… она еще не уверена, а просто
+  // сомневается».
+  //
+  // TWO LINES FOR EACH OF THE FIVE STEPS THAT HAVE A VOICE; `too-early` HAS NONE – there is nothing to hint at yet, and
+  // a week that says nothing is the right note for it. All ten are licensed on `heardAtTable` alone: the one week of a
+  // period her feel was re-read, an ordinary training week, at a roof stage – so at most one of these a month, never in
+  // a flat of her own (the parent does not sit at that dinner) and never on a week with no practice in it.
+  //
+  // ⚠ THE HEDGE IS THE COPY, NOT A WARNING LABEL. The unsure pair says she has not made up her mind – «different»,
+  // «still working it out» – and nothing about good or bad. The seems pair leans and stops short: a drill shown twice,
+  // «starting to make sense»; the other way, a flat «fine» that closes the subject. Only `good` and `off` speak
+  // plainly, and the gauge has confirmed them (chemistry.ts: confident needs the level) – yet even `off` is silence at
+  // the table and never a verdict.
+  //
+  // ⚠ THE COACH IS NEVER GENDERED (R15-7): «the coach» as a noun, no pronoun, in both languages.
+  // ⚠ NO CONTRACTIONS, because this pool has none («It is healing», «did not»): the drafts that said «It's» and
+  // «doesn't» are spelled out to match their neighbours. Every line is inside the 80-character scrap.
+  {
+    text: 'Asked how practice went, she shrugged: "Still working it out."',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'unsure' },
+    license: (f) => heardAtTable(f, 'unsure'),
+  },
+  {
+    text: 'Practice was "different", she said. Not better, not worse. Different.',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'unsure' },
+    license: (f) => heardAtTable(f, 'unsure'),
+  },
+  {
+    text: "She came home with one of the coach's drills and showed it to us twice.",
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'seems-good' },
+    license: (f) => heardAtTable(f, 'seems-good'),
+  },
+  {
+    text: '"It is starting to make sense," she said about practice. That was new.',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'seems-good' },
+    license: (f) => heardAtTable(f, 'seems-good'),
+  },
+  {
+    text: '"Fine," she said about practice, and changed the subject.',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'seems-off' },
+    license: (f) => heardAtTable(f, 'seems-off'),
+  },
+  {
+    text: 'She tried the new drill in the hall, stopped halfway. "It is fine."',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'seems-off' },
+    license: (f) => heardAtTable(f, 'seems-off'),
+  },
+  {
+    text: 'Practice came up three times at dinner. All of it good.',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'good' },
+    license: (f) => heardAtTable(f, 'good'),
+  },
+  {
+    text: 'She quoted the coach at dinner. Twice.',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'good' },
+    license: (f) => heardAtTable(f, 'good'),
+  },
+  {
+    text: 'She does not talk about practice any more.',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'off' },
+    license: (f) => heardAtTable(f, 'off'),
+  },
+  {
+    text: 'Practice came and went without a word at dinner.',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'off' },
+    license: (f) => heardAtTable(f, 'off'),
+  },
   {
     text: 'The season is over. She slept until nine and it was glorious.',
     claims: { offSeason: true, notTravellingWeek: true },
@@ -2290,8 +2379,18 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
  * `travelHomeScene`, so the scrap can never have two authors in one week.
  */
 export function weekNoteLine(facts: DiaryFacts, seed: string): DiaryLine | null {
-  const pool = WEEK_NOTES.filter((n) => n.license(facts))
-  if (pool.length === 0) return null
+  const licensed = WEEK_NOTES.filter((n) => n.license(facts))
+  if (licensed.length === 0) return null
+  // ⭐⭐ R52 F3 – ON A WEEK HER FEEL IS HEARD, THE TEN TAKE THE NOTE; the coin below still decides whether the week speaks.
+  //
+  // MEASURED, NOT GUESSED: the ten are licensed on about five weeks a coached year (the first week of a period, a plain
+  // training week, a roof stage), but on those weeks they sit in a pool of a dozen lines, so a uniform pick printed one
+  // of them about once in four coached years – a hint nobody can use, and the owner asked for it «изредка», not never.
+  // Taking the note whenever the coin lets the week speak puts it at the coin's share of those weeks. Only the weeks
+  // the fact is present on change: on every other week `heard` is empty and `pool` IS `licensed`, the list this
+  // function always drew from, so every other draw, and the entry point of every rotating band, is what it was.
+  const heard = licensed.filter((n) => n.claims.coachFeelRead !== undefined)
+  const pool = heard.length > 0 ? heard : licensed
   const rng = rngFromSeed(`${seed}:weeknote:${facts.week}`)
   // The coin first, so the pick is drawn off the same stream in the same order every time.
   const coin = rng()

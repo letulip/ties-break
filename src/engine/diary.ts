@@ -286,6 +286,10 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     birthdayRepeatAge: view.birthdayRepeatAge,
     knockChoice: view.knockChoice,
     knockPart: view.knockPart,
+    // ⭐ R52 F3 – her feel for the coach on the week it was re-read: CARRIED, never re-derived (this module owns no
+    // reading of the coach ledger or of the weeks together). A conditional spread, so the key is ABSENT on every other
+    // week and an uncoached career's facts are byte-identical to what they were.
+    ...(view.coachFeelRead === undefined ? {} : { coachFeelRead: view.coachFeelRead }),
   }
 }
 

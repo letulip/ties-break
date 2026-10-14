@@ -100,7 +100,7 @@ import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
 import { buildLifeBeatPrompt, buildSoftBeatInvite, forkWantOf, latchedEpisode, spouseViewOccasionThisWeek, FORK_WANT_ANSWER } from './lifeBeat'
-import { coachFeel } from './coachFeel'
+import { coachFeel, coachFeelRead } from './coachFeel'
 // ⚠ A BEAT KIND THAT LIVES IN ITS OWN MODULE IS ASKED DIRECTLY (A-06 / T6.10, 28.09). `ownKeyThisWeek`
 // imports the hub, so the hub cannot re-export it back without the cycle A-06 is about – see
 // `world/lifeBeat/ownKey.ts`'s header. The read below did not move.
@@ -1667,6 +1667,9 @@ function carriedOnTheWire(world: WorldState): Offer[] {
 export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snapshot {
   const pending = pendingView(world)
   const feel = coachFeel(world)
+  // ⭐ R52 F3 – ...and the SAME answer on the one week of a period it was re-read, for the diary's week note. Asked from
+  // `feel` so the tile and the note cannot disagree; `null` on every other week (`coachFeelRead`'s own rules).
+  const feelRead = coachFeelRead(world, feel)
   // ⭐ RU-23 – THE COACH'S THREE READS ON HER ROOM, each ONCE: the ref is the decision and the string beside it is that ref's English, so the two wires cannot disagree (class (b): derived here, persisted nowhere).
   const roomNoteC = coachRoomNoteRef(world)
   const declineNoteC = coachDeclineNoteRef(world)
@@ -1781,6 +1784,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // W5: ...and WHICH holiday, for the frame that names it. The booking is still on file when its
     // story is told - `prunePlannerBookings` keeps four trailing weeks - and null on every other week.
     vacationPackageId: vacationForWeek(world, world.week)?.packageId ?? null,
+    // ⭐ R52 F3 – HER FEEL FOR THE COACH ON THE WEEK IT WAS RE-READ, for the week note: carried, and ABSENT on every
+    // other week (`DiaryFacts.coachFeelRead`), so an uncoached career's diary facts are exactly what they were.
+    ...(feelRead === null ? {} : { coachFeelRead: feelRead }),
     // W2: how hard the PLAYER worked her this week – the one fact about a training week that is his
     // decision rather than the world's, and the subject of the ordinary week's note.
     // ⭐ ROUND-21 #2: the ONE predicate, asked here and carried – see `coachTravelsWithHer`.
