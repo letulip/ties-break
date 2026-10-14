@@ -638,7 +638,7 @@ import { MET_DRY, MET_HEADING, MET_HEADING_HEADLINE, MET_HER_LINE, MET_MENTION, 
 import { COACH_REAL_HUNCH, COACH_REAL_SITUATION_ID, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_CARD, SMALL_TALK_FRAME_REGISTER, SMALL_TALK_HEADING, SMALL_TALK_LINE, SMALL_TALK_SUBJECTS, smallTalkSituationIdOf, smallTalkSubjectFor } from './lifeBeat/smallTalkCopy'
 import type { LegacySmallTalkSubject, SmallTalkSubject } from './lifeBeat/smallTalkCopy'
 import { feelHunch, type ChemistryHunch } from '../chemistry' // ⭐ ROUND 51 №8: her hunch about the coach is a band; ROUND 52 F1 (14.10): the band is read off HOW SHE FEELS (below), not off the raw level
-import { coachFeel } from './coachFeel'
+import { COACH_FEEL_STINT_FACTS, coachFeel, coachFeelStintFacts } from './coachFeel'
 import type { CoachFeel } from '../../shared/protocol'
 export { LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_SUBJECTS, smallTalkSubjectFor }
 export type { LegacySmallTalkSubject, SmallTalkSubject }
@@ -676,7 +676,7 @@ export const SMALL_TALK_STANCE_ID: Record<SmallTalkStance, string> = {
  *
  *  ⚠ THE ROSTER IS A UNION AND THE PREDICATES ARE A TOTAL RECORD, so a new claim cannot be added
  *  without somebody writing the read that makes it true. */
-export const SMALL_TALK_FACTS = ['played-recently', 'march-entry-open', 'coach-employed', 'beat-her-conqueror', 'clear-next-week', 'coach-feel-warm', 'coach-feel-unsure', 'coach-feel-cold'] as const
+export const SMALL_TALK_FACTS = ['played-recently', 'march-entry-open', 'coach-employed', 'beat-her-conqueror', 'clear-next-week', 'coach-feel-warm', 'coach-feel-unsure', 'coach-feel-cold', ...COACH_FEEL_STINT_FACTS] as const
 export type SmallTalkFact = (typeof SMALL_TALK_FACTS)[number]
 
 /** How far back «today» may reach when she recounts a match. ⚠ TWO AND NOT ONE, because the row is
@@ -783,6 +783,8 @@ const SMALL_TALK_FACT: Record<SmallTalkFact, (world: WorldState, feelOnce: () =>
   'coach-feel-warm': (world, feelOnce) => coachFeelIs(world, feelOnce, 'seems-good', 'good'),
   'coach-feel-unsure': (world, feelOnce) => coachFeelIs(world, feelOnce, 'unsure'),
   'coach-feel-cold': (world, feelOnce) => coachFeelIs(world, feelOnce, 'seems-off', 'off'),
+  // ⭐ ROUND 52 H2 – R70–R75: the same three sides at half a year and at a year together. Their windows and sides live in the leaf (`coachFeel.ts`), which cannot import the hub; this hands it the one college question.
+  ...coachFeelStintFacts(inCollege),
 }
 
 /** One branch of one exchange: what the PARENT may say, and what she says back to exactly that.

@@ -124,7 +124,7 @@ describe('§1 the walker folds `+` between plain literals into ONE key – and l
 // =================================================================================================
 // the number of DISTINCT keys each seat reaches – every figure is one an earlier wave's net counts on its own (the provider is not asked to confirm itself)
 const SEAT_KEYS: Record<string, number> = {
-  'lifeBeat.optionLabel': 230, //   34 LIFE_BEAT_OPTIONS labels (L2-9b) + 187 distinct stance labels over 65 situations x 4 voices (L3-5 §6; ⚠ RE-AIMED 14.10 r51 №17: +12, r51 continuation E1: +9, E2: +9, E3: +12)
+  'lifeBeat.optionLabel': 248, //   34 LIFE_BEAT_OPTIONS labels (L2-9b) + 187 distinct stance labels over 65 situations x 4 voices (L3-5 §6; ⚠ RE-AIMED 14.10 r51 №17: +12, r51 continuation E1: +9, E2: +9, E3: +12, r52 F4: +9, H2: +18)
   'lifeBeat.replyDone': 2, //       `Let her finish` and `Proceed` – the two shipped words (invariant 4)
   'lifeBeat.promptConfirm': 1, //   `Proceed`
   'lifeMoment.confirm': 1, //       LIFE_MOMENT_CONFIRM
@@ -134,7 +134,7 @@ const SEAT_KEYS: Record<string, number> = {
   'diary.debut': 4, //              the four opening-week lines
   'diary.weekNotes': 311, //        311 static cells of the 337-cell corpus (L3-4 §8; +3 R51 №13; +10 R52 F3)
   'diary.travel': 78, //            the travel notes + the coach's five
-  'smallTalk.corpus': 1108, //      260 openers + 780 replies + 20 shared second beats (L3-5 §6; ⚠ RE-AIMED 14.10 r51 №17: +80, r51 continuation E1: +48, E2: +48, E3: +64)
+  'smallTalk.corpus': 1204, //      260 openers + 780 replies + 20 shared second beats (L3-5 §6; ⚠ RE-AIMED 14.10 r51 №17: +80, r51 continuation E1: +48, E2: +48, E3: +64, r52 F4: +48, H2: +96)
   'smallTalk.frames': 18, //        9 per presence
   'album.corpus': 664, //           648 cells + 16 arc cells (L3-6 §11) – ⚠ RE-STAMPED 12.10 r49 №7 (+180) and r50 №1 (+12: the pregnancy occasion A38)
   // ⚠ 10.10 – the LQA runner's four not-in-catalog keys and their whole families (L4-GATE row):
@@ -323,7 +323,8 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     // ⭐ RE-AIMED A FOURTH TIME 14.10 (r51 continuation, builder E3): 3000 → 3076 (+76: two school-years worries and two decisions – 16 openers and 48 replies on the corpus seat, 12 labels on the option-label seat).
     // ⭐ RE-AIMED 14.10 (r52 F3): 3076 → 3086 (+10 `diary.weekNotes` keys: her feel for the coach, two lines for each of the five steps that have a voice).
     // ⭐ RE-AIMED A FIFTH TIME 14.10 (r52, builder F4): reach +57 (three coach-feel situations – 12 openers and 36 replies on the corpus seat, 9 labels on the option-label seat).
-    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 3143 catalog keys/)
+    // ⭐ RE-AIMED A SIXTH TIME 14.10 (r52, builder H2): reach +114 (six stint situations – 24 openers and 72 replies on the corpus seat, 18 labels on the option-label seat).
+    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 3257 catalog keys/)
   })
 })
 

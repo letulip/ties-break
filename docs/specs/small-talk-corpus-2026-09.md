@@ -3031,6 +3031,254 @@ Counts, final tree: school observation 430, curiosity 393, decision 390, story 2
 - `deep` `"Thank you. I would rather say it once, and say it properly."`
 - `quiet` `"Okay. I'll say it when I know what it is."`
 
+## Addendum 14.10 (round 52, builder H2) – six stint situations: she brings up the coach again at half a year and at a year together, and which of the three depends on how she feels about it
+
+**The owner, 14.10:** «на тему смол-тока – нам это важно и критично как раз знать не один раз в 19 лет, а в первые год-два сотрудничества, чтобы понять это "тот" тренер или лучше поменять». Earlier the same day, on how sure she may sound: «не "всё плохо" а "я пока не очень поняла" или "вроде нормально, но"… она еще не уверена, а просто сомневается».
+
+**What this is.** The first three coach-feel situations (R67–R69) are her first impression, heard in the weeks after the six that count as too early. The owner wants her voice on the coach during the first year or two of a stint, not once in a career. This addendum adds the other two checkpoints of the design in `docs/rounds/round-52.md` (weeks together 12, 32 and 56): three situations for **half a year** (R70–R72) and three for **a year together** (R73–R75), each behind one side of the same feel (`coachFeel`) and now also behind the stint's age. The mechanism that brings them up at the checkpoint weeks is a separate item; until it lands, they come up in ordinary small talk, whenever their fact is true.
+
+| row | subject | stages | fact | what it is |
+| --- | --- | --- | --- | --- |
+| R70 `half-a-year-and-it-fits` | good-news | school, after-school, independent | `coach-feel-warm-half` | months in, practice with her coach fits her; the drill changed twice this month just as she was getting restless |
+| R71 `half-a-year-and-still-unsure` | observation | school, after-school, independent | `coach-feel-unsure-half` | half a year and she still cannot say whether it is the right coach; her answer changes from one month to the next |
+| R72 `months-in-and-still-waiting` | worry | school, after-school, independent | `coach-feel-cold-half` | practice is fine, and months in she is still waiting for it to click; she blames nobody |
+| R73 `a-year-and-she-would-not-swap` | good-news | school, after-school, independent | `coach-feel-warm-year` | a year in, she would not change it; every session starts with a question about what she wants to work on |
+| R74 `a-year-and-she-still-does-not-know` | decision | school, after-school, independent | `coach-feel-unsure-year` | a year and she still does not know; she asks whether they should look around, which would only mean looking |
+| R75 `a-year-in-we-need-to-talk` | decision | school, after-school, independent | `coach-feel-cold-year` | practice is fine and a year in it still is not working; she thinks they should talk about whether this is the right coach |
+
+**The six facts.** Each is the side of the scale R67–R69 use, with a window of weeks together added. The side is read from `coachFeel(world)` and nothing else (the parity law of R67–R69). The window is `world.week` minus `coachSinceWeek(world)`, the stint's age, which restarts on every hire and every release, so a new coach is a new first impression and then a new half year.
+
+| fact | true when | false on |
+| --- | --- | --- |
+| `coach-feel-warm-half` | weeks together 24 to 43, feel `seems-good` or `good` | any other week; `too-early`, `unsure`, `seems-off`, `off`; no coach; college |
+| `coach-feel-unsure-half` | weeks together 24 to 43, feel `unsure` | any other week; `too-early`, `seems-good`, `good`, `seems-off`, `off`; no coach; college |
+| `coach-feel-cold-half` | weeks together 24 to 43, feel `seems-off` or `off` | any other week; `too-early`, `unsure`, `seems-good`, `good`; no coach; college |
+| `coach-feel-warm-year` | weeks together 48 or more, feel `seems-good` or `good` | before week 48; the other sides; no coach; college |
+| `coach-feel-unsure-year` | weeks together 48 or more, feel `unsure` | before week 48; the other sides; no coach; college |
+| `coach-feel-cold-year` | weeks together 48 or more, feel `seems-off` or `off` | before week 48; the other sides; no coach; college |
+
+**Why those weeks.** Her feel is redrawn every four weeks (`COACH_FEEL.periodWeeks`), and the checkpoints 12, 32 and 56 are multiples of four, so the feel has just been read on the week a checkpoint arrives. The half-year window opens at 24 (six periods, half a year rounded down to a period), so the checkpoint at 32 sits eight weeks inside it, and it closes at 44 (eleven periods), twelve weeks after the checkpoint: room for the mechanism to try again if the checkpoint week is taken by another beat. It closes four weeks before the year window opens at 48 (twelve periods, a year rounded down to a period; the checkpoint at 56 sits eight weeks inside), so a line that says «months» is never heard beside one that says «a year». The year window has no end: «a year» is a floor and the stint does not get younger. ⚠ That makes «a year in» loose in a stint of three years; if the owner wants it tighter it is one constant (`COACH_TALK_YEAR_UNTIL_WEEK`).
+
+**Where they sit.** Last in this document, after R69, so the catalogue's first 68 rows keep their order. A situation is chosen by position in the filtered pool, so a pool of a different length reads a different position for the same seed: a career already under way may be shown a different situation next time than it would have been. That draw is on its own sub-stream (`seed:life:smalltalk:situation:<week>`), nothing is stored and the main stream does not move.
+
+**Stages and facts.** School, after-school and independent, **not college**, for the reason R67–R69 give: the coach does not work in college weeks, and each fact refuses college besides (the same `inCollege` the other coach-feel facts use; the leaf that holds the six is handed it by the hub, so there is one spelling of that question). `too-early` has no row, and with nobody employed `coachFeel` is `null` and every fact is false.
+
+**Subjects, by this document's own definitions.** R70 and R73 are good news: something good she brings home, kept small and true. R71 is an observation: something she noticed about herself, and she asks the parent for nothing. R72 is a worry: small, hers, not a crisis. R74 and R75 are decisions: a choice she wants to talk through. Here the choice is whether to look at other coaches, and the conversation is all it is. Nothing in these rows opens the coach market, hires or releases anyone, and no answer moves the bond, her spirits or the coach pair (ruling V2: her answers move nothing). Each subject keeps every row it had; the six new rows join a cell only while their fact is true.
+
+**What the lines were written against.**
+
+- **The gate licenses a feeling and nothing else.** She may say how it feels to be with this coach after months or a year; she may not say that the coach is good or bad, that she has improved or fallen back (the fog law, R45), or any result. Where a line says the drill changed, it is a texture of her telling, which nothing in the engine reads (the engine models no session).
+- **His register is doubt and never a verdict.** The cold rows (R72, R75) say practice is FINE first, in every voice, as R69 does, and then that it has not clicked or is not working for her. R72 says outright that she blames nobody; R75 asks to TALK and does not ask for anyone to go. The unsure rows say she cannot tell, and R71 says her answer moves from month to month, which is what the feel does (it is redrawn every four weeks). A girl who is sure (`good`, `off`) reads the same row as a girl who is not (`seems-good`, `seems-off`): the lines are true of both.
+- **The age is said in words that match the window.** The half-year rows say «months» or «half a year», never «a year»; the year rows say «a year» and never «months». The test keeps that, so a line cannot contradict the weeks the fact stands on.
+- **The coach is never pronoun-ed and never gendered (R15-7).** «My coach» and «the coach» as nouns only, and no line that names the coach carries a third-person pronoun. The Russian keeps the same discipline: no past-tense verb or adjective takes the coach as its subject (where the English says the coach changed the drill, the Russian says the drill was changed).
+- No «today», no exclamation mark (the fiery voice carries its edge in short verdicts), no digit, no long dash. Her replies describe what she noticed or what she will do with the thought, never a pattern of her own tennis (R34's finding).
+- The facts are the same in all four voices. Each invite reply adds one fact of its own, and the respond and space replies add none.
+- Every new line was searched for in `src/` before it was emitted (round 51's «Nobody argued.» sat in `albumCorpus.ts` too and turned an album test red at the closing gate); the sweep is kept in `tests/r52-coach-feel-talk.test.ts`.
+
+**The arithmetic after these six**, derived by `tools/small-talk-corpus-parse.ts` rather than carried: 74 rows, 296 openers, 222 labels, 888 replies and 20 shared beats (a good news, an observation, a worry and a decision have no second beat). The figures in the older sections are of the 51, 55, 58, 61, 65 and 68 and stay as the record of the passes that produced them.
+
+**Measured after** (14.10, the tree this addendum ships with).
+
+**The facts and the roll.** Over a grid of five careers, fourteen weeks and seven chemistry levels that reaches all six steps of the scale and both sides of every window edge (weeks 23|24, 43|44 and 47|48), each fact is true exactly when her feel is on its side and the stint is inside its window. Cut down to the six rows, the shipped roll raises each of them on a pose where its fact is true, raises a half-year row only on weeks 24 to 43 and a year row only from week 48, and none of the answers moves the bond, her spirits or the coach pair. A stint counted from the last hire reads the same: let go and hired back at week 100, week 124 is a half-year week and week 148 a year week. Six deliberate breaks of the leaf `coachFeel.ts`, each restored byte for byte, turn the test file red: the half-year window closing at 48 instead of 44 (5 tests), the year window opening at 44 instead of 48 (5), the cold year reading `unsure` as well (7), the college clause removed (1), and each edge moved by one week (4 and 6).
+
+**K4** (`npm run bench:smalltalk -- --seeds 60`): every cell passes. The six rows list school, after-school and independent, so each of those three stages gains two good news, one observation, one worry and two decisions; the reachable cells now read school 6 / 5 / 5 / 5, after-school 7 / 6 / 6 / 7 and independent 11 / 9 / 9 / 9 (good news / observation / worry / decision), and college is unchanged at 8 / 7 / 7 / 7 because the rows do not list it. **K2 and K3:** zero repeats wherever an alternative existed, in the posed career (adjacent 104/2340 → 0, within three 232/2340 → 0) and the bare one (115/2340 → 0, 233/2340 → 0) alike. **K5:** 74 situations · 296 voice columns; 29 voice columns flagged "never drawn": the three `march-entry-open` ones as before, eight of R67–R69 and eighteen of the new six. That is rarity and not unreachability: the bench's posed career poses a coach but neither a feel nor a stint age, and the half-year window is twenty weeks long.
+
+**How often a player meets one, before any checkpoint mechanism – still rare.** On played, coached careers (7 presets that start with a coach × 6 careers × 312 weeks = **252 coached years**; `R52_F4_SCALE=big R52_F4_REPORT=1 npx vitest run --project unit tests/r52-coach-feel-talk.test.ts -t "H2 R|H2 M"`) she talked 304 times and **16** of those conversations were a stint row: **0.063 a coached year**, against 0.052 for the three first-impression rows (13), so any of the nine coach-feel rows comes up about **0.115 a coached year – once in nine coached years**, where R67–R69 alone were once in nineteen. On the walk of the same file (36 careers × 24 years, a close bond, her level posed) the draw hands out 102 stint rows: `a-year-and-she-still-does-not-know` 41, `a-year-in-we-need-to-talk` 37, `a-year-and-she-would-not-swap` 22, `months-in-and-still-waiting` 2 and the two other half-year rows **none**, every one with its fact true at the roll. The half-year rows are the rare ones by construction: their window is twenty weeks of a stint, about one conversation, and each is one row among several in its subject. Ordinary small talk will not put the owner's «half a year» in front of a player; the checkpoint mechanism is what does, and that is the next item.
+
+**What it costs the pins that read the draw.** The six rows join a coached career's pool for part of every stint, and a situation is picked by position in the pool, so the digest pins that hash a played career move again (coach-travel-edge, succession-s1-start-year, the l3-7 twin and PICK-STABILITY in i18n-l3-5). They are not re-stamped here; with the six facts forced to false all thirteen of those files are green, which is the control that the rows, and nothing else in the change, moved them.
+
+### R70 · `half-a-year-and-it-fits` · good-news · school, after-school, independent · **fact: `coach-feel-warm-half`**
+**Kernel:** A few months into the stint, practice with her coach fits her. She is glad of it and says so plainly. She does not say the coach is the best, or that she has improved; only that it fits.
+**Authoritative claims:** `coach-feel-warm-half` – she has a coach, they have been together at least twenty-four weeks and fewer than forty-four, and her feel for the coach stands on the warm side of the scale, `seems-good` or `good`. It licenses that the arrangement fits her – **not** that the coach is good, that she has improved (the fog law, R45) or any result. ⚠ One set of lines serves both steps, so every voice keeps a clause that is true of the hedged step and of the confident one: «seems to», «so far», «I don't think».
+**Fixed in all four voices:** a few months in, practice with her coach fits her, and she says it plainly. Each invite reply carries the same fact: twice this month the drill changed just as she was getting restless, and she had not said anything. The respond stance takes the parent's gladness and the third lets her leave it unexplained; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"A few months in, and practice with my coach just fits. I noticed this week. I wanted you to know."` |
+| `fiery` | `"Months in, and practice finally makes sense. My coach seems to know what I need before I do. I'll only say it once."` |
+| `deep` | `"Months in, practice with my coach fits. I checked it against how I felt last month and the month before. It has held so far."` |
+| `quiet` | `"It's been a few months. I stopped looking at the clock in practice with my coach, and I only noticed this week."` |
+
+**Parent:** *Ask what she has noticed* · *Say you are glad it fits* · *Say she does not have to explain it*
+
+**invite** · *Ask what she has noticed*
+- `sunny` `"Twice this month my coach changed the drill right when I was getting restless. I hadn't said anything. It's a small thing, but I noticed."`
+- `fiery` `"Twice this month my coach changed the drill right as I got restless. I hadn't said a word. Make of that what you like."`
+- `deep` `"Twice this month my coach changed the drill at the moment I began to get restless. I had said nothing. I have thought about that more than I expected to."`
+- `quiet` `"Twice this month my coach changed the drill when I was getting restless. I hadn't said anything."`
+
+**respond** · *Say you are glad it fits*
+- `sunny` `"Thanks. It's nice to say it out loud to someone."`
+- `fiery` `"Good. So am I. Don't make a thing of it."`
+- `deep` `"Thank you. I waited a while to say it, so that it would not be something I said in a good week."`
+- `quiet` `"Thanks. I just thought you should know."`
+
+**space** · *Say she does not have to explain it*
+- `sunny` `"Okay, good, because I can't. It just fits."`
+- `fiery` `"Good, because I can't. It fits. That's the whole report."`
+- `deep` `"I could not explain it if I tried. It fits, and I am content to leave it there."`
+- `quiet` `"Okay. It just fits."`
+
+### R71 · `half-a-year-and-still-unsure` · observation · school, after-school, independent · **fact: `coach-feel-unsure-half`**
+**Kernel:** Half a year with her coach, and she still cannot say whether it is the right one. She says exactly that and asks the parent for nothing. What she has noticed is about her own mind: the answer changes from one month to the next.
+**Authoritative claims:** `coach-feel-unsure-half` – she has a coach, they have been together at least twenty-four weeks and fewer than forty-four, and her feel is `unsure`: the owner's «я пока не очень поняла», at half a year. It licenses that she has not made up her mind – **not** that this is the wrong coach, that anything about the training changed, or that she is better or worse. ⚠ «From one month to the next» is the engine's own truth said as a texture and not a number: her doubt is redrawn every four weeks.
+**Fixed in all four voices:** half a year with her coach, and she still cannot say whether it is the right one. Each invite reply carries the same fact: her answer changes from one month to the next. The respond stance takes the parent's view that half a year is not long, and the third lets her not know yet; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"It's been half a year with my coach, and I still can't tell if it's the right fit. I thought I'd know by now."` |
+| `fiery` | `"Half a year with my coach and I still can't say if it's the right one. You'd think I'd know by now."` |
+| `deep` | `"Half a year with my coach, and I have tried more than once to decide whether it is the right one. I cannot. Nothing has settled it either way."` |
+| `quiet` | `"Half a year with my coach, give or take. I'm still not sure what I think."` |
+
+**Parent:** *Ask what keeps her unsure* · *Say half a year is not that long to know* · *Say she does not have to know yet*
+
+**invite** · *Ask what keeps her unsure*
+- `sunny` `"It changes. Some months I'd say yes straight away, and the next month I'm not so sure. It doesn't settle."`
+- `fiery` `"It changes. One month I'd say yes, the next I'd say I don't know. It refuses to hold still. I'd like it to pick a side."`
+- `deep` `"My answer changes from one month to the next. In one I am nearly sure, and in the next I am not. I cannot find what moves it."`
+- `quiet` `"It changes month to month. This month I'm not sure."`
+
+**respond** · *Say half a year is not that long to know*
+- `sunny` `"Maybe not. I just thought it would be clearer by now."`
+- `fiery` `"Maybe. Half a year feels like plenty to me. Fine. I'll give it longer."`
+- `deep` `"Perhaps. I would still have liked to know by now. I will try to be patient with not knowing."`
+- `quiet` `"Maybe. I'll wait and see."`
+
+**space** · *Say she does not have to know yet*
+- `sunny` `"That helps. I'll stop quizzing myself every week."`
+- `fiery` `"Good. Then I'll stop asking myself every week. It hasn't helped."`
+- `deep` `"Thank you. It is a relief to be allowed not to know. I will say so when I do."`
+- `quiet` `"Okay. I'll let it be for now."`
+
+### R72 · `months-in-and-still-waiting` · worry · school, after-school, independent · **fact: `coach-feel-cold-half`**
+**Kernel:** Months in, practice with her coach is fine, and she keeps waiting for it to click. It has not. She does not blame anyone, and she brings it as a worry and not as a complaint.
+**Authoritative claims:** `coach-feel-cold-half` – she has a coach, they have been together at least twenty-four weeks and fewer than forty-four, and her feel stands on the cold side, `seems-off` or `off`: the owner's «вроде нормально, но…», at half a year. It licenses that it has not clicked for her yet – **not** that the coach is bad, that anything is wrong, or what would make it click. ⚠⚠ His register is doubt and never «всё плохо»: every voice says practice is FINE first, as R69 does, says «yet» or «not really», and the invite reply says she blames nobody. The confident step (`off`) reads the same row.
+**Fixed in all four voices:** months in, practice is fine, and she keeps waiting for it to click. Each invite reply carries the same fact: she is waiting for it to feel as though she and her coach are working on the same thing, and she blames nobody. The respond stance takes the parent's having waited for something too, and the third lets her decide nothing yet; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"It's been a few months and practice with my coach is fine. I'm still waiting for it to click, though. It hasn't yet."` |
+| `fiery` | `"It's been months. Practice with my coach is fine. I keep waiting for it to click. It hasn't, not really."` |
+| `deep` | `"Practice with my coach has been fine for months. I keep waiting for it to click. Lately I have started to wonder whether it will."` |
+| `quiet` | `"Months now, and practice with my coach is still fine. I keep waiting for it to be more than fine."` |
+
+**Parent:** *Ask what she is waiting for* · *Say you have waited for something to click too* · *Say she does not have to decide anything yet*
+
+**invite** · *Ask what she is waiting for*
+- `sunny` `"For it to feel like we're working on the same thing. I can't say it any better than that. I'm not blaming anyone."`
+- `fiery` `"For us to be working on the same thing. That's all. It's nobody's fault, so you can skip that question."`
+- `deep` `"For it to feel as if we are working on the same thing. I do not blame anyone for that. I only notice that it has not come."`
+- `quiet` `"For it to feel like we're working on the same thing. I'm not blaming anyone."`
+
+**respond** · *Say you have waited for something to click too*
+- `sunny` `"Did you? That helps, actually. I was worried I was being picky."`
+- `fiery` `"Then you know. It isn't nothing. It just sits there."`
+- `deep` `"Did you? Then I am a little less afraid that it is only me."`
+- `quiet` `"Oh. Okay. That helps a little."`
+
+**space** · *Say she does not have to decide anything yet*
+- `sunny` `"Good. I wasn't going to. I just needed to say it somewhere."`
+- `fiery` `"I wasn't going to decide anything. I just wanted it said."`
+- `deep` `"I know. I am not deciding. I only did not want to carry it alone."`
+- `quiet` `"Okay. I wasn't going to."`
+
+### R73 · `a-year-and-she-would-not-swap` · good-news · school, after-school, independent · **fact: `coach-feel-warm-year`**
+**Kernel:** A year with her coach, and she would not change it. She says so plainly, as something she has noticed and is glad of. She does not say the coach is the best, or that she has improved; only that she would not swap.
+**Authoritative claims:** `coach-feel-warm-year` – she has a coach, they have been together at least forty-eight weeks, and her feel stands on the warm side of the scale, `seems-good` or `good`. It licenses that she would stay – **not** that the coach is good, that she has improved (the fog law, R45) or any result. ⚠ One set of lines serves both steps: the hedged ones say «I don't think I'd», the confident ones say it flat, and every invite reply is true of both.
+**Fixed in all four voices:** a year with her coach, and she would not change it. Each invite reply carries the same fact: every session starts with her coach asking what she wants to work on, and after a year she still has an answer ready. The respond stance takes the parent's gladness and the third lets her simply enjoy it; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"A whole year with my coach already. I don't think I'd change a thing."` |
+| `fiery` | `"A whole year with my coach. I wouldn't swap it. There. I said it."` |
+| `deep` | `"A year with my coach. I have asked myself whether I would change it, more than once, and each time the answer was no."` |
+| `quiet` | `"A year with my coach, give or take. I wouldn't change anything."` |
+
+**Parent:** *Ask what she would miss* · *Say you are glad it has gone this way* · *Say it is fine to just enjoy it*
+
+**invite** · *Ask what she would miss*
+- `sunny` `"How my coach starts every session by asking what I want to work on. A year of it, and I still have an answer ready."`
+- `fiery` `"How every session starts. My coach asks what I want to work on. A year of that, and I still have an answer ready."`
+- `deep` `"That every session begins with my coach asking what I want to work on. I have answered that question for a year, and it has never been an empty ritual."`
+- `quiet` `"That every session starts with a question about what I want to work on. I've always had an answer."`
+
+**respond** · *Say you are glad it has gone this way*
+- `sunny` `"Me too. I didn't know a year could feel this short."`
+- `fiery` `"Good. I'm glad too. Don't tell my coach I said so."`
+- `deep` `"Thank you. A year is long enough for me to trust it, and I did not expect to say that."`
+- `quiet` `"Thanks. Me too."`
+
+**space** · *Say it is fine to just enjoy it*
+- `sunny` `"Okay. That's what I'll do."`
+- `fiery` `"I will. I'm not going to analyse it."`
+- `deep` `"I will try. I tend to look for the catch, and I would like to stop."`
+- `quiet` `"Okay. I will."`
+
+### R74 · `a-year-and-she-still-does-not-know` · decision · school, after-school, independent · **fact: `coach-feel-unsure-year`**
+**Kernel:** A year with her coach, and she still does not know whether it is the right one. She has started to wonder whether they should look around, and she asks the parent what they think. It is a question and not a request.
+**Authoritative claims:** `coach-feel-unsure-year` – she has a coach, they have been together at least forty-eight weeks, and her feel is `unsure`. It licenses that she has not decided and would like to talk about looking – **not** that this is the wrong coach, or that anyone should be replaced. ⚠ **Nothing here opens the coach market, hires or releases anyone**: «look around» is a thing she asks, and what the parent does with it is the parent's.
+**Fixed in all four voices:** a year with her coach, she still does not know, and she asks whether they should look around. Each invite reply carries the same fact: looking around would only mean looking, to see who else is out there, and she is not saying leave. The respond stance takes the parent's offer to look together and the third takes the parent's saying there is no hurry; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"It's been a year with my coach, and I honestly can't tell if it's right. Should we maybe look around?"` |
+| `fiery` | `"A year with my coach and I still don't know. Should we be looking around?"` |
+| `deep` | `"A year with my coach, and I still cannot say whether it is the right one. I have started to think we should look around, and I wanted to ask you before I decided anything."` |
+| `quiet` | `"A year with my coach, give or take. I still don't know. Do you think we should look around?"` |
+
+**Parent:** *Ask what looking around would mean* · *Say you could look around together* · *Say there is no hurry to decide*
+
+**invite** · *Ask what looking around would mean*
+- `sunny` `"Only looking. Seeing who else is out there. I'm not saying leave. I'd just like to know what the choice is."`
+- `fiery` `"Looking. That's all. Not leaving. I want to see what else there is, so that staying is a choice and not a habit."`
+- `deep` `"Only looking. I am not asking to leave. I would like to know what else exists, so that if I stay, I stay because I chose it."`
+- `quiet` `"Just looking. Not leaving. I'd like to know what else there is."`
+
+**respond** · *Say you could look around together*
+- `sunny` `"Together would be better. I wouldn't know where to start."`
+- `fiery` `"Together. Good. But I'm the one who says yes or no."`
+- `deep` `"I would like that. I would not want to do it alone, and I would not want it done for me."`
+- `quiet` `"Okay. Together is good."`
+
+**space** · *Say there is no hurry to decide*
+- `sunny` `"That's a relief. I'll keep going and see how it feels."`
+- `fiery` `"Fine. No hurry. But I'm not going to wonder forever."`
+- `deep` `"Thank you. I will keep going to practice and keep watching how I feel. I will tell you when it settles."`
+- `quiet` `"Okay. I'll keep going and see."`
+
+### R75 · `a-year-in-we-need-to-talk` · decision · school, after-school, independent · **fact: `coach-feel-cold-year`**
+**Kernel:** A year in, practice with her coach is fine, and it still is not working for her. She thinks they should talk about it. She has not decided anything, and she wants the parent in the conversation.
+**Authoritative claims:** `coach-feel-cold-year` – she has a coach, they have been together at least forty-eight weeks, and her feel stands on the cold side, `seems-off` or `off`. It licenses that she wants to talk – **not** that the coach is bad, that anything is wrong, or that the coach must go. ⚠⚠ This is the owner's «тот тренер или лучше поменять» put into her mouth as a conversation, and it keeps his register: practice is FINE first, in every voice; it still does not land; and she asks to TALK. The confident step (`off`) reads the same row, because a girl who is sure something is not working may still not know the answer. Nothing here opens the coach market, hires or releases anyone.
+**Fixed in all four voices:** a year in, practice is fine and it still is not working for her, and she thinks they need to talk about it. Each invite reply carries the same fact: what she wants to talk about is whether this is the right coach for her, and she does not know the answer. The respond stance takes the parent's wish to talk it through and the third lets her start when she is ready; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"A year in, and practice with my coach is fine, but it still isn't working for me. I think we should talk about it."` |
+| `fiery` | `"A year in. Practice with my coach is fine, and it still isn't working. I think we need to talk about it."` |
+| `deep` | `"Practice with my coach has been fine for a year, and it has never quite felt right. I have thought about this for a long time, and I think we need to talk."` |
+| `quiet` | `"A year of practice with my coach, give or take. It's fine, and it still isn't working. Can we talk about it?"` |
+
+**Parent:** *Ask what she wants to talk about* · *Say you would like to talk it through* · *Say she can start whenever she is ready*
+
+**invite** · *Ask what she wants to talk about*
+- `sunny` `"Whether this is the right coach for me. I don't know the answer. I only know I can't keep not asking."`
+- `fiery` `"Whether this is the right coach for me. I don't have the answer. I'm done pretending I'm not asking."`
+- `deep` `"Whether this is the right coach for me. I do not know the answer, and I do not think it is anyone's fault. I only know I cannot go on not asking."`
+- `quiet` `"Whether this is the right coach for me. I don't know. I just can't keep not asking."`
+
+**respond** · *Say you would like to talk it through*
+- `sunny` `"Thank you. I was a bit scared to bring it up."`
+- `fiery` `"Good. That's all I wanted. Talking. We can argue about the rest later."`
+- `deep` `"Thank you. I was afraid that asking would sound like an accusation. I only want it to be a question."`
+- `quiet` `"Okay. Thanks. I'd like that."`
+
+**space** · *Say she can start whenever she is ready*
+- `sunny` `"Okay. I want to find the words first."`
+- `fiery` `"Fine. Soon, though. I've waited a year already."`
+- `deep` `"Thank you. I will say it when I can say it without making it worse."`
+- `quiet` `"Okay. I'll let you know."`
+
 ---
 
 ## P3.7 The corpus at 43, and the whole document at 51 – counted by script, not claimed

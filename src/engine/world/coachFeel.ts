@@ -32,6 +32,13 @@ export function coachPairAffinity(world: WorldState, coach: Coach): number {
   return affinityFor(world.seed, coach.id, world.temperament, coach.manner)
 }
 
+/** ⭐ THE STINT'S AGE IN WEEKS – the ONE spelling (round 52 H2, 14.10). Her feel, the week notes' period test and the half-year and year facts of R70–R75
+ *  all ask «how long has she had THIS coach», and three inline copies of `world.week - coachSinceWeek(world)` is how the feel and the window that gates a
+ *  conversation about it would come to disagree by a week. It restarts on every hire and every release (`coachSinceWeek`'s own rule). Pure, zero draws. */
+export function coachWeeksTogether(world: WorldState): number {
+  return world.week - coachSinceWeek(world)
+}
+
 /** ⭐⭐⭐ HOW SHE FEELS ABOUT THE COACH SHE HAS RIGHT NOW – `null` when nobody is employed (the parent on the court has
  *  no coach to feel anything about; the snapshot then carries no key at all, see `Snapshot.coachFeel`).
  *
@@ -49,7 +56,7 @@ export function coachFeel(world: WorldState): CoachFeel | null {
   return coachFeelOf(
     world.coachPairs?.[coach.id],
     coachPairAffinity(world, coach),
-    world.week - coachSinceWeek(world),
+    coachWeeksTogether(world),
     world.seed,
     coach.id,
   )
@@ -74,6 +81,74 @@ export function coachFeel(world: WorldState): CoachFeel | null {
  *  hunch and the note must be the same answer. Derived, nothing persisted, zero draws. */
 export function coachFeelRead(world: WorldState, feel: CoachFeel | null): Exclude<CoachFeel, 'too-early'> | null {
   if (feel === null || feel === 'too-early') return null
-  const weeksTogether = world.week - coachSinceWeek(world)
+  const weeksTogether = coachWeeksTogether(world)
   return weeksTogether > 0 && weeksTogether % COACH_FEEL.periodWeeks === 0 ? feel : null
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// ⭐⭐ ROUND 52 H2 (14.10) – THE STINT'S WINDOWS: the six facts of R70–R75 (half a year together, a year together)
+// ---------------------------------------------------------------------------------------------------------------------
+// The owner: «нам это важно и критично как раз знать не один раз в 19 лет, а в первые год-два сотрудничества, чтобы понять это "тот" тренер или лучше
+// поменять». R67–R69 (the hub's `coach-feel-warm / -unsure / -cold`) are her first impression; these six are the same three sides at two later ages of the stint.
+//
+// ⚠ WHY THE TABLE LIVES IN THIS LEAF AND NOT IN THE HUB. `lifeBeat.ts` sits at its A-06 ceiling (`tests/principles-a06-life-beat-direction.test.ts`), and a
+// fact that reads her feel and the stint's age is a read of THIS module's own two things. The hub spreads the table into `SMALL_TALK_FACT` and hands it
+// `inCollege` (the C-07 clause, college.ts): the leaf cannot import the hub, and importing college.ts here would drag its fan-out into a module whose whole
+// point is that nothing it imports reaches back. Passing the question in keeps ONE spelling of «is she at college this week».
+
+/** Weeks together at which the half-year talks open: six feel periods (`COACH_FEEL.periodWeeks` is 4), half a year rounded DOWN to a period boundary, where her
+ *  feel has just been redrawn. The design's checkpoints are weeks 12 / 32 / 56 (first impression, half a year, a year); 32 sits eight weeks inside. */
+export const COACH_TALK_HALF_YEAR_FROM_WEEK = 24
+/** …and closes: eleven periods, twelve weeks AFTER the half-year checkpoint, so a checkpoint week taken by another beat can try again and still be true. It is
+ *  four weeks before the year window opens: «months» and «a year» are never both true, and no line says one while the stint is the other. */
+export const COACH_TALK_HALF_YEAR_UNTIL_WEEK = 44
+/** Weeks together at which the year talks open: twelve periods, a year rounded DOWN to a period; the year checkpoint (56) sits eight weeks inside. */
+export const COACH_TALK_YEAR_FROM_WEEK = 48
+/** ⚠ NO CEILING, AS BRIEFED: «a year» is a floor and the stint does not get younger. It makes «a year in» loose in a stint of three years; if the owner wants it
+ *  tighter this is the one constant (the facts read it, the spec's addendum names it). */
+export const COACH_TALK_YEAR_UNTIL_WEEK = Number.POSITIVE_INFINITY
+
+/** The three SIDES of the scale, spelled as the hub spells them for R67–R69 (`coach-feel-warm / -unsure / -cold`). ⚠ Two spellings of one thing: the parity test
+ *  in `tests/r52-coach-feel-talk.test.ts` (section L) holds them together, inside the windows, over a grid that reaches every step. `too-early` is in none. */
+const WARM_SIDE: readonly CoachFeel[] = ['seems-good', 'good']
+const UNSURE_SIDE: readonly CoachFeel[] = ['unsure']
+const COLD_SIDE: readonly CoachFeel[] = ['seems-off', 'off']
+
+export const COACH_FEEL_STINT_FACTS = [
+  'coach-feel-warm-half',
+  'coach-feel-unsure-half',
+  'coach-feel-cold-half',
+  'coach-feel-warm-year',
+  'coach-feel-unsure-year',
+  'coach-feel-cold-year',
+] as const
+export type CoachFeelStintFact = (typeof COACH_FEEL_STINT_FACTS)[number]
+
+/** The hub's fact signature: the world, and the pass's ONE lazy read of her feel (R52 F5). Declared here because this leaf must not import the hub's type. */
+type StintFactRead = (world: WorldState, feelOnce: () => CoachFeel | null) => boolean
+
+/** ⭐⭐ THE SIX FACTS, as the hub's `SMALL_TALK_FACT` entries: her feel on one side AND the stint inside one window. `refuse` is the hub's `inCollege` – the coach does
+ *  not work in college weeks, so a girl in a dorm has no stint to be a year into.
+ *
+ *  ⚠ THE CHEAP CLAUSES FIRST AND THE FEEL LAST: no coach and college need no read, and outside its window a fact never asks `feelOnce` at all, so a career in
+ *  its second week of a stint costs the pass nothing. `coachFeel` is `null` with nobody employed and `null` is in no side. Pure and zero-draw: the only
+ *  randomness is the feel's own purpose-scoped sub-stream, never MAIN. */
+export function coachFeelStintFacts(refuse: (world: WorldState) => boolean): Record<CoachFeelStintFact, StintFactRead> {
+  const read =
+    (from: number, until: number, side: readonly CoachFeel[]): StintFactRead =>
+    (world, feelOnce) => {
+      if (world.coachId === null || refuse(world)) return false
+      const weeks = coachWeeksTogether(world)
+      if (weeks < from || weeks >= until) return false
+      const feel = feelOnce()
+      return feel !== null && side.includes(feel)
+    }
+  return {
+    'coach-feel-warm-half': read(COACH_TALK_HALF_YEAR_FROM_WEEK, COACH_TALK_HALF_YEAR_UNTIL_WEEK, WARM_SIDE),
+    'coach-feel-unsure-half': read(COACH_TALK_HALF_YEAR_FROM_WEEK, COACH_TALK_HALF_YEAR_UNTIL_WEEK, UNSURE_SIDE),
+    'coach-feel-cold-half': read(COACH_TALK_HALF_YEAR_FROM_WEEK, COACH_TALK_HALF_YEAR_UNTIL_WEEK, COLD_SIDE),
+    'coach-feel-warm-year': read(COACH_TALK_YEAR_FROM_WEEK, COACH_TALK_YEAR_UNTIL_WEEK, WARM_SIDE),
+    'coach-feel-unsure-year': read(COACH_TALK_YEAR_FROM_WEEK, COACH_TALK_YEAR_UNTIL_WEEK, UNSURE_SIDE),
+    'coach-feel-cold-year': read(COACH_TALK_YEAR_FROM_WEEK, COACH_TALK_YEAR_UNTIL_WEEK, COLD_SIDE),
+  }
 }

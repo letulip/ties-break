@@ -128,12 +128,13 @@ describe('round 51 (continuation) A – the observation cell is no longer empty'
     }
   })
 
-  it('the three are ordinary rows – ungated, observation, four-voiced, school and after-school, NO second beat – and they sit ten from the end (R60–R69 follow them)', () => {
+  it('the three are ordinary rows – ungated, observation, four-voiced, school and after-school, NO second beat – and they sit sixteen from the end (R60–R75 follow them)', () => {
     // ⚠ RE-AIMED 14.10 (r51 continuation, builder E2): «the last three» became «the three before the last three» when R60–R62 (tests/round51-school-curiosity-goodnews-pool.test.ts) were appended after them; the order of what was there did not move.
     // ⚠ RE-AIMED AGAIN 14.10 (r51 continuation, builder E3): «the three before the last three» became «the three before the last seven» when R63–R66 (tests/round51-school-worry-decision-pool.test.ts) were appended after R60–R62; the order of what was there did not move.
     expect(
       // ⚠ RE-AIMED A FIFTH TIME 14.10 (r52, builder F4): «the last seven» became «the last ten» when R67–R69 (tests/r52-coach-feel-talk.test.ts) were appended after R66; the order of what was there did not move.
-      SMALL_TALK_SITUATIONS.slice(-13, -10).map((s) => s.id),
+      // ⚠ RE-AIMED A SIXTH TIME 14.10 (r52, builder H2): «the last ten» became «the last sixteen» when R70–R75 (tests/r52-coach-feel-talk.test.ts) were appended after R69; the order of what was there did not move.
+      SMALL_TALK_SITUATIONS.slice(-19, -16).map((s) => s.id),
       'appended last: a pool of a different length reads a different position, but the order of what was there does not move',
     ).toEqual([...NEW_OBSERVATIONS])
     for (const id of NEW_OBSERVATIONS) {

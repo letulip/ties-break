@@ -236,7 +236,8 @@ describe('§2 her line – the ref renders to the line over every reachable tupl
     // ⭐ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E2): 5248 → 5448 (+200 = the two curiosities' two stages (school, after-school) x 4 voices x 10, plus the good news' one stage (school) x 4 voices x 10; ten is the row's own frame or none plus the presence's nine).
     // ⭐ RE-AIMED A FOURTH TIME 14.10 (r51 continuation, builder E3): 5448 → 5728 (+280 = the film worry's one stage (school) x 4 voices x 10, plus the other three rows' two stages (school, after-school) x 4 voices x 10 each; ten is the row's own frame or none plus the presence's nine).
     // ⭐ RE-AIMED A FIFTH TIME 14.10 (r52, builder F4): 5728 → 6088 (+360 = three rows x their three stages (school, after-school, independent) x 4 voices x 10; ten is the row's own frame or none plus the presence's nine).
-    expect(walked['small-talk'], 'small talk: 68 situations x their voices x their stages x (the row\'s own frame or none + the presence\'s nine) + the three legacy subjects x 4 voices x 4 stages').toBe(6088)
+    // ⭐ RE-AIMED A SIXTH TIME 14.10 (r52, builder H2): 6088 → 6808 (+720 = six rows x their three stages (school, after-school, independent) x 4 voices x 10; ten is the row's own frame or none plus the presence's nine).
+    expect(walked['small-talk'], 'small talk: 74 situations x their voices x their stages x (the row\'s own frame or none + the presence\'s nine) + the three legacy subjects x 4 voices x 4 stages').toBe(6808)
     expect(walked['fork-opinion']).toBe(3 * 4 * 3 * 4 * 3)
   })
 
@@ -299,7 +300,7 @@ describe('§3 the headings – every one any axis can produce is a catalog key (
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // §4 – her replies
 // ---------------------------------------------------------------------------------------------------------------------------------------------
-describe('§4 her replies – each follow-up paragraph has its seat, over the 68 situations and the fork\'s continuation', () => {
+describe('§4 her replies – each follow-up paragraph has its seat, over the 74 situations and the fork\'s continuation', () => {
   it('small talk: every situation x voice x stance carries a ref per paragraph that renders to it (the shared second beat included)', () => {
     let paragraphs = 0
     let shared = 0
@@ -327,7 +328,8 @@ describe('§4 her replies – each follow-up paragraph has its seat, over the 68
     // ⭐ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E2): 696 → 732 replies (+36 = three more rows x 4 voices x 3 stances); the 20 shared second beats are untouched, a curiosity and a good news have none.
     // ⭐ RE-AIMED A FOURTH TIME 14.10 (r51 continuation, builder E3): 732 → 780 replies (+48 = four more rows x 4 voices x 3 stances); the 20 shared second beats are untouched, a worry and a decision have none.
     // ⭐ RE-AIMED A FIFTH TIME 14.10 (r52, builder F4): 780 → 816 replies (+36 = three more rows x 4 voices x 3 stances); the 20 shared second beats are untouched, a good news, an observation and a worry have none.
-    expect(paragraphs, '816 replies + the 20 shared second beats across the three stances of their columns').toBe(816 + 20 * 3)
+    // ⭐ RE-AIMED A SIXTH TIME 14.10 (r52, builder H2): 816 → 888 replies (+72 = six more rows x 4 voices x 3 stances); the 20 shared second beats are untouched, a good news, an observation, a worry and a decision have none.
+    expect(paragraphs, '888 replies + the 20 shared second beats across the three stances of their columns').toBe(888 + 20 * 3)
     // ⭐ RE-AIMED 14.10 (r51 №17): 4 x 3 = 12 → 20 x 3 = 60 (court-four's four columns plus the four new stories' sixteen).
     expect(shared, 'the twenty `story` columns, three stances each').toBe(60)
   })
@@ -438,7 +440,7 @@ describe('§5b the announcement\'s PROMPT, through the real assembly – the poo
 /** Corpus strings the CATALOG does not carry, by family. The whole corpus file is a census copy home, so this is 0 – and it can only fall. */
 const OUTSIDE_CATALOG = { openers: 0, labels: 0, replies: 0, shared: 0 } as const
 
-describe('§6 the 68-situation corpus', () => {
+describe('§6 the 74-situation corpus', () => {
   const openers = new Set<string>()
   const labels = new Set<string>()
   const replies = new Set<string>()
@@ -457,18 +459,19 @@ describe('§6 the 68-situation corpus', () => {
       }
     }
 
-  it('is 68 situations in 272 voice columns: 272 openers, 816 replies, 20 shared second beats (the corpus header\'s own numbers)', () => {
+  it('is 74 situations in 296 voice columns: 296 openers, 888 replies, 20 shared second beats (the corpus header\'s own numbers)', () => {
     // ⭐ RE-AIMED 14.10 (r51 №17): 51/204/612/4/145 → 55/220/660/20/157 – four school-years stories, twelve new distinct labels.
     // ⭐ RE-AIMED AGAIN 14.10 (r51 continuation, builder E1): 55/220/660/20/157 → 58/232/696/20/166 – three school-years observations, nine new distinct labels, no second beat.
     // ⭐ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E2): 58/232/696/20/166 → 61/244/732/20/175 – two school-years curiosities and a good news, nine new distinct labels, no second beat.
     // ⭐ RE-AIMED A FOURTH TIME 14.10 (r51 continuation, builder E3): 61/244/732/20/175 → 65/260/780/20/187 – two school-years worries and two decisions, twelve new distinct labels, no second beat.
     // ⭐ RE-AIMED A FIFTH TIME 14.10 (r52, builder F4): 65/260/780/20/187 → 68/272/816/20/196 – a good news, an observation and a worry behind a coach-feel fact, nine new distinct labels, no second beat.
-    expect(SMALL_TALK_SITUATIONS.length).toBe(68)
-    expect(columns).toBe(272)
-    expect(openers.size).toBe(272)
-    expect(replies.size).toBe(816)
+    // ⭐ RE-AIMED A SIXTH TIME 14.10 (r52, builder H2): 68/272/816/20/196 → 74/296/888/20/214 – six stint situations (R70–R75) behind a coach-feel fact and a window of weeks together, eighteen new distinct labels, no second beat.
+    expect(SMALL_TALK_SITUATIONS.length).toBe(74)
+    expect(columns).toBe(296)
+    expect(openers.size).toBe(296)
+    expect(replies.size).toBe(888)
     expect(shared.size).toBe(20)
-    expect(labels.size, 'distinct stance labels').toBe(196)
+    expect(labels.size, 'distinct stance labels').toBe(214)
   })
 
   it('every opener, label, reply and shared beat is a catalog key and seatable (OUTSIDE_CATALOG for the corpus: 0)', () => {

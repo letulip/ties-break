@@ -125,14 +125,15 @@ describe('round 44 – the committed corpus IS the document', () => {
     // ⚠ RE-AIMED A FOURTH TIME 14.10 (r51 continuation, builder E3): 61 → 65 rows, 244 → 260 openers, 183 → 195 labels, 732 → 780 replies; shared stays 20. Two school-years worries and two decisions
     // (R63–R66) were appended LAST, after R60–R62, so the first 61 keep their order; neither subject has a second beat.
     // ⚠ RE-AIMED A FIFTH TIME 14.10 (r52, builder F4): 65 → 68 rows, 260 → 272 openers, 195 → 204 labels, 780 → 816 replies; shared stays 20. A good news, an observation and a worry behind a coach-feel fact (R67–R69) were appended LAST, after R66, so the first 65 keep their order; none of the three has a second beat.
-    expect(counts, 'the document parses completely – 68 rows, 272 openers, 204 labels, 816 replies, 20 shared').toEqual({
-      rows: 68,
-      openers: 272,
-      labels: 204,
-      replies: 816,
+    // ⚠ RE-AIMED A SIXTH TIME 14.10 (r52, builder H2): 68 → 74 rows, 272 → 296 openers, 204 → 222 labels, 816 → 888 replies; shared stays 20. Six stint situations behind a coach-feel fact and a window of weeks together (R70–R75) were appended LAST, after R69, so the first 68 keep their order; none of the six has a second beat.
+    expect(counts, 'the document parses completely – 74 rows, 296 openers, 222 labels, 888 replies, 20 shared').toEqual({
+      rows: 74,
+      openers: 296,
+      labels: 222,
+      replies: 888,
       shared: 20,
     })
-    expect(SMALL_TALK_CORPUS.length, 'and the committed catalogue holds the same 68').toBe(68)
+    expect(SMALL_TALK_CORPUS.length, 'and the committed catalogue holds the same 74').toBe(74)
     expect(CORPUS_VOICES.length, 'four voices').toBe(4)
     expect(CORPUS_STANCES.length, 'three stances').toBe(3)
     // ⭐⭐ ROUND 44's SECOND HALF, AND THE NUMBER IS THE WHOLE CLAIM: 51 and not 43. The eight
@@ -140,11 +141,11 @@ describe('round 44 – the committed corpus IS the document', () => {
     // while the 43 were generated, so this pin covered five sixths of the catalogue and the sixth it
     // did not cover was the sixth an agent could retype. `SMALL_TALK_SHIPPED` is gone; the engine's
     // whole catalogue is this array, which is what the next case asserts from the other side.
-    expect(SMALL_TALK_SITUATIONS.length, 'and the ENGINE\'s catalogue is exactly the document – no hand-written half left').toBe(68)
+    expect(SMALL_TALK_SITUATIONS.length, 'and the ENGINE\'s catalogue is exactly the document – no hand-written half left').toBe(74)
     expect(SMALL_TALK_SITUATIONS.map((s) => s.id), 'the same rows, in the same order').toEqual(SMALL_TALK_CORPUS.map((s) => s.id))
   })
 
-  it('⭐ the committed catalogue holds exactly the document\'s 68 rows, by id and in the document\'s order', () => {
+  it('⭐ the committed catalogue holds exactly the document\'s 74 rows, by id and in the document\'s order', () => {
     expect(SMALL_TALK_CORPUS.map((s) => s.id), 'id for id, in order').toEqual(DOC.map((r) => r.id))
     // ⚠⚠ AND THE EIGHT ARE FIRST, BY THE IDS THEY SHIPPED WITH. An id is PERSISTED as half of a
     // `lifeLog` row's `detail`, so a rename orphans an old career's record of a conversation that
@@ -172,7 +173,7 @@ describe('round 44 – the committed corpus IS the document', () => {
     }
   })
 
-  it('⭐⭐⭐ every one of the 272 openers is the document\'s, character for character', () => {
+  it('⭐⭐⭐ every one of the 296 openers is the document\'s, character for character', () => {
     let compared = 0
     for (const row of DOC) {
       const s = builtFor(row)
@@ -183,10 +184,10 @@ describe('round 44 – the committed corpus IS the document', () => {
         compared++
       }
     }
-    expect(compared, 'all 272 openers were compared, not a subset').toBe(272)
+    expect(compared, 'all 296 openers were compared, not a subset').toBe(296)
   })
 
-  it('⭐⭐ the five two-beat rows\' 20 shared lines are the document\'s too, and the other 63 carry none', () => {
+  it('⭐⭐ the five two-beat rows\' 20 shared lines are the document\'s too, and the other 69 carry none', () => {
     // ⚠⚠ THE HOLE THIS CLOSES IS THE REASON THE EIGHT COULD NOT MOVE WITHOUT IT. `court-four` is a
     // `story`, and §8d.2 of the exchange spec makes a story TWO beats: the incident is heard by every
     // route before its own branch, and it is told in her own words, so it is per voice. The document
@@ -213,10 +214,11 @@ describe('round 44 – the committed corpus IS the document', () => {
     }
     expect(withBeat, 'the five stories with a second beat (court-four and the four school-years ones), in all four voices').toBe(20)
     // ⚠ RE-AIMED 14.10 (r52, builder F4): 60 → 63 rows without a second beat, 240 → 252 voice columns; R67–R69 have none.
-    expect(without, 'and the other sixty-three rows carry none').toBe(252)
+    // ⚠ RE-AIMED A SECOND TIME 14.10 (r52, builder H2): 63 → 69 rows without a second beat, 252 → 276 voice columns; R70–R75 have none.
+    expect(without, 'and the other sixty-nine rows carry none').toBe(276)
   })
 
-  it('⭐⭐ every one of the 204 stance labels is the document\'s, in the document\'s own order', () => {
+  it('⭐⭐ every one of the 222 stance labels is the document\'s, in the document\'s own order', () => {
     // ⚠ THE LABEL IS ONE PER SITUATION PER STANCE and the four voices carry the SAME words – the
     // parent says one thing. The document writes it once on the row's `**Parent:**` line and again as
     // each block's header, and the parser refuses a mismatch; this asserts the catalogue agrees with
@@ -233,10 +235,10 @@ describe('round 44 – the committed corpus IS the document', () => {
         compared++
       }
     }
-    expect(compared, 'all 204 labels were compared, not a subset').toBe(204)
+    expect(compared, 'all 222 labels were compared, not a subset').toBe(222)
   })
 
-  it('⭐⭐⭐ every one of the 816 replies is the document\'s, character for character', () => {
+  it('⭐⭐⭐ every one of the 888 replies is the document\'s, character for character', () => {
     let compared = 0
     for (const row of DOC) {
       const s = builtFor(row)
@@ -249,7 +251,7 @@ describe('round 44 – the committed corpus IS the document', () => {
         }
       }
     }
-    expect(compared, 'all 816 replies were compared, not a subset').toBe(816)
+    expect(compared, 'all 888 replies were compared, not a subset').toBe(888)
   })
 
   it('⚠ R3\'s key carries no apostrophe – it is PERSISTED into `lifeLog` and compared in the exclusion sets', () => {
