@@ -15,53 +15,48 @@ last-reviewed: 2026-10-14
   corpus sketches `99d1e8ba`, strip scroll + the №18 proof `7d0715e3`, kid-tile wraps `c4440ab8`,
   the overflow sweep + four fixes `73d00fd3`.
 - Item 14 (both-languages law) is in the localization contract §8, CLAUDE.md, both skills.
-- Item 8 answered (flavor-only) and reopened as a design question by the owner's evening word.
+- THE CONTINUATION (his morning answers of 14.10, all in the ledger and decisions.md): Heavy →
+  «Мрачная» and every round DRAFT row he passed marked APPROVED (ru.json compiled byte-identical);
+  the dynasty's opening cash capped at $288,000, house and car on top (`a5b28ced`); item 8 built to
+  the recommendation – the `view` answer to `coach-real` opens the current pair's chemistry reading
+  and adds a band-true hunch line (`e52bdeaa`); the thin school-years small-talk subjects filled in
+  both languages – ten ungated situations R57–R66 (`fc0f5f23`, `fdb3221c`, `7059d411`), every
+  subject × stage cell at the K4 floor, the final school mix within 1.5 points of the engine's
+  own weights.
 - NO schema move the whole round. The frozen MAIN capture is unmoved (41550 / `e6b0c709`).
-- Twin fixtures re-captured on the final tree, both platforms, field-reviewed (`d5603222`):
-  darwin exactly 14 leaves (world+lifeLog ×7 – B11/B12 picks), linux exactly 28 (the same + the
-  B8 snapshot/coachMarket pairs its older base lacked). Zero text/row/draw digests.
 
-## Open (the owner's morning review – «Утренняя вычитка» section of the round ledger)
-- Applied evening rulings 13.10: pill-strip scroll not wrap; cash-only coach strip; bank-model
-  withdrawals; the car thread closed; default epoch confirmed 2031.
-- Questions queued: №8 design options (recommended: the beat's answer opens the pair's chemistry
-  reading – ⚖ 14.10 «давай по рекомендации», built); inheritance ceiling (⚖ 14.10: $288,000 cash,
-  house and car on top – built `a5b28ced`); chemistry pace knob (parked by his word);
-  tournament names raw app-wide; B9's part-sale-never-names-a-loss confirmation; B12's 49% story
-  share + thin school subjects; briefing copy still promises «every Slam is required» without the
-  cap exception; «Травмирована» third soft-hyphen candidate; sub-360 polish notes.
-- DRAFT strings for his live edit: mood table (RU22-MOOD), Specialists (RU21-STF + four woken
-  RU-06 rows), coach phrases (RU23-CMK-49..58, the advice-register note), chemistry card
-  (RU23-CHM-01..07), staycation notes (RU09D-STW-01..03), four corpus situations (10C §17-§22),
-  two soft hyphens in his mood words.
+## Open
+- He tries the bank model in play and reports (№19 «давай так попробуем»).
+- Chemistry pace parked by his word – with one new measurement for it: at a year the model leans
+  COLD (bench B13: warm 21 / even 38 / cold 41 %), the existing model's shape.
+- Still his: the season briefing promises «every Slam is required» with no cap exception;
+  «Травмирована» as a third soft-hyphen candidate; sub-360 polish; one more ungated row in four
+  school cells would make «3 per cell» true on a bare career (each holds one gated row).
+- DRAFT strings for his live edit (new today): the twelve hunch lines RU51-HNC-01..12, the ten
+  school situations (10C §22–§34).
 
 ## Files touched (beyond the per-item lists in the ledger)
-- tests: s1 digests+exemptions, t514 shim re-point, l2-6 LOCKED_DETAIL allowance removed,
-  l3-4/l3-5 digests, coachTravelEdgeFixtures 65 cells, twin fixtures+header.
-- src/composables/startYear.ts header exception note; docs/localization shelf-row retirement.
+- tests: s1 digests (twice) + exemptions, t514 shim re-point, l2-6 LOCKED_DETAIL allowance removed,
+  l3-4/l3-5 digests, coachTravelEdgeFixtures (74 cells, five passes), twin fixtures+header;
+  tests/helpers/schoolTranche.ts (shared tranche helpers).
+- src/composables/startYear.ts header exception note; docs/localization shelf-row retirement and
+  the APPROVED flips.
 
 ## Gates
-All verdicts from sentinel files (mtime checked fresher than each run), clean worktree
-`../tb-r51-gate` (npm ci), EVERY ONE at the single final SHA `8f529171`:
-- check: GREEN – `R51_CHECK_EXIT=0` (/tmp/r51-gate-check3.log; component 320/320 files, unit green
-  in 380s, build + install-size + every doc/registry gate inside).
-- sim: GREEN – `R51_SIM_EXIT=0`, 13 files in 377s (/tmp/r51-gate-sim2.log). An earlier green run at
-  the pre-fixture SHA was DISCARDED and re-run when the last tail commit touched an engine file –
-  no «outside the inputs» caveat was left to claim.
-- e2e: GREEN – `R51_E2E_EXIT=0`, 145 journeys in 56s (/tmp/r51-gate-e2e2.log; 139 + the round's
-  money-tabs and overflow-sweep specs).
-- lqa:ru: GREEN – `R51_LQA_EXIT=0`, 0 English keys / 0 lookups, all routes (/tmp/r51-gate-lqa2.log).
-- container twin: GREEN – `R51_CONTAINER_EXIT=0`, twin 6/6 on podman linux/amd64 node:22 with
-  `npm ci` in the container (scratchpad l37-out/twin-gate.log); VM stopped after.
-The closing chain caught and closed three cross-wave tails the builders' targeted runs could not
-see: the prior-schemas digest family (nine more cells – the fourth coach-travel pass), the R56
-reply colliding with an album-corpus line, and the carpet inventory for ChemistryHelpDialog.
+All verdicts from sentinel files (mtime checked fresher than each run), clean worktree with
+`npm ci`, every one at the single final SHA named here:
+- check / sim / e2e / lqa:ru / container twin: PENDING (the continuation's chain)
+The first chain (night, at `8f529171`) was green end to end; the continuation re-runs everything.
 Known shared-checkout-only red: tools:registry (another session's staged devlog files) – green in
 the clean worktree by design.
 
 ## Process notes for the next wave
 - A reporting builder's digest-red list is the TOP of the iceberg: the runner stops at the first
-  red assertion per arm (coach-travel was 65 cells, not the reported 8). Harvest mechanically.
+  red assertion per arm (coach-travel was 74 cells, not the reported 8; l3-5's '0/1' hid behind
+  '5/0'). Harvest mechanically, every pin of every family file, in one process.
+- ⚠ An attribution «by exclusion» is a guess: the overnight '0/1' one (soft hyphens) was wrong –
+  that digest hashes English engine strings – and is withdrawn in place. Read what a digest hashes
+  before naming its cause.
 - The commit-before-verdict batch ordering slipped once more this round (coach-travel first pass);
   the fix landed in the following commit. Read the verdict, then commit.
-- i18n:extract skips untracked .vue files (`git add -N` first) – B8's find, guard queued.
+- i18n:extract skips untracked files (`git add -N` first) – B8's find, guard queued.
