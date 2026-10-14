@@ -8,7 +8,7 @@
 //   · THE CATALOG – every key a played career emits has its Russian row, and the one hole that is a WORD (the table's name) has its hole-table row.
 // No draw anywhere (the refs are pure), and none is added to MAIN: the position of the main stream is compared across a snapshot.
 //
-// ⚠ NO CYRILLIC IS TYPED HERE – the Russian side of this item is mounted in tests/component/i18n-r51-b4-coach-caution.test.ts and reads ru.json by key.
+// ⚠ NO CYRILLIC IS TYPED HERE – the Russian side of this item is mounted in tests/component/i18n-r51-b4-coach-caution.test.ts and tests/component/i18n-r51-b4-coach-caution-poses.test.ts (one file until 14.10) and reads ru.json by key.
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { bookClosedTo, closeTournament, coachLadderNote, createWorld, decideKnock, hasOutgrown, pendingKnock, skipTournament, tickWeek, tierOpenFor, toSnapshot } from '../src/engine/world'

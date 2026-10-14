@@ -16,102 +16,24 @@
 // ⚠ RE-AIMED 13.10 (architect): the entry confirm's FATIGUE HALF is now under test too – `cautionDetail` (the fatigue gate's own sentence, engine/world/medical.ts) crosses through engineText at both sinks (SeasonScreen askEnter, CalendarScreen caution-note) since the same-day architect tail after B4 reported it raw.
 //   The arm below asserts the coach's half is Russian and says nothing about the half after it.
 // ⚠ MUTATION-VERIFIED 13.10 – see the commit message for the three runs (the three screens put back to `{{ x.coachCaution }}`; the snapshot putting `coachCautionC` back off the wire; the hole-table row removed).
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { mount, type VueWrapper } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
-import { readFileSync } from 'node:fs'
+// ⚠ CUT 14.10 (r52, the radar law – scripts/units.mjs): the header's «TEN REFS» arm, and only it, lives in i18n-r51-b4-coach-caution-poses.test.ts now. This file keeps the four surfaces, the tired-body sentence and the seams around the ref – so it still mounts the Calendar, which tests/calendar-screen.test.ts names. What the halves share is tests/helpers/coachCautionSurfaces.ts.
+import { describe, expect, it } from 'vitest'
+import { mount } from '@vue/test-utils'
 import CalendarScreen from '../../src/components/screens/CalendarScreen.vue'
 import NextTournamentPanel from '../../src/components/NextTournamentPanel.vue'
 import { useGameStore } from '../../src/stores/game'
 import { toSnapshot } from '../../src/engine/world'
-import { coachEntryLineRef, coachLadderNoteRef } from '../../src/engine/world/coachMarket'
 import { TIERS } from '../../src/engine/season/calendar'
-import { installCatalog, resetI18nForTests, setLocale } from '../../src/i18n'
-import { renderCopyRef, SOURCE_LOCALE, type CopyRef } from '../../src/shared/i18n'
 import type { Snapshot, UpcomingEvent } from '../../src/shared/protocol'
 import { mountSeason } from '../helpers/mountSeason'
-import { aheadPose, bookPose, LEGACY, outgrownPose, paysPose, shutPose, withCoach, type Pose } from '../helpers/coachCautionPoses'
-import { EVENT_ID, FLOOR, tiredWithACoach } from '../helpers/r41EntryWarning'
-import { installMemoryStorage } from './setup'
+import { LEGACY } from '../helpers/coachCautionPoses'
+import { aheadCard, cardOf, expectedRu, inRussian, LATIN_WORD, namesIn, posed, RU, useCautionLifecycle, withoutNames } from '../helpers/coachCautionSurfaces'
+import { EVENT_ID, tiredWithACoach } from '../helpers/r41EntryWarning'
 
-/** His Russian, as the importer compiled it. */
-const RU = JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string, string>
-const en = (c: CopyRef): string => renderCopyRef(c, { locale: SOURCE_LOCALE })
-const LATIN_WORD = /[A-Za-z]{2,}/
-
-beforeEach(() => {
-  installMemoryStorage()
-  resetI18nForTests(null)
-  setActivePinia(createPinia())
-  document.body.innerHTML = ''
-})
-afterEach(() => {
-  document.body.innerHTML = ''
-  resetI18nForTests(null)
-  document.documentElement.lang = 'en'
-})
-async function inRussian(): Promise<void> {
-  installCatalog('ru', RU)
-  await setLocale('ru')
-}
-
-// --- the expected Russian, built from the rows by hand ---------------------------------------------------------------
-
-const LADDER_WORD: Record<string, string> = { national: RU['tile|National'] as string, international: RU['tile|International'] as string, professional: RU['tile|Professional'] as string }
-const PAYS = 'Your coach says the {0} is the week – this pays {1} points, not the table she is climbing.'
-
-/** One ref, spelled in Russian by substituting its holes into its row: a string hole is a name (raw) – except the table's word in `PAYS`, which is the catalog's compact word – and a nested ref is spelled the same way. The
- *  only row with a plural is the counted tail; its branch is picked with the platform's own Russian plural rules and the number put into it. */
-function expectedRu(ref: CopyRef): string {
-  const row = RU[ref.k]
-  expect(row, `ru.json carries «${ref.k}»`).toBeTruthy()
-  const p = ref.p ?? []
-  if (ref.k === 'when|in {0} weeks') {
-    const n = p[0] as number
-    const category = new Intl.PluralRules('ru').select(n)
-    const branch = new RegExp(`${category} \\{(\\{0\\}[^{}]*)\\}`).exec(row as string)
-    expect(branch, `the plural row has a «${category}» branch`).not.toBeNull()
-    return (row as string).replace(/\{0, plural,[\s\S]*\}$/, (branch as RegExpExecArray)[1]!.replace('{0}', String(n)))
-  }
-  let out = row as string
-  p.forEach((hole, i) => {
-    const spelled = typeof hole === 'object' && hole !== null ? expectedRu(hole) : ref.k === PAYS && i === 1 ? (LADDER_WORD[String(hole)] as string) : String(hole)
-    out = out.replace(`{${i}}`, spelled)
-  })
-  return out
-}
-
-/** Every tournament name a ref carries, at any depth: raw by design, so the English-word scan takes them out before it looks. */
-function namesIn(ref: CopyRef): string[] {
-  return (ref.p ?? []).flatMap((h) => (typeof h === 'object' && h !== null ? namesIn(h) : typeof h === 'string' && !(h in LADDER_WORD) ? [h] : []))
-}
-function withoutNames(text: string, names: string[]): string {
-  return names.reduce((acc, name) => acc.split(name).join(' '), text)
-}
+useCautionLifecycle()
 
 // --- the cards ------------------------------------------------------------------------------------------------------
 
-/** The owner's own sentence, engine-built: an elite coach, a W15 she has outgrown, a W75 three weeks on – «Your coach would save her for the W75 in 3 weeks.» */
-function aheadCard(): { snap: Snapshot; card: UpcomingEvent; ref: CopyRef; pose: Pose } {
-  const pose = aheadPose(3)
-  withCoach(pose.world, 'elite')
-  const snap = toSnapshot(pose.world)
-  const card = snap.upcoming.find((e) => e.id === pose.event.id)!
-  expect(card.coachCautionC, 'precondition: the engine sent the ref beside the string').toBeDefined()
-  expect(card.coachCaution).toBe(LEGACY.save(TIERS.w75.label, 3))
-  return { snap, card, ref: card.coachCautionC!, pose }
-}
-/** The same snapshot with ANOTHER ref on that card – a posed caution, the card and everything else the engine's. */
-function posed(snap: Snapshot, id: string, ref: CopyRef | null): Snapshot {
-  return {
-    ...snap,
-    upcoming: snap.upcoming.map((e) => {
-      if (e.id !== id) return e
-      const { coachCaution: _s, coachCautionC: _c, ...rest } = e
-      return ref === null ? rest : { ...rest, coachCaution: en(ref), coachCautionC: ref }
-    }),
-  }
-}
 /** A tired career with a hired coach, the fixture's one National as the only card (the round-41 idiom: the feed narrowed to the card under test). */
 function tiredCard(): { snap: Snapshot; card: UpcomingEvent } {
   const { world } = tiredWithACoach('r51-b4-tired-ui')
@@ -128,11 +50,6 @@ interface Read {
   /** What the surface prints of his sentence (the confirm prints it inside a longer message, so that one is read whole). */
   text: string
   whole: boolean
-}
-const cardOf = (w: VueWrapper, label: string) => {
-  const hit = w.findAll('.event-card').find((c) => c.find('.event-tier').text().trim() === label)
-  expect(hit, `Season draws a card for ${label}`).toBeTruthy()
-  return hit!
 }
 const SURFACES: Array<[string, (snap: Snapshot, card: UpcomingEvent) => Promise<Read>]> = [
   [
@@ -249,44 +166,6 @@ describe('the tired-body sentence (the entry confirm\'s FIRST shape: she is unde
     const { snap, card } = tiredCard()
     const { text } = await SURFACES[0]![1](snap, card)
     expect(text).toBe(RU[LEGACY.empty] as string)
-  })
-})
-
-describe('every sentence the engine can say, posed onto a real card, on Season\'s card', () => {
-  const ladder = (pose: Pose): CopyRef => coachLadderNoteRef(pose.world, pose.event, 'elite')!
-  const POSE_REFS: Array<[string, () => CopyRef]> = [
-    ['empty – she would not be taken', () => coachEntryLineRef('national', FLOOR - 6)],
-    ['skip this one', () => coachEntryLineRef('national', FLOOR - 1)],
-    ['a week short', () => coachEntryLineRef('national', FLOOR)],
-    ['the better one is on this week, she has outgrown this', () => ladder(outgrownPose())],
-    ['the better one is on this week, this pays another table', () => ladder(paysPose())],
-    ['the better one is on this week, this will not move anything', () => ladder(shutPose())],
-    ['even a title here would not move her ranking', () => ladder(bookPose())],
-    ['save her for it, a few weeks on', () => ladder(aheadPose(3))],
-    ['save her for it, next week', () => ladder(aheadPose(1))],
-  ]
-
-  it('the denominator: nine poses, nine distinct refs, ten distinct keys between them', () => {
-    const refs = POSE_REFS.map(([, make]) => make())
-    expect(new Set(refs.map((r) => JSON.stringify(r))).size).toBe(9)
-    const keys = new Set<string>()
-    const walk = (c: CopyRef): void => {
-      keys.add(c.k)
-      for (const h of c.p ?? []) if (typeof h === 'object' && h !== null) walk(h)
-    }
-    refs.forEach(walk)
-    expect(keys.size, 'eight sentences and the two counted tails').toBe(10)
-  })
-
-  it.each(POSE_REFS)('%s', async (_name, make) => {
-    await inRussian()
-    const { snap, card } = aheadCard()
-    const ref = make()
-    const w = mountSeason(posed(snap, card.id, ref))
-    const text = cardOf(w, TIERS[card.tier].label).find('.coach-note').text()
-    w.unmount()
-    expect(text).toBe(expectedRu(ref))
-    expect(withoutNames(text, namesIn(ref))).not.toMatch(LATIN_WORD)
   })
 })
 
