@@ -33,7 +33,14 @@ last-reviewed: 2026-10-14
 - All new strings DRAFT: RU23-CFL-01..07 (tile), RU09D-CFW-01..10 (notes), 10C §35–§38 (talks).
 
 ## Gates
-- PENDING (the round's closing chain).
+All verdicts from sentinel files (mtime fresher than each run), clean worktree with `npm ci`, every
+one at `95adf883`:
+- check: GREEN – `R52_CHECK_EXIT=0` (/tmp/r52-gate-check2.log; component 322/322, unit 402 s). The
+  first closing run at `7f455497` caught two cross-wave tails (five test budgets over birpc's window;
+  three identical feel reads per small-talk pass), fixed by F5 `95adf883` and re-run.
+- sim: GREEN – `R52_SIM_EXIT=0`, 13 files in 381 s. e2e: GREEN – `R52_E2E_EXIT=0`, 145 journeys.
+- lqa:ru: GREEN – `R52_LQA_EXIT=0`, 0 English keys. Container twin: GREEN – `R52_CONTAINER_EXIT=0`,
+  6/6 (podman linux/amd64 node:22, npm ci inside). Build line `95adf88` baked into the worktree dist.
 
 ## Process notes
 - The digest harvest is now a fixed procedure: all pins of all seven coach-travel files plus the
