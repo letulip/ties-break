@@ -1416,3 +1416,43 @@ the rule removes are the ones on the wrong side of a speaking gauge.
 
 **Targets** (unchanged): unsure at week 13 between 30% and 60%; hedged-wrong at most 15%; flicker median at most 4 a year; confident-wrong exactly 0. If one misses, the
 work stops and is reported – no knob is moved.
+
+#### Measured
+
+Run: `npm run bench:chemistry -- --feel` on the final tree (1200 pairs, three coached years, the same pairs as 17.3). **All four targets held on the first run, and no knob was
+moved.** The 17.3 column is the run before this rule, for the same pairs.
+
+| what is measured | 17.3 (before) | predicted | measured now |
+| --- | --- | --- | --- |
+| (a) week 5 | too early for 100.0% | 100.0% | 100.0% |
+| (a) week 6 | 47.7%, 25.8%, 26.5%, 0.0%, 0.0% | the same | 47.7%, 25.8%, 26.5%, 0.0%, 0.0% – identical |
+| (a) week 13 | 47.8%, 22.7%, 25.9%, 1.2%, 2.5% | unsure 47.0–47.8%; good 1.2–2.0%; off 2.5–3.5% | 47.7%, 22.7%, 25.9%, 1.2%, 2.6% – inside |
+| (a) week 26 | 43.1%, 14.4%, 13.1%, 10.6%, 18.8% | unsure 39–42%; seems-good 13.4–14.4%; seems-off 12.0–13.1%; good 11.5–13%; off 20–22.5% | 40.5%, 14.4%, 13.1%, **10.6% (below)**, 21.4% |
+| (a) week 52 | 23.3%, 6.8%, 8.0%, 21.1%, 40.8% | identical | 23.3%, 6.8%, 8.0%, 21.1%, 40.8% – identical |
+| (b) from week 13 | unsure 9.4 / 57.2 / 33.3; seems-good 68.0 / 29.0 / 2.9; seems-off 0.0 / 15.4 / 84.6 | within 3 points | 9.4 / 57.3 / 33.2; 68.0 / 29.0 / 2.9; 0.0 / 15.4 / 84.6 – within 0.1 point |
+| (b) from week 26 | seems-good +3 or more 59.0%; seems-off −3 or less 71.3%; good +3 or more 95.3%; off −3 or less 100.0% (n = 226) | good 90–96%; off 95–100% | 59.0%; 71.3%; 95.3%; **98.8% (n = 257)** |
+| (c) doubt errors from week 13 | 5.8% (11.4% warm, 1.0% cold) | 5.0–5.8%, not higher | 5.8% (11.4%, 1.0%) – identical |
+| (c) doubt errors from week 26 | 6.4% | 5.2–6.4%, not higher | 6.4% (11.6% warm, 0.6% cold) – identical |
+| (d) flicker, first coached year | median 1.1, p90 5.7, mean 2.5; 12.3% never change | median 1.1–1.6; p90 5.7–6.8; mean 2.6–3.1; never change 10–12.3% | median 1.1, p90 5.7, **mean 2.4 (below)**; 12.3% never change |
+| (d) flicker, years two and three | median 0.0, p90 3.5, mean 1.0; 57.1% never change | identical | identical |
+| (e) confident and wrong | 0 of 115,162 | 0 of about 116,000–117,500 | 0 of 115,793 (a little under the predicted range) |
+
+Targets: unsure at week 13 is 47.7% (30–60%); hedged-wrong is 5.8% from week 13 and 6.4% from week 26 (at most 15%); the first-year flicker median is 1.1 a year (at most
+4); confident-wrong is 0 with a non-empty denominator.
+
+**What the prediction got right.** The two blocks it called identical are identical – week 52 and the whole of years two and three. That is the arithmetic's claim, and it is
+also the check that the bench arm is the right one: the rule moved week 26 (so the arm holds the change and its reader) and left week 52 alone.
+
+**What it got wrong.** Three things, none of them a target.
+
+1. Only the cold side moved. At week 26 the 2.6 points that left "unsure" (31 pairs of 1200) all landed on "off"; "good" stayed at 10.6%, under the predicted 11.5–13%. The likely
+   reading, not measured separately: a pair with a weak affinity that reaches the line within half a year reaches it on the cold side (cold is twice as common as warm in B13),
+   while a warm pair that early has the trend behind it already and was confident before.
+2. Flicker did not rise. The first-year mean is 2.4 against 2.5, and the median and p90 did not move, where a small rise was expected from pairs hovering round ±3. The likely
+   reading, not measured: a pair that was within the doubt's width of the lean line while its gauge already spoke is now well clear of it, so the doubt's redraw every four weeks
+   no longer flips it.
+3. The confident denominator grew by 631 pair-weeks, not by the 850–2,300 expected – a smaller share of pairs was affected than guessed.
+
+**What it means for the player.** A coach the family hires back is read from the gauge at once, so her feel and the card agree from the first week. On a fresh stint the only
+visible change is that she says "off" earlier for about one pair in forty: those already at −3 or less by half a year, whom the trend had kept "unsure". Everything from week 52
+on is unchanged. Every number here is on the stated even-record stream, as in 17.3, not on played careers.
