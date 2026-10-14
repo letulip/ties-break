@@ -45,17 +45,23 @@ const BIRTHS: Record<string, [number, number] | null> = { default: null, dec31: 
  *  NOT a draw change: every `rngN` (the MAIN position) is byte-identical and stayed pinned green.
  *  Attribution proven by a clean-worktree control run at B12's parent 0fe15aca: there this file
  *  fails ONLY on the S2e sweep (B5's three MoreScreen sites, exempted below), all 9 digests green.
- *  gamma did not move – its bond band never rolls a small talk inside 110 weeks. */
+ *  gamma did not move – its bond band never rolls a small talk inside 110 weeks.
+ *  ⚠ RE-STAMPED AGAIN 14.10 (r51 continuation, architect): ALL NINE `hN` moved with the school-years
+ *  tranche E1-E3 (pool 55→65), gamma included. ⚠ The «never rolls a small talk» sentence above was an
+ *  UNVERIFIED guess of mine and is withdrawn: the likelier reading is that gamma's talks fell in
+ *  subjects B12 never grew (he appended STORY rows only, so a non-story pick index did not move),
+ *  while E1-E3 grew every other school subject. Same purpose-scoped sub-stream class either way;
+ *  every `rngN` (the MAIN position) stayed pinned green. */
 const BASELINE: Record<string, { rng0: string; h0: string; rngN: string; hN: string }> = {
-  's1-alpha|default': { rng0: '-1306492581:0', h0: '1662620015bc23c9', rngN: '-1625113431:87894', hN: '98a41b16d2f05724' },
-  's1-alpha|dec31': { rng0: '-1306492581:0', h0: 'e3c0dbdc02dfe2c4', rngN: '-1625113431:87894', hN: 'f9b238bea93e1d79' },
-  's1-alpha|jan6': { rng0: '-1306492581:0', h0: 'baccabf4e3897d71', rngN: '-1625113431:87894', hN: '38bb8b2920e48d4e' },
-  's1-beta|default': { rng0: '2140152401:0', h0: '2376db693585cb49', rngN: '-73975459:87900', hN: 'd8128a698f5c63bc' },
-  's1-beta|dec31': { rng0: '2140152401:0', h0: 'a2dd35eb5fdb72f9', rngN: '-73975459:87900', hN: 'edacecd95bf7d86e' },
-  's1-beta|jan6': { rng0: '2140152401:0', h0: '954e24dc6bc505f9', rngN: '-73975459:87900', hN: '9b3a5552547cfbcf' },
-  's1-gamma|default': { rng0: '-2119545102:0', h0: '5f847e633dd4e992', rngN: '1792860147:87901', hN: '34ed1637259f0e79' },
-  's1-gamma|dec31': { rng0: '-2119545102:0', h0: 'ab3e8951a687d2e4', rngN: '1792860147:87901', hN: '62f2940cc6d3b279' },
-  's1-gamma|jan6': { rng0: '-2119545102:0', h0: 'ae71ca27f9886772', rngN: '1792860147:87901', hN: '1d21ec5aafa86725' },
+  's1-alpha|default': { rng0: '-1306492581:0', h0: '1662620015bc23c9', rngN: '-1625113431:87894', hN: 'e4a981f68460099e' },
+  's1-alpha|dec31': { rng0: '-1306492581:0', h0: 'e3c0dbdc02dfe2c4', rngN: '-1625113431:87894', hN: 'f9cc31e574c62bca' },
+  's1-alpha|jan6': { rng0: '-1306492581:0', h0: 'baccabf4e3897d71', rngN: '-1625113431:87894', hN: '42589927c0bc2b20' },
+  's1-beta|default': { rng0: '2140152401:0', h0: '2376db693585cb49', rngN: '-73975459:87900', hN: '3324a69d52d1e0d7' },
+  's1-beta|dec31': { rng0: '2140152401:0', h0: 'a2dd35eb5fdb72f9', rngN: '-73975459:87900', hN: '8ec8427b8622bada' },
+  's1-beta|jan6': { rng0: '2140152401:0', h0: '954e24dc6bc505f9', rngN: '-73975459:87900', hN: '2a8d42437a3f398c' },
+  's1-gamma|default': { rng0: '-2119545102:0', h0: '5f847e633dd4e992', rngN: '1792860147:87901', hN: 'edd9ef9a657046bb' },
+  's1-gamma|dec31': { rng0: '-2119545102:0', h0: 'ab3e8951a687d2e4', rngN: '1792860147:87901', hN: 'f042c9a05f6c4bd9' },
+  's1-gamma|jan6': { rng0: '-2119545102:0', h0: 'ae71ca27f9886772', rngN: '1792860147:87901', hN: '5274ef47a7038186' },
 }
 
 function digest(world: unknown): string {
