@@ -146,6 +146,11 @@ export function posed(
   }
 }
 
+/** A screen on a snapshot – `posed`, kind fixed. It lives HERE and not in a carpet file because two of them mount screens since the cut of 14.10 (`i18n-l4-2-xx-carpet-screens` and
+ *  `-screens-b`): a local copy in each would be the pasted body T5.14 refuses, and the alias holds no state of its own. */
+export const screen = (id: string, swept: string, comp: Component, snap: () => Snapshot, props: Record<string, unknown> = {}, after?: (w: VueWrapper) => Promise<void>, extra: Extra = {}): Surface =>
+  posed(id, 'screen', swept, comp, snap, props, after, extra)
+
 const CONTROLS = 'button, a[href], input, select, textarea, [role="button"]'
 const SKIP = /^(?:SCRIPT|STYLE)$/
 

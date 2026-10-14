@@ -9,7 +9,8 @@
 //            `dismiss-en`  it leaves the phone in ENGLISH already
 //   detail   the text with its digits written `N` / the viewport + failure class – NEVER a ratio (a layout nudge, or a tuning pass that moves a
 //            threshold, must not churn the ledger)
-//   area     the carpet file that mounts the surface (a row naming a surface of another file would never be compared)
+//   area     the carpet file that mounts the surface (a row naming a surface of another file would never be compared – the screens were cut in two on 14.10, so a row for the
+//            kid, the Calendar, the Coach Market, Stats, Trophies or the Album is `screens-b`; the carpet's first arm fails on a row left under the wrong one)
 //
 // ⚠ THE FIRST LOOK (L4-2, 10.10) found 75 rows on 13 surfaces, ZERO overflows and ZERO dismiss failures across the 86 surfaces – every row a literal in a
 //   template or a composable, none an engine word. L4-2 fixed nothing (layout and copy are the owner's), and said so.
@@ -21,7 +22,7 @@
 //   titles (+ the App shell's copy of them and of the rail card), the seven weekday initials (ThisWeekScreen + WeekRecapCard), the Calendar's block
 //   lexicon and day-summary sentence, `National Unranked`, WeekSpanReport 2, RailDashboard 1, ConfirmDialog's default `Cancel`.
 export interface Finding {
-  area: 'screens' | 'cards' | 'overlays' | 'takeovers'
+  area: 'screens' | 'screens-b' | 'cards' | 'overlays' | 'takeovers'
   surface: string
   kind: 'leak' | 'overflow' | 'overflow-en' | 'dismiss' | 'dismiss-en'
   detail: string
