@@ -1588,6 +1588,14 @@ button {
   border-radius: var(--radius-pill);
   padding: 8px 16px;
   font-size: 14px;
+  /* EVERY BUTTON SPEAKS THE APP'S FONT (owner, 14.10, round 52 №2: «Every button speaks the app's font»). A browser does not let a
+     <button> inherit the body's face, so every button no component patched for itself drew the browser's default – Arial in
+     Chromium, the system face on a phone. Measured 14.10: on the first three screens of a new game, 12 of 12 visible buttons (the
+     language choice, the childhood prologue's first card, the onboarding intro) drew Arial and none drew Manrope.
+     ⚠ THE FAMILY ONLY, NEVER `font: inherit`. The shorthand would also reset the 14px above to the body's 15px and pull in its
+     line-height, resizing every pill in the game; KidScreen's `.kid-tile-door` says the same. The seven components that patched
+     the family for themselves are left as they are. Net and census: e2e/r52-button-font.spec.ts. */
+  font-family: inherit;
   cursor: pointer;
 }
 

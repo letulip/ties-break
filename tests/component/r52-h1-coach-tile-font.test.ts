@@ -30,6 +30,13 @@
 //   ARM M2  the stand-in's `document.head.prepend(uaSheet)` commented out, the rule present. **1 RED**: the control, and only it – the language arms cannot tell, because the rule is there.
 //   ARM M3  BOTH removed. **1 RED**: still only the control – the two language arms are GREEN over the unfixed tile. That is the null result the stand-in exists to prevent, measured: without it the
 //           comparison cannot tell a fixed tile from a broken one, and the control is what refuses to let that pass quietly.
+//
+// ⚠⚠ 14.10, AFTER THE OWNER'S GLOBAL RULING (round 52 №2, «Every button speaks the app's font»: `font-family: inherit` in the global `button` rule of style.css). THE LEDGER ABOVE IS THE PRE-RULING TREE'S, kept as
+// measured. What changed, measured on the changed tree: the tile's own declaration is now REDUNDANT behind the global one – ARM M1 (the tile's declaration deleted, the global rule present) is **0 RED**, 3/3 green,
+// because the premise the old control rested on, "no author rule reaches a bare <button>", no longer holds in this document (the header above names the case: «a global `button` reset»). The CONTROL was re-aimed for
+// it and still guards what it was for – that the stand-in is in force at all: it reads the stand-in with the app's own sheets taken out of the head, then asserts the new truth (sheets back, a bare <button> wears the
+// siblings' face). ARM M3' (BOTH the tile's declaration and the global one deleted) is **3 RED**: the English arm, the Russian arm and the control's second half – the pair is the cascade's test, as M1 was the tile's.
+// The tile's own line was left where it is (the ruling leaves the seven local patches alone); whether it still earns its place is a separate decision.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -130,14 +137,32 @@ describe('⭐⭐ ROUND 52 H1 – the Coach tile wears the same face as its sibli
     })
   }
 
-  it('⚠ CONTROL: the stand-in bites – a bare <button> put in the same grid reports the platform face, which is NOT the siblings\'', async () => {
+  it('⚠ CONTROL: the stand-in bites – with the app\'s own sheets out of the head a bare <button> in the same grid reports the platform face, which is NOT the siblings\'', async () => {
     await en()
     const w = mountKid()
     const { door, friends } = tiles(w)
+    const siblings = family(friends!)
+    // ⚠ 14.10, ROUND 52 №2: THE GLOBAL `button` RULE NOW SAYS `font-family: inherit`, so a bare <button> in THIS document is reached by an author rule and the control's old premise –
+    // "nothing reaches it" – is gone (the header names this case: «a global `button` reset»). What the control is FOR is unchanged: the stand-in must be in force at all. So that is read
+    // with every author sheet taken out of the head for the one read (and put back), on a fresh element each time – happy-dom may cache a computed style across the swap.
+    const authored = Array.from(document.head.querySelectorAll('style')).filter((sheet) => sheet !== uaSheet)
+    expect(authored.length, 'the app\'s own sheets are in the head to be taken out – with none there, this proves nothing about them').toBeGreaterThan(0)
+    authored.forEach((sheet) => sheet.remove())
+    const alone = document.createElement('button')
+    door.parentElement!.appendChild(alone)
+    let aloneFace = ''
+    try {
+      aloneFace = family(alone)
+    } finally {
+      authored.forEach((sheet) => document.head.appendChild(sheet))
+    }
+    expect(aloneFace, 'a button no author rule reaches gets the stand-in\'s face').toContain(UA_FACE)
+    expect(aloneFace, 'and that face differs from what a sibling tile inherits, so the comparison above CAN go red').not.toBe(siblings)
+
+    // ...and the other half of the new truth: with the sheets back, a bare button is reached by the global reset and wears the siblings' face.
     const bare = document.createElement('button')
     door.parentElement!.appendChild(bare)
-    expect(family(bare), 'a button with no author family rule gets the stand-in\'s face – so a tile that reports anything else was reached by an author rule').toContain(UA_FACE)
-    expect(family(bare), 'and that face differs from what a sibling tile inherits, so the comparison above CAN go red').not.toBe(family(friends!))
+    expect(family(bare), 'the global `button` rule carries the family: a bare button wears what the siblings wear').toBe(siblings)
     w.unmount()
   })
 })
