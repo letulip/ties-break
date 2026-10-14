@@ -46,25 +46,23 @@
 //          for another reason (career 5/0 '913777ed' against '38f6336d') and moves again here ('7ac6e89').
 //          None is re-stamped in this change: the architect re-stamps the played-career digests once, at
 //          the close-out, on the final tree.
+//   ⚠ 14.10, builder E2: the ledger above is of the tree at 58 rows. R60–R62 (two curiosities, one good news) were appended
+//          after these three, which moves the draw for every seed (the pool is longer) but none of the arms' claims; the
+//          fixtures moved to tests/helpers/schoolTranche.ts with their seeds unchanged.
 import { readdirSync, readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
 import {
-  createWorld,
-  kidAgeExact,
-  lifeLogOf,
   reachableSituations,
-  rollSmallTalk,
   SMALL_TALK_SITUATIONS,
   TEMPERAMENTS,
   type Temperament,
   type WorldState,
 } from '../src/engine/world'
-import { bondBandOf } from '../src/engine/spirit'
-import { diaryLifeStageFor } from '../src/engine/diary/facts'
-import { schoolIsOver } from '../src/engine/kidLife'
-import type { BondBand, DiaryLifeStage } from '../src/shared/protocol'
+import type { DiaryLifeStage } from '../src/shared/protocol'
+// ⚠ RE-AIMED 14.10 (r51 continuation, builder E2): the career fixtures are the shared helper's now – see the FIXTURES note below.
+import { careerAt, walkCareers, type Said } from './helpers/schoolTranche'
 
 /** The three, in the order the document appends them. None depends on her age: a warm-up, a sound and a
  *  fence are the same scene at nine and at nineteen. */
@@ -72,30 +70,15 @@ const NEW_OBSERVATIONS = ['the-warm-up-friends', 'the-sound-of-a-clean-ball', 't
 
 // -------------------------------------------------------------------------------------------------
 // FIXTURES – round 43's own (ask the ladder for the bond, pose only the voice), and for its reasons.
-// ⚠ A BARE world on purpose: no coach, no match, no open entry. That is the career the hole was
-// measured on, and the only one on which `played-recently` (R14, R34) stays false.
+// ⚠ A BARE world on purpose: no match played, no result, no open entry. That is the career the hole was
+// measured on, and the only one on which `played-recently` (R14, R34) stays false. (⚠ builder E2, 14.10: it is not
+// coach-less – a fresh career has a coach from the first week – and nothing in this file relies on that.)
+// ⚠ MOVED 14.10 (r51 continuation, builder E2): `bondFor`, `careerAt`, `stageAt`, `walk` and the 120-career
+// walk now live in `tests/helpers/schoolTranche.ts`, which this file and
+// `tests/round51-school-curiosity-goodnews-pool.test.ts` both import – a second pasted copy would be the
+// shape T5.14 RULE B refuses for its merged families. The seed prefix below (`r51-e1-`) stayed in this file, so
+// these are the same careers they were and every number in the ledger above still describes them.
 // -------------------------------------------------------------------------------------------------
-
-function bondFor(band: BondBand): number {
-  for (let b = 0; b <= 100; b += 0.5) if (bondBandOf(b) === band) return b
-  throw new Error(`no bond value reads as ${band}`)
-}
-
-function careerAt(seed: string, voice: Temperament): WorldState {
-  const world = createWorld(seed)
-  world.bond = bondFor('close')
-  world.temperament = voice
-  world.lifeLog = []
-  return world
-}
-
-function stageAt(world: WorldState, week: number): DiaryLifeStage {
-  return diaryLifeStageFor(
-    kidAgeExact(week, world.profile.birthMonth, world.profile.birthDay),
-    schoolIsOver(week, world.profile.birthMonth),
-    false,
-  )
-}
 
 function observationIdsAt(world: WorldState, voice: Temperament, stage: DiaryLifeStage): string[] {
   return reachableSituations(world, voice, stage)
@@ -103,44 +86,10 @@ function observationIdsAt(world: WorldState, voice: Temperament, stage: DiaryLif
     .map((s) => s.id)
 }
 
-/** One conversation as the engine stored it, and the stage she was in. */
-interface Said {
-  detail: string
-  stage: DiaryLifeStage
-}
-
-/** A career walked week by week, answering every row the moment it is raised – the parent the bench
- *  models, and the only one whose cadence is the shipped one (a live soft row blocks the next). */
-function walk(world: WorldState, weeks: number): Said[] {
-  const out: Said[] = []
-  for (let w = 0; w < weeks; w++) {
-    world.week = w
-    const before = lifeLogOf(world).length
-    const stage = stageAt(world, w)
-    rollSmallTalk(world)
-    const log = world.lifeLog ?? []
-    if (log.length === before) continue
-    const row = log[log.length - 1]
-    out.push({ detail: row.detail, stage })
-    row.answer = 'more'
-  }
-  return out
-}
-
-const CAREERS = 120
-// Sixteen years: the school years end near week 620 and after-school runs to her twenty-second birthday.
-const WEEKS = 52 * 16
-
 let memo: Said[][] | null = null
 /** Every career's conversations, computed once for the file. */
 function careers(): Said[][] {
-  if (memo === null) {
-    memo = []
-    for (let i = 0; i < CAREERS; i++) {
-      const voice = TEMPERAMENTS[i % TEMPERAMENTS.length]
-      memo.push(walk(careerAt(`r51-e1-${i}`, voice), WEEKS))
-    }
-  }
+  if (memo === null) memo = walkCareers('r51-e1-')
   return memo
 }
 
@@ -179,9 +128,10 @@ describe('round 51 (continuation) A – the observation cell is no longer empty'
     }
   })
 
-  it('the three are ordinary rows – ungated, observation, four-voiced, school and after-school, NO second beat – and they are the LAST three', () => {
+  it('the three are ordinary rows – ungated, observation, four-voiced, school and after-school, NO second beat – and they sit three from the end (R60–R62 follow them)', () => {
+    // ⚠ RE-AIMED 14.10 (r51 continuation, builder E2): «the last three» became «the three before the last three» when R60–R62 (tests/round51-school-curiosity-goodnews-pool.test.ts) were appended after them; the order of what was there did not move.
     expect(
-      SMALL_TALK_SITUATIONS.slice(-3).map((s) => s.id),
+      SMALL_TALK_SITUATIONS.slice(-6, -3).map((s) => s.id),
       'appended last: a pool of a different length reads a different position, but the order of what was there does not move',
     ).toEqual([...NEW_OBSERVATIONS])
     for (const id of NEW_OBSERVATIONS) {

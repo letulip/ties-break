@@ -1,5 +1,5 @@
 // ⭐⭐⭐ THE SMALL-TALK CORPUS – **GENERATED FROM `docs/specs/small-talk-corpus-2026-09.md`,
-// NEVER RETYPED.** 58 situations × 4 voices: 232 openers, 174 stance labels, 696 replies, 20 shared second beats.
+// NEVER RETYPED.** 61 situations × 4 voices: 244 openers, 183 stance labels, 732 replies, 20 shared second beats.
 //
 // ⭐⭐ THIS IS THE WHOLE CATALOGUE AND NOT A SECOND HALF OF ONE. `SMALL_TALK_SHIPPED` – the eight
 // situations hand-written in `lifeBeat.ts` since wave 2 – was deleted in round 44 and those eight are
@@ -16,7 +16,7 @@
 // ⚠ IT IS ORDINARY COMMITTED SOURCE AND NOT A BUILD STEP (the round's own ruling). Nothing in
 // `npm run check`, `npm run build` or the dev server generates it; the emitter is a one-off.
 //
-// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 1102 authored strings. An agent retyping them
+// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 1159 authored strings. An agent retyping them
 // produces typos that no test can catch, because a test written by the same agent compares against
 // what was typed. The document is the source of truth; this file is its projection.
 //
@@ -4517,6 +4517,237 @@ export const SMALL_TALK_CORPUS: readonly SmallTalkSituation[] = [
           space: {
             label: 'Say it is mostly kindness',
             said: '"Probably. It doesn\'t tell anyone anything, though."',
+          },
+        },
+      },
+    },
+  },
+  // R60 · the-ball-she-let-go
+  {
+    id: 'the-ball-she-let-go',
+    subject: 'curiosity',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"How does an older player know a ball is going out? One just let it go by."',
+        branches: {
+          invite: {
+            label: 'Ask what the player did',
+            said: '"Nothing. She watched it all the way with her racket down. So calm."',
+          },
+          respond: {
+            label: 'Say they have watched so many balls they just know',
+            said: '"So it\'s just watching, lots and lots of it. I can do that."',
+          },
+          space: {
+            label: 'Say she does not have to see it yet',
+            said: '"Okay. I\'ll keep watching and see if it starts to make sense."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"An older player didn\'t move for a ball, and it landed out. I want to know how she knew."',
+        branches: {
+          invite: {
+            label: 'Ask what the player did',
+            said: '"Nothing. Not a step. She watched it land out like she\'d arranged it."',
+          },
+          respond: {
+            label: 'Say they have watched so many balls they just know',
+            said: '"Then I\'ll watch more. A lot more. Starting with the very next ball."',
+          },
+          space: {
+            label: 'Say she does not have to see it yet',
+            said: '"Fine. But I\'m watching her feet next time."',
+          },
+        },
+      },
+      deep: {
+        opener: '"An older player left a ball alone, and it landed out. I keep wondering what she saw."',
+        branches: {
+          invite: {
+            label: 'Ask what the player did',
+            said: '"Nothing. She stood still and watched, as if she already knew."',
+          },
+          respond: {
+            label: 'Say they have watched so many balls they just know',
+            said: '"So it is looking, for a long time. I cannot hurry it."',
+          },
+          space: {
+            label: 'Say she does not have to see it yet',
+            said: '"I know. I would still like to see it once."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"An older player let a ball go by. It landed out. How did she know?"',
+        branches: {
+          invite: {
+            label: 'Ask what the player did',
+            said: '"Nothing. She just watched it go."',
+          },
+          respond: {
+            label: 'Say they have watched so many balls they just know',
+            said: '"So I\'ll watch more of them."',
+          },
+          space: {
+            label: 'Say she does not have to see it yet',
+            said: '"Okay. I\'ll watch for it next time."',
+          },
+        },
+      },
+    },
+  },
+  // R61 · sorry-for-a-lucky-point
+  {
+    id: 'sorry-for-a-lucky-point',
+    subject: 'curiosity',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"Why do people say sorry when the ball clips the net and drops over? It\'s still a point."',
+        branches: {
+          invite: {
+            label: 'Ask what the other girl did',
+            said: '"She just nodded, like it was completely normal. Maybe it is."',
+          },
+          respond: {
+            label: 'Say it is a way of admitting it was luck',
+            said: '"Oh. So it\'s like saying, I know that was lucky. I like that."',
+          },
+          space: {
+            label: 'Say you never worked it out either',
+            said: '"Really? Good. Then I\'m not behind. We can wonder together."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"You don\'t say sorry for a point. A girl did, when the ball clipped the net. Why?"',
+        branches: {
+          invite: {
+            label: 'Ask what the other girl did',
+            said: '"She nodded. Like a debt had just been paid."',
+          },
+          respond: {
+            label: 'Say it is a way of admitting it was luck',
+            said: '"So it\'s manners about luck. All right. I\'m still keeping the point."',
+          },
+          space: {
+            label: 'Say you never worked it out either',
+            said: '"Great. Two of us who don\'t get it. I\'ll find out first."',
+          },
+        },
+      },
+      deep: {
+        opener: '"I keep wondering what a girl was sorry for when she won a point off the net cord."',
+        branches: {
+          invite: {
+            label: 'Ask what the other girl did',
+            said: '"She nodded. They both knew what it meant. I did not."',
+          },
+          respond: {
+            label: 'Say it is a way of admitting it was luck',
+            said: '"So it is honesty about luck. I had not thought of that."',
+          },
+          space: {
+            label: 'Say you never worked it out either',
+            said: '"Then we are both still wondering. I do not mind that."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"A girl said sorry for a point off the net cord. I didn\'t know you did that."',
+        branches: {
+          invite: {
+            label: 'Ask what the other girl did',
+            said: '"She nodded. That was all."',
+          },
+          respond: {
+            label: 'Say it is a way of admitting it was luck',
+            said: '"Oh. It\'s a polite way of saying it was luck."',
+          },
+          space: {
+            label: 'Say you never worked it out either',
+            said: '"Okay. I\'ll ask someone else, then."',
+          },
+        },
+      },
+    },
+  },
+  // R62 · the-older-girl-knew-her-name
+  {
+    id: 'the-older-girl-knew-her-name',
+    subject: 'good-news',
+    stages: ['school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"One of the older girls said hello to me by name. I didn\'t think she knew it."',
+        branches: {
+          invite: {
+            label: 'Ask what the older girl said',
+            said: '"Just hello, and my name, like it was nothing. Then she kept walking."',
+          },
+          respond: {
+            label: 'Say it\'s good to be noticed',
+            said: '"It really is. I feel a foot taller and I\'m trying to hide it."',
+          },
+          space: {
+            label: 'Let her just have this',
+            said: '"I will. I\'m going to say hello back properly next time."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"One of the older girls knows my name. She used it. I heard it."',
+        branches: {
+          invite: {
+            label: 'Ask what the older girl said',
+            said: '"Hello, and my name. Then she walked off like it was nothing. It was not nothing."',
+          },
+          respond: {
+            label: 'Say it\'s good to be noticed',
+            said: '"It is. I\'d like a few more of them to notice, frankly."',
+          },
+          space: {
+            label: 'Let her just have this',
+            said: '"Oh, I will. And next time I\'m saying her name first."',
+          },
+        },
+      },
+      deep: {
+        opener: '"One of the older girls said my name in passing. I did not think she knew it."',
+        branches: {
+          invite: {
+            label: 'Ask what the older girl said',
+            said: '"Hello, and my name, in passing. She did not even stop."',
+          },
+          respond: {
+            label: 'Say it\'s good to be noticed',
+            said: '"It is. I did not know I wanted it until it happened."',
+          },
+          space: {
+            label: 'Let her just have this',
+            said: '"I will. I would like to remember exactly how it sounded."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"One of the older girls said hello. She used my name."',
+        branches: {
+          invite: {
+            label: 'Ask what the older girl said',
+            said: '"Just hello and my name. Then she walked on."',
+          },
+          respond: {
+            label: 'Say it\'s good to be noticed',
+            said: '"It is. I\'d noticed her too."',
+          },
+          space: {
+            label: 'Let her just have this',
+            said: '"I will. It was a nice bit of the week."',
           },
         },
       },

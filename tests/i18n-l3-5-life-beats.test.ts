@@ -13,7 +13,7 @@
 //   §1 the key law for class (b)       – tests/helpers/l3-5-life-keys.ts is exactly what the life files spell that no old save can hold: the nine span sentences and the `{0} {1}` join
 //   §2 her line                        – `lifeBeatSaidRef` renders to `lifeBeatSaid` over EVERY reachable (kind x voice x register x bond x wants x stage x frame x line), keys all in the catalog
 //   §3 the headings                    – every heading any axis can produce is a catalog key (10J's heard headings and 10K's headline frame included)
-//   §4 her replies                     – every follow-up paragraph of the 58 situations x 4 voices x 3 stances and of the fork's continuation has its seat
+//   §4 her replies                     – every follow-up paragraph of the 61 situations x 4 voices x 3 stances and of the fork's continuation has its seat
 //   §5 the span sentence               – `engagedWithTogetherRef` renders to `engagedWithTogether` for every week from 0 to 5,200
 //   §6 the 51-situation corpus         – the counts, and that every opener / shared beat / label / reply is a catalog key (OUTSIDE_CATALOG for this family: 0)
 //   §7 the sinks' sentences            – every constant a sink's seat can hold is a key of the frozen table AND of the catalog (the L3-1 net's §1b walks the same pools as a seat law)
@@ -233,7 +233,8 @@ describe('§2 her line – the ref renders to the line over every reachable tupl
     expect(Object.keys(walked).sort()).toEqual([...KINDS].sort())
     // ⭐ RE-AIMED 14.10 (r51 №17): 4728 → 5008 (+280 = the gran's one stage x 4 voices x 10 + the other three stories' two stages x 4 voices x 10 each; ten is the row's own frame or none plus the presence's nine).
     // ⭐ RE-AIMED AGAIN 14.10 (r51 continuation, builder E1): 5008 → 5248 (+240 = the three observations' two stages (school, after-school) x 4 voices x 10; ten is the row's own frame or none plus the presence's nine).
-    expect(walked['small-talk'], 'small talk: 58 situations x their voices x their stages x (the row\'s own frame or none + the presence\'s nine) + the three legacy subjects x 4 voices x 4 stages').toBe(5248)
+    // ⭐ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E2): 5248 → 5448 (+200 = the two curiosities' two stages (school, after-school) x 4 voices x 10, plus the good news' one stage (school) x 4 voices x 10; ten is the row's own frame or none plus the presence's nine).
+    expect(walked['small-talk'], 'small talk: 61 situations x their voices x their stages x (the row\'s own frame or none + the presence\'s nine) + the three legacy subjects x 4 voices x 4 stages').toBe(5448)
     expect(walked['fork-opinion']).toBe(3 * 4 * 3 * 4 * 3)
   })
 
@@ -296,7 +297,7 @@ describe('§3 the headings – every one any axis can produce is a catalog key (
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // §4 – her replies
 // ---------------------------------------------------------------------------------------------------------------------------------------------
-describe('§4 her replies – each follow-up paragraph has its seat, over the 58 situations and the fork\'s continuation', () => {
+describe('§4 her replies – each follow-up paragraph has its seat, over the 61 situations and the fork\'s continuation', () => {
   it('small talk: every situation x voice x stance carries a ref per paragraph that renders to it (the shared second beat included)', () => {
     let paragraphs = 0
     let shared = 0
@@ -321,7 +322,8 @@ describe('§4 her replies – each follow-up paragraph has its seat, over the 58
     expect(outside, 'a reply the owner\'s row cannot join').toEqual([])
     // ⭐ RE-AIMED 14.10 (r51 №17): 612 + 4 x 3 → 660 + 20 x 3 (the four school-years stories each carry a shared second beat in four voices).
     // ⭐ RE-AIMED AGAIN 14.10 (r51 continuation, builder E1): 660 → 696 replies (+36 = three observations x 4 voices x 3 stances); the 20 shared second beats are untouched, an observation has none.
-    expect(paragraphs, '696 replies + the 20 shared second beats across the three stances of their columns').toBe(696 + 20 * 3)
+    // ⭐ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E2): 696 → 732 replies (+36 = three more rows x 4 voices x 3 stances); the 20 shared second beats are untouched, a curiosity and a good news have none.
+    expect(paragraphs, '732 replies + the 20 shared second beats across the three stances of their columns').toBe(732 + 20 * 3)
     // ⭐ RE-AIMED 14.10 (r51 №17): 4 x 3 = 12 → 20 x 3 = 60 (court-four's four columns plus the four new stories' sixteen).
     expect(shared, 'the twenty `story` columns, three stances each').toBe(60)
   })
@@ -432,7 +434,7 @@ describe('§5b the announcement\'s PROMPT, through the real assembly – the poo
 /** Corpus strings the CATALOG does not carry, by family. The whole corpus file is a census copy home, so this is 0 – and it can only fall. */
 const OUTSIDE_CATALOG = { openers: 0, labels: 0, replies: 0, shared: 0 } as const
 
-describe('§6 the 58-situation corpus', () => {
+describe('§6 the 61-situation corpus', () => {
   const openers = new Set<string>()
   const labels = new Set<string>()
   const replies = new Set<string>()
@@ -451,15 +453,16 @@ describe('§6 the 58-situation corpus', () => {
       }
     }
 
-  it('is 58 situations in 232 voice columns: 232 openers, 696 replies, 20 shared second beats (the corpus header\'s own numbers)', () => {
+  it('is 61 situations in 244 voice columns: 244 openers, 732 replies, 20 shared second beats (the corpus header\'s own numbers)', () => {
     // ⭐ RE-AIMED 14.10 (r51 №17): 51/204/612/4/145 → 55/220/660/20/157 – four school-years stories, twelve new distinct labels.
     // ⭐ RE-AIMED AGAIN 14.10 (r51 continuation, builder E1): 55/220/660/20/157 → 58/232/696/20/166 – three school-years observations, nine new distinct labels, no second beat.
-    expect(SMALL_TALK_SITUATIONS.length).toBe(58)
-    expect(columns).toBe(232)
-    expect(openers.size).toBe(232)
-    expect(replies.size).toBe(696)
+    // ⭐ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E2): 58/232/696/20/166 → 61/244/732/20/175 – two school-years curiosities and a good news, nine new distinct labels, no second beat.
+    expect(SMALL_TALK_SITUATIONS.length).toBe(61)
+    expect(columns).toBe(244)
+    expect(openers.size).toBe(244)
+    expect(replies.size).toBe(732)
     expect(shared.size).toBe(20)
-    expect(labels.size, 'distinct stance labels').toBe(166)
+    expect(labels.size, 'distinct stance labels').toBe(175)
   })
 
   it('every opener, label, reply and shared beat is a catalog key and seatable (OUTSIDE_CATALOG for the corpus: 0)', () => {

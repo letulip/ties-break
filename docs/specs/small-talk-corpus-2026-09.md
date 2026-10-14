@@ -2587,6 +2587,133 @@ hesitation.
 - `deep` `"I think it is. I just don't think it helps whoever missed."`
 - `quiet` `"Probably. It doesn't tell anyone anything, though."`
 
+## Addendum 14.10 (second continuation) – `curiosity` and `good-news` for the school years: three, because the cells held one and two (round 51)
+
+**The owner, 14.10:** «остальные школьные темы тонкие - это тоже можно сюда же взять на двух языках, весь тон-оф-войс для референса и все рулинги у тебя есть.»
+
+**The hole, measured.** Builder B12's corpus bench (`npm run bench:smalltalk -- --seeds 60`, K4) counted what a school-age girl can be handed, per subject, and builder E1 re-measured it the same day after his three observations: school `worry` 1, `good-news` 2, `decision` 1, `curiosity` **1**; after-school `curiosity` **2**. K4 counts a row by the stages it lists and not by its fact. The one school curiosity is R48 `coach-real`, which also waits on `coach-employed`; the two after-school ones are R48 and R23 `the-word-she-keeps-hearing`. The school `good-news` pair is R45 `practice-clicked` and R52 `beat-her-conqueror`, the second of them the strictest gate in the catalogue. This document's own floor (§3b) is «minimum situations per subject × stage (3–4)». A third builder takes `worry` and `decision` after this one; this addendum is `curiosity` ×2 and `good-news` ×1.
+
+**What they are, here.** A `curiosity` is something she wants to understand and ASKS the parent about – the three buttons are to ask what she saw, to give the answer a parent could honestly give, and to let her off knowing it yet. A `good-news` is something good she brings home, kept small and true: no title, no result and no ranking, which are other beats (R52 owns the one result). Each of the three is one scene told four ways (§2, §4); the parent's three buttons are the same for all four voices, and her replies then add one fact of their own.
+
+| row | subject | stages | what it is |
+| --- | --- | --- | --- |
+| R60 `the-ball-she-let-go` | curiosity | school, after-school | an older player let a ball go by without a step, it landed out, and she asks how anyone can tell |
+| R61 `sorry-for-a-lucky-point` | curiosity | school, after-school | a girl said sorry for winning a point off the net cord, and she asks why you would |
+| R62 `the-older-girl-knew-her-name` | good-news | school | one of the older girls said hello to her by name, and she had not thought the girl knew it |
+
+**Where they sit.** Last in this document, after R59, so the catalogue's first 58 rows keep their order. A situation is chosen by position in the filtered pool, so a pool of a different length reads a different position for the same seed: a career already under way may be shown a different situation next time than it would have been. That draw is on its own sub-stream (`seed:life:smalltalk:situation:<week>`), nothing is stored and the main stream does not move.
+
+**Stages and facts.** An older player, a ball, a hand and a net do not depend on her age, so both curiosities reach school and after-school, the way `court-four` and the three observations do. The good news is the one honest exception: «one of the older girls» is a school-years sentence, so R62 stops at school and does not claim after-school. All three are `generated` (no career fact), because a row gated on a fact does not lift the floor on a career that has not earned the fact.
+
+**What the lines were written against.**
+
+- Nothing a career could contradict: no result, score, placing, injury, money or coach. The older players, the girls, the ball and the hand exist only inside the sentence and nothing in the engine reads them. The one point named is won off the net cord by someone else; no button asks for an outcome (R36's lesson).
+- No professional appears – no coach, umpire, teacher or physio – so none needs a pronoun (R15-7), and no masculine pronoun anywhere (`tests/coach-voice.test.ts`). The `she` and `her` in these rows are players and girls.
+- No «today», no exclamation mark (the fiery voice carries its edge in short verdicts, as R53–R59 do), no digit, no long dash.
+- Her replies describe what the OTHER players did, or what she will do with the thought – never a persistent pattern of her own tennis (R34's finding). ⚠ R60 in particular: no voice says she has got better at reading a ball. She says she will watch more of them, the way R45 keeps a good practice a mood and not a gain (the fog law).
+- The facts are the same in all four voices. Each reply then adds one fact of its own, and no voice contradicts another's edition of the scene.
+- ⚠ Every new line was searched for in `src/` before it was emitted: round 51's «Nobody argued.» sat in `albumCorpus.ts` too and turned an album test red at the closing gate.
+
+**The arithmetic after these three**, derived by `tools/small-talk-corpus-parse.ts` rather than carried: 61 rows, 244 openers, 183 labels, 732 replies and 20 shared beats (neither a curiosity nor a good news has a second beat). The figures in the older sections are of the 51, 55 and 58 and stay as the record of the passes that produced them.
+
+**Measured after** (`npm run bench:smalltalk -- --seeds 60`, the bench B12 ran, 14.10): K4 `curiosity` school **1 → 3** and after-school **2 → 4**, `good-news` school **2 → 3**. The other K4 cells read exactly as builder E1 reported them (`worry` school 1 and after-school 3, `decision` school 1 and after-school 3, `observation` 3 and 4, `story` 5 and 9), which is the check that this is the same arm and that nothing but these three cells moved; K4 counts the catalogue and does not depend on the seeds. Cells under the floor: five → two – what remains is school `worry` and school `decision`, the cells the later builder takes. ⚠ Each of those two is held by a row that also waits on a career fact (R46 `line-call` on `played-recently`, R47 `march-entry` on `march-entry-open`), because K4 counts a row by the stages it lists. K2 and K3: zero repeats wherever an alternative existed, in the posed career (adjacent 171/2340 → 0, within three 331/2340 → 0) and the bare one (167/2340 → 0, 328/2340 → 0) alike. K5: 61 situations · 244 voice columns, the same four gated situations flagged as before (five voice columns) and none of the three among them.
+
+### R60 · `the-ball-she-let-go` · curiosity · school, after-school · generated
+**Kernel:** One of the older players let a ball go by without taking a step, and it landed out. She cannot see how anyone can tell that early, and she asks.
+**Authoritative claims:** none – the older player and the ball exist only inside the sentence, no point, score or result is named, and nothing here is about a ball of her own.
+**Fixed in all four voices:** an older player, a ball she did not move for, and that it landed out. Each reply adds one fact: that the player did nothing at all but watch it (invite). The respond stance takes the parent's answer and says she will watch more balls, and the third relieves her of seeing it yet; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"How does an older player know a ball is going out? One just let it go by."` |
+| `fiery` | `"An older player didn't move for a ball, and it landed out. I want to know how she knew."` |
+| `deep` | `"An older player left a ball alone, and it landed out. I keep wondering what she saw."` |
+| `quiet` | `"An older player let a ball go by. It landed out. How did she know?"` |
+
+**Parent:** *Ask what the player did* · *Say they have watched so many balls they just know* · *Say she does not have to see it yet*
+
+**invite** · *Ask what the player did*
+- `sunny` `"Nothing. She watched it all the way with her racket down. So calm."`
+- `fiery` `"Nothing. Not a step. She watched it land out like she'd arranged it."`
+- `deep` `"Nothing. She stood still and watched, as if she already knew."`
+- `quiet` `"Nothing. She just watched it go."`
+
+**respond** · *Say they have watched so many balls they just know*
+- `sunny` `"So it's just watching, lots and lots of it. I can do that."`
+- `fiery` `"Then I'll watch more. A lot more. Starting with the very next ball."`
+- `deep` `"So it is looking, for a long time. I cannot hurry it."`
+- `quiet` `"So I'll watch more of them."`
+
+**space** · *Say she does not have to see it yet*
+- `sunny` `"Okay. I'll keep watching and see if it starts to make sense."`
+- `fiery` `"Fine. But I'm watching her feet next time."`
+- `deep` `"I know. I would still like to see it once."`
+- `quiet` `"Okay. I'll watch for it next time."`
+
+### R61 · `sorry-for-a-lucky-point` · curiosity · school, after-school · generated
+**Kernel:** A ball clipped the net and dropped over for a point. The girl who won it said sorry, and the other girl nodded. She does not see why you would say sorry for winning a point.
+**Authoritative claims:** none – the two girls exist only inside the sentence, no score, match or result is named (a point off the net cord is not a result), and nothing here is about a match of her own.
+**Fixed in all four voices:** a ball that clipped the net, and the sorry said for the point it won. Each reply adds one fact: that the other girl nodded (invite). The respond stance takes the parent's answer, that it is a way of admitting the point was luck, and the third shares the not-knowing; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Why do people say sorry when the ball clips the net and drops over? It's still a point."` |
+| `fiery` | `"You don't say sorry for a point. A girl did, when the ball clipped the net. Why?"` |
+| `deep` | `"I keep wondering what a girl was sorry for when she won a point off the net cord."` |
+| `quiet` | `"A girl said sorry for a point off the net cord. I didn't know you did that."` |
+
+**Parent:** *Ask what the other girl did* · *Say it is a way of admitting it was luck* · *Say you never worked it out either*
+
+**invite** · *Ask what the other girl did*
+- `sunny` `"She just nodded, like it was completely normal. Maybe it is."`
+- `fiery` `"She nodded. Like a debt had just been paid."`
+- `deep` `"She nodded. They both knew what it meant. I did not."`
+- `quiet` `"She nodded. That was all."`
+
+**respond** · *Say it is a way of admitting it was luck*
+- `sunny` `"Oh. So it's like saying, I know that was lucky. I like that."`
+- `fiery` `"So it's manners about luck. All right. I'm still keeping the point."`
+- `deep` `"So it is honesty about luck. I had not thought of that."`
+- `quiet` `"Oh. It's a polite way of saying it was luck."`
+
+**space** · *Say you never worked it out either*
+- `sunny` `"Really? Good. Then I'm not behind. We can wonder together."`
+- `fiery` `"Great. Two of us who don't get it. I'll find out first."`
+- `deep` `"Then we are both still wondering. I do not mind that."`
+- `quiet` `"Okay. I'll ask someone else, then."`
+
+### R62 · `the-older-girl-knew-her-name` · good-news · school · generated
+**Kernel:** One of the older girls said hello to her by name in passing, and she had not thought the girl knew it. Nothing more happened.
+**Authoritative claims:** none – the older girl exists only inside the sentence, no name, result, ranking or reputation is claimed, and ⚠ nothing here says she is known on the circuit: one hello is one hello.
+**Fixed in all four voices:** one of the older girls, hello and the name, and that it was said in passing. Each reply adds one fact: what was said, and that the girl walked on (invite). The respond and space stances add none – they are what she feels and what she will do with it.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"One of the older girls said hello to me by name. I didn't think she knew it."` |
+| `fiery` | `"One of the older girls knows my name. She used it. I heard it."` |
+| `deep` | `"One of the older girls said my name in passing. I did not think she knew it."` |
+| `quiet` | `"One of the older girls said hello. She used my name."` |
+
+**Parent:** *Ask what the older girl said* · *Say it's good to be noticed* · *Let her just have this*
+
+**invite** · *Ask what the older girl said*
+- `sunny` `"Just hello, and my name, like it was nothing. Then she kept walking."`
+- `fiery` `"Hello, and my name. Then she walked off like it was nothing. It was not nothing."`
+- `deep` `"Hello, and my name, in passing. She did not even stop."`
+- `quiet` `"Just hello and my name. Then she walked on."`
+
+**respond** · *Say it's good to be noticed*
+- `sunny` `"It really is. I feel a foot taller and I'm trying to hide it."`
+- `fiery` `"It is. I'd like a few more of them to notice, frankly."`
+- `deep` `"It is. I did not know I wanted it until it happened."`
+- `quiet` `"It is. I'd noticed her too."`
+
+**space** · *Let her just have this*
+- `sunny` `"I will. I'm going to say hello back properly next time."`
+- `fiery` `"Oh, I will. And next time I'm saying her name first."`
+- `deep` `"I will. I would like to remember exactly how it sounded."`
+- `quiet` `"I will. It was a nice bit of the week."`
+
 ---
 
 ## P3.7 The corpus at 43, and the whole document at 51 – counted by script, not claimed
