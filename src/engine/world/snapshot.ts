@@ -2280,7 +2280,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // entry gates and `world/ladder.ts` are untouched; only the wire copy goes.
     coachId: world.coachId,
     // ⭐⭐ ROUND 52 F1 (14.10) – HOW SHE FEELS ABOUT THE COACH SHE HAS (`Snapshot.coachFeel`, one of six ids, no wording). A conditional spread, so the key is ABSENT – not `null`,
-    // not `undefined` – when nobody is employed: `null` moves every L3-7 twin digest and an always-present valueless key breaks D-07's byte census (`openingFundsCents` below measured both).
+    // not `undefined` – when nobody is employed: `null` moves every L3-7 twin digest and an always-present valueless key breaks D-07's byte census (`openingFundsCents` above measured both).
     ...(feel === null ? {} : { coachFeel: feel }),
     coachMarket: coachMarket(world),
     coachBilling: coachBilling(world),

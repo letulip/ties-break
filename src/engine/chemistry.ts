@@ -471,9 +471,10 @@ export function chemistryHunch(chem: number | undefined): ChemistryHunch {
  *  guessed (invariant 5): `tools/chemistry-bench.ts` B14 and `docs/specs/the-chemistry-2026-09.md` §17
  *  carry the shares each of these produces. */
 export const COACH_FEEL = {
-  /** Weeks together before she has anything to say. Six, because «a sentence in week 3 about a
-   *  relationship is noise» (C7, 16.09) and the first six weeks are the longest a pair has no
-   *  history at all; below it the step is `too-early`, whatever the pair. */
+  /** Weeks together before she has anything to say. Six is the design's number (round 52): C7's
+   *  «a sentence in week 3 about a relationship is noise» (16.09) rules out the opening weeks, and
+   *  by week 6 the trend already separates the pairs (B14 (a)) while the level has barely moved.
+   *  Under it the step is `too-early`, whatever the pair. */
   tooEarlyWeeks: 6,
   /** The level term is `chem / levelScale`, clamped to ±1: a pair at ±6 has said everything its level
    *  can say. Twice the confident line (±3, `CHEMISTRY_HUNCH_*`), so a pair just past the line speaks

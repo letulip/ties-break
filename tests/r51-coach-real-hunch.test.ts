@@ -47,6 +47,8 @@
 // new test finds, by a fixed scan, careers whose TREND alone hedges warm or cold at week 13 with the gauge silent. `chemistryHunch` and its
 // constants stay and are still pinned below: they are the feel's CONFIDENT line (`coachFeelStep`), no longer the prompt's reader. The copy
 // arms (table rules, the byte-identical sweep, the mounted language cases) are untouched.
+// MUTATION ARMS FOR THE RE-AIM (14.10, full table in tests/r52-coach-feel.test.ts): warm and cold swapped in `feelHunch` (M7) RED here 2 unit + 2 mounted; the hub
+// reading the RAW level again (M13) RED here 2 – the prompt case and the hedged-feel case, which is the one that CANNOT be satisfied by a band of the level.
 import { describe, it, expect } from 'vitest'
 import {
   SMALL_TALK_SITUATIONS,

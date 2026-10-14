@@ -1266,13 +1266,13 @@ small-talk copy are separate pieces of work.
 **Six steps, and never a number.** `too-early` (under six weeks together), `unsure`, `seems-good`, `seems-off`, `good`, `off`. A
 score shown to the player would be a second gauge with a different bar, so only the step leaves the engine.
 
-**The score.** She starts from the pair's trend – the yearly drift its affinity gives, scaled to the range −1 to +1 – and gives more
+**The score.** She starts from the pair's trend – the yearly drift its affinity gives, scaled to the range -1 to +1 – and gives more
 and more weight to the level (the gauge's own number, scaled so that ±6 is all of it) as they work together: nothing on the first
 day, about a third at half a year, 70% from a year on. A small doubt of at most ±0.12 is added, drawn once every four weeks on its own
-sub-stream, so it does not flicker between two looks at the screen. At +0.25 or more she leans good, at −0.25 or less she leans off,
+sub-stream, so it does not flicker between two looks at the screen. At +0.25 or more she leans good, at -0.25 or less she leans off,
 and in between she is unsure.
 
-**Confidence is the gauge's to confirm.** `good` also needs the level to be +3 or more, and `off` −3 or less – the same lines the
+**Confidence is the gauge's to confirm.** `good` also needs the level to be +3 or more, and `off` -3 or less – the same lines the
 small-talk hunch uses, which sit above the largest bar any pair can draw (2.5). So whenever she is confident, the gauge on the card
 shows a figure with the same sign, and all of her doubt sits in the two hedged steps. That is a property, and it is tested against the
 gauge's own function rather than a restated threshold.
@@ -1300,8 +1300,8 @@ the corridor is steeper below the drift than above it – the same shape that ma
 | (a) week 13 | unsure 44–56%, seems-good 19–26%, seems-off 19–26%, good 0.5–2%, off 1.5–4% |
 | (a) week 26 | unsure 36–50%, seems-good 10–18%, seems-off 8–15%, good 8–12%, off 17–25% |
 | (a) week 52 | unsure 30–40%, seems-good 2–8%, seems-off 2–8%, good 17–22%, off 35–42% |
-| (b) from week 13, level at week 52 | seems-good: +3 or more 55–72%, between 25–40%, −3 or less 2–7% · seems-off: −3 or less 78–92%, between 8–22%, +3 or more under 1% · unsure: +3 or more 5–14%, between 45–60%, −3 or less 30–45% |
-| (b) from week 26 | seems-good: +3 or more 60–80% · seems-off: −3 or less 70–90% · good: +3 or more 85–97% · off: −3 or less 92–99% |
+| (b) from week 13, level at week 52 | seems-good: +3 or more 55–72%, between 25–40%, -3 or less 2–7% · seems-off: -3 or less 78–92%, between 8–22%, +3 or more under 1% · unsure: +3 or more 5–14%, between 45–60%, -3 or less 30–45% |
+| (b) from week 26 | seems-good: +3 or more 60–80% · seems-off: -3 or less 70–90% · good: +3 or more 85–97% · off: -3 or less 92–99% |
 | (c) doubt errors from week 13 | seems-good wrong 10–18%, seems-off wrong 2–6%, combined 6–12% |
 | (c) doubt errors from week 26 | combined 5–11% |
 | (d) flicker, first coached year | median 1 change (0–2), p90 3–6 |
@@ -1327,10 +1327,10 @@ knob was moved.** Everything below is read off one walk per pair.
 | (a) week 13 | unsure 44–56%, seems-good 19–26%, seems-off 19–26%, good 0.5–2%, off 1.5–4% | 47.8%, 22.7%, 25.9%, 1.2%, 2.5% – all inside (seems-off near the top) |
 | (a) week 26 | unsure 36–50%, seems-good 10–18%, seems-off 8–15%, good 8–12%, off 17–25% | 43.1%, 14.4%, 13.1%, 10.6%, 18.8% – all inside |
 | (a) week 52 | unsure 30–40%, seems-good 2–8%, seems-off 2–8%, good 17–22%, off 35–42% | **unsure 23.3% (below)**, 6.8%, 8.0%, 21.1%, 40.8% |
-| (b) from week 13, level at week 52 | seems-good: +3 or more 55–72%, between 25–40%, −3 or less 2–7% | 68.0%, 29.0%, 2.9% |
-| | seems-off: −3 or less 78–92%, between 8–22%, +3 or more under 1% | 84.6%, 15.4%, 0.0% |
-| | unsure: +3 or more 5–14%, between 45–60%, −3 or less 30–45% | 9.4%, 57.2%, 33.3% |
-| (b) from week 26 | seems-good +3 or more 60–80% · seems-off −3 or less 70–90% · good +3 or more 85–97% · off −3 or less 92–99% | 59.0% (a point under) · 71.3% · 95.3% · 100.0% (n = 226; a point over) |
+| (b) from week 13, level at week 52 | seems-good: +3 or more 55–72%, between 25–40%, -3 or less 2–7% | 68.0%, 29.0%, 2.9% |
+| | seems-off: -3 or less 78–92%, between 8–22%, +3 or more under 1% | 84.6%, 15.4%, 0.0% |
+| | unsure: +3 or more 5–14%, between 45–60%, -3 or less 30–45% | 9.4%, 57.2%, 33.3% |
+| (b) from week 26 | seems-good +3 or more 60–80% · seems-off -3 or less 70–90% · good +3 or more 85–97% · off -3 or less 92–99% | 59.0% (a point under) · 71.3% · 95.3% · 100.0% (n = 226; a point over) |
 | (c) doubt errors from week 13 | seems-good wrong 10–18%, seems-off 2–6%, combined 6–12% | 11.4% (31 of 272), **1.0%** (3 of 311), **5.8%** – the cold side and the total are below the range |
 | (c) from week 26 | combined 5–11% | 6.4% (21 of 330) |
 | (d) flicker, first coached year | median 1 (0–2), p90 3–6 | median 1.1, p90 5.7, mean 2.5; 12.3% of pairs never change |
@@ -1346,10 +1346,11 @@ line, so those pairs lean hedged rather than staying quiet – 14.8% of pairs ar
 is smaller than predicted (1.0% against 2–6%): a pair that starts badly almost never turns round within a year, while one that starts
 well sometimes does (11.4%) – the asymmetry predicted, only stronger. And the first-year flicker tail is at the top of the range:
 one pair in ten changes step about every two months. Those are the pairs whose score sits within the doubt's width of the line, and
-the doubt is what moves them; the median pair changes once, when its hedged step becomes a confident one.
+the doubt is what moves them. The median pair changes step about once in its first year, which fits a hedged step firming into a confident
+one as the level passes ±3 – the bench counts changes, not their kind, so that reading is not measured.
 
 **What it means for the player.** After a quarter she is unsure about half the time, and when she does lean, the lean is right: of
 the pairs that seem good at week 13, about two in three show +3 or more at week 52, and fewer than one in thirty ends the year
-clearly cold; of those that seem off, five in six end it at −3 or less. A confident step is rare in the first quarter (3.7% of pairs at
+clearly cold; of those that seem off, five in six end it at -3 or less. A confident step is rare in the first quarter (3.7% of pairs at
 week 13) and common by the end of the year (62% at week 52), because it needs the gauge to agree. Every number here is on the stated
 even-record stream, as in B12 and B13, not on played careers.

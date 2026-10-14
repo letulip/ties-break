@@ -12,8 +12,23 @@
 //   F. the snapshot key – ABSENT (not null, not undefined) without a coach, present with one
 //   G. the hunch mapping the small-talk hunch line reads (the line itself is tests/r51-coach-real-hunch.test.ts)
 //
-// ⚠⚠ MUTATION ARMS – each APPLIED to the real tree, RUN against this file, RED MEASURED, the file restored with its sha
-// checked identical. The table is in docs/specs/the-chemistry-2026-09.md §17 (the run that produced it is the builder's report).
+// ⚠⚠ MUTATION ARMS – each APPLIED to the real tree, RUN against this file and the round-51 hunch pair (unit; M7 and M13 also the mounted file),
+// RED MEASURED, and the file restored with its sha-256 checked identical (all fourteen, 14.10). Green unmutated.
+//   M1  the score edge made strict at +leanAt (`>=` -> `>`)              RED 3  score edges · confident edges · a level against the lean
+//   M2  the too-early gate off by one (`>=` -> `>`)                      RED 2  the gate · a hire restarts the clock
+//   M3  the confident gate dropped on the warm side                      RED 6  the PROPERTY · three step-table cases · the gate case · r51's hedged-feel prompt
+//   M4  the doubt redrawn every week, not every period                   RED 2  the score ramp · constant inside a period
+//   M5  the level weight uncapped (no `Math.min`)                        RED 1  the score ramp
+//   M6  a weekly-phase term added to the score                           RED 1  no phase term
+//   M7  warm and cold swapped in `feelHunch`                             RED 3 unit + 2 mounted  the mapping · r51's prompt and hedged cases · mounted en + ru
+//   M8  the snapshot key always present (undefined-valued)               RED 1  key absent
+//   M9  the wrapper speaks with nobody employed                          RED 3  null without a coach · key absent · r51's «nobody employed»
+//   M10 the wrapper moves the MAIN position                              RED 2  zero MAIN draws · r51's no-MAIN-draw
+//   M11 the stint never restarts (`coachSinceWeek` always 0)             RED 4  a hire restarts the clock · r51's older-stint and strict-week · radar-training
+//   M12 the affinity helper offset by +0.37                              RED 1  the tick-and-feel equality (round43-chemistry stayed green: it is statistical)
+//   M13 the hub reads the RAW level again (round 51's rule inlined)      RED 2 unit (the prompt reads her feel · the hedged-feel case) · mounted 0, whose poses are
+//                                                                          clear levels or young stints where both rules agree – the unit pair is what separates them
+//   M14 the tick re-inlines an `affinityFor` call                        RED 1  the one-spelling pin
 import { describe, it, expect } from 'vitest'
 import {
   CHEMISTRY_HUNCH_COLD_AT,
@@ -37,6 +52,7 @@ import { ageAtWeek } from '../src/engine/world/age'
 import { coachFeel, coachPairAffinity } from '../src/engine/world/coachFeel'
 import { coachSinceWeek } from '../src/engine/world/coachStint'
 import { DEFAULT_PROFILE, type CoachFeel } from '../src/shared/protocol'
+import { engineModuleFunction } from './worldSource'
 
 const SEED = 'r52-f1'
 const COACH = 'coach-x'
@@ -280,6 +296,14 @@ describe('round 52 F1 E – the world-level wrapper', () => {
     expect(coachFeel(world)).toBe('good')
     world.coachPairs[id] = pairOf(-12)
     expect(coachFeel(world)).toBe('off')
+  })
+
+  it('⭐ THE TICK AND HER FEEL SHARE THE ONE AFFINITY SPELLING: `accrueCoachPair` calls `coachPairAffinity` and carries no `affinityFor` call of its own', () => {
+    // A structure claim, so a source read is the honest instrument (the behaviour half is the equality test above): re-inlining the four arguments in the tick
+    // would let the level it writes and the feel that reads it disagree about who the pair is, and nothing numeric would notice until a bench did.
+    const tick = engineModuleFunction('world/phaseGrowth', 'accrueCoachPair')
+    expect(tick).toContain('coachPairAffinity(world, coach)')
+    expect(tick, 'a second spelling of the affinity').not.toContain('affinityFor(')
   })
 
   it('an absent pair reads chem 0 (no row until the first paid week) and never throws', () => {
