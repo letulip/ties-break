@@ -1997,6 +1997,8 @@ These are the 81 catalogue keys of `src/engine/economy/shop.ts`, `equipment.ts` 
 
 ## ⚙ 13.10 agent-authored (бланкет) – r51 B3, item №2: the Specialists tab's engine sentences, as whole keys
 
+⚖ 14.10 владелец: «по остальным к вычитке ок» – ряды этого раздела `APPROVED`.
+
 ⚙ 13.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's item №2: «На Экране Специалистов остались английские надписи в русской версии».
 
 Seven of the engine's own sentences reached this tab as they came, English under ru: the three locked lines (`MASSEUR_LOCKED_DETAIL`, `PSYCHOLOGIST_LOCKED_DETAIL`, `SPARRING_LOCKED_DETAIL`, shown while a seat is closed) and the four states of the masseur's room note (`masseurRoomNote`, shown under his name once he is hired). They are keys of the seat `engine.text` now, and `SupportStaffTab.vue` reads them through `engineText`. The masseur's four notes are enumerated by posing a world and calling the real function (`tools/i18n-seats.ts`), so a fifth state joins by existing.
@@ -2009,6 +2011,6 @@ Vocabulary is the tab's own: `серия W`, `массажист`, `психол
 
 | id | English | Russian | Status |
 | --- | --- | --- | --- |
-| RU21-STF-01 | `Her first counting W-series result opens a place for a masseur.` | `Её первый зачётный результат на турнире серии W откроет место для массажиста.` | `DRAFT` |
-| RU21-STF-02 | `Her first counting W-series result opens a place for a psychologist.` | `Её первый зачётный результат на турнире серии W откроет место для психолога.` | `DRAFT` |
-| RU21-STF-03 | `Her first counting W-series result opens a place for a hitting partner.` | `Её первый зачётный результат на турнире серии W откроет место для спарринг-партнёра.` | `DRAFT` |
+| RU21-STF-01 | `Her first counting W-series result opens a place for a masseur.` | `Её первый зачётный результат на турнире серии W откроет место для массажиста.` | `APPROVED` |
+| RU21-STF-02 | `Her first counting W-series result opens a place for a psychologist.` | `Её первый зачётный результат на турнире серии W откроет место для психолога.` | `APPROVED` |
+| RU21-STF-03 | `Her first counting W-series result opens a place for a hitting partner.` | `Её первый зачётный результат на турнире серии W откроет место для спарринг-партнёра.` | `APPROVED` |

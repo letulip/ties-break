@@ -659,6 +659,8 @@ may change claims, licences, chance gates or the persisted main RNG state.
 
 ## ⚙ 14.10 agent-authored (бланкет) – r51 B11, item №13: what a staycation week says, as whole keys
 
+⚖ 14.10 владелец: «по остальным к вычитке ок» – ряды этого раздела `APPROVED`.
+
 ⚙ 14.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's item №13: «Неделя дома "с подружками" в качестве отпуска закончилась запиской "Неделя без корта. Вернулась загорелее и громче за ужином" - мне кажется здесь смыслово не очень подходит, это к деревне или морю больше, надо для этого варианта что-то другое добавить и проверить в английском чтобы тоже синхронизация была».
 
 Three new rows, printed only on a staycation week, and two old rows that no longer print there. Both languages in one change.
@@ -672,6 +674,6 @@ Three new rows, printed only on a staycation week, and two old rows that no long
 
 | id | English | Russian | Status |
 | --- | --- | --- | --- |
-| RU09D-STW-01 | `A week at home with her friends. The kitchen was never empty.` | `Неделя дома с подружками. Кухня не пустовала.` | `DRAFT` |
-| RU09D-STW-02 | `No court this week. Her friends were in and out, and the fridge paid for it.` | `Неделя без корта. Подружки то и дело заходили, а холодильник поплатился.` | `DRAFT` |
-| RU09D-STW-03 | `Home all week. Louder at dinner, happier too.` | `Всю неделю дома. За ужином громче – и веселее.` | `DRAFT` |
+| RU09D-STW-01 | `A week at home with her friends. The kitchen was never empty.` | `Неделя дома с подружками. Кухня не пустовала.` | `APPROVED` |
+| RU09D-STW-02 | `No court this week. Her friends were in and out, and the fridge paid for it.` | `Неделя без корта. Подружки то и дело заходили, а холодильник поплатился.` | `APPROVED` |
+| RU09D-STW-03 | `Home all week. Louder at dinner, happier too.` | `Всю неделю дома. За ужином громче – и веселее.` | `APPROVED` |

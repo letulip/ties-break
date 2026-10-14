@@ -63,10 +63,10 @@ These are compact descriptions of how she is now, not labels for her personality
 | norm | `Steady` (`KidScreen.vue`) | `Спокойна` |
 | happy | `Happy` (`KidScreen.vue`) | `Радуется` |
 | sad | `Low` | `Не в духе` |
-| serious | `Focused` (`KidScreen.vue`) | `Сосредо­точена` – ⚙ 14.10 (r51, №21, «надо бы сделать перенос») в слове один невидимый мягкий перенос (U+00AD) после «Сосредо»: на телефоне слово шире плашки, и без переноса оно рвалось бы посреди слога. Слово то же, меняется только место разрыва. |
+| serious | `Focused` (`KidScreen.vue`) | `Сосредо­точена` – ⚙ 14.10 (r51, №21, «надо бы сделать перенос») в слове один невидимый мягкий перенос (U+00AD) после «Сосредо»: на телефоне слово шире плашки, и без переноса оно рвалось бы посреди слога. Слово то же, меняется только место разрыва. ⚖ 14.10 владелец: ок, `APPROVED`. |
 | tired | `Tired` (`KidScreen.vue`) | `Устала` |
 | injury | `Hurt` | `Травмирована` |
-| rehab | `On the mend` | `Восста­навли­вается` – ⚙ 14.10 (r51, №21) в слове два невидимых мягких переноса (U+00AD): после «Восста» и после «навли». Слово шире плашки даже в две строки, поэтому три строки по слогам: «Восста-», «навли-», «вается». Слово то же, меняется только место разрыва. Такая же запись стоит в таблице настроения экрана недели (ru-home-weekly, строка rehab): ключ общий, и если две записи разойдутся, ключ On the mend перестанет собираться (конфликт). |
+| rehab | `On the mend` | `Восста­навли­вается` – ⚙ 14.10 (r51, №21) в слове два невидимых мягких переноса (U+00AD): после «Восста» и после «навли». Слово шире плашки даже в две строки, поэтому три строки по слогам: «Восста-», «навли-», «вается». Слово то же, меняется только место разрыва. Такая же запись стоит в таблице настроения экрана недели (ru-home-weekly, строка rehab): ключ общий, и если две записи разойдутся, ключ On the mend перестанет собираться (конфликт). ⚖ 14.10 владелец: ок, `APPROVED`. |
 | angry | `Angry` | `Злится` |
 
 The private-life channel may override these with `diary.facts.moodWord`; those five lines belong to
@@ -1501,6 +1501,8 @@ The sixteen names are localized data (RU-05 §6): the nominative for `{0} next d
 
 ## ⚙ 13.10 agent-authored (бланкет) – r51 B4, item №7: what the hired coach says about a trip, as whole keys
 
+⚖ 14.10 владелец: «по остальным к вычитке ок» – ряды этого раздела `APPROVED`.
+
 ⚙ 13.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's item №7: «Your coach would save her... нет перевода ни в попапе при заявке, ни на самой карточке в Сезоне».
 
 The hired coach's opinion about a trip was the last English printed as a finished sentence on a tournament card: eight sentences, written by the engine (`coachEntryLine` – how tired she is; `coachLadderNote` – which tournament he would rather she played), shown in four places – the entry confirm, the Season card, the next-tournament panel and the Calendar's marker card. They are `CopyRef`s now, beside the English string on the card (`UpcomingEvent.coachCautionC`; class (b): derived at snapshot time, persisted nowhere, no schema move), and the four places render the ref. English is unchanged to the byte: the string is the ref rendered under the source locale.
@@ -1513,18 +1515,20 @@ The hired coach's opinion about a trip was the last English printed as a finishe
 
 | id | English | Russian | Status |
 | --- | --- | --- | --- |
-| RU23-CMK-49 | `Your coach would not take her. She is empty.` | `Тренер не советует брать её на этот турнир. Сил у неё не осталось.` | `DRAFT` |
-| RU23-CMK-50 | `Your coach would skip this one and get her legs back.` | `Тренер советует пропустить этот турнир и вернуть ногам лёгкость.` | `DRAFT` |
-| RU23-CMK-51 | `Your coach thinks she is a week short of her best for this.` | `Тренер считает, что для этого турнира ей не хватает недели до лучшей формы.` | `DRAFT` |
-| RU23-CMK-52 | `Your coach says the {0} is the week – this pays {1} points, not the table she is climbing.` | `Тренер говорит, что на этой неделе стоит играть «{0}» – здесь очки идут в другой рейтинг ({1}), а не в тот, по которому она поднимается.` | `DRAFT` |
-| RU23-CMK-53 | `Your coach says the {0} is the week – this one will not move anything.` | `Тренер говорит, что на этой неделе стоит играть «{0}» – этот турнир ничего не изменит.` | `DRAFT` |
-| RU23-CMK-54 | `Your coach says the {0} is the week – she has outgrown this one.` | `Тренер говорит, что на этой неделе стоит играть «{0}» – этот уровень она уже прошла.` | `DRAFT` |
-| RU23-CMK-55 | `Your coach says even a title here would not move her ranking.` | `Тренер говорит, что даже титул здесь не повлияет на её рейтинг.` | `DRAFT` |
-| RU23-CMK-56 | `Your coach would save her for the {0} {1}.` | `Тренер советует приберечь её для «{0}» {1}.` | `DRAFT` |
-| RU23-CMK-57 | `when\|next week` | `на следующей неделе` | `DRAFT` |
-| RU23-CMK-58 | `when\|in {0} weeks` | `через {0, plural, one {{0} неделю} few {{0} недели} many {{0} недель} other {{0} недели}}` | `DRAFT` |
+| RU23-CMK-49 | `Your coach would not take her. She is empty.` | `Тренер не советует брать её на этот турнир. Сил у неё не осталось.` | `APPROVED` |
+| RU23-CMK-50 | `Your coach would skip this one and get her legs back.` | `Тренер советует пропустить этот турнир и вернуть ногам лёгкость.` | `APPROVED` |
+| RU23-CMK-51 | `Your coach thinks she is a week short of her best for this.` | `Тренер считает, что для этого турнира ей не хватает недели до лучшей формы.` | `APPROVED` |
+| RU23-CMK-52 | `Your coach says the {0} is the week – this pays {1} points, not the table she is climbing.` | `Тренер говорит, что на этой неделе стоит играть «{0}» – здесь очки идут в другой рейтинг ({1}), а не в тот, по которому она поднимается.` | `APPROVED` |
+| RU23-CMK-53 | `Your coach says the {0} is the week – this one will not move anything.` | `Тренер говорит, что на этой неделе стоит играть «{0}» – этот турнир ничего не изменит.` | `APPROVED` |
+| RU23-CMK-54 | `Your coach says the {0} is the week – she has outgrown this one.` | `Тренер говорит, что на этой неделе стоит играть «{0}» – этот уровень она уже прошла.` | `APPROVED` |
+| RU23-CMK-55 | `Your coach says even a title here would not move her ranking.` | `Тренер говорит, что даже титул здесь не повлияет на её рейтинг.` | `APPROVED` |
+| RU23-CMK-56 | `Your coach would save her for the {0} {1}.` | `Тренер советует приберечь её для «{0}» {1}.` | `APPROVED` |
+| RU23-CMK-57 | `when\|next week` | `на следующей неделе` | `APPROVED` |
+| RU23-CMK-58 | `when\|in {0} weeks` | `через {0, plural, one {{0} неделю} few {{0} недели} many {{0} недель} other {{0} недели}}` | `APPROVED` |
 
 ## ⚙ 13.10 agent-authored (бланкет) – r51 B8, items №10/№11: the chemistry info popup
+
+⚖ 14.10 владелец: «по остальным к вычитке ок» – ряды этого раздела `APPROVED`.
 
 ⚙ 13.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's item №11: «надо наверное при кликие на химию тренера какой-то небольшой информ попап показывать что там вообще, а то этот знак вопроса без движения несколько смущает» – and item №10 (44 weeks and the ring never moved) is answered by this card in the game: the pair is recomputed every week a coach is hired, and the «?» was hiding two different states.
 
@@ -1537,10 +1541,10 @@ A tap on the chemistry ring of a coach card opens `ChemistryHelpDialog.vue`: a t
 
 | id | English | Russian | Status |
 | --- | --- | --- | --- |
-| RU23-CHM-01 | `Chemistry` | `Взаимопонимание` | `DRAFT` |
-| RU23-CHM-02 | `How well she and a coach understand each other.` | `Насколько хорошо она и тренер понимают друг друга.` | `DRAFT` |
-| RU23-CHM-03 | `It shifts a little every week they work together – slowly, so a first reading can take months.` | `Взаимопонимание понемногу меняется каждую неделю, пока они работают вместе, – медленно, поэтому первое значение может появиться только через несколько месяцев.` | `DRAFT` |
-| RU23-CHM-04 | `She has not worked with this coach yet, so there is nothing to read.` | `Она ещё не работала с этим тренером, поэтому показывать пока нечего.` | `DRAFT` |
-| RU23-CHM-05 | `They have worked together, but it is not readable yet – it needs more time together.` | `Они уже работали вместе, но значение ещё не прочитано – нужно больше времени вместе.` | `DRAFT` |
-| RU23-CHM-06 | `Right now it reads {0}%.` | `Сейчас значение: {0}%.` | `DRAFT` |
-| RU23-CHM-07 | `When a coach is let go, it stays where it was – it does not fade – and carries on if you hire that coach again.` | `Если с тренером расстаться, взаимопонимание останется на месте – оно не угасает – и продолжится, если нанять этого тренера снова.` | `DRAFT` |
+| RU23-CHM-01 | `Chemistry` | `Взаимопонимание` | `APPROVED` |
+| RU23-CHM-02 | `How well she and a coach understand each other.` | `Насколько хорошо она и тренер понимают друг друга.` | `APPROVED` |
+| RU23-CHM-03 | `It shifts a little every week they work together – slowly, so a first reading can take months.` | `Взаимопонимание понемногу меняется каждую неделю, пока они работают вместе, – медленно, поэтому первое значение может появиться только через несколько месяцев.` | `APPROVED` |
+| RU23-CHM-04 | `She has not worked with this coach yet, so there is nothing to read.` | `Она ещё не работала с этим тренером, поэтому показывать пока нечего.` | `APPROVED` |
+| RU23-CHM-05 | `They have worked together, but it is not readable yet – it needs more time together.` | `Они уже работали вместе, но значение ещё не прочитано – нужно больше времени вместе.` | `APPROVED` |
+| RU23-CHM-06 | `Right now it reads {0}%.` | `Сейчас значение: {0}%.` | `APPROVED` |
+| RU23-CHM-07 | `When a coach is let go, it stays where it was – it does not fade – and carries on if you hire that coach again.` | `Если с тренером расстаться, взаимопонимание останется на месте – оно не угасает – и продолжится, если нанять этого тренера снова.` | `APPROVED` |

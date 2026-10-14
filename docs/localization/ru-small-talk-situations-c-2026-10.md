@@ -661,6 +661,8 @@ assigns fatigue, training or bond effects to resting.
 
 ## 17. r51 №17 – four school-years story situations (14.10)
 
+⚖ 14.10 владелец: «по остальным к вычитке ок» – ряды этого раздела `APPROVED`.
+
 ⚙ 14.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's item №17: «ситуация "Она подает, мяч задевает трос сетки - и падает в кофе одного папы." очень крутая. Но я ее видел уже 3 раза. Давай сделаем разнообразие этих юморных зарисовок и как-то сделаем, чтобы они более рандомно происходили?»
 
 Four new `story` situations, R53–R56, appended last in the generated catalogue (English authority: the 14.10 addendum in `docs/specs/small-talk-corpus-2026-09.md`). Both languages in one change. Each is a teaser, a shared incident and three replies, in all four voices, like the court-four rows in [RU-10 life beats](ru-life-beats-small-talk-2026-10.md) §11. Row order, ids, stages and fact gates are locale-independent; nothing here is drawn differently in Russian.

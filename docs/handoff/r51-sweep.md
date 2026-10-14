@@ -25,7 +25,8 @@ last-reviewed: 2026-10-14
 - Applied evening rulings 13.10: pill-strip scroll not wrap; cash-only coach strip; bank-model
   withdrawals; the car thread closed; default epoch confirmed 2031.
 - Questions queued: №8 design options (recommended: the beat's answer opens the pair's chemistry
-  reading); inheritance ceiling $432k and the offered invariant-5 bench; chemistry pace knob;
+  reading – ⚖ 14.10 «давай по рекомендации», built); inheritance ceiling (⚖ 14.10: $288,000 cash,
+  house and car on top – built `a5b28ced`); chemistry pace knob (parked by his word);
   tournament names raw app-wide; B9's part-sale-never-names-a-loss confirmation; B12's 49% story
   share + thin school subjects; briefing copy still promises «every Slam is required» without the
   cap exception; «Травмирована» third soft-hyphen candidate; sub-360 polish notes.
