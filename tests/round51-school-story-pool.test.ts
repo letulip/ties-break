@@ -237,7 +237,12 @@ describe('round 51 №17 B – the shipped draw hands her a different story', ()
     // ⚠ ANTI-VACUITY FIRST: a share of an empty set is a share of nothing. 120 careers x 12 years
     // of weekly rolls hold well over a thousand school conversations on this recipe.
     expect(all.length, 'school-stage conversations walked').toBeGreaterThan(1000)
-    expect(stories.length, 'and the story subject was actually drawn in them').toBeGreaterThan(250)
+    // ⚠ RE-AIMED 14.10 (round 52 close, architect): the floor was 250 and H3's stint checkpoints
+    // (dac4e94e) took it to 241 – a due coach talk counts toward the season's tally of four, so a
+    // close-bond season that holds one leaves the lottery a slot fewer. The arm is an ANTI-VACUITY
+    // floor, not a measurement: 200 stories is still a sample the two shares below are read from
+    // with a standard error under 3.5 points.
+    expect(stories.length, 'and the story subject was actually drawn in them').toBeGreaterThan(200)
     const four = count(stories, 'story:court-four')
     const shareOfStories = four / stories.length
     const shareOfAll = four / all.length
