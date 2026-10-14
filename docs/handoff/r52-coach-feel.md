@@ -24,15 +24,27 @@ last-reviewed: 2026-10-14
   - F4 `87e7f284` – three small-talk conversations in her voice, gated by the feel.
 - NO schema move. The frozen MAIN capture is unmoved (41550 / `e6b0c709`).
 
+## The continuation (his answers of 14.10: «важно и критично как раз знать… в первые год-два
+сотрудничества» and «шрифт на плашке тоже поправь»)
+- H1 `cc4470cf` – the «Coach» tile in Manrope (`font-family: inherit`); six onboarding cards carry the
+  same defect – reported, not touched.
+- H2 `2144c3c1` – six stint conversations (half a year R70–R72, a year together R73–R75; at a year
+  «not sure» and «cold» ask whether to look at another coach).
+- H3 `dac4e94e` – stint checkpoints at weeks together 12/32/56: the talk comes on its own, by her
+  real feel; measured all three talks in 98–100 % of stints ≥ 60 weeks at a steady/close bond,
+  coach talks in the first two years ×9 (1.57 a year vs 0.18); a recency veto (his round-43 law)
+  costs 0.6 % of windows; at a strained/cold bond she does not confide (one clause).
+
 ## Open (the owner's)
-- F4's conversations measured nearly invisible: 0.052 per coached year (small talk itself is ~1.2 a
-  year). The priced lever – a lead on the re-read week, ≈0.3 a year, but about a quarter of her
-  conversations in coached years would then be about the coach – is his call.
-- The «Coach» tile renders in the platform button font, not Manrope like its five neighbours
-  (pre-existing) – a one-line fix if he wants it.
+- Whether the checkpoint talk should come even at a strained/cold bond (one clause).
+- The six onboarding cards in the button font (OnboardingWizard.vue).
 - All new strings DRAFT: RU23-CFL-01..07 (tile), RU09D-CFW-01..10 (notes), 10C §35–§38 (talks).
 
 ## Gates
+CONTINUATION CHAIN at `e69a495e` (clean worktree, npm ci, one background run, every verdict from
+its own file): check `R52H_CHECK_EXIT=0` (323/323, unit 389 s – first run), sim `R52H_SIM_EXIT=0`
+(13/414 s), e2e `R52H_E2E_EXIT=0` (145), lqa:ru `R52H_LQA_EXIT=0` (0 English), container twin
+`R52H_CONTAINER_EXIT=0` (6/6); build line `e69a495` in the worktree dist. The first chain, below:
 All verdicts from sentinel files (mtime fresher than each run), clean worktree with `npm ci`, every
 one at `95adf883`:
 - check: GREEN – `R52_CHECK_EXIT=0` (/tmp/r52-gate-check2.log; component 322/322, unit 402 s). The
