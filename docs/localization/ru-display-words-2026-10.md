@@ -309,7 +309,7 @@ The week recap prints one line a week for a coached career: where the coach has 
 
 Русские значения лидов – его же припаркованные формы RU-17 R02–R05 (их ряды помечены решёнными).
 
-## Слова настроения – ⚙ 13.10, r51 B2 (пункты №15 «Bright» и №22 «Heavy»); агент-автор по бланкетному руллингу, `DRAFT`, владелец правит вживую
+## Слова настроения – ⚙ 13.10, r51 B2 (пункты №15 «Bright» и №22 «Heavy»); агент-автор по бланкетному руллингу – ⚖ 14.10 владелец: «ок, только Heavy пусть будет Мрачная» – все четыре ряда `APPROVED`
 
 Движок отдаёт плитке настроения одно из пяти английских слов (`MOOD_WORD`, `src/engine/spirit.ts`): Glowing, Bright, Steady, Dimmed, Heavy. Плитка «Настроение» на экране девочки и строка настроения в итогах недели печатали это слово как есть, поэтому под ru оно оставалось английским. Теперь экран читает его на границе показа (классы `mood` и `moodRecap` в `src/i18n/words.ts`); движок не тронут.
 
@@ -320,4 +320,4 @@ The week recap prints one line a week for a coached career: where the coach has 
 | RU22-MOOD-01 | `mood\|Glowing` | `Сияет` |
 | RU22-MOOD-02 | `mood\|Bright` | `Светлая` |
 | RU22-MOOD-03 | `mood\|Dimmed` | `Притихла` |
-| RU22-MOOD-04 | `mood\|Heavy` | `Тяжело на душе` |
+| RU22-MOOD-04 | `mood\|Heavy` | `Мрачная` – ⚖ 14.10 слово владельца («Heavy пусть будет Мрачная»), `APPROVED`; было «Тяжело на душе» |
