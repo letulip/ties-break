@@ -731,10 +731,10 @@ export function nextWeekIsClear(world: WorldState): boolean {
  *  with the level. `too-early` is in none of the three sets ON PURPOSE: six weeks in, there is nothing to say yet.
  *  ⚠ `!inCollege(world)` is the C-07 clause (`march-entry-open`'s, below) for its reason: the coach does not work in college weeks (`coachWorksThisWeek`), so a girl in
  *  a dorm has no practice to be unsure of. The three rows leave the college stage out of their lists too; this makes the FACT true to itself, not only the list.
- *  ⚠ `coachFeel` is `null` with nobody employed and `null` is in no set. PURE AND ZERO-DRAW: its noise is its own purpose-scoped sub-stream, never MAIN. */
-function coachFeelIs(world: WorldState, ...steps: CoachFeel[]): boolean {
+ *  ⚠ `coachFeel` is `null` with nobody employed and `null` is in no set. PURE AND ZERO-DRAW: its noise is its own purpose-scoped sub-stream, never MAIN. `feelOnce` is `reachableSituations`'s ONE read of it per pass (R52 F5). */
+function coachFeelIs(world: WorldState, feelOnce: () => CoachFeel | null, ...steps: CoachFeel[]): boolean {
   if (inCollege(world)) return false
-  const feel = coachFeel(world)
+  const feel = feelOnce()
   return feel !== null && steps.includes(feel)
 }
 
@@ -750,7 +750,7 @@ function coachFeelIs(world: WorldState, ...steps: CoachFeel[]): boolean {
  *  ⚠ SMALL_TALK_FACT: `tests/principles-c07-march-entry.test.ts`
  *  → docs/notes/life-beats/hub.md#small_talk_fact--8d5s-five-reads-and-every-one-of-them-is-pure
  */
-const SMALL_TALK_FACT: Record<SmallTalkFact, (world: WorldState) => boolean> = {
+const SMALL_TALK_FACT: Record<SmallTalkFact, (world: WorldState, feelOnce: () => CoachFeel | null) => boolean> = {
   'played-recently': (world) =>
     kidMatchRows(world).some((r) => r.week > world.week - SMALL_TALK_FACT_WEEKS && r.week <= world.week),
   'march-entry-open': (world) =>
@@ -780,9 +780,9 @@ const SMALL_TALK_FACT: Record<SmallTalkFact, (world: WorldState) => boolean> = {
   },
   'clear-next-week': nextWeekIsClear,
   // ⭐ ROUND 52 F4 – R67, R68, R69: the three sides of her feel for the coach (the block above `SMALL_TALK_FACT`).
-  'coach-feel-warm': (world) => coachFeelIs(world, 'seems-good', 'good'),
-  'coach-feel-unsure': (world) => coachFeelIs(world, 'unsure'),
-  'coach-feel-cold': (world) => coachFeelIs(world, 'seems-off', 'off'),
+  'coach-feel-warm': (world, feelOnce) => coachFeelIs(world, feelOnce, 'seems-good', 'good'),
+  'coach-feel-unsure': (world, feelOnce) => coachFeelIs(world, feelOnce, 'unsure'),
+  'coach-feel-cold': (world, feelOnce) => coachFeelIs(world, feelOnce, 'seems-off', 'off'),
 }
 
 /** One branch of one exchange: what the PARENT may say, and what she says back to exactly that.
@@ -992,9 +992,13 @@ export function reachableSituations(world: WorldState, voice: Temperament, stage
   // gate is unchanged in strength: a voice nobody wrote for a situation still cannot reach it. What
   // changed is that a situation can now be written for more than one, which is the corpus's §2 and
   // the whole reason a `fiery` girl no longer has one conversation in her life.
+  // ⭐ ROUND 52 F5 (14.10) – HER FEEL IS READ ONCE A PASS, AND ONLY WHEN A ROW ASKS: the three coach-feel facts each re-derived `coachFeel` (nine sub-stream keys on a hit).
+  // `null` (nobody employed) is a value that was READ, not a read still to do.
+  let feel: CoachFeel | null | undefined
+  const feelOnce = (): CoachFeel | null => (feel === undefined ? (feel = coachFeel(world)) : feel)
   return SMALL_TALK_SITUATIONS.filter(
     (s) =>
-      s.voices[voice] !== undefined && s.stages.includes(stage) && (s.fact === null || SMALL_TALK_FACT[s.fact](world)),
+      s.voices[voice] !== undefined && s.stages.includes(stage) && (s.fact === null || SMALL_TALK_FACT[s.fact](world, feelOnce)),
   )
 }
 

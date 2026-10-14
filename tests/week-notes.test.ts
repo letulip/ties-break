@@ -2136,6 +2136,10 @@ describe('R52 F3 — her feel for the coach reaches the week note', () => {
     }
   }
 
+  // ⚠⚠ THE TWO PER-TEST BUDGETS OF 4a AND 4b (240 s, 120 s) ARE GONE 14.10 (ROUND 52 F5 – the closing check's catch; `tests/sim-serialisation.test.ts`: birpc's window is 60 s, and a budget above it
+  // only turns a readable timeout into an opaque `Timeout calling "onTaskUpdate"` stall). MEASURED SOLO 14.10 (unit project, `--reporter=verbose`, 1-min load 3.1): 4a 10.32 s – six careers x 130
+  // weeks, 780 snapshots, `coachedWeeks` asserted at exactly 2 x 3 x 130 – and 4b 0.97 s. At T5.3's strictest factor on record (x3.1, the two-core runner) 4a is ~32 s, 1.9x under the window, so
+  // NOTHING WAS CUT AND NOTHING PROMOTED and the project default applies. If 4a ever needs margin the cheap knob is the careers per preset (`idx < 3`), not a bigger number.
   it('4a – on played, coached careers the fact is present on EXACTLY the first week of a period she has trained, carries the tile\'s step, and is absent otherwise; the note drawn is always that step\'s', () => {
     let coachedWeeks = 0
     let reads = 0
@@ -2179,7 +2183,7 @@ describe('R52 F3 — her feel for the coach reaches the week note', () => {
     expect(stepsSeen.size, 'with more than one step among them').toBeGreaterThanOrEqual(2)
     expect(reachedFromReal.size, 'and the real facts drew lines of the ten under other seeds').toBeGreaterThanOrEqual(2)
     expect(notesDrawn, 'the notes drawn on the careers\' own seeds are counted, not required').toBeGreaterThanOrEqual(0)
-  }, 240_000)
+  })
 
   it('4b – an uncoached career never has the key, on any of its weeks', () => {
     let weeks = 0
@@ -2189,7 +2193,7 @@ describe('R52 F3 — her feel for the coach reaches the week note', () => {
       weeks++
     })
     expect(weeks).toBe(80)
-  }, 120_000)
+  })
 
   it('4c – the week of a hire never carries the fact – not even for a coach hired back whose gauge already speaks – and the fourth and eighth weeks do', () => {
     for (const [chem, expected] of [[10, 'good'], [-10, 'off']] as const) {

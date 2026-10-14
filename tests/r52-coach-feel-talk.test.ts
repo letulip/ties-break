@@ -87,6 +87,11 @@ const ALL_STAGES: readonly DiaryLifeStage[] = ['school', 'after-school', 'colleg
 const STEPS: readonly CoachFeel[] = ['too-early', 'unsure', 'seems-good', 'seems-off', 'good', 'off']
 const REPORT = process.env.R52_F4_REPORT === '1'
 const BIG = process.env.R52_F4_SCALE === 'big'
+// ⚠⚠ THE PER-TEST BUDGETS IN THIS FILE ARE GONE 14.10 (ROUND 52 F5 – the closing check's catch, `tests/sim-serialisation.test.ts`: birpc's reporter window is 60 s, so a budget above it is
+// never spent – it only turns a readable «Test timed out» into an opaque `Timeout calling "onTaskUpdate"` stall with every test green). Four read 240 s: the D walk, E's default arm and F's two.
+// MEASURED SOLO 14.10 (unit project, `--reporter=verbose`, 1-min load 3.1): D 0.36 s, E 0.93 s, F 0.85 s and 0.02 s – the whole file 3.9 s wall. At T5.3's strictest factor on record (x3.1, the
+// two-core runner) the slowest is 2.9 s, so NOTHING WAS CUT AND NOTHING PROMOTED: the project default (`vite.config.ts` `testTimeout`) applies, and a restated 60 would only be a constant that cannot
+// follow its source. The one number that stays is E's `BIG` arm – `R52_F4_SCALE=big` is the spec's opt-in measurement and no gate runs it.
 
 // -------------------------------------------------------------------------------------------------
 // FIXTURES – a founding coach on the payroll, and her level posed
@@ -312,7 +317,7 @@ describe('round 52 F4 D – the shipped draw hands her a coach-feel row only whi
     expect(conversations.college ?? 0, 'a career with no college fork never walks the college stage').toBe(0)
     for (const id of ROWS) expect(draws.filter((d) => d.id === id).length, `${id} drawn at least once`).toBeGreaterThan(0)
     expect(draws.filter((d) => d.stage === 'independent').length, 'the independent years reached a coach-feel row').toBeGreaterThan(0)
-  }, 240_000)
+  })
 })
 
 // =================================================================================================
@@ -380,7 +385,7 @@ describe('round 52 F4 E – how often a played, coached career meets one', () =>
     }
     expect(total.coachedWeeks, 'coached weeks walked').toBeGreaterThan(weeks)
     expect(total.conversations, 'conversations walked').toBeGreaterThan(0)
-  }, BIG ? 3_000_000 : 240_000)
+  }, BIG ? 3_000_000 : undefined)
 })
 
 // =================================================================================================
@@ -404,7 +409,7 @@ describe('round 52 F4 F – the rows tap no MAIN draw and their answers move not
     expect(withRows.conversations, 'and she talked, so the facts were asked').toBeGreaterThan(0)
     expect(withRows.draws, 'MAIN draws with the three rows').toBe(without.draws)
     expect(withRows.next3, 'and the stream\'s next three').toEqual(without.next3)
-  }, 240_000)
+  })
 
   it('⭐ answering any of the three with any stance moves neither the bond, nor her spirit, nor the coach pair the gauge reads', () => {
     // The real roll must raise the row, so the answer is about a real conversation. The other situations are taken out of the catalogue for the walk (and put back, in order):
@@ -447,7 +452,7 @@ describe('round 52 F4 F – the rows tap no MAIN draw and their answers move not
         expect(JSON.stringify(world.coachPairs), `${id}/${stance}: the coach pair`).toBe(pairs)
       }
     }
-  }, 240_000)
+  })
 })
 
 // =================================================================================================
