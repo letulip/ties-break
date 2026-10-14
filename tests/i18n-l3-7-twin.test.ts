@@ -38,6 +38,10 @@
 //   `snapshot` aggregates; F3's coach-feel week notes move `snapshotFields.diary` on 4 careers;
 //   F4's gated coach-feel rows move `world` + `worldFields.lifeLog` on 5/0 and 5/1. Zero row, text
 //   or next-draw digests; captures: L37_CAPTURE here, podman linux/amd64 node:22, npm ci inside.
+// ⚠ REFRESHED AGAIN 14.10 (round 52 continuation close, both platforms, identical diffs): exactly 12
+//   leaves – the `world` + `worldFields.lifeLog` pair of the 6 coached careers – attributed by a
+//   CONTROL capture at builder H1's tip (the tile font: 0 leaves): H2's stint rows and H3's
+//   checkpoints raise a due coach talk at weeks together 12/32/56. Zero row, text or draw digests.
 //
 // ⚠⚠ TWO PLATFORM FAMILIES, BOTH TRUE (10.10, the day-long hunt). The PR runner (ubuntu/x64,
 // node 22) produces snapshot digests no darwin/arm64 machine can – measured to the last cell: a
