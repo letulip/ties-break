@@ -550,16 +550,20 @@ describe('§7 every sentence a sink\'s seat can hold is a key of the frozen v92 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 /** per career: the digest of every string the player was shown (prompts, replies, cards – the English only), captured on the PRE-WAVE tree (0b60a1b3, a throwaway worktree) by the same
  *  driver: `tests/helpers/l3-5-life-play.ts`. Boosted life events, 300 weeks, every pending beat answered by rotating the offered options. */
-// ⚠ RE-STAMPED 14.10 (r51, architect), both tags, two causes one night:
-// '5/0' (was 'cb62362') moved with B12's four new small-talk situations (99d1e8ba, pool 51→55) –
-// a longer pool reads a different position on the purpose-scoped smalltalk sub-streams. Not a
-// MAIN draw (B12's twin arm compares rngMain across every step).
-// '0/1' (was '665c9a8d') was still green on B12's tree and moved with B14's soft hyphens
-// (c4440ab8): the digest hashes RENDERED Russian, and the two U+00AD marks in «Сосредоточена» /
-// «Восстанавливается» are bytes in it. Attribution by exclusion: ru.json's two rows are the only
-// content change between B12's green run and this red – B13/B14 touched CSS, tests and docs
-// otherwise. No draw anywhere near.
-const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': '38f6336d', '0/1': 'e5d188d9' }
+// ⚠ RE-STAMPED 14.10 (r51, architect) – night: '5/0' (was 'cb62362') moved with B12's four new
+// small-talk situations (99d1e8ba, pool 51→55): a longer pool reads a different position on the
+// purpose-scoped smalltalk sub-streams. '0/1' (was '665c9a8d') turned red only AFTER '5/0' was
+// stamped and was then attributed «by exclusion» to B14's soft hyphens – ⚠⚠ THAT ATTRIBUTION WAS
+// WRONG and is withdrawn: this digest hashes the ENGINE's English prompt strings
+// (tests/helpers/l3-5-life-play.ts `promptRec` – heading, said, labels, follow-ups), so a ru.json
+// row cannot move it. The real cause was B12's corpus too, HIDDEN by the first-red-stops-the-test
+// blind spot: the loop asserts '5/0' first, so while it was red '0/1' was never checked (B12's
+// «'0/1' unchanged» was that blind spot, the same one the coach-travel harvest hit).
+// ⚠ RE-STAMPED AGAIN 14.10 (r51 continuation, architect): both tags moved with the continuation's
+// content – builder D's hunch line (D's own control: switching it off at the source alone turned
+// '5/0' green, 913777ed) and E1–E3's ten school rows (pool 55→65). Not a MAIN draw: every builder's
+// arm compared rngMain. Was '38f6336d' / 'e5d188d9'.
+const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': '41e7bb05', '0/1': 'ac91e65e' }
 /** and the bench's MAIN stream, three draws on from the last week of each career, from the same pre-wave runs – the wave draws nothing, and the next draws prove the position is the pre-wave one */
 const PRE_WAVE_NEXT3: Record<string, number[]> = {
   '5/0': [0.18923983839340508, 0.10872006509453058, 0.37577401218004525],
