@@ -199,7 +199,8 @@ describe('round 51 №17 A – the school years have stories to draw', () => {
     // ⚠ RE-AIMED 14.10 (r51 continuation, builder E1): «the last four» became «the four before the last three» when R57–R59 (observations, tests/round51-school-observation-pool.test.ts) were appended after them; the order of what was there did not move.
     // ⚠ RE-AIMED AGAIN 14.10 (r51 continuation, builder E2): «the four before the last three» became «the four before the last six» when R60–R62 (tests/round51-school-curiosity-goodnews-pool.test.ts) were appended after the observations; the order of what was there did not move.
     // ⚠ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E3): «the four before the last six» became «the four before the last ten» when R63–R66 (tests/round51-school-worry-decision-pool.test.ts) were appended after R60–R62; the order of what was there did not move.
-    expect(SMALL_TALK_SITUATIONS.slice(-14, -10).map((s) => s.id), 'appended last: a pool of a different length reads a different position, but the order of what was there does not move').toEqual([...NEW_STORIES])
+    // ⚠ RE-AIMED A FIFTH TIME 14.10 (r52, builder F4): «the last ten» became «the last thirteen» when R67–R69 (tests/r52-coach-feel-talk.test.ts) were appended after R66; the order of what was there did not move.
+    expect(SMALL_TALK_SITUATIONS.slice(-17, -13).map((s) => s.id), 'appended last: a pool of a different length reads a different position, but the order of what was there does not move').toEqual([...NEW_STORIES])
     for (const id of NEW_STORIES) {
       const s = SMALL_TALK_SITUATIONS.find((r) => r.id === id)!
       expect(s.subject, `${id}: subject`).toBe('story')

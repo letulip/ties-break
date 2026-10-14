@@ -639,6 +639,7 @@ import { COACH_REAL_HUNCH, COACH_REAL_SITUATION_ID, LEGACY_SMALL_TALK_SUBJECTS, 
 import type { LegacySmallTalkSubject, SmallTalkSubject } from './lifeBeat/smallTalkCopy'
 import { feelHunch, type ChemistryHunch } from '../chemistry' // ⭐ ROUND 51 №8: her hunch about the coach is a band; ROUND 52 F1 (14.10): the band is read off HOW SHE FEELS (below), not off the raw level
 import { coachFeel } from './coachFeel'
+import type { CoachFeel } from '../../shared/protocol'
 export { LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_SUBJECTS, smallTalkSubjectFor }
 export type { LegacySmallTalkSubject, SmallTalkSubject }
 
@@ -675,7 +676,7 @@ export const SMALL_TALK_STANCE_ID: Record<SmallTalkStance, string> = {
  *
  *  ⚠ THE ROSTER IS A UNION AND THE PREDICATES ARE A TOTAL RECORD, so a new claim cannot be added
  *  without somebody writing the read that makes it true. */
-export const SMALL_TALK_FACTS = ['played-recently', 'march-entry-open', 'coach-employed', 'beat-her-conqueror', 'clear-next-week'] as const
+export const SMALL_TALK_FACTS = ['played-recently', 'march-entry-open', 'coach-employed', 'beat-her-conqueror', 'clear-next-week', 'coach-feel-warm', 'coach-feel-unsure', 'coach-feel-cold'] as const
 export type SmallTalkFact = (typeof SMALL_TALK_FACTS)[number]
 
 /** How far back «today» may reach when she recounts a match. ⚠ TWO AND NOT ONE, because the row is
@@ -719,6 +720,24 @@ export function nextWeekIsClear(world: WorldState): boolean {
   return ahead.length > 0 && !ahead.some((e) => world.entries.includes(e.id))
 }
 
+/** ⭐⭐⭐ ROUND 52 F4 (14.10) – HER FEEL FOR THE COACH, AS THE GATES OF R67–R69: one SIDE of the `coachFeel` scale per fact, the steps spelled in the table below.
+ *
+ *  The owner: «я хочу сделать систему, что ребенок может намекать, что ей ок, норм или вообще не ок с этим тренером…» and, on how sure she may sound,
+ *  «не "всё плохо" а "я пока не очень поняла" или "вроде нормально, но"». The plate (F2) and the week notes (F3) already say it; this is the third channel, a
+ *  conversation in her own voice, and a conversation can only be about what is true – so each situation waits on the side of the scale it is about.
+ *
+ *  ⚠⚠ THEY READ `coachFeel(world)` AND NOTHING ELSE, the primitive the plate and the notes read (the parity law). A gate that re-derived a band from the chemistry
+ *  level would be a second answer to «how does she feel about her coach», and the two would part company the first time her doubt (the step's own noise) disagreed
+ *  with the level. `too-early` is in none of the three sets ON PURPOSE: six weeks in, there is nothing to say yet.
+ *  ⚠ `!inCollege(world)` is the C-07 clause (`march-entry-open`'s, below) for its reason: the coach does not work in college weeks (`coachWorksThisWeek`), so a girl in
+ *  a dorm has no practice to be unsure of. The three rows leave the college stage out of their lists too; this makes the FACT true to itself, not only the list.
+ *  ⚠ `coachFeel` is `null` with nobody employed and `null` is in no set. PURE AND ZERO-DRAW: its noise is its own purpose-scoped sub-stream, never MAIN. */
+function coachFeelIs(world: WorldState, ...steps: CoachFeel[]): boolean {
+  if (inCollege(world)) return false
+  const feel = coachFeel(world)
+  return feel !== null && steps.includes(feel)
+}
+
 /** ⭐⭐⭐ §8d.5's FIVE READS, AND EVERY ONE OF THEM IS PURE AND ZERO-DRAW. They are asked BEFORE
  *  the situation is drawn (`reachableSituations`), never after, so a false fact removes the
  *  situation from the pool instead of being papered over in the copy.
@@ -760,6 +779,10 @@ const SMALL_TALK_FACT: Record<SmallTalkFact, (world: WorldState) => boolean> = {
     })
   },
   'clear-next-week': nextWeekIsClear,
+  // ⭐ ROUND 52 F4 – R67, R68, R69: the three sides of her feel for the coach (the block above `SMALL_TALK_FACT`).
+  'coach-feel-warm': (world) => coachFeelIs(world, 'seems-good', 'good'),
+  'coach-feel-unsure': (world) => coachFeelIs(world, 'unsure'),
+  'coach-feel-cold': (world) => coachFeelIs(world, 'seems-off', 'off'),
 }
 
 /** One branch of one exchange: what the PARENT may say, and what she says back to exactly that.

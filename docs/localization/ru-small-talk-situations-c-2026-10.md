@@ -1253,10 +1253,130 @@ Subject `decision`; stages `school`, `after-school`; no fact gate. `Подруг
 | quiet | respond | `"I know. That's what I keep thinking."` | `«Знаю. Я об этом всё и думаю.»` |
 | quiet | space | `"Okay. I'll see how long I last."` | `«Хорошо. Посмотрю, насколько меня хватит.»` |
 
-## 35. Corpus progress (14.10)
+## 35. r52 – three coach-feel situations: a good news, an observation and a worry behind her feel for the coach (14.10)
+
+⚙ 14.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's words: «я хочу сделать систему, что ребенок может намекать, что ей ок, норм или вообще не ок с этим тренером, чтобы у игрока была какая-то обратная связь от ребенка для принятия решения» and, on how sure she may sound, «не "всё плохо" а "я пока не очень поняла" или "вроде нормально, но" или что-то в таком духе, т.е. она еще не уверена, а просто сомневается».
+
+Three new situations, R67–R69, appended last in the generated catalogue (English authority: the round 52 addendum, builder F4, in `docs/specs/small-talk-corpus-2026-09.md`): a `good-news`, an `observation` and a `worry`, each behind one side of her feel for the coach (fact gates `coach-feel-warm`, `coach-feel-unsure`, `coach-feel-cold`). Both languages in one change. Each is an opener and three replies in all four voices, with no shared second beat. Row order, ids, stages and fact gates are locale-independent; nothing here is drawn differently in Russian. ⚠ The coach is a noun and never the subject of a past-tense verb or an adjective in these lines (R15-7): Russian gives the past tense a gender, and the coach's sex is the career's to hold, not the copy's. The daughter is feminine in her own past tense and says `ты` to the parent (ruling 01.10 №6); the labels use the family `мы` or an infinitive, so the parent is neither mother nor father.
+
+## 36. Situation R67 – `the-thing-that-makes-sense`
+
+Subject `good-news`; stages `school`, `after-school`, `independent`; fact gate `coach-feel-warm`. `Тренер` appears only as a noun and only as the subject of a PRESENT-tense verb (`просит`, `добивается`): a past tense (`попросил`) would name the coach's sex, which R15-7 forbids, so the English «asked for the same thing twice» became «просит ... уже второй раз». `Начало обретать смысл` is «started to make sense» without a skill claim. The respond label says `мы рады`, the family «мы» of the style guide, so the parent is neither mother nor father.
+
+### 36.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Something my coach asks for has started to make sense. I'm trying not to say it too loudly."` | `«Кое-что из того, о чём просит тренер, начало обретать смысл. Стараюсь не говорить об этом слишком громко.»` |
+| fiery | `"I think I finally get what my coach has been asking for. Don't make a fuss. It might not stay."` | `«Кажется, я наконец поняла, чего добивается от меня тренер. Не устраивай шума. Может и не удержаться.»` |
+| deep | `"Something my coach asks for has begun to make sense. I wanted to tell you, and I did not want to promise it will last."` | `«Кое-что из того, о чём просит тренер, начало обретать смысл. Мне хотелось тебе об этом сказать, но не хотелось обещать, что так и останется.»` |
+| quiet | `"My coach asked for the same thing twice. It made sense both times."` | `«Тренер просит об одном и том же уже второй раз. И оба раза мне это понятно.»` |
+
+### 36.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what has started to make sense` | `Спросить, что начало обретать смысл` |
+| respond | `Say you are glad it makes sense` | `Сказать, что мы рады, что это стало понятно` |
+| space | `Say it does not have to last to be good news` | `Сказать, что это хорошая новость, даже если не продлится` |
+
+### 36.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Where to be before the ball arrives. It sounded like nothing until I saw what it was for."` | `«Где стоять до того, как прилетит мяч. Звучало как пустяк, пока я не увидела, зачем это нужно.»` |
+| sunny | respond | `"Thanks. I wanted somebody to know. I'm keeping it quiet everywhere else."` | `«Спасибо. Мне хотелось, чтобы кто-то знал. Больше нигде об этом не говорю.»` |
+| sunny | space | `"That's fair. It's nice this week, even if it doesn't stay."` | `«Это правда. На этой неделе приятно, даже если потом не удержится.»` |
+| fiery | invite | `"Where to be before the ball arrives. Obvious, I know. It wasn't obvious until it was."` | `«Где стоять до того, как прилетит мяч. Очевидно, знаю. Но очевидным это не было – пока вдруг не стало.»` |
+| fiery | respond | `"Good. Be glad quietly. If it goes, I don't want to explain it."` | `«Хорошо. Радуйся тихо. Если пропадёт, мне не хочется ничего объяснять.»` |
+| fiery | space | `"Fine. It's good news right now. If it stays, I'll say so."` | `«Ладно. Сейчас это хорошая новость. Если удержится, скажу.»` |
+| deep | invite | `"Where to be before the ball arrives. It is a small thing. I have been turning it over, and it fits."` | `«Где стоять до того, как прилетит мяч. Это мелочь. Я долго её обдумывала, и всё сходится.»` |
+| deep | respond | `"Thank you. I wanted somebody to know before I knew whether it holds."` | `«Спасибо. Мне хотелось, чтобы кто-то знал, ещё до того, как станет ясно, удержится ли это.»` |
+| deep | space | `"I know. I would still like it to stay. I'll try not to hold on too tightly."` | `«Знаю. Но мне бы хотелось, чтобы это осталось. Постараюсь не держаться за это слишком крепко.»` |
+| quiet | invite | `"Where to be before the ball arrives. I wrote it down so I wouldn't lose it."` | `«Где стоять до того, как прилетит мяч. Я записала, чтобы не потерять.»` |
+| quiet | respond | `"Thanks. I only wanted to mention it."` | `«Спасибо. Я только хотела об этом сказать.»` |
+| quiet | space | `"True. I'll take it while it's here."` | `«Верно. Пока оно есть – возьму.»` |
+
+## 37. Situation R68 – `practice-feels-different`
+
+Subject `observation`; stages `school`, `after-school`, `independent`; fact gate `coach-feel-unsure`. The row is the owner's «я пока не очень поняла» turned into something she noticed: `пока` is «yet» in every voice, and nobody says better or worse. `Тренер` is a noun after `с` only; no verb or adjective takes it as a subject. The space label `приглядываться` is «keep noticing».
+
+### 37.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Practice with my coach feels different. I can't tell yet if different is better."` | `«Тренировка с тренером ощущается по-другому. Пока не могу понять, лучше это или нет.»` |
+| fiery | `"Practice with my coach is different. Better or worse, I can't say, and it's annoying."` | `«Тренировка с тренером теперь другая. Лучше или хуже – сказать не могу, и это бесит.»` |
+| deep | `"Practice with my coach has changed in a way I cannot name. I do not know yet if it is better. I keep waiting to know."` | `«Тренировка с тренером изменилась так, что я не могу это назвать. Не знаю пока, к лучшему ли это. Всё жду, когда пойму.»` |
+| quiet | `"Practice with my coach felt different this week. I haven't worked out if that's good."` | `«Тренировка с тренером на этой неделе была другой. Я пока не решила, хорошо это или нет.»` |
+
+### 37.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what is different` | `Спросить, что изменилось` |
+| respond | `Say it can take a while to know` | `Сказать, что понять это можно только со временем` |
+| space | `Say she can just keep noticing` | `Сказать, что она может просто приглядываться` |
+
+### 37.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"The order, mostly. We do the hard part first now. I can't decide if I like it."` | `«Порядок, в основном. Теперь сначала самое трудное. Не могу решить, нравится ли мне.»` |
+| sunny | respond | `"That's what I'm hoping. I'll keep showing up and see."` | `«Я на это и надеюсь. Буду ходить и смотреть.»` |
+| sunny | space | `"I can do that. Noticing is the easy part. Deciding is the hard part."` | `«Это я могу. Приглядываться легко. Трудно – решать.»` |
+| fiery | invite | `"The order. The hard part comes first now. I'd like a reason and I haven't got one."` | `«Порядок. Теперь сначала самое трудное. Мне нужна причина, а её у меня нет.»` |
+| fiery | respond | `"A while isn't an answer. Fine. I'll give it a while."` | `«Со временем – это не ответ. Ладно. Дам этому время.»` |
+| fiery | space | `"Noticing, fine. I'll keep track."` | `«Приглядываться – ладно. Буду следить.»` |
+| deep | invite | `"The order of things. The hard part comes first now. I am still deciding what I think of it."` | `«Порядок. Теперь самое трудное идёт первым. Я всё ещё решаю, что об этом думаю.»` |
+| deep | respond | `"I know. I only wanted to say that I don't know yet."` | `«Знаю. Я только хотела сказать, что пока не знаю.»` |
+| deep | space | `"Yes. I will keep noticing, and I will say when I know."` | `«Да. Буду приглядываться и скажу, когда пойму.»` |
+| quiet | invite | `"The order. The hard part comes first."` | `«Порядок. Сначала самое трудное.»` |
+| quiet | respond | `"Probably. I'll give it time."` | `«Наверное. Дам этому время.»` |
+| quiet | space | `"Okay. I'll keep an eye on it."` | `«Хорошо. Буду присматривать за этим.»` |
+
+## 38. Situation R69 – `the-thing-she-cannot-name`
+
+Subject `worry`; stages `school`, `after-school`, `independent`; fact gate `coach-feel-cold`. His register is kept word for word where Russian allows: `нормальная` is «fine», `не доходит` is «is not landing», and nobody says `плохо`. `Несправедливой к тренеру` is the only place a feminine predicate stands next to the coach, and it describes HER (`я` is the subject), so it names nobody's sex but hers. The respond label says `с нами такое тоже бывало`, the family «мы».
+
+### 38.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Practice with my coach is fine. It really is. There's just something I can't quite put into words."` | `«Тренировка с тренером нормальная. Правда. Просто есть что-то, чего я не могу выразить словами.»` |
+| fiery | `"Practice with my coach is fine. That's the verdict. I just have a feeling something isn't landing, and I don't know how to say it."` | `«Тренировка с тренером нормальная. Вердикт такой. Просто у меня чувство, что что-то не доходит, а как это сказать, я не знаю.»` |
+| deep | `"Practice with my coach is fine. It is only that something does not land, and I have not found a way to say it that is fair."` | `«Тренировка с тренером нормальная. Просто что-то не доходит, и я не нашла, как сказать об этом справедливо.»` |
+| quiet | `"Practice with my coach was fine. I keep thinking there's something I haven't said."` | `«Тренировка с тренером была нормальной. Мне всё кажется, что я чего-то не сказала.»` |
+
+### 38.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she thinks is not landing` | `Спросить, что, по её ощущению, не доходит` |
+| respond | `Say you have felt that way before` | `Сказать, что с нами такое тоже бывало` |
+| space | `Say she can find the words once she knows what it is` | `Сказать, что слова найдутся, когда она поймёт, в чём дело` |
+
+### 38.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"I can't tell. It isn't big. It's small and it keeps showing up."` | `«Не могу понять. Это не что-то большое. Это мелочь, которая всё время повторяется.»` |
+| sunny | respond | `"Have you? That's a relief. I thought I was just making a fuss."` | `«Правда? Какое облегчение. А я думала, что просто поднимаю шум из ничего.»` |
+| sunny | space | `"Okay. That takes the pressure off. I'll say it when I can."` | `«Хорошо. Так легче. Скажу, когда смогу.»` |
+| fiery | invite | `"If I knew, I'd have said it. It's small, it keeps coming back, and that's what's annoying."` | `«Если бы знала, сказала бы. Мелочь, но всё время возвращается, и именно это бесит.»` |
+| fiery | respond | `"Then you know it isn't nothing. I'm not making it up."` | `«Значит, ты знаешь, что это не ерунда. Я не выдумываю.»` |
+| fiery | space | `"Fine. But it's going to come out one way or another."` | `«Ладно. Но так или иначе это прозвучит.»` |
+| deep | invite | `"I cannot tell. It is small, and it comes back. I do not want to be unfair to my coach by guessing."` | `«Не могу понять. Это мелочь, и она возвращается. Не хочу быть несправедливой к тренеру, гадая.»` |
+| deep | respond | `"I thought it might only be me. It helps to know it isn't."` | `«Я думала, что это только у меня. Хорошо знать, что нет.»` |
+| deep | space | `"Thank you. I would rather say it once, and say it properly."` | `«Спасибо. Я лучше скажу один раз, но как следует.»` |
+| quiet | invite | `"I can't tell. It's small. It keeps coming back."` | `«Не могу понять. Мелочь. Всё время возвращается.»` |
+| quiet | respond | `"Okay. Knowing that helps a bit."` | `«Хорошо. Мне от этого немного легче.»` |
+| quiet | space | `"Okay. I'll say it when I know what it is."` | `«Хорошо. Скажу, когда пойму, что это.»` |
+
+## 39. Corpus progress (14.10)
 
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
-| 65 / 65 | 1235 / 1235 | 20 / 20 | all current generated situations complete as DRAFT |
+| 68 / 68 | 1292 / 1292 | 20 / 20 | all current generated situations complete as DRAFT |
 
-The 11.10 line in §16 (51 / 51, 969 / 969, 4 / 4) is the record of the volume as it stood then; the four rows in §17–§21 join it, 76 ordinary strings and 16 shared beats more, the three rows in §22–§25 add 57 ordinary strings (12 openers, 9 labels, 36 replies) and no shared beat, the three rows in §26–§29 add 57 more on the same count, and the four rows in §30–§34 add 76 (16 openers, 12 labels, 48 replies) and no shared beat. Every English cell in §17–§34 is read from the parsed corpus by the generating script, not typed, and `npm run i18n:check` is the proof that no key is left without Russian.
+The 11.10 line in §16 (51 / 51, 969 / 969, 4 / 4) is the record of the volume as it stood then; the four rows in §17–§21 join it, 76 ordinary strings and 16 shared beats more, the three rows in §22–§25 add 57 ordinary strings (12 openers, 9 labels, 36 replies) and no shared beat, the three rows in §26–§29 add 57 more on the same count, the four rows in §30–§34 add 76 (16 openers, 12 labels, 48 replies) and no shared beat, and the three rows in §35–§38 add 57 on the count of the second and third (12 openers, 9 labels, 36 replies; no shared beat). Every English cell in §17–§38 is read from the parsed corpus by the generating script, not typed, and `npm run i18n:check` is the proof that no key is left without Russian.

@@ -1,5 +1,5 @@
 // ⭐⭐⭐ THE SMALL-TALK CORPUS – **GENERATED FROM `docs/specs/small-talk-corpus-2026-09.md`,
-// NEVER RETYPED.** 65 situations × 4 voices: 260 openers, 195 stance labels, 780 replies, 20 shared second beats.
+// NEVER RETYPED.** 68 situations × 4 voices: 272 openers, 204 stance labels, 816 replies, 20 shared second beats.
 //
 // ⭐⭐ THIS IS THE WHOLE CATALOGUE AND NOT A SECOND HALF OF ONE. `SMALL_TALK_SHIPPED` – the eight
 // situations hand-written in `lifeBeat.ts` since wave 2 – was deleted in round 44 and those eight are
@@ -16,7 +16,7 @@
 // ⚠ IT IS ORDINARY COMMITTED SOURCE AND NOT A BUILD STEP (the round's own ruling). Nothing in
 // `npm run check`, `npm run build` or the dev server generates it; the emitter is a one-off.
 //
-// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 1235 authored strings. An agent retyping them
+// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 1292 authored strings. An agent retyping them
 // produces typos that no test can catch, because a test written by the same agent compares against
 // what was typed. The document is the source of truth; this file is its projection.
 //
@@ -5056,6 +5056,237 @@ export const SMALL_TALK_CORPUS: readonly SmallTalkSituation[] = [
           space: {
             label: 'Say she can go when she has had enough',
             said: '"Okay. I\'ll see how long I last."',
+          },
+        },
+      },
+    },
+  },
+  // R67 · the-thing-that-makes-sense
+  {
+    id: 'the-thing-that-makes-sense',
+    subject: 'good-news',
+    stages: ['school', 'after-school', 'independent'],
+    fact: 'coach-feel-warm',
+    voices: {
+      sunny: {
+        opener: '"Something my coach asks for has started to make sense. I\'m trying not to say it too loudly."',
+        branches: {
+          invite: {
+            label: 'Ask what has started to make sense',
+            said: '"Where to be before the ball arrives. It sounded like nothing until I saw what it was for."',
+          },
+          respond: {
+            label: 'Say you are glad it makes sense',
+            said: '"Thanks. I wanted somebody to know. I\'m keeping it quiet everywhere else."',
+          },
+          space: {
+            label: 'Say it does not have to last to be good news',
+            said: '"That\'s fair. It\'s nice this week, even if it doesn\'t stay."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"I think I finally get what my coach has been asking for. Don\'t make a fuss. It might not stay."',
+        branches: {
+          invite: {
+            label: 'Ask what has started to make sense',
+            said: '"Where to be before the ball arrives. Obvious, I know. It wasn\'t obvious until it was."',
+          },
+          respond: {
+            label: 'Say you are glad it makes sense',
+            said: '"Good. Be glad quietly. If it goes, I don\'t want to explain it."',
+          },
+          space: {
+            label: 'Say it does not have to last to be good news',
+            said: '"Fine. It\'s good news right now. If it stays, I\'ll say so."',
+          },
+        },
+      },
+      deep: {
+        opener: '"Something my coach asks for has begun to make sense. I wanted to tell you, and I did not want to promise it will last."',
+        branches: {
+          invite: {
+            label: 'Ask what has started to make sense',
+            said: '"Where to be before the ball arrives. It is a small thing. I have been turning it over, and it fits."',
+          },
+          respond: {
+            label: 'Say you are glad it makes sense',
+            said: '"Thank you. I wanted somebody to know before I knew whether it holds."',
+          },
+          space: {
+            label: 'Say it does not have to last to be good news',
+            said: '"I know. I would still like it to stay. I\'ll try not to hold on too tightly."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"My coach asked for the same thing twice. It made sense both times."',
+        branches: {
+          invite: {
+            label: 'Ask what has started to make sense',
+            said: '"Where to be before the ball arrives. I wrote it down so I wouldn\'t lose it."',
+          },
+          respond: {
+            label: 'Say you are glad it makes sense',
+            said: '"Thanks. I only wanted to mention it."',
+          },
+          space: {
+            label: 'Say it does not have to last to be good news',
+            said: '"True. I\'ll take it while it\'s here."',
+          },
+        },
+      },
+    },
+  },
+  // R68 · practice-feels-different
+  {
+    id: 'practice-feels-different',
+    subject: 'observation',
+    stages: ['school', 'after-school', 'independent'],
+    fact: 'coach-feel-unsure',
+    voices: {
+      sunny: {
+        opener: '"Practice with my coach feels different. I can\'t tell yet if different is better."',
+        branches: {
+          invite: {
+            label: 'Ask what is different',
+            said: '"The order, mostly. We do the hard part first now. I can\'t decide if I like it."',
+          },
+          respond: {
+            label: 'Say it can take a while to know',
+            said: '"That\'s what I\'m hoping. I\'ll keep showing up and see."',
+          },
+          space: {
+            label: 'Say she can just keep noticing',
+            said: '"I can do that. Noticing is the easy part. Deciding is the hard part."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"Practice with my coach is different. Better or worse, I can\'t say, and it\'s annoying."',
+        branches: {
+          invite: {
+            label: 'Ask what is different',
+            said: '"The order. The hard part comes first now. I\'d like a reason and I haven\'t got one."',
+          },
+          respond: {
+            label: 'Say it can take a while to know',
+            said: '"A while isn\'t an answer. Fine. I\'ll give it a while."',
+          },
+          space: {
+            label: 'Say she can just keep noticing',
+            said: '"Noticing, fine. I\'ll keep track."',
+          },
+        },
+      },
+      deep: {
+        opener: '"Practice with my coach has changed in a way I cannot name. I do not know yet if it is better. I keep waiting to know."',
+        branches: {
+          invite: {
+            label: 'Ask what is different',
+            said: '"The order of things. The hard part comes first now. I am still deciding what I think of it."',
+          },
+          respond: {
+            label: 'Say it can take a while to know',
+            said: '"I know. I only wanted to say that I don\'t know yet."',
+          },
+          space: {
+            label: 'Say she can just keep noticing',
+            said: '"Yes. I will keep noticing, and I will say when I know."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"Practice with my coach felt different this week. I haven\'t worked out if that\'s good."',
+        branches: {
+          invite: {
+            label: 'Ask what is different',
+            said: '"The order. The hard part comes first."',
+          },
+          respond: {
+            label: 'Say it can take a while to know',
+            said: '"Probably. I\'ll give it time."',
+          },
+          space: {
+            label: 'Say she can just keep noticing',
+            said: '"Okay. I\'ll keep an eye on it."',
+          },
+        },
+      },
+    },
+  },
+  // R69 · the-thing-she-cannot-name
+  {
+    id: 'the-thing-she-cannot-name',
+    subject: 'worry',
+    stages: ['school', 'after-school', 'independent'],
+    fact: 'coach-feel-cold',
+    voices: {
+      sunny: {
+        opener: '"Practice with my coach is fine. It really is. There\'s just something I can\'t quite put into words."',
+        branches: {
+          invite: {
+            label: 'Ask what she thinks is not landing',
+            said: '"I can\'t tell. It isn\'t big. It\'s small and it keeps showing up."',
+          },
+          respond: {
+            label: 'Say you have felt that way before',
+            said: '"Have you? That\'s a relief. I thought I was just making a fuss."',
+          },
+          space: {
+            label: 'Say she can find the words once she knows what it is',
+            said: '"Okay. That takes the pressure off. I\'ll say it when I can."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"Practice with my coach is fine. That\'s the verdict. I just have a feeling something isn\'t landing, and I don\'t know how to say it."',
+        branches: {
+          invite: {
+            label: 'Ask what she thinks is not landing',
+            said: '"If I knew, I\'d have said it. It\'s small, it keeps coming back, and that\'s what\'s annoying."',
+          },
+          respond: {
+            label: 'Say you have felt that way before',
+            said: '"Then you know it isn\'t nothing. I\'m not making it up."',
+          },
+          space: {
+            label: 'Say she can find the words once she knows what it is',
+            said: '"Fine. But it\'s going to come out one way or another."',
+          },
+        },
+      },
+      deep: {
+        opener: '"Practice with my coach is fine. It is only that something does not land, and I have not found a way to say it that is fair."',
+        branches: {
+          invite: {
+            label: 'Ask what she thinks is not landing',
+            said: '"I cannot tell. It is small, and it comes back. I do not want to be unfair to my coach by guessing."',
+          },
+          respond: {
+            label: 'Say you have felt that way before',
+            said: '"I thought it might only be me. It helps to know it isn\'t."',
+          },
+          space: {
+            label: 'Say she can find the words once she knows what it is',
+            said: '"Thank you. I would rather say it once, and say it properly."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"Practice with my coach was fine. I keep thinking there\'s something I haven\'t said."',
+        branches: {
+          invite: {
+            label: 'Ask what she thinks is not landing',
+            said: '"I can\'t tell. It\'s small. It keeps coming back."',
+          },
+          respond: {
+            label: 'Say you have felt that way before',
+            said: '"Okay. Knowing that helps a bit."',
+          },
+          space: {
+            label: 'Say she can find the words once she knows what it is',
+            said: '"Okay. I\'ll say it when I know what it is."',
           },
         },
       },

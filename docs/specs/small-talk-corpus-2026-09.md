@@ -2889,6 +2889,148 @@ Counts, final tree: school observation 430, curiosity 393, decision 390, story 2
 - `deep` `"Perhaps. I would still know I had left, though."`
 - `quiet` `"Okay. I'll see how long I last."`
 
+## Addendum 14.10 (round 52, builder F4) – three coach-feel situations: she brings up how it is going with her coach, and which of the three depends on how she feels about it
+
+**The owner, 14.10:** «я хочу сделать систему, что ребенок может намекать, что ей ок, норм или вообще не ок с этим тренером, чтобы у игрока была какая-то обратная связь от ребенка для принятия решения». Of the three channels offered (the plate on her screen, the week notes, a conversation) he chose this one as well: «Отдельный разговор – редкая беседа о тренере её голосом… самый живой». On how sure she may sound: «не "всё плохо" а "я пока не очень поняла" или "вроде нормально, но" или что-то в таком духе, т.е. она еще не уверена, а просто сомневается».
+
+**What this is.** Her feel for the coach is one reading, `coachFeel(world)` (round 52 F1: a scale of five steps and «too early»). The Coach plate on her screen (F2) and the diary's week notes (F3) already say it. This is the third channel: three small-talk situations in her own voice, each waiting on one SIDE of that scale, so that the conversation can only be about what is true. The owner's «rare» is the existing cadence – this addendum changes no weekly chance, no season cap, no depth of the memory and no subject weight.
+
+| row | subject | stages | fact | what it is |
+| --- | --- | --- | --- | --- |
+| R67 `the-thing-that-makes-sense` | good-news | school, after-school, independent | `coach-feel-warm` | something her coach asks for has started to make sense to her; she is glad, and does not say it will last |
+| R68 `practice-feels-different` | observation | school, after-school, independent | `coach-feel-unsure` | practice with her coach feels different, and she cannot tell yet whether different is better |
+| R69 `the-thing-she-cannot-name` | worry | school, after-school, independent | `coach-feel-cold` | practice with her coach is «fine», but something is not landing, and she has not found a way to say it that is fair |
+
+**The three facts.** All three live in `lifeBeat.ts`'s `SMALL_TALK_FACT` beside the five that were there, and all three read `coachFeel(world)` and nothing else – the primitive the plate and the notes read (the parity law: a gate that re-derived a band from the chemistry level would be a second answer to «how does she feel about her coach»).
+
+| fact | true when her feel is | false on |
+| --- | --- | --- |
+| `coach-feel-warm` | `seems-good` or `good` | `too-early`, `unsure`, `seems-off`, `off`, no coach, college |
+| `coach-feel-unsure` | `unsure` | `too-early`, `seems-good`, `good`, `seems-off`, `off`, no coach, college |
+| `coach-feel-cold` | `seems-off` or `off` | `too-early`, `unsure`, `seems-good`, `good`, no coach, college |
+
+**Where they sit.** Last in this document, after R66, so the catalogue's first 65 rows keep their order. A situation is chosen by position in the filtered pool, so a pool of a different length reads a different position for the same seed: a career already under way may be shown a different situation next time than it would have been. That draw is on its own sub-stream (`seed:life:smalltalk:situation:<week>`), nothing is stored and the main stream does not move.
+
+**Stages and facts.** School, after-school and independent – **not college**, twice over. The coach does not work in college weeks (`coachWorksThisWeek`: «the family stops paying»), so a girl in a dorm has no practice to be unsure about; and each fact carries `!inCollege(world)` besides (the C-07 clause of `march-entry-open`), so the FACT is true to itself and not only the stage list. In the independent years she talks about her coach on the phone; the lines say nothing about where she is, as R45 and `court-four` do not, and the presence layer's frame says it. `too-early` (the first weeks together) has no row and no fact: there is nothing to talk about yet, and a girl asked about someone she met last week would be inventing a feeling. With nobody employed `coachFeel` is `null` and every fact is false.
+
+**Subjects, by this document's own definitions.** R67 is a good news – something good she brings home, kept small and true. R68 is an observation and not a curiosity: something she noticed, and she asks the parent for nothing. R69 is a worry – small, hers, and not a crisis. Each subject keeps every row it had; the three new rows join a cell only while their fact is true.
+
+**What the lines were written against.**
+
+- **The gate licenses a FEELING and nothing else.** She may say how it feels with her coach; she may not say that the coach is good or bad, that she has improved or fallen back (the fog law – R45: a practice that felt easy is a mood and never a training gain), or any result.
+- **His register is doubt and never a verdict.** «Не "всё плохо"»: no line calls anything bad, wrong or over. The cold row says practice is FINE first, in every voice; the unsure row says she cannot tell; the warm row will not promise that it lasts. A girl who is sure (`good`, `off`) reads the same row as a girl who is not (`seems-good`, `seems-off`) – the lines are true of both.
+- **The coach is never pronoun-ed and never gendered (R15-7).** «My coach» and «the coach» as nouns only, and no line that names the coach carries a third-person pronoun at all. The Russian keeps the same discipline: no past-tense verb or adjective takes the coach as its subject.
+- **Her answers move nothing** (ruling V2: tier-1 replies move nothing). No effect is added; only R48 `coach-real`'s `view` opens the chemistry gauge, and these rows do not touch it. The player's feedback is what she says; what he does with it is his.
+- No «today», no exclamation mark, no digit, no long dash; the fiery voice carries its edge in short verdicts, as R53–R66 do. Her replies describe what she noticed or what she will do with the thought – never a persistent pattern of her own tennis (R34's finding).
+- The facts are the same in all four voices. Each invite reply then adds one fact of its own, and no voice contradicts another's edition of the scene.
+- ⚠ Every new line was searched for in `src/` before it was emitted (round 51's «Nobody argued.» sat in `albumCorpus.ts` too and turned an album test red at the closing gate); the sweep is kept in `tests/r52-coach-feel-talk.test.ts`.
+
+**The arithmetic after these three**, derived by `tools/small-talk-corpus-parse.ts` rather than carried: 68 rows, 272 openers, 204 labels, 816 replies and 20 shared beats (a good news, an observation and a worry have no second beat). The figures in the older sections are of the 51, 55, 58, 61 and 65 and stay as the record of the passes that produced them.
+
+**Measured after** (14.10, the tree this addendum ships with).
+
+**K4** (`npm run bench:smalltalk -- --seeds 60`, the bench B12 ran): `good-news`, `observation` and `worry` each gain one listed row at school (3 → 4, 3 → 4, 3 → 4), after-school (4 → 5, 4 → 5, 4 → 5) and independent (to 9, 8 and 8); college is unchanged (8, 7 and 7) because the rows do not list it. Cells under the floor: zero before and zero after. K4 counts a row by the stages it lists and not by its fact, so these three are listed everywhere they can be heard but reachable only while her feel is on their side. **K2 and K3:** zero repeats wherever an alternative existed, in the posed career (adjacent 104/2340 → 0, within three 232/2340 → 0) and the bare one (121/2340 → 0, 247/2340 → 0) alike. **K5:** 68 situations · 272 voice columns; ten voice columns flagged "never drawn", three of them the `march-entry-open` ones as before and seven the new rows' (R67 fiery and deep, R68 sunny, fiery and deep, R69 quiet and deep). That is RARITY and not unreachability: the bench's posed career poses `coach-employed` but no feel, and its 24 real careers are too few to meet a row that comes about once in nineteen coached years. The test's walk below draws every row at all three stages.
+
+**⚠ HOW OFTEN A PLAYER MEETS ONE – and it is rare, rarer than «редкая беседа» can mean.** The real draw on played, coached careers (7 presets that start with a coach × 6 careers × 312 weeks = **252 coached years**; `R52_F4_SCALE=big R52_F4_REPORT=1 npx vitest run --project unit tests/r52-coach-feel-talk.test.ts -t "how often|round 52 F4 D"`): she talked 304 times (1.21 a coached year – the played bond keeps the weekly chance under the close-bond 0.08 the bench uses) and **13** of those conversations were a coach-feel one: warm 4, unsure 5, cold 4. That is **0.052 a coached year, about one in nineteen**, 4.3% of her conversations, and any ONE of the three about once in 50–63 coached years. A fourteen-year career meets 0.7 of them: a coin toss whether a player meets even one. On the walk of the same file with a close bond and her level posed (36 careers × 24 years = 864 coached years, 3.3 conversations a year, 2849 in all) the draw hands out 71: warm 23 (6 school, 6 after-school, 11 independent), unsure 35 (9, 9, 17) and cold 13 (1, 2, 10) – 0.082 a coached year, and every one of the 71 had its fact true at the moment of the roll. The cold row is rarest at school because a school-years pool is small and `worry` is the lightest subject (1 of 14 in a level week): the rows join cells of 3–9 and a subject is drawn by its weight first.
+
+**What would move it, not built.** The rarity is the cadence and the pool depth, which this addendum deliberately left alone (no weight, no chance, no cap moved). The lever, if the owner's feedback channel should be SEEN, is a lead like the week notes got in F3: when a coach-feel fact is true, the matching row takes the pick on a share of the conversations (its own purpose-scoped sub-stream, zero MAIN draws). Predicted from the measured 1.21 conversations a coached year, and since some side is true on every coached week past the first six: a share of 1/4 is about 0.3 a coached year (once in three years), 1/3 about 0.4, 1/2 about 0.6. It changes the draw of every coached career (the digest pins move again), so it is the architect's call, as F3's was.
+
+### R67 · `the-thing-that-makes-sense` · good-news · school, after-school, independent · **fact: `coach-feel-warm`**
+**Kernel:** Something her coach asks for has started to make sense to her. She is glad of it and careful with it: she tells the parent, and she does not say it will last.
+**Authoritative claims:** `coach-feel-warm` – she has a coach and her feel for the coach stands on the warm side of the scale, `seems-good` or `good`. It licenses that things are coming together for her – **not** that the coach is good, that she has improved (the fog law, R45: a practice that felt easy is a mood and never a training gain), or any result. ⚠ One set of lines serves both steps, so every voice keeps a clause that is true of the hedged step and of the confident one: it might not stay, or she will say so if it does.
+**Fixed in all four voices:** something her coach asks for has started to make sense to her, and she is not promising it will last. Each invite reply carries the same fact: the instruction is about where to be before the ball arrives. The respond stance takes the parent's gladness and the third says it need not last to be good news; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Something my coach asks for has started to make sense. I'm trying not to say it too loudly."` |
+| `fiery` | `"I think I finally get what my coach has been asking for. Don't make a fuss. It might not stay."` |
+| `deep` | `"Something my coach asks for has begun to make sense. I wanted to tell you, and I did not want to promise it will last."` |
+| `quiet` | `"My coach asked for the same thing twice. It made sense both times."` |
+
+**Parent:** *Ask what has started to make sense* · *Say you are glad it makes sense* · *Say it does not have to last to be good news*
+
+**invite** · *Ask what has started to make sense*
+- `sunny` `"Where to be before the ball arrives. It sounded like nothing until I saw what it was for."`
+- `fiery` `"Where to be before the ball arrives. Obvious, I know. It wasn't obvious until it was."`
+- `deep` `"Where to be before the ball arrives. It is a small thing. I have been turning it over, and it fits."`
+- `quiet` `"Where to be before the ball arrives. I wrote it down so I wouldn't lose it."`
+
+**respond** · *Say you are glad it makes sense*
+- `sunny` `"Thanks. I wanted somebody to know. I'm keeping it quiet everywhere else."`
+- `fiery` `"Good. Be glad quietly. If it goes, I don't want to explain it."`
+- `deep` `"Thank you. I wanted somebody to know before I knew whether it holds."`
+- `quiet` `"Thanks. I only wanted to mention it."`
+
+**space** · *Say it does not have to last to be good news*
+- `sunny` `"That's fair. It's nice this week, even if it doesn't stay."`
+- `fiery` `"Fine. It's good news right now. If it stays, I'll say so."`
+- `deep` `"I know. I would still like it to stay. I'll try not to hold on too tightly."`
+- `quiet` `"True. I'll take it while it's here."`
+
+### R68 · `practice-feels-different` · observation · school, after-school, independent · **fact: `coach-feel-unsure`**
+**Kernel:** Practice with her coach feels different, and she cannot tell yet whether different is better. She says exactly that and asks the parent for nothing.
+**Authoritative claims:** `coach-feel-unsure` – she has a coach and her feel is `unsure`, the owner's «я пока не очень поняла». It licenses that she has not made up her mind – **not** that anything about the training changed (the engine models no session), and not that it is better or worse. ⚠ The one thing a reply names as different is the ORDER of a session, the hard part first: a texture of the sentence that nothing in the engine reads and no button asks the parent to confirm.
+**Fixed in all four voices:** practice with her coach feels different, and she cannot tell yet whether that is better. Each invite reply carries the same fact: the order of the session changed and the hard part comes first. The respond stance takes the parent's patience and the third lets her keep noticing; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Practice with my coach feels different. I can't tell yet if different is better."` |
+| `fiery` | `"Practice with my coach is different. Better or worse, I can't say, and it's annoying."` |
+| `deep` | `"Practice with my coach has changed in a way I cannot name. I do not know yet if it is better. I keep waiting to know."` |
+| `quiet` | `"Practice with my coach felt different this week. I haven't worked out if that's good."` |
+
+**Parent:** *Ask what is different* · *Say it can take a while to know* · *Say she can just keep noticing*
+
+**invite** · *Ask what is different*
+- `sunny` `"The order, mostly. We do the hard part first now. I can't decide if I like it."`
+- `fiery` `"The order. The hard part comes first now. I'd like a reason and I haven't got one."`
+- `deep` `"The order of things. The hard part comes first now. I am still deciding what I think of it."`
+- `quiet` `"The order. The hard part comes first."`
+
+**respond** · *Say it can take a while to know*
+- `sunny` `"That's what I'm hoping. I'll keep showing up and see."`
+- `fiery` `"A while isn't an answer. Fine. I'll give it a while."`
+- `deep` `"I know. I only wanted to say that I don't know yet."`
+- `quiet` `"Probably. I'll give it time."`
+
+**space** · *Say she can just keep noticing*
+- `sunny` `"I can do that. Noticing is the easy part. Deciding is the hard part."`
+- `fiery` `"Noticing, fine. I'll keep track."`
+- `deep` `"Yes. I will keep noticing, and I will say when I know."`
+- `quiet` `"Okay. I'll keep an eye on it."`
+
+### R69 · `the-thing-she-cannot-name` · worry · school, after-school, independent · **fact: `coach-feel-cold`**
+**Kernel:** Practice with her coach is fine, but something is not landing. She cannot name it and has not found a way to say it that is fair, so she brings it as a feeling and not as a complaint.
+**Authoritative claims:** `coach-feel-cold` – she has a coach and her feel stands on the cold side, `seems-off` or `off`, the owner's «вроде нормально, но…». It licenses that something is not landing for her – **not** that the coach is bad, that anything is wrong, or what the something is. ⚠⚠ His register is doubt and never «всё плохо»: every voice says practice is FINE first, calls the thing small and unnamed, and one of them says outright that she does not want to be unfair to her coach by guessing. The confident step (`off`) reads the same row: a girl who is sure something is wrong may still be unable to say it, which is the honest version of both.
+**Fixed in all four voices:** practice with her coach is fine, something small and unnamed does not land, and she has not said it. Each invite reply carries the same fact: she cannot tell what it is, it is small, and it keeps coming back. The respond stance takes the parent's having felt that way before and the third lets her say it once she knows what it is; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Practice with my coach is fine. It really is. There's just something I can't quite put into words."` |
+| `fiery` | `"Practice with my coach is fine. That's the verdict. I just have a feeling something isn't landing, and I don't know how to say it."` |
+| `deep` | `"Practice with my coach is fine. It is only that something does not land, and I have not found a way to say it that is fair."` |
+| `quiet` | `"Practice with my coach was fine. I keep thinking there's something I haven't said."` |
+
+**Parent:** *Ask what she thinks is not landing* · *Say you have felt that way before* · *Say she can find the words once she knows what it is*
+
+**invite** · *Ask what she thinks is not landing*
+- `sunny` `"I can't tell. It isn't big. It's small and it keeps showing up."`
+- `fiery` `"If I knew, I'd have said it. It's small, it keeps coming back, and that's what's annoying."`
+- `deep` `"I cannot tell. It is small, and it comes back. I do not want to be unfair to my coach by guessing."`
+- `quiet` `"I can't tell. It's small. It keeps coming back."`
+
+**respond** · *Say you have felt that way before*
+- `sunny` `"Have you? That's a relief. I thought I was just making a fuss."`
+- `fiery` `"Then you know it isn't nothing. I'm not making it up."`
+- `deep` `"I thought it might only be me. It helps to know it isn't."`
+- `quiet` `"Okay. Knowing that helps a bit."`
+
+**space** · *Say she can find the words once she knows what it is*
+- `sunny` `"Okay. That takes the pressure off. I'll say it when I can."`
+- `fiery` `"Fine. But it's going to come out one way or another."`
+- `deep` `"Thank you. I would rather say it once, and say it properly."`
+- `quiet` `"Okay. I'll say it when I know what it is."`
+
 ---
 
 ## P3.7 The corpus at 43, and the whole document at 51 – counted by script, not claimed

@@ -155,10 +155,11 @@ describe('round 51 (continuation) A – the three cells reach the floor', () => 
     }
   })
 
-  it('the three are ordinary rows – ungated, four-voiced, NO second beat, the right subject and stages – and they sit four from the end (R63–R66 follow them)', () => {
+  it('the three are ordinary rows – ungated, four-voiced, NO second beat, the right subject and stages – and they sit seven from the end (R63–R69 follow them)', () => {
     // ⚠ RE-AIMED 14.10 (r51 continuation, builder E3): «the last three» became «the three before the last four» when R63–R66 (tests/round51-school-worry-decision-pool.test.ts) were appended after them; the order of what was there did not move.
     expect(
-      SMALL_TALK_SITUATIONS.slice(-7, -4).map((s) => s.id),
+      // ⚠ RE-AIMED A FIFTH TIME 14.10 (r52, builder F4): «the last four» became «the last seven» when R67–R69 (tests/r52-coach-feel-talk.test.ts) were appended after R66; the order of what was there did not move.
+      SMALL_TALK_SITUATIONS.slice(-10, -7).map((s) => s.id),
       'appended last: a pool of a different length reads a different position, but the order of what was there does not move',
     ).toEqual([...NEW_ROWS])
     for (const id of NEW_ROWS) {

@@ -53,21 +53,27 @@ export function stageAt(world: WorldState, week: number): DiaryLifeStage {
 export interface Said {
   detail: string
   stage: DiaryLifeStage
+  /** The week it was raised. ROUND 52 F4 (14.10): added so a sibling can match a conversation to what it observed that week. */
+  week: number
 }
 
 /** A career walked week by week, answering every row the moment it is raised – the parent the bench models, and the only
  *  one whose cadence is the shipped one (a live soft row blocks the next). */
-export function walk(world: WorldState, weeks: number): Said[] {
+/** ROUND 52 F4 (14.10): `observe` is called every week, BEFORE the roll, with the world exactly as the roll will read it. The coach-feel test uses it to record her feel at the moment a
+ *  coach-feel situation is drawn – the only honest way to ask "was the fact true when it was drawn", since a roll changes the log and the next week changes the world. Optional, so
+ *  every earlier caller walks exactly the walk it walked. */
+export function walk(world: WorldState, weeks: number, observe?: (world: WorldState, week: number) => void): Said[] {
   const out: Said[] = []
   for (let w = 0; w < weeks; w++) {
     world.week = w
     const before = lifeLogOf(world).length
     const stage = stageAt(world, w)
+    if (observe !== undefined) observe(world, w)
     rollSmallTalk(world)
     const log = world.lifeLog ?? []
     if (log.length === before) continue
     const row = log[log.length - 1]
-    out.push({ detail: row.detail, stage })
+    out.push({ detail: row.detail, stage, week: w })
     row.answer = 'more'
   }
   return out
