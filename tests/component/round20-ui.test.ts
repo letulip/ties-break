@@ -59,7 +59,9 @@ function mountMore(snapshot: Snapshot) {
   return mount(MoreScreen, mountOpts)
 }
 
-const mountOpts = { global: { stubs: { teleport: true } } }
+// ⚠ 14.10 (r52, the owner's CI trace): `recapFresh` is a REQUIRED prop of HomeScreen (App.vue passes it) – omitting it
+// only printed «Missing required prop» noise into every CI log; false = no fresh recap, the shell's own default state.
+const mountOpts = { props: { recapFresh: false }, global: { stubs: { teleport: true } } }
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND THE WATERMARKS ARE ABOUT localStorage. happy-dom is
 // configured here without web storage (probed: `typeof localStorage === 'undefined'`, and it is not

@@ -78,7 +78,9 @@ describe('⚠⚠ U-07 – a browser that blocks site data still gets the game', 
   it('⚠⚠ Home mounts and draws the hero with storage blocked', () => {
     installBlockedStorage()
     useGameStore().snapshot = careerSnapshot(6, 'u07-blocked')
-    const wrapper = mount(HomeScreen, { attachTo: document.body })
+    // ⚠ 14.10 (r52, the owner's CI trace): `recapFresh` is a REQUIRED prop of HomeScreen – passed in every mount here, so the
+    // log carries no «Missing required prop» noise; false = no fresh recap.
+    const wrapper = mount(HomeScreen, { props: { recapFresh: false }, attachTo: document.body })
     expect(wrapper.find('.diary-hero').exists(), 'the first screen of every career did not render').toBe(true)
     wrapper.unmount()
   })
@@ -86,7 +88,7 @@ describe('⚠⚠ U-07 – a browser that blocks site data still gets the game', 
   it('...and the one-time callout defaults to SHOWN, which is what an unread mark means', () => {
     installBlockedStorage()
     useGameStore().snapshot = careerSnapshot(6, 'u07-blocked-hint')
-    const wrapper = mount(HomeScreen, { attachTo: document.body })
+    const wrapper = mount(HomeScreen, { props: { recapFresh: false }, attachTo: document.body })
     expect(
       wrapper.find('.diary-kid-hint').exists(),
       'a storage failure silently spent the callout nobody could dismiss',
@@ -96,7 +98,7 @@ describe('⚠⚠ U-07 – a browser that blocks site data still gets the game', 
 
   it('⚠ the control – with storage working the screen is unchanged, and the mark still persists', async () => {
     useGameStore().snapshot = careerSnapshot(6, 'u07-working')
-    const wrapper = mount(HomeScreen, { attachTo: document.body })
+    const wrapper = mount(HomeScreen, { props: { recapFresh: false }, attachTo: document.body })
     const hint = wrapper.find('.diary-kid-hint')
     expect(hint.exists(), 'the callout is not on screen, so dismissing it proves nothing').toBe(true)
     await hint.trigger('click')
