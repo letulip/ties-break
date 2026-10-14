@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 171 dated entries, newest 2026-10-14. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 172 dated entries, newest 2026-10-14. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -40,7 +40,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 28 | [ROUND 51, HIS MORNING ANSWERS (each verbatim in the round ledger)](#14102026--round-51-his-morning-answers-each-verbatim-in-the-round-ledger) | 2026-10-14 |
+| process-and-git | 29 | [ROUND 52, HIS ANSWERS ON THE CLOSE (each verbatim in the round ledger)](#14102026--round-52-his-answers-on-the-close-each-verbatim-in-the-round-ledger) | 2026-10-14 |
 | product-and-scope | 8 | [LOCALIZATION: THE NINE QUESTIONS RULED, PLUS THREE ORDERS – THE STACK LANDS WITH THE INTAKE](#07102026--localization-the-nine-questions-ruled-plus-three-orders--the-stack-lands-with-the-intake) | 2026-10-07 |
 | ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
@@ -6136,3 +6136,21 @@ byte-identity proven, and the coach market was the last product screen to leave 
 5. **The thin school-years small-talk subjects are filled in both languages** – «это тоже можно
    сюда же взять на двух языках»: every school / after-school subject cell to the K4 floor of 3.
 6. **The bank model stays on trial** – «давай так попробуем, я проверю и скажу».
+
+## 14.10.2026 – ROUND 52, HIS ANSWERS ON THE CLOSE (each verbatim in the round ledger)
+
+1. **At a strained or cold bond she does not confide at a stint checkpoint either – and the
+   silence shows** – «давай по рекомендациям»: the checkpoint talk keeps the bond gate every small
+   talk has; a checkpoint the bond shuts leaves a parent-voice diary week note, so the player sees
+   what the relationship cost.
+2. **Every button speaks the app's font** – the same answer: `font-family: inherit` in the global
+   `button` rule (measured 14.10: 12 of 12 visible buttons on the first three screens of a new game
+   drew the browser's default face, none Manrope), shipped with a real-Chromium overflow sweep and
+   before/after screenshots for his eye.
+3. **The recency veto holds at a checkpoint** – she does not say twice what she said five to seven
+   weeks earlier (0.6 % of windows, every one heard early).
+4. **The year talk's cold share is left to her feel** – a third of played stints hear R75, not
+   half; no lever pulled (a data point for the parked chemistry-pace question).
+5. **All of it rides the same wave** – «всё в эту же волну грузи»: `r52/coach-feel`, PR #176; the
+   round's DRAFT strings go to one review sheet for his later pass («собери лист на вычитку, я
+   сделаю позже»).
