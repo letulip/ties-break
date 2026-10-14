@@ -35,12 +35,28 @@ last-reviewed: 2026-10-14
   coach talks in the first two years ×9 (1.57 a year vs 0.18); a recency veto (his round-43 law)
   costs 0.6 % of windows; at a strained/cold bond she does not confide (one clause).
 
+## The CI hygiene (his trace, 14.10 evening: one `Timeout calling "onTaskUpdate"` over 323/323
+green files, and «а еще вот такое там нашел в трейсе» – `Missing required prop: "recapFresh"`)
+- I1 `b7282fd2` – the screens carpet cut in two (26.8 s solo → 10.2 + 11.4 s, the same 18 surfaces).
+- `980020cf`, `6cf7f0db` – HomeScreen's required `recapFresh` and OfferLetter's `week` passed in
+  every mount; zero `[Vue warn]` across the component project.
+- I2 `a8d82bde` – coach-caution cut in two (21.1 s solo → 7.8 + 14.9 s, the same 23 tests), the
+  shared body in tests/helpers/coachCautionSurfaces.ts.
+- Radar after the cuts: the worst file inside the whole run is 26.2 s (was 42.6–49.0), ≈ 35 s on the
+  2-core runner. Watch, do not cut: the takeovers carpet (17.2 s solo ≈ 40 s on CI).
+
 ## Open (the owner's)
 - Whether the checkpoint talk should come even at a strained/cold bond (one clause).
 - The six onboarding cards in the button font (OnboardingWizard.vue).
-- All new strings DRAFT: RU23-CFL-01..07 (tile), RU09D-CFW-01..10 (notes), 10C §35–§38 (talks).
+- All new strings DRAFT: RU23-CFL-01..07 (tile), RU09D-CFW-01..10 (notes), 10C §35–§45 (talks).
 
 ## Gates
+CI-HYGIENE CHAIN at `a8d82bde` (clean worktree, npm ci, one background run, every verdict from its
+own file in the session scratchpad, `r52i-*.log`, mtime fresher than the run): check
+`R52I_CHECK_EXIT=0` (component 325/325, unit 387 s with one accepted bulk-pool late ack), sim
+`R52I_SIM_EXIT=0` (13/378 s), e2e `R52I_E2E_EXIT=0` (145); build line `a8d82bd` in the worktree
+dist. lqa:ru and the container twin carried from `e69a495e` – no `src/` or twin-fixture change since.
+r51 is merged (#175), so PR #176 shows round 52 alone.
 CONTINUATION CHAIN at `e69a495e` (clean worktree, npm ci, one background run, every verdict from
 its own file): check `R52H_CHECK_EXIT=0` (323/323, unit 389 s – first run), sim `R52H_SIM_EXIT=0`
 (13/414 s), e2e `R52H_E2E_EXIT=0` (145), lqa:ru `R52H_LQA_EXIT=0` (0 English), container twin
