@@ -416,6 +416,13 @@ const inHerVoice = (f: DiaryFacts): boolean =>
  *  NOT here: at `cold` there is no tier-0 line at all (who-she-is §5b's tier table). */
 const wallsUp = (f: DiaryFacts): boolean => f.bondBand === 'strained'
 
+/** ⭐⭐ R52 J1c (14.10) – HER WORDS CAN BE QUOTED IN THE PARENT'S WEEK STORY THIS WEEK: the bond is anything but `cold`. Who-she-is §5b's tier table makes tier 0, her quoted line inside the parent's story,
+ *  «every few weeks at close/steady; rare at strained; absent at cold» – «losing her voice is the point» – and the owner's ruling of 14.10 (round 52, his answers on the close №1) is that at a strained or cold bond
+ *  she does not confide. Written ONCE, for the five F3 coach-feel lines that put her words in quotation marks: their shared licence, `heardAtTable`, has no bond clause of its own, so before this the parent's diary
+ *  quoted a girl who had closed off. ⚠ `strained` is deliberately NOT cut: «rare at strained» is the POOL's frequency, and which quote would be flat enough to survive there is the owner's call on wording
+ *  (invariant 4), not a licence's. */
+const herWordsQuotable = (f: DiaryFacts): boolean => f.bondBand !== 'cold'
+
 /** THE SHAPE. Her voice AND the channel, which is what every one of the 44 voiced lines needs. */
 export const voiceOf = (t: Temperament) => (f: DiaryFacts): boolean =>
   f.temperament === t && inHerVoice(f)
@@ -454,6 +461,8 @@ export const plainTraining = (f: DiaryFacts): boolean =>
 //    an exam week, not the off-season, not a knock, not a friendly, not a journey, not a layoff. (That is also every
 //    licence the owner's brief named – no travelling week, no injury – and it puts the line under the pool's coin.)
 //  - `underOneRoof` – the parent hears it at dinner, in the hall; from 22 her life reaches the parent by calls.
+//  - ⚠ AND IT DOES NOT ASK THE BOND (J1c, 14.10): the five lines that put her words in quotation marks add `herWordsQuotable` themselves
+//    (who-she-is §5b: tier 0 is absent at cold); the other five are the parent's observation and ride on this alone.
 const heardAtTable = (f: DiaryFacts, step: Exclude<CoachFeel, 'too-early'>): boolean =>
   plainTraining(f) && underOneRoof(f) && f.coachFeelRead === step
 
@@ -1515,9 +1524,22 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
   // сомневается».
   //
   // TWO LINES FOR EACH OF THE FIVE STEPS THAT HAVE A VOICE; `too-early` HAS NONE – there is nothing to hint at yet, and
-  // a week that says nothing is the right note for it. All ten are licensed on `heardAtTable` alone: the one week of a
+  // a week that says nothing is the right note for it. All ten are licensed on `heardAtTable`: the one week of a
   // period her feel was re-read, an ordinary training week, at a roof stage – so at most one of these a month, never in
   // a flat of her own (the parent does not sit at that dinner) and never on a week with no practice in it.
+  //
+  // ⭐⭐ R52 J1c (14.10) – FIVE OF THE TEN QUOTE HER, AND THOSE FIVE ALSO ASK `herWordsQuotable`: the bond is not `cold`.
+  // F3 licensed all ten on `heardAtTable` ALONE, and it has no bond clause, so at a cold bond the parent's diary quoted a
+  // girl who has closed off – against who-she-is §5b (tier 0, her quoted line inside the parent's week story, is «absent
+  // at cold»: «losing her voice is the point») and the owner's ruling of 14.10 (round 52, his answers on the close №1: at
+  // a strained or cold bond she does not confide). THE FIVE are the ones with her words in quotation marks: the `unsure`
+  // pair, the second `seems-good` line and the `seems-off` pair. The other five – the drill shown twice, practice coming
+  // up three times at dinner, her quoting the coach, the practice she does not talk about, the practice that came and
+  // went – are the PARENT's observation with no word of hers in them, and a shut door is something a parent observes: so
+  // at `cold` the notes still speak, for `seems-good`, `good` and `off`. `unsure` and `seems-off` have no unquoted line,
+  // so at `cold` those two steps print no hint and the week draws from the ordinary pool like any plain training week.
+  // ⚠ `strained` is NOT cut: «rare at strained» is the pool's frequency, and which quote is flat enough is the owner's
+  // call on wording (invariant 4), not a licence's. NO STRING CHANGED – the licence is the whole change.
   //
   // ⚠ THE HEDGE IS THE COPY, NOT A WARNING LABEL. The unsure pair says she has not made up her mind – «different»,
   // «still working it out» – and nothing about good or bad. The seems pair leans and stops short: a drill shown twice,
@@ -1531,12 +1553,12 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
   {
     text: 'Asked how practice went, she shrugged: "Still working it out."',
     claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'unsure' },
-    license: (f) => heardAtTable(f, 'unsure'),
+    license: (f) => heardAtTable(f, 'unsure') && herWordsQuotable(f),
   },
   {
     text: 'Practice was "different", she said. Not better, not worse. Different.',
     claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'unsure' },
-    license: (f) => heardAtTable(f, 'unsure'),
+    license: (f) => heardAtTable(f, 'unsure') && herWordsQuotable(f),
   },
   {
     text: "She came home with one of the coach's drills and showed it to us twice.",
@@ -1546,17 +1568,17 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
   {
     text: '"It is starting to make sense," she said about practice. That was new.',
     claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'seems-good' },
-    license: (f) => heardAtTable(f, 'seems-good'),
+    license: (f) => heardAtTable(f, 'seems-good') && herWordsQuotable(f),
   },
   {
     text: '"Fine," she said about practice, and changed the subject.',
     claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'seems-off' },
-    license: (f) => heardAtTable(f, 'seems-off'),
+    license: (f) => heardAtTable(f, 'seems-off') && herWordsQuotable(f),
   },
   {
     text: 'She tried the new drill in the hall, stopped halfway. "It is fine."',
     claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'seems-off' },
-    license: (f) => heardAtTable(f, 'seems-off'),
+    license: (f) => heardAtTable(f, 'seems-off') && herWordsQuotable(f),
   },
   {
     text: 'Practice came up three times at dinner. All of it good.',

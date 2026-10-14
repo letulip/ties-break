@@ -2013,6 +2013,8 @@ describe('R51 №13 — a staycation week is not a journey', () => {
 //                   ABSENT (not null) otherwise; an uncoached career never has the key; the week of a hire never has it,
 //                   not even for a coach hired back whose gauge already speaks; a snapshot draws nothing from MAIN.
 //   5. THE WORDS.   The rest of the pool is byte-identical, and the ten Russian rows are present.
+//   6. THE BOND.    (J1c, 14.10) Five of the ten quote her and are licensed only while the bond is not `cold` (who-she-is §5b: tier 0 is
+//                   absent at cold); the other five, and every other band, are licensed as they were.
 describe('R52 F3 — her feel for the coach reaches the week note', () => {
   type Step = Exclude<CoachFeel, 'too-early'>
   const STEPS: Step[] = ['unsure', 'seems-good', 'seems-off', 'good', 'off']
@@ -2091,6 +2093,55 @@ describe('R52 F3 — her feel for the coach reaches the week note', () => {
   it('3 – each step draws its own two lines, both of them, and never another step\'s; with no fact none is ever drawn', () => {
     for (const step of STEPS) expect([...drawnFeel({ coachFeelRead: step })].sort(), step).toEqual([...LINES[step]].sort())
     expect(drawnFeel({}).size, 'a week with no fact in it').toBe(0)
+  })
+
+  // ⭐ R52 J1c (14.10) – THE BOND. Who-she-is §5b: tier 0, her quoted line inside the parent's week story, is «absent at cold»; the owner's ruling of 14.10 (round 52, his answers on the close №1): at a strained or cold
+  // bond she does not confide. FIVE of the ten put her words in quotation marks and take the bond clause (`herWordsQuotable`); the other five are the parent's own observation and do not. Both tables are DATA in this
+  // file, copied and never read back from the source: what is licensed at `close`, `steady` and `strained` is the LINES table above, unmoved, and what is licensed at `cold` is spelled out here.
+  const BONDS_F3 = ['close', 'steady', 'strained', 'cold'] as const
+  /** What is still licensed at `cold`, per step: the lines with no word of hers in them. `unsure` and `seems-off` have none – both lines of each pair quote her. */
+  const AT_COLD: Record<Step, readonly string[]> = {
+    unsure: [],
+    'seems-good': [LINES['seems-good'][0]],
+    'seems-off': [],
+    good: [...LINES.good],
+    off: [...LINES.off],
+  }
+
+  it('2b – THE BOND: at close, steady and strained the ten are licensed exactly as before; at cold only the five with none of her words in them are', () => {
+    for (const step of STEPS) {
+      // the oracle's own split IS the quotation mark: a line that quotes her is a line this table leaves out
+      expect([...AT_COLD[step]], `${step}: the frozen cold table is the unquoted lines`).toEqual(LINES[step].filter((t) => !t.includes('"')))
+    }
+    expect(STEPS.flatMap((s) => [...AT_COLD[s]]), 'three steps still speak at cold, five lines in all').toHaveLength(5)
+    for (const stage of STAGES) {
+      const roof = ROOF_STAGES.includes(stage)
+      for (const step of STEPS) {
+        for (const bondBand of BONDS_F3) {
+          const texts = feelTexts(homeWeek({ ...stageOf(stage), bondBand, coachFeelRead: step }))
+          const expected = !roof ? [] : bondBand === 'cold' ? AT_COLD[step] : LINES[step]
+          expect(texts, `${stage} / ${step} / ${bondBand}`).toEqual([...expected])
+          if (bondBand === 'cold') for (const t of texts) expect(t, `${stage} / ${step}: a quotation mark at a cold bond`).not.toContain('"')
+        }
+      }
+    }
+  })
+
+  it('3d – and the DRAW at cold: a quoted line is never printed, the unquoted ones still are, and a step with none leaves the week to the ordinary pool', () => {
+    for (const step of STEPS) {
+      const drawn = drawnFeel({ coachFeelRead: step, bondBand: 'cold' })
+      expect([...drawn].sort(), `cold / ${step}`).toEqual([...AT_COLD[step]].sort())
+    }
+    // ...a step with no unquoted line is not a silenced week: the coin and the pool are the ordinary ones
+    for (const step of ['unsure', 'seems-off'] as const) {
+      let spoke = 0
+      for (let s = 0; s < 40; s++) {
+        for (let week = 1; week <= 60; week++) {
+          if (weekNoteFor(homeWeek({ week, bondBand: 'cold', coachFeelRead: step }), `r52-j1c-cold-${s}`) !== null) spoke++
+        }
+      }
+      expect(spoke, `cold / ${step}: the ordinary pool still speaks`).toBeGreaterThan(0)
+    }
   })
 
   it('3b – and the claim is REACHED, per line, through the honesty pin\'s sweep (HOLDS.coachFeelRead is not decoration)', () => {
