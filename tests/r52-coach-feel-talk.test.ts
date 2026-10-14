@@ -36,6 +36,11 @@
 //       round44-corpus-roundtrip's «every row's subject, stages and fact are the document's». smallTalkCorpus.ts c35eaa560ff261e0 → c35eaa560ff261e0.
 //   M3  COLLEGE CLAUSE – `if (inCollege(world)) return false` removed from `coachFeelIs`: 1 RED of the 5 cases of A (the college case: the fact must be false in college, true again with it cleared); the other four stay green.
 //   ARM F  the A/B of §F is the control for the draw: the same played career with the three rows spliced out of the catalogue (put back, in order, in a finally) taps the same MAIN draws and ends on the same next three.
+//   ARM 4  THE DIGEST FAMILIES, measured against the PARENT (d54bb6d0, a detached worktree with node_modules linked; the rows are absent there: has-rows 0). At the parent ONLY i18n-l3-7-twin
+//          is red (2 tests – F1's twin-snapshot leaves, already named in the round record); coach-travel-edge x4 files and succession-s1-start-year are GREEN, and PICK-STABILITY
+//          (i18n-l3-5-life-beats, careers 5/0) is GREEN. On this tree the same files go red because a coached career's small-talk pool is three rows longer and a situation is picked by
+//          position: coach-travel-edge 3, coach-travel-edge-late-schemas 8, -prior-schemas 3, -recent-schemas 10, succession-s1-start-year 3, PICK-STABILITY 1 (career 5/0: '1692c8b6' where
+//          the pin holds '41e7bb05'), plus the twin's 2 as before = 30 tests in 7 files. NOT re-stamped here; the architect re-stamps them once, at the close-out, on the final tree.
 //   MEASURED (the tree this file ships with, R52_F4_REPORT=1)
 //       walk D: 36 careers x 1248 weeks, close bond, level posed -8 / 0 / +8: 864 coached years, 2849 conversations (556 school, 481 after-school, 1812 independent), 71 coach-feel
 //       draws – warm 23 (6 / 6 / 11), unsure 35 (9 / 9 / 17), cold 13 (1 / 2 / 10) by school / after-school / independent – every one with its fact true at the roll.
