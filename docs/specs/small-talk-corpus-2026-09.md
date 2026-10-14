@@ -2460,6 +2460,135 @@ hesitation.
 
 ---
 
+## Addendum 14.10 (continuation) – `observation` for the school years: three, because the cell held none (round 51)
+
+**The owner, 14.10:** «остальные школьные темы тонкие - это тоже можно сюда же взять на двух языках, весь тон-оф-войс для референса и все рулинги у тебя есть.»
+
+**The hole, measured.** Builder B12's corpus bench (`npm run bench:smalltalk -- --seeds 60`, K4) counted what a school-age girl can be handed, per subject: `worry` 1, `good-news` 2, `decision` 1, `curiosity` 1 and `observation` **0**; after-school, `curiosity` 2 and `observation` 1. This document's own floor (§3b) is «minimum situations per subject × stage (3–4)». The one after-school observation is R14 `the-calm-loss`, which waits on a fact (`played-recently`), so on a career that has played nothing the cell was empty at both stages. Two later builders take `curiosity` and `good-news`, and `worry` and `decision`; this addendum is `observation` only.
+
+**What an observation is, here.** Something she noticed and brings home. Not a story – nothing happens to her, there is no punchline and no second beat – and not a curiosity: she is not asking for anything. Each of the three is one thing she watched, told four ways (§2, §4); the parent's three buttons are the same for all four voices, and her replies then add one fact of their own.
+
+| row | stages | what she noticed |
+| --- | --- | --- |
+| R57 `the-warm-up-friends` | school, after-school | two girls on the next court are friendly all through the warm-up, strangers from the first serve, and talking again at the net |
+| R58 `the-sound-of-a-clean-ball` | school, after-school | a ball on the next court is hit so cleanly that everybody looks round at the sound |
+| R59 `the-fence-says-unlucky` | school, after-school | the adults at the fence say «unlucky» after nearly every miss, even a plain bad shot, and the players nod |
+
+**Where they sit.** Last in this document, after R56, so the catalogue's first 55 rows keep their order. A situation is chosen by position in the filtered pool, so a pool of a different length reads a different position for the same seed: a career already under way may be shown a different situation next time than it would have been. That draw is on its own sub-stream (`seed:life:smalltalk:situation:<week>`), nothing is stored and the main stream does not move.
+
+**Stages and facts.** A warm-up, a sound and a fence do not depend on her age, so all three reach both school and after-school, the way `court-four` does. All three are `generated` (no career fact): a row gated on `played-recently` does not lift the floor on a career that has played nothing, and that is the career the hole was measured on.
+
+**What the lines were written against.**
+
+- Nothing a career could contradict: no result, score, placing, injury, money or coach. The girls, the ball and the adults exist only inside the sentence and nothing in the engine reads them. No button asks for an outcome (R36's lesson: «Ask who won it» is an authoritative claim a `generated` kernel does not hold).
+- No pronoun for a professional – none appears – and no masculine pronoun anywhere (`tests/coach-voice.test.ts`).
+- No «today», no exclamation mark (the fiery voice carries its edge in short verdicts and capitals, as R53–R56 do), no digit, no long dash.
+- Her replies describe what the OTHER players and the adults did, or what she will do with the thought – never a persistent pattern of her own tennis (R34's finding).
+- The facts are the same in all four voices. Each reply then adds one fact of its own, and no voice contradicts another's edition of the scene.
+- ⚠ Every new line was searched for in `src/` before it was emitted: round 51's «Nobody argued.» sat in `albumCorpus.ts` too and turned an album test red at the closing gate.
+
+**The arithmetic after these three**, derived by `tools/small-talk-corpus-parse.ts` rather than carried: 58 rows, 232 openers, 174 labels, 696 replies and 20 shared beats (an observation has no second beat). The figures in the older sections are of the 51 and 55 and stay as the record of the passes that produced them.
+
+**Measured after** (`npm run bench:smalltalk -- --seeds 60`, the bench B12 ran, 14.10): K4 `observation` school **0 → 3**, after-school **1 → 4**. The other K4 cells read exactly as B12 reported them (school `worry` 1, `good-news` 2, `decision` 1, `curiosity` 1; after-school `curiosity` 2), which is the check that this is the same arm and that nothing but the observation cell moved. Cells under the floor: seven → five – what remains is the `curiosity`, `good-news`, `worry` and `decision` cells the later builders take. K2 and K3: zero repeats wherever an alternative existed, in the posed career and the bare one alike. K5: 58 situations · 232 voice columns, the same four gated situations flagged as before and none of the three among them.
+
+### R57 · `the-warm-up-friends` · observation · school, after-school · generated
+**Kernel:** Two girls on the next court talked and laughed all through the warm-up. From the first serve until the match was over they did not look at each other. At the net afterwards they were talking again.
+**Authoritative claims:** none – the two girls exist only inside the sentence, no score, winner or result is named, and nothing here is about a match of her own.
+**Fixed in all four voices:** the next court, a friendly warm-up, and the first serve after which they stopped. Each reply adds one fact: that the change came exactly at the first serve (invite), and that it came back at the net (respond). The third stance relieves her of working it out and adds no fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"The two on the next court were so friendly in the warm-up. Then the first point started and they were strangers."` |
+| `fiery` | `"Best friends in the warm-up. Strangers from the first serve. Where is that switch, and how do I get one?"` |
+| `deep` | `"They were kind to each other in the warm-up. Once the first ball went up, neither looked at the other."` |
+| `quiet` | `"Two of them on the next court talked all through the warm-up. Then the match began, and they stopped."` |
+
+**Parent:** *Ask when it changed* · *Say it probably went back at the net* · *Say she does not have to work it out*
+
+**invite** · *Ask when it changed*
+- `sunny` `"At the very first serve. Before it they hit to each other's rackets. After it, neither of them did."`
+- `fiery` `"The first serve. That's the whole switch. A ball goes up and suddenly they've both got a grudge."`
+- `deep` `"The first serve. The moment the ball left the hand, they were somebody else."`
+- `quiet` `"At the first serve. That was all it took."`
+
+**respond** · *Say it probably went back at the net*
+- `sunny` `"It did. They shook hands and started chatting again as if nothing had happened."`
+- `fiery` `"It did. Straight away. That's the part I can't get over."`
+- `deep` `"It did. How easily it came back is the part I keep thinking about."`
+- `quiet` `"It did. They were talking again at the net."`
+
+**space** · *Say she does not have to work it out*
+- `sunny` `"I'm not trying to. I'm just glad I got to see it."`
+- `fiery` `"I'll work it out anyway. I'd like to be able to do that."`
+- `deep` `"I know. I'll probably keep watching for the exact moment it turns, though."`
+- `quiet` `"I know. I only wanted to tell somebody."`
+
+### R58 · `the-sound-of-a-clean-ball` · observation · school, after-school · generated
+**Kernel:** A ball on the next court was hit so cleanly that everybody looked round at the sound – a short, solid knock.
+**Authoritative claims:** none – the ball and whoever hit it exist only inside the sentence, and nobody is named and no score is mentioned.
+**Fixed in all four voices:** the next court, one ball hit cleanly, everyone looking round. Each reply adds one fact: the sound was a short, solid knock (invite), and that other people hear it too (respond). The third stance relieves her of chasing it and adds no fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"One ball on the next court sounded so good that everybody looked round. Nobody said a word."` |
+| `fiery` | `"One ball made one sound and every head on the court turned. I want that sound."` |
+| `deep` | `"A ball on the next court was hit so cleanly that everyone looked round. It was a while before I stopped hearing it."` |
+| `quiet` | `"A ball on the next court made a sound and everyone looked round. I did too."` |
+
+**Parent:** *Ask what it sounded like* · *Say you know that sound* · *Say she does not have to chase it*
+
+**invite** · *Ask what it sounded like*
+- `sunny` `"A short, solid knock. Like tapping a really good table."`
+- `fiery` `"A knock. Short, solid, final. A door that has made up its mind."`
+- `deep` `"A knock with nothing around it. Over before I'd looked up, and I can still hear it."`
+- `quiet` `"A short knock. That's all it was."`
+
+**respond** · *Say you know that sound*
+- `sunny` `"I thought you might. It's the best noise in the sport, honestly."`
+- `fiery` `"Then you know. It's the one honest sound in the whole game."`
+- `deep` `"You do? I wasn't sure anyone else heard it the way I do."`
+- `quiet` `"Then it isn't only me. Good."`
+
+**space** · *Say she does not have to chase it*
+- `sunny` `"I'm not chasing it. I'd just like to hear it again."`
+- `fiery` `"I'm chasing it anyway. That sound is the point."`
+- `deep` `"I know. You can't go after it. It turns up, and I want to be listening when it does."`
+- `quiet` `"I know. I'll just listen for it."`
+
+### R59 · `the-fence-says-unlucky` · observation · school, after-school · generated
+**Kernel:** The adults at the fence say «unlucky» after nearly every miss, including the ones that were plainly a bad shot. The players nod.
+**Authoritative claims:** none – the adults and the players are generic, no player is named, and ⚠ whether the parent is one of the adults at that fence is deliberately not said: the row is about the word, and the three buttons let the parent decide what to do with it.
+**Fixed in all four voices:** the adults at the fence, the word «unlucky», said after a miss that was a bad shot. Each reply adds one fact: the players nod (invite), that she would rather be told what happened (respond), and that the word is kindly meant but tells nobody anything (space).
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"The adults at the fence say 'unlucky' after every miss, even a bad shot. It's funny once you start listening."` |
+| `fiery` | `"Every adult at the fence said 'unlucky'. That was not unlucky. That was a bad shot and everybody could see it."` |
+| `deep` | `"I've started listening to the fence. 'Unlucky,' after nearly every miss, even the bad shots. I can't stop hearing it."` |
+| `quiet` | `"The adults at the fence say 'unlucky' a lot. Even when it was only a bad shot."` |
+
+**Parent:** *Ask what the players do when they hear it* · *Say you will try to say what you actually see* · *Say it is mostly kindness*
+
+**invite** · *Ask what the players do when they hear it*
+- `sunny` `"They nod. Every time, very politely. It's like a password."`
+- `fiery` `"They nod. Every single one. As if it were an actual explanation."`
+- `deep` `"They nod. I think they know exactly what the word is covering for."`
+- `quiet` `"They nod, mostly."`
+
+**respond** · *Say you will try to say what you actually see*
+- `sunny` `"Please do. I'd rather know what I actually did. Politely, though."`
+- `fiery` `"Good. Tell me what you see. I can take it."`
+- `deep` `"I'd like that. I can use a true thing. I can't use 'unlucky'."`
+- `quiet` `"That would help. 'Unlucky' never does."`
+
+**space** · *Say it is mostly kindness*
+- `sunny` `"I know. It's very kind. I just keep waiting for somebody to say what happened."`
+- `fiery` `"It's kind. It's also not true. I'm allowed to notice both."`
+- `deep` `"I think it is. I just don't think it helps whoever missed."`
+- `quiet` `"Probably. It doesn't tell anyone anything, though."`
+
+---
+
 ## P3.7 The corpus at 43, and the whole document at 51 – counted by script, not claimed
 
 ⚠⚠ **THIS SECTION SAID 44 UNTIL THE REPLIES PASS RE-RAN ITS OWN COUNT, AND IT WAS THE DOCUMENT'S OWN

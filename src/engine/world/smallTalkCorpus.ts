@@ -1,5 +1,5 @@
 // ⭐⭐⭐ THE SMALL-TALK CORPUS – **GENERATED FROM `docs/specs/small-talk-corpus-2026-09.md`,
-// NEVER RETYPED.** 55 situations × 4 voices: 220 openers, 165 stance labels, 660 replies, 20 shared second beats.
+// NEVER RETYPED.** 58 situations × 4 voices: 232 openers, 174 stance labels, 696 replies, 20 shared second beats.
 //
 // ⭐⭐ THIS IS THE WHOLE CATALOGUE AND NOT A SECOND HALF OF ONE. `SMALL_TALK_SHIPPED` – the eight
 // situations hand-written in `lifeBeat.ts` since wave 2 – was deleted in round 44 and those eight are
@@ -16,7 +16,7 @@
 // ⚠ IT IS ORDINARY COMMITTED SOURCE AND NOT A BUILD STEP (the round's own ruling). Nothing in
 // `npm run check`, `npm run build` or the dev server generates it; the emitter is a one-off.
 //
-// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 1045 authored strings. An agent retyping them
+// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 1102 authored strings. An agent retyping them
 // produces typos that no test can catch, because a test written by the same agent compares against
 // what was typed. The document is the source of truth; this file is its projection.
 //
@@ -4286,6 +4286,237 @@ export const SMALL_TALK_CORPUS: readonly SmallTalkSituation[] = [
           space: {
             label: 'Say nothing and let her go on',
             said: '"That\'s everything. When it left, the umpire checked the seat first."',
+          },
+        },
+      },
+    },
+  },
+  // R57 · the-warm-up-friends
+  {
+    id: 'the-warm-up-friends',
+    subject: 'observation',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"The two on the next court were so friendly in the warm-up. Then the first point started and they were strangers."',
+        branches: {
+          invite: {
+            label: 'Ask when it changed',
+            said: '"At the very first serve. Before it they hit to each other\'s rackets. After it, neither of them did."',
+          },
+          respond: {
+            label: 'Say it probably went back at the net',
+            said: '"It did. They shook hands and started chatting again as if nothing had happened."',
+          },
+          space: {
+            label: 'Say she does not have to work it out',
+            said: '"I\'m not trying to. I\'m just glad I got to see it."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"Best friends in the warm-up. Strangers from the first serve. Where is that switch, and how do I get one?"',
+        branches: {
+          invite: {
+            label: 'Ask when it changed',
+            said: '"The first serve. That\'s the whole switch. A ball goes up and suddenly they\'ve both got a grudge."',
+          },
+          respond: {
+            label: 'Say it probably went back at the net',
+            said: '"It did. Straight away. That\'s the part I can\'t get over."',
+          },
+          space: {
+            label: 'Say she does not have to work it out',
+            said: '"I\'ll work it out anyway. I\'d like to be able to do that."',
+          },
+        },
+      },
+      deep: {
+        opener: '"They were kind to each other in the warm-up. Once the first ball went up, neither looked at the other."',
+        branches: {
+          invite: {
+            label: 'Ask when it changed',
+            said: '"The first serve. The moment the ball left the hand, they were somebody else."',
+          },
+          respond: {
+            label: 'Say it probably went back at the net',
+            said: '"It did. How easily it came back is the part I keep thinking about."',
+          },
+          space: {
+            label: 'Say she does not have to work it out',
+            said: '"I know. I\'ll probably keep watching for the exact moment it turns, though."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"Two of them on the next court talked all through the warm-up. Then the match began, and they stopped."',
+        branches: {
+          invite: {
+            label: 'Ask when it changed',
+            said: '"At the first serve. That was all it took."',
+          },
+          respond: {
+            label: 'Say it probably went back at the net',
+            said: '"It did. They were talking again at the net."',
+          },
+          space: {
+            label: 'Say she does not have to work it out',
+            said: '"I know. I only wanted to tell somebody."',
+          },
+        },
+      },
+    },
+  },
+  // R58 · the-sound-of-a-clean-ball
+  {
+    id: 'the-sound-of-a-clean-ball',
+    subject: 'observation',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"One ball on the next court sounded so good that everybody looked round. Nobody said a word."',
+        branches: {
+          invite: {
+            label: 'Ask what it sounded like',
+            said: '"A short, solid knock. Like tapping a really good table."',
+          },
+          respond: {
+            label: 'Say you know that sound',
+            said: '"I thought you might. It\'s the best noise in the sport, honestly."',
+          },
+          space: {
+            label: 'Say she does not have to chase it',
+            said: '"I\'m not chasing it. I\'d just like to hear it again."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"One ball made one sound and every head on the court turned. I want that sound."',
+        branches: {
+          invite: {
+            label: 'Ask what it sounded like',
+            said: '"A knock. Short, solid, final. A door that has made up its mind."',
+          },
+          respond: {
+            label: 'Say you know that sound',
+            said: '"Then you know. It\'s the one honest sound in the whole game."',
+          },
+          space: {
+            label: 'Say she does not have to chase it',
+            said: '"I\'m chasing it anyway. That sound is the point."',
+          },
+        },
+      },
+      deep: {
+        opener: '"A ball on the next court was hit so cleanly that everyone looked round. It was a while before I stopped hearing it."',
+        branches: {
+          invite: {
+            label: 'Ask what it sounded like',
+            said: '"A knock with nothing around it. Over before I\'d looked up, and I can still hear it."',
+          },
+          respond: {
+            label: 'Say you know that sound',
+            said: '"You do? I wasn\'t sure anyone else heard it the way I do."',
+          },
+          space: {
+            label: 'Say she does not have to chase it',
+            said: '"I know. You can\'t go after it. It turns up, and I want to be listening when it does."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"A ball on the next court made a sound and everyone looked round. I did too."',
+        branches: {
+          invite: {
+            label: 'Ask what it sounded like',
+            said: '"A short knock. That\'s all it was."',
+          },
+          respond: {
+            label: 'Say you know that sound',
+            said: '"Then it isn\'t only me. Good."',
+          },
+          space: {
+            label: 'Say she does not have to chase it',
+            said: '"I know. I\'ll just listen for it."',
+          },
+        },
+      },
+    },
+  },
+  // R59 · the-fence-says-unlucky
+  {
+    id: 'the-fence-says-unlucky',
+    subject: 'observation',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"The adults at the fence say \'unlucky\' after every miss, even a bad shot. It\'s funny once you start listening."',
+        branches: {
+          invite: {
+            label: 'Ask what the players do when they hear it',
+            said: '"They nod. Every time, very politely. It\'s like a password."',
+          },
+          respond: {
+            label: 'Say you will try to say what you actually see',
+            said: '"Please do. I\'d rather know what I actually did. Politely, though."',
+          },
+          space: {
+            label: 'Say it is mostly kindness',
+            said: '"I know. It\'s very kind. I just keep waiting for somebody to say what happened."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"Every adult at the fence said \'unlucky\'. That was not unlucky. That was a bad shot and everybody could see it."',
+        branches: {
+          invite: {
+            label: 'Ask what the players do when they hear it',
+            said: '"They nod. Every single one. As if it were an actual explanation."',
+          },
+          respond: {
+            label: 'Say you will try to say what you actually see',
+            said: '"Good. Tell me what you see. I can take it."',
+          },
+          space: {
+            label: 'Say it is mostly kindness',
+            said: '"It\'s kind. It\'s also not true. I\'m allowed to notice both."',
+          },
+        },
+      },
+      deep: {
+        opener: '"I\'ve started listening to the fence. \'Unlucky,\' after nearly every miss, even the bad shots. I can\'t stop hearing it."',
+        branches: {
+          invite: {
+            label: 'Ask what the players do when they hear it',
+            said: '"They nod. I think they know exactly what the word is covering for."',
+          },
+          respond: {
+            label: 'Say you will try to say what you actually see',
+            said: '"I\'d like that. I can use a true thing. I can\'t use \'unlucky\'."',
+          },
+          space: {
+            label: 'Say it is mostly kindness',
+            said: '"I think it is. I just don\'t think it helps whoever missed."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"The adults at the fence say \'unlucky\' a lot. Even when it was only a bad shot."',
+        branches: {
+          invite: {
+            label: 'Ask what the players do when they hear it',
+            said: '"They nod, mostly."',
+          },
+          respond: {
+            label: 'Say you will try to say what you actually see',
+            said: '"That would help. \'Unlucky\' never does."',
+          },
+          space: {
+            label: 'Say it is mostly kindness',
+            said: '"Probably. It doesn\'t tell anyone anything, though."',
           },
         },
       },

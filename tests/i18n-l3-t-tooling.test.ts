@@ -124,7 +124,7 @@ describe('§1 the walker folds `+` between plain literals into ONE key – and l
 // =================================================================================================
 // the number of DISTINCT keys each seat reaches – every figure is one an earlier wave's net counts on its own (the provider is not asked to confirm itself)
 const SEAT_KEYS: Record<string, number> = {
-  'lifeBeat.optionLabel': 191, //   34 LIFE_BEAT_OPTIONS labels (L2-9b) + 157 distinct stance labels over 55 situations x 4 voices (L3-5 §6; ⚠ RE-AIMED 14.10 r51 №17: +12)
+  'lifeBeat.optionLabel': 200, //   34 LIFE_BEAT_OPTIONS labels (L2-9b) + 166 distinct stance labels over 58 situations x 4 voices (L3-5 §6; ⚠ RE-AIMED 14.10 r51 №17: +12, r51 continuation E1: +9)
   'lifeBeat.replyDone': 2, //       `Let her finish` and `Proceed` – the two shipped words (invariant 4)
   'lifeBeat.promptConfirm': 1, //   `Proceed`
   'lifeMoment.confirm': 1, //       LIFE_MOMENT_CONFIRM
@@ -134,7 +134,7 @@ const SEAT_KEYS: Record<string, number> = {
   'diary.debut': 4, //              the four opening-week lines
   'diary.weekNotes': 301, //        301 static cells of the 327-cell corpus (L3-4 §8; +3 R51 №13)
   'diary.travel': 78, //            the travel notes + the coach's five
-  'smallTalk.corpus': 900, //       220 openers + 660 replies + 20 shared second beats (L3-5 §6; ⚠ RE-AIMED 14.10 r51 №17: +80)
+  'smallTalk.corpus': 948, //       232 openers + 696 replies + 20 shared second beats (L3-5 §6; ⚠ RE-AIMED 14.10 r51 №17: +80, r51 continuation E1: +48)
   'smallTalk.frames': 18, //        9 per presence
   'album.corpus': 664, //           648 cells + 16 arc cells (L3-6 §11) – ⚠ RE-STAMPED 12.10 r49 №7 (+180) and r50 №1 (+12: the pregnancy occasion A38)
   // ⚠ 10.10 – the LQA runner's four not-in-catalog keys and their whole families (L4-GATE row):
@@ -318,7 +318,8 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     // ⭐ RE-AIMED 13.10 (r51 №2): 2781 → 2791 (+10 `engine.text` keys: the Specialists tab's three locked lines, the masseur's four room notes, three refusals).
     // ⭐ RE-AIMED 14.10 (r51 №13): 2791 → 2794 (+3 `diary.weekNotes` keys: the staycation week's three lines).
     // ⭐ RE-AIMED 14.10 (r51 №17): 2794 → 2886 (+92: four school-years stories – 16 openers, 48 replies and 16 shared beats on the corpus seat, 12 labels on the option-label seat).
-    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 2886 catalog keys/)
+    // ⭐ RE-AIMED AGAIN 14.10 (r51 continuation, builder E1): 2886 → 2943 (+57: three school-years observations – 12 openers and 36 replies on the corpus seat, 9 labels on the option-label seat).
+    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 2943 catalog keys/)
   })
 })
 
