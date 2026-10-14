@@ -21,7 +21,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, dynastyHandoverOf, STARTING_FUNDS_CENTS, tickWeek, toSnapshot } from '../../src/engine/world'
-import { createLegacyWorld, legacyInputOf, LEGACY_SAVINGS_MULTIPLIER } from '../../src/engine/world/succession'
+import { createLegacyWorld, legacyInputOf, LEGACY_CASH_CEILING_CENTS, LEGACY_SAVINGS_MULTIPLIER } from '../../src/engine/world/succession'
 import { resumeMain } from '../../src/engine/rng'
 import { formatCents } from '../../src/shared/money'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
@@ -73,8 +73,10 @@ describe('r51 №5 – the Money screen quotes the grant the career really recei
 
     const daughter = createLegacyWorld(legacy, handover.childSeed, 'Ilka', DEFAULT_PROFILE, undefined, { dynasty: handover })
     const grant = daughter.legacy!.savingsSliceCents
-    expect(grant, 'no prologue rode along: the wealthy row times the held band, rounded once').toBe(
-      Math.round(STARTING_FUNDS_CENTS.wealthy * LEGACY_SAVINGS_MULTIPLIER.held),
+    // ⚠ 14.10: the wealthy row times the held band is 360,000 – over the owner's cash ceiling – so the grant is the CEILING (288,000). The house and the car arrive on top; the cash is what is capped.
+    expect(Math.round(STARTING_FUNDS_CENTS.wealthy * LEGACY_SAVINGS_MULTIPLIER.held), 'the raw product is over the ceiling – the clamp is in play, not idle').toBeGreaterThan(LEGACY_CASH_CEILING_CENTS)
+    expect(grant, 'no prologue rode along: the wealthy row times the held band, rounded once, then held at the ceiling').toBe(
+      Math.min(Math.round(STARTING_FUNDS_CENTS.wealthy * LEGACY_SAVINGS_MULTIPLIER.held), LEGACY_CASH_CEILING_CENTS),
     )
 
     const snap = toSnapshot(daughter)

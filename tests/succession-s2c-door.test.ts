@@ -43,13 +43,21 @@
 //   · the worker's clamp re-introduced (profile AND handover forced to `middle`)  -> 6 red of 13: the creation arm, the Alice case, exactly-at-the-wealthy-reserve, one cent under the middle
 //                                                                                    reserve, the empty account and the Alice's-daughter arm (the two `middle` cases and the numbers pin stay green – a forced middle is their answer)
 //   · the snapshot dropping the grant (`openingFundsCents` never built)            -> 7 red of 13: the creation arm and all six band cases, each of which asserts the wire
+// ⚠ 14.10 (r51 continuation – THE OWNER'S CASH-CEILING RULING): «Потолок наследства $288-432k - это мы про наличные говорим? Если да, то я думаю даже что 288 может быть верхним потолком, учитывая еще дом и машину,
+// в этот раунд». The opening CASH is capped at $288,000 (`LEGACY_CASH_CEILING_CENTS`, the last step of `legacyOpeningCashCents`); the house and the car arrive on top and are untouched. The numbers pin at the foot
+// of this file used to read its table off `prologueFundsOnBaseCents` alone and to call 432,000 «the ceiling»: it now reads the table off the engine's one wallet function, so the cap is SEEN, and the wealthy x held
+// trio 432,000 / 360,000 / 288,000 is 288,000 x3. The Alice case's expectation takes the cap from the constant and the economy's own function and never from the seam the world was built by (a seam compared with
+// itself cannot go red when its clamp is removed). Predicted vs measured, cell by cell, is the arm after the numbers pin; the boundary arm follows it.
+// MUTATION-VERIFIED 14.10 (the one clamp line in `legacyOpeningCashCents` removed by reverse-applying a one-hunk patch, the wallet suites run, the patch re-applied; sha256 of succession.ts before = after):
+//   · clamp removed -> 7 red across 3 files: HERE the numbers pin (the wealthy x held trio and the maximum), the predicted-vs-measured arm, the boundary arm and the Alice case (4); tests/succession-s2b-create.test.ts
+//     the twelve-cell table and the world-level boundary arm (2); tests/component/r51-money-opening-grant.test.ts the mounted real-career arm (1). S2a's multiplier suite stays green – it never reads the wallet.
 import 'fake-indexeddb/auto'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { createWorld, dynastyHandoverOf, tickWeek, type WorldState } from '../src/engine/world'
 import { START_AGE_YEARS } from '../src/engine/world/age'
 import { STARTING_FUNDS_CENTS } from '../src/engine/world/create'
 import { ECONOMY, prologueFundsOnBaseCents } from '../src/engine/economy'
-import { createLegacyWorld, legacyInputOf, LEGACY_SAVINGS_MULTIPLIER, type LegacyInput } from '../src/engine/world/succession'
+import { createLegacyWorld, legacyInputOf, legacyOpeningCashCents, LEGACY_CASH_CEILING_CENTS, LEGACY_SAVINGS_MULTIPLIER, type LegacyInput } from '../src/engine/world/succession'
 import { resumeMain } from '../src/engine/rng'
 import { decodeExportFile, encodeExportFile } from '../src/engine/saveCodec'
 import { DEFAULT_START_YEAR } from '../src/shared/dates'
@@ -313,7 +321,9 @@ describe('r51 №5 – the band her mother earned reaches the daughter, and the 
       expect(handover.background, 'the engine\'s own reading of the mother\'s account is the band under test').toBe(c.band)
       expect(card, 'the origins card disagrees with that band – it must not be what decided').not.toBe(c.band)
       expect(world.profile.background, 'the band reached the profile').toBe(c.band)
-      const wallet = prologueFundsOnBaseCents(STARTING_FUNDS_CENTS[c.band] * c.m, prologue.spentCents)
+      // ⚠ 14.10: THE CEILING IS PART OF THE WALLET NOW. The expectation builds it from the economy's own function and the exported constant – NOT from `legacyOpeningCashCents`, which built the world. Alice's line is
+      // the live case: the cheapest road prices wealthy x held at 432,000 and the ceiling holds it at 288,000.
+      const wallet = Math.min(prologueFundsOnBaseCents(STARTING_FUNDS_CENTS[c.band] * c.m, prologue.spentCents), LEGACY_CASH_CEILING_CENTS)
       expect(world.fundsCents, `the wallet is the ${c.band} row times ${c.m}, with the childhood's deduction on it`).toBe(wallet)
       expect(world.legacy?.savingsSliceCents, 'the block records the grant that was made').toBe(world.fundsCents)
       expect(reply.snapshot!.openingFundsCents, 'and the wire quotes it').toBe(world.fundsCents)
@@ -328,24 +338,83 @@ describe('r51 №5 – the band her mother earned reaches the daughter, and the 
     expect(ECONOMY.parentIncomeCents.middle, 'where the 425 he met is the middle row').toBe(425_00)
   })
 
+  // ⚠ 14.10 – THE OWNER'S CEILING RULING SUPERSEDES THE 432,000 THIS PIN USED TO CALL «THE CEILING»: «Потолок наследства $288-432k - это мы про наличные говорим? Если да, то я думаю даже что 288 может быть
+  // верхним потолком, учитывая еще дом и машину, в этот раунд». The table is read through `legacyOpeningCashCents` – the engine's one wallet function, cap included – and no longer off
+  // `prologueFundsOnBaseCents` alone, which is exactly what let this pin go on saying 432,000 about a rule that had stopped allowing it. The wealthy x held trio was 432,000 / 360,000 / 288,000 (lightest /
+  // reference / dearest childhood) and is 288,000 x3: the whole row lands ON the cap. Every other cell is where it was, and the live-save line below is untouched.
+  const m = LEGACY_SAVINGS_MULTIPLIER
+  const BAND_NAMES = ['working', 'middle', 'wealthy'] as const
+  const REF = ECONOMY.prologue.referenceSpendCents // the reference childhood moves the reserve by nothing
+  const LIGHTEST = 0 // far under the reference: `moved` clamps to +1
+  const DEAREST = 1e12 // far over it: `moved` clamps to -1
+  const at = (band: FamilyBackground, mult: number, spent: number) => legacyOpeningCashCents(band, mult, spent)
+  const row = (band: FamilyBackground) => [m.early, m.faded, m.solid, m.held].map((x) => at(band, x, REF) / 100)
+
   it('⭐⭐ the numbers the spec\'s closure note states, read off the engine\'s own functions – the table and the ceiling', () => {
-    const m = LEGACY_SAVINGS_MULTIPLIER
-    const at = (band: FamilyBackground, mult: number, spent: number) => prologueFundsOnBaseCents(BANDS[band] * mult, spent)
-    const REF = ECONOMY.prologue.referenceSpendCents // the reference childhood moves the reserve by nothing
-    const LIGHTEST = 0 // far under the reference: `moved` clamps to +1
-    const DEAREST = 1e12 // far over it: `moved` clamps to -1
-    const row = (band: FamilyBackground) => [m.early, m.faded, m.solid, m.held].map((x) => at(band, x, REF) / 100)
     expect(row('working'), 'working: early / faded / solid / held').toEqual([8_000, 10_400, 16_000, 24_000])
     expect(row('middle'), 'middle').toEqual([25_000, 32_500, 50_000, 75_000])
-    expect(row('wealthy'), 'wealthy').toEqual([120_000, 156_000, 240_000, 360_000])
-    expect(at('wealthy', m.held, LIGHTEST) / 100, 'THE CEILING: wealthy x held at the lightest childhood').toBe(432_000)
-    expect(at('wealthy', m.held, REF) / 100, 'the same line at the reference childhood').toBe(360_000)
-    expect(at('wealthy', m.held, DEAREST) / 100, 'and at the dearest').toBe(288_000)
+    expect(row('wealthy'), 'wealthy – the held cell was 360,000 before the 14.10 ceiling').toEqual([120_000, 156_000, 240_000, 288_000])
+    expect(at('wealthy', m.held, LIGHTEST) / 100, 'THE CEILING: wealthy x held at the lightest childhood – was 432,000').toBe(288_000)
+    expect(at('wealthy', m.held, REF) / 100, 'the same line at the reference childhood – was 360,000').toBe(288_000)
+    expect(at('wealthy', m.held, DEAREST) / 100, 'and at the dearest – 288,000 before and after: the ceiling is where the dearest childhood always landed').toBe(288_000)
+    expect(at('wealthy', m.solid, LIGHTEST) / 100, 'wealthy x solid at the lightest childhood is 120,000 x 2.0 x 1.2 – exactly AT the ceiling, unchanged').toBe(288_000)
     expect(at('middle', m.held, DEAREST) / 100, 'his live save: a middle base, held, the dearest childhood').toBe(60_000)
-    const every = (['working', 'middle', 'wealthy'] as const).flatMap((b) =>
-      [m.early, m.faded, m.solid, m.held].flatMap((x) => [LIGHTEST, REF, DEAREST].map((s) => at(b, x, s))),
-    )
-    expect(Math.max(...every) / 100, 'the ceiling is the top of every band x multiplier x childhood').toBe(432_000)
+    const every = BAND_NAMES.flatMap((b) => [m.early, m.faded, m.solid, m.held].flatMap((x) => [LIGHTEST, REF, DEAREST].map((s) => at(b, x, s))))
+    expect(every, 'the denominator: 3 bands x 4 multipliers x 3 childhoods').toHaveLength(36)
+    expect(Math.max(...every) / 100, 'the top of every band x multiplier x childhood – was 432,000').toBe(288_000)
+    expect(Math.max(...every), 'and that top IS the constant').toBe(LEGACY_CASH_CEILING_CENTS)
+  })
+
+  it('PREDICTED vs MEASURED (invariant 5, 14.10): of the 36 cells the ceiling moves exactly the two wealthy x held ones that were over it – and of the 12 childhood-less ones, one', () => {
+    // «Before» is the pre-ceiling arithmetic, the economy's own function; «after» is the engine's wallet function. A cell is listed only if the two differ.
+    const moved: string[] = []
+    let cells = 0
+    for (const band of BAND_NAMES) {
+      for (const [name, x] of Object.entries(m)) {
+        for (const [childhood, spent] of [['lightest', LIGHTEST], ['reference', REF], ['dearest', DEAREST]] as [string, number][]) {
+          cells++
+          const before = prologueFundsOnBaseCents(BANDS[band] * x, spent)
+          const after = at(band, x, spent)
+          if (after !== before) moved.push(`${band} x ${name} @ ${childhood}: ${before / 100} -> ${after / 100}`)
+        }
+      }
+    }
+    expect(cells, 'the denominator').toBe(36)
+    expect(moved).toEqual(['wealthy x held @ lightest: 432000 -> 288000', 'wealthy x held @ reference: 360000 -> 288000'])
+    // No nine years riding along: B x m rounded once – the twelve-cell table of S2b.
+    const movedBare: string[] = []
+    let bare = 0
+    for (const band of BAND_NAMES) {
+      for (const [name, x] of Object.entries(m)) {
+        bare++
+        const before = Math.round(BANDS[band] * x)
+        const after = legacyOpeningCashCents(band, x)
+        if (after !== before) movedBare.push(`${band} x ${name}: ${before / 100} -> ${after / 100}`)
+      }
+    }
+    expect(bare, 'the denominator').toBe(12)
+    expect(movedBare).toEqual(['wealthy x held: 360000 -> 288000'])
+  })
+
+  it('THE BOUNDARY (14.10): a computed wallet one cent over the ceiling clamps, one cent under passes through, exactly at stays – with and without the nine years', () => {
+    const cap = LEGACY_CASH_CEILING_CENTS
+    const B = STARTING_FUNDS_CENTS.wealthy
+    const cases: [string, number, number][] = [
+      ['one cent over', cap + 1, cap],
+      ['exactly at', cap, cap],
+      ['one cent under', cap - 1, cap - 1],
+    ]
+    for (const [label, raw, expected] of cases) {
+      // A multiplier that lands the raw wallet on the chosen cent: the engine takes any multiplier in the table's corridor (S2b already feeds it 1.2345679) and rounds once, at the end.
+      const bareMultiplier = raw / B
+      expect(Math.round(B * bareMultiplier), `${label}: the raw wallet without a childhood really is ${raw} (the denominator the arm leans on)`).toBe(raw)
+      expect(legacyOpeningCashCents('wealthy', bareMultiplier), `${label}, no childhood`).toBe(expected)
+      // With the lightest childhood riding along (+20 % on the multiplied base): the deduction first, the cap after.
+      const childhoodMultiplier = raw / (B * (1 + ECONOMY.prologue.reserveSwingShare))
+      expect(prologueFundsOnBaseCents(B * childhoodMultiplier, LIGHTEST), `${label}: the raw wallet with the lightest childhood really is ${raw}`).toBe(raw)
+      expect(legacyOpeningCashCents('wealthy', childhoodMultiplier, LIGHTEST), `${label}, lightest childhood`).toBe(expected)
+    }
+    // The cap clears every band's richest ordinary start (the lightest childhood), so a generation-2 start is never poorer than an ordinary one – the §4 corridor's intent.
+    for (const band of BAND_NAMES) expect(cap, `${band}: an ordinary start sits under the cap`).toBeGreaterThan(prologueFundsOnBaseCents(BANDS[band], LIGHTEST))
   })
 })
-

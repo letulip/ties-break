@@ -75,6 +75,34 @@ export const LEGACY_SAVINGS_MULTIPLIER: Record<LegacyBand, number> = {
   early: 1.0,
 }
 
+/** THE HARD CEILING OF THE OPENING CASH – $288,000, THE OWNER'S RULING OF 14.10 (r51): «Потолок наследства $288-432k - это мы про наличные говорим? Если да, то я думаю даже что 288 может быть
+ *  верхним потолком, учитывая еще дом и машину, в этот раунд». It IS the cash: the opening wallet – the one figure that lands in `fundsCents`, is persisted as `legacy.savingsSliceCents` and is
+ *  quoted on the wire as `Snapshot.openingFundsCents` – and the house and the car arrive ON TOP of it as owned assets, untouched (no price of theirs enters this arithmetic; S2b's tests hold the
+ *  wallet equal with and without them).
+ *
+ *  WHY IT EXISTS: the 13.10 removal of the origins clamp let the mother's band reach the daughter, and the multiplier STACKS on that band's base – wealthy x held opens on 360,000 at the reference
+ *  childhood and 432,000 at the lightest (the spec's closure note named that figure and handed him the lever). Beside a house and a car it read as too much cash, and he chose a CEILING over a
+ *  lower held multiplier: the §4 table keeps its meaning (the order of the bands) and only the top of the money is capped.
+ *
+ *  ⚠ APPLIED LAST, in `legacyOpeningCashCents` and nowhere else – after the multiplier AND after the childhood's deduction, so the deduction still reads the whole multiplied reserve and the ceiling
+ *  only clips what comes out of it. Of the twelve band x multiplier rows it moves the wealthy x held one alone, and every childhood of that row lands ON it (120,000 x 3.0 x 0.8 is 288,000 already
+ *  at the dearest childhood); wealthy x solid at the lightest childhood is 120,000 x 2.0 x 1.2 = 288,000, exactly AT it. It sits above every ordinary start (the richest, the wealthy family's
+ *  lightest childhood, is 144,000), so a generation-2 start is still never poorer than an ordinary one. NO DRAW, NO STATE, NO SCHEMA: the field already exists, only its value is capped. */
+export const LEGACY_CASH_CEILING_CENTS = 288_000_00
+
+/** THE OPENING WALLET, ONE ARITHMETIC – the whole of «what a generation-2 career opens with», as a pure function of plain facts so its table can be enumerated without walking a career
+ *  (`legacyBandOf`'s idiom). `createLegacyWorld` asks THIS and hands `createWorld` the finished figure, so `legacy.savingsSliceCents`, the world's `fundsCents` and `Snapshot.openingFundsCents`
+ *  all carry one number from one place.
+ *
+ *  The order is the law: B[background] x the §4 multiplier (a float, rounded once at the end); the prologue's own deduction on that multiplied base when the nine years rode along (`spentCents`
+ *  given – W1, ruling 12; `prologueFundsOnBaseCents` is the SAME function an ordinary prologue career uses), or one rounding when they did not; and last the cash ceiling (14.10). Byte-identical to
+ *  the inline arithmetic it replaced for every cell the ceiling does not touch. NO DRAW, NO STATE, NO SCHEMA. */
+export function legacyOpeningCashCents(background: FamilyBackground, savingsMultiplier: number, spentCents?: number): number {
+  const multipliedBaseCents = STARTING_FUNDS_CENTS[background] * savingsMultiplier
+  const wallet = spentCents === undefined ? Math.round(multipliedBaseCents) : prologueFundsOnBaseCents(multipliedBaseCents, spentCents)
+  return Math.min(wallet, LEGACY_CASH_CEILING_CENTS)
+}
+
 /** §4 row 2's bar: «top-100 reached», on the PRO table. `bestRankOn(world, 'wta')` is the reader and it
  *  answers `null` for a career that never touched that table, so a junior #3 is not a solid pro – the
  *  architect's 22.09 review, which `dynastyHandoverOf` carries and this reads. */
@@ -384,10 +412,10 @@ export function createLegacyWorld(
   // ⭐⭐ W1 (06.10, ruling 12): THE WALLET IS THE PROLOGUE'S OWN DEDUCTION ON THE MULTIPLIED BASE when the nine years ride along – the arithmetic
   // `createWorld` applies to an ordinary prologue career, on a base that is B x m instead of B – and B x m rounded once when they do not.
   // `createWorld` is handed the finished figure (its eighth argument replaces the prologue's own wallet line there), so there is ONE wallet.
-  const multipliedBaseCents = STARTING_FUNDS_CENTS[background] * legacy.savingsMultiplier
-  const grantCents = creation.prologue
-    ? prologueFundsOnBaseCents(multipliedBaseCents, creation.prologue.spentCents)
-    : Math.round(multipliedBaseCents)
+  // 14.10 (THE OWNER'S RULING, r51): THE CASH CEILING IS THE LAST STEP OF THAT SAME ARITHMETIC – $288,000, with the house and the car on top of it, untouched. The whole wallet – the multiplier, the
+  // deduction W1 returned and the ceiling – lives in `legacyOpeningCashCents`, the one place it is computed (pure, so its table is enumerable without walking a career); this line only asks it,
+  // which is what keeps `savingsSliceCents`, `fundsCents` and `openingFundsCents` from ever disagreeing.
+  const grantCents = legacyOpeningCashCents(background, legacy.savingsMultiplier, creation.prologue?.spentCents)
   const world = createWorld(seed, daughter, careerId, creation.prologue, creation.dynasty, creation.weightEnabled, startYear, grantCents)
 
   world.legacy = {
