@@ -1315,3 +1315,41 @@ zero because most pairs go from a hedged step to a confident one once, as the le
 
 **Targets.** Unsure at week 13 between 30% and 60%; hedged-wrong at most 15%; flicker median at most 4 a year; confident-wrong exactly 0.
 If one misses, one knob may move once, with both measurements reported; if it still misses, the owner of the design decides.
+
+### 17.3 Measured
+
+Run: `npm run bench:chemistry -- --feel` (1200 pairs, three coached years, B13's pairs). **All four targets held on the first run, and no
+knob was moved.** Everything below is read off one walk per pair.
+
+| what is measured | predicted | measured |
+| --- | --- | --- |
+| (a) week 6 | unsure 42–52%, seems-good 22–31%, seems-off 22–31%, good and off under 1% | 47.7%, 25.8%, 26.5%, 0.0% and 0.0% – all inside; week 5 is too early for 100.0% |
+| (a) week 13 | unsure 44–56%, seems-good 19–26%, seems-off 19–26%, good 0.5–2%, off 1.5–4% | 47.8%, 22.7%, 25.9%, 1.2%, 2.5% – all inside (seems-off near the top) |
+| (a) week 26 | unsure 36–50%, seems-good 10–18%, seems-off 8–15%, good 8–12%, off 17–25% | 43.1%, 14.4%, 13.1%, 10.6%, 18.8% – all inside |
+| (a) week 52 | unsure 30–40%, seems-good 2–8%, seems-off 2–8%, good 17–22%, off 35–42% | **unsure 23.3% (below)**, 6.8%, 8.0%, 21.1%, 40.8% |
+| (b) from week 13, level at week 52 | seems-good: +3 or more 55–72%, between 25–40%, −3 or less 2–7% | 68.0%, 29.0%, 2.9% |
+| | seems-off: −3 or less 78–92%, between 8–22%, +3 or more under 1% | 84.6%, 15.4%, 0.0% |
+| | unsure: +3 or more 5–14%, between 45–60%, −3 or less 30–45% | 9.4%, 57.2%, 33.3% |
+| (b) from week 26 | seems-good +3 or more 60–80% · seems-off −3 or less 70–90% · good +3 or more 85–97% · off −3 or less 92–99% | 59.0% (a point under) · 71.3% · 95.3% · 100.0% (n = 226; a point over) |
+| (c) doubt errors from week 13 | seems-good wrong 10–18%, seems-off 2–6%, combined 6–12% | 11.4% (31 of 272), **1.0%** (3 of 311), **5.8%** – the cold side and the total are below the range |
+| (c) from week 26 | combined 5–11% | 6.4% (21 of 330) |
+| (d) flicker, first coached year | median 1 (0–2), p90 3–6 | median 1.1, p90 5.7, mean 2.5; 12.3% of pairs never change |
+| (d) flicker, years two and three | median 0 (0–1), p90 2–4 | median 0.0, p90 3.5, mean 1.0; 57.1% never change |
+| (e) confident and wrong | 0 | 0 of 115,162 confident pair-weeks |
+
+Targets: unsure at week 13 is 47.8% (30–60%); hedged-wrong is 5.8% from week 13 and 6.4% from week 26 (at most 15%); the flicker
+median is 1.1 a year (at most 4); confident-wrong is 0 with a non-empty denominator.
+
+**What the prediction got wrong.** Three things, none of them a target. At a year she is unsure for 23.3% of pairs, not 30–40%: once
+the level carries 70% of the score, a level of 2–3 (which the gauge may or may not be showing yet) already pushes the score past the
+line, so those pairs lean hedged rather than staying quiet – 14.8% of pairs are on a hedged step at a year. The cold side's doubt
+is smaller than predicted (1.0% against 2–6%): a pair that starts badly almost never turns round within a year, while one that starts
+well sometimes does (11.4%) – the asymmetry predicted, only stronger. And the first-year flicker tail is at the top of the range:
+one pair in ten changes step about every two months. Those are the pairs whose score sits within the doubt's width of the line, and
+the doubt is what moves them; the median pair changes once, when its hedged step becomes a confident one.
+
+**What it means for the player.** After a quarter she is unsure about half the time, and when she does lean, the lean is right: of
+the pairs that seem good at week 13, about two in three show +3 or more at week 52, and fewer than one in thirty ends the year
+clearly cold; of those that seem off, five in six end it at −3 or less. A confident step is rare in the first quarter (3.7% of pairs at
+week 13) and common by the end of the year (62% at week 52), because it needs the gauge to agree. Every number here is on the stated
+even-record stream, as in B12 and B13, not on played careers.
