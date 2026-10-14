@@ -59,9 +59,12 @@ function mountMore(snapshot: Snapshot) {
   return mount(MoreScreen, mountOpts)
 }
 
+const mountOpts = { global: { stubs: { teleport: true } } }
 // ⚠ 14.10 (r52, the owner's CI trace): `recapFresh` is a REQUIRED prop of HomeScreen (App.vue passes it) – omitting it
 // only printed «Missing required prop» noise into every CI log; false = no fresh recap, the shell's own default state.
-const mountOpts = { props: { recapFresh: false }, global: { stubs: { teleport: true } } }
+// HOME ONLY: the shared options above also mount More, Money and Kid, which declare no such prop (it would land as an
+// extraneous attribute – the second warning this fix first caused, caught by builder I1).
+const homeMountOpts = { ...mountOpts, props: { recapFresh: false } }
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND THE WATERMARKS ARE ABOUT localStorage. happy-dom is
 // configured here without web storage (probed: `typeof localStorage === 'undefined'`, and it is not
@@ -296,7 +299,7 @@ describe('HomeScreen - the bell dot clears (item 5)', () => {
     const store = withSnapshot(snapshot)
     // The player last looked before the newest story landed.
     localStorage.setItem(`tb:lastSeenBellNewsId:${store.snapshot!.careerId}`, String(latestNewsId(snapshot) - 1))
-    const wrapper = mount(HomeScreen, mountOpts)
+    const wrapper = mount(HomeScreen, homeMountOpts)
     const bell = wrapper.find('button[aria-label="Go to the news feed"]')
     expect(bell.find('.diary-tool-dot').exists()).toBe(true)
     wrapper.unmount()
@@ -306,7 +309,7 @@ describe('HomeScreen - the bell dot clears (item 5)', () => {
     const snapshot = snapshotAfter(30)
     const store = withSnapshot(snapshot)
     localStorage.setItem(`tb:lastSeenBellNewsId:${store.snapshot!.careerId}`, String(latestNewsId(snapshot) - 1))
-    const wrapper = mount(HomeScreen, mountOpts)
+    const wrapper = mount(HomeScreen, homeMountOpts)
     const bell = wrapper.find('button[aria-label="Go to the news feed"]')
     expect(bell.find('.diary-tool-dot').exists()).toBe(true)
     await bell.trigger('click')
@@ -317,7 +320,7 @@ describe('HomeScreen - the bell dot clears (item 5)', () => {
       String(latestNewsId(snapshot)),
     )
     wrapper.unmount()
-    const again = mount(HomeScreen, mountOpts)
+    const again = mount(HomeScreen, homeMountOpts)
     expect(again.find('button[aria-label="Go to the news feed"]').find('.diary-tool-dot').exists()).toBe(false)
     again.unmount()
   })
@@ -326,7 +329,7 @@ describe('HomeScreen - the bell dot clears (item 5)', () => {
     const snapshot = snapshotAfter(30)
     const store = withSnapshot(snapshot)
     localStorage.setItem(`tb:lastSeenBellNewsId:${store.snapshot!.careerId}`, String(latestNewsId(snapshot)))
-    const wrapper = mount(HomeScreen, mountOpts)
+    const wrapper = mount(HomeScreen, homeMountOpts)
     expect(wrapper.find('button[aria-label="Go to the news feed"]').find('.diary-tool-dot').exists()).toBe(false)
     wrapper.unmount()
   })
@@ -380,7 +383,7 @@ describe('HomeScreen - the season strip is the window plus one (item 7)', () => 
     const open = TIER_LADDER.filter((t) => snapshot.tierOpen?.[t])
     expect(open.length).toBeGreaterThan(0)
     expect(open.length).toBeLessThan(TIER_LADDER.length)
-    const wrapper = mount(HomeScreen, mountOpts)
+    const wrapper = mount(HomeScreen, homeMountOpts)
     const chips = wrapper.findAll('.season-strip .tier-chip:not(.strip-more)')
     expect(chips.length).toBeLessThan(TIER_LADDER.length)
     expect(chips.length).toBeLessThanOrEqual(open.length + 1)
@@ -393,7 +396,7 @@ describe('HomeScreen - the season strip is the window plus one (item 7)', () => 
     const open = TIER_LADDER.filter((t) => snapshot.tierOpen?.[t])
     const highest = TIER_LADDER.indexOf(open[open.length - 1])
     const aspirational = TIER_LADDER[Math.min(highest + 1, TIER_LADDER.length - 1)]
-    const wrapper = mount(HomeScreen, mountOpts)
+    const wrapper = mount(HomeScreen, homeMountOpts)
     const text = wrapper.find('.season-strip').text()
     // Chips print the tier's SHORT name, which is what the strip's own array carries.
     for (const id of open) expect(text).toContain(shortOf(id))
@@ -403,7 +406,7 @@ describe('HomeScreen - the season strip is the window plus one (item 7)', () => 
 
   it('the rest is behind an ellipsis, and the ellipsis really opens it', async () => {
     withSnapshot(snapshotAfter(30))
-    const wrapper = mount(HomeScreen, mountOpts)
+    const wrapper = mount(HomeScreen, homeMountOpts)
     const more = wrapper.findAll('.season-strip .strip-more')
     expect(more.length).toBeGreaterThan(0)
     const collapsed = wrapper.findAll('.season-strip .tier-chip:not(.strip-more)').length
@@ -425,7 +428,7 @@ describe('HomeScreen - the season strip is the window plus one (item 7)', () => 
     // the one that matters for a window read from the engine: with no verdict, hide nothing.
     const snapshot = snapshotAfter(30)
     withSnapshot({ ...snapshot, tierOpen: undefined } as unknown as Snapshot)
-    const wrapper = mount(HomeScreen, mountOpts)
+    const wrapper = mount(HomeScreen, homeMountOpts)
     expect(wrapper.findAll('.season-strip .tier-chip:not(.strip-more)').length).toBe(TIER_LADDER.length)
     expect(wrapper.findAll('.season-strip .strip-more').length).toBe(0)
     wrapper.unmount()

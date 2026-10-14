@@ -509,7 +509,9 @@ describe('OfferLetter – every rung prints its OWN mark now', () => {
         deadlineWeek: 9,
         terms: { kind: 'kit', tier, weeklyCents: 5000, seasons: 1, covers: ['racket'] },
       } as unknown as Offer
-      const wrapper = mount(OfferLetter, { props: { offer } as never })
+      // ⚠ 14.10 (r52, the owner's CI trace): `week` is a REQUIRED prop of OfferLetter – passed (the offer's own week),
+      // so the log carries no «Missing required prop» noise.
+      const wrapper = mount(OfferLetter, { props: { offer, week: 3 } as never })
       const src = wrapper.find('img').attributes('src') ?? ''
       expect(src, `${tier} must print its own letterhead`).toContain(`sponsors/${tier}.webp`)
       expect(src, `${tier} must not fall back to the global mark`).not.toContain('sponsors/global.webp')
