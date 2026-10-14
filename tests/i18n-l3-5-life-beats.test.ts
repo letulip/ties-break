@@ -573,7 +573,9 @@ describe('§7 every sentence a sink\'s seat can hold is a key of the frozen v92 
 // coached career reaches a true feel fact on a small-talk week; F4's control arm at its parent was
 // green). Checking '0/1' AFTER stamping '5/0' – the first-red-stops blind spot is now part of the
 // harvest procedure. Was '41e7bb05'.
-const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': '1692c8b6', '0/1': 'ac91e65e' }
+// ⚠ RE-STAMPED AGAIN 14.10 (round 52 continuation close): '5/0' moved with H2's stint rows and H3's
+// checkpoints (the coached career raises a due coach talk at 12/32/56). Was '1692c8b6'.
+const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': '445a8b73', '0/1': 'ac91e65e' }
 /** and the bench's MAIN stream, three draws on from the last week of each career, from the same pre-wave runs – the wave draws nothing, and the next draws prove the position is the pre-wave one */
 const PRE_WAVE_NEXT3: Record<string, number[]> = {
   '5/0': [0.18923983839340508, 0.10872006509453058, 0.37577401218004525],
