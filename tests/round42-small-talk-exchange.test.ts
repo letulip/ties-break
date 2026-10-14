@@ -123,6 +123,7 @@ import {
   type Temperament,
   type WorldState,
 } from '../src/engine/world'
+import { COACH_REAL_SITUATION_ID } from '../src/engine/world/lifeBeat/smallTalkCopy'
 import { weekMonth } from '../src/shared/dates'
 import { diaryLifeStageFor } from '../src/engine/diary/facts'
 import { schoolIsOver } from '../src/engine/kidLife'
@@ -446,7 +447,11 @@ describe('round 42 #15 B – the beat is an exchange', () => {
     expect(plain.length, 'the anti-vacuity half – there are non-story columns').toBeGreaterThan(3)
     for (const { s, voice, name } of plain) {
       const { prompt } = exchange(`plain-${name}`, voice, s)
-      for (const follow of prompt.followUps) expect(follow.said.length, `${name}/${follow.optionId}`).toBe(1)
+      // ⚠ RE-AIMED 14.10 (round 51 №8, the owner's "а он ок или не ок"): `coach-real`'s `view` reply is the ONE cell that
+      // gains a second paragraph – her hunch about the coach she has (`COACH_REAL_HUNCH`; its shape and its band are held
+      // by tests/r51-coach-real-hunch.test.ts). Every other cell of every other situation still carries exactly one.
+      const hunch = s.id === COACH_REAL_SITUATION_ID
+      for (const follow of prompt.followUps) expect(follow.said.length, `${name}/${follow.optionId}`).toBe(hunch && follow.optionId === SMALL_TALK_STANCE_ID.respond ? 2 : 1)
     }
   })
 

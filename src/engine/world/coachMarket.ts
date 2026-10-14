@@ -95,6 +95,8 @@ import { startingSkills, withHeadStart } from './player'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidLadderRank, kidPoints, tierOpenFor } from './ladder'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
+// ⭐ ROUND 51 №8 – the one reader of «the parent asked her coach why» (see `coachReadingOpened` below).
+import { coachRealViewedSince } from './lifeBeat/smallTalk'
 // ⭐ RU-23 (11.10) – THE ROOM AND DECLINE NOTES ARE CopyRefs NOW (class (b): assembled at snapshot time off the decline read, never stored), and the English the screens always showed is the ref
 // rendered under the source locale – `knock.ts`' own precedent – so a string and its translation cannot drift. The branches, the thresholds and the words are untouched; nothing here draws.
 import { cp, isCopyRef, renderCopyRef, SOURCE_LOCALE, type CopyRef } from '../../shared/i18n'
@@ -249,6 +251,41 @@ export function coachSinceWeek(world: WorldState): number {
     if (e.milestoneKey?.startsWith(COACH_CHANGE_KEY) && e.week > since) since = e.week
   }
   return since
+}
+
+/** ⭐⭐⭐ ROUND 51 №8 (14.10) – HAS THE PARENT OPENED THE READING OF HER COACH'S CHEMISTRY? Yes exactly
+ *  when, in the stint that is running now, they answered her «is my coach actually good» (small talk
+ *  `coach-real`) with «a good coach explains what they're changing» – the `view` answer, which is the
+ *  parent deciding to find out.
+ *
+ *  The owner, 14.10, after being told the question was only a question: «вот жаль, что не привязан,
+ *  потому что после такого очень хочется и мне понять "а он ок или не ок" и как-то хочется это сделать».
+ *
+ *  ⚠ DERIVED, NEVER STORED. The answer is on the `lifeLog` row already and the log is never pruned, so
+ *  the fact is a read: no schema key, no migration, no draw on any stream.
+ *  ⚠ THE STINT IS `coachSinceWeek`, NOT `coachDeal.agreedWeek` – a signed raise re-strikes the deal at a
+ *  new week without changing the coach. A coach hired or released after the answer closes the reading
+ *  again (`coachRealViewedSince` has the week arithmetic): the answer was about the person she had then.
+ *  ⚠ NOBODY EMPLOYED IS FALSE – the parent on the court has no pair to read. */
+export function coachReadingOpened(world: WorldState): boolean {
+  return world.coachId !== null && coachRealViewedSince(world, coachSinceWeek(world))
+}
+
+/** ⭐⭐⭐ ROUND 51 №8 – THE ONE READER OF A COACH'S CHEMISTRY FOR A WORLD. Both surfaces that print the
+ *  figure – the coach card's ring (`coachMarket` below) and the season wrap-up's coach letter
+ *  (`staffLetters.ts`) – call THIS and never `chemistryReading` directly, so «what the ring shows» and
+ *  «what the letter says» cannot part: a second predicate for «is the figure allowed» is exactly the
+ *  parity defect (an engine verdict restated by a surface) the house keeps paying for.
+ *
+ *  `chemistryReading` still decides readability by the pair's own bar. THE ONLY THING THIS ADDS is that
+ *  an opened reading (`coachReadingOpened`) shows the CURRENT coach's pair below that bar: the real
+ *  number, however small. It never opens another coach's pair, and an absent pair stays `null` even when
+ *  opened – there is nothing to read. */
+export function chemistryReadingFor(world: WorldState, coachId: string): number | null {
+  const pair = world.coachPairs?.[coachId]
+  if (pair === undefined) return null
+  if (coachId === world.coachId && coachReadingOpened(world)) return pair.chem
+  return chemistryReading(pair, world.seed, coachId)
 }
 
 // =================================================================================================
@@ -1352,7 +1389,8 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // different schedule and every one of those schedules is reproducible. Nothing is persisted and
       // nothing is cached: the two values below are what identifies the pair, and they are what this
       // line already had in its hands.
-      chemistry: chemistryReading(world.coachPairs[coach.id], world.seed, coach.id),
+      // ⭐ ROUND 51 №8 – through `chemistryReadingFor`, which also knows the parent has asked her coach why.
+      chemistry: chemistryReadingFor(world, coach.id),
       // ⭐ ROUND 51 №11 – THE SECOND HALF OF THE «?» (shared/protocol/offers.ts has the reasoning):
       // whether the pair is ON THE BOOKS, read off the same row `chemistry` above reads and with no
       // gate of its own. A row exists from the first week she trains with this coach and is never

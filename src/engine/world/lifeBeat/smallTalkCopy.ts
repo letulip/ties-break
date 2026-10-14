@@ -5,6 +5,7 @@
 // ⚠ smallTalkCopy: `PresenceCell` comes back from the hub, `MoodRegister` and `Temperament` from the engine's own modules…
 // → docs/notes/life-beats/smallTalk.md#smalltalkcopyts-header
 import type { Temperament } from '../../spirit'
+import type { ChemistryHunch } from '../../chemistry'
 import type { MoodRegister } from '../../../shared/protocol/narrative'
 import type { PresenceCell } from '../lifeBeat'
 
@@ -164,3 +165,60 @@ export const SMALL_TALK_HEADING: Record<MoodRegister, string> = {
  *  → docs/notes/life-beats/smallTalk.md#small_talk_card--v74-t15--the-invitation
  */
 export const SMALL_TALK_CARD = 'She came by with something small.'
+
+/** ⭐⭐⭐ ROUND 51 №8 (14.10) – THE SITUATION WHOSE `respond` ANSWER OPENS THE READING AND EARNS HER HUNCH.
+ *
+ *  The owner, on the beat where she asks whether her coach is any good: «это просто вопрос или он
+ *  реально у нас к химии привязан?» – and, told it was only a question: «вот жаль, что не привязан,
+ *  потому что после такого очень хочется и мне понять "а он ок или не ок"». So it is bound now: the
+ *  parent answering `respond` (`view`, «Say a good coach explains what they're changing») is the
+ *  parent deciding to find out, and the game lets them.
+ *
+ *  ⚠ THE ID, AND NOT THE SUBJECT: the situation's id is its identity (`curiosity:coach-real` is the
+ *  stored detail; `smallTalkVoiceOf` parses it the same way). One name here, read by the follow-up
+ *  assembly in the hub and by the opened-reading predicate, so neither can drift from the other. */
+export const COACH_REAL_SITUATION_ID = 'coach-real'
+
+/** ⭐ ROUND 51 №8 – THE SITUATION ID OF A SMALL-TALK DETAIL (`<subject>:<id>`), cut exactly as the hub's `smallTalkVoiceOf` cuts it; `null` is a LEGACY row, which names no situation. */
+export function smallTalkSituationIdOf(detail: string): string | null {
+  const cut = detail.indexOf(':')
+  return cut < 0 ? null : detail.slice(cut + 1)
+}
+
+/** ⭐⭐⭐ ROUND 51 №8 (14.10) – HER HUNCH ABOUT THE COACH, the one second line that `coach-real`'s
+ *  `respond` reply gains: four voices x three bands (the pair's actual chemistry, `chemistryHunch`).
+ *  EVERY WORD A DRAFT for the owner's вычитка (invariant 4).
+ *
+ *  ⚠⚠ IT IS TRUE, AND THAT IS THE WHOLE OF IT. The line is picked by the pair's real band, so a cold
+ *  line is a cold pair and a warm line a warm one – a hunch that could be wrong would teach the player
+ *  to ignore it. It names a MOOD («I've a feeling»), never a number, never a verdict on the coach's
+ *  skill: chemistry is how the two of them fit, not how good the coach is.
+ *  ⚠ ZERO BOND AND NOTHING ELSE MOVES (ruling V2, «tier-1 replies move nothing»): the new effect is
+ *  informational. The reading the parent gets on the coach's card is the other half, in
+ *  `world/coachMarket.ts` (`chemistryReadingFor`).
+ *  ⚠ NO PRONOUN FOR THE COACH IN EITHER LANGUAGE – the neutral «my coach» / «the answer», like the
+ *  rest of `coach-real` (R48): her coach's sex is real in the save and this row never names it.
+ *  ⚠ HER OWN VOICE, continuing the line each voice already says on `respond`: sunny warm-bright,
+ *  fiery blunt, deep reflective, quiet terse. */
+export const COACH_REAL_HUNCH: Record<Temperament, Record<ChemistryHunch, string>> = {
+  sunny: {
+    warm: "And I bet there'll be a good answer. There usually is.",
+    even: "Honestly, I can't guess what I'll hear. Some days it all clicks, some days it doesn't.",
+    cold: "Though I've a feeling there won't be much of an answer. That's sort of why I asked.",
+  },
+  fiery: {
+    warm: "Though honestly? I bet there's a real answer. There always is.",
+    even: "No idea what I'll hear. Half the drills land and half don't.",
+    cold: "And I already know there won't be an answer. That's the whole problem.",
+  },
+  deep: {
+    warm: "I suspect there'll be a real answer. Most of the changes end up making sense.",
+    even: "I can't predict the answer, which probably tells me something by itself.",
+    cold: "I think I know what I'll hear, and I don't think it will be an answer.",
+  },
+  quiet: {
+    warm: "I think there'll be one.",
+    even: "Not sure what I'll hear.",
+    cold: "I don't think there'll be one.",
+  },
+}
