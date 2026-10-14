@@ -3,7 +3,7 @@
 // THE OWNER approved «давай по рекомендациям» (round 52, his answers on the close №1): at a strained or cold bond she does not confide at a stint checkpoint either – the checkpoint talk keeps the bond gate every
 // small talk has – AND THE SILENCE SHOWS: a checkpoint the bond shuts leaves a note in the parent's voice on the week's diary scrap, so the player sees what the relationship cost.
 //
-// WHAT THIS HOLDS, in the order the change was built (docs/specs/small-talk-corpus-2026-09.md, «Round 52 J1»):
+// WHAT THIS HOLDS, in the order the change was built (docs/specs/small-talk-corpus-2026-09.md, «Addendum, round 52 J1»):
 //   A. THE FACT      `coachTalkShut` is present on EXACTLY ONE week of a shut checkpoint's window – the first on which the line could be heard (J1b, 14.10; J1 had the window's first week alone) – once per checkpoint, at strained and cold,
 //                    and absent when the checkpoint was spoken, at steady and close, on the other window weeks, before week 12 and with nobody employed. It is ABSENT as a key, not undefined-valued. ⚠ In the BARE worlds of this
 //                    section no week is away, so the first free week IS the checkpoint week and J1's arms hold as they were; section F poses the away weeks.

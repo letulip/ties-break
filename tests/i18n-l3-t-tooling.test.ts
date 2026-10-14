@@ -132,7 +132,7 @@ const SEAT_KEYS: Record<string, number> = {
   'birthday.gifts': 159, //         the gift catalogue (L3-4): labels, notes, repeat notes, asks, the means alternates
   'diary.pool': 95, //              95 static cells (L3-4 §2)
   'diary.debut': 4, //              the four opening-week lines
-  'diary.weekNotes': 311, //        311 static cells of the 337-cell corpus (L3-4 §8; +3 R51 №13; +10 R52 F3)
+  'diary.weekNotes': 315, //        315 static cells of the 341-cell corpus (L3-4 §8; +3 R51 №13; +10 R52 F3; ⚠ RE-AIMED 14.10 r52 J1: +4, the checkpoint-silence lines)
   'diary.travel': 78, //            the travel notes + the coach's five
   'smallTalk.corpus': 1204, //      260 openers + 780 replies + 20 shared second beats (L3-5 §6; ⚠ RE-AIMED 14.10 r51 №17: +80, r51 continuation E1: +48, E2: +48, E3: +64, r52 F4: +48, H2: +96)
   'smallTalk.frames': 18, //        9 per presence
@@ -324,7 +324,8 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     // ⭐ RE-AIMED 14.10 (r52 F3): 3076 → 3086 (+10 `diary.weekNotes` keys: her feel for the coach, two lines for each of the five steps that have a voice).
     // ⭐ RE-AIMED A FIFTH TIME 14.10 (r52, builder F4): reach +57 (three coach-feel situations – 12 openers and 36 replies on the corpus seat, 9 labels on the option-label seat).
     // ⭐ RE-AIMED A SIXTH TIME 14.10 (r52, builder H2): reach +114 (six stint situations – 24 openers and 72 replies on the corpus seat, 18 labels on the option-label seat).
-    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 3257 catalog keys/)
+    // ⭐ RE-AIMED A SEVENTH TIME 14.10 (r52, builder J1): 3257 → 3261 (+4 `diary.weekNotes` keys: the checkpoint the bond shut, two lines for strained and two for cold).
+    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 3261 catalog keys/)
   })
 })
 

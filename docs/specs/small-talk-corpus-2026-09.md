@@ -3354,7 +3354,7 @@ None of them is re-stamped here: the architect harvests the digests once at the 
 **The two levers, if the owner rules otherwise.** (1) At a strained or cold bond she does not confide here; to let the talk through anyway, delete the one `smallTalkChanceFor(...) <= 0` clause in `raiseCoachCheckpointTalk`. (2) The recency veto is `repeatsOneOfHerLastTwo`; without it the three windows above are talked and she may repeat herself in about one career in thirteen (9 repeats in the 120 careers of the story-pool walk).
 
 
-### Round 52 J1 (14.10) – the checkpoint the bond shut, and the silence that shows
+### Addendum, round 52 J1 (14.10) – the checkpoint the bond shut, and the silence that shows
 
 **The ruling.** The owner approved the recommendation («давай по рекомендациям», round 52, his answers on the close, №1): at a strained or cold bond she does not confide at a stint checkpoint either – the checkpoint talk keeps the bond gate every small talk has – and **the silence shows**. A checkpoint the bond shuts leaves a note in the parent's voice on the week's diary scrap, so the player can see what the relationship cost. This is the first lever of the paragraph above, answered: the clause stays, and now it is visible.
 
@@ -3405,7 +3405,7 @@ A shut checkpoint is rare in a played career, as H3 found, and the note is rarer
 
 **Proved by mutation, each restored byte for byte:** dropping the bond clause from the fact, dropping the lead, dropping the coin exemption, dropping the layoff narrowing (the standing rule's own pin goes red) and re-spelling the clause in the checkpoint talk (the one-spelling arm goes red) each turn at least one arm red.
 
-### Round 52 J1b (14.10) – the silence waits for the first week it can be heard
+### Addendum, round 52 J1b (14.10) – the silence waits for the first week it can be heard
 
 **The ruling.** The architect, on J1's own number: 43% is not «the silence shows». J1 measured the note on the checkpoint's first week alone and found a travelling week took 54.2% of the 144 shut checkpoints (stints begun at week 0 read 72%). So the fact is **widened**, not retuned: it is present on the **first week of the checkpoint's window (cp <= w < cp + 4) on which the line could be heard**, and on no other week. Still once per checkpoint, still derived: nothing is persisted, no schema move, zero draws, and the four lines stay exactly as they are.
 
