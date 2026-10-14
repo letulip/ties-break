@@ -45,12 +45,35 @@ green files, and «а еще вот такое там нашел в трейсе
 - Radar after the cuts: the worst file inside the whole run is 26.2 s (was 42.6–49.0), ≈ 35 s on the
   2-core runner. Watch, do not cut: the takeovers carpet (17.2 s solo ≈ 40 s on CI).
 
+## The recommendations wave (his «давай по рекомендациям», «всё в эту же волну грузи», 14.10 night)
+- J1 `176b0917` – a checkpoint the bond shuts leaves a parent-voice week note (RU09D-CFW-11..14,
+  DRAFT); one spelling of «does the bond let her confide» (`bondLetsHerConfide`).
+- J1b `731dc7b6` – the note waits for the first week of the window she can be asked: visible in
+  88.9 % of shut checkpoints (was 43.1 %), zero double prints; one spelling of «away» (`diary/weekAway.ts`).
+- J1c `1643a021` – who-she-is §5b: F3's five notes that quote her do not print at a cold bond.
+- J2 `8eabc1e9` – `font-family: inherit` in the global `button` rule: 214 of 239 buttons off the
+  app's face → 0 (real-Chromium census), no new overflow; Coach Market rows grow 1–2 lines at 375.
+- `51626646` – the close's two tails (spec headings read as corpus rows; the seats pins).
+- The review sheet (private to the owner): https://claude.ai/artifact/L8h5ExH3AwJ363MGwwHHk3 –
+  all 192 DRAFT rows, the font before/after, three decisions. His marks live in the artifact's db,
+  collection `reviews`, one document per row id ({ok?, ru?, note?} or {choice, note?} for the
+  decisions); read them with `ArtifactData list`, apply to the docs/localization tables, flip
+  DRAFT → APPROVED, both languages in one commit.
+
 ## Open (the owner's)
-- Whether the checkpoint talk should come even at a strained/cold bond (one clause).
-- The six onboarding cards in the button font (OnboardingWizard.vue).
-- All new strings DRAFT: RU23-CFL-01..07 (tile), RU09D-CFW-01..10 (notes), 10C §35–§45 (talks).
+- His pass over the review sheet (strings, the font screenshots, the three decisions there:
+  F3's cold quotes, the silence note, the Coach Market row height).
+- Resolved by his 14.10 ruling: the bond gate at a checkpoint stays (the silence now shows); the
+  onboarding cards' font (the global rule fixed every button); the recency veto stays.
 
 ## Gates
+RECOMMENDATIONS CHAIN (every verdict from its own file in the session scratchpad, mtime fresher than
+the run): check `R52L_CHECK_EXIT=0` at `e88b07a3` (clean worktree, npm ci; unit 393 s with one
+accepted bulk-pool late ack, component 325/325, build; the first two closing runs caught three
+tails, see the ledger); at `ee1fb385` – sim `R52J_SIM_EXIT=0` (13/380 s), e2e `R52J_E2E_EXIT=0`
+(147), lqa:ru `R52J_LQA_EXIT=0`, container twin `R52J_CONTAINER_EXIT=0` (6/6) – the commits above
+it touch a spec heading and three test files. Build line `e88b07a` in the worktree dist; frozen
+capture 51/51 standalone; schema untouched against `main`.
 CI-HYGIENE CHAIN at `a8d82bde` (clean worktree, npm ci, one background run, every verdict from its
 own file in the session scratchpad, `r52i-*.log`, mtime fresher than the run): check
 `R52I_CHECK_EXIT=0` (component 325/325, unit 387 s with one accepted bulk-pool late ack), sim
