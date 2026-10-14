@@ -1249,3 +1249,69 @@ pairs end cold than warm on this stream was not investigated here. So, on this s
 winning seasons lean warmer through the event nudges is not measured here – the stream is a stated model,
 not a played career. Reported to the owner as a finding; the thresholds are not changed to flatter the
 split.
+
+## 17. Round 52 (14.10) – how she feels about her coach
+
+### 17.1 What the owner asked, and what is built
+
+He asked for a way for her to hint how she feels about the coach – fine, so-so, or not fine at all – so the parent has something to
+go on when the chemistry is not growing, or not visibly. Two of his answers shaped it. The hint starts from the trend of the pair
+and then, through the year, the level either confirms it or refutes it («у нас живые отношения»). And it is not perfectly reliable:
+noise, but small – never «всё плохо», rather «я пока не очень поняла» or «вроде нормально, но». The gauge on the coach's card is where
+the parent later sees the confirmation or the refutation.
+
+This build is the engine core only. No screen and no sentence is added here; the tile on the coach card, the week notes and the
+small-talk copy are separate pieces of work.
+
+**Six steps, and never a number.** `too-early` (under six weeks together), `unsure`, `seems-good`, `seems-off`, `good`, `off`. A
+score shown to the player would be a second gauge with a different bar, so only the step leaves the engine.
+
+**The score.** She starts from the pair's trend – the yearly drift its affinity gives, scaled to the range −1 to +1 – and gives more
+and more weight to the level (the gauge's own number, scaled so that ±6 is all of it) as they work together: nothing on the first
+day, about a third at half a year, 70% from a year on. A small doubt of at most ±0.12 is added, drawn once every four weeks on its own
+sub-stream, so it does not flicker between two looks at the screen. At +0.25 or more she leans good, at −0.25 or less she leans off,
+and in between she is unsure.
+
+**Confidence is the gauge's to confirm.** `good` also needs the level to be +3 or more, and `off` −3 or less – the same lines the
+small-talk hunch uses, which sit above the largest bar any pair can draw (2.5). So whenever she is confident, the gauge on the card
+shows a figure with the same sign, and all of her doubt sits in the two hedged steps. That is a property, and it is tested against the
+gauge's own function rather than a restated threshold.
+
+**No weekly weather in it, on purpose.** The weather swings by ±0.3 a week; read straight, her feel would flicker from week to week.
+The weather reaches her through the level, which is its integral – that is what «подтверждать или опровергать» means here.
+
+**Where it lives.** `coachFeelOf` and its constants (`COACH_FEEL`) are in `engine/chemistry.ts`; `coachFeel(world)` is in the leaf
+`engine/world/coachFeel.ts`, which also holds the one spelling of the pair's affinity that the weekly tick now shares. The stint's age
+(`coachSinceWeek`) moved to the leaf `engine/world/coachStint.ts` so the life-beat hub, which cannot import the coach market, can read
+it. The snapshot carries `coachFeel` only while a coach is employed. The small-talk hunch line now follows her feel instead of the raw
+level: good and seems-good lean warm, off and seems-off cold, unsure and too-early even – so her line can lean while the gauge still
+shows «?», which is the point of the hedged steps. No save field, no schema move, no draw on the main stream.
+
+### 17.2 Prediction, written before the run
+
+Bench B14 (`npm run bench:chemistry -- --feel`) walks the same 1200 pairs as B13 for three coached years, the real accrual, the stated
+week stream, the world's own temperament. The numbers below come from reasoning about the model, not from a run: the trend alone
+leaves her unsure for roughly the half of pairs whose affinity is under about 0.3 in size, the level catches up through the year, and
+the corridor is steeper below the drift than above it – the same shape that makes cold twice as common as warm in B13.
+
+| what is measured | predicted |
+| --- | --- |
+| (a) week 6 | unsure 42–52%, seems-good 22–31%, seems-off 22–31%, good and off under 1%; week 5 is too early for 100% |
+| (a) week 13 | unsure 44–56%, seems-good 19–26%, seems-off 19–26%, good 0.5–2%, off 1.5–4% |
+| (a) week 26 | unsure 36–50%, seems-good 10–18%, seems-off 8–15%, good 8–12%, off 17–25% |
+| (a) week 52 | unsure 30–40%, seems-good 2–8%, seems-off 2–8%, good 17–22%, off 35–42% |
+| (b) from week 13, level at week 52 | seems-good: +3 or more 55–72%, between 25–40%, −3 or less 2–7% · seems-off: −3 or less 78–92%, between 8–22%, +3 or more under 1% · unsure: +3 or more 5–14%, between 45–60%, −3 or less 30–45% |
+| (b) from week 26 | seems-good: +3 or more 60–80% · seems-off: −3 or less 70–90% · good: +3 or more 85–97% · off: −3 or less 92–99% |
+| (c) doubt errors from week 13 | seems-good wrong 10–18%, seems-off wrong 2–6%, combined 6–12% |
+| (c) doubt errors from week 26 | combined 5–11% |
+| (d) flicker, first coached year | median 1 change (0–2), p90 3–6 |
+| (d) flicker, years two and three | median 0 (0–1), p90 2–4 |
+| (e) confident and wrong | 0 |
+
+Why these three are the ones to watch. The unsure share at week 13 follows from how wide the quiet band is: about half of all
+pairs have a trend too weak to lean on yet. The warm side carries most of the doubt errors because a pair that starts well can still
+end the year in the red when the weather turns, while a pair that starts badly almost never recovers. And the flicker median is not
+zero because most pairs go from a hedged step to a confident one once, as the level passes ±3.
+
+**Targets.** Unsure at week 13 between 30% and 60%; hedged-wrong at most 15%; flicker median at most 4 a year; confident-wrong exactly 0.
+If one misses, one knob may move once, with both measurements reported; if it still misses, the owner of the design decides.
