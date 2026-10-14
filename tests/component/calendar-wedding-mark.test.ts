@@ -12,6 +12,7 @@
 //   * `weddingMarkFor` always returning null -> RED (feed + mounted).
 //   * the `v-if="weddingMark"` band dropped from the template (always drawn) -> RED on «a plain career draws none».
 import { describe, it, expect, beforeEach } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import CalendarScreen from '../../src/components/screens/CalendarScreen.vue'
@@ -21,6 +22,7 @@ import { createWorld, raiseLifeBeat, toSnapshot } from '../../src/engine/world'
 import { kidAgeNow, lifeLogOf } from '../../src/engine/world/lifeBeat'
 import { ECONOMY } from '../../src/engine/economy'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
+import { installCatalog, resetI18nForTests, setLocale } from '../../src/i18n'
 
 const EPISODE_ID = 'p:300'
 // ⚠ POSED AT AGE 24, the age the game can reach (the wedding gate is 23): the bride is painted for the `adult` band only.
@@ -76,6 +78,27 @@ describe('the screen: the calendar draws the band', () => {
     useGameStore().snapshot = snapshot
     return mount(CalendarScreen, { global: { stubs: { teleport: true } } })
   }
+
+  // ⭐ R51 B1 (13.10, №12): THE BAND'S NAME WAS A BARE LITERAL. «Her wedding» sat in the template outside `t()`, so the Russian row that has existed
+  // since RU-15 never reached the screen. The expectation is read from the REAL ru.json by key (no Cyrillic literal here), and the English arm pins
+  // that wiring the reader moved no byte under the default locale.
+  it('the band\'s name is the catalog row under Russian and the same two words under English', async () => {
+    const RU = JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string, string>
+    expect(RU['Her wedding'], 'the row must exist or this arm proves nothing').toBeTruthy()
+    const english = mountCalendar(announced())
+    expect(english.find('.cal-wedding-name').text()).toBe('Her wedding')
+    english.unmount()
+    try {
+      installCatalog('ru', RU)
+      await setLocale('ru')
+      const russian = mountCalendar(announced())
+      expect(russian.find('.cal-wedding-name').text()).toBe(RU['Her wedding'])
+      russian.unmount()
+    } finally {
+      resetI18nForTests(null)
+      document.documentElement.lang = 'en'
+    }
+  })
 
   it('an announced wedding is on the calendar, with the picture and the week the engine named', () => {
     const snap = announced()

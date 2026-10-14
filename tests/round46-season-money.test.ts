@@ -349,22 +349,32 @@ describe('⭐⭐⭐ round 46 morning item 4 – a sale that FIXED a loss is a re
     expect(money.earnedCents - money.spentCents - loss + money.shelfNetCents).toBe(window.netCents - loss)
   })
 
-  it('a PART sale at a loss: loss = released basis - proceeds, and shelf = -(purchases - basis released) - loss', () => {
+  it('a PART sale at a loss realises NOTHING (round 51 #19) – the loss rides on the row and the closing sale names all of it', () => {
     const world = wrapWorld(0, 'r46-realised-fund')
     world.fundsCents = 6_000_000_00
     accrueFinance(world, 10, 'prize', 300_000_00)
     // the market fell 10%: 4,000,000 bought is worth 3,600,000 and a million is taken out
     const { purchase, basisReleased, proceeds } = fundSale(world, 3_600_000_00, 1_000_000_00)
-    const loss = basisReleased - proceeds
-    // hand-computed: the cost of the million that left is 4,000,000 x 1,000,000 / 3,600,000 = 1,111,111.11 -> 111,111,111 cents, so the loss is 11,111,111 cents
-    expect(loss).toBe(11_111_111)
-    expect(realisedLossOf(world.financeWeeks, 0)).toBe(11_111_111)
+    // ⚠⚠ RE-AIMED 14.10 BY ROUND 51 #19. It read «the cost of the million that left is 4,000,000 x 1,000,000 / 3,600,000 = 1,111,111.11, so the loss is 11,111,111 cents».
+    // THE OWNER, 13.10 evening, on a withdrawal: «была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята.» An underwater fund has no profit to hand over, so the whole million is principal coming back: the released basis
+    // IS the proceeds and the memo is 0 – measured, as this file always does, off the wallet and the row and never off the memo.
+    expect(basisReleased, 'all of it was principal').toBe(proceeds)
+    expect(realisedLossOf(world.financeWeeks, 0)).toBe(0)
+    // the loss was never fixed, so it is still on the row: 3,000,000 of cost against 2,600,000 of worth. The sale that closes the position names ALL of it.
+    const costLeft = world.assets.find((a) => a.id === 'index-fund')!.paidCents
+    expect(costLeft).toBe(300_000_000)
+    const walletBefore = world.fundsCents
+    sellAsset(world, 'index-fund')
+    const fetched = world.fundsCents - walletBefore
+    expect(fetched).toBe(260_000_000)
+    const loss = costLeft - fetched
+    expect(loss, 'the whole loss – 4,000,000 bought, 3,600,000 worth – is named once, by the closing sale').toBe(40_000_000)
+    expect(realisedLossOf(world.financeWeeks, 0)).toBe(40_000_000)
     const window = financeWindow(world.financeWeeks, 0)
     const money = seasonMoneyOf(window)
-    expect(money.shelfNetCents).toBe(-purchase + proceeds)
-    // the relation, on the principal that STAYED on the shelf: -(4,000,000 - 1,111,111.11) = -2,888,888.89
-    expect(money.shelfNetCents + loss).toBe(-(purchase - basisReleased))
-    expect(money.shelfNetCents + loss).toBe(-288_888_889)
+    expect(money.shelfNetCents).toBe(-purchase + proceeds + fetched)
+    // the relation, on the principal that STAYED on the shelf: the position is closed, so every cent of basis was released and nothing is left on it
+    expect(money.shelfNetCents + loss).toBe(0)
     expect(money.earnedCents - money.spentCents + money.shelfNetCents).toBe(window.netCents)
   })
 
@@ -372,7 +382,9 @@ describe('⭐⭐⭐ round 46 morning item 4 – a sale that FIXED a loss is a re
     const world = wrapWorld(0, 'r46-realised-gain')
     world.fundsCents = 6_000_000_00
     const { basisReleased, proceeds } = fundSale(world, 4_400_000_00, 1_000_000_00)
-    expect(proceeds - basisReleased, 'the part that left was worth more than it cost').toBe(9_090_909)
+    // ⚠ RE-AIMED 14.10 BY ROUND 51 #19: it read 9_090_909, the pro-rata share of the 400,000 the fund had made. A withdrawal takes the PROFIT first, and a million is
+    // more than the 400,000 gain, so exactly the profit is realised: 40,000,000 cents.
+    expect(proceeds - basisReleased, 'the part that left was worth more than it cost').toBe(40_000_000)
     expect(realisedLossOf(world.financeWeeks, 0)).toBe(0)
     maybeFireSeasonWrapUp(world)
     const s = world.lastSeasonSummary!
@@ -384,16 +396,22 @@ describe('⭐⭐⭐ round 46 morning item 4 – a sale that FIXED a loss is a re
   })
 
   it('the figure is NET over the window: a gain on one sale hides a loss on another, and what is left is the loss', () => {
+    // ⚠⚠ RE-AIMED 14.10 BY ROUND 51 #19. The FIRST sale was «a loss» fixed by a part sale and the second another part sale; under the bank model a part sale never fixes a
+    // loss (была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята.), so the pair is now a PART sale that realises a gain and the sale that CLOSES the position at a price that may or may not be a loss.
     for (const [secondValueCents, expectLoss] of [[5_000_000_00, false], [2_000_000_00, true]] as const) {
       const world = wrapWorld(0, 'r46-realised-net')
       world.fundsCents = 6_000_000_00
-      const first = fundSale(world, 3_600_000_00, 1_000_000_00)
+      // 4,000,000 bought, worth 4,400,000: a million out takes 400,000 of profit and 600,000 of principal, leaving 3,400,000 of cost against 3,400,000 of worth
+      const first = fundSale(world, 4_400_000_00, 1_000_000_00)
       world.assets.find((a) => a.id === 'index-fund')!.valueCents = secondValueCents
-      const second = withdraw(world, 1_000_000_00)
+      const costLeft = world.assets.find((a) => a.id === 'index-fund')!.paidCents
+      const walletBefore = world.fundsCents
+      sellAsset(world, 'index-fund')
+      const second = { basisReleased: costLeft, proceeds: world.fundsCents - walletBefore }
       const net = first.proceeds - first.basisReleased + (second.proceeds - second.basisReleased)
-      expect(first.proceeds - first.basisReleased, 'the first sale fixed a loss').toBeLessThan(0)
+      expect(first.proceeds - first.basisReleased, 'the first sale realised a gain').toBeGreaterThan(0)
       expect(realisedLossOf(world.financeWeeks, 0)).toBe(Math.max(0, -net))
-      expect(realisedLossOf(world.financeWeeks, 0) > 0, `second sale at a fund worth ${secondValueCents / 100}`).toBe(expectLoss)
+      expect(realisedLossOf(world.financeWeeks, 0) > 0, `closing sale at a fund worth ${secondValueCents / 100}`).toBe(expectLoss)
     }
   })
 

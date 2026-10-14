@@ -45,6 +45,18 @@
 //   * the `?? 0` fallbacks in `shopView` made `?? 1` -> «a holding that has never been sold reads
 //     exactly what it always read» RED, along with the sum and loss arms. The backwards-compatible
 //     fallback is asserted rather than assumed, because it is what makes this not a schema move.
+// =================================================================================================
+// ⚠⚠⚠ ROUND 51 #19 (14.10) – THE OWNER REVERSED THE CARD HALF OF THIS FILE, AND THE LIFETIME HALF STAYS PINNED.
+// =================================================================================================
+//
+// Everything above is the 02.09 ruling and the measurements behind it, kept as history. On 13.10 the owner saw it in play: «Индексный фонд всё ещё не
+// пересчитывается после продажи долей, см. скриншот, +62673 показывается всё еще хотя там явно написано сколько стоит и сколько заплачено», and ruled on the
+// bank: «была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята.» «…мы должны пересчитывать тоже в момент добавления (это кстати есть, доходность размывается) и в момент снятия (а этого нет)».
+//
+// So the card's «since you bought it» is the gain of the position that is LEFT – `valueCents - paidCents`, over the remaining `paidCents` – and `sellAsset` takes the
+// profit first. The four arms about the FIGURE below are re-aimed to say that. What of round 34 still holds, and is still asserted here: the realised memory stays on
+// the row (the lifetime truth), realised gain + the card is the same number before and after a sale, and a loss is never made to disappear. The arms that were about
+// the UNCHANGED halves (a holding never sold; the next accrual is smaller) are untouched. The new law's own arms are tests/round51-bank-model-sale.test.ts.
 import { describe, it, expect } from 'vitest'
 import {
   buyAsset,
@@ -82,8 +94,8 @@ function depositRow(world: WorldState): ShopRowView {
   return row!
 }
 
-describe('#15 – the gain on savings describes what was earned, not what is left', () => {
-  it('⭐⭐ THE REPRODUCTION, AS AN ASSERTION: the sum does not move when money is taken out', () => {
+describe('#15 – (round 51 #19: re-aimed) the card describes the position that is left; the memory keeps what was earned', () => {
+  it('⭐⭐ THE REPRODUCTION, RE-AIMED: the LIFETIME sum does not move when money is taken out – the card shows what is left', () => {
     const world = holding('r34-15-sum', 'deposit', 100_000_00)
     ageWeeks(world, WEEKS_PER_YEAR * 10)
 
@@ -96,28 +108,33 @@ describe('#15 – the gain on savings describes what was earned, not what is lef
     sellAsset(world, 'deposit', half)
 
     const after = depositRow(world)
-    expect(after.changeCents, 'what it earned is what it earned').toBe(before.changeCents)
+    const held = world.assets.find((a) => a.id === 'deposit')!
+    // ⚠⚠ ROUND 51 #19: half the account is more than the whole profit, so the profit left first and the position that remains has earned nothing yet – «Мне кажется 0, прибыль изъята.»
+    expect(after.changeCents, 'the profit was taken: the card reads nothing').toBe(0)
+    // ...and the round-34 truth is where it always was, split between the card and the memory: what it earned is what it earned
+    expect(held.realisedGainCents! + after.changeCents!, 'what it earned is what it earned').toBe(before.changeCents)
     // ...and the money really did leave the holding, so this is not "nothing happened".
     expect(after.valueCents!).toBe(before.valueCents! - half)
     expect(world.fundsCents).toBeGreaterThan(0)
   })
 
-  it('⭐ ...and neither does the percentage beside it', () => {
-    // ⚠ THE OTHER COLUMN OF THE SAME SENTENCE. «+$36,626 since they bought it (37%)» is one line, and
-    // a fix that froze the sum while doubling the percentage would have moved the defect rather than
-    // removed it – `paidCents` is the cost of what is STILL HELD, so it halves with the sale too.
+  it('⭐ ...and the percentage beside it is read against the cost that is LEFT', () => {
+    // ⚠ A WITHDRAWAL SMALLER THAN THE PROFIT, so something is left on the card and the base of the percentage is what is being tested. Round 34 divided by the
+    // LIFETIME cost; round 51 #19 divides by the remaining `paidCents` – and a profit-first withdrawal inside the profit leaves that cost untouched.
     const world = holding('r34-15-pct', 'deposit', 100_000_00)
     ageWeeks(world, WEEKS_PER_YEAR * 10)
     const before = depositRow(world)
-    sellAsset(world, 'deposit', Math.round(before.valueCents! / 2))
-    expect(depositRow(world).changePct, 'the return on what they put in').toBe(before.changePct)
+    sellAsset(world, 'deposit', 10_000_00)
+    const after = depositRow(world)
+    expect(after.paidCents, 'inside the profit, so the principal did not move').toBe(100_000_00)
+    expect(after.changeCents, 'the profit shrank by exactly what was taken').toBe(before.changeCents! - 10_000_00)
+    expect(after.changePct, 'the return on the cost that is left').toBe(Math.round((after.changeCents! / after.paidCents!) * 100))
+    expect(after.changePct!, 'and it fell with the profit').toBeLessThan(before.changePct!)
   })
 
-  it('⭐ the realised and unrealised halves re-add to the gain, to the cent', () => {
-    // ⚠ «IT DID NOT MOVE» IS NOT ENOUGH ON ITS OWN – a figure frozen at the wrong value would pass
-    // the first arm. This is the arithmetic underneath it: what is still on the holding plus what
-    // previous sales took out IS the lifetime gain, which is `sellAsset`'s own identity read from
-    // the card's end.
+  it('⭐ the realised and unrealised halves re-add to the lifetime gain, to the cent', () => {
+    // ⚠ «IT DID NOT MOVE» IS NOT ENOUGH ON ITS OWN – a figure frozen at the wrong value would pass. This is the arithmetic underneath: what is still on the holding
+    // plus what previous sales took out IS the lifetime gain (everything taken out and everything still held, less the cash that went in).
     const world = holding('r34-15-identity', 'deposit', 80_000_00)
     ageWeeks(world, WEEKS_PER_YEAR * 6)
     sellAsset(world, 'deposit', 10_000_00)
@@ -127,19 +144,15 @@ describe('#15 – the gain on savings describes what was earned, not what is lef
     const held = world.assets.find((a) => a.id === 'deposit')!
     const row = depositRow(world)
     expect(held.realisedGainCents!, 'two sales, both realised').toBeGreaterThan(0)
-    expect(row.changeCents).toBe(held.valueCents - held.paidCents + held.realisedGainCents!)
-    expect(row.changePct).toBe(
-      Math.round((row.changeCents! / (held.paidCents + held.realisedCostCents!)) * 100),
-    )
+    expect(row.changeCents, 'the card is the position that is left').toBe(held.valueCents - held.paidCents)
+    expect(held.realisedGainCents! + row.changeCents!, 'the lifetime gain, split between the memory and the card').toBe(35_000_00 + held.valueCents - 80_000_00)
+    expect(row.changePct).toBe(Math.round((row.changeCents! / held.paidCents) * 100))
   })
 
-  it('⚠ a realised LOSS stays realised – the fix is symmetric', () => {
-    // ⚠⚠ THE MIRROR, AND IT IS THE ARM THAT STOPS THIS BECOMING FREE MONEY. «Зафиксировать убыток»
-    // is round 30 #14's own phrase for what a part sale is FOR; a lifetime gain that only ever
-    // accumulated the good halves would let a family sell out of a sunken holding and watch the loss
-    // vanish off the card. The car is the fixture because §3b's family exists to lose money.
-    // ⚠ A CAR IS SOLD WHOLE, so the losing fixture is a divisible rung instead: only an 'open' rung
-    // takes money out in parts, and a part sale is the only thing that realises anything.
+  it('⚠ a LOSS is not fixed by a part sale – it rides on what is left, unchanged in dollars', () => {
+    // ⚠⚠ THE MIRROR, AND IT IS THE ARM THAT STOPS THIS BECOMING FREE MONEY: a sale must never make a loss vanish off the card. Round 34 kept it by realising a share of
+    // it; the bank (round 51 #19) has no profit to hand over on a sunken holding, so the withdrawal is all principal and the whole loss stays where it was.
+    // ⚠ A CAR IS SOLD WHOLE, so the losing fixture is a divisible rung: only an 'open' rung takes money out in parts.
     const fund = holding('r34-15-loss-fund', 'index-fund', 100_000_00)
     ageWeeks(fund, WEEKS_PER_YEAR)
     const held = fund.assets.find((a) => a.id === 'index-fund')!
@@ -149,13 +162,13 @@ describe('#15 – the gain on savings describes what was earned, not what is lef
 
     const rowBefore = shopView(fund).rows.find((r) => r.id === 'index-fund')!
     expect(rowBefore.changeCents!, 'the fixture really is under water').toBeLessThan(0)
-    sellAsset(fund, 'index-fund', Math.round(held.valueCents / 2))
+    const out = Math.round(held.valueCents / 2)
+    sellAsset(fund, 'index-fund', out)
 
     const rowAfter = shopView(fund).rows.find((r) => r.id === 'index-fund')!
-    expect(held.realisedGainCents!, 'the sale realised a loss, and it is negative').toBeLessThan(0)
-    expect(rowAfter.changeCents, 'the loss does not evaporate when half of it is realised').toBe(
-      rowBefore.changeCents,
-    )
+    expect(held.realisedGainCents, 'nothing was profit, so nothing was realised').toBe(0)
+    expect(held.realisedCostCents, 'the whole withdrawal was principal coming back').toBe(out)
+    expect(rowAfter.changeCents, 'the loss does not evaporate when money is taken out').toBe(rowBefore.changeCents)
   })
 
   it('⚠ a holding that has never been sold reads exactly what it always read', () => {

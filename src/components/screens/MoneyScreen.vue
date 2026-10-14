@@ -100,6 +100,7 @@ import { portraitStage } from '../../shared/avatarEmotion'
 // The scholarship's share, from the module the two event cards read it out of. Same rate, same
 // rounding – this page reports it as a season total and they print it per trip.
 import { useAcademyCoverPct } from '../../composables/eventCard'
+import { useRevealActivePill } from '../../composables/stripReveal'
 // U0 - the shared components (docs/specs/ui-components.md), plus the NINTH, which this screen is
 // the reason for: StatRow. docs/specs/ui-components.md deliberately left it out of that slice
 // ("it comes with the Money screen in U1, where it has a real caller"), and the three rows below -
@@ -176,7 +177,16 @@ const funds = computed(() => formatCents(fundsCents.value))
 // here fed the one formatter in the app that took dollars instead of cents – the ×100 trap P6 was
 // written about – and its "must match world.ts" comment was the drift this screen now cannot have:
 // retune the engine, and this line retunes with it. tests/money-format.test.ts pins the wiring.
-const startingBudget = computed(() => (game.snapshot ? formatCents(STARTING_FUNDS_CENTS[game.snapshot.profile.background]) : ''))
+// ⭐ r51 №5 (13.10): A DYNASTY CAREER QUOTES THE GRANT IT REALLY RECEIVED. The tier base above is what an ordinary family opens on; a daughter of a champion opens on
+// the band's base times her mother's multiplier, with the childhood's deduction on it, so the base printed on this line was a number her career never held – the
+// screen restating a verdict the engine did not hold. The engine persists the grant (`legacy.savingsSliceCents`) and the snapshot carries it as
+// `openingFundsCents`; where it is absent the line is exactly what it always was. The sentence and its key are unchanged – only the number is the true one.
+const startingBudget = computed(() => {
+  const snap = game.snapshot
+  if (!snap) return ''
+  if (snap.openingFundsCents != null) return formatCents(snap.openingFundsCents)
+  return formatCents(STARTING_FUNDS_CENTS[snap.profile.background])
+})
 
 // =================================================================================================
 // ⭐⭐⭐ ROUND 26 #5b – HER SHARE, ON THE SCREEN THAT IS ABOUT MONEY
@@ -1098,6 +1108,14 @@ const TAB_OPTIONS = computed(() => [
   { value: 'shop', label: t('Shop'), title: t('What the family can buy with what is left') },
 ])
 
+// ⭐ R51 №1a (14.10) – THE CHAPTER STRIP SCROLLS INSIDE ITSELF (`.money-tabs` in the style block carries the
+// ruling), so the pressed chapter has to be kept inside the part that shows. A tap on a visible pill needs
+// nothing; the ledger button (`showAllTransactions`) and the shop's front door change the chapter from
+// elsewhere, and then the pressed pill can be the one off the edge. It moves the STRIP's `scrollLeft` and
+// nothing else – never `scrollIntoView`, which would drag the page too (the composable's header argues it).
+const chapterStrip = useTemplateRef<InstanceType<typeof SegmentedRow>>('chapterStrip')
+useRevealActivePill(() => chapterStrip.value?.$el as HTMLElement | undefined, screenTab)
+
 // =================================================================================================
 // ⭐⭐ ROUND 30 #5 – A SECOND ROW OF TABS INSIDE BILLS AND INSIDE SHOP.
 //
@@ -1203,6 +1221,7 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
            and why the summary cannot be parted from the period switcher, is argued at
            `TAB_OPTIONS` in the script. The plate is off, per the Stats ruling - see .money-tabs. -->
       <SegmentedRow
+        ref="chapterStrip"
         v-model="screenTab"
         appearance="chapter"
         class="money-tabs"
@@ -2053,6 +2072,61 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
    so the two screens he named in one sentence breathe the same amount. */
 .money-tabs {
   margin-bottom: 14px;
+  /* R51 №1a – the ruling, argued in the note under this rule. */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+/* ⭐⭐ R51 №1a (14.10) – THE PILLS SCROLL INSIDE THEIR OWN STRIP AND THE PAGE NEVER DOES. The owner, 13.10, on
+   the Russian budget at phone width: the four chapter words ask more than a phone has (about 430 px of the
+   343 the row is left at 375) and the page scrolled sideways. His ruling on the cure, verbatim: «нужен
+   скролл самих пилюль горизонтальный в этом случае без горизонтального скролла страницы». So the
+   mechanism is the strip's scroll and NOT a second line of pills: a wrapped row of four chapters is a grid,
+   and the ruling named the other thing.
+
+   The four declarations above are that ruling. One line (`nowrap`); sideways scroll of its own
+   (`overflow-x: auto`); the end of that scroll is not handed to the page behind it
+   (`overscroll-behavior-x: contain` – the scroll-chain line `.bt-tabs` and `.guide-table-wrap` carry for the
+   same reason, so the three horizontal scrollers behave alike); and the bar hidden like the draw's round tabs
+   (`scrollbar-width: none` here, the rule below for WebKit) – a pill cut by the strip's edge is what says
+   «more this way».
+
+   ⚠ SCOPED TO THIS STRIP, NOT TO `.tab-row`. Eight rows use `SegmentedRow`; the others fit, or are another
+   sweep's to find (the owner's «в этом случае» is the scope), and a global `overflow` on the shared plate
+   would also turn every one of them into a scroll container. ONE MECHANISM AT EVERY WIDTH: the sub-360
+   `flex-wrap` this block used to carry is gone (see the R-L4 note below).
+
+   ⚠ NO `min-width: 0` AND NO `max-width`, ON PURPOSE. The strip is a block-level flex container inside the
+   screen body, itself a flex COLUMN (`ScreenShell`), where the width is the cross axis: the strip is stretched
+   to the column and its own content cannot widen it. A scroll container's automatic minimum size is zero
+   anyway. `e2e/r51-money-tabs.spec.ts` measures the page at 375 px in Russian – if a context ever does need
+   one, that is the arm that goes red. */
+.money-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* A pill keeps the width its own word asks for. At the default `flex-shrink: 1` the row would squeeze the
+   pills toward their min-content before it overflowed, and "scrolls only when it cannot fit" would turn into
+   "squeezed, then scrolls" – the same line `.bt-tabs` carries for the same reason. The compound is the one the
+   R-L4 note below argues for (the sheet comes last in the bundle). */
+.money-tabs.as-chapter :deep(.tab-pill) {
+  flex: 0 0 auto;
+}
+
+/* ⚠ A SCROLL CONTAINER CLIPS ITS CHILDREN'S OUTLINES. The app's focus ring is a hairline drawn 2px OUTSIDE the
+   control (`:focus-visible` in the sheet), and the chapter pills touch every edge of this strip (`as-bare`
+   takes the plate's padding off), so the moment the strip became a scroller the ring was cut off on all four
+   sides – a keyboard user would have lost the only sign of where the focus is. For THIS row it is drawn
+   INSIDE the pill. On the pressed pill (accent fill) it takes the dark label colour, because accent on accent
+   is no ring at all. */
+.money-tabs.as-chapter :deep(.tab-pill:focus-visible) {
+  outline-offset: -3px;
+}
+
+.money-tabs.as-chapter :deep(.tab-pill.active:focus-visible) {
+  outline-color: var(--on-lime);
 }
 
 /* ⭐ R-L4 (10.10) – NO SIDEWAYS SCROLL AT 320 PX. The owner, over the LQA runner's route 7: «гориз. скролл
@@ -2075,12 +2149,16 @@ const { saleDialogRow, saleDialogHeading, saleDialogLines, closeSaleDialog, list
    18 px, the four no longer fitted and the row wrapped to a second line. happy-dom settles the same tie
    the other way round (the T6.4 note below says as much of `.money-subtabs`), which is why the mounted net
    re-applies the sheet AFTER the screens before it reads a pill. `.money-tabs.as-chapter` is (0,4,0) and
-   wins in either order. */
-@media (max-width: 359px) {
-  .money-tabs {
-    flex-wrap: wrap;
-  }
+   wins in either order.
 
+   ⚠⚠ RE-AIMED 14.10 (R51 №1a) – THE WRAP HALF OF THIS BLOCK IS GONE; THE SIDES HALF STAYS. «`wrap` is the
+   guarantee under the look» above is the sentence the owner's 13.10 ruling replaced: the guarantee under the
+   look is now the strip's own scroll (the `.money-tabs` rule and its note, further up), at EVERY width – there
+   is no longer a width at which the row wraps. What is left under 360 px is the 12 px sides, and it is a
+   LOOK, not a guarantee: it is why English still stands on one line at 320 (268 of 288 px) instead of
+   scrolling 28 px. Measurements and arms above are the 10.10 ones as they were; `r-l4-320-no-hscroll` carries
+   the dated re-aim of the one arm that read `flex-wrap: wrap`. */
+@media (max-width: 359px) {
   .money-tabs.as-chapter :deep(.tab-pill) {
     padding-left: 12px;
     padding-right: 12px;

@@ -428,6 +428,8 @@ describe('the copy', () => {
   // metrics do not exist in this process – every line was measured in the browser against the real
   // Manrope, and six were rewritten when the measurement said they clipped. This catches the
   // careless line; the browser catches the wide one.
+  // ⚠ RE-AIMED 14.10 (r51 B14, №4): THE SCREEN NO LONGER TRUNCATES – the tile lines wrap now (tests/component/r51-b14-kid-tile-wraps.test.ts), so «nowrap» in this title and in
+  // the header is history. TILE_LINE_MAX is still the budget the ENGINE writes English to, and the sweep below is unchanged.
   it('fits the design cell: every line is inside the nowrap budget', () => {
     for (const line of everyLine()) {
       expect(line.length, line).toBeLessThanOrEqual(TILE_LINE_MAX)

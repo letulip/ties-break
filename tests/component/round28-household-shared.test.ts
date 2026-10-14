@@ -46,6 +46,7 @@ import CoachMarketScreen from '../../src/components/screens/CoachMarketScreen.vu
 import SupportStaffTab from '../../src/components/SupportStaffTab.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
+  buyAsset,
   createWorld,
   hireMasseur,
   masseurWeeklyCents,
@@ -193,6 +194,31 @@ describe('§2 both surfaces print the same week', () => {
     const { coaches, staff } = await bothOf(snap)
     expect(staff, 'the losing case reads identically too').toBe(coaches)
     expect(staff, 'and it says which way it points').toContain('short')
+  })
+
+  it('...and on a household that OWNS things – the shelf\'s paper is on neither surface, and they still agree', async () => {
+    // ⚠⚠⚠ ADDED AT ROUND 51 #6 (13.10), ON THE OWNER'S RULING: «вообще не должно его быть на экране
+    // тренеров, мы им не оперируем там никак, он только заблуждает». The two cases above compare the
+    // surfaces on households that own NOTHING, so the shelf – the one term the strip once took from
+    // a moving valuation – was never in this file's world at all. This case owns a house (gaining on
+    // paper) and a car (losing, with an upkeep), and holds three things: the surfaces print the SAME
+    // sentence, the IN figure is the cash that arrives (`weeklyIncomeCents`, which has never carried
+    // the paper), and the OUT figure is the bills (training, payroll, upkeep) and not a cent of drift.
+    const world = pro('r51-6-parity')
+    world.fundsCents = 20_000_000_00
+    hireMasseur(world, true)
+    buyAsset(world, 'house-first')
+    buyAsset(world, 'car-sensible')
+    const snap = toSnapshot(world)
+    const house = snap.coachBilling.household
+    expect(house.shelfCents, 'the shelf really moves, or the claim below is vacuous').not.toBe(0)
+    expect(house.upkeepCents, 'and it really has an upkeep, which is cash').toBeGreaterThan(0)
+    const { coaches, staff } = await bothOf(snap)
+    expect(staff, 'the two surfaces print the same sentence').toBe(coaches)
+    expect(coaches).toContain(`${formatCents(snap.coachBilling.weeklyIncomeCents)} in`)
+    expect(coaches).toContain(
+      `${formatCents(snap.coachBilling.weeklyCents + snap.masseurSalaryCents + house.upkeepCents)} out`,
+    )
   })
 })
 

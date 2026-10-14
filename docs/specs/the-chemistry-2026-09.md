@@ -478,6 +478,21 @@ His gradient carries **two facts in one component**: the DIRECTION is the hue fa
 is the position inside it. A pair at −15 is orange and a pair at −90 is red, and the player reads
 «going wrong» and «gone wrong» without a second glyph, a number or a legend.
 
+⭐ **AMENDED 13.10 (round 51 №10/№11) – THE RING STILL CARRIES NO LEGEND, BUT A TAP ON IT NOW OPENS ONE.**
+The stance above stands for the gauge itself: no glyph, no extra text, nothing on the card grew. The
+owner played 44 weeks on one save and the ring never moved («за 44 недели химия с тренером не
+сдвинулась ни на одно деление»), and asked for «какой-то небольшой информ попап» behind a tap on it,
+because the «?» without movement confused him. He was reading a healthy mechanism through a picture
+that hid it: the pair is recomputed **every week** a coach is hired (`accrueCoachPair`, 6.24 after 39
+weeks on his own save), the ring shows nothing until the pair clears its own reading bar (B12 below:
+median first reading at week 21, p90 at week 78), and a 6% arc is a few pixels. The «?» also meant two
+things – never worked together, and working but not readable yet – which the wire now tells apart
+(`CoachMarketRow.chemistryKnown`, derived from the pair row existing, no schema move, zero draws).
+The popup (`ChemistryHelpDialog.vue`, RankHelpDialog's shell) says what the ring is, that it moves
+every week, which of the three states this coach is in, and that letting a coach go pauses it without
+decay (§7). Copy is a DRAFT under the 11.10 blanket; the rates and thresholds are unchanged and stay
+the owner's to rule on separately.
+
 ⭐⭐ **AND THE FIGURE STAYS, WITH ITS SIGN – his ruling, and he struck the spec's own line to make it.**
 §8 said «no percentage anywhere» on the grounds that a number is a slider; he answered: «вполне можем
 оставить цифру как раз для тех, кто плохо считывает цвета или расположение шкалы. Не вижу ничего плохого
@@ -1161,3 +1176,76 @@ player-facing string at all** – the seasonal line lands in C3 with the card an
 
 ⚠ The anti-match line deliberately names the COST – further from her game – rather than the mood,
 because the player's only other channel is a bill that says nothing is wrong.
+
+## 16. Round 51 №8 (14.10) – asking her coach «why» opens the reading, and she says how it feels
+
+The owner, after a small-talk beat where she asked whether her coach is any good: asked whether it is
+only a question or tied to the chemistry, was told it was only a question, and answered: «вот жаль, что
+не привязан, потому что после такого очень хочется и мне понять "а он ок или не ок" и как-то хочется
+это сделать». On 14.10: «давай по рекомендации». This section records what was built and the
+measurement behind its one tuned number (invariant 5).
+
+### 16.1 What the parent gets
+
+When the parent answers her `coach-real` question («Is my coach actually good?») with the middle stance
+(«Say a good coach explains what they're changing»), two things happen, and nothing else:
+
+1. **The reading of the coach she has opens.** The ring on the coach's card shows the pair's number even
+   below the bar that otherwise shows «?» – the same number the ring shows once the bar is crossed. It
+   opens for the coach in the chair only, for as long as that coach stays: hiring or releasing someone
+   closes it again, because the question was about the person she had then. Other coaches' rings and
+   the first-year rule are untouched.
+2. **Her follow-up gains one line – her hunch – that leans the way the pair really leans.** Four voices
+   by three bands (warm, even, cold), English and Russian, in `COACH_REAL_HUNCH`. A coach she has not
+   trained with yet reads «even».
+
+The other two answers to the same question, every other situation, and every bond price are unchanged
+(ruling V2: tier-1 replies move nothing; the new effect is information, not a price).
+
+### 16.2 How it is built (no schema move, no draw)
+
+- The answer is already on the `lifeLog` row (`answer: 'view'`), the log is never pruned, so «opened» is
+  derived: an answered `view` on the `coach-real` situation, raised in a later tick than the current
+  stint's start (`coachSinceWeek`, not the deal's `agreedWeek` – a signed raise re-strikes the deal
+  without changing the coach). The comparison is strict because the tick adds its week before it raises
+  beats, while a hire or release is stamped with the week the world is standing in.
+- ONE reader of the figure: `chemistryReadingFor(world, coachId)` in `world/coachMarket.ts`. The coach
+  card's ring and the wrap-up coach letter both call it, so they cannot show different things.
+- The hunch band is `chemistryHunch(pair.chem)` in `chemistry.ts`, computed in the prompt assembly from
+  the world and handed to the pure follow-up builder as a parameter.
+- Coach-market rows are not memoised: `toSnapshot` builds them fresh from the world on every snapshot
+  (`memoise` in `world/snapshot.ts` serves only the rated field and the tournament preview tables). So the
+  ring shows the opened figure on the first snapshot after the answer – a test cuts a snapshot before and
+  after `answerLifeBeat` on one world to hold that.
+
+### 16.3 The one tuned number – where «warm» and «cold» start
+
+Predicted before the run (`tools/chemistry-bench.ts`, header, B13): with warm at +3 and cold at -3 –
+just beyond the largest bar a pair can draw (2.5) – a pair is «even» for most of its first quarter
+(week 13: 90-96%, week 26: 70-82%, week 52: 50-68%), warm 18-30% and cold 12-25% at a year. Threshold to
+step to ±2 if «even» exceeds 70% at week 52. Run: `npm run bench:chemistry -- --hunch` (1200 pairs, the
+B12 walk: the real `accrueChemistry`, an even record, the world's own temperament).
+
+| stint week | band | predicted | measured at ±3 | measured at ±2 (comparison) |
+| ---: | --- | --- | ---: | ---: |
+| 13 | even | 90-96% | 96.3% | 82.1% |
+| 13 | warm / cold | – | 1.2% / 2.6% | 6.3% / 11.7% |
+| 26 | even | 70-82% | 67.8% | 49.3% |
+| 26 | warm / cold | – | 10.6% / 21.7% | 17.8% / 32.8% |
+| 52 | even | 50-68% | 37.9% | 24.5% |
+| 52 | warm / cold | 18-30% / 12-25% | 21.1% / 41.0% | 26.2% / 49.3% |
+
+**Decision: ±3 stands.** «Even» is 37.9% at week 52, well under the 70% line, so there is no reason to
+tighten to ±2. Structural check: no pair leans while its ring is still unreadable (0 of 3600 readings),
+which is what sitting above the largest bar buys.
+
+**What the prediction got wrong, and what it means.** Week 13 landed a hair above its range; week 26 just
+under it; week 52 well under – the walk gets decided faster than predicted. And the split is not even:
+cold is about twice as common as warm at a year (41.0% against 21.1%), against a predicted 12-25%. This is
+the chemistry model's own shape on the bench's stream, not something this change introduced: an even
+record with a title every 180 weeks, and a drift that the pair's affinity signs (§3). Why more of the drawn
+pairs end cold than warm on this stream was not investigated here. So, on this stream, her hunch will say
+«I don't think there'll be an answer» about four times in ten after a year. Whether played careers with
+winning seasons lean warmer through the event nudges is not measured here – the stream is a stated model,
+not a played career. Reported to the owner as a finding; the thresholds are not changed to flatter the
+split.

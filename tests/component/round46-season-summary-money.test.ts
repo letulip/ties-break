@@ -184,6 +184,12 @@ describe('⭐⭐⭐ round 46 #8 + #19 – the year-end Money tile', () => {
 // ⚠ A WHOLE-DOLLAR YEAR ON PURPOSE. Everything below stays under $1M, so the card prints full dollars and the rows can be SUMMED FROM WHAT THEY SAY – the strongest claim a card
 // can make about its own arithmetic. The fund is bought at 400,000 and is worth `valueCents` when 100,000 is taken out; at 320,000 the released basis is exactly 125,000, so the
 // loss is exactly 25,000, and at 500,000 the same withdrawal releases 80,000 and fixes a 20,000 GAIN. The world goes through the real `buyAsset`, `sellAsset` and wrap-up.
+//
+// ⚠⚠ RE-AIMED 14.10 BY ROUND 51 #19. The fixture below used to fix the loss with the PART sale alone («the released basis is exactly 125,000, so the loss is exactly 25,000»). THE OWNER,
+// 13.10 evening, on a withdrawal: «была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята.» An underwater fund has no profit to hand over, so a part sale is principal coming back and realises NOTHING; the loss is named
+// by the sale that CLOSES the position. So the year is: a deposit bought and kept (so the shelf row is not nothing), the fund bought at 400,000, a part sale (realises 0), then the
+// closing sale. At 320,000 the whole loss is 80,000 (400,000 bought, 320,000 fetched across the two sales); at 500,000 the closing sale fixes a 100,000 GAIN. The printed shelf row
+// is -50,000 (the deposit alone) and the funds line -103,000 (60,000 earned, 33,000 spent, -130,000 on the shelf).
 function lossYear(valueCents: number): WorldState {
   const world = createWorld('r46-card-loss', { ...DEFAULT_PROFILE })
   world.week = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
@@ -191,10 +197,12 @@ function lossYear(valueCents: number): WorldState {
   accrueFinance(world, 10, 'prize', 60_000_00)
   accrueFinance(world, 11, 'coaching', -24_000_00)
   accrueFinance(world, 12, 'travel', -9_000_00)
-  world.fundsCents = 600_000_00 + 400_000_00
+  world.fundsCents = 600_000_00 + 400_000_00 + 50_000_00
+  buyAsset(world, 'deposit', 50_000_00)
   buyAsset(world, 'index-fund', 400_000_00)
   world.assets.find((a) => a.id === 'index-fund')!.valueCents = valueCents
   sellAsset(world, 'index-fund', 100_000_00)
+  sellAsset(world, 'index-fund')
   maybeFireSeasonWrapUp(world)
   return world
 }
@@ -217,18 +225,18 @@ describe('⭐⭐⭐ round 46 morning item 4 – the realised loss on the expense
   it('prints the ENGINE`S loss as its own row under «Spent», and the shelf row prints WITHOUT it', () => {
     const world = lossYear(320_000_00)
     const s = world.lastSeasonSummary!
-    expect(s.wealth!.realisedLossCents, 'the engine banked the loss: 125,000 released - 100,000 fetched').toBe(25_000_00)
+    expect(s.wealth!.realisedLossCents, 'the engine banked the loss: 400,000 bought, 320,000 fetched across the two sales').toBe(80_000_00)
     const card = mountCard(world)
 
     // ⚠⚠ THE ARM. Mutate `realisedLossOf` to 0 and the row disappears; point the dialog's shelf row back at `shelfNetCents` and the second line reads -$300,000.
     expect(figure(card, 'Sold at a loss')).toBe(formatCentsSignedCompact(-s.wealth!.realisedLossCents!))
-    expect(figure(card, 'Sold at a loss')).toBe('-$25,000')
+    expect(figure(card, 'Sold at a loss')).toBe('-$80,000')
     expect(figure(card, 'Holdings and upkeep')).toBe(formatCentsSignedCompact(s.wealth!.shelfNetCents + s.wealth!.realisedLossCents!))
-    expect(figure(card, 'Holdings and upkeep')).toBe('-$275,000')
+    expect(figure(card, 'Holdings and upkeep')).toBe('-$50,000')
     // the rest of the card is what it was
     expect(figure(card, 'Spent this season')).toBe('-$33,000')
     expect(figure(card, 'Earned this season')).toBe('+$60,000')
-    expect(figure(card, 'Funds this season')).toBe('-$273,000')
+    expect(figure(card, 'Funds this season')).toBe('-$103,000')
     // expense side: the loss row sits directly under «Spent», before «Earned»
     expect(moneyKeys(card)).toEqual([
       'Spent this season',
@@ -250,7 +258,7 @@ describe('⭐⭐⭐ round 46 morning item 4 – the realised loss on the expense
     // the printed figures are signed as they read: Spent and the loss are already negative
     expect(n('Earned this season') + n('Spent this season') + n('Sold at a loss') + n('Holdings and upkeep')).toBe(n('Funds this season'))
     // and a shelf row that kept the loss inside it (the double count) would miss the bottom line by exactly the loss
-    expect(n('Earned this season') + n('Spent this season') + n('Sold at a loss') + -300_000_00).toBe(n('Funds this season') - 25_000_00)
+    expect(n('Earned this season') + n('Spent this season') + n('Sold at a loss') + -130_000_00).toBe(n('Funds this season') - 80_000_00)
   })
 
   it('a GAIN-fixing year and a year with no sale show NO loss row, and the shelf row is the shelf as it always was', () => {
@@ -258,7 +266,7 @@ describe('⭐⭐⭐ round 46 morning item 4 – the realised loss on the expense
     expect('realisedLossCents' in gain.lastSeasonSummary!.wealth!).toBe(false)
     const card = mountCard(gain)
     expect(figure(card, 'Sold at a loss')).toBeNull()
-    expect(figure(card, 'Holdings and upkeep')).toBe('-$300,000')
+    expect(figure(card, 'Holdings and upkeep')).toBe('+$50,000')
     expect(moneyKeys(card)).not.toContain('Sold at a loss')
 
     // no sale at all: his M-form scenario and the modest family

@@ -21,8 +21,10 @@
 //       IN figure is the week's income. Both read as text off the strip.
 //   §2  ⭐ THE NUMBER MOVES. The same career with and without the hire, and the difference is
 //       exactly his salary – the assertion his sentence is actually about.
-//   §3  the shelf is in it (his «и даже на магазин растянуть»), signed: a depreciating car makes the
-//       household's weekly outgoing LARGER, and the strip names the shelf when it holds anything.
+//   §3  the shelf is in it (his «и даже на магазин растянуть») – ⚠⚠⚠ RE-AIMED 13.10 (ROUND 51 #6) BY
+//       THE OWNER'S RULING, see §3's own block: the shelf's PAPER drift is OUT of the strip, what it
+//       costs to KEEP (the upkeep, cash) is still IN it, and the strip names the upkeep and no
+//       longer the shelf.
 //   §4  the coaching meter above it is UNTOUCHED – round-21 #12's claim is a different question and
 //       still has its own answer on the same screen.
 //       ⚠⚠⚠ ROUND 42 #42 (15.09) RE-AIMED §4 BY THE OWNER'S WORD («committed должен это и
@@ -196,7 +198,14 @@ describe('§2 the masseur moves the figure', () => {
 describe('§3 the shelf is in the household week', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('⭐⭐ a depreciating car makes the weekly outgoing larger, by its own week of value', async () => {
+  // ⚠⚠⚠ RE-AIMED AT ROUND 51 #6 (13.10), ON THE OWNER'S RULING: «вообще не должно его быть на экране
+  // тренеров, мы им не оперируем там никак, он только заблуждает». This arm used to say a depreciating
+  // car makes the weekly outgoing larger BY ITS OWN WEEK OF VALUE – the paper summed into OUT – and
+  // the strip's sentence about the shelf was its twin below. Both are inverted, not deleted: what the
+  // car really costs the wallet, its UPKEEP, is still the strip's business and is still asserted IN;
+  // the week of lost VALUE is asserted OUT by the pre-ruling figure being the one that must NOT
+  // appear. `weekly` stays computed as the witness that makes that non-vacuous.
+  it('⭐⭐ a depreciating car adds its UPKEEP to the weekly outgoing and its lost value does not', async () => {
     const world = pro('r28-h-shop')
     world.fundsCents = 500_000_00 // enough to buy the thing; the shelf opens with the pro career
     const bare = toSnapshot(world)
@@ -224,7 +233,10 @@ describe('§3 the shelf is in the household week', () => {
     const upkeep = weeklyAssetUpkeepCents(world)
     expect(upkeep, 'round 30 #15 – a car really does cost something to keep now').toBeGreaterThan(0)
     const strip = await stripOf(snap)
-    expect(strip).toContain(`${formatCents(snap.coachBilling.weeklyCents + -weekly + upkeep)} out`)
+    expect(strip).toContain(`${formatCents(snap.coachBilling.weeklyCents + upkeep)} out`)
+    expect(strip, 'the lost value of the car is paper and is not in OUT').not.toContain(
+      `${formatCents(snap.coachBilling.weeklyCents + -weekly + upkeep)} out`,
+    )
     // ⚠ AND THE BARE ARM DID NOT: the shelf is what moved the figure, not the purchase's dent in the
     // balance. (Buying moves `fundsCents` and therefore the interest, so the IN figure differs
     // between the arms – which is why this claim is read off the OUT side alone.)
@@ -232,22 +244,31 @@ describe('§3 the shelf is in the household week', () => {
     expect(bareStrip).toContain(`${formatCents(bare.coachBilling.weeklyCents)} out`)
   })
 
-  it('the strip NAMES the shelf when it holds something, and stays quiet when it does not', async () => {
-    // A "$0.00 shelf" line on every junior career for years is noise on a phone; the sentence earns
-    // its place only once there is a shelf to talk about.
+  it('the strip no longer NAMES the shelf – and still names what it costs to keep', async () => {
+    // ⚠⚠⚠ RE-AIMED AT ROUND 51 #6 (13.10), ON THE OWNER'S RULING (see the block above): this arm used
+    // to assert the shelf sentence EXISTED once the family owned something that moves. The owner took
+    // that sentence off the screen, so the arm holds the opposite and keeps its teeth: the sentence
+    // is absent for a depreciating car, while the UPKEEP sentence – cash, byte-identical to what
+    // shipped – is present. A strip that went silent about BOTH would pass the first half alone.
     const world = pro('r28-h-shop-note')
     const bare = toSnapshot(world)
     let wrapper = await mountCoaches(bare)
     expect(wrapper.find('.budget-shelf').exists(), 'nothing owned, nothing said').toBe(false)
+    expect(wrapper.find('.budget-upkeep').exists(), 'nothing owned, no upkeep line').toBe(false)
     wrapper.unmount()
 
     world.fundsCents = 500_000_00
     buyAsset(world, 'car-sensible')
+    const upkeep = weeklyAssetUpkeepCents(world)
+    expect(upkeep, 'the car really has an upkeep, or the second half is vacuous').toBeGreaterThan(0)
     wrapper = await mountCoaches(toSnapshot(world))
-    const note = wrapper.find('.budget-shelf')
-    expect(note.exists(), 'a shelf that moves money says so').toBe(true)
-    expect(note.text()).toContain('The shelf is in that')
-    expect(note.text(), 'a depreciating car COSTS').toContain('costs')
+    expect(wrapper.find('.budget-shelf').exists(), 'the shelf sentence is gone for good').toBe(false)
+    expect(wrapper.text(), 'and so are its words').not.toContain('The shelf is in that')
+    const keep = wrapper.find('.budget-upkeep')
+    expect(keep.exists(), 'what it costs to KEEP is cash and stays').toBe(true)
+    expect(keep.text().replace(/\s+/g, ' ')).toBe(
+      `Keeping what you own is ${formatCents(upkeep)} a week of that, and it is real money.`,
+    )
     wrapper.unmount()
   })
 })
@@ -297,11 +318,11 @@ describe('§4 the coaching budget above it is still its own question – ⚠ re-
     expect(legend).toContain(`${formatCents(payroll)} committed`)
 
     // ⚠ AND THE METER IS STILL NOT THE HOUSEHOLD, which is what §4 has always really been about: the
-    // strip's OUT figure carries the shelf and the upkeep too, and the two must not become one
+    // strip's OUT figure carries the upkeep too (the shelf's PAPER left it on 13.10, round 51 #6), and the two must not become one
     // number. A committed figure equal to the household's outgoing would be the round 28 #8 defect
     // arriving from the other direction.
     const out = snap.coachBilling.household.outgoingCents
-    expect(out, 'the household really outspends the payroll – the shelf and the upkeep are in it').toBeGreaterThan(0)
+    expect(out, 'the household really outspends the payroll – whatever else it pays is in it').toBeGreaterThan(0)
     if (out !== payroll) expect(legend).not.toContain(`${formatCents(out)} committed`)
 
     // ...and the household strip is a SEPARATE element under it, not a rewrite of the legend.

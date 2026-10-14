@@ -38,17 +38,30 @@ import { load } from './goldenSavesCorpus'
 const WEEKS = 110
 const BIRTHS: Record<string, [number, number] | null> = { default: null, dec31: [12, 31], jan6: [1, 6] }
 
-/** Digests of the PRISTINE tree (7df39c35): `rng0`/`h0` at creation, `rngN`/`hN` after WEEKS no-action ticks. sha1, first 16 hex. */
+/** Digests of the PRISTINE tree (7df39c35): `rng0`/`h0` at creation, `rngN`/`hN` after WEEKS no-action ticks. sha1, first 16 hex.
+ *  ⚠ RE-STAMPED 14.10 (r51, architect): the six alpha/beta `hN` moved with B12's small-talk corpus
+ *  (99d1e8ba, 51→55 situations) – a longer pool reads a different position on the purpose-scoped
+ *  `seed:life:smalltalk:*` sub-streams, so the walked lifeLog holds different small-talk rows.
+ *  NOT a draw change: every `rngN` (the MAIN position) is byte-identical and stayed pinned green.
+ *  Attribution proven by a clean-worktree control run at B12's parent 0fe15aca: there this file
+ *  fails ONLY on the S2e sweep (B5's three MoreScreen sites, exempted below), all 9 digests green.
+ *  gamma did not move – its bond band never rolls a small talk inside 110 weeks.
+ *  ⚠ RE-STAMPED AGAIN 14.10 (r51 continuation, architect): ALL NINE `hN` moved with the school-years
+ *  tranche E1-E3 (pool 55→65), gamma included. ⚠ The «never rolls a small talk» sentence above was an
+ *  UNVERIFIED guess of mine and is withdrawn: the likelier reading is that gamma's talks fell in
+ *  subjects B12 never grew (he appended STORY rows only, so a non-story pick index did not move),
+ *  while E1-E3 grew every other school subject. Same purpose-scoped sub-stream class either way;
+ *  every `rngN` (the MAIN position) stayed pinned green. */
 const BASELINE: Record<string, { rng0: string; h0: string; rngN: string; hN: string }> = {
-  's1-alpha|default': { rng0: '-1306492581:0', h0: '1662620015bc23c9', rngN: '-1625113431:87894', hN: 'b9b588084cc0523f' },
-  's1-alpha|dec31': { rng0: '-1306492581:0', h0: 'e3c0dbdc02dfe2c4', rngN: '-1625113431:87894', hN: '2f18ea5763e500da' },
-  's1-alpha|jan6': { rng0: '-1306492581:0', h0: 'baccabf4e3897d71', rngN: '-1625113431:87894', hN: '2f67b3d329194b3a' },
-  's1-beta|default': { rng0: '2140152401:0', h0: '2376db693585cb49', rngN: '-73975459:87900', hN: 'f6fe7089ae8c78d8' },
-  's1-beta|dec31': { rng0: '2140152401:0', h0: 'a2dd35eb5fdb72f9', rngN: '-73975459:87900', hN: 'db5227061df30a83' },
-  's1-beta|jan6': { rng0: '2140152401:0', h0: '954e24dc6bc505f9', rngN: '-73975459:87900', hN: 'd7e814af3fb6b940' },
-  's1-gamma|default': { rng0: '-2119545102:0', h0: '5f847e633dd4e992', rngN: '1792860147:87901', hN: '34ed1637259f0e79' },
-  's1-gamma|dec31': { rng0: '-2119545102:0', h0: 'ab3e8951a687d2e4', rngN: '1792860147:87901', hN: '62f2940cc6d3b279' },
-  's1-gamma|jan6': { rng0: '-2119545102:0', h0: 'ae71ca27f9886772', rngN: '1792860147:87901', hN: '1d21ec5aafa86725' },
+  's1-alpha|default': { rng0: '-1306492581:0', h0: '1662620015bc23c9', rngN: '-1625113431:87894', hN: 'e4a981f68460099e' },
+  's1-alpha|dec31': { rng0: '-1306492581:0', h0: 'e3c0dbdc02dfe2c4', rngN: '-1625113431:87894', hN: 'f9cc31e574c62bca' },
+  's1-alpha|jan6': { rng0: '-1306492581:0', h0: 'baccabf4e3897d71', rngN: '-1625113431:87894', hN: '42589927c0bc2b20' },
+  's1-beta|default': { rng0: '2140152401:0', h0: '2376db693585cb49', rngN: '-73975459:87900', hN: '3324a69d52d1e0d7' },
+  's1-beta|dec31': { rng0: '2140152401:0', h0: 'a2dd35eb5fdb72f9', rngN: '-73975459:87900', hN: '8ec8427b8622bada' },
+  's1-beta|jan6': { rng0: '2140152401:0', h0: '954e24dc6bc505f9', rngN: '-73975459:87900', hN: '2a8d42437a3f398c' },
+  's1-gamma|default': { rng0: '-2119545102:0', h0: '5f847e633dd4e992', rngN: '1792860147:87901', hN: 'edd9ef9a657046bb' },
+  's1-gamma|dec31': { rng0: '-2119545102:0', h0: 'ab3e8951a687d2e4', rngN: '1792860147:87901', hN: 'f042c9a05f6c4bd9' },
+  's1-gamma|jan6': { rng0: '-2119545102:0', h0: 'ae71ca27f9886772', rngN: '1792860147:87901', hN: '5274ef47a7038186' },
 }
 
 function digest(world: unknown): string {
@@ -341,7 +354,21 @@ const UI_YEAR_DEPENDENT = [...YEAR_DEPENDENT, 'enterActionName'] as const
  *  (a duration, say, and never a year). ⚠ NOT FOR A CALL THAT IS MERELY HARD TO THREAD: S2e threaded every one it found, including a pure helper three
  *  callers deep and a list row that prints another career's week (see the S2e line of the spec's §8 ledger for the one honest limit that leaves).
  *  Empty on 06.10 – and `staleExemptions` makes an entry that outlives its call a failure, so the table cannot rot into a list of things nobody remembers. */
-const UI_EXEMPT: Record<string, string> = {}
+const UI_EXEMPT: Record<string, string> = {
+  // ⚠ 14.10 (r51 B5, 173ebb8e) – these three ARE threaded, with the ROW's OWN epoch, which the
+  // scanner's pattern does not recognise as startYear. The careers LIST prints rows of OTHER
+  // careers: the active snapshot's year would be the very defect r51 №3 reported ('85 for a 2031
+  // mother under a 2066 daughter). rowStartYear(c) = the row's stored epoch, else the snapshot's
+  // for the active career's own bare row, else DEFAULT_START_YEAR (exact for every gen-1 career);
+  // the import confirm reads the decoded file's own epoch. Mutation-proven in
+  // tests/component/round51-careers-epoch.test.ts (M1/M3/M4).
+  'components/screens/MoreScreen.vue:return c.birthMonth === undefined ? ageAtWeek(c.week) : kidAgeYears(c.week, c.birthMonth, c.birthDay ?? 1, rowStartYear(c))':
+    '14.10 r51 B5 – threaded with the ROW’s epoch (another career’s list row), not the snapshot’s',
+  'components/screens/MoreScreen.vue:[existing.kidName, weekLabel(existing.week, rowStartYear(existing)), weekLabel(peek.week, peek.startYear ?? DEFAULT_START_YEAR)],':
+    '14.10 r51 B5 – import confirm: each side dated in ITS OWN epoch (row’s / decoded file’s)',
+  'components/screens/MoreScreen.vue:{{ t(\'{0} · age {1} · last played {2}\', [weekLabel(c.week, rowStartYear(c)), careerAge(c), fmtDate(c.lastPlayedAt)]) }}':
+    '14.10 r51 B5 – the list row prints its own career’s year via rowStartYear(c)',
+}
 
 type Hit = { file: string; line: number; code: string }
 const keyOf = (h: Hit): string => `${h.file}:${h.code}`

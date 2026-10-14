@@ -95,6 +95,8 @@ import { startingSkills, withHeadStart } from './player'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidLadderRank, kidPoints, tierOpenFor } from './ladder'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
+// ⭐ ROUND 51 №8 – the one reader of «the parent asked her coach why» (see `coachReadingOpened` below).
+import { coachRealViewedSince } from './lifeBeat/smallTalk'
 // ⭐ RU-23 (11.10) – THE ROOM AND DECLINE NOTES ARE CopyRefs NOW (class (b): assembled at snapshot time off the decline read, never stored), and the English the screens always showed is the ref
 // rendered under the source locale – `knock.ts`' own precedent – so a string and its translation cannot drift. The branches, the thresholds and the words are untouched; nothing here draws.
 import { cp, isCopyRef, renderCopyRef, SOURCE_LOCALE, type CopyRef } from '../../shared/i18n'
@@ -249,6 +251,41 @@ export function coachSinceWeek(world: WorldState): number {
     if (e.milestoneKey?.startsWith(COACH_CHANGE_KEY) && e.week > since) since = e.week
   }
   return since
+}
+
+/** ⭐⭐⭐ ROUND 51 №8 (14.10) – HAS THE PARENT OPENED THE READING OF HER COACH'S CHEMISTRY? Yes exactly
+ *  when, in the stint that is running now, they answered her «is my coach actually good» (small talk
+ *  `coach-real`) with «a good coach explains what they're changing» – the `view` answer, which is the
+ *  parent deciding to find out.
+ *
+ *  The owner, 14.10, after being told the question was only a question: «вот жаль, что не привязан,
+ *  потому что после такого очень хочется и мне понять "а он ок или не ок" и как-то хочется это сделать».
+ *
+ *  ⚠ DERIVED, NEVER STORED. The answer is on the `lifeLog` row already and the log is never pruned, so
+ *  the fact is a read: no schema key, no migration, no draw on any stream.
+ *  ⚠ THE STINT IS `coachSinceWeek`, NOT `coachDeal.agreedWeek` – a signed raise re-strikes the deal at a
+ *  new week without changing the coach. A coach hired or released after the answer closes the reading
+ *  again (`coachRealViewedSince` has the week arithmetic): the answer was about the person she had then.
+ *  ⚠ NOBODY EMPLOYED IS FALSE – the parent on the court has no pair to read. */
+export function coachReadingOpened(world: WorldState): boolean {
+  return world.coachId !== null && coachRealViewedSince(world, coachSinceWeek(world))
+}
+
+/** ⭐⭐⭐ ROUND 51 №8 – THE ONE READER OF A COACH'S CHEMISTRY FOR A WORLD. Both surfaces that print the
+ *  figure – the coach card's ring (`coachMarket` below) and the season wrap-up's coach letter
+ *  (`staffLetters.ts`) – call THIS and never `chemistryReading` directly, so «what the ring shows» and
+ *  «what the letter says» cannot part: a second predicate for «is the figure allowed» is exactly the
+ *  parity defect (an engine verdict restated by a surface) the house keeps paying for.
+ *
+ *  `chemistryReading` still decides readability by the pair's own bar. THE ONLY THING THIS ADDS is that
+ *  an opened reading (`coachReadingOpened`) shows the CURRENT coach's pair below that bar: the real
+ *  number, however small. It never opens another coach's pair, and an absent pair stays `null` even when
+ *  opened – there is nothing to read. */
+export function chemistryReadingFor(world: WorldState, coachId: string): number | null {
+  const pair = world.coachPairs?.[coachId]
+  if (pair === undefined) return null
+  if (coachId === world.coachId && coachReadingOpened(world)) return pair.chem
+  return chemistryReading(pair, world.seed, coachId)
 }
 
 // =================================================================================================
@@ -981,8 +1018,9 @@ export function familyWeeklyIncomeCents(world: WorldState): number {
   // consult the budget at all (`overBudgetCents` colours a card and nothing else), which is what
   // keeps this inside «мы ни за что не наказываем». The honest answer to the re-opened complaint is
   // the shelf, not a restored wage on the current account: a family that puts the million into the
-  // index fund is earning again, deliberately, and `householdWeekly` already shows that money in the
-  // household's week.
+  // index fund is earning again, deliberately, and `householdWeekly` showed that money in the
+  // household's week until round 51 #6 (13.10), when the owner ruled the shelf's paper drift off the
+  // coach screens – see the note at its return.
   const deal = activeKitDeal(world.offers, world.week)
   const retainerCents = deal ? ((deal.terms as KitOfferTerms).retainerCents ?? 0) : 0
   // ⚠ THE SPLIT COMES OFF THE CHEQUE BEFORE IT IS PRO-RATED, and in that order, because that is the
@@ -1076,6 +1114,12 @@ export function supportPayrollWeeklyCents(world: WorldState): number {
  *  будущем), и даже на магазин растянуть». The block on screen T showed the COACH's line and called
  *  it the week's spending; his masseur was $525 a week of it and was nowhere in the figure.
  *
+ *  ⚠⚠⚠ ROUND 51 #6 (13.10) – CASH ONLY, ON THE OWNER'S RULING: «вообще не должно его быть на экране
+ *  тренеров, мы им не оперируем там никак, он только заблуждает». The shelf's weekly VALUATION drift
+ *  is no longer summed into `incomeCents` / `outgoingCents`; the paragraphs below still describe how
+ *  that memo is DERIVED (unchanged), and where they speak of the `Math.max(0, ±shelfCents)` split
+ *  they are history – the note at the return has the account. The upkeep, being cash, stays in OUT.
+ *
  *  ⚠ THE INCOME SIDE IS `familyWeeklyIncomeCents` AND NOT A SECOND SUM OF THE SAME STREAMS. That
  *  function is the one definition of "what arrives every week", the cap the meter draws and the
  *  denominator every `overBudgetCents` is cut from; a household total that re-derived the parents'
@@ -1145,8 +1189,24 @@ export function householdWeekly(world: WorldState, trainingCents: number): House
   // banks». Her cut comes off before the strip sees it, for the same reason and by the same rule.
   const merchCents = merchFamilyWeeklyIncomeCents(world)
   const academyIncomeCents = academyWeeklyIncomeCents(world)
-  const incomeCents = familyWeeklyIncomeCents(world) + Math.max(0, shelfCents)
-  const outgoingCents = trainingCents + staffCents + Math.max(0, -shelfCents) + upkeepCents
+  // ⭐⭐⭐ ROUND 51 #6 (13.10) – THE HOUSEHOLD'S WEEK IS CASH, AND THE SHELF'S PAPER IS NOT IN IT.
+  // THE OWNER, 13.10, once the figure he could not find on the coaches screen was traced: «вообще не
+  // должно его быть на экране тренеров, мы им не оперируем там никак, он только заблуждает». His
+  // save read «$1,814 in – $627 out – $1,187 left over» while the cash that really arrives was $425
+  // a week against the same $627, i.e. $202 SHORT: the other $1,389 was the houses and the fund
+  // getting dearer on paper (`revalueAssets` writes only `valueCents`; no cash moves until a sale).
+  // Until today `Math.max(0, shelfCents)` rode into income and `Math.max(0, -shelfCents)` into
+  // outgoings – round 28 #8 stretching the strip over the shop, which was right for the UPKEEP (cash,
+  // above) and wrong for the VALUATION: the one place this function summed paper with money. Both
+  // terms are gone. IN is what `familyWeeklyIncomeCents` says arrives; OUT is what the till charges –
+  // training, the payroll, the upkeep.
+  // ⚠ `shelfCents` IS STILL COMPUTED AND RETURNED, as a MEMO that sits in none of the three totals.
+  // No screen reads it any more (the strip's sentence went with this ruling); it stays on the wire
+  // because the engine's market tests measure the shelf's week through it (`round29p3-market`,
+  // `round29-shop-topup`, `round29p5-business`), and repointing them is churn that buys no
+  // behaviour. A consumer that ADDS it to a total has put the defect back.
+  const incomeCents = familyWeeklyIncomeCents(world)
+  const outgoingCents = trainingCents + staffCents + upkeepCents
   return { incomeCents, outgoingCents, netCents: incomeCents - outgoingCents, shelfCents, upkeepCents, merchCents, academyIncomeCents }
 }
 
@@ -1329,7 +1389,14 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // different schedule and every one of those schedules is reproducible. Nothing is persisted and
       // nothing is cached: the two values below are what identifies the pair, and they are what this
       // line already had in its hands.
-      chemistry: chemistryReading(world.coachPairs[coach.id], world.seed, coach.id),
+      // ⭐ ROUND 51 №8 – through `chemistryReadingFor`, which also knows the parent has asked her coach why.
+      chemistry: chemistryReadingFor(world, coach.id),
+      // ⭐ ROUND 51 №11 – THE SECOND HALF OF THE «?» (shared/protocol/offers.ts has the reasoning):
+      // whether the pair is ON THE BOOKS, read off the same row `chemistry` above reads and with no
+      // gate of its own. A row exists from the first week she trains with this coach and is never
+      // deleted (leaving pauses, it does not reset – state.ts), so this is the one bit that tells
+      // «never worked together» from «working, nothing readable yet». ZERO DRAWS, nothing persisted.
+      chemistryKnown: world.coachPairs[coach.id] !== undefined,
     }
   })
 }
@@ -3016,10 +3083,17 @@ const COACH_BLURB: Record<string, string> = {
  *  The J300 line names the stake because that is the honest argument at the top of the ladder: the
  *  entry fee and the flights are real money, and a first-round exit spends them for nothing. */
 export function coachEntryLine(tier: TierId, condition: number): string {
+  return en(coachEntryLineRef(tier, condition))
+}
+
+/** ⭐ r51 №7 (13.10) – THE REF BESIDE `coachEntryLine`, and the string above is its English: one decision, two spellings that cannot differ (the `coachDeclineNoteRef` shape; class (b) – derived at snapshot time,
+ *  persists nothing, owes no migration, draws nothing). The owner met these three under the Russian build as the engine's English on the card and in the entry confirm. The three sentences are whole keys with no hole, so
+ *  the Russian rows are the sentences. The threshold walk is untouched: the same `floor` and the same `- 5` margin pick the same line for the same body. */
+export function coachEntryLineRef(tier: TierId, condition: number): CopyRef {
   const floor = ECONOMY.availability.minConditionToEnter[tier]
-  if (condition < floor - 5) return 'Your coach would not take her. She is empty.'
-  if (condition < floor) return 'Your coach would skip this one and get her legs back.'
-  return 'Your coach thinks she is a week short of her best for this.'
+  if (condition < floor - 5) return cp`Your coach would not take her. She is empty.`
+  if (condition < floor) return cp`Your coach would skip this one and get her legs back.`
+  return cp`Your coach thinks she is a week short of her best for this.`
 }
 
 // =================================================================================================
@@ -3136,6 +3210,20 @@ export function coachReadsTheBook(tier: CoachTier): boolean {
  *  seed, and the caller already holds the answer (`toSnapshot` computes it once per snapshot for the
  *  body arm). Passing it in also makes whose opinion this is impossible to get wrong. */
 export function coachLadderNote(world: WorldState, event: SeasonEvent, coachTier: CoachTier): string | null {
+  const ref = coachLadderNoteRef(world, event, coachTier)
+  return ref === null ? null : en(ref)
+}
+
+/** ⭐ r51 №7 (13.10) – THE REF BESIDE `coachLadderNote`, which carries the whole argument above; the string is this ref's English, so a clause cannot be reworded on one wire and not the other (the owner met «Your coach
+ *  would save her for…» under the Russian build as English, in the entry confirm and on the Season card). Class (b): derived at snapshot time, persists nothing, draws nothing – the clause walk, the horizon and the
+ *  candidate picker are the function they always were; only what each clause RETURNS changed, from a finished sentence to its `cp` ref.
+ *
+ *  ⚠ THREE KINDS OF HOLE, EACH READ BY THE UI THE WAY ITS KIND IS READ ELSEWHERE. A TOURNAMENT'S LABEL (`alt`, the rung ahead) is passed raw – the app prints tournament names untranslated everywhere and this
+ *  sentence does not get to be the one place that decides otherwise; the Russian row quotes it and translates only the words around it. The TABLE (`currency`, `national | international | professional`) is
+ *  the hole-table's class `ladder` (`wordHoles.ts`), the same compact words the Stats tiles print. The COUNTED TAIL (`when`) is a ref of its own, the `placesRef` shape: one key per English form, so the Russian row
+ *  owns the plural of «in {0} weeks» instead of the engine pre-spelling a number into a string the catalog could not reach. The `when|` tag keeps these two fragments from ever becoming the translation of a
+ *  stand-alone «next week» elsewhere (the tag is stripped before English is shown). */
+export function coachLadderNoteRef(world: WorldState, event: SeasonEvent, coachTier: CoachTier): CopyRef | null {
   const horizon = COACH_HORIZON_WEEKS[coachTier]
   if (horizon < 0) return null
   if (!hasOutgrown(world, event.tier)) return null
@@ -3154,15 +3242,15 @@ export function coachLadderNote(world: WorldState, event: SeasonEvent, coachTier
     const alt = TIERS[sameWeek.tier].label
     if (!climbs(TIERS[event.tier].track)) {
       const currency = LADDER_LABEL[TIERS[event.tier].track].toLowerCase()
-      return `Your coach says the ${alt} is the week – this pays ${currency} points, not the table she is climbing.`
+      return cp`Your coach says the ${alt} is the week – this pays ${currency} points, not the table she is climbing.`
     }
-    if (shut) return `Your coach says the ${alt} is the week – this one will not move anything.`
-    return `Your coach says the ${alt} is the week – she has outgrown this one.`
+    if (shut) return cp`Your coach says the ${alt} is the week – this one will not move anything.`
+    return cp`Your coach says the ${alt} is the week – she has outgrown this one.`
   }
-  if (shut) return 'Your coach says even a title here would not move her ranking.'
+  if (shut) return cp`Your coach says even a title here would not move her ranking.`
   const ahead = horizon > 0 ? better(event.week + 1, event.week + horizon) : undefined
   if (!ahead) return null
   const weeks = ahead.week - event.week
-  const when = weeks === 1 ? 'next week' : `in ${weeks} weeks`
-  return `Your coach would save her for the ${TIERS[ahead.tier].label} ${when}.`
+  const when = weeks === 1 ? cp`when|next week` : cp`when|in ${weeks} weeks`
+  return cp`Your coach would save her for the ${TIERS[ahead.tier].label} ${when}.`
 }

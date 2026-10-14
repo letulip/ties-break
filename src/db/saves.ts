@@ -266,6 +266,10 @@ function careerRowFor(
     // One clock, on the Careers list too (09.08) – the row printed the band before this.
     birthMonth: world.profile.birthMonth,
     birthDay: world.profile.birthDay,
+    // r51 №3 (13.10) – THE CAREER'S OWN EPOCH, for the same list. The Careers list dated every row in the ACTIVE career's epoch, so after a dynasty handover the mother's rows read the daughter's
+    // years («'85» for a week that is «'50»). A career's epoch never changes, so unlike `week`/`revision` it needs no forward-only rule: every write of this world says the same year. NOT a schema
+    // change – an index-row field like the two above (see `CareerMeta.startYear`); a row written before this has none until the next autosave rebuilds it.
+    startYear: world.startYear,
   }
 }
 

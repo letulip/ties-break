@@ -27,9 +27,7 @@ import HouseholdStrip from '../../src/components/HouseholdStrip.vue'
 import SupportStaffTab from '../../src/components/SupportStaffTab.vue'
 import { useGameStore } from '../../src/stores/game'
 import { ECONOMY, staffResultShareBps } from '../../src/engine/economy'
-import { MASSEUR_LOCKED_DETAIL } from '../../src/engine/world/masseur'
-import { PSYCHOLOGIST_LOCKED_DETAIL, PSY_FOCUS_LABEL, PSY_FOCUS_LINE } from '../../src/engine/world/psychologist'
-import { SPARRING_LOCKED_DETAIL } from '../../src/engine/world/sparring'
+import { PSY_FOCUS_LABEL, PSY_FOCUS_LINE } from '../../src/engine/world/psychologist'
 import { formatShortName } from '../../src/shared/format'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 import { installCatalog, missCount, missedKeys, resetI18nForTests, resetMisses, setLocale, t } from '../../src/i18n'
@@ -322,7 +320,8 @@ describe('L2-6 parity – the English the screens shipped, with no catalog', () 
     first.unmount()
   })
 
-  it('the household strip: both signs, the shelf, the upkeep and the businesses', () => {
+  // ⚠⚠⚠ RE-AIMED AT ROUND 51 #6 (13.10), ON THE OWNER'S RULING: «вообще не должно его быть на экране тренеров, мы им не оперируем там никак, он только заблуждает». The shelf's two sentences («The shelf is in that – it adds / costs {0} a week at today's rates.») are gone from the strip, so a household whose wire memo `shelfCents` is -$40 (and, below, +$40) must render NOTHING about it. The fixtures still carry the field on purpose: the silence needs a non-zero memo to be silent about.
+  it('the household strip: both signs, the upkeep and the businesses, and no sentence about the shelf', () => {
     const household = (over: Deep): Snapshot =>
       patched(coached, { coachBilling: { ...coached.coachBilling, household: { incomeCents: 500_00, outgoingCents: 800_00, netCents: -300_00, shelfCents: 0, upkeepCents: 0, merchCents: 0, academyIncomeCents: 0, ...over } } })
     const lose = mountHousehold(household({ shelfCents: -40_00, upkeepCents: 25_00, merchCents: 10_00, academyIncomeCents: 5_00 }))
@@ -331,14 +330,13 @@ describe('L2-6 parity – the English the screens shipped, with no catalog', () 
     expect(flat(lose.get('.household-figs').text())).toBe('$500 in –$800 out –$300 short')
     const notes = lose.findAll('.hint').map((n) => flat(n.text()))
     expect(notes).toEqual([
-      "The shelf is in that – it costs $40 a week at today's rates.",
       'Keeping what you own is $25 a week of that, and it is real money.',
       'Their businesses bring in $15 a week of that – merch $10, the academy $5.',
     ])
     lose.unmount()
     const win = mountHousehold(household({ netCents: 200_00, shelfCents: 40_00, academyIncomeCents: 5_00 }))
     expect(flat(win.get('.household-figs').text())).toBe('$500 in –$800 out –$200 left over')
-    expect(win.findAll('.hint').map((n) => flat(n.text()))).toEqual(["The shelf is in that – it adds $40 a week at today's rates.", 'Their businesses bring in $5 a week of that – the academy $5.'])
+    expect(win.findAll('.hint').map((n) => flat(n.text()))).toEqual(['Their businesses bring in $5 a week of that – the academy $5.'])
     win.unmount()
   })
 
@@ -452,7 +450,7 @@ describe('L2-6 completeness – every string of the batch files is a wired key, 
         'Where the money went in the chosen period', 'The recurring costs the family has signed up to', 'Every season, and every transaction', 'What the family can buy with what is left', 'Her Kit',
         'Advs Portfolio', 'What she plays with, and what replacing it costs', 'The advertising categories, filled and open']],
       ['src/components/HouseholdStrip.vue', ['Household, every week', 'in', 'out', 'short', 'left over', 'merch {0}', 'the academy {0}', 'Their businesses bring in {0} a week of that – {1}.',
-        "The shelf is in that – it adds {0} a week at today's rates.", "The shelf is in that – it costs {0} a week at today's rates.", 'Keeping what you own is {0} a week of that, and it is real money.']],
+        'Keeping what you own is {0} a week of that, and it is real money.']],
       ['src/components/SupportStaffTab.vue', ['Masseur', 'Psychologist', 'Hitting partner', '{0} /wk', '{0}/wk', 'Locked', 'Hire', 'Let go', 'Set it', '{0} over the 1 trip booked.', '{0} over the {1} trips booked.',
         'Table work at home every week, and a hand on every rehab – layoffs end sooner.', 'Travels with her: table work between rounds. The deeper the run, the more it buys – a first-round exit buys nothing.',
         'Stays home on tournament weeks. One fare saved on every trip.', 'Masseur sessions per week', 'Masseur travels to tournaments',
@@ -663,9 +661,11 @@ describe('L2-6 xx sweep – no unwrapped literal in the frames, and the phone st
       JSON.stringify(ECONOMY.masseur),
       JSON.stringify(ECONOMY.psychologist),
       JSON.stringify(ECONOMY.sparring),
-      MASSEUR_LOCKED_DETAIL,
-      PSYCHOLOGIST_LOCKED_DETAIL,
-      SPARRING_LOCKED_DETAIL,
+      // ⚠ RE-AIMED 14.10 (r51, architect, B3's hand-back): the three LOCKED_DETAIL sentences LEFT
+      // this allowed-English corpus – since 7c1fa91b they render Russian through engineText, so a
+      // raw leak of them is a DEFECT the carpet must redden on, not a known engine string. The
+      // allowance was dead (this net poses no locked seat) and would have masked exactly that
+      // regression.
       JSON.stringify(PSY_FOCUS_LABEL),
       JSON.stringify(PSY_FOCUS_LINE),
     ].join('\n')

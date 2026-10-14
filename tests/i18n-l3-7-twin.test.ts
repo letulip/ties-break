@@ -11,6 +11,27 @@
 // ⚠ REFRESHED AGAIN 12.10 (r50 №5): the diff is EXACTLY TWO leaves – career 8/0's snapshot aggregate
 // and its `ending` field, the one bench career that owns the merch brand reading its new epilogue
 // line. The r50 №3 cup field moved nothing here – the digest never carried it.
+// ⚠ REFRESHED 13.10 (r51 №11, `chemistryKnown` on every coach-market row): the DARWIN fixture only, and
+// the field diff is EXACTLY 14 leaves – the `coachMarket` digest and the `snapshot` aggregate that
+// contains it, for each of the 7 careers (5 bench + 2 college) – with zero row, text or next-draw
+// digests moved: this twin saying the round added one boolean to one wire row and changed no English
+// and no draws. ⚠ THE LINUX FIXTURE IS NOT REFRESHED BY THAT COMMIT (no podman capture was run) and
+// will read red on the ubuntu runner until it is; its diff is the same 14 leaves.
+// ⚠ REFRESHED 14.10 (r51 close, BOTH platforms, one capture each on the final tree):
+//   darwin diff = EXACTLY 14 leaves – the `world` aggregate + `worldFields.lifeLog` pair of all 7
+//   careers: B11's staycation licences and B12's 51→55 small-talk pool moved the walked lifeLog on
+//   the purpose-scoped sub-streams (the base was already B8-fresh, so no snapshot leaves here).
+//   linux diff = EXACTLY 28 leaves – the SAME 14 plus the `snapshot` + `snapshotFields.coachMarket`
+//   pair of the same 7 careers, because the linux base predated B8's `chemistryKnown` (the stale
+//   warning above). Zero row, text or next-draw digests moved on either platform; B9's bank-model
+//   display moved nothing here (no bench career holds a part-sold asset). Captures: L37_CAPTURE on
+//   this Mac; podman --platform linux/amd64 node:22, npm ci in the container, LINUX_CAP_EXIT=0.
+// ⚠ REFRESHED AGAIN 14.10 (r51 continuation, both platforms on the final tree): the diff is EXACTLY
+//   14 leaves on BOTH – the `world` + `worldFields.lifeLog` pair of all 7 careers: the ten new
+//   school-years small-talk rows (R57–R66, pool 55→65) moved the walked picks on the purpose-scoped
+//   sub-stream. No snapshot leaf moved: no bench career holds a pending `coach-real` prompt or an
+//   answered `view` row in its current stint, so builder D's hunch and opened reading are
+//   invisible here. Zero row, text or next-draw digests on either platform.
 //
 // ⚠⚠ TWO PLATFORM FAMILIES, BOTH TRUE (10.10, the day-long hunt). The PR runner (ubuntu/x64,
 // node 22) produces snapshot digests no darwin/arm64 machine can – measured to the last cell: a

@@ -274,7 +274,11 @@ describe('round 30 #14 – ⭐⭐⭐ the two moves he is buying with this change
     expect(held.valueCents).toBeGreaterThan(allAtOnce)
   })
 
-  it('⭐⭐⭐ «ЗАФИКСИРОВАТЬ УБЫТОК»: selling part at a loss realises it and leaves the average alone', () => {
+  // ⚠⚠ RE-AIMED 14.10 BY ROUND 51 #19, AND THE TITLE WITH IT. This arm pinned round 30's reading of «зафиксировать убыток»: a part sale at a loss realises a
+  // share of it and leaves the average alone. THE OWNER, 13.10 evening, on a withdrawal: «была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята.» A bank has no profit to hand over on an UNDERWATER
+  // holding, so the whole withdrawal is principal coming back: nothing is realised, the absolute loss rides on what is left, and the average RISES (the cost
+  // that is left over fewer units). The loss is named when the position is closed (tests/round46-season-money.test.ts).
+  it('⭐⭐⭐ «ЗАФИКСИРОВАТЬ УБЫТОК» (round 51 #19: the bank model) – selling part at a loss is returned principal: nothing realised, the loss rides on, the average rises', () => {
     const SEED = 'r30-take-the-loss'
     const c = marketCrash(SEED, 0)
     let realised = 0
@@ -282,6 +286,7 @@ describe('round 30 #14 – ⭐⭐⭐ the two moves he is buying with this change
     let avgAfter = 0
     let unitsBefore = 0
     let unitsAfter = 0
+    let principalLeft = 0
     const world = career(SEED, c.troughWeek + 2, (w) => {
       if (w.week === 2) buyAsset(w, 'index-fund', 90_000_00)
       if (w.week === c.troughWeek) {
@@ -293,15 +298,17 @@ describe('round 30 #14 – ⭐⭐⭐ the two moves he is buying with this change
         const valueBefore = held.valueCents
         const out = Math.round(valueBefore / 3)
         sellAsset(w, 'index-fund', out)
-        realised = out - Math.round((paidBefore * out) / valueBefore)
+        realised = Math.min(out, Math.max(0, valueBefore - paidBefore))
+        principalLeft = paidBefore - out
         avgAfter = avgUnitPriceCents(heldOf(w, 'index-fund'))!
         unitsAfter = heldOf(w, 'index-fund').units!
       }
     })
-    // ⭐ THE LOSS IS REAL AND IT IS IN THE LEDGER, named to the cent by the sale's own sentence.
-    expect(realised).toBeLessThan(0)
+    // ⭐ ROUND 51 #19 – THE LOSS IS NOT FIXED BY A PART SALE: nothing was profit, so the whole withdrawal is principal, and the sale's own sentence says so.
+    // (It read «less than it cost» under round 30's pro-rata release; the loss is named when the position is closed.)
+    expect(realised, 'an underwater withdrawal realises nothing').toBe(0)
     const row = world.events.find((e) => e.category === 'shop' && e.text.startsWith('Sold '))!
-    expect(row.text).toContain('less than it cost')
+    expect(row.text).toContain('exactly what it cost')
     // ⭐⭐ AND THE AVERAGE DID NOT MOVE, which is what makes the next decision the same decision:
     // a third of the units left and a third of the cash basis went with them.
     //
@@ -312,7 +319,10 @@ describe('round 30 #14 – ⭐⭐⭐ the two moves he is buying with this change
     // $3,800 average that is the eighth decimal place. It is discriminating where it matters: the
     // mutation this arm exists for – the average read off `valueCents` instead of `paidCents` –
     // moves it by hundreds of dollars.
-    expect(avgAfter).toBeCloseTo(avgBefore, 0)
+    // ⚠⚠ ROUND 51 #19 SUPERSEDES THE PARAGRAPH ABOVE: the average does move now. The cost that is left (all of it, less the principal that came back) is
+    // spread over the units that are left, so it is that quotient to the float, and it is HIGHER than the average the family came in at.
+    expect(avgAfter, 'the average entry price rises when principal comes back from a sunken holding').toBeGreaterThan(avgBefore)
+    expect(avgAfter).toBeCloseTo(principalLeft / unitsAfter, 6)
     expect(unitsAfter).toBeCloseTo(unitsBefore * (2 / 3), 4)
     // ...and two ticks on it is still two thirds of a holding – the sale was not undone.
     const held = heldOf(world, 'index-fund')
@@ -331,7 +341,8 @@ describe('round 30 #14 – ⭐⭐⭐ the two moves he is buying with this change
     const left = world.assets[0]
     expect(left.units, 'no units key was invented').toBeUndefined()
     expect(left.valueCents).toBe(60_000_00)
-    expect(left.paidCents).toBe(110_000_00 - Math.round((110_000_00 * 30_000_00) / 90_000_00))
+    // ⚠ RE-AIMED 14.10, ROUND 51 #19: this row is UNDERWATER ($90,000 against $110,000 paid), so the $30,000 is all principal and the cost left is exactly $80,000.
+    expect(left.paidCents).toBe(110_000_00 - 30_000_00)
     // ...and a revaluation leaves it exactly there – an unknown rung is not re-priced at all.
     revalueAssets(world)
     expect(world.assets[0].valueCents).toBe(60_000_00)
@@ -385,16 +396,22 @@ describe('round 30 #14 – what the screen is given, and the volatility that cam
     expect(row.unitPriceCents).toBeGreaterThan(0)
   })
 
-  it('⭐⭐ the average moves only when they BUY – a part sale leaves it exactly where it was', () => {
+  it('⭐⭐ the average moves when they BUY or SELL (round 51 #19: profit first) and never with the market', () => {
     const world = career('r30-avg-stable', 120, (w) => {
       if (w.week === 20) buyAsset(w, 'index-fund', 80_000_00)
     })
     const held = heldOf(world, 'index-fund')
-    const before = avgUnitPriceCents(held)!
-    sellAsset(world, 'index-fund', Math.round(held.valueCents / 4))
-    // ⚠ HALF A CENT, AND THE REASON IS `costSoldCents`' ONE ROUNDING – written out on the
-    // «зафиксировать убыток» arm above.
-    expect(avgUnitPriceCents(heldOf(world, 'index-fund'))!).toBeCloseTo(before, 0)
+    const paidBefore = held.paidCents
+    const valueBefore = held.valueCents
+    const unitsBefore = held.units!
+    const out = Math.round(valueBefore / 4)
+    sellAsset(world, 'index-fund', out)
+    // ⚠⚠ RE-AIMED 14.10 BY ROUND 51 #19, WHICH SUPERSEDES «a part sale leaves it exactly where it was»: a withdrawal takes the profit first, so the cost that is
+    // left is `paid - principal` and the units that are left are `units x (1 - out / value)`. `before` is that quotient – the average the sale LEAVES – and the
+    // arm's real claim, below, is unchanged: after the sale it is a fact about what they PAID, and the market does not move it.
+    const principal = out - Math.min(out, Math.max(0, valueBefore - paidBefore))
+    const before = (paidBefore - principal) / (unitsBefore * (1 - out / valueBefore))
+    expect(avgUnitPriceCents(heldOf(world, 'index-fund'))!).toBeCloseTo(before, 6)
     // ...and a week of the market moving does not move it either: it is a fact about what they PAID.
     const rng = resumeMain(world.rngMain)
     tickWeek(world, rng)

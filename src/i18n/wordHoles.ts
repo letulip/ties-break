@@ -47,6 +47,9 @@ export type WordClass =
   | 'relLead' // ⚠ 11.10 – the relationships tile's leads (Married, Engaged, Together for, On her own, it seems)
   | 'schoolNote' // the school tile's second line: the exam fortnight, the summer, the four standings in the class (`lifeStageTile`)
   | 'stageLine' // the lines after the last grade and the college lines with no number in them (`afterSchoolTile`)
+  // ⭐ r51 B2 (13.10) – the two Mood lines: the five words of `MOOD_WORD` (engine/spirit.ts) that a screen holds in `diary.facts.moodWord`. Not holes of a message either, so no row below names them. TWO classes over one vocabulary, because the neutral word is two Russian words (the Kid tile's `Steady`, the recap card's `recap|Steady`) – see `words.ts`
+  | 'mood' // the Kid screen's Mood tile: Glowing, Bright, Steady, Dimmed, Heavy
+  | 'moodRecap' // …and the recap card's Mood line – the same five words, where the neutral one is the card's own
 
 /** `[key, ...hole indexes]` – a positional message. */
 export type HoleRow = readonly [key: string, ...holes: number[]]
@@ -130,6 +133,8 @@ export const HOLE_TABLE: Readonly<Record<WordClass, readonly HoleRow[]>> = {
   ladder: [
     ['Final {0} rank', 0],
     ['{0} could not move her {1} ranking', 1],
+    // ⭐ r51 №7 (13.10) – the coach's «this pays {1} points, not the table she is climbing» (`coachLadderNoteRef`): hole 1 is `LADDER_LABEL[track].toLowerCase()`, hole 0 a tournament's label and is NOT a word of this table (names stay raw)
+    ['Your coach says the {0} is the week – this pays {1} points, not the table she is climbing.', 1],
     ['Her {0} rank counts her {1} best {2} results from the last 52 weeks. Full tables are on the Stats tab.', 0, 2],
     ['Season {0} wrap-up: Unranked – {1} · {2} pts this season · no result that scored · {3}-{4} (W-L) · funds {5}', 1],
     ['Season {0} wrap-up: Unranked – {1} · {2} pts this season · no tournaments played · {3}-{4} (W-L) · funds {5}', 1],
@@ -349,6 +354,8 @@ export const HOLE_TABLE: Readonly<Record<WordClass, readonly HoleRow[]>> = {
     ['Family vacation – {0}: +{1} condition.', 0],
     ['Ordered: {0}', 0],
     ['Put on the market: {0}', 0],
+    // ⭐ r51 №2 (13.10) – the Specialists tab's ask before a year's work is set: hole 0 is `PSY_FOCUS_LABEL[f]`, the English label of the year pressed (a catalog key of the engine.text seat)
+    ["Set the psychologist's work for this season to {0}? The year's work is chosen once a season, and the next choice comes in the next off-season.", 0],
     ['Sold: {0} – exactly what it cost', 0],
     ['Sold: {0} – {1} less than it cost', 0],
     ['Sold: {0} – {1} more than it cost', 0],
@@ -410,6 +417,9 @@ export const HOLE_TABLE: Readonly<Record<WordClass, readonly HoleRow[]>> = {
   relLead: [],
   schoolNote: [],
   stageLine: [],
+  // ⭐ r51 B2 – the Mood lines are read by the screen that holds the word (`engineWord`), not by a hole of a message
+  mood: [],
+  moodRecap: [],
 }
 
 /** The UI's own messages with named holes. */

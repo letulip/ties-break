@@ -94,7 +94,7 @@ import { entryFeeText } from '../../composables/entryFee'
 // D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with Season.
 import { enterActionName } from '../../composables/eventName'
 // The upcoming-event card's shared parts, owned once and drawn by the Season feed too.
-import { fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
+import { coachCautionText, fieldChanceLabel, fieldChanceTitle, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
 // The app's one red-to-green ramp, shared with the three condition rings. `{ fraction }` names the
 // scale IN the call: this number is a 0..1 chance, not a 0..100 percentage, and the signature will
 // not let the two be confused.
@@ -117,7 +117,7 @@ import SurfaceMark from '../ui/SurfaceMark.vue'
 import type { UpcomingEvent } from '../../shared/protocol'
 import { useStartYear } from '../../composables/startYear'
 // L2-3 (08.10): RU-03 – the Calendar's frame, the day-kind words and the tournament marker card call `t()`.
-import { t } from '../../i18n'
+import { engineText, t } from '../../i18n'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
 
@@ -514,7 +514,7 @@ const showGo = computed(() => !game.snapshot?.pending)
       <section v-if="weddingMark" class="bare cal-wedding">
         <img v-if="brideArt" class="cal-wedding-art" :src="brideArt" alt="" />
         <p class="cal-wedding-body">
-          <span class="cal-wedding-name">Her wedding</span>
+          <span class="cal-wedding-name">{{ t('Her wedding') }}</span>
           <span class="hint">{{ weddingMark.label }}, {{ weddingMark.dates }}</span>
         </p>
       </section>
@@ -689,9 +689,9 @@ const showGo = computed(() => !game.snapshot?.pending)
              (she is under the tier's condition floor) and one is a person's read of her, so a card
              can carry either, both or neither. Neither is a block - the parent may push. -->
         <p v-if="marker.cautionReason === 'fatigued'" class="caution-note">
-          {{ marker.cautionDetail ?? t('Exhausted – racing risks injury.') }}
+          {{ marker.cautionDetail ? engineText(marker.cautionDetail) : t('Exhausted – racing risks injury.') }}
         </p>
-        <p v-if="marker.coachCaution" class="coach-note">{{ marker.coachCaution }}</p>
+        <p v-if="marker.coachCaution" class="coach-note">{{ coachCautionText(marker) }}</p>
 
         <!-- ⚠ P4's COLLEGE NOTE WAS HERE AND IS REMOVED (owner, 16.08). This card is its own
              confirmation, so it carried the same sentence the Season confirm did - a result here can

@@ -9,7 +9,7 @@ import { pickInt, rngFromSeed } from '../../rng'
 import { ECONOMY } from '../../economy'
 import { bondBandOf, moodRegisterOf, spiritBandOf } from '../../spirit'
 import { seasonIndexOf } from '../ledger'
-import { SMALL_TALK_SUBJECTS, smallTalkSubjectFor } from './smallTalkCopy'
+import { COACH_REAL_SITUATION_ID, SMALL_TALK_SUBJECTS, smallTalkSituationIdOf, smallTalkSubjectFor } from './smallTalkCopy'
 import {
   drawSmallTalkFrame,
   lifeLogOf,
@@ -22,6 +22,7 @@ import {
   smallTalkDetailFor,
   voiceOf,
   withoutRecentSituations,
+  SMALL_TALK_STANCE_ID,
   SMALL_TALK_SUBJECT_WEIGHT,
 } from '../lifeBeat'
 import type { SmallTalkSubject } from './smallTalkCopy'
@@ -161,3 +162,19 @@ function drawSmallTalkSubject(
   return live[live.length - 1]
 }
 
+/** ⭐⭐⭐ ROUND 51 №8 (14.10) – DID THE PARENT ANSWER HER «IS MY COACH ACTUALLY GOOD» WITH `view`, IN A STINT THAT BEGAN AT `sinceWeek`? The reading of the coach's chemistry opens on
+ *  exactly this (`coachReadingOpened`, world/coachMarket.ts).
+ *
+ *  ⚠ DERIVED, NEVER STORED: `answerLifeBeat` already persists the option id on the never-pruned `lifeLog` row – no schema key, no migration.
+ *  ⚠ `row.week > sinceWeek`, STRICTLY: the tick adds its week first and raises its beats after (`phaseHerWeek`, «ruling P») while a hire is a command stamped with the week the world then stands in,
+ *  so a row raised in the week a coach arrived was raised BEFORE them. The week it was ANSWERED is not stored: a card left across a change of coach counts for the old stint (closed, never opened for a stranger).
+ *  ⚠ HERE AND NOT IN THE HUB: it is tier 1's own reading (A-06's direction), and `coachMarket` can import this module because the hub already sits below it (`coachMarket -> endings -> lifeBeat`). */
+export function coachRealViewedSince(world: WorldState, sinceWeek: number): boolean {
+  return lifeLogOf(world).some(
+    (row) =>
+      row.kind === 'small-talk' &&
+      row.answer === SMALL_TALK_STANCE_ID.respond &&
+      smallTalkSituationIdOf(row.detail) === COACH_REAL_SITUATION_ID &&
+      row.week > sinceWeek,
+  )
+}

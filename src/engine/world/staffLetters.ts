@@ -35,11 +35,10 @@
 // function that decides whether the gauge shows a reading, which is the point: two surfaces asking
 // one question must ask one function, or the letter can say what the ring is still hiding.
 
-import { chemistryReading } from '../chemistry'
 import { raiseStaffLetter } from '../offers'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import type { StaffLetterTerms, StaffSeat } from '../../shared/protocol'
-import { COACH_CHANGE_KEY, coachSinceWeek } from './coachMarket'
+import { COACH_CHANGE_KEY, chemistryReadingFor, coachSinceWeek } from './coachMarket'
 import { seasonIndexOf } from './ledger'
 import { SEASON_PLAYED_WEEKS, seasonRankOf, titlesInSeason } from './seasonFacts'
 import { MASSEUR_CHANGE_KEY } from './masseur'
@@ -159,9 +158,10 @@ export function settleStaffLetters(world: WorldState): void {
   // tests/round45-chemistry-readable.test.ts. `null` here means precisely what an empty ring means –
   // she has not trained with him enough for the pair to have a reading, or the reading has not
   // cleared this pair's own bar – and the letter then says nothing whatever about the pair.
-  const coachChem = world.coachId
-    ? chemistryReading(world.coachPairs?.[world.coachId], world.seed, world.coachId)
-    : null
+  //
+  // ⭐ ROUND 51 №8: THE CALL IS `chemistryReadingFor`, the one reader the coach card's ring also uses – so a
+  // reading the parent opened by asking her coach why reaches this letter exactly when it reaches the ring.
+  const coachChem = world.coachId ? chemistryReadingFor(world, world.coachId) : null
   write('coach', world.coachId !== null, coachWeeksServedIn(world, yearStart, wrapWeek), {
     ...(row
       ? {

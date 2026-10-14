@@ -1,5 +1,5 @@
 // ⭐⭐⭐ THE SMALL-TALK CORPUS – **GENERATED FROM `docs/specs/small-talk-corpus-2026-09.md`,
-// NEVER RETYPED.** 51 situations × 4 voices: 204 openers, 153 stance labels, 612 replies, 4 shared second beats.
+// NEVER RETYPED.** 65 situations × 4 voices: 260 openers, 195 stance labels, 780 replies, 20 shared second beats.
 //
 // ⭐⭐ THIS IS THE WHOLE CATALOGUE AND NOT A SECOND HALF OF ONE. `SMALL_TALK_SHIPPED` – the eight
 // situations hand-written in `lifeBeat.ts` since wave 2 – was deleted in round 44 and those eight are
@@ -16,7 +16,7 @@
 // ⚠ IT IS ORDINARY COMMITTED SOURCE AND NOT A BUILD STEP (the round's own ruling). Nothing in
 // `npm run check`, `npm run build` or the dev server generates it; the emitter is a one-off.
 //
-// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 969 authored strings. An agent retyping them
+// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 1235 authored strings. An agent retyping them
 // produces typos that no test can catch, because a test written by the same agent compares against
 // what was typed. The document is the source of truth; this file is its projection.
 //
@@ -3962,6 +3962,1100 @@ export const SMALL_TALK_CORPUS: readonly SmallTalkSituation[] = [
           space: {
             label: 'Say she can decide on the day',
             said: '"Fine. I\'ll leave it until then."',
+          },
+        },
+      },
+    },
+  },
+  // R53 · the-gran-with-sunscreen
+  {
+    id: 'the-gran-with-sunscreen',
+    subject: 'story',
+    stages: ['school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"Wait till you hear what happened at the changeover."',
+        shared: '"Somebody\'s gran walked onto the court with a tube of sunscreen and did both our ears. Then the umpire\'s neck. Nobody stopped her."',
+        branches: {
+          invite: {
+            label: 'Ask what happened at the changeover',
+            said: '"The umpire said thank you. Properly. Then called time, as if it was planned."',
+          },
+          respond: {
+            label: 'Say you wish you had been there',
+            said: '"You\'d have loved it. I looked at my shoes for a whole game."',
+          },
+          space: {
+            label: 'Let her tell it',
+            said: '"Anyway. I smelled of coconut for the rest of the day. I didn\'t mind."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"That changeover should not have been allowed."',
+        shared: '"A gran walks onto the court with a tube of sunscreen – both our ears, then the umpire\'s neck. Nobody stopped her."',
+        branches: {
+          invite: {
+            label: 'Ask what happened at the changeover',
+            said: '"The umpire thanked her. THANKED her. Then called time like it was normal."',
+          },
+          respond: {
+            label: 'Say you wish you had been there',
+            said: '"You\'d have laughed. I held it in with my whole face."',
+          },
+          space: {
+            label: 'Let her tell it',
+            said: '"Anyway, I smelled of coconut until the last game. Nobody warns you."',
+          },
+        },
+      },
+      deep: {
+        opener: '"I keep thinking about the changeover. Not the tennis – the changeover."',
+        shared: '"Somebody\'s gran came onto the court with a tube of sunscreen. Both our ears, then the umpire\'s neck. It didn\'t cross anyone\'s mind to stop her."',
+        branches: {
+          invite: {
+            label: 'Ask what happened at the changeover',
+            said: '"The umpire thanked her. I think it was the only thing left to say."',
+          },
+          respond: {
+            label: 'Say you wish you had been there',
+            said: '"I wish you had been. Would you have laughed, or stood very still?"',
+          },
+          space: {
+            label: 'Let her tell it',
+            said: '"That\'s all of it. The coconut stayed with me until the last game."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"The changeover went on a bit."',
+        shared: '"A gran came on with sunscreen. She did both our ears, and the umpire\'s neck. Nobody stopped her."',
+        branches: {
+          invite: {
+            label: 'Ask what happened at the changeover',
+            said: '"The umpire said thank you. Then we played."',
+          },
+          respond: {
+            label: 'Say you wish you had been there',
+            said: '"You\'d have liked it. I kept very still."',
+          },
+          space: {
+            label: 'Let her tell it',
+            said: '"That\'s all. I smelled of coconut for a while."',
+          },
+        },
+      },
+    },
+  },
+  // R54 · the-rooster-ringtone
+  {
+    id: 'the-rooster-ringtone',
+    subject: 'story',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"A phone went off in the middle of a rally and I\'m still not over it."',
+        shared: '"The ringtone was a rooster. A mum answered it and whispered that she couldn\'t talk, she was at the tennis. Three courts heard."',
+        branches: {
+          invite: {
+            label: 'Ask whose phone it was',
+            said: '"No idea which mum. It rang again two minutes later. Same rooster, same whisper."',
+          },
+          respond: {
+            label: 'Say you\'re already smiling',
+            said: '"Good. I was too. I had to turn my back and bounce a ball."',
+          },
+          space: {
+            label: 'Let her tell the rest',
+            said: '"Oh, and at the next changeover every parent along the fence checked their phone."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"A phone went off in the middle of a rally. Of course it did."',
+        shared: '"The ringtone\'s a rooster – and a mum answers it, whispering that she can\'t talk, she\'s at the tennis. Three courts heard."',
+        branches: {
+          invite: {
+            label: 'Ask whose phone it was',
+            said: '"Somebody\'s mum. I never found out which. Two minutes later: same rooster, same whisper."',
+          },
+          respond: {
+            label: 'Say you\'re already smiling',
+            said: '"Good. I had to stare at the net like it owed me money."',
+          },
+          space: {
+            label: 'Let her tell the rest',
+            said: '"At the next changeover every parent along that fence checked their phone. Good."',
+          },
+        },
+      },
+      deep: {
+        opener: '"A phone went off in the middle of a rally, and I\'ve been thinking about it since."',
+        shared: '"The ringtone was a rooster. A mum answered, whispering that she couldn\'t talk, she was at the tennis. Three courts heard every word."',
+        branches: {
+          invite: {
+            label: 'Ask whose phone it was',
+            said: '"I never found out which mum. Two minutes later: the same rooster, the same whisper."',
+          },
+          respond: {
+            label: 'Say you\'re already smiling',
+            said: '"I was, a little. It was the whisper – so careful, and so loud."',
+          },
+          space: {
+            label: 'Let her tell the rest',
+            said: '"That\'s the whole of it. By the next changeover every parent had quietly checked their phone."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"A phone went off during a rally."',
+        shared: '"It was a rooster. A mum answered and whispered that she was at the tennis. Three courts heard."',
+        branches: {
+          invite: {
+            label: 'Ask whose phone it was',
+            said: '"I don\'t know which mum. It rang again two minutes later."',
+          },
+          respond: {
+            label: 'Say you\'re already smiling',
+            said: '"It was funny. I looked at my strings."',
+          },
+          space: {
+            label: 'Let her tell the rest',
+            said: '"That\'s it. At the next changeover everyone checked their phones."',
+          },
+        },
+      },
+    },
+  },
+  // R55 · the-coin-and-the-drain
+  {
+    id: 'the-coin-and-the-drain',
+    subject: 'story',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"The coin toss was the funniest part of the day. I\'m not joking."',
+        shared: '"The coin bounced, rolled across the baseline and dropped straight down a drain. Nobody had another one. We spun a racket instead."',
+        branches: {
+          invite: {
+            label: 'Ask what went wrong with the coin toss',
+            said: '"Then we spent a minute working out which end of the racket was up."',
+          },
+          respond: {
+            label: 'Say you can tell this one is good',
+            said: '"It is. I looked down the drain afterwards, just in case."',
+          },
+          space: {
+            label: 'Let her carry on',
+            said: '"And it was my racket we spun. It\'s never had so much attention."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"A coin toss. How hard can a coin toss be?"',
+        shared: '"The coin lands, rolls across the baseline – and goes down a drain. Nobody had another. We spun a racket instead."',
+        branches: {
+          invite: {
+            label: 'Ask what went wrong with the coin toss',
+            said: '"Then we argued about which end of a racket is up. A whole minute."',
+          },
+          respond: {
+            label: 'Say you can tell this one is good',
+            said: '"It is. I looked down that drain afterwards. Nothing. I\'m not climbing in."',
+          },
+          space: {
+            label: 'Let her carry on',
+            said: '"For the record, it was my racket we spun. Mine was the one nearest."',
+          },
+        },
+      },
+      deep: {
+        opener: '"Something small went wrong at the coin toss and I haven\'t been able to let it go."',
+        shared: '"The coin hit the court, rolled to the baseline and went down a drain. Nobody had another, so we spun a racket."',
+        branches: {
+          invite: {
+            label: 'Ask what went wrong with the coin toss',
+            said: '"Then we spent a minute agreeing which end was up. Strange what you forget."',
+          },
+          respond: {
+            label: 'Say you can tell this one is good',
+            said: '"It is. I looked down the drain afterwards. I don\'t know what for."',
+          },
+          space: {
+            label: 'Let her carry on',
+            said: '"That\'s the end of it. It was my racket, and I felt oddly responsible."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"There was a problem with the coin toss."',
+        shared: '"The coin went down a drain. Nobody had another, so we spun a racket."',
+        branches: {
+          invite: {
+            label: 'Ask what went wrong with the coin toss',
+            said: '"Then we had to agree which end was up. It took a minute."',
+          },
+          respond: {
+            label: 'Say you can tell this one is good',
+            said: '"It is. I looked down the drain afterwards. Nothing."',
+          },
+          space: {
+            label: 'Let her carry on',
+            said: '"That\'s all, really. It was my racket, as it happens."',
+          },
+        },
+      },
+    },
+  },
+  // R56 · the-gull-in-the-chair
+  {
+    id: 'the-gull-in-the-chair',
+    subject: 'story',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"The umpire\'s chair got taken. I can\'t tell you how funny it was."',
+        shared: '"A seagull walked up the steps and sat in it while the umpire was at the net. The umpire came back and sat on the bottom step."',
+        branches: {
+          invite: {
+            label: 'Ask who was in the umpire\'s chair',
+            said: '"It stayed the whole next game. The umpire called the score from the step, politely."',
+          },
+          respond: {
+            label: 'Say you can picture it',
+            said: '"You can, can\'t you? Best seat in the place, and none of the paperwork."',
+          },
+          space: {
+            label: 'Say nothing and let her go on',
+            said: '"Oh, and when it flew off, the umpire checked the seat very thoroughly."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"Someone else got the umpire\'s chair. I\'m not exaggerating."',
+        shared: '"A seagull walks up the steps and takes it while the umpire\'s at the net. The umpire came back and sat on the bottom step."',
+        branches: {
+          invite: {
+            label: 'Ask who was in the umpire\'s chair',
+            said: '"The whole next game. Score called from the step. The gull never looked up."',
+          },
+          respond: {
+            label: 'Say you can picture it',
+            said: '"Then you\'ve got it. The most senior person on court, and it knew it."',
+          },
+          space: {
+            label: 'Say nothing and let her go on',
+            said: '"And when it finally left, the umpire inspected the chair before sitting. Wise."',
+          },
+        },
+      },
+      deep: {
+        opener: '"Something unexpected took the umpire\'s chair, and I keep going back to it."',
+        shared: '"A seagull climbed the steps and sat down while the umpire was at the net. The umpire came back, looked at it, and sat on the bottom step."',
+        branches: {
+          invite: {
+            label: 'Ask who was in the umpire\'s chair',
+            said: '"The whole next game. The umpire called the score from the step, a little lower than usual."',
+          },
+          respond: {
+            label: 'Say you can picture it',
+            said: '"It sat very still, as if it had been there longer than us. It probably had."',
+          },
+          space: {
+            label: 'Say nothing and let her go on',
+            said: '"After it flew off, the umpire checked the seat first. I respected that."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"The umpire\'s chair was occupied."',
+        shared: '"A seagull sat in it while the umpire was at the net. The umpire sat on the bottom step."',
+        branches: {
+          invite: {
+            label: 'Ask who was in the umpire\'s chair',
+            said: '"The whole next game. The umpire called the score from the step."',
+          },
+          respond: {
+            label: 'Say you can picture it',
+            said: '"It was very calm about it. No one argued."',
+          },
+          space: {
+            label: 'Say nothing and let her go on',
+            said: '"That\'s everything. When it left, the umpire checked the seat first."',
+          },
+        },
+      },
+    },
+  },
+  // R57 · the-warm-up-friends
+  {
+    id: 'the-warm-up-friends',
+    subject: 'observation',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"The two on the next court were so friendly in the warm-up. Then the first point started and they were strangers."',
+        branches: {
+          invite: {
+            label: 'Ask when it changed',
+            said: '"At the very first serve. Before it they hit to each other\'s rackets. After it, neither of them did."',
+          },
+          respond: {
+            label: 'Say it probably went back at the net',
+            said: '"It did. They shook hands and started chatting again as if nothing had happened."',
+          },
+          space: {
+            label: 'Say she does not have to work it out',
+            said: '"I\'m not trying to. I\'m just glad I got to see it."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"Best friends in the warm-up. Strangers from the first serve. Where is that switch, and how do I get one?"',
+        branches: {
+          invite: {
+            label: 'Ask when it changed',
+            said: '"The first serve. That\'s the whole switch. A ball goes up and suddenly they\'ve both got a grudge."',
+          },
+          respond: {
+            label: 'Say it probably went back at the net',
+            said: '"It did. Straight away. That\'s the part I can\'t get over."',
+          },
+          space: {
+            label: 'Say she does not have to work it out',
+            said: '"I\'ll work it out anyway. I\'d like to be able to do that."',
+          },
+        },
+      },
+      deep: {
+        opener: '"They were kind to each other in the warm-up. Once the first ball went up, neither looked at the other."',
+        branches: {
+          invite: {
+            label: 'Ask when it changed',
+            said: '"The first serve. The moment the ball left the hand, they were somebody else."',
+          },
+          respond: {
+            label: 'Say it probably went back at the net',
+            said: '"It did. How easily it came back is the part I keep thinking about."',
+          },
+          space: {
+            label: 'Say she does not have to work it out',
+            said: '"I know. I\'ll probably keep watching for the exact moment it turns, though."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"Two of them on the next court talked all through the warm-up. Then the match began, and they stopped."',
+        branches: {
+          invite: {
+            label: 'Ask when it changed',
+            said: '"At the first serve. That was all it took."',
+          },
+          respond: {
+            label: 'Say it probably went back at the net',
+            said: '"It did. They were talking again at the net."',
+          },
+          space: {
+            label: 'Say she does not have to work it out',
+            said: '"I know. I only wanted to tell somebody."',
+          },
+        },
+      },
+    },
+  },
+  // R58 · the-sound-of-a-clean-ball
+  {
+    id: 'the-sound-of-a-clean-ball',
+    subject: 'observation',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"One ball on the next court sounded so good that everybody looked round. Nobody said a word."',
+        branches: {
+          invite: {
+            label: 'Ask what it sounded like',
+            said: '"A short, solid knock. Like tapping a really good table."',
+          },
+          respond: {
+            label: 'Say you know that sound',
+            said: '"I thought you might. It\'s the best noise in the sport, honestly."',
+          },
+          space: {
+            label: 'Say she does not have to chase it',
+            said: '"I\'m not chasing it. I\'d just like to hear it again."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"One ball made one sound and every head on the court turned. I want that sound."',
+        branches: {
+          invite: {
+            label: 'Ask what it sounded like',
+            said: '"A knock. Short, solid, final. A door that has made up its mind."',
+          },
+          respond: {
+            label: 'Say you know that sound',
+            said: '"Then you know. It\'s the one honest sound in the whole game."',
+          },
+          space: {
+            label: 'Say she does not have to chase it',
+            said: '"I\'m chasing it anyway. That sound is the point."',
+          },
+        },
+      },
+      deep: {
+        opener: '"A ball on the next court was hit so cleanly that everyone looked round. It was a while before I stopped hearing it."',
+        branches: {
+          invite: {
+            label: 'Ask what it sounded like',
+            said: '"A knock with nothing around it. Over before I\'d looked up, and I can still hear it."',
+          },
+          respond: {
+            label: 'Say you know that sound',
+            said: '"You do? I wasn\'t sure anyone else heard it the way I do."',
+          },
+          space: {
+            label: 'Say she does not have to chase it',
+            said: '"I know. You can\'t go after it. It turns up, and I want to be listening when it does."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"A ball on the next court made a sound and everyone looked round. I did too."',
+        branches: {
+          invite: {
+            label: 'Ask what it sounded like',
+            said: '"A short knock. That\'s all it was."',
+          },
+          respond: {
+            label: 'Say you know that sound',
+            said: '"Then it isn\'t only me. Good."',
+          },
+          space: {
+            label: 'Say she does not have to chase it',
+            said: '"I know. I\'ll just listen for it."',
+          },
+        },
+      },
+    },
+  },
+  // R59 · the-fence-says-unlucky
+  {
+    id: 'the-fence-says-unlucky',
+    subject: 'observation',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"The adults at the fence say \'unlucky\' after every miss, even a bad shot. It\'s funny once you start listening."',
+        branches: {
+          invite: {
+            label: 'Ask what the players do when they hear it',
+            said: '"They nod. Every time, very politely. It\'s like a password."',
+          },
+          respond: {
+            label: 'Say you will try to say what you actually see',
+            said: '"Please do. I\'d rather know what I actually did. Politely, though."',
+          },
+          space: {
+            label: 'Say it is mostly kindness',
+            said: '"I know. It\'s very kind. I just keep waiting for somebody to say what happened."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"Every adult at the fence said \'unlucky\'. That was not unlucky. That was a bad shot and everybody could see it."',
+        branches: {
+          invite: {
+            label: 'Ask what the players do when they hear it',
+            said: '"They nod. Every single one. As if it were an actual explanation."',
+          },
+          respond: {
+            label: 'Say you will try to say what you actually see',
+            said: '"Good. Tell me what you see. I can take it."',
+          },
+          space: {
+            label: 'Say it is mostly kindness',
+            said: '"It\'s kind. It\'s also not true. I\'m allowed to notice both."',
+          },
+        },
+      },
+      deep: {
+        opener: '"I\'ve started listening to the fence. \'Unlucky,\' after nearly every miss, even the bad shots. I can\'t stop hearing it."',
+        branches: {
+          invite: {
+            label: 'Ask what the players do when they hear it',
+            said: '"They nod. I think they know exactly what the word is covering for."',
+          },
+          respond: {
+            label: 'Say you will try to say what you actually see',
+            said: '"I\'d like that. I can use a true thing. I can\'t use \'unlucky\'."',
+          },
+          space: {
+            label: 'Say it is mostly kindness',
+            said: '"I think it is. I just don\'t think it helps whoever missed."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"The adults at the fence say \'unlucky\' a lot. Even when it was only a bad shot."',
+        branches: {
+          invite: {
+            label: 'Ask what the players do when they hear it',
+            said: '"They nod, mostly."',
+          },
+          respond: {
+            label: 'Say you will try to say what you actually see',
+            said: '"That would help. \'Unlucky\' never does."',
+          },
+          space: {
+            label: 'Say it is mostly kindness',
+            said: '"Probably. It doesn\'t tell anyone anything, though."',
+          },
+        },
+      },
+    },
+  },
+  // R60 · the-ball-she-let-go
+  {
+    id: 'the-ball-she-let-go',
+    subject: 'curiosity',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"How does an older player know a ball is going out? One just let it go by."',
+        branches: {
+          invite: {
+            label: 'Ask what the player did',
+            said: '"Nothing. She watched it all the way with her racket down. So calm."',
+          },
+          respond: {
+            label: 'Say they have watched so many balls they just know',
+            said: '"So it\'s just watching, lots and lots of it. I can do that."',
+          },
+          space: {
+            label: 'Say she does not have to see it yet',
+            said: '"Okay. I\'ll keep watching and see if it starts to make sense."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"An older player didn\'t move for a ball, and it landed out. I want to know how she knew."',
+        branches: {
+          invite: {
+            label: 'Ask what the player did',
+            said: '"Nothing. Not a step. She watched it land out like she\'d arranged it."',
+          },
+          respond: {
+            label: 'Say they have watched so many balls they just know',
+            said: '"Then I\'ll watch more. A lot more. Starting with the very next ball."',
+          },
+          space: {
+            label: 'Say she does not have to see it yet',
+            said: '"Fine. But I\'m watching her feet next time."',
+          },
+        },
+      },
+      deep: {
+        opener: '"An older player left a ball alone, and it landed out. I keep wondering what she saw."',
+        branches: {
+          invite: {
+            label: 'Ask what the player did',
+            said: '"Nothing. She stood still and watched, as if she already knew."',
+          },
+          respond: {
+            label: 'Say they have watched so many balls they just know',
+            said: '"So it is looking, for a long time. I cannot hurry it."',
+          },
+          space: {
+            label: 'Say she does not have to see it yet',
+            said: '"I know. I would still like to see it once."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"An older player let a ball go by. It landed out. How did she know?"',
+        branches: {
+          invite: {
+            label: 'Ask what the player did',
+            said: '"Nothing. She just watched it go."',
+          },
+          respond: {
+            label: 'Say they have watched so many balls they just know',
+            said: '"So I\'ll watch more of them."',
+          },
+          space: {
+            label: 'Say she does not have to see it yet',
+            said: '"Okay. I\'ll watch for it next time."',
+          },
+        },
+      },
+    },
+  },
+  // R61 · sorry-for-a-lucky-point
+  {
+    id: 'sorry-for-a-lucky-point',
+    subject: 'curiosity',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"Why do people say sorry when the ball clips the net and drops over? It\'s still a point."',
+        branches: {
+          invite: {
+            label: 'Ask what the other girl did',
+            said: '"She just nodded, like it was completely normal. Maybe it is."',
+          },
+          respond: {
+            label: 'Say it is a way of admitting it was luck',
+            said: '"Oh. So it\'s like saying, I know that was lucky. I like that."',
+          },
+          space: {
+            label: 'Say you never worked it out either',
+            said: '"Really? Good. Then I\'m not behind. We can wonder together."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"You don\'t say sorry for a point. A girl did, when the ball clipped the net. Why?"',
+        branches: {
+          invite: {
+            label: 'Ask what the other girl did',
+            said: '"She nodded. Like a debt had just been paid."',
+          },
+          respond: {
+            label: 'Say it is a way of admitting it was luck',
+            said: '"So it\'s manners about luck. All right. I\'m still keeping the point."',
+          },
+          space: {
+            label: 'Say you never worked it out either',
+            said: '"Great. Two of us who don\'t get it. I\'ll find out first."',
+          },
+        },
+      },
+      deep: {
+        opener: '"I keep wondering what a girl was sorry for when she won a point off the net cord."',
+        branches: {
+          invite: {
+            label: 'Ask what the other girl did',
+            said: '"She nodded. They both knew what it meant. I did not."',
+          },
+          respond: {
+            label: 'Say it is a way of admitting it was luck',
+            said: '"So it is honesty about luck. I had not thought of that."',
+          },
+          space: {
+            label: 'Say you never worked it out either',
+            said: '"Then we are both still wondering. I do not mind that."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"A girl said sorry for a point off the net cord. I didn\'t know you did that."',
+        branches: {
+          invite: {
+            label: 'Ask what the other girl did',
+            said: '"She nodded. That was all."',
+          },
+          respond: {
+            label: 'Say it is a way of admitting it was luck',
+            said: '"Oh. It\'s a polite way of saying it was luck."',
+          },
+          space: {
+            label: 'Say you never worked it out either',
+            said: '"Okay. I\'ll ask someone else, then."',
+          },
+        },
+      },
+    },
+  },
+  // R62 · the-older-girl-knew-her-name
+  {
+    id: 'the-older-girl-knew-her-name',
+    subject: 'good-news',
+    stages: ['school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"One of the older girls said hello to me by name. I didn\'t think she knew it."',
+        branches: {
+          invite: {
+            label: 'Ask what the older girl said',
+            said: '"Just hello, and my name, like it was nothing. Then she kept walking."',
+          },
+          respond: {
+            label: 'Say it\'s good to be noticed',
+            said: '"It really is. I feel a foot taller and I\'m trying to hide it."',
+          },
+          space: {
+            label: 'Let her just have this',
+            said: '"I will. I\'m going to say hello back properly next time."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"One of the older girls knows my name. She used it. I heard it."',
+        branches: {
+          invite: {
+            label: 'Ask what the older girl said',
+            said: '"Hello, and my name. Then she walked off like it was nothing. It was not nothing."',
+          },
+          respond: {
+            label: 'Say it\'s good to be noticed',
+            said: '"It is. I\'d like a few more of them to notice, frankly."',
+          },
+          space: {
+            label: 'Let her just have this',
+            said: '"Oh, I will. And next time I\'m saying her name first."',
+          },
+        },
+      },
+      deep: {
+        opener: '"One of the older girls said my name in passing. I did not think she knew it."',
+        branches: {
+          invite: {
+            label: 'Ask what the older girl said',
+            said: '"Hello, and my name, in passing. She did not even stop."',
+          },
+          respond: {
+            label: 'Say it\'s good to be noticed',
+            said: '"It is. I did not know I wanted it until it happened."',
+          },
+          space: {
+            label: 'Let her just have this',
+            said: '"I will. I would like to remember exactly how it sounded."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"One of the older girls said hello. She used my name."',
+        branches: {
+          invite: {
+            label: 'Ask what the older girl said',
+            said: '"Just hello and my name. Then she walked on."',
+          },
+          respond: {
+            label: 'Say it\'s good to be noticed',
+            said: '"It is. I\'d noticed her too."',
+          },
+          space: {
+            label: 'Let her just have this',
+            said: '"I will. It was a nice bit of the week."',
+          },
+        },
+      },
+    },
+  },
+  // R63 · the-film-she-has-not-seen
+  {
+    id: 'the-film-she-has-not-seen',
+    subject: 'worry',
+    stages: ['school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"I told a girl I\'d seen the film she loves. I haven\'t. Now she wants to talk about it every single day."',
+        branches: {
+          invite: {
+            label: 'Ask what she told the girl about it',
+            said: '"That I loved the ending. I don\'t even know how it ends."',
+          },
+          respond: {
+            label: 'Say you have done the same',
+            said: '"Have you? Good. Then I\'m in decent company."',
+          },
+          space: {
+            label: 'Say it can be put right with one sentence',
+            said: '"One sentence. I can do one sentence. Maybe after the weekend."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"I lied about a film. A girl loves it, I said I\'d seen it, and now she will not stop talking about it."',
+        branches: {
+          invite: {
+            label: 'Ask what she told the girl about it',
+            said: '"That the ending was the best part. I have never seen the ending."',
+          },
+          respond: {
+            label: 'Say you have done the same',
+            said: '"Of course you have. So that\'s where I get it."',
+          },
+          space: {
+            label: 'Say it can be put right with one sentence',
+            said: '"One sentence? Then I\'ve been dreading nothing."',
+          },
+        },
+      },
+      deep: {
+        opener: '"I told a girl I had seen the film she loves. I had not. Every time she mentions it, the lie feels a little bigger."',
+        branches: {
+          invite: {
+            label: 'Ask what she told the girl about it',
+            said: '"That I loved the ending. I do not know what happens in it. I said it as if I did."',
+          },
+          respond: {
+            label: 'Say you have done the same',
+            said: '"I did not think you ever had. It makes it feel smaller."',
+          },
+          space: {
+            label: 'Say it can be put right with one sentence',
+            said: '"It is one sentence. It is the saying of it that I keep rehearsing."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"A girl keeps mentioning a film. I told her I\'d seen it. I haven\'t."',
+        branches: {
+          invite: {
+            label: 'Ask what she told the girl about it',
+            said: '"That the ending was good. She was pleased."',
+          },
+          respond: {
+            label: 'Say you have done the same',
+            said: '"All right. That helps a little."',
+          },
+          space: {
+            label: 'Say it can be put right with one sentence',
+            said: '"One sentence. I\'ll find a time."',
+          },
+        },
+      },
+    },
+  },
+  // R64 · the-girl-she-walked-past
+  {
+    id: 'the-girl-she-walked-past',
+    subject: 'worry',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"A girl was crying on her own by the gate and I walked past. I think I should have stopped."',
+        branches: {
+          invite: {
+            label: 'Ask what she saw',
+            said: '"She was sitting on her bag with her hood up. All on her own."',
+          },
+          respond: {
+            label: 'Say you have walked past too',
+            said: '"You too? Then it\'s not just me. I still wish I\'d stopped."',
+          },
+          space: {
+            label: 'Say it counts that she noticed',
+            said: '"Does it? Then I\'ll say hello to her next time. That\'s a start."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"I walked straight past a girl who was crying. Straight past. I should have stopped."',
+        branches: {
+          invite: {
+            label: 'Ask what she saw',
+            said: '"On her bag, hood up, on her own. Nobody anywhere near her."',
+          },
+          respond: {
+            label: 'Say you have walked past too',
+            said: '"Everyone has. That\'s not an excuse. That\'s the problem."',
+          },
+          space: {
+            label: 'Say it counts that she noticed',
+            said: '"Noticing doesn\'t do anything for her. Next time I\'m stopping."',
+          },
+        },
+      },
+      deep: {
+        opener: '"A girl was crying by herself near the gate and I walked past her. I keep going back to the moment I decided not to stop."',
+        branches: {
+          invite: {
+            label: 'Ask what she saw',
+            said: '"She was sitting on her bag with her hood up, and nobody was near her."',
+          },
+          respond: {
+            label: 'Say you have walked past too',
+            said: '"I believe you. It does not make her any less alone."',
+          },
+          space: {
+            label: 'Say it counts that she noticed',
+            said: '"Perhaps. It is the only part of it I got right."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"A girl was sitting by the gate, crying. I kept walking."',
+        branches: {
+          invite: {
+            label: 'Ask what she saw',
+            said: '"On her bag, with her hood up."',
+          },
+          respond: {
+            label: 'Say you have walked past too',
+            said: '"Okay. That doesn\'t change it, but okay."',
+          },
+          space: {
+            label: 'Say it counts that she noticed',
+            said: '"Maybe. I\'ll look for her."',
+          },
+        },
+      },
+    },
+  },
+  // R65 · the-maybe-she-gave
+  {
+    id: 'the-maybe-she-gave',
+    subject: 'decision',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"A younger girl asked if I\'d hit with her. I said maybe. I should probably say yes or no."',
+        branches: {
+          invite: {
+            label: 'Ask what the younger girl is like',
+            said: '"Shy, I think. She keeps standing at the end of the court, waiting for a gap."',
+          },
+          respond: {
+            label: 'Say someone once made time for you',
+            said: '"Did they? Then I think I\'ll say yes. One hit, to start."',
+          },
+          space: {
+            label: 'Say she can answer when she knows',
+            said: '"Good. I\'ll tell her by the end of the week, either way."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"A younger girl asked me to hit with her and I said maybe. Maybe isn\'t an answer. I know that."',
+        branches: {
+          invite: {
+            label: 'Ask what the younger girl is like',
+            said: '"She doesn\'t say much. She stands at the end of the court and waits for a gap."',
+          },
+          respond: {
+            label: 'Say someone once made time for you',
+            said: '"Fine. One hit, and then we\'ll see. I\'m not a ball machine."',
+          },
+          space: {
+            label: 'Say she can answer when she knows',
+            said: '"Fine. But she\'s waiting. I\'d like to stop making her wait."',
+          },
+        },
+      },
+      deep: {
+        opener: '"A younger girl asked me to hit with her. I said maybe, and I keep seeing her face when I said it."',
+        branches: {
+          invite: {
+            label: 'Ask what the younger girl is like',
+            said: '"She does not say much. She stands at the end of the court and waits for a gap, as if she has done it before."',
+          },
+          respond: {
+            label: 'Say someone once made time for you',
+            said: '"I did not know that. It makes it harder to say no, which I suppose is the point."',
+          },
+          space: {
+            label: 'Say she can answer when she knows',
+            said: '"I know. I do not want to leave her wondering for long."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"A younger girl asked if I\'d hit with her. I said maybe."',
+        branches: {
+          invite: {
+            label: 'Ask what the younger girl is like',
+            said: '"Quiet. She waits at the end of the court for a gap."',
+          },
+          respond: {
+            label: 'Say someone once made time for you',
+            said: '"All right. I\'ll tell her yes."',
+          },
+          space: {
+            label: 'Say she can answer when she knows',
+            said: '"Okay. Not for long, though."',
+          },
+        },
+      },
+    },
+  },
+  // R66 · the-match-she-said-she-would-watch
+  {
+    id: 'the-match-she-said-she-would-watch',
+    subject: 'decision',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"I told a friend I\'d stay and watch her match. It\'s the last one on, so that\'s a lot of waiting."',
+        branches: {
+          invite: {
+            label: 'Ask how much she promised to watch',
+            said: '"All of it. That was the silly part. Half would have been fine."',
+          },
+          respond: {
+            label: 'Say you would keep a promise like that',
+            said: '"I know you would. I think that\'s why I haven\'t gone yet."',
+          },
+          space: {
+            label: 'Say she can go when she has had enough',
+            said: '"Okay. Then I\'ll stay for the start and see how I feel."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"I made a promise too quickly. I said I\'d watch a friend\'s match, and it\'s the last one on."',
+        branches: {
+          invite: {
+            label: 'Ask how much she promised to watch',
+            said: '"All of it. I said all of it. Why did I say all of it."',
+          },
+          respond: {
+            label: 'Say you would keep a promise like that',
+            said: '"Fine. Then I stay. I\'m not going to enjoy the last hour, though."',
+          },
+          space: {
+            label: 'Say she can go when she has had enough',
+            said: '"Good. I\'ll stay for the start, and I\'m not saying sorry for the rest."',
+          },
+        },
+      },
+      deep: {
+        opener: '"I told a friend I would stay and watch her match. I meant it then. It is the last match on, and I am not sure I mean it now."',
+        branches: {
+          invite: {
+            label: 'Ask how much she promised to watch',
+            said: '"All of it. I told her I would stay to the end, and she thanked me."',
+          },
+          respond: {
+            label: 'Say you would keep a promise like that',
+            said: '"I know. That is what I am weighing it against."',
+          },
+          space: {
+            label: 'Say she can go when she has had enough',
+            said: '"Perhaps. I would still know I had left, though."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"I said I\'d watch a friend\'s match. It\'s the last one on."',
+        branches: {
+          invite: {
+            label: 'Ask how much she promised to watch',
+            said: '"All of it. That\'s what I said."',
+          },
+          respond: {
+            label: 'Say you would keep a promise like that',
+            said: '"I know. That\'s what I keep thinking."',
+          },
+          space: {
+            label: 'Say she can go when she has had enough',
+            said: '"Okay. I\'ll see how long I last."',
           },
         },
       },

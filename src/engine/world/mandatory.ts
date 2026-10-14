@@ -42,6 +42,7 @@ import {
 import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 import { kidAgeAt } from './age'
 import { acceptanceRank } from './ladder'
+import { tierCapClosure } from './entryCaps'
 import { KID_ID } from './constants'
 import type { PenaltyReason, PenaltyRow, TourBriefing, TourBriefingRow } from '../../shared/protocol'
 import type { SeasonEvent, TierId } from '../season/types'
@@ -72,13 +73,52 @@ export function mandatoryBindsRank(world: WorldState): boolean {
   return rank <= ECONOMY.mandatory.maxRank
 }
 
+/** THE TOUR'S OWN AGE CAP, AS AN OBLIGATION'S EXCUSE (R51 item 20, owner 14.10) – true when the age
+ *  allowance has already shut the door to this event's week, so entering was not open to her and the
+ *  event cannot oblige her. It is the last clause of «an obligation she could not have met is not an
+ *  obligation», which listed injury, suspension, the acceptance list, the rung's age band and a second
+ *  entry in the same week and left out the one rule that arithmetic proves unmeetable: a
+ *  seventeen-year-old's allowance is sixteen professional entries a year, and full compliance (the four
+ *  Slams, every 1000 and six of the ten 500s) is eighteen.
+ *
+ *  ⚠ THE DECISION IS THE DOOR'S, NOT A COPY OF IT: `tierCapClosure` (world/entryCaps.ts) is what
+ *  `tierCapRefusal` refuses entries with, so this clause and the entry button cannot disagree about which
+ *  weeks are shut – now, or the day a fourth allowance is added. (It lives in entryCaps.ts rather than
+ *  being `tierCapRefusal` itself because medical.ts imports this module for the suspension window; the
+ *  other direction would be a runtime import cycle, which tests/import-cycles refuses.)
+ *
+ *  ⚠⚠ WHEN «SHUT» IS MEASURED – AT THE EVENT'S OWN WEEK, ON THE LEDGER AS IT STANDS. The allowance is her
+ *  AGE-YEAR's (birthday to birthday), so an event is shut when the age-year that contains its week is
+ *  already spent – by anything, including small events she chose EARLIER in that year. That is the
+ *  deliberate reading and the owner's: the clause is about ABILITY AT THE MOMENT, not about blame. A girl
+ *  who spent fourteen slots on W15s in the spring and then cannot enter the autumn Slam could not have
+ *  met it, and a fine plus a counted zero for a door the tour itself has closed would be the tour
+ *  penalising what its own rulebook forbids. The same reading is why an event AFTER her birthday is asked
+ *  against the NEXT age-year (an eighteen-year-old has no allowance): the obligation returns the week the
+ *  allowance does, and never earlier.
+ *
+ *  ⚠ A SLOT ALREADY SITTING ON THE EVENT'S WEEK IS HERS FOR THE EVENT, so the clause stays silent. The late
+ *  withdrawal (entries.ts) and the no-show (tick.ts) ask `mandatoryBinds` AFTER the entry has left
+ *  `world.entries` but with the slot still on `proEntryWeeks` (every forfeiting exit keeps it), and the
+ *  shoot-clash card asks it while she is entered. Read naively, her own last slot would shut the very
+ *  event she holds and drop the 3- and 4-point charges in exactly the state they were written for. If she
+ *  ever took a slot for that week the door WAS open to her, which is the proof the cap did not forbid it.
+ *  (A forfeited slot of a different event on the same week reads the same way – strict, as before.)
+ *
+ *  Pure read, zero draws. */
+function ageCapShutsEntry(world: WorldState, event: SeasonEvent): boolean {
+  if (world.proEntryWeeks.includes(event.week)) return false
+  return tierCapClosure(world, event.tier, event.week) !== null
+}
+
 /** DOES THIS EVENT BIND HER — the whole gate, in one function, so no caller can answer it
  *  differently and no penalty can arrive from a rule the letter did not quote.
  *
  *  ⚠⚠ THE SECOND CLAUSE IS THE OWNER'S RULING AS CODE. An obligation she could not have met is not
  *  an obligation, so this returns false for every state in which entering was not actually open to
  *  her: injured (the real tour's own medical excuse), already serving a suspension, below the
- *  acceptance list, too young for the rung, or already committed to another tournament that week —
+ *  acceptance list, too young for the rung, shut out of that week by the tour's own age cap (item 20,
+ *  `ageCapShutsEntry` above), or already committed to another tournament that week —
  *  she has one body, and `enterEvent` refuses a second entry in the same week, so obliging her to be
  *  in two draws would be obliging her to break a rule with a rule.
  *
@@ -100,6 +140,10 @@ export function mandatoryBinds(world: WorldState, event: SeasonEvent): boolean {
   if (!isTierAgeOpen(event.tier, kidAgeAt(world, event.week))) return false
   const accepts = acceptanceRank(world, event.tier)
   if (accepts !== undefined && (world.kidRankWta ?? Number.MAX_SAFE_INTEGER) > accepts) return false
+  // ⚠⚠ THE TOUR'S OWN AGE CAP (R51 item 20, owner 14.10): a week the allowance has already shut cannot
+  // oblige her. Measured at the EVENT's week on the ledger as it stands – `ageCapShutsEntry` carries the
+  // reading, and the reason her own slot on that week keeps this clause silent.
+  if (ageCapShutsEntry(world, event)) return false
   // One body, one week: an event she cannot enter because she is already entered somewhere that
   // week cannot oblige her. Her own entry in THIS event is the fulfilled case and is checked by the
   // caller, never here — this function answers "does it bind", not "did she do it".
@@ -415,7 +459,13 @@ export function quotaPlayedIn(world: WorldState, week: number): number {
  *
  *  ⚠ IT IS CAPPED BY WHAT THE CALENDAR OFFERED HER, not merely by the quota. A season in which the
  *  acceptance list only ever opened four 500s to her cannot owe six, and the same «an obligation she
- *  could not meet is not an obligation» rule that governs `mandatoryBinds` governs here. */
+ *  could not meet is not an obligation» rule that governs `mandatoryBinds` governs here.
+ *
+ *  ⭐ AND A 500 THE AGE CAP HAD ALREADY SHUT ON ITS WEEK IS NOT OFFERED EITHER (R51 item 20, owner
+ *  14.10) – the same `ageCapShutsEntry` the per-event clause reads, so the quota and the Slams cannot
+ *  disagree about which weeks she was locked out of. A 500 she PLAYED always counts as offered (the slot
+ *  on its week is the proof), which is also why the played count and the offered count cannot come
+ *  apart: shutting a 500 she played would shrink what she owes below what she did. */
 export function quotaShortfallAt(world: WorldState, week: number): number {
   if (!mandatoryBindsRank(world)) return 0
   const from = seasonStartWeek(week)
@@ -428,7 +478,9 @@ export function quotaShortfallAt(world: WorldState, week: number): number {
       e.week < from + WEEKS_PER_YEAR &&
       // HER age, the same clock `mandatoryBinds` reads – a quota may only count what she could enter.
       isTierAgeOpen(tier, kidAgeAt(world, e.week)) &&
-      (accepts === undefined || (world.kidRankWta ?? Number.MAX_SAFE_INTEGER) <= accepts),
+      (accepts === undefined || (world.kidRankWta ?? Number.MAX_SAFE_INTEGER) <= accepts) &&
+      // ...AND THE TOUR'S OWN AGE CAP: a 500 the allowance had shut on its week was never on offer.
+      !ageCapShutsEntry(world, e),
   ).length
   const owed = Math.min(ECONOMY.mandatory.quota, offered)
   return Math.max(0, owed - quotaPlayedIn(world, week))

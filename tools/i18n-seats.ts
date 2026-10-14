@@ -35,6 +35,9 @@ import {
   createWorld,
   lifeBeatFollowUps,
   raiseLifeBeat,
+  MASSEUR_LOCKED_DETAIL,
+  SPARRING_LOCKED_DETAIL,
+  masseurRoomNote,
 } from '../src/engine/world'
 import { ENDING_BLURB } from '../src/engine/ending'
 import { ALBUM_ARC, ALBUM_CORPUS } from '../src/engine/world/albumCorpus'
@@ -49,7 +52,14 @@ import { BELOW_BEST_LADDER, ROOM_BANDS, TRAVEL_EDGE_LINE, coachBlurb, coachLoadN
 import { ECONOMY } from '../src/engine/economy'
 import { RADAR_AXIS_LABEL } from '../src/engine/radar'
 import { readFileSync } from 'node:fs'
-import { PSY_FOCUS_LABEL, PSY_FOCUS_LINE } from '../src/engine/world/psychologist'
+import {
+  PSY_FOCUS_LABEL,
+  PSY_FOCUS_LINE,
+  PSYCHOLOGIST_LOCKED_DETAIL,
+  PSYCHOLOGIST_FOCUS_SEASON_REFUSAL,
+  PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL,
+  PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL,
+} from '../src/engine/world/psychologist'
 import { certain, hasHole } from './copy-census-walk'
 import { coachFormNote } from '../src/engine/world/form'
 import { COACH_TRIP_NOTES, DEBUT_LINES, DIARY_POOL, TRAVEL_NOTES, WEEK_NOTES } from '../src/engine/diary'
@@ -222,6 +232,25 @@ function formEyeSentences(): string[] {
   return [good, rust]
 }
 
+/** ⭐ r51 №2 (13.10) – THE MASSEUR'S ROOM NOTE, off the real function (`masseurRoomNote`, masseur.ts): four returned literals no census rule reads, which the snapshot hands to the Specialists tab as
+ *  `masseurNote` and the tab draws through `engineText`. A hired masseur, then the three things the function tests in its own order – a layoff he is working on, a layoff he has bought no weeks back on, a recent
+ *  save in the history – so the sentences cannot drift from the engine because they ARE what it returns. The two injury poses are the fields the function reads and nothing else (`weeksSaved`). */
+function masseurRoomNotes(): string[] {
+  const world = createWorld('r51-b3-room-note')
+  world.masseurHired = true
+  const fresh = masseurRoomNote(world)
+  world.injuryHistory = [{ kind: 'strain', severity: 'minor', week: world.week, weeksOut: 2, weeksSaved: 1 }]
+  const bought = masseurRoomNote(world)
+  world.injuryHistory = []
+  world.injury = { weeksSaved: 1 } as unknown as typeof world.injury
+  const working = masseurRoomNote(world)
+  world.injury = { weeksSaved: 0 } as unknown as typeof world.injury
+  const onTheTable = masseurRoomNote(world)
+  const all = [fresh, bought, working, onTheTable]
+  if (new Set(all).size !== 4 || all.some((s) => s === '')) throw new Error('masseurRoomNote did not return four different sentences for the four states it tests – the seat engine.text cannot enumerate the room note')
+  return all
+}
+
 /** ⭐ RU-23 (11.10) – THE COACH MARKET'S OWN PROSE, off the real functions: the sixteen bios (`coachBlurb` over the roster's portraits), the four rungs' load notes, the style profile (`coachProfileNote` over
  *  every rung and fit – the band is a function of the two – CUT at its dash by the engine's own splitter: four labels and four arguments, because the screen reads each half through the catalog and never a
  *  sentence it has already translated), the eleven sentences of the plaque (`coachPlaqueLine` over every state: two before the verdict, three placements at each of three tenures) and the travel line.
@@ -309,7 +338,11 @@ export const DECLARED_SEATS: readonly Seat[] = [
       { home: 'src/engine/economy/sparring.ts', keys: ECONOMY.sparring.rungs.map((r) => r.note) },
       { home: 'src/engine/radar.ts', keys: uniq([...censusSentences('src/engine/radar.ts'), ...radarTrainingLines(), ...Object.values(RADAR_AXIS_LABEL)]) },
       { home: 'src/engine/kidLife.ts', keys: censusSentences('src/engine/kidLife.ts') },
-      { home: 'src/engine/world/psychologist.ts', keys: [...Object.values(PSY_FOCUS_LABEL), ...Object.values(PSY_FOCUS_LINE)] },
+      // ⭐ r51 №2 (13.10) – THE SPECIALISTS TAB'S ENGINE SENTENCES BEYOND THE YEARS: the three locked lines (`engineText` in SupportStaffTab.vue), the masseur's four-state room note, and the three refusals that can
+      // reach the year's-work note of a HIRED psychologist (the season, the joint decline, the not-ready one – the unhired and unknown-year refusals are thrown to a stale screen and never drawn)
+      { home: 'src/engine/world/psychologist.ts', keys: [...Object.values(PSY_FOCUS_LABEL), ...Object.values(PSY_FOCUS_LINE), PSYCHOLOGIST_LOCKED_DETAIL, PSYCHOLOGIST_FOCUS_SEASON_REFUSAL, PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL, PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL] },
+      { home: 'src/engine/world/masseur.ts', keys: [MASSEUR_LOCKED_DETAIL, ...masseurRoomNotes()] },
+      { home: 'src/engine/world/sparring.ts', keys: [SPARRING_LOCKED_DETAIL] },
       { home: 'src/engine/world/coachMarket.ts', keys: coachMarketTexts() },
       { home: 'src/engine/collegeOffer.ts', keys: Object.values(COLLEGE_TIER_NAME) },
     ],

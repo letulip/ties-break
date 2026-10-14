@@ -14,6 +14,7 @@ import type { WorldMatch } from './events'
 // edge closes no cycle. The booth's packet is declared there because it is a fact about her private
 // life; it RIDES here because the only surface that reads it is the live match (see `PendingView`).
 import type { BoothPrivateLife } from './narrative'
+import type { CopyRef } from '../i18n'
 
 /** Structured end-of-season recap (schema v10). Written at wrap-up time (the tick into the
  *  season year's first off-season week) off the world state itself – W-L are counted as the
@@ -735,6 +736,11 @@ export interface UpcomingEvent {
    *  NEVER A BLOCK. "The parent may push" is a standing rule of this game and the doctor's veto
    *  (`ineligibleReason: 'medical'`) is its single exception. `eligible` stays true. */
   coachCaution?: string
+  /** ⭐ r51 №7 (13.10) – THE REF BESIDE `coachCaution`, the `*C` convention of docs/specs/i18n-2026-10.md §3.2: the sentence the engine decided, as the CopyRef a screen renders under the current locale
+   *  (`coachCautionText` in composables/eventCard.ts → `eventText`). The string above is this ref's English, written from it in the one place that builds the card, so the two cannot disagree; it stays on the wire
+   *  because the screens' "did he speak" tests (the confirm's «Enter anyway», the card's note) and the English-evidence readers ask the string. PRESENT EXACTLY WHEN `coachCaution` IS – a ref with no
+   *  string, or the reverse, is a defect. Snapshot-only and derived, like the string: nothing is persisted and no save schema moves. */
+  coachCautionC?: CopyRef
   /* ⚠ `costsCollege?: boolean` WAS HERE (P4) AND IS REMOVED ON THE OWNER'S RULING OF 16.08. It carried
    *  P4's warning – *"a result here can cost the college place at nineteen"* – to both entry paths,
    *  and it was true of the rule as it then stood. College is an independent branch now and no result

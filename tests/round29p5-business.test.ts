@@ -657,14 +657,23 @@ describe('§4 the ledger rows and the strip total – round 28 #8\'s law', () =>
     // `Math.max(0, shelfCents)` contributed nothing on either side.
     // ⚠⚠ AND IT IS THE FULL SUM, NOT A TOLERANCE. Absorbing the difference into a `toBeCloseTo`
     // would have retired the law this arm exists to state.
+    // ⚠⚠⚠ RE-AIMED A THIRD TIME, AT ROUND 51 #6 (13.10), ON THE OWNER'S RULING: «вообще не должно его
+    // быть на экране тренеров, мы им не оперируем там никак, он только заблуждает». Round 38 #8's
+    // re-aim above ADDED the shelf's gain to the expected IN figure, because the academy's stages
+    // drift in value and `householdWeekly` quoted that drift into income. The ruling retires the
+    // premise – a valuation is not a weekly line, it is paper – so the strip's IN is the CASH streams
+    // alone and the difference between the arms is `merch + academy`, the full sum and not a
+    // tolerance. ⚠ `shelf` is kept as the WITNESS: the memo still moves with the stages, and an
+    // engine that put it back into income would make the difference `merch + academy + shelf` – the
+    // pre-ruling figure, asserted below NOT to hold.
     const shelf = Math.max(0, hb.shelfCents) - Math.max(0, ha.shelfCents)
-    expect(hb.incomeCents - ha.incomeCents, 'round 28 #8: the strip must total every weekly line').toBe(
+    expect(hb.incomeCents - ha.incomeCents, 'round 28 #8: the strip totals every weekly CASH line').toBe(
+      merch + academy,
+    )
+    expect(shelf, 'the drifting academy still moves the memo, or the claim below is vacuous').toBeGreaterThan(0)
+    expect(hb.incomeCents - ha.incomeCents, 'and the paper drift is not one of those lines').not.toBe(
       merch + academy + shelf,
     )
-    // ⚠ AND THE NEW LINE IS REALLY THERE, which is the half that stops this passing on a reverted
-    // engine: at rate 0 the academy's stages move the shelf by nothing and `shelf` is 0, so a
-    // greater-than-zero claim is exactly the mutation guard.
-    expect(shelf, 'the drifting academy is a weekly line of its own now').toBeGreaterThan(0)
     expect(hb.merchCents).toBe(merch)
     expect(hb.academyIncomeCents).toBe(academy)
     expect(ha.merchCents).toBe(0)

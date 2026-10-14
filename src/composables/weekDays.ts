@@ -103,7 +103,7 @@ import type { TierDef, TierId } from '../engine/season/types'
 import type { SessionKind, Snapshot, UpcomingEvent } from '../shared/protocol'
 // L2-3 (08.10): RU-03 §13/§14 – the day names, the week titles and the fixed readouts call `t()`. The counted / declined readouts of
 // §14.1 and the grid's block lexicon (weekGrid.ts) are NOT wired yet – see the L2-3 note in docs/specs/i18n-2026-10.md §8.
-import { localizedList, t } from '../i18n'
+import { engineText, localizedList, t } from '../i18n'
 
 /** The grid's column heads, Monday first – the same Monday..Sunday span `shared/dates.ts` builds
  *  every date range from, so the columns and the printed dates cannot disagree about which day is
@@ -585,6 +585,13 @@ export function shootDaysFor(planDays: readonly PlanRole[], matchIndex: number |
   return []
 }
 
+/** A booked package's label in the player's words. It is a catalog key the economy owns (words.ts `text`), so the reader is `engineText`; an id the economy does not know is no label and shows as it came.
+ *  r51 №12: the vacation week's readout and the look-ahead band both printed the engine's English before. */
+function packageLabelFor(packageId: string): string {
+  const pkg = vacationPackage(packageId)
+  return pkg ? engineText(pkg.label) : packageId
+}
+
 /** Every day the same kind, for the five weeks that are not hers to train through. */
 function uniform(kind: DayKind, beat: DayBeat | null, note: string | null): CalendarDay[] {
   return DAY_SHORT.map((short, index) => ({
@@ -784,7 +791,8 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
   const vacation = snap.vacations.find((v) => v.week === week)
   if (vacation) {
     const pkg = vacationPackage(vacation.packageId)
-    const label = pkg?.label ?? vacation.packageId
+    const label = packageLabelFor(vacation.packageId)
+    const blurb = pkg?.blurb ? engineText(pkg.blurb) : ''
     return {
       ...base,
       days: uniform('off', null, 'Away'),
@@ -797,7 +805,7 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
       // поехала и расписание одинаковое, и week recap». The package's own blurb is already written,
       // already in the catalogue and already what the picker showed him when he chose it - so the
       // week reads back the promise he bought instead of a generic line under six different grids.
-      readout: pkg?.blurb ? `${label} – ${pkg.blurb.charAt(0).toLowerCase()}${pkg.blurb.slice(1)}` : t('{label} – no tennis at all this week.', { label }),
+      readout: blurb ? `${label} – ${blurb.charAt(0).toLowerCase()}${blurb.slice(1)}` : t('{label} – no tennis at all this week.', { label }),
       vacationId: vacation.packageId,
     }
   }
@@ -1162,7 +1170,7 @@ export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
                   ? 'off-season'
                   : 'training'
     const note = vacation
-      ? (vacationPackage(vacation.packageId)?.label ?? vacation.packageId)
+      ? packageLabelFor(vacation.packageId)
       : practice
         ? practice.withCoach ? t('Practice match + coach') : t('Practice match')
         : event

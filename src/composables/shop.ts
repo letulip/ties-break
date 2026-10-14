@@ -14,7 +14,7 @@ import { useGameStore } from '../stores/game'
 import type { ShopPricePoint, ShopPurchaseView, ShopRowView } from '../shared/protocol'
 import { weekLabel } from '../i18n/dates'
 import { monthLabel } from '../i18n/dates'
-import { formatCents } from '../shared/money'
+import { bankSaleSplit, formatCents } from '../shared/money'
 import { t } from '../i18n'
 // ⭐ ROUND 30 #5 / ROUND 35 #3 – the paintings' own module. `shelfArtUrl` is what decides whether a
 // rung has a band at all (see `shopRowArtSide`), and `SHELF_CATEGORY_KEYS` is HIS row order for the
@@ -618,15 +618,14 @@ export function useShop(week: ComputedRef<number>) {
       id: row.id,
       label: row.label,
       amountCents,
-      // ⚠ THE REALISED DIFFERENCE, SCALED BY WHAT IS LEAVING. The engine reaches the same figure from
-      // the other side – `proceeds − round(paidCents x proceeds / value)` – which is this expression
-      // rearranged, so the two can differ by at most a cent and never by a dollar on screen. ⚠ IT IS
-      // NOT RE-DERIVED FROM A RATE: `changeCents` is the engine's own subtraction, off `shopView`.
-      // Whole sale: the row's own `changeCents`, untouched.
+      // ⚠ THE REALISED DIFFERENCE OF THE PART THAT IS LEAVING. ROUND 51 #19: A WITHDRAWAL TAKES THE PROFIT FIRST, so it is no longer a share of the row's
+      // gain but `bankSaleSplit`'s profit part – the very function `sellAsset` calls for the figure its ledger sentence carries. (The expression that stood
+      // here was `sellAsset`'s old average-cost arithmetic rearranged, «at most a cent apart»; under profit-first it would be dollars apart.) ⚠ IT IS NOT
+      // RE-DERIVED FROM A RATE: `paidCents` and `valueCents` are the engine's own figures, off `shopView`. Whole sale: the row's own `changeCents`, untouched.
       changeCents:
-        row.changeCents === null || amountCents >= row.valueCents
+        row.changeCents === null || row.paidCents === null || amountCents >= row.valueCents
           ? row.changeCents
-          : Math.round((row.changeCents * amountCents) / row.valueCents),
+          : bankSaleSplit(row.paidCents, row.valueCents, amountCents).profitCents,
       partCents: amountCents < row.valueCents ? amountCents : undefined,
     }
   }

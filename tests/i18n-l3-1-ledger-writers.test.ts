@@ -923,8 +923,15 @@ describe('§5 the shop – purchases, the order and its delivery, the three sale
       const rows = checkNewRows(world, before)
       const sold = rows.filter((r) => r.text.startsWith('Sold'))
       expect(sold, 'a part-lot row and a whole-lot row').toHaveLength(2)
-      const tail = value < 1 ? 'less than it cost' : value > 1 ? 'more than it cost' : 'exactly what it cost'
-      for (const r of sold) expect(r.text.endsWith(tail), `${r.text} should end "${tail}"`).toBe(true)
+      // ⚠⚠ RE-AIMED 14.10 BY ROUND 51 #19 – THE WITHDRAWAL TAKES THE PROFIT FIRST (the owner, 13.10 evening: была сумма, скажем 100к, ее положили, пришел процент, скажем 50 - стало 150к, доходность видна, мы сняли со счета 50к, там снова осталось 100к - какая теперь доходность? Мне кажется 0, прибыль изъята.). A PART lot
+      // sold under water is returned principal, so its tail is «exactly what it cost»; the loss is named by the WHOLE lot that closes the position. Every other
+      // pairing is unchanged, and the three tails are still each rendered against their ref by `checkNewRows`.
+      const wholeTail = value < 1 ? 'less than it cost' : value > 1 ? 'more than it cost' : 'exactly what it cost'
+      const partTail = value > 1 ? 'more than it cost' : 'exactly what it cost'
+      for (const r of sold) {
+        const tail = r.text.includes(' of: ') ? partTail : wholeTail
+        expect(r.text.endsWith(tail), `${r.text} should end "${tail}"`).toBe(true)
+      }
     })
   }
 

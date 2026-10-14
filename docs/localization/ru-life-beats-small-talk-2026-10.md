@@ -797,3 +797,28 @@ The quote is the same in the roof and the away row of a cell; the one missing ce
 | RU21-STK-21 | `Her message came and did not ask for a reply. "Good week. I needed that."` | `Сообщение пришло без просьбы ответить. «Хорошая неделя. Она была мне нужна».` |
 | RU21-STK-22 | `She waited for the room to empty first. "I want to ask you something."` | `Сначала дождалась, пока комната опустеет. «Хочу тебя кое о чём спросить».` |
 | RU21-STK-23 | `She waited until the call was nearly over. "I want to ask you something."` | `Дождалась почти самого конца звонка. «Хочу тебя кое о чём спросить».` |
+
+## ⚙ 14.10 agent-authored – round 51 №8: her hunch about the coach, 12 lines (4 voices x 3 bands)
+
+⚙ 14.10 agent-authored for the owner's item №8; every row is `DRAFT` and his live edit follows.
+
+When the parent answers her `coach-real` question («действительно ли мой тренер хороший») with the middle answer, her reply gains **one** more line – her hunch about what her coach will say – and the line leans the way the pair really leans (warm, even, cold). English lives in `COACH_REAL_HUNCH` in `src/engine/world/lifeBeat/smallTalkCopy.ts`; the key is the whole English string, so the dialog renders the Russian from here by exact match.
+
+- **Her own voice, continuing the reply each voice already gives on this answer** (§ R48): sunny warm-bright, fiery blunt, deep reflective, quiet terse.
+- **No verb names the coach's sex** – present and future tense or noun phrases (`услышу`, `ответ будет`), never a past-tense verb about the coach – the same rule the rest of `coach-real` follows. Her own past tense is feminine (`спросила`).
+- **A mood, never a number and never a verdict on the coach's skill**: chemistry is how the two of them fit, not how good the coach is.
+
+| id | English | Russian | Status |
+| --- | --- | --- | --- |
+| RU51-HNC-01 | `And I bet there'll be a good answer. There usually is.` | `Спорим, ответ будет хороший. Обычно так и бывает.` | `DRAFT` |
+| RU51-HNC-02 | `Honestly, I can't guess what I'll hear. Some days it all clicks, some days it doesn't.` | `Честно, даже не знаю, что услышу. Иногда всё сходится, иногда нет.` | `DRAFT` |
+| RU51-HNC-03 | `Though I've a feeling there won't be much of an answer. That's sort of why I asked.` | `Хотя мне кажется, внятного ответа не будет. Поэтому и спросила.` | `DRAFT` |
+| RU51-HNC-04 | `Though honestly? I bet there's a real answer. There always is.` | `Хотя честно? Спорим, ответ найдётся. Он всегда находится.` | `DRAFT` |
+| RU51-HNC-05 | `No idea what I'll hear. Half the drills land and half don't.` | `Понятия не имею, что услышу. Половина упражнений заходит, половина нет.` | `DRAFT` |
+| RU51-HNC-06 | `And I already know there won't be an answer. That's the whole problem.` | `И я уже знаю, что ответа не будет. В этом вся проблема.` | `DRAFT` |
+| RU51-HNC-07 | `I suspect there'll be a real answer. Most of the changes end up making sense.` | `Подозреваю, ответ будет настоящий. Почти все изменения потом оказываются осмысленными.` | `DRAFT` |
+| RU51-HNC-08 | `I can't predict the answer, which probably tells me something by itself.` | `Не могу предсказать ответ, и это, наверное, уже о чём-то говорит.` | `DRAFT` |
+| RU51-HNC-09 | `I think I know what I'll hear, and I don't think it will be an answer.` | `Кажется, я знаю, что услышу, и вряд ли это будет ответ.` | `DRAFT` |
+| RU51-HNC-10 | `I think there'll be one.` | `Думаю, ответ будет.` | `DRAFT` |
+| RU51-HNC-11 | `Not sure what I'll hear.` | `Не знаю, что услышу.` | `DRAFT` |
+| RU51-HNC-12 | `I don't think there'll be one.` | `Не думаю, что ответ будет.` | `DRAFT` |

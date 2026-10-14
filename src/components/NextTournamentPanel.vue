@@ -129,7 +129,7 @@
 // on the first-round plate.
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
-import { fieldChanceLabel, fieldChanceTitle, fieldRingShown, firstMatchLabel, firstMatchTitle, rankText, surfaceName, useEventCard } from '../composables/eventCard'
+import { coachCautionText, fieldChanceLabel, fieldChanceTitle, fieldRingShown, firstMatchLabel, firstMatchTitle, rankText, surfaceName, useEventCard } from '../composables/eventCard'
 import { t } from '../i18n'
 import { readingColor } from '../composables/readingColor'
 import { flagEmoji } from '../composables/countries'
@@ -241,7 +241,7 @@ const courtRead = computed(() => courtReadFor(props.event.surface))
             <p class="nt-read-label">{{ t('The read') }}</p>
             <p class="nt-read-line">{{ fieldRead }}</p>
             <p v-if="courtRead" class="nt-read-line">{{ courtRead }}</p>
-            <p v-if="event.coachCaution" class="coach-note">{{ event.coachCaution }}</p>
+            <p v-if="event.coachCaution" class="coach-note">{{ coachCautionText(event) }}</p>
             <!-- ⭐⭐⭐ ROUND 36 PHASE 5 – WHAT THE PRE-DRAW FIGURE PROMISES, MOVED HERE OFF THE SEASON
                  CARDS. Round 34 #5b put this line on every card in the season feed, at the owner's
                  own ask; he met it in play and ruled it off them on 04.09 – it is on every card, so

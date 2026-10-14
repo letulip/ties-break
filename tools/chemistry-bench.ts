@@ -44,6 +44,14 @@
 //                                none or on all of them, and leaves nobody unread inside eight years.
 //                                ⚠ The figure on that first week should be 1% or 2% – his own words –
 //                                and if it is not, the corridor is wrong rather than the report.
+//   B13 · her hunch's bands     ROUND 51 №8 (14.10), predicted BEFORE the run: with warm >= +3 and cold <= -3
+//                                (just beyond the largest readable bar, 2.5) a pair is still «even» for most
+//                                of its first quarter – week 13 even 90-96%, week 26 even 70-82%, week 52
+//                                even 50-68% – with warm and cold both present at a year (warm 18-30%, cold
+//                                12-25%). Structural: a hunch never leans on a pair the ring calls unreadable
+//                                (0 pairs with |chem| >= 3 under their own bar). ⚠ If even exceeds 70% at
+//                                week 52 the thresholds step to +-2 and BOTH measurements are reported.
+//                                Run: npm run bench:chemistry -- --hunch
 //
 // ⚠ WHAT THIS BENCH CANNOT MEASURE, said out loud rather than quietly skipped. §1a is explicit that
 // the table's PRINCIPLE cannot be validated – «two intense people burn out» is a claim about human
@@ -73,6 +81,7 @@ import {
   type Temperament,
 } from '../src/engine/world'
 import { buildCoachRoster, HIREABLE_TIERS, styleFitBetween } from '../src/engine/coach'
+import { CHEMISTRY_HUNCH_COLD_AT, CHEMISTRY_HUNCH_WARM_AT, chemistryHunch } from '../src/engine/chemistry'
 import { availabilityStatus, closeTournament, enterEvent, skipTournament, tickWeek } from '../src/engine/world'
 import { SKILL_KEYS } from '../src/engine/development'
 import { rngFromSeed } from '../src/engine/rng'
@@ -95,6 +104,7 @@ const SEEDS = argOf('seeds', 3000)
 const PAIRS = argOf('pairs', 4000)
 const WALK_YEARS = argOf('walkyears', 400)
 const ACTUATE = args.includes('--actuate')
+const HUNCH = args.includes('--hunch')
 
 const f1 = (x: number) => x.toFixed(1)
 const f2 = (x: number) => x.toFixed(2)
@@ -395,6 +405,68 @@ function b12(): void {
     `  the figure on the week it first appears: ` +
       [...hist.entries()].sort((x, y) => x[0] - y[0]).map(([k, v]) => `${k}% x${v}`).join('  '),
   )
+}
+
+// =================================================================================================
+// B13 · HER HUNCH – round 51 №8 (14.10): how often she leans warm, even or cold at stint week 13 / 26 / 52
+// =================================================================================================
+//
+// When the parent answers «a good coach explains what they're changing», her follow-up gains one line
+// whose band is `chemistryHunch(pair.chem)`. A hunch that said «I can't tell» nine times in ten would be
+// a decoration, and one that leaned every time would be a second gauge – so the shares are MEASURED here
+// (invariant 5) against the prediction in the header.
+//
+// ⚠ THE SAME WALK AS B12 (the real `accrueChemistry`, the stated week stream, the world's own
+// temperament) – real pairs, not played careers – READ AT THREE STINT WEEKS. Each pair is walked once
+// and the ±3 shipped constants and the ±2 alternative are read off the SAME series, so the comparison is
+// a ruler moving and nothing else.
+// ⚠ THE STRUCTURAL CHECK: a pair the ring still calls unreadable (|chem| under its own drawn bar) must
+// never lean – the ±3 line sits above the largest bar a pair can draw (2.5), so the count printed
+// last is 0 by construction, and a non-zero one is a broken constant.
+const HUNCH_MARKS = [13, 26, 52]
+function b13(): void {
+  const pairs = argOf('hunchpairs', 1200)
+  console.log(`\nB13 · HER HUNCH – ${pairs} pairs, the band at stint weeks ${HUNCH_MARKS.join(' / ')} (warm >= ${CHEMISTRY_HUNCH_WARM_AT}, cold <= ${CHEMISTRY_HUNCH_COLD_AT})`)
+  type Band = 'warm' | 'even' | 'cold'
+  const tally = (): Record<Band, number> => ({ warm: 0, even: 0, cold: 0 })
+  const shipped = new Map<number, Record<Band, number>>(HUNCH_MARKS.map((m) => [m, tally()]))
+  const alt2 = new Map<number, Record<Band, number>>(HUNCH_MARKS.map((m) => [m, tally()]))
+  let leansUnreadable = 0
+  for (let i = 0; i < pairs; i++) {
+    const seed = `chem-hunch-${i}`
+    const world = createWorld(seed, {
+      ...DEFAULT_PROFILE,
+      background: BACKGROUNDS[i % BACKGROUNDS.length],
+      playStyle: STYLES[i % STYLES.length],
+    })
+    const roster = buildCoachRoster(seed, 14)
+    const coach = roster[i % roster.length]
+    const a = affinityFor(seed, coach.id, world.temperament, coach.manner)
+    const bar = chemistryReadableAt(seed, coach.id)
+    let pair = freshCoachPair()
+    for (let w = 1; w <= HUNCH_MARKS[HUNCH_MARKS.length - 1]; w++) {
+      pair = accrueChemistry(pair, a, seed, coach.id, w, readWeek(w))
+      if (!HUNCH_MARKS.includes(w)) continue
+      shipped.get(w)![chemistryHunch(pair.chem)] += 1
+      alt2.get(w)![pair.chem >= 2 ? 'warm' : pair.chem <= -2 ? 'cold' : 'even'] += 1
+      if (chemistryHunch(pair.chem) !== 'even' && Math.abs(pair.chem) < bar) leansUnreadable += 1
+    }
+  }
+  const row = (label: string, m: Map<number, Record<Band, number>>): void => {
+    console.log(`  ${pad(label, 12)}` + HUNCH_MARKS.map((w) => {
+      const t = m.get(w)!
+      return `wk ${padL(String(w), 2)}: warm ${padL(pctOf(t.warm / pairs), 6)} even ${padL(pctOf(t.even / pairs), 6)} cold ${padL(pctOf(t.cold / pairs), 6)}   `
+    }).join(''))
+  }
+  row(`+-${CHEMISTRY_HUNCH_WARM_AT} (ships)`, shipped)
+  row('+-2 (alt)', alt2)
+  const even52 = shipped.get(52)!.even / pairs
+  console.log(
+    even52 > 0.7
+      ? `  ⚠ even is ${pctOf(even52)} at week 52 – above 70%: step to +-2 (second row) and report both.`
+      : `  ✓ even is ${pctOf(even52)} at week 52 – within the 70% line, +-${CHEMISTRY_HUNCH_WARM_AT} stands.`,
+  )
+  console.log(`  structural: pairs that lean while the ring is still unreadable: ${leansUnreadable} (must be 0)`)
 }
 
 /** B11 – the structural balance check. Not a truth claim: a broken-game check. */
@@ -729,6 +801,10 @@ function run(): void {
     actuate()
     return
   }
+  if (HUNCH) {
+    b13()
+    return
+  }
   b11()
   const r = b10()
   console.log('\nB10 · THE LOOKUP TEST – variance of realised affinity, WITHIN a cell against BETWEEN cells')
@@ -742,6 +818,7 @@ function run(): void {
   b9()
   b7()
   b12()
+  b13()
   b0()
   careerArm()
 }

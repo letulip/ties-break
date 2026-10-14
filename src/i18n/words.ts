@@ -442,6 +442,26 @@ export function createWordReaders(t: Translate, tables: WordTables = { holes: HO
     return isUpper(english) ? upperFirst(out) : lowerFirst(out)
   }
 
+  // ── the two Mood lines (r51 B2, 13.10 – owner №15 «Bright» and №22 «Heavy» printed English under ru) ──────────────────────────────────────────────────────────────────────
+  // `engine/spirit.ts` hands a screen one of five words (`MOOD_WORD`: Glowing, Bright, Steady, Dimmed, Heavy) as `diary.facts.moodWord`, on exactly the weeks her spirit won the face; the Kid screen's
+  // Mood tile and the recap card's Mood line printed it as it came. The fallback maps beside it were translated all along, so only the weeks the engine spoke leaked. The screen holds the word and no
+  // message does, so no row of `wordHoles.ts` names it: the screen asks the reader by class (`engineWord`).
+  // ⚠ TWO CLASSES OVER ONE VOCABULARY, because the neutral word is two Russian words and both are the owner's (RU-05): `Steady` is «Спокойна» on the Kid tile and `recap|Steady` is «Ровная» on the
+  // recap card. The engine's `Steady` must read as the SAME SCREEN'S OWN `norm` face does, or a tile would flip between two Russian words for one state. So `Steady`
+  // re-uses each screen's existing row (no new row), and the four words that had no Russian anywhere share one row each – `mood|…` – on both screens. If the recap is to speak differently from the
+  // tile, the split is one thunk below and a `recap|` row.
+  // ⚠ THE NEUTRAL WORD IS UNREACHABLE TODAY, and the reader still knows it: the neutral rung is the same `norm` the body produces, so it can never win the channel (`avatarEmotionRead`: a rung of 0
+  // does not beat the body) and the engine never hands `Steady` as `moodWord`. It stays in the vocabulary so the table is the engine's whole `MOOD_WORD` (a test holds the two together) and a
+  // change to the ladder cannot print English; `tests/component/wave1-mood-word.test.ts` poses it, because no snapshot of the engine's own carries it.
+  const moodNew: Readonly<Record<string, () => string>> = {
+    Glowing: () => t('mood|Glowing'),
+    Bright: () => t('mood|Bright'),
+    Dimmed: () => t('mood|Dimmed'),
+    Heavy: () => t('mood|Heavy'),
+  }
+  const mood = lex('mood', { ...moodNew, Steady: () => t('Steady') })
+  const moodRecap = lex('moodRecap', { ...moodNew, Steady: () => t('recap|Steady') })
+
   // ── the court row: the venue and the clause that says when the hours were booked ──────────────────
   const court = lex('court', {
     'Club courts': () => t('court|Club courts'),
@@ -507,6 +527,8 @@ export function createWordReaders(t: Translate, tables: WordTables = { holes: HO
     schoolNote,
     stageLine,
     relLead, // ⚠ 11.10 – the relationships tile's leads
+    mood, // ⭐ r51 B2 – the Kid screen's Mood tile
+    moodRecap, // …and the recap card's Mood line
   }
 
   const positional = new Map<string, Map<string, WordReader>>()

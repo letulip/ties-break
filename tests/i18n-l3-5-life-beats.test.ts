@@ -13,7 +13,7 @@
 //   §1 the key law for class (b)       – tests/helpers/l3-5-life-keys.ts is exactly what the life files spell that no old save can hold: the nine span sentences and the `{0} {1}` join
 //   §2 her line                        – `lifeBeatSaidRef` renders to `lifeBeatSaid` over EVERY reachable (kind x voice x register x bond x wants x stage x frame x line), keys all in the catalog
 //   §3 the headings                    – every heading any axis can produce is a catalog key (10J's heard headings and 10K's headline frame included)
-//   §4 her replies                     – every follow-up paragraph of the 51 situations x 4 voices x 3 stances and of the fork's continuation has its seat
+//   §4 her replies                     – every follow-up paragraph of the 65 situations x 4 voices x 3 stances and of the fork's continuation has its seat
 //   §5 the span sentence               – `engagedWithTogetherRef` renders to `engagedWithTogether` for every week from 0 to 5,200
 //   §6 the 51-situation corpus         – the counts, and that every opener / shared beat / label / reply is a catalog key (OUTSIDE_CATALOG for this family: 0)
 //   §7 the sinks' sentences            – every constant a sink's seat can hold is a key of the frozen table AND of the catalog (the L3-1 net's §1b walks the same pools as a seat law)
@@ -231,7 +231,11 @@ describe('§2 her line – the ref renders to the line over every reachable tupl
 
   it('walks every kind of beat (the sweep is not blind)', () => {
     expect(Object.keys(walked).sort()).toEqual([...KINDS].sort())
-    expect(walked['small-talk'], 'small talk: 51 situations x their voices x their stages x (the row\'s own frame or none + the presence\'s nine) + the three legacy subjects x 4 voices x 4 stages').toBe(4728)
+    // ⭐ RE-AIMED 14.10 (r51 №17): 4728 → 5008 (+280 = the gran's one stage x 4 voices x 10 + the other three stories' two stages x 4 voices x 10 each; ten is the row's own frame or none plus the presence's nine).
+    // ⭐ RE-AIMED AGAIN 14.10 (r51 continuation, builder E1): 5008 → 5248 (+240 = the three observations' two stages (school, after-school) x 4 voices x 10; ten is the row's own frame or none plus the presence's nine).
+    // ⭐ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E2): 5248 → 5448 (+200 = the two curiosities' two stages (school, after-school) x 4 voices x 10, plus the good news' one stage (school) x 4 voices x 10; ten is the row's own frame or none plus the presence's nine).
+    // ⭐ RE-AIMED A FOURTH TIME 14.10 (r51 continuation, builder E3): 5448 → 5728 (+280 = the film worry's one stage (school) x 4 voices x 10, plus the other three rows' two stages (school, after-school) x 4 voices x 10 each; ten is the row's own frame or none plus the presence's nine).
+    expect(walked['small-talk'], 'small talk: 65 situations x their voices x their stages x (the row\'s own frame or none + the presence\'s nine) + the three legacy subjects x 4 voices x 4 stages').toBe(5728)
     expect(walked['fork-opinion']).toBe(3 * 4 * 3 * 4 * 3)
   })
 
@@ -294,7 +298,7 @@ describe('§3 the headings – every one any axis can produce is a catalog key (
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // §4 – her replies
 // ---------------------------------------------------------------------------------------------------------------------------------------------
-describe('§4 her replies – each follow-up paragraph has its seat, over the 51 situations and the fork\'s continuation', () => {
+describe('§4 her replies – each follow-up paragraph has its seat, over the 65 situations and the fork\'s continuation', () => {
   it('small talk: every situation x voice x stance carries a ref per paragraph that renders to it (the shared second beat included)', () => {
     let paragraphs = 0
     let shared = 0
@@ -317,8 +321,13 @@ describe('§4 her replies – each follow-up paragraph has its seat, over the 51
         }
       }
     expect(outside, 'a reply the owner\'s row cannot join').toEqual([])
-    expect(paragraphs, '612 replies + the 4 shared second beats across the three stances of their columns').toBe(612 + 4 * 3)
-    expect(shared, 'the four `story` columns, three stances each').toBe(12)
+    // ⭐ RE-AIMED 14.10 (r51 №17): 612 + 4 x 3 → 660 + 20 x 3 (the four school-years stories each carry a shared second beat in four voices).
+    // ⭐ RE-AIMED AGAIN 14.10 (r51 continuation, builder E1): 660 → 696 replies (+36 = three observations x 4 voices x 3 stances); the 20 shared second beats are untouched, an observation has none.
+    // ⭐ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E2): 696 → 732 replies (+36 = three more rows x 4 voices x 3 stances); the 20 shared second beats are untouched, a curiosity and a good news have none.
+    // ⭐ RE-AIMED A FOURTH TIME 14.10 (r51 continuation, builder E3): 732 → 780 replies (+48 = four more rows x 4 voices x 3 stances); the 20 shared second beats are untouched, a worry and a decision have none.
+    expect(paragraphs, '780 replies + the 20 shared second beats across the three stances of their columns').toBe(780 + 20 * 3)
+    // ⭐ RE-AIMED 14.10 (r51 №17): 4 x 3 = 12 → 20 x 3 = 60 (court-four's four columns plus the four new stories' sixteen).
+    expect(shared, 'the twenty `story` columns, three stances each').toBe(60)
   })
 
   it('the fork\'s continuation (HER_CONTINUATION): a seat per voice x want, only where she speaks in her own voice', () => {
@@ -427,7 +436,7 @@ describe('§5b the announcement\'s PROMPT, through the real assembly – the poo
 /** Corpus strings the CATALOG does not carry, by family. The whole corpus file is a census copy home, so this is 0 – and it can only fall. */
 const OUTSIDE_CATALOG = { openers: 0, labels: 0, replies: 0, shared: 0 } as const
 
-describe('§6 the 51-situation corpus', () => {
+describe('§6 the 65-situation corpus', () => {
   const openers = new Set<string>()
   const labels = new Set<string>()
   const replies = new Set<string>()
@@ -446,13 +455,17 @@ describe('§6 the 51-situation corpus', () => {
       }
     }
 
-  it('is 51 situations in 204 voice columns: 204 openers, 612 replies, 4 shared second beats (the corpus header\'s own numbers)', () => {
-    expect(SMALL_TALK_SITUATIONS.length).toBe(51)
-    expect(columns).toBe(204)
-    expect(openers.size).toBe(204)
-    expect(replies.size).toBe(612)
-    expect(shared.size).toBe(4)
-    expect(labels.size, 'distinct stance labels').toBe(145)
+  it('is 65 situations in 260 voice columns: 260 openers, 780 replies, 20 shared second beats (the corpus header\'s own numbers)', () => {
+    // ⭐ RE-AIMED 14.10 (r51 №17): 51/204/612/4/145 → 55/220/660/20/157 – four school-years stories, twelve new distinct labels.
+    // ⭐ RE-AIMED AGAIN 14.10 (r51 continuation, builder E1): 55/220/660/20/157 → 58/232/696/20/166 – three school-years observations, nine new distinct labels, no second beat.
+    // ⭐ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E2): 58/232/696/20/166 → 61/244/732/20/175 – two school-years curiosities and a good news, nine new distinct labels, no second beat.
+    // ⭐ RE-AIMED A FOURTH TIME 14.10 (r51 continuation, builder E3): 61/244/732/20/175 → 65/260/780/20/187 – two school-years worries and two decisions, twelve new distinct labels, no second beat.
+    expect(SMALL_TALK_SITUATIONS.length).toBe(65)
+    expect(columns).toBe(260)
+    expect(openers.size).toBe(260)
+    expect(replies.size).toBe(780)
+    expect(shared.size).toBe(20)
+    expect(labels.size, 'distinct stance labels').toBe(187)
   })
 
   it('every opener, label, reply and shared beat is a catalog key and seatable (OUTSIDE_CATALOG for the corpus: 0)', () => {
@@ -537,7 +550,20 @@ describe('§7 every sentence a sink\'s seat can hold is a key of the frozen v92 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 /** per career: the digest of every string the player was shown (prompts, replies, cards – the English only), captured on the PRE-WAVE tree (0b60a1b3, a throwaway worktree) by the same
  *  driver: `tests/helpers/l3-5-life-play.ts`. Boosted life events, 300 weeks, every pending beat answered by rotating the offered options. */
-const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': 'cb62362', '0/1': '665c9a8d' }
+// ⚠ RE-STAMPED 14.10 (r51, architect) – night: '5/0' (was 'cb62362') moved with B12's four new
+// small-talk situations (99d1e8ba, pool 51→55): a longer pool reads a different position on the
+// purpose-scoped smalltalk sub-streams. '0/1' (was '665c9a8d') turned red only AFTER '5/0' was
+// stamped and was then attributed «by exclusion» to B14's soft hyphens – ⚠⚠ THAT ATTRIBUTION WAS
+// WRONG and is withdrawn: this digest hashes the ENGINE's English prompt strings
+// (tests/helpers/l3-5-life-play.ts `promptRec` – heading, said, labels, follow-ups), so a ru.json
+// row cannot move it. The real cause was B12's corpus too, HIDDEN by the first-red-stops-the-test
+// blind spot: the loop asserts '5/0' first, so while it was red '0/1' was never checked (B12's
+// «'0/1' unchanged» was that blind spot, the same one the coach-travel harvest hit).
+// ⚠ RE-STAMPED AGAIN 14.10 (r51 continuation, architect): both tags moved with the continuation's
+// content – builder D's hunch line (D's own control: switching it off at the source alone turned
+// '5/0' green, 913777ed) and E1–E3's ten school rows (pool 55→65). Not a MAIN draw: every builder's
+// arm compared rngMain. Was '38f6336d' / 'e5d188d9'.
+const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': '41e7bb05', '0/1': 'ac91e65e' }
 /** and the bench's MAIN stream, three draws on from the last week of each career, from the same pre-wave runs – the wave draws nothing, and the next draws prove the position is the pre-wave one */
 const PRE_WAVE_NEXT3: Record<string, number[]> = {
   '5/0': [0.18923983839340508, 0.10872006509453058, 0.37577401218004525],

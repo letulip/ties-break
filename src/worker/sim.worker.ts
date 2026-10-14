@@ -59,7 +59,7 @@ import {
 // import from it and none of their names may move (CLAUDE.md) – and a symbol born after A-03 freezes
 // that list does not join it. `assembleAlbum` above predates the freeze and keeps its barrel name.
 import { assembleInbox } from '../engine/world/snapshot'
-import { createLegacyWorld, legacyInputOf, LEGACY_FAMILY_BACKGROUND } from '../engine/world/succession'
+import { createLegacyWorld, legacyInputOf } from '../engine/world/succession'
 import { heirloomBookOf } from '../engine/world/heirloom'
 import { mainStateConsistent, resumeMain, type MainRngState, type Rng } from '../engine/rng'
 import { planFromWeek, planShapeError, planWeek } from '../engine/plan'
@@ -406,25 +406,22 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // built by `createLegacyWorld` (the calendar, the multiplied wallet, the arriving house and car, the heirloom) and still takes everything
       // every other creation takes – the childhood, the line's record and the weight ask – so the nine years she walked are not thrown away at
       // the last card.
-      // ⚠ THE ORIGINS CARD IS SET ASIDE HERE AND NOT IN THE BUILDER: the family's circumstance is the multiplier (the architect's ruling,
-      // `LEGACY_FAMILY_BACKGROUND`), so both places the band can arrive from – the profile and the line's handover – are forced to it BEFORE the
-      // call. `createWorld` applies the handover's band over the profile's, which is why forcing one alone would not hold.
+      // ⭐⭐⭐ r51 №5 (13.10) – HISTORY, KEPT WHERE IT SAT: THE ORIGINS CLAMP THAT WAS HERE IS GONE. S2c (06.10) set the origins card aside at THIS call and not in the
+      // builder: the family's circumstance was to be the multiplier and nothing else (the architect's ruling, `LEGACY_FAMILY_BACKGROUND`), so both places the band can
+      // arrive from – the profile and the line's handover – were forced to `middle` BEFORE the call (`createWorld` applies the handover's band over the profile's, which is
+      // why forcing one alone would not have held). No owner ruling stood behind it, and the owner met the result in play: a millionaire mother's daughter opening on $25k and
+      // $425 a week. Nothing is forced now – the handover's band (`dynastyBackgroundOf`, off the mother's own account) reaches the world, `createWorld` still lets it overrule
+      // the origins card, and the multiplier stacks on that band's base. The full note, the owner's words and the ceiling that stacking reaches: the history note in
+      // `world/succession.ts` and the S2c closure note in docs/specs/succession-2026-10.md.
       // ⚠ ABSENT `legacy` IS THE CAREER THE WORKER HAS ALWAYS CREATED, argument for argument: the same single `createWorld` call, with the career
       // id computed once instead of inline.
       const careerId = makeCareerId(seed)
       const candidate = msg.legacy
-        ? createLegacyWorld(
-            msg.legacy,
-            seed,
-            msg.profile.kidName,
-            { ...msg.profile, background: LEGACY_FAMILY_BACKGROUND },
-            careerId,
-            {
-              prologue: msg.prologue,
-              dynasty: msg.dynasty && { ...msg.dynasty, background: LEGACY_FAMILY_BACKGROUND },
-              weightEnabled: msg.weightEnabled,
-            },
-          )
+        ? createLegacyWorld(msg.legacy, seed, msg.profile.kidName, msg.profile, careerId, {
+            prologue: msg.prologue,
+            dynasty: msg.dynasty,
+            weightEnabled: msg.weightEnabled,
+          })
         : createWorld(seed, msg.profile, careerId, msg.prologue, msg.dynasty, msg.weightEnabled)
       // ⭐ E-02: the reply is BUILT before the career is adopted – see `snapshotMsg`. `createWorld`
       // writes every required field itself, so this cannot throw today; it is here because the
@@ -881,7 +878,8 @@ async function handle(msg: ToWorker): Promise<ToUI> {
         id: msg.id,
         ok: true,
         type: 'peek',
-        peek: { careerId: candidate.careerId, kidName: candidate.profile.kidName, week: candidate.week },
+        // r51 №3 – `startYear` rides along so the confirm dates the file's week in the FILE's calendar (the candidate is the decoded world, which carries its own epoch).
+        peek: { careerId: candidate.careerId, kidName: candidate.profile.kidName, week: candidate.week, startYear: candidate.startYear },
         revision: committedRevision,
       }
     }

@@ -635,8 +635,9 @@ import { MET_DRY, MET_HEADING, MET_HEADING_HEADLINE, MET_HER_LINE, MET_MENTION, 
 //
 // ⚠⚠ §3c-2, THE SITUATION LAYER, STAYS HERE, and it is the one place in T6.8 where a COPY section could not move…
 // → docs/notes/life-beats/hub.md#lifebeatts-3c--small-talk--the-copy-moved
-import { LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_CARD, SMALL_TALK_FRAME_REGISTER, SMALL_TALK_HEADING, SMALL_TALK_LINE, SMALL_TALK_SUBJECTS, smallTalkSubjectFor } from './lifeBeat/smallTalkCopy'
+import { COACH_REAL_HUNCH, COACH_REAL_SITUATION_ID, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_CARD, SMALL_TALK_FRAME_REGISTER, SMALL_TALK_HEADING, SMALL_TALK_LINE, SMALL_TALK_SUBJECTS, smallTalkSituationIdOf, smallTalkSubjectFor } from './lifeBeat/smallTalkCopy'
 import type { LegacySmallTalkSubject, SmallTalkSubject } from './lifeBeat/smallTalkCopy'
+import { chemistryHunch, type ChemistryHunch } from '../chemistry' // ⭐ ROUND 51 №8: her hunch about the coach is a band of the pair's chemistry
 export { LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_SUBJECTS, smallTalkSubjectFor }
 export type { LegacySmallTalkSubject, SmallTalkSubject }
 
@@ -2236,6 +2237,8 @@ export function lifeBeatFollowUps(
   detail: string,
   voice: Temperament,
   bond: BondBand,
+  // ⭐ ROUND 51 №8 – her hunch about the coach, handed in by the prompt assembly (the only caller with the world) so this stays pure; `null` / absent is the card that shipped.
+  hunch: ChemistryHunch | null = null,
 ): LifeBeatFollowUp[] {
   if (kind === 'small-talk') {
     const column = smallTalkVoiceOf(detail, voice)
@@ -2243,10 +2246,14 @@ export function lifeBeatFollowUps(
     // unchanged. It is named here rather than left to fall through, because «this cell is still the
     // old beat» is a fact the handoff reports and a reader has to be able to find.
     if (column === null) return []
+    // ⭐ ROUND 51 №8 – ONE second line on ONE reply of ONE situation: `coach-real`'s `respond` (`view`) – only the parent who decides to ask the coach «why» has earned a hunch.
+    const hunchLine =
+      hunch !== null && smallTalkSituationIdOf(detail) === COACH_REAL_SITUATION_ID ? COACH_REAL_HUNCH[voice][hunch] : null
     return SMALL_TALK_STANCES.map((stance) => {
       const said = column.shared === undefined
         ? [column.branches[stance].said]
         : [column.shared, column.branches[stance].said]
+      if (hunchLine !== null && stance === 'respond') said.push(hunchLine)
       // ⭐ L3-5 (10.10): each paragraph is a seat – the corpus string IS its key (`saidC[i]` renders to `said[i]`; the net walks all 51 situations x 4 voices x 3 stances)
       return { optionId: SMALL_TALK_STANCE_ID[stance], said, saidC: said.map((k) => ({ k })), done: stance === 'invite' ? LISTEN_DONE_LABEL : CONFIRM_LABEL }
     })
@@ -2418,7 +2425,9 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
   const heard: HeardRead | null = row.heard === true ? { voice, wants } : null
   // ⭐⭐⭐ ROUND 42 #15 – EVERY ANSWER THAT EARNS A SECOND LINE OF HERS, in one list. The fork still
   // has exactly the one it always had; tier 1 has three since the small-talk exchange.
-  const followUps = lifeBeatFollowUps(row.kind, row.detail, voice, band)
+  // ⭐ ROUND 51 №8 – and the pair's band for her hunch (only small talk takes one): `null` when nobody is employed, `'even'` for a coach with no row on the books yet. Pure, no draw.
+  const hunch = row.kind === 'small-talk' && world.coachId !== null ? chemistryHunch(world.coachPairs?.[world.coachId]?.chem) : null
+  const followUps = lifeBeatFollowUps(row.kind, row.detail, voice, band, hunch)
   // ⭐⭐ ROUND 42 #24 – THE FRAME'S REGISTER IS THE SUBJECT'S, NOT THE WEEK'S, ON TIER 1 AND NOWHERE
   // ELSE. Spec §2 cut the one-to-one between the Mood register and the subject («mood sets the
   // WEIGHTS»), so a bright week can bring a worry and the shipped bright heading would contradict her

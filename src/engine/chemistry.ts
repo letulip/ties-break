@@ -401,6 +401,42 @@ export function chemistryReading(pair: CoachPair | undefined, seed: string, coac
   return Math.abs(pair.chem) >= chemistryReadableAt(seed, coachId) ? pair.chem : null
 }
 
+// =================================================================================================
+// 5b. HER HUNCH – a band and never a number (round 51 №8, 14.10)
+// =================================================================================================
+//
+// The owner, after a small-talk beat where she asked whether her coach is any good: «вот жаль, что не
+// привязан, потому что после такого очень хочется и мне понять "а он ок или не ок"». The beat now
+// answers him in two ways, and this is the second: when the parent says a good coach explains what they
+// are changing, her follow-up gains one line of HUNCH about the coach she has – and the line is true to
+// the pair's actual chemistry. Three bands, because a hunch is a mood and not a measurement.
+
+/** WHICH WAY HER HUNCH LEANS. Machine-readable, never a rendered word: the copy table in
+ *  `world/lifeBeat/smallTalkCopy.ts` (`COACH_REAL_HUNCH`) is keyed on it. */
+export type ChemistryHunch = 'warm' | 'even' | 'cold'
+
+/** WHERE «WARM» STARTS, AND WHERE «COLD» ENDS, on the same -100..+100 scale as the reading.
+ *
+ *  ⚠ JUST BEYOND THE LARGEST BAR A PAIR CAN DRAW (`ECONOMY.chemistry.readableCeiling`, 2.5). A hunch
+ *  that leaned on a pair the ring still calls unreadable would be a second, looser gauge sitting beside
+ *  the first; at ±3 her «warm» and «cold» are always pairs the ring could show, and everything in
+ *  between is honestly «I can't tell». MEASURED, not guessed (invariant 5): the share of each band at
+ *  stint weeks 13 / 26 / 52 is in `tools/chemistry-bench.ts` B13 and in the dated amendment at the end
+ *  of `docs/specs/the-chemistry-2026-09.md`. */
+export const CHEMISTRY_HUNCH_WARM_AT = 3
+export const CHEMISTRY_HUNCH_COLD_AT = -3
+
+/** THE BAND OF A PAIR'S CHEMISTRY. `undefined` is a coach she has not trained with yet (no row in
+ *  `coachPairs` until the first week) and reads `'even'` – a brand-new coach is exactly «I can't guess
+ *  what I'll hear». Pure: no draw, nothing persisted, no threshold drawn per pair (this is NOT the
+ *  readability gate, which stays `chemistryReading`'s). */
+export function chemistryHunch(chem: number | undefined): ChemistryHunch {
+  if (chem === undefined) return 'even'
+  if (chem >= CHEMISTRY_HUNCH_WARM_AT) return 'warm'
+  if (chem <= CHEMISTRY_HUNCH_COLD_AT) return 'cold'
+  return 'even'
+}
+
 // --- the two helpers, once ----------------------------------------------------------------------
 
 function clamp(x: number, lo: number, hi: number): number {

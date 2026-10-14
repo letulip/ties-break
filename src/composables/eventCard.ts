@@ -24,7 +24,8 @@ import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { venueArtUrl } from '../art/venues'
 import { surfaceStyleAffinity } from '../engine/match/style'
-import { t } from '../i18n'
+import { eventText, t } from '../i18n'
+import type { CopyRef } from '../shared/i18n'
 import type { Surface } from '../engine/match/types'
 import type { TierId } from '../engine/season/types'
 
@@ -213,6 +214,15 @@ export function courtSentence(style: PlayStyleOf, surface: Surface): string | nu
  *  Home chip does since L2-3. `null` is «no rank»; `rankLabel(n, true)` and `#{rank}` are the same characters. */
 export function rankText(rank: number | null): string {
   return rank === null ? t('Unranked') : t('#{rank}', { rank })
+}
+
+/** ⭐ r51 №7 (13.10) – THE HIRED COACH'S SENTENCE ON A TOURNAMENT CARD, IN THE PLAYER'S WORDS: the entry confirm, Season's card, the next-tournament panel and the Calendar's marker card all print it, and until now
+ *  all four printed the engine's English string as it came («Your coach would save her for…» under the Russian build). The engine ships the sentence twice, `coachCaution` (its English) and `coachCautionC` (the ref that
+ *  English was rendered from); this renders the ref, and falls back to the string where there is none. Under English the two are the same bytes (the formatter's identity path), so wiring a screen through here moves
+ *  nothing a player can see today. '' where he said nothing – the callers' `v-if` asks the string, which is present exactly when the ref is. A tournament's NAME inside it is passed through raw, like everywhere
+ *  else in the app; only the sentence around it is translated. */
+export function coachCautionText(e: { coachCaution?: string; coachCautionC?: CopyRef }): string {
+  return e.coachCaution ? eventText({ text: e.coachCaution, c: e.coachCautionC }) : ''
 }
 
 export function useEventCard(): {

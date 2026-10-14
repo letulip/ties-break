@@ -65,6 +65,9 @@ a box it has not proven with a command in this session.
 3. **The diff, read before described.** `git log --oneline main..HEAD` and
    `git diff --stat main...HEAD`. The What-section is written from what actually changed, not from
    memory: two sentences, the owner's numbering where the wave answered his items.
+   ⚠ While reading it, check the two-language law (owner, r51 №14, 13.10): player-facing EN copy
+   touched without its RU pair in the same diff is a STOP – collect the pair before assembling,
+   do not ship the gap as a note. `npm run i18n:check` inside `check` proves the catalog half.
 
 4. **The checklist, EARNED box by box – the check runs, then the box is ticked, in that order.**
    The owner's own words: «идут проверки и мы галочки проставляем». Every box in the template maps

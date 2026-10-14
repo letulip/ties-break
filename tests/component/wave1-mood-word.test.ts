@@ -23,7 +23,21 @@
 //       -> the "her life takes the word" arm goes red on the recap card alone.
 //   * ties in `idleRead` changed from `mood > body` to `mood >= body`
 //       -> the "a tie leaves the shipped word alone" arm goes red.
-import { describe, it, expect, beforeEach } from 'vitest'
+//
+// ⭐⭐ ROUND 51 B2 (13.10) – THE LAST DESCRIBE BELOW IS NEW: THE FIVE WORDS UNDER RUSSIAN (owner №15 «Bright», №22 «Heavy»).
+// Everything above it is English and is byte-identical to the day it was written. The engine's word reached both tiles as it came, which under `ru` meant `Bright` and `Heavy` printed in English –
+// only on the weeks the engine spoke, because the two fallback maps were translated all along. The tiles now read it through the display boundary (`engineWord('mood' | 'moodRecap', …)`), and the
+// arms at the foot hold the Russian: every rung the engine hands, on both screens, off its own snapshot; the neutral rung reading as each screen's OWN `norm` word; English unmoved; the
+// vocabulary against `MOOD_WORD`; and the longest Russian rung against the longest word either tile already shows (the English length arm above cannot speak for Russian lengths).
+// ⚠ EVERY RUSSIAN EXPECTATION IS READ FROM THE REAL src/i18n/ru.json BY KEY, so his live edits follow the screen instead of reddening it, and an absent row is an `undefined` expectation, which
+// fails loudly instead of passing on English.
+// ⚠ MUTATION-VERIFIED 13.10 – each of these was made and watched, then the tree put back byte-identical (checksums compared) and this file run green, 12 of 12:
+//   * both screens put back to the raw word (`engineWord('mood' | 'moodRecap', engineMood)` -> `engineMood`) -> the "every rung reads Russian on both screens" arm and the "neutral rung reads as each
+//     screen's own norm word" arm go red; the English, vocabulary and length arms stay green (they are not about the screens' wiring), and so do the seven older arms.
+//   * the reader forgets `Heavy` (its entry dropped from the shared table in words.ts) -> the "every rung" arm and the "vocabulary is the engine's" arm go red.
+//   * the recap's neutral rung pointed at the Kid tile's row (`recap|Steady` -> `Steady` in `moodRecap`) -> the "neutral rung" arm goes red alone, on the recap card.
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
@@ -49,6 +63,8 @@ import { rngFromSeed } from '../../src/engine/rng'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 import type { WorldState } from '../../src/engine/world'
 import { PHONE, setViewport } from './fits'
+import { engineWord, installCatalog, resetI18nForTests, setLocale } from '../../src/i18n'
+import { installMemoryStorage } from './setup'
 
 /** A REAL career ticked to `week` with every tournament skipped, held solvent – so the week the
  *  arms read is an ORDINARY one: no fresh result, nothing on her face but her body and her life.
@@ -233,5 +249,131 @@ describe('⭐⭐ v72 – the Mood word on the two tiles that have one', () => {
     expect(kidWord(kid(snap)).length).toBeLessThan(longestShipped.length)
     expect(recapWord(recap(snap)).length).toBeLessThan(longestShipped.length)
     setViewport({ width: 1280, height: 800 })
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+// ⭐⭐ ROUND 51 B2 (13.10) – THE FIVE WORDS UNDER RUSSIAN
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════
+/** His Russian, as the importer compiled it. */
+const RU = JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string, string>
+
+/** The catalog row each rung's Russian lives under on the Kid tile. `Steady` is NOT a new row: it is that tile's own `norm` word. */
+const KID_ROW: Record<string, string> = {
+  Glowing: 'mood|Glowing',
+  Bright: 'mood|Bright',
+  Steady: 'Steady',
+  Dimmed: 'mood|Dimmed',
+  Heavy: 'mood|Heavy',
+}
+/** …and on the recap card, whose neutral rung is the card's own `recap|Steady`. */
+const RECAP_ROW: Record<string, string> = { ...KID_ROW, Steady: 'recap|Steady' }
+
+/** The four rungs the engine hands, each with a spirit that lands on it with a fresh body (the ladder arm above walks the same values). The neutral rung is POSED: it can never win the channel (`avatarEmotionRead`: a rung of 0 does not beat the body), so the engine never hands `Steady` and no snapshot of its own carries it. */
+const RUNGS: ReadonlyArray<readonly [word: string, spirit: number]> = [
+  ['Glowing', ECONOMY.spirit.mood.glowingFrom + 2],
+  ['Bright', ECONOMY.spirit.mood.brightFrom + 1],
+  ['Dimmed', ECONOMY.spirit.mood.dimmedBelow - 1],
+  ['Heavy', ECONOMY.spirit.mood.heavyBelow - 5],
+]
+
+/** The same ordinary week with the engine's word posed on it. */
+function withWord(snap: Snapshot, moodWord: string | null): Snapshot {
+  return { ...snap, diary: { ...snap.diary, facts: { ...snap.diary.facts, moodWord: moodWord as Snapshot['diary']['facts']['moodWord'] } } }
+}
+
+async function inRussian(): Promise<void> {
+  installCatalog('ru', RU)
+  await setLocale('ru')
+}
+
+/** The Kid tile found by its RUSSIAN label – the English finder above looks for `Mood`. */
+const kidWordRu = (w: ReturnType<typeof kid>) =>
+  w
+    .findAll('.kid-tile')
+    .find((tile) => tile.find('.kid-tile-label').text() === RU.Mood)!
+    .find('.kid-tile-lead')
+    .text()
+
+describe('⭐⭐ r51 B2 – the five Mood words under Russian (owner №15 Bright, №22 Heavy)', () => {
+  beforeEach(() => {
+    installMemoryStorage()
+    resetI18nForTests(null)
+    setActivePinia(createPinia())
+  })
+  afterEach(() => {
+    document.body.innerHTML = ''
+    resetI18nForTests(null)
+    document.documentElement.lang = 'en'
+  })
+
+  it('⭐ EVERY RUNG THE ENGINE HANDS READS RUSSIAN ON BOTH SCREENS, off its own snapshot – Bright and Heavy are the two he found', async () => {
+    await inRussian()
+    expect(RU.Mood, 'the Kid tile has a Russian label to be found by').toBeTruthy()
+    for (const [word, spirit] of RUNGS) {
+      const snap = snapshotAt(spirit)
+      expect(snap.diary.facts.moodWord, `${word}: the fixture is the engine's own rung`).toBe(word)
+      const onKid = kidWordRu(kid(snap))
+      const onRecap = recapWord(recap(snap))
+      expect(onKid, `${word} on the Kid tile`).toBe(RU[KID_ROW[word]!])
+      expect(onRecap, `${word} on the recap card`).toBe(RU[RECAP_ROW[word]!])
+      for (const printed of [onKid, onRecap]) {
+        expect(printed, `${word} printed «${printed}»`).toMatch(/\p{Script=Cyrillic}/u)
+        expect(printed, `${word} printed «${printed}» – a Latin letter survived`).not.toMatch(/[A-Za-z]/)
+      }
+    }
+  })
+
+  it('⚠⚠ THE NEUTRAL RUNG READS AS EACH SCREEN’S OWN `norm` WORD – one state, one word, per screen', async () => {
+    await inRussian()
+    // A baseline week hands no word, so each tile prints its OWN map's word for the neutral face: the two words the owner shipped (RU-05), which differ between the screens, and which the
+    // engine's `Steady` must agree with – or a tile would flip between two Russian words for one state from one week to the next.
+    const base = snapshotAt(ECONOMY.spirit.baseline)
+    expect(base.diary.facts.moodWord).toBeNull()
+    expect(base.diary.facts.emotion).toBe('norm')
+    const ownKid = kidWordRu(kid(base))
+    const ownRecap = recapWord(recap(base))
+    expect(ownKid, 'the Kid tile’s own neutral word is its `Steady` row').toBe(RU.Steady)
+    expect(ownRecap, 'the recap card’s own neutral word is its `recap|Steady` row').toBe(RU['recap|Steady'])
+    const posed = withWord(base, 'Steady')
+    expect(kidWordRu(kid(posed))).toBe(ownKid)
+    expect(recapWord(recap(posed))).toBe(ownRecap)
+  })
+
+  it('⚠ ENGLISH IS UNMOVED: the five words print as the engine wrote them under the default locale, on both screens', () => {
+    const base = snapshotAt(ECONOMY.spirit.baseline)
+    for (const word of Object.values(MOOD_WORD)) {
+      const snap = withWord(base, word)
+      expect(kidWord(kid(snap)), `${word} on the Kid tile`).toBe(word)
+      expect(recapWord(recap(snap)), `${word} on the recap card`).toBe(word)
+    }
+  })
+
+  it('⚠ THE VOCABULARY IS THE ENGINE’S: every word of `MOOD_WORD` reads Russian through the production reader, in both classes', async () => {
+    await inRussian()
+    const words = Object.values(MOOD_WORD)
+    expect(words.length, 'the five words were read (an empty list would make this vacuous)').toBe(5)
+    for (const word of words) {
+      for (const cls of ['mood', 'moodRecap'] as const) {
+        const reading = engineWord(cls, word)
+        expect(reading, `${cls}: «${word}» reads «${reading}» – an unknown word comes back as written`).not.toBe(word)
+        expect(reading, `${cls}: «${word}» reads «${reading}»`).toMatch(/\p{Script=Cyrillic}/u)
+        expect(reading, `${cls}: «${word}» reads «${reading}» – a Latin letter survived`).not.toMatch(/[A-Za-z]/)
+      }
+    }
+  })
+
+  it('⚠ 375x667 – NO RUSSIAN RUNG IS LONGER THAN THE LONGEST WORD EITHER TILE ALREADY SHOWS', () => {
+    // ⚠ r51 B2 (13.10): the English length arm above is English-only and stays so (a line nobody touched cannot regress). The Russian words are a different set with different lengths, so the same
+    // claim is measured again here against the real ru.json: a box that holds the longest word the tiles already print holds any rung no longer than it. Characters are the honest unit for
+    // the same reason as above (both tiles are styled in scoped blocks `@vue/test-utils` does not inject), and a rung with spaces can also wrap, which the longest shipped word cannot.
+    const faces = ['Steady', 'Happy', 'Low', 'Focused', 'Tired', 'Hurt', 'On the mend', 'Angry', 'recap|Steady', 'recap|Happy', 'recap|Focused', 'recap|Tired', 'Frustrated']
+    expect(faces.every((k) => (RU[k] ?? '') !== ''), 'every shipped face word has its Russian row').toBe(true)
+    const longestShipped = Math.max(...faces.map((k) => (RU[k] as string).length))
+    for (const row of new Set([...Object.values(KID_ROW), ...Object.values(RECAP_ROW)])) {
+      const word = RU[row] ?? ''
+      expect(word, `${row} has a Russian row`).not.toBe('')
+      expect(word.length, `«${word}» (${row}) is longer than the longest word the tiles already hold (${longestShipped})`).toBeLessThanOrEqual(longestShipped)
+    }
   })
 })

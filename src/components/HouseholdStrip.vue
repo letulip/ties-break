@@ -42,15 +42,22 @@ const household = computed(() => game.snapshot?.coachBilling.household ?? null)
 const inCents = computed(() => household.value?.incomeCents ?? 0)
 const outCents = computed(() => household.value?.outgoingCents ?? 0)
 const netCents = computed(() => household.value?.netCents ?? 0)
-// The shelf only earns a mention when the family owns something that moves – a "$0.00 shelf" line is
-// noise on a phone, and every junior career would carry it for years before the shop even opens.
-const shelfCents = computed(() => household.value?.shelfCents ?? 0)
-// ⭐⭐ ROUND 29 #5 – AND WHAT THE SHELF COSTS TO KEEP, which is a different sentence from the one
-// above and has to be. `shelfCents` is a VALUATION (a car is worth less this week); this is CASH
-// that really left the wallet – a yacht's crew, berth, fuel, survey and insurance. It is already
-// inside the OUT figure; the line exists so the largest weekly bill in the game has a name on the
-// one strip the owner asked for two rounds ago. Silent at zero, exactly as the shelf line is: every
-// family that owns nothing with an upkeep is every family that has not commissioned a boat.
+// ⭐⭐⭐ ROUND 51 #6 (13.10) – THE SHELF'S SENTENCE WAS HERE AND IT IS GONE, ON THE OWNER'S RULING.
+// «The shelf is in that – it adds / costs {0} a week at today's rates.» named the weekly VALUATION
+// drift of what the family owns, and the engine had summed that same drift into the IN and OUT
+// figures above it. THE OWNER, 13.10, when his save read «$1,814 in» with $425 of cash arriving:
+// «вообще не должно его быть на экране тренеров, мы им не оперируем там никак, он только
+// заблуждает». So this strip counts CASH ONLY (`householdWeekly`) and says nothing about paper.
+// ⚠ AND THIS FILE DOES NOT READ `household.shelfCents`, ON PURPOSE: the wire still carries it as a
+// memo for the engine's own tests, and a template that quotes it again is the defect back in a new
+// coat.
+// ⭐⭐ ROUND 29 #5 – AND WHAT THE SHELF COSTS TO KEEP, which was a different sentence from the
+// shelf's line above and had to be. The valuation (a car is worth less this week) was paper; this is
+// CASH that really left the wallet – a yacht's crew, berth, fuel, survey and insurance. It is
+// already inside the OUT figure; the line exists so the largest weekly bill in the game has a name
+// on the one strip the owner asked for two rounds ago. Silent at zero: every family that owns
+// nothing with an upkeep is every family that has not commissioned a boat. ⚠ IT STAYS – upkeep is
+// cash, and the 13.10 ruling is about the paper only.
 const upkeepCents = computed(() => household.value?.upkeepCents ?? 0)
 // ⭐⭐ ROUND 29 PART FOUR P7 – AND WHAT THE PARENT'S BUSINESSES BRING IN, which is CASH like the
 // upkeep line and unlike the shelf's valuation: the merch brand (follows fame) and the academy's
@@ -92,13 +99,6 @@ const netMagnitude = computed(() => Math.abs(netCents.value))
         <strong :class="{ short: netCents < 0 }">{{ formatCents(netMagnitude) }}</strong>
         {{ netLabel }}
       </span>
-    </p>
-    <p v-if="shelfCents !== 0" class="hint budget-shelf">
-      {{
-        shelfCents > 0
-          ? t("The shelf is in that – it adds {0} a week at today's rates.", [formatCents(shelfCents)])
-          : t("The shelf is in that – it costs {0} a week at today's rates.", [formatCents(-shelfCents)])
-      }}
     </p>
     <p v-if="upkeepCents > 0" class="hint budget-upkeep">
       {{ t('Keeping what you own is {0} a week of that, and it is real money.', [formatCents(upkeepCents)]) }}

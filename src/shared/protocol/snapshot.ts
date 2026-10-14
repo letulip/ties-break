@@ -69,12 +69,15 @@ export type HandoverBaseBand = 'behind' | 'level' | 'ahead'
 
 export interface HouseholdWeekly {
   /** everything that arrives in a week, in cents: `weeklyIncomeCents` (the parents' contribution,
-   *  the savings interest, a kit retainer pro-rated and net of her cut) plus the shelf's weekly GAIN
-   *  when it is gaining. */
+   *  the savings interest, a kit retainer pro-rated and net of her cut). CASH ONLY since round 51 #6
+   *  (13.10): the shelf's weekly valuation GAIN used to be added here and no longer is – the owner's
+   *  ruling, see `shelfCents`. */
   incomeCents: number
   /** everything that leaves in a week, as a POSITIVE magnitude: the training bill (the coach and the
    *  court – `coachBilling.weeklyCents`, which is court time alone for a self-coached family) plus a
-   *  hired masseur's salary, plus the shelf's weekly LOSS when it is losing. */
+   *  hired masseur's salary, plus what the shelf costs to keep (`upkeepCents`, which is cash). CASH
+   *  ONLY since round 51 #6 (13.10): the shelf's weekly valuation LOSS used to be added here and no
+   *  longer is. */
   outgoingCents: number
   /** `incomeCents - outgoingCents`. Signed: a household spending more than it earns reads negative,
    *  which is most junior careers and is the truth of them. */
@@ -84,15 +87,18 @@ export interface HouseholdWeekly {
    *  есть и с доходностью инструменты и с расходом»: a deposit at +2% a year yields, a car at -9%
    *  costs, and a family holding both sees the net of the two.
    *
-   *  ⚠⚠ A MEMO, AND ALREADY INSIDE THE THREE FIGURES ABOVE – `FinanceWeek.kidShare`'s own discipline,
-   *  in the same words: a consumer that ADDS this to `incomeCents` or subtracts it from
-   *  `outgoingCents` has misread it. It is carried so a screen can NAME the shelf, never so that the
-   *  arithmetic can be redone.
+   *  ⚠⚠⚠ ROUND 51 #6 (13.10) – A MEMO, AND IN NONE OF THE THREE FIGURES ABOVE. THE OWNER, on the
+   *  coaches screen: «вообще не должно его быть на экране тренеров, мы им не оперируем там никак, он
+   *  только заблуждает». This USED to be inside `incomeCents` / `outgoingCents` (its positive part in
+   *  the one, its negative part in the other – `FinanceWeek.kidShare`'s memo discipline), and a
+   *  household whose houses were gaining on paper read «left over» while the cash was short. It is
+   *  carried now so the engine's market tests can measure the shelf's week; NO screen reads it, and a
+   *  consumer that adds it to a total has put the defect back.
    *
    *  ⚠ AND IT IS NOT CASH. A car's depreciation never leaves the wallet and a fund's growth never
-   *  enters it – the value only becomes money on a sale. It is here because he asked for the shelf to
-   *  be in the household's weekly picture, and it is deliberately NOT in `weeklyIncomeCents`, which
-   *  is the coach market's affordability cap and must stay the money that really arrives. */
+   *  enters it – the value only becomes money on a sale. That is the whole reason it is out of the
+   *  totals, and why it is deliberately NOT in `weeklyIncomeCents`, which is the coach market's
+   *  affordability cap and must stay the money that really arrives. */
   shelfCents: number
   /** ⭐⭐ ROUND 29 #5, §3f – WHAT THE SHELF COSTS TO KEEP, as a POSITIVE magnitude, and unlike
    *  `shelfCents` THIS ONE IS CASH. A yacht's crew, berth, fuel, survey and insurance leave the
@@ -419,6 +425,14 @@ export interface Snapshot {
    *  owns the book and this is its ONE-BIT view, so the book itself (1 to 9 KB) never rides the weekly snapshot: the album screen draws its control off
    *  this flag and asks for the book once, with the `heirloomAlbum` query, when that control is pressed. */
   hasHeirloom: boolean
+  /** ⭐ r51 №5 (13.10) – WHAT A DYNASTY CAREER REALLY OPENED WITH, in cents: `world.legacy.savingsSliceCents`, the grant the career was handed (the band's base times her
+   *  mother's multiplier, the childhood's deduction on it). The Money screen's starting-budget line quotes THIS and not the tier's base, which a daughter of a held
+   *  champion never held. ABSENT on a career with no legacy block – the line then quotes the tier base, as it always did. DERIVED (class b) off the
+   *  persisted block and persisted on the snapshot nowhere.
+   *  ⚠ THE KEY IS ABSENT – NOT `null`, NOT `undefined` – ON A CAREER WITH NO LEGACY BLOCK. Measured both ways on 13.10: a `null` moves the L3-7 twin's JSON digest of every
+   *  career in the corpus (a linux one that cannot be regenerated on a Mac included), and a key that is always present with no value breaks D-07's per-key size census
+   *  (`JSON.stringify(undefined)` is `undefined`). So the wire carries the keys every career carries, and this one more on a dynasty career. */
+  openingFundsCents?: number
   /** ⭐ ROUND 46 #22 – IS THE DEV LIFE-EVENT BOOST ON in the worker right now. Transient, never saved: the More
    *  screen's switch shows the worker's own state rather than a belief of its own. */
   devLifeBoost: boolean

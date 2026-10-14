@@ -226,9 +226,14 @@ const masseurSalary = computed(() => formatCents(game.snapshot?.masseurSalaryCen
 // control and the click it refuses must tell one story. HIRED prints the room note. UNHIRED prints
 // the pitch – what the salary buys, in the units the player reads, no figures (they are on the
 // price beside it).
+// ⭐ r51 №2 (13.10) – THE LOCKED SENTENCE AND THE ROOM NOTE ARE THE ENGINE'S ENGLISH, so they go through
+// `engineText` (the display boundary: a closed set the seat `engine.text` names, read through the catalog
+// by its own text) and not through `t()`. ⚠ ONLY ON THE ENGINE-BORN BRANCHES: the unhired pitch below is
+// already a `t()` literal, and feeding a sentence that is already Russian back through the boundary would
+// count a miss for a string that was never meant to be a key. English returns the text as written.
 const masseurLine = computed(() => {
-  if (!masseurUnlocked.value) return MASSEUR_LOCKED_DETAIL
-  if (masseurHired.value) return game.snapshot?.masseurNote ?? ''
+  if (!masseurUnlocked.value) return engineText(MASSEUR_LOCKED_DETAIL)
+  if (masseurHired.value) return engineText(game.snapshot?.masseurNote ?? '')
   return t('Table work at home every week, and a hand on every rehab – layoffs end sooner.')
 })
 // ⭐ v59 step 2 – THE DIAL, the owner's own idea («настройки сколько раз в неделю он дает свои
@@ -391,11 +396,15 @@ const psychologistFocusOpen = computed(() => game.snapshot?.psychologistFocusOpe
 // The line under the row: the ENGINE's refusal while anything is closed, otherwise what the running
 // year is for – and nothing at all before the first pick, because the four labelled options already
 // say what is on offer and a placeholder sentence would be this file inventing copy.
+// ⭐ r51 №2 (13.10) – BOTH BRANCHES ARE THE ENGINE'S ENGLISH (the refusal the command throws, the year's
+// catalogue line), and the template prints this note as it comes, so the boundary is crossed HERE: the
+// picker above already read the same five lines through `engineText`, which is why the note was the one
+// place a Russian card still said «The year goes on …».
 const psychologistFocusNote = computed(() => {
   const detail = game.snapshot?.psychologistFocusDetail ?? ''
-  if (detail) return detail
+  if (detail) return engineText(detail)
   const chosen = psychologistFocus.value
-  return chosen ? PSY_FOCUS_LINE[chosen] : ''
+  return chosen ? engineText(PSY_FOCUS_LINE[chosen]) : ''
 })
 // ⭐⭐ 17.09 – AND THE SECOND HALF OF THE RE-AFFIRMATION DEFECT LIVED HERE, not in the engine.
 // `if (focus === psychologistFocus.value) return` stood at the top of this function and mirrored the
@@ -436,7 +445,7 @@ const psychologistNudge = computed(() => psychologistFocusNudge(game.snapshot))
 // R10-16 doctrine. HIRED and UNHIRED both print what the retainer IS, because that is all that is
 // true of him today; the focus row that will say what he WORKS ON is T3's.
 const psychologistLine = computed(() => {
-  if (!psychologistUnlocked.value) return PSYCHOLOGIST_LOCKED_DETAIL
+  if (!psychologistUnlocked.value) return engineText(PSYCHOLOGIST_LOCKED_DETAIL)
   // ⭐ THE RUNNING YEAR LIVES HERE (the owner, 14.09: «да, вписывай строку с годом» – wave-5
   // question 9). The four PSY_FOCUS_LINE sentences were on screen ~3 weeks a year, because the
   // note under the focus row correctly prints the engine's refusal whenever a change is closed
@@ -575,7 +584,7 @@ const sparringTravelSub = computed(() => {
 // the bill and the card, so the screen cannot claim a free week the ledger charged for.
 const sparringStoodDown = computed(() => game.snapshot?.sparringStoodDown ?? false)
 const sparringLine = computed(() => {
-  if (!sparringUnlocked.value) return SPARRING_LOCKED_DETAIL
+  if (!sparringUnlocked.value) return engineText(SPARRING_LOCKED_DETAIL)
   if (sparringHired.value && sparringStoodDown.value) {
     return t('The hitting partner remains with the team, but is not working this week. No salary is charged.')
   }

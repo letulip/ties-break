@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 169 dated entries, newest 2026-10-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 171 dated entries, newest 2026-10-14. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -40,7 +40,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 26 | [THE LOCALIZATION STACK RECEIVED: CODEX/LOCALIZATION-RU INTAKEN, THE SPEC RE-PLANNED](#07102026--the-localization-stack-received-codexlocalization-ru-intaken-the-spec-re-planned) | 2026-10-07 |
+| process-and-git | 28 | [ROUND 51, HIS MORNING ANSWERS (each verbatim in the round ledger)](#14102026--round-51-his-morning-answers-each-verbatim-in-the-round-ledger) | 2026-10-14 |
 | product-and-scope | 8 | [LOCALIZATION: THE NINE QUESTIONS RULED, PLUS THREE ORDERS – THE STACK LANDS WITH THE INTAKE](#07102026--localization-the-nine-questions-ruled-plus-three-orders--the-stack-lands-with-the-intake) | 2026-10-07 |
 | ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
@@ -6100,3 +6100,39 @@ row exists – style guide, №10 family voice, RU-04 lexicon, every wave annota
 Eight waves on `loc/ru-fill` took ru.json 56 -> 5,857 of 5,859 (the two held ENDING_BLURB
 paragraphs await his English call), the display boundary localises engine-born words with English
 byte-identity proven, and the coach market was the last product screen to leave English.
+
+## 13.10.2026 – ROUND 51'S FOUR STANDING RULINGS (his evening words, each verbatim in the round ledger)
+
+1. **Both languages at once** (№14): «теперь все текстовые правки должно отражать в обоих языках
+   синхронно, нужно отразить в спеках, документации, скиллах». The law lives in the localization
+   working contract §8, CLAUDE.md Style, /house-review Pass 1 №7 and /pull-request step 3; the
+   census `npm run i18n:check` is its mechanical half.
+2. **The bank model for withdrawals** (№19): «положили 100к … стало 150к … сняли 50к – осталось
+   100к – какая теперь доходность? Мне кажется 0, прибыль изъята … пересчитывать тоже … в момент
+   снятия». A part sale takes PROFIT FIRST (`bankSaleSplit`, shared/money.ts); the card's «since
+   you bought it» figure is the remaining position's V − P; an underwater withdrawal is principal
+   and the dollar loss carries. Supersedes round 34 №15's DISPLAY where they met; the lifetime
+   memory fields stay.
+3. **The coach screens count cash only** (№6): «вообще не должно его быть на экране тренеров, мы
+   им не оперируем там никак, он только заблуждает» – the paper valuation drift left the
+   household strip's figures and its hint sentence; upkeep stays (real money).
+4. **Tab strips scroll inside themselves** (№1): «нужен скролл самих пилюль горизонтальный в этом
+   случае без горизонтального скролла страницы» – the recipe (contained overflow-x + reveal of
+   the active pill) shipped on the budget and More strips; the overflow sweep guards the page.
+
+## 14.10.2026 – ROUND 51, HIS MORNING ANSWERS (each verbatim in the round ledger)
+
+1. **The dynasty's opening cash is capped at $288,000** – «я думаю даже что 288 может быть верхним
+   потолком, учитывая еще дом и машину, в этот раунд». The house and car arrive on top, untouched;
+   `LEGACY_CASH_CEILING_CENTS` is the last step of the one wallet primitive (`a5b28ced`).
+2. **The «is my coach actually good» beat opens the reading** – «давай по рекомендации»: the
+   `view` answer to `coach-real` opens the CURRENT pair's chemistry reading and her reply gains a
+   band-true hunch line. Amends ruling V2 for that one stance with an INFORMATIONAL effect only –
+   bond effects of tier-1 replies stay zero.
+3. **Tournament names stay Latin** – «они вроде и так английские, мы их не локализуем» (the same
+   class as the patch names and venues of RU-18).
+4. **«Heavy пусть будет Мрачная»**; the round's other DRAFT rows approved («по остальным к вычитке
+   ок»).
+5. **The thin school-years small-talk subjects are filled in both languages** – «это тоже можно
+   сюда же взять на двух языках»: every school / after-school subject cell to the K4 floor of 3.
+6. **The bank model stays on trial** – «давай так попробуем, я проверю и скажу».

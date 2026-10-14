@@ -59,7 +59,7 @@ import { STARTING_FUNDS_CENTS } from '../src/engine/world/create'
 import { bookPractice } from '../src/engine/world/planner'
 import { buyAsset } from '../src/engine/world/shop'
 import { toSnapshot } from '../src/engine/world/snapshot'
-import { createLegacyWorld, legacyInputOf, LEGACY_DAUGHTER_LAG_YEARS, type LegacyInput } from '../src/engine/world/succession'
+import { createLegacyWorld, legacyInputOf, LEGACY_CASH_CEILING_CENTS, LEGACY_DAUGHTER_LAG_YEARS, type LegacyInput } from '../src/engine/world/succession'
 import { tickWeek } from '../src/engine/world/tick'
 import { resumeMain } from '../src/engine/rng'
 import { compressWorld, decodeExportFile, decompressWorld, encodeExportFile } from '../src/engine/saveCodec'
@@ -222,9 +222,28 @@ describe('S2b 2 – the money: B x the band, one multiply, whole cents', () => {
     for (const background of backgrounds) {
       for (const { m } of BANDS) {
         const world = createLegacyWorld(posed({ savingsMultiplier: m, ...NO_ASSETS }), SEEDS[0], NAME, { ...DEFAULT_PROFILE, background })
-        expect(world.fundsCents, `${background} x ${m}`).toBe(Math.round(STARTING_FUNDS_CENTS[background] * m))
+        // ⚠ 14.10: the owner's cash ceiling caps the wealthy x held cell (360,000 became 288,000); the other eleven are untouched. Built from the constant and the table, not from the engine function under test.
+        expect(world.fundsCents, `${background} x ${m}`).toBe(Math.min(Math.round(STARTING_FUNDS_CENTS[background] * m), LEGACY_CASH_CEILING_CENTS))
         expect(world.profile.background).toBe(background)
       }
+    }
+  })
+
+  it('14.10 – the cash ceiling at the world level: one cent over clamps, exactly at stays, one cent under passes – the wallet, the grant and the first sentence agree', () => {
+    const B = STARTING_FUNDS_CENTS.wealthy
+    const cap = LEGACY_CASH_CEILING_CENTS
+    const cases: [string, number, number][] = [
+      ['one cent over', cap + 1, cap],
+      ['exactly at', cap, cap],
+      ['one cent under', cap - 1, cap - 1],
+    ]
+    for (const [label, raw, expected] of cases) {
+      const mult = raw / B
+      expect(Math.round(B * mult), `${label}: the raw wallet really is ${raw} (the denominator the arm leans on)`).toBe(raw)
+      const world = createLegacyWorld(posed({ savingsMultiplier: mult, ...NO_ASSETS }), SEEDS[0], NAME, { ...DEFAULT_PROFILE, background: 'wealthy' })
+      expect(world.fundsCents, label).toBe(expected)
+      expect(world.legacy!.savingsSliceCents, `${label}: the amount GRANTED is the clamped wallet`).toBe(expected)
+      expect(world.events[0].text, `${label}: the first sentence states that wallet`).toContain(formatCents(expected))
     }
   })
 

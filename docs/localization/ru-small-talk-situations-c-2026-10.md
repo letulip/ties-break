@@ -656,3 +656,607 @@ assigns fatigue, training or bond effects to resting.
 | rows | ordinary authored strings | shared second beats | state |
 | ---: | ---: | ---: | --- |
 | 51 / 51 | 969 / 969 | 4 / 4 | all current generated situations complete as DRAFT |
+
+⚙ 14.10: four rows joined at the end of the catalogue – the current count is in §22.
+
+## 17. r51 №17 – four school-years story situations (14.10)
+
+⚖ 14.10 владелец: «по остальным к вычитке ок» – ряды этого раздела `APPROVED`.
+
+⚙ 14.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's item №17: «ситуация "Она подает, мяч задевает трос сетки - и падает в кофе одного папы." очень крутая. Но я ее видел уже 3 раза. Давай сделаем разнообразие этих юморных зарисовок и как-то сделаем, чтобы они более рандомно происходили?»
+
+Four new `story` situations, R53–R56, appended last in the generated catalogue (English authority: the 14.10 addendum in `docs/specs/small-talk-corpus-2026-09.md`). Both languages in one change. Each is a teaser, a shared incident and three replies, in all four voices, like the court-four rows in [RU-10 life beats](ru-life-beats-small-talk-2026-10.md) §11. Row order, ids, stages and fact gates are locale-independent; nothing here is drawn differently in Russian.
+
+## 18. Situation R53 – `the-gran-with-sunscreen`
+
+Subject `story`; stages `school`; no fact gate. `Смена сторон` is the tennis changeover. The umpire is never given a gender in Russian: the thanks is a nominal sentence (`От судьи – „спасибо“`) and the sunscreen goes `судье` in the dative, the way `ru.json` already writes `пожала руку судье`. `Нам обеим` is the two players, both girls.
+
+### 18.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Wait till you hear what happened at the changeover."` | `«Подожди, сейчас расскажу, что было на смене сторон.»` |
+| fiery | `"That changeover should not have been allowed."` | `«Такое на смене сторон вообще нельзя было разрешать.»` |
+| deep | `"I keep thinking about the changeover. Not the tennis – the changeover."` | `«Всё думаю про смену сторон. Не про теннис – про смену сторон.»` |
+| quiet | `"The changeover went on a bit."` | `«Смена сторон немного затянулась.»` |
+
+### 18.2 Shared second beats
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Somebody's gran walked onto the court with a tube of sunscreen and did both our ears. Then the umpire's neck. Nobody stopped her."` | `«Чья-то бабушка вышла на корт с тюбиком солнцезащитного крема и намазала уши нам обеим. Потом шею судье. Её никто не остановил.»` |
+| fiery | `"A gran walks onto the court with a tube of sunscreen – both our ears, then the umpire's neck. Nobody stopped her."` | `«Бабушка выходит на корт с тюбиком солнцезащитного крема – уши нам обеим, потом шея судьи. Её никто не остановил.»` |
+| deep | `"Somebody's gran came onto the court with a tube of sunscreen. Both our ears, then the umpire's neck. It didn't cross anyone's mind to stop her."` | `«Чья-то бабушка пришла на корт с тюбиком солнцезащитного крема. Уши нам обеим, потом шея судьи. Никому и в голову не пришло её остановить.»` |
+| quiet | `"A gran came on with sunscreen. She did both our ears, and the umpire's neck. Nobody stopped her."` | `«Вышла бабушка с солнцезащитным кремом. Намазала нам обеим уши и судье шею. Её никто не остановил.»` |
+
+### 18.3 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what happened at the changeover` | `Спросить, что случилось на смене сторон` |
+| respond | `Say you wish you had been there` | `Сказать, что жаль, что вас там не было` |
+| space | `Let her tell it` | `Дать ей рассказать самой` |
+
+### 18.4 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"The umpire said thank you. Properly. Then called time, as if it was planned."` | `«От судьи – „спасибо“. Всерьёз. А потом нас позвали играть дальше, будто так и было задумано.»` |
+| sunny | respond | `"You'd have loved it. I looked at my shoes for a whole game."` | `«Тебе бы понравилось. Целый гейм я смотрела на свои кроссовки.»` |
+| sunny | space | `"Anyway. I smelled of coconut for the rest of the day. I didn't mind."` | `«В общем, до конца дня я пахла кокосом. Меня это не смущало.»` |
+| fiery | invite | `"The umpire thanked her. THANKED her. Then called time like it was normal."` | `«От судьи – „спасибо“. СПАСИБО. А потом нас позвали играть дальше, как будто так и надо.»` |
+| fiery | respond | `"You'd have laughed. I held it in with my whole face."` | `«Тебе было бы смешно. А я сдерживалась всем лицом.»` |
+| fiery | space | `"Anyway, I smelled of coconut until the last game. Nobody warns you."` | `«Короче, я пахла кокосом до последнего гейма. Про такое никто не предупреждает.»` |
+| deep | invite | `"The umpire thanked her. I think it was the only thing left to say."` | `«От судьи – „спасибо“. По-моему, больше ничего и не оставалось сказать.»` |
+| deep | respond | `"I wish you had been. Would you have laughed, or stood very still?"` | `«Жаль, что тебя там не было. Хотелось бы знать: смех или полная неподвижность?»` |
+| deep | space | `"That's all of it. The coconut stayed with me until the last game."` | `«Вот и всё. Кокос держался до последнего гейма.»` |
+| quiet | invite | `"The umpire said thank you. Then we played."` | `«От судьи – „спасибо“. И мы играли дальше.»` |
+| quiet | respond | `"You'd have liked it. I kept very still."` | `«Тебе бы понравилось. Я стояла не шелохнувшись.»` |
+| quiet | space | `"That's all. I smelled of coconut for a while."` | `«Вот и всё. Какое-то время я пахла кокосом.»` |
+
+## 19. Situation R54 – `the-rooster-ringtone`
+
+Subject `story`; stages `school`, `after-school`; no fact gate. `Розыгрыш` is the rally, `рингтон` is the word everyone says, and `слышали три корта` keeps the count of three. `Одна мама` follows `одного папы` in the court-four rows: a stranger the sentence never names.
+
+### 19.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"A phone went off in the middle of a rally and I'm still not over it."` | `«Посреди розыгрыша зазвонил телефон, и я до сих пор не отошла.»` |
+| fiery | `"A phone went off in the middle of a rally. Of course it did."` | `«Посреди розыгрыша зазвонил телефон. Ну конечно.»` |
+| deep | `"A phone went off in the middle of a rally, and I've been thinking about it since."` | `«Посреди розыгрыша зазвонил телефон, и я с тех пор об этом думаю.»` |
+| quiet | `"A phone went off during a rally."` | `«Во время розыгрыша зазвонил телефон.»` |
+
+### 19.2 Shared second beats
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"The ringtone was a rooster. A mum answered it and whispered that she couldn't talk, she was at the tennis. Three courts heard."` | `«Рингтоном был петух. Какая-то мама ответила и зашептала, что не может говорить, она на теннисе. Слышали три корта.»` |
+| fiery | `"The ringtone's a rooster – and a mum answers it, whispering that she can't talk, she's at the tennis. Three courts heard."` | `«Рингтон – петух. Одна мама отвечает шёпотом, что не может говорить, она на теннисе. Слышали три корта.»` |
+| deep | `"The ringtone was a rooster. A mum answered, whispering that she couldn't talk, she was at the tennis. Three courts heard every word."` | `«Рингтоном был петух. Одна мама ответила шёпотом, что говорить не может: она на теннисе. Каждое слово слышали три корта.»` |
+| quiet | `"It was a rooster. A mum answered and whispered that she was at the tennis. Three courts heard."` | `«Это был петух. Какая-то мама ответила шёпотом, что она на теннисе. Слышали три корта.»` |
+
+### 19.3 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask whose phone it was` | `Спросить, чей это был телефон` |
+| respond | `Say you're already smiling` | `Сказать, что вы уже улыбаетесь` |
+| space | `Let her tell the rest` | `Дать ей рассказать остальное` |
+
+### 19.4 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"No idea which mum. It rang again two minutes later. Same rooster, same whisper."` | `«Понятия не имею, какая мама. Через две минуты зазвонило снова. Тот же петух, тот же шёпот.»` |
+| sunny | respond | `"Good. I was too. I had to turn my back and bounce a ball."` | `«Вот и хорошо, я тоже. Пришлось отвернуться и постучать мячом об корт.»` |
+| sunny | space | `"Oh, and at the next changeover every parent along the fence checked their phone."` | `«Да, и на следующей смене сторон все родители вдоль ограды проверили телефоны.»` |
+| fiery | invite | `"Somebody's mum. I never found out which. Two minutes later: same rooster, same whisper."` | `«Чья-то мама. Чья – так и не узнала. Через две минуты снова: тот же петух, тот же шёпот.»` |
+| fiery | respond | `"Good. I had to stare at the net like it owed me money."` | `«Вот и славно. Мне пришлось смотреть на сетку так, будто она мне должна.»` |
+| fiery | space | `"At the next changeover every parent along that fence checked their phone. Good."` | `«На следующей смене сторон все родители вдоль той ограды проверили телефоны. Правильно.»` |
+| deep | invite | `"I never found out which mum. Two minutes later: the same rooster, the same whisper."` | `«Какая это была мама, я так и не узнала. Через две минуты – тот же петух, тот же шёпот.»` |
+| deep | respond | `"I was, a little. It was the whisper – so careful, and so loud."` | `«Немного, да. Дело было в шёпоте – таком осторожном и таком громком.»` |
+| deep | space | `"That's the whole of it. By the next changeover every parent had quietly checked their phone."` | `«Вот и вся история. К следующей смене сторон все родители тихо проверили телефоны.»` |
+| quiet | invite | `"I don't know which mum. It rang again two minutes later."` | `«Не знаю, какая мама. Через две минуты зазвонило снова.»` |
+| quiet | respond | `"It was funny. I looked at my strings."` | `«Было смешно. Я смотрела на струны.»` |
+| quiet | space | `"That's it. At the next changeover everyone checked their phones."` | `«Вот и всё. На следующей смене сторон все проверили телефоны.»` |
+
+## 20. Situation R55 – `the-coin-and-the-drain`
+
+Subject `story`; stages `school`, `after-school`; no fact gate. `Жеребьёвка` is the coin toss, `водосток` the drain, and the racket spin is told as which end is `верхний`. The respond label says the story will be good and all four replies open with `Хорошая`, which answers `история`.
+
+### 20.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"The coin toss was the funniest part of the day. I'm not joking."` | `«Жеребьёвка была самой смешной частью дня. Я не шучу.»` |
+| fiery | `"A coin toss. How hard can a coin toss be?"` | `«Жеребьёвка. Что сложного может быть в жеребьёвке?»` |
+| deep | `"Something small went wrong at the coin toss and I haven't been able to let it go."` | `«На жеребьёвке пошло не так что-то мелкое, и я никак не могу это отпустить.»` |
+| quiet | `"There was a problem with the coin toss."` | `«С жеребьёвкой вышла загвоздка.»` |
+
+### 20.2 Shared second beats
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"The coin bounced, rolled across the baseline and dropped straight down a drain. Nobody had another one. We spun a racket instead."` | `«Монетка подпрыгнула, прокатилась через заднюю линию и упала прямо в водосток. Другой ни у кого не нашлось. Вместо неё мы крутили ракетку.»` |
+| fiery | `"The coin lands, rolls across the baseline – and goes down a drain. Nobody had another. We spun a racket instead."` | `«Монетка падает, катится через заднюю линию – и в водосток. Другой ни у кого не было. Вместо неё мы крутили ракетку.»` |
+| deep | `"The coin hit the court, rolled to the baseline and went down a drain. Nobody had another, so we spun a racket."` | `«Монетка ударилась о корт, докатилась до задней линии и ушла в водосток. Другой ни у кого не было, так что мы крутили ракетку.»` |
+| quiet | `"The coin went down a drain. Nobody had another, so we spun a racket."` | `«Монетка ушла в водосток. Другой ни у кого не было, поэтому мы крутили ракетку.»` |
+
+### 20.3 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what went wrong with the coin toss` | `Спросить, что пошло не так с жеребьёвкой` |
+| respond | `Say you can tell this one is good` | `Сказать, что чувствуете: история будет хорошая` |
+| space | `Let her carry on` | `Дать ей продолжать` |
+
+### 20.4 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Then we spent a minute working out which end of the racket was up."` | `«Потом мы минуту выясняли, какой конец ракетки считается верхним.»` |
+| sunny | respond | `"It is. I looked down the drain afterwards, just in case."` | `«Хорошая. Потом я заглянула в водосток – на всякий случай.»` |
+| sunny | space | `"And it was my racket we spun. It's never had so much attention."` | `«А крутили мою ракетку. Столько внимания у неё ещё не было.»` |
+| fiery | invite | `"Then we argued about which end of a racket is up. A whole minute."` | `«Потом спорили, какой конец ракетки верхний. Целую минуту.»` |
+| fiery | respond | `"It is. I looked down that drain afterwards. Nothing. I'm not climbing in."` | `«Хорошая. Потом заглянула в тот водосток. Ничего. Лезть туда я не собираюсь.»` |
+| fiery | space | `"For the record, it was my racket we spun. Mine was the one nearest."` | `«Для протокола: крутили мою ракетку. Она просто оказалась ближе всех.»` |
+| deep | invite | `"Then we spent a minute agreeing which end was up. Strange what you forget."` | `«Потом минуту договаривались, какой конец верхний. Странно, что именно это забываешь.»` |
+| deep | respond | `"It is. I looked down the drain afterwards. I don't know what for."` | `«Хорошая. Потом я заглянула в водосток. Сама не знаю зачем.»` |
+| deep | space | `"That's the end of it. It was my racket, and I felt oddly responsible."` | `«Вот и конец истории. Ракетка была моя, и я почему-то чувствовала за неё ответственность.»` |
+| quiet | invite | `"Then we had to agree which end was up. It took a minute."` | `«Потом нам пришлось договариваться, какой конец верхний. Это заняло минуту.»` |
+| quiet | respond | `"It is. I looked down the drain afterwards. Nothing."` | `«Хорошая. Потом я заглянула в водосток. Ничего.»` |
+| quiet | space | `"That's all, really. It was my racket, as it happens."` | `«Вот и всё, в общем. Ракетка, кстати, была моя.»` |
+
+## 21. Situation R56 – `the-gull-in-the-chair`
+
+Subject `story`; stages `school`, `after-school`; no fact gate. `Судейская вышка` is the umpire's chair and the gull is `она`. The umpire's verbs are in the present tense (`садится`, `осматривает`) on purpose: a Russian past tense would have to say whether the umpire is a man or a woman, and the English never does. The scene is told in the present throughout so the two beats agree.
+
+### 21.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"The umpire's chair got taken. I can't tell you how funny it was."` | `«Судейскую вышку заняли. Не передать, как это было смешно.»` |
+| fiery | `"Someone else got the umpire's chair. I'm not exaggerating."` | `«Судейская вышка досталась кому-то другому. Я не преувеличиваю.»` |
+| deep | `"Something unexpected took the umpire's chair, and I keep going back to it."` | `«Судейскую вышку занял кто-то неожиданный, и я всё время к этому возвращаюсь.»` |
+| quiet | `"The umpire's chair was occupied."` | `«Судейская вышка была занята.»` |
+
+### 21.2 Shared second beats
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"A seagull walked up the steps and sat in it while the umpire was at the net. The umpire came back and sat on the bottom step."` | `«Чайка поднимается по ступенькам и садится на вышку, пока судья у сетки. Судья возвращается и садится на нижнюю ступеньку.»` |
+| fiery | `"A seagull walks up the steps and takes it while the umpire's at the net. The umpire came back and sat on the bottom step."` | `«Чайка поднимается по ступенькам и занимает вышку, пока судья у сетки. Судья возвращается и садится на нижнюю ступеньку.»` |
+| deep | `"A seagull climbed the steps and sat down while the umpire was at the net. The umpire came back, looked at it, and sat on the bottom step."` | `«Чайка поднимается по ступенькам и садится, пока судья у сетки. Судья возвращается, смотрит на неё и садится на нижнюю ступеньку.»` |
+| quiet | `"A seagull sat in it while the umpire was at the net. The umpire sat on the bottom step."` | `«Чайка садится на вышку, пока судья у сетки. Судья садится на нижнюю ступеньку.»` |
+
+### 21.3 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask who was in the umpire's chair` | `Спросить, кто сидел на судейской вышке` |
+| respond | `Say you can picture it` | `Сказать, что вы это прекрасно представляете` |
+| space | `Say nothing and let her go on` | `Ничего не говорить и дать ей продолжать` |
+
+### 21.4 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"It stayed the whole next game. The umpire called the score from the step, politely."` | `«Она сидит весь следующий гейм. Счёт объявляют со ступеньки, очень вежливо.»` |
+| sunny | respond | `"You can, can't you? Best seat in the place, and none of the paperwork."` | `«Можешь же себе представить? Лучшее место на корте и никакой бумажной работы.»` |
+| sunny | space | `"Oh, and when it flew off, the umpire checked the seat very thoroughly."` | `«Да, и когда чайка улетает, судья очень тщательно осматривает сиденье.»` |
+| fiery | invite | `"The whole next game. Score called from the step. The gull never looked up."` | `«Весь следующий гейм. Счёт объявляют со ступеньки. Чайка ни разу не поднимает голову.»` |
+| fiery | respond | `"Then you've got it. The most senior person on court, and it knew it."` | `«Тогда всё ясно. Главнее всех на корте она – и она это знает.»` |
+| fiery | space | `"And when it finally left, the umpire inspected the chair before sitting. Wise."` | `«А когда чайка наконец улетает, судья осматривает вышку, прежде чем сесть. Разумно.»` |
+| deep | invite | `"The whole next game. The umpire called the score from the step, a little lower than usual."` | `«Весь следующий гейм. Счёт объявляют со ступеньки, чуть ниже обычного.»` |
+| deep | respond | `"It sat very still, as if it had been there longer than us. It probably had."` | `«Она сидит совершенно неподвижно, будто здесь дольше нас. Наверное, так и есть.»` |
+| deep | space | `"After it flew off, the umpire checked the seat first. I respected that."` | `«Когда чайка улетает, судья сначала осматривает сиденье. Я это уважаю.»` |
+| quiet | invite | `"The whole next game. The umpire called the score from the step."` | `«Весь следующий гейм. Счёт объявляют со ступеньки.»` |
+| quiet | respond | `"It was very calm about it. No one argued."` | `«Она очень спокойна. Никто не спорит.»` |
+| quiet | space | `"That's everything. When it left, the umpire checked the seat first."` | `«Вот и всё. Когда чайка улетает, судья сначала осматривает сиденье.»` |
+
+## 22. r51 – three school-years observation situations (14.10)
+
+⚙ 14.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's words on the school years' thin subjects: «остальные школьные темы тонкие - это тоже можно сюда же взять на двух языках, весь тон-оф-войс для референса и все рулинги у тебя есть.»
+
+Three new `observation` situations, R57–R59, appended last in the generated catalogue (English authority: the second 14.10 addendum in `docs/specs/small-talk-corpus-2026-09.md`). Both languages in one change. Each is an opener and three replies in all four voices, with no shared second beat – an observation is something she noticed, not an incident she tells – like the observation rows in §9–§15 above. Row order, ids, stages and fact gates are locale-independent; nothing here is drawn differently in Russian.
+
+## 23. Situation R57 – `the-warm-up-friends`
+
+Subject `observation`; stages `school`, `after-school`; no fact gate. `Те двое` keeps the two girls without an age or a name – a school girl and a young woman can say it alike – and `разминка` is the warm-up. `Бить на ракетку` is the warm-up courtesy of sending the ball straight to the other racket, `подача` is the serve, and `счёты` carries the grudge without naming a quarrel. The respond label puts the handshake `у сетки`, at the net, and the daughter's `ты` is never needed inside her lines.
+
+### 23.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"The two on the next court were so friendly in the warm-up. Then the first point started and they were strangers."` | `«Те двое на соседнем корте на разминке были такие дружные. Потом начался первый розыгрыш, и они стали как чужие.»` |
+| fiery | `"Best friends in the warm-up. Strangers from the first serve. Where is that switch, and how do I get one?"` | `«На разминке – лучшие подруги. С первой подачи – чужие. Где у них этот переключатель? Мне такой тоже нужен.»` |
+| deep | `"They were kind to each other in the warm-up. Once the first ball went up, neither looked at the other."` | `«На разминке они были добры друг к другу. Стоило первому мячу взлететь вверх – и они больше не смотрели друг на друга.»` |
+| quiet | `"Two of them on the next court talked all through the warm-up. Then the match began, and they stopped."` | `«Двое на соседнем корте всю разминку разговаривали. Потом начался матч, и они замолчали.»` |
+
+### 23.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask when it changed` | `Спросить, когда всё изменилось` |
+| respond | `Say it probably went back at the net` | `Сказать, что у сетки, наверное, всё вернулось` |
+| space | `Say she does not have to work it out` | `Сказать, что ей не обязательно в этом разбираться` |
+
+### 23.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"At the very first serve. Before it they hit to each other's rackets. After it, neither of them did."` | `«Ровно на первой подаче. До неё они били друг другу прямо на ракетку. После неё – ни одна.»` |
+| sunny | respond | `"It did. They shook hands and started chatting again as if nothing had happened."` | `«Вернулось. Они пожали друг другу руки и снова болтали, как ни в чём не бывало.»` |
+| sunny | space | `"I'm not trying to. I'm just glad I got to see it."` | `«Я и не пытаюсь. Просто хорошо, что я это увидела.»` |
+| fiery | invite | `"The first serve. That's the whole switch. A ball goes up and suddenly they've both got a grudge."` | `«С первой подачи. Вот и весь переключатель. Мяч взлетает – и у обеих вдруг счёты друг с другом.»` |
+| fiery | respond | `"It did. Straight away. That's the part I can't get over."` | `«Вернулось. Сразу же. Вот этого я переварить и не могу.»` |
+| fiery | space | `"I'll work it out anyway. I'd like to be able to do that."` | `«Я всё равно разберусь. Хочу так уметь.»` |
+| deep | invite | `"The first serve. The moment the ball left the hand, they were somebody else."` | `«С первой подачи. Мяч ушёл из руки – и они стали другими людьми.»` |
+| deep | respond | `"It did. How easily it came back is the part I keep thinking about."` | `«Вернулось. Меня не отпускает, как легко оно вернулось.»` |
+| deep | space | `"I know. I'll probably keep watching for the exact moment it turns, though."` | `«Знаю. Но, наверное, всё равно буду высматривать тот самый момент, когда всё меняется.»` |
+| quiet | invite | `"At the first serve. That was all it took."` | `«На первой подаче. Больше ничего не понадобилось.»` |
+| quiet | respond | `"It did. They were talking again at the net."` | `«Вернулось. У сетки они уже опять разговаривали.»` |
+| quiet | space | `"I know. I only wanted to tell somebody."` | `«Знаю. Мне просто хотелось кому-то рассказать.»` |
+
+## 24. Situation R58 – `the-sound-of-a-clean-ball`
+
+Subject `observation`; stages `school`, `after-school`; no fact gate. `Обернулись` is everyone looking round; `стук` is the knock – short and solid, never a crack or a bang – so that all four voices describe one sound. The respond label uses the neutral `знаете`, the way the older observation rows address the parent, and the space label follows `ей не обязательно` in the rows before it. The daughter's `ты` appears in two replies and is only the relationship voice.
+
+### 24.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"One ball on the next court sounded so good that everybody looked round. Nobody said a word."` | `«На соседнем корте один мяч прозвучал так хорошо, что все обернулись. И никто не сказал ни слова.»` |
+| fiery | `"One ball made one sound and every head on the court turned. I want that sound."` | `«Один мяч, один звук – и все на корте повернули головы. Я хочу такой звук.»` |
+| deep | `"A ball on the next court was hit so cleanly that everyone looked round. It was a while before I stopped hearing it."` | `«На соседнем корте мяч ударили так чисто, что все обернулись. Я ещё долго слышала этот звук.»` |
+| quiet | `"A ball on the next court made a sound and everyone looked round. I did too."` | `«На соседнем корте мяч издал звук, и все обернулись. Я тоже.»` |
+
+### 24.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what it sounded like` | `Спросить, как это звучало` |
+| respond | `Say you know that sound` | `Сказать, что знаете этот звук` |
+| space | `Say she does not have to chase it` | `Сказать, что ей не обязательно за ним гнаться` |
+
+### 24.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"A short, solid knock. Like tapping a really good table."` | `«Короткий, плотный стук. Как будто постучали по очень хорошему столу.»` |
+| sunny | respond | `"I thought you might. It's the best noise in the sport, honestly."` | `«Я так и думала. По-моему, это лучший звук во всём теннисе.»` |
+| sunny | space | `"I'm not chasing it. I'd just like to hear it again."` | `«Я и не гонюсь. Просто хочу услышать ещё раз.»` |
+| fiery | invite | `"A knock. Short, solid, final. A door that has made up its mind."` | `«Стук. Короткий, плотный, окончательный. Как дверь, которая уже всё решила.»` |
+| fiery | respond | `"Then you know. It's the one honest sound in the whole game."` | `«Тогда ты знаешь. Это единственный честный звук во всей игре.»` |
+| fiery | space | `"I'm chasing it anyway. That sound is the point."` | `«А я всё равно гонюсь. В этом звуке весь смысл.»` |
+| deep | invite | `"A knock with nothing around it. Over before I'd looked up, and I can still hear it."` | `«Стук, и вокруг него ничего. Кончился раньше, чем я подняла голову, а я его всё ещё слышу.»` |
+| deep | respond | `"You do? I wasn't sure anyone else heard it the way I do."` | `«Правда? Я не была уверена, что кто-то ещё слышит это так, как я.»` |
+| deep | space | `"I know. You can't go after it. It turns up, and I want to be listening when it does."` | `«Знаю. За ним не угнаться. Он появляется сам, и мне хочется в этот момент слушать.»` |
+| quiet | invite | `"A short knock. That's all it was."` | `«Короткий стук. Вот и всё.»` |
+| quiet | respond | `"Then it isn't only me. Good."` | `«Значит, не только я. Хорошо.»` |
+| quiet | space | `"I know. I'll just listen for it."` | `«Знаю. Буду просто прислушиваться.»` |
+
+## 25. Situation R59 – `the-fence-says-unlucky`
+
+Subject `observation`; stages `school`, `after-school`; no fact gate. `Не повезло` is what is said at a Russian fence too, and it is quoted `„не повезло“` inside `«»`, the way the gran row quotes `„спасибо“`. `Забор` is the fence the adults stand along, the players are `игроки` as in the older observation rows, and `тому, кто промахнулся` keeps whoever missed without a gender. The respond label uses the neutral `вы`-form with no past tense, so the parent is neither mother nor father.
+
+### 25.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"The adults at the fence say 'unlucky' after every miss, even a bad shot. It's funny once you start listening."` | `«Взрослые у забора после каждого промаха говорят „не повезло“. Даже после плохого удара. Смешно, когда начинаешь прислушиваться.»` |
+| fiery | `"Every adult at the fence said 'unlucky'. That was not unlucky. That was a bad shot and everybody could see it."` | `«Все взрослые у забора сказали „не повезло“. Это не невезение. Это плохой удар, и все это видели.»` |
+| deep | `"I've started listening to the fence. 'Unlucky,' after nearly every miss, even the bad shots. I can't stop hearing it."` | `«Я начала прислушиваться к тому, что говорят у забора. „Не повезло“ – почти после каждого промаха, даже после плохих ударов. Теперь я только это и слышу.»` |
+| quiet | `"The adults at the fence say 'unlucky' a lot. Even when it was only a bad shot."` | `«Взрослые у забора часто говорят „не повезло“. Даже когда это просто плохой удар.»` |
+
+### 25.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what the players do when they hear it` | `Спросить, что делают игроки, когда это слышат` |
+| respond | `Say you will try to say what you actually see` | `Сказать, что постараетесь говорить как есть` |
+| space | `Say it is mostly kindness` | `Сказать, что это по большей части от доброты` |
+
+### 25.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"They nod. Every time, very politely. It's like a password."` | `«Кивают. Каждый раз, очень вежливо. Как будто это пароль.»` |
+| sunny | respond | `"Please do. I'd rather know what I actually did. Politely, though."` | `«Пожалуйста. Я лучше узнаю, что на самом деле сделала. Только вежливо.»` |
+| sunny | space | `"I know. It's very kind. I just keep waiting for somebody to say what happened."` | `«Знаю. Это очень мило. Просто я всё жду, что кто-нибудь скажет, как было на самом деле.»` |
+| fiery | invite | `"They nod. Every single one. As if it were an actual explanation."` | `«Кивают. Все до одного. Как будто это и правда объяснение.»` |
+| fiery | respond | `"Good. Tell me what you see. I can take it."` | `«Хорошо. Говори, что видишь. Я выдержу.»` |
+| fiery | space | `"It's kind. It's also not true. I'm allowed to notice both."` | `«Это мило. И это неправда. Мне можно заметить и то и другое.»` |
+| deep | invite | `"They nod. I think they know exactly what the word is covering for."` | `«Кивают. По-моему, они прекрасно знают, что эти слова на самом деле значат.»` |
+| deep | respond | `"I'd like that. I can use a true thing. I can't use 'unlucky'."` | `«Мне бы этого хотелось. Правду я могу использовать, а „не повезло“ – нет.»` |
+| deep | space | `"I think it is. I just don't think it helps whoever missed."` | `«Наверное, так и есть. Только тому, кто промахнулся, это не помогает.»` |
+| quiet | invite | `"They nod, mostly."` | `«В основном кивают.»` |
+| quiet | respond | `"That would help. 'Unlucky' never does."` | `«Это помогло бы. „Не повезло“ не помогает никогда.»` |
+| quiet | space | `"Probably. It doesn't tell anyone anything, though."` | `«Наверное. Но это же никому ничего не говорит.»` |
+
+## 26. r51 – two school-years curiosity situations and one good-news situation (14.10)
+
+⚙ 14.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's words on the school years' thin subjects: «остальные школьные темы тонкие - это тоже можно сюда же взять на двух языках, весь тон-оф-войс для референса и все рулинги у тебя есть.»
+
+Three new situations, R60–R62, appended last in the generated catalogue (English authority: the third 14.10 addendum in `docs/specs/small-talk-corpus-2026-09.md`): two `curiosity` rows, R60 and R61, and one `good-news` row, R62. Both languages in one change. Each is an opener and three replies in all four voices, with no shared second beat – a curiosity is a question she brings, a good news is a thing she brings, and neither is an incident she tells in two beats. Row order, ids, stages and fact gates are locale-independent; nothing here is drawn differently in Russian.
+
+## 27. Situation R60 – `the-ball-she-let-go`
+
+Subject `curiosity`; stages `school`, `after-school`; no fact gate. `Теннисистка постарше` keeps the older player without a name or an age – a girl and a young woman can both say it – and every voice says the ball `упал в аут`, so that all four describe one ball. The older player is in the feminine past because she is a player, not a professional; the respond label says `они` for the older players, and the space label follows `ей пока не обязательно`, the way the curiosity rows before it use `ей не обязательно`. `Приглядываться` and `присмотреться` are watching with attention, never practice – nothing here says she has got better at reading a ball.
+
+### 27.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"How does an older player know a ball is going out? One just let it go by."` | `«Как теннисистка постарше понимает, что мяч уйдёт в аут? Одна из них просто пропустила его.»` |
+| fiery | `"An older player didn't move for a ball, and it landed out. I want to know how she knew."` | `«Теннисистка постарше даже не двинулась за мячом, и он упал в аут. Хочу знать, откуда она это знала.»` |
+| deep | `"An older player left a ball alone, and it landed out. I keep wondering what she saw."` | `«Теннисистка постарше не тронула мяч, и он упал в аут. Я всё думаю, что она увидела.»` |
+| quiet | `"An older player let a ball go by. It landed out. How did she know?"` | `«Теннисистка постарше пропустила мяч. Он упал в аут. Откуда она знала?»` |
+
+### 27.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what the player did` | `Спросить, что делала эта теннисистка` |
+| respond | `Say they have watched so many balls they just know` | `Сказать, что они видели столько мячей, что просто знают` |
+| space | `Say she does not have to see it yet` | `Сказать, что ей пока не обязательно это видеть` |
+
+### 27.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Nothing. She watched it all the way with her racket down. So calm."` | `«Ничего. Она следила за мячом до конца, ракетка опущена. Такая спокойная.»` |
+| sunny | respond | `"So it's just watching, lots and lots of it. I can do that."` | `«То есть надо просто смотреть, и очень много. Это я могу.»` |
+| sunny | space | `"Okay. I'll keep watching and see if it starts to make sense."` | `«Ладно. Буду приглядываться и посмотрю, станет ли что-то понятнее.»` |
+| fiery | invite | `"Nothing. Not a step. She watched it land out like she'd arranged it."` | `«Ничего. Ни шага. Смотрела, как он падает в аут, будто сама так всё устроила.»` |
+| fiery | respond | `"Then I'll watch more. A lot more. Starting with the very next ball."` | `«Тогда буду смотреть больше. Гораздо больше. Прямо с ближайшего мяча.»` |
+| fiery | space | `"Fine. But I'm watching her feet next time."` | `«Ладно. Но в следующий раз я буду смотреть ей на ноги.»` |
+| deep | invite | `"Nothing. She stood still and watched, as if she already knew."` | `«Ничего. Стояла на месте и смотрела, будто уже знала.»` |
+| deep | respond | `"So it is looking, for a long time. I cannot hurry it."` | `«Значит, нужно долго смотреть. Ускорить это я не могу.»` |
+| deep | space | `"I know. I would still like to see it once."` | `«Знаю. Но мне всё равно хотелось бы увидеть это хотя бы раз.»` |
+| quiet | invite | `"Nothing. She just watched it go."` | `«Ничего. Просто смотрела, как он летит.»` |
+| quiet | respond | `"So I'll watch more of them."` | `«Тогда буду смотреть на них побольше.»` |
+| quiet | space | `"Okay. I'll watch for it next time."` | `«Хорошо. В следующий раз присмотрюсь.»` |
+
+## 28. Situation R61 – `sorry-for-a-lucky-point`
+
+Subject `curiosity`; stages `school`, `after-school`; no fact gate. The net cord is the ball that `задевает` or `задел сетку` in the two voices that tell the moment, and `касание сетки` in the two that name the point it won – Russian players say the ball `задел сетку` – and `за очко не извиняются` is the fiery verdict. `Теннисистка` and `соперница` keep the two girls without an age, `везение` is luck, and the space label puts the not-knowing on the family `мы`, so the parent is neither mother nor father. The sunny space reply says `можем подумать об этом вместе`: the English wonders together, and Russian thinks together.
+
+### 28.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"Why do people say sorry when the ball clips the net and drops over? It's still a point."` | `«Почему люди извиняются, когда мяч задевает сетку и падает на другую сторону? Это же всё равно очко.»` |
+| fiery | `"You don't say sorry for a point. A girl did, when the ball clipped the net. Why?"` | `«За очко не извиняются. А одна теннисистка извинилась, когда мяч задел сетку. Почему?»` |
+| deep | `"I keep wondering what a girl was sorry for when she won a point off the net cord."` | `«Я всё думаю, за что извинялась теннисистка, выигравшая очко после касания сетки.»` |
+| quiet | `"A girl said sorry for a point off the net cord. I didn't know you did that."` | `«Одна теннисистка извинилась за очко после касания сетки. Я не знала, что так делают.»` |
+
+### 28.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what the other girl did` | `Спросить, что сделала соперница` |
+| respond | `Say it is a way of admitting it was luck` | `Сказать, что так признают везение` |
+| space | `Say you never worked it out either` | `Сказать, что мы тоже так и не разобрались` |
+
+### 28.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"She just nodded, like it was completely normal. Maybe it is."` | `«Она просто кивнула, как будто это совершенно нормально. Может, так оно и есть.»` |
+| sunny | respond | `"Oh. So it's like saying, I know that was lucky. I like that."` | `«А. То есть это как сказать: я знаю, что мне повезло. Мне нравится.»` |
+| sunny | space | `"Really? Good. Then I'm not behind. We can wonder together."` | `«Правда? Хорошо. Тогда я не отстаю. Можем подумать об этом вместе.»` |
+| fiery | invite | `"She nodded. Like a debt had just been paid."` | `«Кивнула. Будто ей только что вернули долг.»` |
+| fiery | respond | `"So it's manners about luck. All right. I'm still keeping the point."` | `«Значит, это такие манеры насчёт везения. Ладно. Очко я всё равно оставлю себе.»` |
+| fiery | space | `"Great. Two of us who don't get it. I'll find out first."` | `«Отлично. Нас двое, кто этого не понимает. Я разберусь первой.»` |
+| deep | invite | `"She nodded. They both knew what it meant. I did not."` | `«Она кивнула. Они обе понимали, что это значит. Я – нет.»` |
+| deep | respond | `"So it is honesty about luck. I had not thought of that."` | `«Значит, это честность насчёт везения. Я об этом не думала.»` |
+| deep | space | `"Then we are both still wondering. I do not mind that."` | `«Значит, мы оба всё ещё об этом думаем. Меня это устраивает.»` |
+| quiet | invite | `"She nodded. That was all."` | `«Она кивнула. И всё.»` |
+| quiet | respond | `"Oh. It's a polite way of saying it was luck."` | `«А. Это вежливый способ сказать, что повезло.»` |
+| quiet | space | `"Okay. I'll ask someone else, then."` | `«Ладно. Тогда спрошу у кого-нибудь ещё.»` |
+
+## 29. Situation R62 – `the-older-girl-knew-her-name`
+
+Subject `good-news`; stage `school` only. `Старшая девочка` is a school-years phrase, which is why the row stops at school and does not claim after-school. `Поздоровалась по имени` is hello by name, `мимоходом` is in passing, and `на голову выше` carries the English foot – a Russian child is taller by a head. The respond label keeps the generic `быть замеченной` in the feminine, so the parent need not address her with `ты`, and `оставить это себе` is let her keep it, which is how the space label differs from the plain `порадоваться` of the older good-news rows. `Пошла дальше` is the older girl walking on, in every voice.
+
+### 29.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"One of the older girls said hello to me by name. I didn't think she knew it."` | `«Одна из старших девочек поздоровалась со мной по имени. Я не думала, что она его знает.»` |
+| fiery | `"One of the older girls knows my name. She used it. I heard it."` | `«Одна из старших девочек знает моё имя. Она его назвала. Я слышала.»` |
+| deep | `"One of the older girls said my name in passing. I did not think she knew it."` | `«Одна из старших девочек мимоходом назвала моё имя. Я не думала, что она его знает.»` |
+| quiet | `"One of the older girls said hello. She used my name."` | `«Одна из старших девочек поздоровалась. Назвала меня по имени.»` |
+
+### 29.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what the older girl said` | `Спросить, что сказала старшая девочка` |
+| respond | `Say it's good to be noticed` | `Сказать, что быть замеченной приятно` |
+| space | `Let her just have this` | `Дать ей оставить это себе` |
+
+### 29.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Just hello, and my name, like it was nothing. Then she kept walking."` | `«Просто привет и моё имя, как будто это пустяк. Потом пошла дальше.»` |
+| sunny | respond | `"It really is. I feel a foot taller and I'm trying to hide it."` | `«Очень приятно. Я себя чувствую на голову выше и пытаюсь этого не показывать.»` |
+| sunny | space | `"I will. I'm going to say hello back properly next time."` | `«Так и сделаю. В следующий раз поздороваюсь с ней как следует.»` |
+| fiery | invite | `"Hello, and my name. Then she walked off like it was nothing. It was not nothing."` | `«Привет и моё имя. Потом ушла, как будто это пустяк. А это не пустяк.»` |
+| fiery | respond | `"It is. I'd like a few more of them to notice, frankly."` | `«Приятно. Честно говоря, хочу, чтобы ещё несколько из них меня заметили.»` |
+| fiery | space | `"Oh, I will. And next time I'm saying her name first."` | `«Ещё как. А в следующий раз первой назову её имя.»` |
+| deep | invite | `"Hello, and my name, in passing. She did not even stop."` | `«Привет и моё имя, мимоходом. Она даже не остановилась.»` |
+| deep | respond | `"It is. I did not know I wanted it until it happened."` | `«Приятно. Я не знала, что мне этого хочется, пока это не случилось.»` |
+| deep | space | `"I will. I would like to remember exactly how it sounded."` | `«Так и сделаю. Хочу запомнить, как именно это прозвучало.»` |
+| quiet | invite | `"Just hello and my name. Then she walked on."` | `«Просто привет и моё имя. И пошла дальше.»` |
+| quiet | respond | `"It is. I'd noticed her too."` | `«Приятно. Я её тоже замечала.»` |
+| quiet | space | `"I will. It was a nice bit of the week."` | `«Так и сделаю. Это была приятная часть недели.»` |
+
+## 30. r51 – two school-years worry situations and two decision situations (14.10)
+
+⚙ 14.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's words on the school years' thin subjects: «остальные школьные темы тонкие - это тоже можно сюда же взять на двух языках, весь тон-оф-войс для референса и все рулинги у тебя есть.»
+
+Four new situations, R63–R66, appended last in the generated catalogue (English authority: the fourth 14.10 addendum in `docs/specs/small-talk-corpus-2026-09.md`): two `worry` rows, R63 and R64, and two `decision` rows, R65 and R66. Both languages in one change. Each is an opener and three replies in all four voices, with no shared second beat – a worry is something she carries to the parent and a decision is a choice she talks through, and neither is an incident she tells in two beats. Row order, ids, stages and fact gates are locale-independent; nothing here is drawn differently in Russian.
+
+## 31. Situation R63 – `the-film-she-has-not-seen`
+
+Subject `worry`; stage `school` only. `Фильм, который она обожает` and `который она любит` keep the girl's love without a title, `смотрела` is the lie in the daughter's feminine past and `Я не смотрела` is the plain admission. `Концовка` is the ending in every voice. The respond label says `мы тоже так делали`, the family `мы` of the style guide, so the parent is neither mother nor father; the space label `исправить одной фразой` is the one-sentence repair. `Ещё бы` and `Вот откуда это у меня` carry the fiery tease of the English without naming a parent, and `у тебя` in the deep reply is the gender-neutral address.
+
+### 31.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I told a girl I'd seen the film she loves. I haven't. Now she wants to talk about it every single day."` | `«Я сказала одной девочке, что смотрела фильм, который она обожает. Я его не смотрела. Теперь она хочет говорить о нём каждый день.»` |
+| fiery | `"I lied about a film. A girl loves it, I said I'd seen it, and now she will not stop talking about it."` | `«Я соврала про фильм. Одна девочка его обожает, я сказала, что смотрела, и теперь она без умолку говорит о нём.»` |
+| deep | `"I told a girl I had seen the film she loves. I had not. Every time she mentions it, the lie feels a little bigger."` | `«Я сказала одной девочке, что смотрела фильм, который она любит. Я не смотрела. Каждый раз, когда она его упоминает, ложь словно становится чуть больше.»` |
+| quiet | `"A girl keeps mentioning a film. I told her I'd seen it. I haven't."` | `«Одна девочка всё время упоминает фильм. Я сказала ей, что смотрела. Я не смотрела.»` |
+
+### 31.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she told the girl about it` | `Спросить, что она сказала девочке об этом фильме` |
+| respond | `Say you have done the same` | `Сказать, что мы тоже так делали` |
+| space | `Say it can be put right with one sentence` | `Сказать, что это можно исправить одной фразой` |
+
+### 31.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"That I loved the ending. I don't even know how it ends."` | `«Что мне очень понравилась концовка. А я даже не знаю, чем всё заканчивается.»` |
+| sunny | respond | `"Have you? Good. Then I'm in decent company."` | `«Правда? Хорошо. Значит, я в неплохой компании.»` |
+| sunny | space | `"One sentence. I can do one sentence. Maybe after the weekend."` | `«Одна фраза. Одну фразу я осилю. Может, после выходных.»` |
+| fiery | invite | `"That the ending was the best part. I have never seen the ending."` | `«Что концовка – лучшее в фильме. Я концовки вообще не видела.»` |
+| fiery | respond | `"Of course you have. So that's where I get it."` | `«Ещё бы. Вот откуда это у меня.»` |
+| fiery | space | `"One sentence? Then I've been dreading nothing."` | `«Одна фраза? Значит, я боялась на пустом месте.»` |
+| deep | invite | `"That I loved the ending. I do not know what happens in it. I said it as if I did."` | `«Что мне понравилась концовка. Я не знаю, что в ней происходит. Я говорила так, будто знаю.»` |
+| deep | respond | `"I did not think you ever had. It makes it feel smaller."` | `«Не думала, что у тебя такое бывало. От этого оно кажется меньше.»` |
+| deep | space | `"It is one sentence. It is the saying of it that I keep rehearsing."` | `«Это одна фраза. Я всё время репетирую именно то, как её произнести.»` |
+| quiet | invite | `"That the ending was good. She was pleased."` | `«Что концовка хорошая. Она обрадовалась.»` |
+| quiet | respond | `"All right. That helps a little."` | `«Ладно. Это немного помогает.»` |
+| quiet | space | `"One sentence. I'll find a time."` | `«Одна фраза. Найду момент.»` |
+
+## 32. Situation R64 – `the-girl-she-walked-past`
+
+Subject `worry`; stages `school`, `after-school`; no fact gate. `У ворот` is the gate in every voice, `в капюшоне` the hood and `на сумке` the bag she sat on; `никого рядом` keeps the girl alone without saying why she cried – no voice names a cause. The respond label uses the family `мы`. `Заметила` is the noticing that the space label counts, in the daughter's feminine past, and `важно уже то, что` is the English `it counts that`.
+
+### 32.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"A girl was crying on her own by the gate and I walked past. I think I should have stopped."` | `«Одна девочка плакала у ворот совсем одна, а я прошла мимо. Кажется, мне надо было остановиться.»` |
+| fiery | `"I walked straight past a girl who was crying. Straight past. I should have stopped."` | `«Я прошла прямо мимо девочки, которая плакала. Прямо мимо. Надо было остановиться.»` |
+| deep | `"A girl was crying by herself near the gate and I walked past her. I keep going back to the moment I decided not to stop."` | `«Одна девочка плакала в одиночестве возле ворот, а я прошла мимо неё. Я всё возвращаюсь к тому моменту, когда решила не останавливаться.»` |
+| quiet | `"A girl was sitting by the gate, crying. I kept walking."` | `«Девочка сидела у ворот и плакала. Я пошла дальше.»` |
+
+### 32.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what she saw` | `Спросить, что она увидела` |
+| respond | `Say you have walked past too` | `Сказать, что мы тоже проходили мимо` |
+| space | `Say it counts that she noticed` | `Сказать, что важно уже то, что она заметила` |
+
+### 32.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"She was sitting on her bag with her hood up. All on her own."` | `«Она сидела на своей сумке, надев капюшон. Совсем одна.»` |
+| sunny | respond | `"You too? Then it's not just me. I still wish I'd stopped."` | `«И ты тоже? Значит, не только я. Но мне всё равно жаль, что я не остановилась.»` |
+| sunny | space | `"Does it? Then I'll say hello to her next time. That's a start."` | `«Правда? Тогда в следующий раз я с ней поздороваюсь. Это уже начало.»` |
+| fiery | invite | `"On her bag, hood up, on her own. Nobody anywhere near her."` | `«На сумке, в капюшоне, одна. Рядом – никого.»` |
+| fiery | respond | `"Everyone has. That's not an excuse. That's the problem."` | `«Все проходят мимо. Это не оправдание. В этом и проблема.»` |
+| fiery | space | `"Noticing doesn't do anything for her. Next time I'm stopping."` | `«Ей от того, что я заметила, не легче. В следующий раз я остановлюсь.»` |
+| deep | invite | `"She was sitting on her bag with her hood up, and nobody was near her."` | `«Она сидела на своей сумке, надев капюшон, и рядом с ней никого не было.»` |
+| deep | respond | `"I believe you. It does not make her any less alone."` | `«Верю. Но ей от этого не менее одиноко.»` |
+| deep | space | `"Perhaps. It is the only part of it I got right."` | `«Возможно. Это единственное, что я сделала правильно.»` |
+| quiet | invite | `"On her bag, with her hood up."` | `«На сумке, в капюшоне.»` |
+| quiet | respond | `"Okay. That doesn't change it, but okay."` | `«Ладно. Это ничего не меняет, но ладно.»` |
+| quiet | space | `"Maybe. I'll look for her."` | `«Может быть. Поищу её.»` |
+
+## 33. Situation R65 – `the-maybe-she-gave`
+
+Subject `decision`; stages `school`, `after-school`; no fact gate. `Девочка помладше` is the younger girl without an age; `поиграть с ней` is hitting with her – no match is meant – and `может быть` is the maybe, in `„…“` inside `«»` as the older rows quote. `Вклиниться` is stepping into a gap in the hitting, in every voice. The respond label keeps the parent's history in the family `мы` (`и для нас когда-то кто-то нашёл время`), and `теннисная пушка` is the ball machine of the fiery reply.
+
+### 33.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"A younger girl asked if I'd hit with her. I said maybe. I should probably say yes or no."` | `«Девочка помладше спросила, не поиграю ли я с ней. Я сказала „может быть“. Наверное, надо ответить „да“ или „нет“.»` |
+| fiery | `"A younger girl asked me to hit with her and I said maybe. Maybe isn't an answer. I know that."` | `«Девочка помладше попросила поиграть с ней, а я ответила „может быть“. „Может быть“ – это не ответ. Я знаю.»` |
+| deep | `"A younger girl asked me to hit with her. I said maybe, and I keep seeing her face when I said it."` | `«Девочка помладше попросила меня поиграть с ней. Я ответила „может быть“ и всё вспоминаю её лицо в тот момент.»` |
+| quiet | `"A younger girl asked if I'd hit with her. I said maybe."` | `«Девочка помладше спросила, не поиграю ли я с ней. Я ответила „может быть“.»` |
+
+### 33.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask what the younger girl is like` | `Спросить, какая эта девочка` |
+| respond | `Say someone once made time for you` | `Сказать, что и для нас когда-то кто-то нашёл время` |
+| space | `Say she can answer when she knows` | `Сказать, что ответить можно, когда она сама поймёт` |
+
+### 33.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"Shy, I think. She keeps standing at the end of the court, waiting for a gap."` | `«Стеснительная, по-моему. Всё время стоит в конце корта и ждёт, когда можно будет вклиниться.»` |
+| sunny | respond | `"Did they? Then I think I'll say yes. One hit, to start."` | `«Правда? Тогда, пожалуй, скажу „да“. Для начала один раз.»` |
+| sunny | space | `"Good. I'll tell her by the end of the week, either way."` | `«Хорошо. Скажу ей до конца недели, что бы ни решила.»` |
+| fiery | invite | `"She doesn't say much. She stands at the end of the court and waits for a gap."` | `«Она почти не говорит. Стоит в конце корта и ждёт, когда можно будет вклиниться.»` |
+| fiery | respond | `"Fine. One hit, and then we'll see. I'm not a ball machine."` | `«Ладно. Один раз, а там посмотрим. Я не теннисная пушка.»` |
+| fiery | space | `"Fine. But she's waiting. I'd like to stop making her wait."` | `«Ладно. Но она ждёт. Мне хочется перестать заставлять её ждать.»` |
+| deep | invite | `"She does not say much. She stands at the end of the court and waits for a gap, as if she has done it before."` | `«Она почти не говорит. Стоит в конце корта и ждёт, когда можно будет вклиниться, словно ей это не впервой.»` |
+| deep | respond | `"I did not know that. It makes it harder to say no, which I suppose is the point."` | `«Я этого не знала. Теперь труднее сказать „нет“, и, наверное, в этом и смысл.»` |
+| deep | space | `"I know. I do not want to leave her wondering for long."` | `«Знаю. Не хочу надолго оставлять её в неизвестности.»` |
+| quiet | invite | `"Quiet. She waits at the end of the court for a gap."` | `«Тихая. Ждёт в конце корта, когда можно будет вклиниться.»` |
+| quiet | respond | `"All right. I'll tell her yes."` | `«Хорошо. Скажу ей „да“.»` |
+| quiet | space | `"Okay. Not for long, though."` | `«Хорошо. Но не надолго.»` |
+
+## 34. Situation R66 – `the-match-she-said-she-would-watch`
+
+Subject `decision`; stages `school`, `after-school`; no fact gate. `Подруга` is the friend, `матч подруги` is her match and not the daughter's, and `последний` is the last one on. The respond label says `мы бы такое обещание сдержали` in the family `мы`, and the sunny respond reply drops the English `you would` rather than guess a gender for the parent. `Весь` agrees with `матч` in all four invite replies.
+
+### 34.1 Openers
+
+| voice | English source | Russian draft |
+| --- | --- | --- |
+| sunny | `"I told a friend I'd stay and watch her match. It's the last one on, so that's a lot of waiting."` | `«Я сказала подруге, что останусь и посмотрю её матч. Он последний, так что ждать придётся долго.»` |
+| fiery | `"I made a promise too quickly. I said I'd watch a friend's match, and it's the last one on."` | `«Я слишком быстро пообещала. Сказала, что посмотрю матч подруги, а он последний.»` |
+| deep | `"I told a friend I would stay and watch her match. I meant it then. It is the last match on, and I am not sure I mean it now."` | `«Я сказала подруге, что останусь и посмотрю её матч. Тогда я так и думала. Это последний матч, и теперь я не уверена, что думаю так же.»` |
+| quiet | `"I said I'd watch a friend's match. It's the last one on."` | `«Я сказала, что посмотрю матч подруги. Он последний.»` |
+
+### 34.2 Shared stance labels
+
+| stance | English source | Russian draft |
+| --- | --- | --- |
+| invite | `Ask how much she promised to watch` | `Спросить, сколько она пообещала посмотреть` |
+| respond | `Say you would keep a promise like that` | `Сказать, что мы бы такое обещание сдержали` |
+| space | `Say she can go when she has had enough` | `Сказать, что она может уйти, когда ей будет достаточно` |
+
+### 34.3 Replies
+
+| voice | stance | English source | Russian draft |
+| --- | --- | --- | --- |
+| sunny | invite | `"All of it. That was the silly part. Half would have been fine."` | `«Весь. Это и было глупо. Хватило бы и половины.»` |
+| sunny | respond | `"I know you would. I think that's why I haven't gone yet."` | `«Знаю. Наверное, поэтому я до сих пор не ушла.»` |
+| sunny | space | `"Okay. Then I'll stay for the start and see how I feel."` | `«Ладно. Тогда посижу в начале и посмотрю, как себя почувствую.»` |
+| fiery | invite | `"All of it. I said all of it. Why did I say all of it."` | `«Весь. Я сказала, что весь. Зачем я сказала, что весь.»` |
+| fiery | respond | `"Fine. Then I stay. I'm not going to enjoy the last hour, though."` | `«Ладно. Тогда остаюсь. Но последний час мне нравиться не будет.»` |
+| fiery | space | `"Good. I'll stay for the start, and I'm not saying sorry for the rest."` | `«Хорошо. Начало досижу, а за остальное извиняться не буду.»` |
+| deep | invite | `"All of it. I told her I would stay to the end, and she thanked me."` | `«Весь. Я сказала, что досижу до конца, и она меня поблагодарила.»` |
+| deep | respond | `"I know. That is what I am weighing it against."` | `«Знаю. Именно с этим я всё и сравниваю.»` |
+| deep | space | `"Perhaps. I would still know I had left, though."` | `«Возможно. Но я всё равно буду знать, что ушла.»` |
+| quiet | invite | `"All of it. That's what I said."` | `«Весь. Так я и сказала.»` |
+| quiet | respond | `"I know. That's what I keep thinking."` | `«Знаю. Я об этом всё и думаю.»` |
+| quiet | space | `"Okay. I'll see how long I last."` | `«Хорошо. Посмотрю, насколько меня хватит.»` |
+
+## 35. Corpus progress (14.10)
+
+| rows | ordinary authored strings | shared second beats | state |
+| ---: | ---: | ---: | --- |
+| 65 / 65 | 1235 / 1235 | 20 / 20 | all current generated situations complete as DRAFT |
+
+The 11.10 line in §16 (51 / 51, 969 / 969, 4 / 4) is the record of the volume as it stood then; the four rows in §17–§21 join it, 76 ordinary strings and 16 shared beats more, the three rows in §22–§25 add 57 ordinary strings (12 openers, 9 labels, 36 replies) and no shared beat, the three rows in §26–§29 add 57 more on the same count, and the four rows in §30–§34 add 76 (16 openers, 12 labels, 48 replies) and no shared beat. Every English cell in §17–§34 is read from the parsed corpus by the generating script, not typed, and `npm run i18n:check` is the proof that no key is left without Russian.

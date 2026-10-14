@@ -124,7 +124,7 @@ describe('§1 the walker folds `+` between plain literals into ONE key – and l
 // =================================================================================================
 // the number of DISTINCT keys each seat reaches – every figure is one an earlier wave's net counts on its own (the provider is not asked to confirm itself)
 const SEAT_KEYS: Record<string, number> = {
-  'lifeBeat.optionLabel': 179, //   34 LIFE_BEAT_OPTIONS labels (L2-9b) + 145 distinct stance labels over 51 situations x 4 voices (L3-5 §6)
+  'lifeBeat.optionLabel': 221, //   34 LIFE_BEAT_OPTIONS labels (L2-9b) + 187 distinct stance labels over 65 situations x 4 voices (L3-5 §6; ⚠ RE-AIMED 14.10 r51 №17: +12, r51 continuation E1: +9, E2: +9, E3: +12)
   'lifeBeat.replyDone': 2, //       `Let her finish` and `Proceed` – the two shipped words (invariant 4)
   'lifeBeat.promptConfirm': 1, //   `Proceed`
   'lifeMoment.confirm': 1, //       LIFE_MOMENT_CONFIRM
@@ -132,9 +132,9 @@ const SEAT_KEYS: Record<string, number> = {
   'birthday.gifts': 159, //         the gift catalogue (L3-4): labels, notes, repeat notes, asks, the means alternates
   'diary.pool': 95, //              95 static cells (L3-4 §2)
   'diary.debut': 4, //              the four opening-week lines
-  'diary.weekNotes': 298, //        298 static cells of the 324-cell corpus (L3-4 §8)
+  'diary.weekNotes': 301, //        301 static cells of the 327-cell corpus (L3-4 §8; +3 R51 №13)
   'diary.travel': 78, //            the travel notes + the coach's five
-  'smallTalk.corpus': 820, //       204 openers + 612 replies + 4 shared second beats (L3-5 §6)
+  'smallTalk.corpus': 1060, //      260 openers + 780 replies + 20 shared second beats (L3-5 §6; ⚠ RE-AIMED 14.10 r51 №17: +80, r51 continuation E1: +48, E2: +48, E3: +64)
   'smallTalk.frames': 18, //        9 per presence
   'album.corpus': 664, //           648 cells + 16 arc cells (L3-6 §11) – ⚠ RE-STAMPED 12.10 r49 №7 (+180) and r50 №1 (+12: the pregnancy occasion A38)
   // ⚠ 10.10 – the LQA runner's four not-in-catalog keys and their whole families (L4-GATE row):
@@ -145,7 +145,8 @@ const SEAT_KEYS: Record<string, number> = {
   'ending.blurb': 9, //             ENDING_BLURB, one per `CareerEndingType` – a Record's values no census rule reads, drawn by `t(ENDING_BLURB[type])` on the last page
   // ⭐ 11.10 (RU-22, the display boundary) – the seventh dynamic `t()` call, and the coach's two remarks on her form:
   'form.eye': 2, //                 `coachFormNote`'s two returned literals (a `return '…'` no census rule reads), stored as `c: { k: eye }` – the keys exist the day the seat does
-  'engine.text': 291, //            `engineText(english)` in words.ts: every `label`/`blurb`/`note` of ECONOMY (the shop, the kit, the vacations, the ads, the staff rungs, the hitting partner's three notes), the radar's note pool + its training read (MOVE_POOL 45 + FOG_POOL 5, read off the source) + its five axis labels, the kid tiles' friend lines, the psychologist's four years, the three college places ⭐ RU-23 (11.10): + the coach market's own prose, 251 -> 291 – the sixteen bios, the four load notes, the profile's four labels and four arguments (cut at the dash by the engine's own splitter), the plaque's eleven and the travel line, read off the real functions.
+  // ⭐ RE-AIMED 13.10 (r51 №2): 291 -> 301 – the Specialists tab's engine sentences beyond the years: the three locked lines (`MASSEUR_/PSYCHOLOGIST_/SPARRING_LOCKED_DETAIL`), the masseur's four room notes (read off `masseurRoomNote` by posing a world) and the three refusals a hired psychologist's year's-work note can show (the season, the joint decline, the not-ready one).
+  'engine.text': 301, //            `engineText(english)` in words.ts: every `label`/`blurb`/`note` of ECONOMY (the shop, the kit, the vacations, the ads, the staff rungs, the hitting partner's three notes), the radar's note pool + its training read (MOVE_POOL 45 + FOG_POOL 5, read off the source) + its five axis labels, the kid tiles' friend lines, the psychologist's four years, the three college places ⭐ RU-23 (11.10): + the coach market's own prose, 251 -> 291 – the sixteen bios, the four load notes, the profile's four labels and four arguments (cut at the dash by the engine's own splitter), the plaque's eleven and the travel line, read off the real functions.
   'coach.room': 12, //              ⭐ RU-23 (11.10): the four labels and the four arguments of the long note's reads, the short of Home's plate that is not a label (the other three are their labels: one key each), the three rungs of the below-best ladder – `{ k: text }` refs, read off `ROOM_BANDS` and `BELOW_BEST_LADDER`
 }
 
@@ -209,7 +210,8 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     // 159 gift keys + 34 of the 10.10 families (the 35th, one coaching line, the census already met) + the nine epilogue paragraphs (10.10, item 34 – a Record's values, no census rule reads them)
     // – every seat-only key the census cannot see. ⭐ RE-AIMED 10.10: 193 -> 202. ⭐ RE-AIMED 11.10 (RU-22): 202 -> 210 – the three hitting-partner notes (a `note:` property), the three college places (`COLLEGE_TIER_NAME` values) and the coach's two remarks on her form (returned literals); then 210 -> 260 with the radar's training read (the 50 lines of two private arrays – 45 of them already had RU-05's rows waiting).
     // ⭐ RE-AIMED 11.10 (RU-23): 260 -> 308 – the coach market's prose (39 of the 40 new `engine.text` keys: the travel line is an exported constant the census reads on its own) and nine of the twelve keys of `coach.room` (the three rungs of the below-best ladder are `text:` properties the census already reads).
-    expect(bare.catalog.count, 'the catalog the census alone sees').toBe(built.catalog.count - 308)
+    // ⭐ RE-AIMED 13.10 (r51 №2): 308 -> 315 – seven more keys no census rule sees: the three locked lines of the Specialists tab and the masseur's four room-note literals. The three refusals the same seat now names were catalog keys already, so they are counted in `flipped` below and not here.
+    expect(bare.catalog.count, 'the catalog the census alone sees').toBe(built.catalog.count - 315)
     expect([...gifts].filter((g) => bare.catalog.keys[g] !== undefined)).toEqual([])
   })
 
@@ -232,7 +234,8 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     }
     // 159 gifts + 34 of the 10.10 families + the nine epilogue paragraphs (10.10, item 34), as above – ⭐ RE-AIMED 10.10: 193 -> 202; ⭐ RE-AIMED 11.10 (RU-22): 202 -> 260, as above
     // ⭐ RE-AIMED 11.10 (RU-23): 260 -> 308, as above
-    expect(built.stats.wrapped - bare.stats.wrapped).toBe(flipped + 308)
+    // ⭐ RE-AIMED 13.10 (r51 №2): 308 -> 315, as above (the three refusals are in `flipped`: the census had them, unwrapped, and the seat wires them)
+    expect(built.stats.wrapped - bare.stats.wrapped).toBe(flipped + 315)
   })
 
   // ── the mutations: a fabricated seat, driven through the SAME code ──────────────────────────────────────────────────────────
@@ -312,7 +315,13 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     // ⭐ RE-AIMED 11.10 (RU-22): 17 / 2,284 -> 19 / 2,537 (+ `form.eye` 2 keys, + `engine.text` 251 keys – some of which another seat or the census already reached)
     // ⭐ RE-AIMED 11.10 (RU-23): 19 / 2,537 -> 20 / 2,589 (+ `coach.room` 12 keys, + 40 `engine.text` keys for the coach market's prose)
     // ⚠ RE-STAMPED 12.10 r49 №7 (2589 → 2769, +180 variants) and r50 №1 (→ 2781, +12 A38).
-    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 2781 catalog keys/)
+    // ⭐ RE-AIMED 13.10 (r51 №2): 2781 → 2791 (+10 `engine.text` keys: the Specialists tab's three locked lines, the masseur's four room notes, three refusals).
+    // ⭐ RE-AIMED 14.10 (r51 №13): 2791 → 2794 (+3 `diary.weekNotes` keys: the staycation week's three lines).
+    // ⭐ RE-AIMED 14.10 (r51 №17): 2794 → 2886 (+92: four school-years stories – 16 openers, 48 replies and 16 shared beats on the corpus seat, 12 labels on the option-label seat).
+    // ⭐ RE-AIMED AGAIN 14.10 (r51 continuation, builder E1): 2886 → 2943 (+57: three school-years observations – 12 openers and 36 replies on the corpus seat, 9 labels on the option-label seat).
+    // ⭐ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E2): 2943 → 3000 (+57: two school-years curiosities and a good news – 12 openers and 36 replies on the corpus seat, 9 labels on the option-label seat).
+    // ⭐ RE-AIMED A FOURTH TIME 14.10 (r51 continuation, builder E3): 3000 → 3076 (+76: two school-years worries and two decisions – 16 openers and 48 replies on the corpus seat, 12 labels on the option-label seat).
+    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 3076 catalog keys/)
   })
 })
 

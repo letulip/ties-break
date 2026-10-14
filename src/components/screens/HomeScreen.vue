@@ -71,6 +71,7 @@ import { TIER_SHORT } from '../../composables/weekAhead'
 import { feedContext, isTierOpen, useTierStates } from '../../composables/tierState'
 // L2-3 (08.10): RU-03 – Home's frame, controls, cards, season strip and news shell call `t()`; the coach pools are `localizedList`s.
 import { engineWord, eventText, localizedList, t } from '../../i18n'
+import { surfaceName } from '../../composables/eventCard'
 import MatchReplay from '../MatchReplay.vue'
 import RankHelpDialog from '../RankHelpDialog.vue'
 // v48: the podium's own paper, on the one week a year that is about her rather than about tennis.
@@ -1691,7 +1692,8 @@ async function leaveCollege(): Promise<void> {
             <!-- The TIER is not repeated here: the tournament's own name above it already says
                  "Regional Championship" (owner, 28.07). Surface, then dates - the export's order. -->
             <p class="note-meta">
-              <span>{{ nearestEntered.surface }}</span>
+              <!-- The engine hands over the court as an id; the word comes from the catalog (lowercase, as the id read before). -->
+              <span>{{ surfaceName(nearestEntered.surface) }}</span>
               <span>{{ nextDates }}</span>
             </p>
             <div class="note-foot">

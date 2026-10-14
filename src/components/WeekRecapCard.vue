@@ -57,7 +57,7 @@ import { activeLadderOfSnapshot } from '../shared/protocol'
 import type { TravelHomeMood, TravelHomeScene, WorldEvent, WorldMatch } from '../shared/protocol'
 import { useStartYear } from '../composables/startYear'
 // L2-3 (08.10): RU-03 §20–§23 – the recap's frame, labels, alts, finance rows and memos, mood words and the goal scrap call `t()`.
-import { engineText, eventText, localizedList, t } from '../i18n'
+import { engineText, engineWord, eventText, localizedList, t } from '../i18n'
 import { ladderName } from '../composables/kidIdentity'
 // SUCCESSION S2e (06.10): the career's own year, for every date this file prints.
 const startYear = useStartYear()
@@ -692,9 +692,12 @@ const MOOD_WORD: Record<PortraitEmotion, string> = {
 // its one emotion decision, and null otherwise. ⚠⚠ `MOOD_WORD` BELOW IS UNTOUCHED – `Frustrated`
 // included – and still renders every other week; the Kid screen's own map says `Angry` for the same
 // face, both are shipped strings of the owner's, and this layer changes neither.
-const moodWord = computed(
-  () => game.snapshot?.diary.facts.moodWord ?? MOOD_WORD[emotion.value],
-)
+const moodWord = computed(() => {
+  const engineMood = game.snapshot?.diary.facts.moodWord
+  // ⭐ r51 B2 (13.10, owner №15 «Bright», №22 «Heavy»): the same seam as the Kid tile – the engine's English word is read at the display boundary (`words.ts`, class `moodRecap`, whose neutral `Steady`
+  // is THIS card's own `recap|Steady` row); `MOOD_WORD` above was translated all along and is untouched.
+  return engineMood != null ? engineWord('moodRecap', engineMood) : MOOD_WORD[emotion.value]
+})
 
 // D's "Energy" bar under the face. `condition` IS that number in this game (0..100, 100 = fresh),
 // so the bar is the value and the word above it is the band – the same pair Home's condition ring
@@ -1380,9 +1383,17 @@ const practiceWeekLabel = computed(() => weekLabel(week.value, startYear.value))
   color: var(--paper-ink);
 }
 
+/* R51 №1b – THE TWO COLUMNS MAY SHRINK BELOW THEIR TILES' MIN-CONTENT. `1fr` is `minmax(auto, 1fr)`, so a column never gets narrower than its widest
+   tile's longest unbreakable word. MEASURED (e2e/r51-overflow-sweep.spec.ts + a one-off probe, Russian, `pro`): the Mood tile asks 150 px
+   (its uppercase eyebrow word) and the Highlights tile 162 px (a 16-letter word in a highlight), so the second row alone needs 322 px of a
+   grid that is 288 px wide at 320 and 318 at 350 – the page grew 18 px at 320 and 2 px at 336, Chromium widened the layout viewport to
+   match, and the fixed bottom bar and the week button left the glass. `minmax(0, 1fr)` is the "min-width drop": the columns stay equal
+   halves at every width that fits today (nothing from 354 px up moves), and below that the words run into the tile's own 14 px padding
+   instead of the page. ⚠ KNOWN RESIDUE, NOT HIDDEN: at 320 the longest highlight word is up to 10 px wider than the tile's content box and
+   is still inside its card; stacking the tiles into one column under ~354 px would remove it and is a layout decision, not a fix. */
 .recap-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 14px;
 }

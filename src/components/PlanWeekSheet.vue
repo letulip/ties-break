@@ -84,6 +84,7 @@ const offSeason = computed(() => isOffSeasonWeek(props.week))
 // Read off the SNAPSHOT rather than passed in, for the same reason the prices are: the sheet and
 // the calendar card that opened it must not be able to disagree about whether the week is booked.
 const booked = computed(() => (game.snapshot?.vacations ?? []).find((v) => v.week === props.week) ?? null)
+// The engine's English label, on purpose: it rides the cancel payload as data. The sentence in the template reads it through engineText.
 const bookedLabel = computed(() =>
   booked.value ? (vacationPackage(booked.value.packageId)?.label ?? booked.value.packageId) : '',
 )
@@ -331,7 +332,7 @@ function askVacation(row: PackageRow): void {
              sheet is about a FUTURE week and the title above already names it, so "this week" read
              as the one the player is standing in. -->
         <p class="plan-lead">
-          {{ t('{0} – booked, {1}. She plays no tournament while she is away.', [bookedLabel, feeLabel(booked!.paidCents)]) }}
+          {{ t('{0} – booked, {1}. She plays no tournament while she is away.', [engineText(bookedLabel), feeLabel(booked!.paidCents)]) }}
         </p>
         <p class="hint">
           {{ booked!.paidCents > 0 ? t('Cancel any time before the week starts and the money comes back in full.') : t('Cancel any time before the week starts and nothing is owed either way.') }}
