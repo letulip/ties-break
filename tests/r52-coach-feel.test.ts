@@ -5,12 +5,13 @@
 //
 // WHAT IT HOLDS:
 //   A. the step table – every threshold edge of `coachFeelStep`, on the named constants
-//   B. the too-early gate, and a score that is the stated blend (trend, level, the ramp between them, the doubt)
+//   B. the too-early gate, and a score that is the stated blend (trend, level, the ramp between them, the doubt) – ⚠ F1b: for a QUIET gauge; a speaking one is H's
 //   C. the doubt – constant inside a four-week period, redrawn across periods, bounded, purpose-scoped
 //   D. ⭐ THE PROPERTY: she is CONFIDENT only when the coach card's gauge would show a figure of the same sign
 //   E. the wrapper – null without a coach, the stint restarts on every hire, an absent pair reads chem 0, ZERO MAIN draws
 //   F. the snapshot key – ABSENT (not null, not undefined) without a coach, present with one
 //   G. the hunch mapping the small-talk hunch line reads (the line itself is tests/r51-coach-real-hunch.test.ts)
+//   H. ⭐ F1b (14.10): the gauge leads once it speaks clearly – the margin, the PROPERTY (never on the other side of a gauge past the hunch line), the line itself, the re-hire arms
 //
 // ⚠⚠ MUTATION ARMS – each APPLIED to the real tree, RUN against this file and the round-51 hunch pair (unit; M7 and M13 also the mounted file),
 // RED MEASURED, and the file restored with its sha-256 checked identical (all fourteen, 14.10). Green unmutated.
@@ -29,6 +30,14 @@
 //   M13 the hub reads the RAW level again (round 51's rule inlined)      RED 2 unit (the prompt reads her feel · the hedged-feel case) · mounted 0, whose poses are
 //                                                                          clear levels or young stints where both rules agree – the unit pair is what separates them
 //   M14 the tick re-inlines an `affinityFor` call                        RED 1  the one-spelling pin
+//
+// ⚠⚠ F1b (14.10) – FOUR MORE ARMS, same method: each APPLIED to the real tree, RUN against this file and the round-51 hunch pair (unit), RED MEASURED, and src/engine/chemistry.ts restored with its
+// sha-256 checked identical (2abde793… before and after). M15 and M16 are the two rules; M17 and M18 are controls for the ways a rule can be right and its edge wrong.
+//   M15 the too-early gate back to the clock alone (a speaking gauge no longer passes it)   RED 5  the PROPERTY · the line · the pure re-hire arm · the REAL-hire arm · r51's prompt (±9 at week 3)
+//   M16 the level weight back to the stint's ramp alone (a speaking gauge no longer leads)  RED 5  the PROPERTY · the line · the pure re-hire arm · the ramp/cap score case · r51's prompt
+//        (the REAL-hire arm stays GREEN under M16: the stranger the market hands it happens to have a favourable trend, and a favourable trend hides a missing weight – the pure arm at A = -1 carries this rule)
+//   M17 the cap given to EVERY gauge, quiet ones included                                    RED 4  the quiet-gauge control · the line · the ramp score case · the trend-normalisation case
+//   M18 the line made strict (a gauge exactly AT ±3 no longer speaks)                        RED 2  the PROPERTY · the line
 import { describe, it, expect } from 'vitest'
 import {
   CHEMISTRY_HUNCH_COLD_AT,
@@ -126,9 +135,12 @@ describe('round 52 F1 A – the step table', () => {
 // B. THE GATE AND THE BLEND
 // =================================================================================================
 describe('round 52 F1 B – the too-early gate and the score', () => {
-  it('⭐ under tooEarlyWeeks she says nothing, whatever the pair; from tooEarlyWeeks she is live', () => {
+  it('⭐ under tooEarlyWeeks she says nothing, whatever the pair – while the gauge is QUIET; from tooEarlyWeeks she is live', () => {
+    // ⚠ F1b (14.10): this sweep used to carry chem ±30. A gauge past the hunch line SPEAKS, and she then knows the coach whatever the clock says (a coach hired
+    // back keeps the pair and restarts the stint) – section H holds that half. What stays here is the quiet half: |chem| one hair under the line, and nothing.
+    const quiet = [CHEMISTRY_HUNCH_COLD_AT + 0.01, 0, CHEMISTRY_HUNCH_WARM_AT - 0.01]
     for (const a of [-1, -0.4, 0, 0.4, 1]) {
-      for (const chem of [-30, 0, 30]) {
+      for (const chem of quiet) {
         for (let w = 0; w < COACH_FEEL.tooEarlyWeeks; w++) {
           expect(coachFeelOf(pairOf(chem), a, w, SEED, COACH), `A ${a} chem ${chem} week ${w}`).toBe('too-early')
         }
@@ -145,13 +157,19 @@ describe('round 52 F1 B – the too-early gate and the score', () => {
   it('⭐ the score is (1 - wL) x trend + wL x level + doubt, with wL ramping linearly to levelWeightMax and staying there', () => {
     const doubt = (w: number): number => coachFeelJitter(SEED, COACH, Math.floor(w / COACH_FEEL.periodWeeks))
     const bare = (a: number, chem: number, w: number): number => coachFeelScore(pairOf(chem), a, w, SEED, COACH) - doubt(w)
+    // ⚠ F1b (14.10): the RAMP is the weight of a QUIET gauge (|chem| under the hunch line). A gauge past the line has the cap from the first week, so the three
+    // level terms that used to ride the ramp (±levelScale and saturation) now read «the cap, whatever the stint»; the line itself is section H's.
+    const quiet = CHEMISTRY_HUNCH_WARM_AT - 0.5
+    const cap = COACH_FEEL.levelWeightMax
     for (const w of [0, 6, 13, 26, 52, 80, 156]) {
       const wL = levelWeightAt(w)
       expect(bare(1, 0, w), `trend at a perfect pair, week ${w}`).toBeCloseTo(1 - wL, 9)
       expect(bare(-1, 0, w), `trend at the worst pair, week ${w}`).toBeCloseTo(-(1 - wL), 9)
-      expect(bare(0, COACH_FEEL.levelScale, w), `level at +levelScale, week ${w}`).toBeCloseTo(wL, 9)
-      expect(bare(0, -COACH_FEEL.levelScale, w), `level at -levelScale, week ${w}`).toBeCloseTo(-wL, 9)
-      expect(bare(0, 10 * COACH_FEEL.levelScale, w), `the level saturates, week ${w}`).toBeCloseTo(wL, 9)
+      expect(bare(0, quiet, w), `a quiet warm level rides the ramp, week ${w}`).toBeCloseTo((wL * quiet) / COACH_FEEL.levelScale, 9)
+      expect(bare(0, -quiet, w), `a quiet cold level rides the ramp, week ${w}`).toBeCloseTo((-wL * quiet) / COACH_FEEL.levelScale, 9)
+      expect(bare(0, COACH_FEEL.levelScale, w), `a speaking level at +levelScale has the cap, week ${w}`).toBeCloseTo(cap, 9)
+      expect(bare(0, -COACH_FEEL.levelScale, w), `a speaking level at -levelScale has the cap, week ${w}`).toBeCloseTo(-cap, 9)
+      expect(bare(0, 10 * COACH_FEEL.levelScale, w), `the level saturates, week ${w}`).toBeCloseTo(cap, 9)
     }
     expect(levelWeightAt(COACH_FEEL.levelWeightWeeks)).toBe(COACH_FEEL.levelWeightMax)
     expect(levelWeightAt(10 * COACH_FEEL.levelWeightWeeks), 'and it stays').toBe(COACH_FEEL.levelWeightMax)
@@ -315,14 +333,14 @@ describe('round 52 F1 E – the world-level wrapper', () => {
     expect(absent).toBe(coachFeel(world))
   })
 
-  it('⭐ a hire restarts the clock: the new coach is `too-early` for tooEarlyWeeks even with a big pair on the books, then she is live', () => {
+  it('⭐ a hire restarts the clock: a NEW coach is `too-early` for tooEarlyWeeks, then she is live', () => {
     const world = coached('r52-f1-restart', 60)
     const old = coachOf(world)
     world.coachPairs[old] = pairOf(15)
     expect(coachFeel(world)).toBe('good')
     const stranger = strangerOf(world)
-    // a pair on the stranger's row would not matter either – the stint is what gates her
-    world.coachPairs[stranger] = pairOf(15)
+    // ⚠ F1b (14.10): this used to plant a pair of +15 on the stranger's row and say «the stint is what gates her». A pair on the row IS the re-hire case, and a
+    // gauge past the hunch line outranks the clock (section H holds that arm through this same hire) – so the stranger here is a genuinely NEW coach: no row.
     hireCoach(world, stranger)
     expect(coachSinceWeek(world), 'the hire is stamped with the week the world stands in').toBe(60)
     expect(coachFeel(world)).toBe('too-early')
@@ -397,5 +415,129 @@ describe('round 52 F1 G – the small-talk hunch reads her feel', () => {
     }
     for (const step of COACH_FEEL_STEPS) expect(feelHunch(step), step).toBe(expected[step])
     expect(Object.keys(expected).sort()).toEqual([...COACH_FEEL_STEPS].sort())
+  })
+})
+
+// =================================================================================================
+// H. THE GAUGE LEADS ONCE IT SPEAKS CLEARLY (F1b, 14.10)
+// =================================================================================================
+// The owner's design answer: «как раз и на гаудже химии на карточке тренера увидим подтверждение или опровержение» – the gauge is the confirmation. F1's clock-based
+// rule broke that in one case: a coach hired BACK restarts the stint but keeps the pair, so with the gauge at +10 she said «too early» (or «seems fine, but…» when the
+// trend was negative). F1b states the fix on the LEVEL: `too-early` needs a quiet gauge, and a gauge past the hunch line weighs at least the cap.
+describe('round 52 F1b H – ⭐ a gauge that speaks clearly leads her feel', () => {
+  const WARM_AT = CHEMISTRY_HUNCH_WARM_AT
+  const COLD_AT = CHEMISTRY_HUNCH_COLD_AT
+  const SEEDS = ['r52-h-a', 'r52-h-b', 'r52-h-c']
+  /** what is ON THE OTHER SIDE of a warm gauge (and of a cold one) – «too early» is there too: a clear figure and «can't tell yet» are not the same side */
+  const BEHIND_A_WARM_GAUGE: readonly CoachFeel[] = ['seems-off', 'off', 'too-early']
+  const BEHIND_A_COLD_GAUGE: readonly CoachFeel[] = ['seems-good', 'good', 'too-early']
+  const AFFINITIES = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1]
+  /** the stint, young and old: the day of the hire, the whole gate window and either side of it, the ramp's end (52) and far past it */
+  const STINTS = [0, 1, 2, 3, 4, 5, 6, 7, 13, 26, 51, 52, 104, 400]
+  /** levels AT the line, a hair past it, and out to far beyond the scale – every one past the line by construction, offset from the named constants */
+  const OFFSETS = [0, 0.01, 0.5, 1, 2, 3, 4, 5, 7, 9, 12, 17, 27, 47]
+  const WARM = OFFSETS.map((d) => WARM_AT + d)
+  const COLD = OFFSETS.map((d) => COLD_AT - d)
+
+  it('the margin that makes the property hold, from the NAMED knobs: the worst score on the gauge\'s own side of the line stays inside the lean on the other', () => {
+    const f = COACH_FEEL
+    // the trend all the way against the gauge, the doubt all the way against it too, the level only as large as the line makes it, the weight at the cap
+    const worstWarm = -(1 - f.levelWeightMax) + f.levelWeightMax * Math.min(1, WARM_AT / f.levelScale) - f.jitter
+    const worstCold = (1 - f.levelWeightMax) + f.levelWeightMax * Math.max(-1, COLD_AT / f.levelScale) + f.jitter
+    expect(worstWarm, 'a warm gauge at the line, a trend of -1, a doubt of -jitter').toBeGreaterThan(-f.leanAt)
+    expect(worstCold, 'a cold gauge at the line, a trend of +1, a doubt of +jitter').toBeLessThan(f.leanAt)
+  })
+
+  it('⭐⭐ THE PROPERTY: with |chem| at or past the hunch line her step is NEVER on the other side of the gauge – not confident, not hedged, not «too early» – every affinity x level x stint x doubt, the doubt\'s two extremes included', () => {
+    const wrong: string[] = []
+    const seen: Record<string, number> = {}
+    let cells = 0
+    const judge = (step: CoachFeel, chem: number, where: string): void => {
+      cells += 1
+      seen[step] = (seen[step] ?? 0) + 1
+      if ((chem > 0 ? BEHIND_A_WARM_GAUGE : BEHIND_A_COLD_GAUGE).includes(step)) wrong.push(`${step} at chem ${chem} (${where})`)
+    }
+    // (i) the REAL function over many doubts: three careers x eight coaches
+    for (const seed of SEEDS) {
+      for (let c = 0; c < 8; c++) {
+        for (const a of AFFINITIES) {
+          for (const chem of [...WARM, ...COLD]) {
+            for (const w of STINTS) judge(coachFeelOf(pairOf(chem), a, w, seed, `coach-${c}`), chem, `${seed} coach-${c} A ${a} week ${w}`)
+          }
+        }
+      }
+    }
+    const real = cells
+    // (ii) the doubt's two EXTREMES, which no sampled seed is promised to reach: the real score less its own doubt, then plus and minus the half-width
+    const fine = Array.from({ length: 21 }, (_, i) => -1 + i * 0.1)
+    for (const a of fine) {
+      for (const chem of [...WARM, ...COLD]) {
+        for (const w of STINTS) {
+          const bare = coachFeelScore(pairOf(chem), a, w, SEEDS[0], 'coach-0') - coachFeelJitter(SEEDS[0], 'coach-0', Math.floor(w / COACH_FEEL.periodWeeks))
+          for (const d of [-COACH_FEEL.jitter, COACH_FEEL.jitter]) judge(coachFeelStep(bare + d, chem), chem, `doubt ${d} A ${a} week ${w}`)
+        }
+      }
+    }
+    expect(wrong, 'a step on the other side of a speaking gauge').toEqual([])
+    // non-vacuous: the loops ran, she is confident on both sides, and the lean stays honest – a trend against the gauge can still leave her merely «unsure»
+    expect(real).toBe(SEEDS.length * 8 * AFFINITIES.length * (WARM.length + COLD.length) * STINTS.length)
+    expect(cells - real).toBe(fine.length * (WARM.length + COLD.length) * STINTS.length * 2)
+    expect(seen.good, 'good steps in the sweep').toBeGreaterThan(1000)
+    expect(seen.off, 'off steps in the sweep').toBeGreaterThan(1000)
+    expect(seen.unsure, 'unsure steps in the sweep').toBeGreaterThan(100)
+  })
+
+  it('⭐ the line is a step: AT the hunch line she is read on day one, a hair under it she is still «too early» – and the cap starts at the same place', () => {
+    for (const a of [-1, 0, 1]) {
+      expect(coachFeelOf(pairOf(WARM_AT), a, 0, SEED, COACH), `at the warm line, A ${a}`).not.toBe('too-early')
+      expect(coachFeelOf(pairOf(COLD_AT), a, 0, SEED, COACH), `at the cold line, A ${a}`).not.toBe('too-early')
+      expect(coachFeelOf(pairOf(WARM_AT - 0.01), a, 0, SEED, COACH), `under the warm line, A ${a}`).toBe('too-early')
+      expect(coachFeelOf(pairOf(COLD_AT + 0.01), a, 0, SEED, COACH), `over the cold line, A ${a}`).toBe('too-early')
+    }
+    // at A = 0 the trend is nothing, so the bare score is the level term alone, weighed
+    const bare = (chem: number, w: number): number => coachFeelScore(pairOf(chem), 0, w, SEED, COACH) - coachFeelJitter(SEED, COACH, Math.floor(w / COACH_FEEL.periodWeeks))
+    expect(bare(WARM_AT, 0), 'at the line on day one the level already has the cap').toBeCloseTo((COACH_FEEL.levelWeightMax * WARM_AT) / COACH_FEEL.levelScale, 9)
+    expect(bare(COLD_AT, 0)).toBeCloseTo((COACH_FEEL.levelWeightMax * COLD_AT) / COACH_FEEL.levelScale, 9)
+    expect(bare(WARM_AT - 0.01, 0), 'a hair under it the stint weight still rules, and on day one that is nothing').toBeCloseTo(0, 9)
+    expect(bare(WARM_AT - 0.01, 26), 'half a year in, a quiet gauge is still on the ramp').toBeCloseTo((levelWeightAt(26) * (WARM_AT - 0.01)) / COACH_FEEL.levelScale, 9)
+  })
+
+  it('⭐ the re-hire arm on the pure function: chem +10 against a strongly negative trend, weeks 0..5 – `good` on every career and coach; the mirror is `off`', () => {
+    for (const seed of SEEDS) {
+      for (let c = 0; c < 8; c++) {
+        for (let w = 0; w < COACH_FEEL.tooEarlyWeeks; w++) {
+          for (const a of [-1, -0.7, -0.4]) {
+            expect(coachFeelOf(pairOf(10), a, w, seed, `coach-${c}`), `+10, A ${a}, week ${w}, ${seed} coach-${c}`).toBe('good')
+            expect(coachFeelOf(pairOf(-10), -a, w, seed, `coach-${c}`), `-10, A ${-a}, week ${w}, ${seed} coach-${c}`).toBe('off')
+          }
+        }
+      }
+    }
+  })
+
+  it('⭐ A COACH HIRED BACK is read at once through the REAL hire: a row of +10 (or -10) on the pair, weeks 0..5 of the new stint, is `good` (or `off`)', () => {
+    for (const [chem, expected] of [[10, 'good'], [-10, 'off']] as const) {
+      const world = coached(`r52-f1b-rehire${chem}`, 60)
+      const back = strangerOf(world)
+      // the pair survives leaving and coming back (spec §7), and a level of ±10 is past the clamp (levelScale), so no trend can outvote it: the arm holds for ANY affinity
+      world.coachPairs[back] = pairOf(chem)
+      hireCoach(world, back)
+      expect(world.coachPairs[back]?.chem, 'the hire left the pair alone – otherwise this arm tests nothing').toBe(chem)
+      for (let k = 0; k < COACH_FEEL.tooEarlyWeeks; k++) {
+        world.week = 60 + k
+        expect(world.week - coachSinceWeek(world), 'a young stint').toBe(k)
+        expect(coachFeel(world), `chem ${chem}, week ${k} of the new stint`).toBe(expected)
+      }
+    }
+  })
+
+  it('the override is the SPEAKING gauge\'s alone: a quiet one a hair under the line, against a strongly opposed trend, is still read off the stint\'s trend', () => {
+    // at tooEarlyWeeks the stint weight is about 8%: a trend of -1 gives about -0.88, and a level of +2.99 may not pull it up to «unsure» (a cap for EVERY gauge would)
+    for (const seed of SEEDS) {
+      for (let c = 0; c < 8; c++) {
+        expect(coachFeelOf(pairOf(WARM_AT - 0.01), -1, COACH_FEEL.tooEarlyWeeks, seed, `coach-${c}`), `${seed} coach-${c}`).toBe('seems-off')
+        expect(coachFeelOf(pairOf(COLD_AT + 0.01), 1, COACH_FEEL.tooEarlyWeeks, seed, `coach-${c}`), `${seed} coach-${c}`).toBe('seems-good')
+      }
+    }
   })
 })

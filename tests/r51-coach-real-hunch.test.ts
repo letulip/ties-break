@@ -382,14 +382,16 @@ describe('round 51 №8 D – her hunch', () => {
     expect(lifeBeatFollowUps('met', 'x', 'sunny', 'close', 'cold')).toEqual([])
   })
 
-  it('⭐ THE PROMPT READS HER FEEL: the card the engine assembles leans the way she feels, in every voice (a clear level after a season-and-a-half, and nothing before six weeks)', () => {
+  it('⭐ THE PROMPT READS HER FEEL: the card the engine assembles leans the way she feels, in every voice (a clear level after a season-and-a-half or on a coach hired back, and nothing before six weeks while the gauge is quiet)', () => {
     // [level on the books, weeks together (= the pose's week: a founding coach has been here since week 0), the band her feel gives]
     const cases: [number, number, ChemistryHunch][] = [
       [9, 80, 'warm'], //   a clear warm level after 80 weeks: `good`
       [-9, 80, 'cold'], //  ...and a clear cold one: `off`
-      [0.4, 3, 'even'], //  under six weeks she has nothing to say, whatever the pair
-      [9, 3, 'even'], //    ...even if a level were somehow already on the books
-      [-9, 3, 'even'],
+      [0.4, 3, 'even'], //  under six weeks she has nothing to say, whatever the pair – while the gauge is QUIET
+      // ⚠ F1b (14.10): these two used to read 'even' («even if a level were somehow already on the books»). A level of ±9 is a gauge past the hunch line, and a gauge that speaks
+      // clearly outranks the clock: a coach hired back keeps the pair and restarts the stint, and ±9 on the books at week 3 is exactly that case. She reads it at once.
+      [9, 3, 'warm'],
+      [-9, 3, 'cold'],
     ]
     for (const voice of TEMPERAMENTS as readonly Temperament[]) {
       for (const [chem, weeks, band] of cases) {

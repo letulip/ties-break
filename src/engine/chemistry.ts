@@ -460,6 +460,17 @@ export function chemistryHunch(chem: number | undefined): ChemistryHunch {
 //   карточке тренера увидим подтверждение или опровержение» – the noise is DOUBT, never an error: it
 //   can leave her unsure or hedging, and it can NEVER make her confident against the gauge.
 //
+// ⭐⭐ THE GAUGE LEADS ONCE IT SPEAKS CLEARLY (F1b, 14.10). The owner's «как раз и на гаудже химии на карточке тренера увидим подтверждение или
+// опровержение» makes the gauge the CONFIRMATION, so she must not stand against it – and F1's clock-based rule did, in one case: a coach hired BACK
+// starts a new stint (`coachSinceWeek` restarts on every hire) while the pair's row, and so the gauge, kept every week they trained before. With the
+// gauge at +10 she said «too early to tell», or «seems fine, but…» when the trend term was negative. Past stints cannot be summed (the coach-change
+// key `coach-since-<week>` carries no coach id), so the fix is stated on the LEVEL, not on time:
+//   1. `too-early` only while the stint is short AND the gauge is quiet (|chem| under the hunch line, `chemistryHunch`'s own constants);
+//   2. once the gauge is past that line the level weighs at least `levelWeightMax` – the stint's age no longer discounts a figure the parent can read.
+// The arithmetic IS the property: at the line the level term is 0.5 or more in size, so S >= 0.3 x (-1) + 0.7 x 0.5 - 0.12 = -0.07 on the warm side
+// (mirrored on the cold), which is above -leanAt – her step is NEVER on the opposite side of the gauge, hedged or confident. Pinned in
+// `tests/r52-coach-feel.test.ts` (section H); the measured cost is spec §17.4.
+//
 // ⚠⚠ NO PHASE TERM, ON PURPOSE. The weekly weather swings ±0.3; read straight, her feel would flicker
 // from week to week and the parent would learn to ignore it. The weather reaches her through `chem`,
 // which is what its integral IS – «подтверждать или опровергать» is the level doing its work.
@@ -474,14 +485,17 @@ export const COACH_FEEL = {
   /** Weeks together before she has anything to say. Six is the design's number (round 52): C7's
    *  «a sentence in week 3 about a relationship is noise» (16.09) rules out the opening weeks, and
    *  by week 6 the trend already separates the pairs (B14 (a)) while the level has barely moved.
-   *  Under it the step is `too-early`, whatever the pair. */
+   *  Under it the step is `too-early` – unless the gauge already speaks clearly (F1b, 14.10: |chem| at the
+   *  hunch line, see `coachFeelOf`), in which case she knows this coach whatever the clock says. */
   tooEarlyWeeks: 6,
   /** The level term is `chem / levelScale`, clamped to ±1: a pair at ±6 has said everything its level
    *  can say. Twice the confident line (±3, `CHEMISTRY_HUNCH_*`), so a pair just past the line speaks
    *  at half its volume and a clear one at full. */
   levelScale: 6,
   /** The most the level may weigh against the trend (the trend keeps the rest). Not 1: even after a
-   *  year she still carries a first impression of the person, and the trend IS that impression. */
+   *  year she still carries a first impression of the person, and the trend IS that impression.
+   *  F1b (14.10): it is also the weight a gauge past the hunch line has from the FIRST week – a figure the
+   *  parent can read already outranks the stint's age. */
   levelWeightMax: 0.7,
   /** Weeks together at which the level has reached `levelWeightMax` – a year, because the owner's
    *  sentence is «в процессе года» and a season is what a year IS in this game. The weight is linear
@@ -524,12 +538,26 @@ export function coachFeelJitter(seed: string, coachId: string, period: number): 
   return (r() * 2 - 1) * COACH_FEEL.jitter
 }
 
+/** ⭐ THE GAUGE SPEAKS CLEARLY – the pair's level is past the hunch line either way (`chemistryHunch`'s own
+ *  constants, never retyped here). The one predicate behind both F1b rules: `coachFeelOf` lets a speaking gauge
+ *  through the `too-early` gate and `coachFeelScore` gives its level the full weight. Private on purpose: the
+ *  line is `chemistryHunch`'s, and a second export would be a second place to move it. */
+function gaugeSpeaks(chem: number): boolean {
+  return chemistryHunch(chem) !== 'even'
+}
+
 /** ⭐⭐ HER SCORE – `S = (1 - wL) * trend + wL * level + doubt`, in roughly [-1.1, +1.1].
  *
  *  `wL` climbs linearly from 0 to `levelWeightMax` over `levelWeightWeeks`: in her first weeks she
  *  goes by who the two of them seem to be (the trend), and by the end of a year mostly by how it has
  *  actually gone (the level). An ABSENT pair reads `chem` 0 – she has no history with him, so the
  *  level term has nothing to add.
+ *
+ *  ⭐ F1b (14.10) – A GAUGE PAST THE HUNCH LINE LEADS FROM THE FIRST WEEK: `wL` is at least `levelWeightMax`
+ *  there, so a coach hired back (a new stint on an old pair) is not read off a stint weight of a few
+ *  percent. The stint weight never exceeds the cap, so «at least» is exactly the cap. With it she cannot
+ *  stand on the other side of a gauge that is speaking: S >= -0.07 for a level of +0.5 or more, whatever
+ *  the trend and the doubt (the mirror on the cold side).
  *
  *  ⚠ A SCORE IS NOT A STEP. The classification lives in `coachFeelStep`, so the edges can be pinned
  *  on a score without hunting for a pair that produces it. */
@@ -541,8 +569,10 @@ export function coachFeelScore(
   coachId: string,
 ): number {
   const f = COACH_FEEL
-  const level = clamp((pair?.chem ?? 0) / f.levelScale, -1, 1)
-  const wL = Math.min(f.levelWeightMax, (f.levelWeightMax * weeksTogether) / f.levelWeightWeeks)
+  const chem = pair?.chem ?? 0
+  const level = clamp(chem / f.levelScale, -1, 1)
+  const stintWeight = Math.min(f.levelWeightMax, (f.levelWeightMax * weeksTogether) / f.levelWeightWeeks)
+  const wL = gaugeSpeaks(chem) ? f.levelWeightMax : stintWeight
   const period = Math.floor(weeksTogether / f.periodWeeks)
   return (1 - wL) * coachFeelTrend(affinity) + wL * level + coachFeelJitter(seed, coachId, period)
 }
@@ -567,7 +597,11 @@ export function coachFeelStep(score: number, chem: number): Exclude<CoachFeel, '
  *  `weeksTogether` is the stint's age (`world.week - coachSinceWeek(world)`), `affinity` the pair's
  *  disposition (`affinityFor`, re-derived by the caller and never stored), `pair` the persisted
  *  row or `undefined` before the first week she trains with him. ZERO MAIN draws and nothing
- *  persisted: the only randomness is `coachFeelJitter`'s purpose-scoped sub-stream. */
+ *  persisted: the only randomness is `coachFeelJitter`'s purpose-scoped sub-stream.
+ *
+ *  ⭐ THE GAUGE OUTRANKS THE CLOCK (F1b, 14.10): a stint under `tooEarlyWeeks` is `too-early` only while
+ *  |chem| is under the hunch line. A pair already past it – a coach hired back, whose row kept every week
+ *  they trained before – is read at once, and `coachFeelScore` gives its level the full weight. */
 export function coachFeelOf(
   pair: CoachPair | undefined,
   affinity: number,
@@ -575,10 +609,12 @@ export function coachFeelOf(
   seed: string,
   coachId: string,
 ): CoachFeel {
-  // `!(x >= n)` rather than `x < n`, so a NaN stint (it cannot happen; the guard costs nothing) reads
-  // «too early» and never «unsure».
-  if (!(weeksTogether >= COACH_FEEL.tooEarlyWeeks)) return 'too-early'
-  return coachFeelStep(coachFeelScore(pair, affinity, weeksTogether, seed, coachId), pair?.chem ?? 0)
+  const chem = pair?.chem ?? 0
+  // A NaN stint (it cannot happen; the guard costs nothing) reads «too early» and never «unsure» – asked FIRST,
+  // because a speaking gauge must not carry a NaN past the gate below into a score that is NaN.
+  if (Number.isNaN(weeksTogether)) return 'too-early'
+  if (weeksTogether < COACH_FEEL.tooEarlyWeeks && !gaugeSpeaks(chem)) return 'too-early'
+  return coachFeelStep(coachFeelScore(pair, affinity, weeksTogether, seed, coachId), chem)
 }
 
 /** WHICH WAY HER SMALL-TALK HUNCH LEANS GIVEN HOW SHE FEELS (round 52 re-points round 51's hunch at the
