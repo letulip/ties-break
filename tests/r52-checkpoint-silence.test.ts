@@ -4,14 +4,20 @@
 // small talk has – AND THE SILENCE SHOWS: a checkpoint the bond shuts leaves a note in the parent's voice on the week's diary scrap, so the player sees what the relationship cost.
 //
 // WHAT THIS HOLDS, in the order the change was built (docs/specs/small-talk-corpus-2026-09.md, «Round 52 J1»):
-//   A. THE FACT      `coachTalkShut` is present on EXACTLY the first week of a shut checkpoint's window – once per checkpoint, at strained and cold – and absent when the checkpoint was spoken, at steady and close, on the
-//                    other window weeks, before week 12 and with nobody employed. It is ABSENT as a key, not undefined-valued.
+//   A. THE FACT      `coachTalkShut` is present on EXACTLY ONE week of a shut checkpoint's window – the first on which the line could be heard (J1b, 14.10; J1 had the window's first week alone) – once per checkpoint, at strained and cold,
+//                    and absent when the checkpoint was spoken, at steady and close, on the other window weeks, before week 12 and with nobody employed. It is ABSENT as a key, not undefined-valued. ⚠ In the BARE worlds of this
+//                    section no week is away, so the first free week IS the checkpoint week and J1's arms hold as they were; section F poses the away weeks.
 //   B. THE SPELLING  «does the bond let her confide» is ONE answer: move the table and the lottery's gate, the checkpoint talk and the fact move together. A BEHAVIOUR test, not a source pin.
 //   C. THE LINES     four lines, two per band, their words held as DATA (an oracle read back from the source is a pin that cannot fail); at cold none carries a quotation mark of hers; the coach is never gendered.
 //   D. THE LEAD      on the fact's week the silence lines are the pool and the one-in-three coin does not silence it; every OTHER week's coin is exactly the coin it was.
-//   E. REAL CAREERS  posed (the bond held for 60 weeks of a stint) and played (the bond left to move): the measurement of the spec's addendum, behind R52_J1_REPORT=1 at scale.
+//   E. REAL CAREERS  posed (the bond held for 60 weeks of a stint) and played (the bond left to move): the measurement of the spec's addendum, behind R52_J1_REPORT=1 at scale. ⚠ RE-AIMED BY J1b (14.10): the posed arm reads all four
+//                    weeks of every window, and the played arm holds the CAP ORACLE (an earlier week read now from the capped feed = that week read on the day).
+//   F. J1b           the fact WAITS for the first week the line can be heard: travel at the window's first week moves the note to the first free week; a window with no free week prints nothing; after the note's week the fact is
+//                    absent for the rest of the window (once); a checkpoint spoken inside the window clears it; a refunded trip is a free week and a played tournament is not (one spelling, the diary's own).
 //
 // ⚠ EVERY ARM IS PROVEN BY MUTATION in the builder's report: drop the bond clause from the fact (A and B go red), drop the lead (D goes red), drop the coin exemption (D goes red) – each restored byte for byte.
+// ⚠ J1b's THREE, each proven red and restored byte for byte: drop clause (c) – no earlier hearable week (F goes red: the fact on every later free week, twice per checkpoint); drop clause (b) – the week itself hearable
+// (F goes red: the fact on the away weeks); widen the window's bound by one week (F goes red: the all-away window prints on its fifth week).
 import { afterAll, describe, expect, it } from 'vitest'
 import { WEEK_NOTE_CHANCE, WEEK_NOTES, weekNoteFor } from '../src/engine/diary'
 import { COACH_FEEL } from '../src/engine/chemistry'
@@ -20,6 +26,10 @@ import { rngFromSeed } from '../src/engine/rng'
 import { bondBandOf } from '../src/engine/spirit'
 import { createWorld, hireCoach, lifeLogOf, rollSmallTalk, toSnapshot, type WorldState } from '../src/engine/world'
 import { coachSinceWeek } from '../src/engine/world/coachStint'
+import { coachTalkCheckpointAt } from '../src/engine/world/coachFeel'
+import { KID_ID } from '../src/engine/world/constants'
+import { weekAwayOf } from '../src/engine/diary/weekAway'
+import { notTravellingWeek } from '../src/engine/diary/weekNotes'
 import { COACH_TALK_CHECKPOINT_ROWS, coachTalkCheckpointDue, coachTalkShutRead, smallTalkEligible } from '../src/engine/world/lifeBeat/smallTalk'
 import { smallTalkSituationIdOf } from '../src/engine/world/lifeBeat/smallTalkCopy'
 import { DEFAULT_PROFILE, type BondBand, type DiaryFacts } from '../src/shared/protocol'
@@ -33,6 +43,8 @@ type Shut = 'strained' | 'cold'
 const SHUT: readonly Shut[] = ['strained', 'cold']
 const OPEN: readonly BondBand[] = ['steady', 'close']
 const CHECKPOINTS: readonly number[] = [12, 32, 56]
+/** J1b – `heardAt` for the BARE worlds of A and B, where nothing is away and every week is a table: «the line can be heard» everywhere, so the first free week of a window is its first week (J1's rule, as a special case). Section F poses the away weeks through the real snapshot. */
+const FREE = (): boolean => true
 
 /** The four lines as DATA, copied here and not read back from the source: an oracle that moves with the string it checks is a pin that cannot fail (CLAUDE.md invariant 4). */
 const LINES: Record<Shut, readonly string[]> = {
@@ -54,7 +66,9 @@ function coached(seed: string, band: BondBand): WorldState {
 // =================================================================================================
 // A. THE FACT
 // =================================================================================================
-describe('R52 J1 A – the fact: present on exactly the first week of a shut checkpoint, and nowhere else', () => {
+// ⚠ J1b, 14.10 – RE-AIMED. J1's arms said «present on exactly the first week»; the rule is now «on the first week of the window on which the line could be heard». In these worlds nothing is away (no events, school age, no injury), so that week
+// IS the first and every arm below holds as it was written, with `FREE` standing for «heard everywhere». The away weeks are section F's.
+describe('R52 J1 A – the fact: present on exactly one week of a shut checkpoint (in a bare world the first), and nowhere else', () => {
   it('⭐⭐⭐ present on the checkpoint week and on no other week of its window, nor before it, nor after – at strained and cold, through the snapshot as well', () => {
     for (const band of SHUT) {
       for (const cp of CHECKPOINTS) {
@@ -62,7 +76,7 @@ describe('R52 J1 A – the fact: present on exactly the first week of a shut che
         for (let week = cp - 2; week <= cp + 6; week++) {
           world.week = week
           const where = `${band} / checkpoint ${cp} / week ${week}`
-          expect(coachTalkShutRead(world), where).toBe(week === cp ? band : null)
+          expect(coachTalkShutRead(world, FREE), where).toBe(week === cp ? band : null)
           const facts = toSnapshot(world).diary.facts
           expect(facts.coachTalkShut, where).toBe(week === cp ? band : undefined)
           if (week !== cp) expect('coachTalkShut' in facts, `${where}: the key is ABSENT, not undefined-valued`).toBe(false)
@@ -77,7 +91,7 @@ describe('R52 J1 A – the fact: present on exactly the first week of a shut che
       const weeks: number[] = []
       for (let week = 0; week <= 80; week++) {
         world.week = week
-        const read = coachTalkShutRead(world)
+        const read = coachTalkShutRead(world, FREE)
         if (read !== null) weeks.push(week)
         // the open bands are read through the snapshot at the checkpoint weeks too: no key at all
         if (OPEN.includes(band) && CHECKPOINTS.includes(week)) expect('coachTalkShut' in toSnapshot(world).diary.facts, `${band} / week ${week}`).toBe(false)
@@ -96,17 +110,17 @@ describe('R52 J1 A – the fact: present on exactly the first week of a shut che
       spoken.week = cp
       spoken.lifeLog = [{ week: cp, kind: 'small-talk', detail, answer: 'easy' }]
       expect(coachTalkCheckpointDue(spoken), `${band}: the checkpoint is spoken`).toBeNull()
-      expect(coachTalkShutRead(spoken), `${band}: spoken`).toBeNull()
+      expect(coachTalkShutRead(spoken, FREE), `${band}: spoken`).toBeNull()
 
       const before = coached(`r52-j1-before-${band}`, band)
       before.week = cp
       before.lifeLog = [{ week: cp - 1, kind: 'small-talk', detail, answer: 'easy' }]
-      expect(coachTalkShutRead(before), `${band}: a row raised before the window is not this checkpoint's talk (the control)`).toBe(band)
+      expect(coachTalkShutRead(before, FREE), `${band}: a row raised before the window is not this checkpoint's talk (the control)`).toBe(band)
 
       const young = coached(`r52-j1-young-${band}`, band)
       for (let week = 0; week < 12; week++) {
         young.week = week
-        expect(coachTalkShutRead(young), `${band}: week ${week}, before the first checkpoint`).toBeNull()
+        expect(coachTalkShutRead(young, FREE), `${band}: week ${week}, before the first checkpoint`).toBeNull()
       }
 
       const nobody = coached(`r52-j1-nobody-${band}`, band)
@@ -114,7 +128,7 @@ describe('R52 J1 A – the fact: present on exactly the first week of a shut che
       expect(nobody.coachId, 'the coach is released').toBeNull()
       for (const w of CHECKPOINTS) {
         nobody.week = w
-        expect(coachTalkShutRead(nobody), `${band}: nobody employed, week ${w}`).toBeNull()
+        expect(coachTalkShutRead(nobody, FREE), `${band}: nobody employed, week ${w}`).toBeNull()
       }
     }
   })
@@ -133,7 +147,7 @@ describe('R52 J1 B – «does the bond let her confide» is ONE answer', () => {
       world.week = 12
       world.coachPairs[world.coachId as string] = { chem: 12, phase: 0, standing: 0 }
       const eligible = smallTalkEligible(world)
-      const fact = coachTalkShutRead(world)
+      const fact = coachTalkShutRead(world, FREE)
       const before = lifeLogOf(world).length
       rollSmallTalk(world)
       const log = lifeLogOf(world)
@@ -301,19 +315,23 @@ describe('R52 J1 D – the silence leads the week, and the coin does not silence
 // =================================================================================================
 // E. REAL CAREERS – THE MEASUREMENT
 // =================================================================================================
-interface Posed {
+// ⚠ J1b (14.10) – RE-AIMED. J1 read the diary at each checkpoint's FIRST week; the fact now waits for the first of the four weeks on which the line could be heard, so the posed arm reads ALL FOUR weeks of every window and keeps, per window:
+//   `fact`     the offsets (0..3) that carried the fact            `printed`  the offsets on which a silence line was printed
+//   `free`     the offsets on which the licence TRULY held, read off THAT week's own facts (at the table, home, not laid off) – the oracle the built rule is held against. The rule reads today's values for the earlier weeks; this reads each week's own.
+// What the arm ASSERTS is what must hold with or without the approximation (once; printed exactly where the fact is; the fact only on a free week; nothing where no week was free; the first week when it was free; never before the first free week),
+// and what it COUNTS is what the approximation can cost (a window with a free week that printed nothing; a print after the first free week; two prints). The spec's addendum has the numbers.
+interface CpWindow {
   preset: number
   career: number
   band: Shut
   cp: number
-  fact: boolean
-  printed: boolean
-  reason: 'printed' | 'travel' | 'roof' | 'injured' | 'other'
+  fact: number[]
+  printed: number[]
+  free: number[]
+  away: { travel: number; roof: number; injured: number }
 }
-const POSED: Posed[] = []
-/** REPORT only, and NOT built: for each shut checkpoint, the offset (0..3) of the first week of its window on which a silence note COULD print (at the table, home, not laid off), or null. The architect's widening question. */
-const WIDEN: { band: Shut; cp: number; offset: number | null }[] = []
-const PLAYED = { careers: 0, weeks: 0, coachedWeeks: 0, openWeeks: 0, shutWeeks: 0, printed: 0, edgeOpenRoll: 0, edgeShutRoll: 0, reasons: {} as Record<string, number> }
+const POSED: CpWindow[] = []
+const PLAYED = { careers: 0, weeks: 0, coachedWeeks: 0, openWeeks: 0, shutWeeks: 0, printed: 0, shutWindows: 0, factWindows: 0, edgeOpenRoll: 0, edgeShutRoll: 0, capChecked: 0, capMismatch: 0, maxEvents: 0, maxOrdinary4: 0 }
 
 /** Where in the calendar career `career`'s stint begins: spread over the year (0, 5, 10, 15, 20, 24, 29, ...), or all at week 0 with R52_J1_ALIGNED=1 (the first measurement). */
 const sinceOf = (career: number): number => (process.env.R52_J1_ALIGNED === '1' ? 0 : (career * 4 + (career % 3)) % 52)
@@ -321,8 +339,8 @@ const sinceOf = (career: number): number => (process.env.R52_J1_ALIGNED === '1' 
 const roofStage = (f: DiaryFacts): boolean => f.lifeStage === 'school' || f.lifeStage === 'after-school'
 const travelling = (f: DiaryFacts): boolean => f.playedTournament || f.travelled || f.travelHomeScene !== null
 
-/** One econ-bench career for `weeks` weeks with the bond HELD in `band` (posed before the snapshot and so before the roll of the next step), the real tick, and the diary read at every checkpoint's first week. */
-function posedStint(preset: number, career: number, band: Shut, weeks: number, since: number): Posed[] {
+/** One econ-bench career for `weeks` weeks with the bond HELD in `band` (posed before the snapshot and so before the roll of the next step), the real tick, and the diary read at EVERY week of every checkpoint's window. */
+function posedStint(preset: number, career: number, band: Shut, weeks: number, since: number): CpWindow[] {
   const policy = POLICIES[0]!
   const { world, rng } = openCareer(PRESETS[preset]!, career, policy)
   if (world.coachId === null) throw new Error(`preset ${preset} is supposed to start with a coach`)
@@ -339,31 +357,54 @@ function posedStint(preset: number, career: number, band: Shut, weeks: number, s
     hireCoach(world, coach)
   }
   const bond = bondFor(band)
-  const out: Posed[] = []
-  const first: Record<number, number> = {}
+  const wins = new Map<number, CpWindow>()
   for (let i = 0; i < weeks; i++) {
     world.bond = bond
     if (world.coachId !== null) {
       const together = world.week - coachSinceWeek(world)
       const snap = toSnapshot(world)
       const f = snap.diary.facts
-      const at = CHECKPOINTS.includes(together)
-      const win = CHECKPOINTS.find((cp) => together >= cp && together < cp + COACH_FEEL.periodWeeks)
-      if (win !== undefined && first[win] === undefined && !travelling(f) && roofStage(f) && f.injured === null) first[win] = together - win
-      expect(f.coachTalkShut !== undefined, `preset ${preset}/${career} ${band} week ${world.week} (${together} together)`).toBe(at)
-      if (at) {
+      const cp = CHECKPOINTS.find((c) => together >= c && together < c + COACH_FEEL.periodWeeks)
+      const at = `preset ${preset}/${career} ${band} week ${world.week} (${together} together)`
+      if (cp === undefined) {
+        expect(f.coachTalkShut, `${at}: outside every window`).toBeUndefined()
+      } else {
+        let w = wins.get(cp)
+        if (w === undefined) {
+          w = { preset, career, band, cp, fact: [], printed: [], free: [], away: { travel: 0, roof: 0, injured: 0 } }
+          wins.set(cp, w)
+        }
+        const offset = together - cp
         const note = snap.diary.weekNote
         const printed = note !== null && ALL_LINES.includes(note)
         // the licence, re-derived from the facts and not from the engine's predicates
-        expect(printed, `preset ${preset}/${career} ${band} week ${world.week}: "${note}"`).toBe(!travelling(f) && roofStage(f) && f.injured === null)
-        const reason = printed ? 'printed' : travelling(f) ? 'travel' : !roofStage(f) ? 'roof' : f.injured !== null ? 'injured' : 'other'
-        out.push({ preset, career, band, cp: together, fact: f.coachTalkShut === band, printed, reason })
+        const free = !travelling(f) && roofStage(f) && f.injured === null
+        const fact = f.coachTalkShut !== undefined
+        if (fact) w.fact.push(offset)
+        if (printed) w.printed.push(offset)
+        if (free) w.free.push(offset)
+        else if (travelling(f)) w.away.travel++
+        else if (!roofStage(f)) w.away.roof++
+        else w.away.injured++
+        expect(printed, `${at}: "${note}" – a silence line prints exactly where the fact is present`).toBe(fact)
+        if (fact) expect(free, `${at}: the fact is only ever on a week that is free by its own facts`).toBe(true)
       }
     }
     stepCareerWeek(world, rng, policy)
     drainLifeBeats(world)
   }
-  for (const cp of CHECKPOINTS) WIDEN.push({ band, cp, offset: first[cp] ?? null })
+  const out: CpWindow[] = []
+  for (const cp of CHECKPOINTS) {
+    const w = wins.get(cp)
+    if (w === undefined) throw new Error(`preset ${preset}/${career} ${band}: the window of checkpoint ${cp} was never reached`)
+    const at = `preset ${preset}/${career} ${band} checkpoint ${cp}: fact ${JSON.stringify(w.fact)} printed ${JSON.stringify(w.printed)} free ${JSON.stringify(w.free)}`
+    expect(w.fact.length, `${at}: ONCE per checkpoint`).toBeLessThanOrEqual(1)
+    expect(w.printed, `${at}: printed exactly where the fact is`).toEqual(w.fact)
+    if (w.free.length === 0) expect(w.fact, `${at}: no free week, no note`).toEqual([])
+    if (w.free[0] === 0) expect(w.fact, `${at}: a free first week prints on it`).toEqual([0])
+    if (w.fact.length === 1) expect(w.fact[0]!, `${at}: never before the first free week`).toBeGreaterThanOrEqual(w.free[0]!)
+    out.push(w)
+  }
   return out
 }
 
@@ -371,19 +412,22 @@ describe('R52 J1 E – real careers: the bond posed for 60 weeks of a stint, and
   const POSED_PRESETS = [2, 5]
   const POSED_CAREERS = REPORT ? 12 : 2
   for (const preset of POSED_PRESETS) {
-    it(`⭐⭐ posed, preset ${preset}: the fact is on exactly the three checkpoint weeks of a shut bond, and the note prints exactly when she is at the table, home and not laid off`, () => {
+    it(`⭐⭐ posed, preset ${preset}: the fact is on one week at most of each of the three windows of a shut bond, never on an away week, and the note prints exactly there`, () => {
       let reached = 0
+      let later = 0
       for (let career = 0; career < POSED_CAREERS; career++) {
         for (const band of SHUT) {
-          const hits = posedStint(preset, career, band, 60, sinceOf(career))
-          reached += hits.length
-          for (const h of hits) POSED.push(h)
-          expect(hits.map((h) => h.cp), `preset ${preset}/${career} ${band}`).toEqual([...CHECKPOINTS])
-          expect(hits.every((h) => h.fact), `preset ${preset}/${career} ${band}: the fact carries the band`).toBe(true)
-          expect(hits.every((h) => h.reason !== 'other'), `preset ${preset}/${career} ${band}: every unprinted checkpoint has a named reason`).toBe(true)
+          const wins = posedStint(preset, career, band, 60, sinceOf(career))
+          reached += wins.length
+          for (const w of wins) {
+            POSED.push(w)
+            if (w.fact.length === 1 && w.fact[0]! > 0) later++
+          }
+          expect(wins.map((w) => w.cp), `preset ${preset}/${career} ${band}`).toEqual([...CHECKPOINTS])
         }
       }
-      expect(reached, 'the arm reached the checkpoints (denominator)').toBe(POSED_CAREERS * SHUT.length * CHECKPOINTS.length)
+      expect(reached, 'the arm reached the windows (denominator)').toBe(POSED_CAREERS * SHUT.length * CHECKPOINTS.length)
+      if (REPORT) expect(later, 'anti-vacuity: some windows printed AFTER their first week – the widening did something').toBeGreaterThan(0)
     })
   }
 
@@ -391,23 +435,43 @@ describe('R52 J1 E – real careers: the bond posed for 60 weeks of a stint, and
   const PLAYED_CAREERS = REPORT ? 6 : 2
   const PLAYED_WEEKS = 156
   for (const preset of PLAYED_PRESETS) {
-    it(`⭐⭐ played, preset ${preset} (the parent answers each card the week it is raised): at steady or close the fact never appears and no silence line prints; wherever it does appear the bond is the band it names`, () => {
+    it(`⭐⭐ played, preset ${preset} (the parent answers each card the week it is raised): at steady or close the fact never appears and no silence line prints; wherever it does appear the bond is the band it names; an earlier week read now is that week as it was`, () => {
       const policy = POLICIES[0]!
       for (let career = 0; career < PLAYED_CAREERS; career++) {
         const { world, rng } = openCareer(PRESETS[preset]!, career, policy)
         let seen = 0
         let rollBand: BondBand = bondBandOf(world.bond ?? ECONOMY.bond.start)
+        /** week -> `notTravellingWeek` of that week's own facts, recorded on the day: the oracle the capped feed is held against */
+        const recorded = new Map<number, boolean>()
+        const shutWindows = new Set<string>()
+        const factWindows = new Set<string>()
         PLAYED.careers++
         for (let i = 0; i < PLAYED_WEEKS; i++) {
           const snap = toSnapshot(world)
           const f = snap.diary.facts
           const note = snap.diary.weekNote
           PLAYED.weeks++
+          // ⭐ THE CAP ORACLE (J1b): the look-back reads up to three weeks back from a feed `pruneEvents` caps. Each earlier week, read NOW from the capped log by the very helper the diary reads the current week with, must be the week as it was read ON THE DAY.
+          recorded.set(world.week, notTravellingWeek(f))
+          for (let u = Math.max(0, world.week - (COACH_FEEL.periodWeeks - 1)); u < world.week; u++) {
+            const was = recorded.get(u)
+            if (was === undefined) continue
+            const now = notTravellingWeek(
+              weekAwayOf({ events: world.events, milestones: world.milestones, week: u, seed: world.seed, kidId: KID_ID, condition: f.condition, lifeStage: f.lifeStage, birthdayAge: null, injury: null, pendingUnfinished: false }),
+            )
+            PLAYED.capChecked++
+            if (now !== was) PLAYED.capMismatch++
+          }
+          PLAYED.maxEvents = Math.max(PLAYED.maxEvents, world.events.length)
+          PLAYED.maxOrdinary4 = Math.max(PLAYED.maxOrdinary4, world.events.filter((e) => e.week > world.week - COACH_FEEL.periodWeeks && !e.keep && !(e.match !== undefined && !e.friendly)).length)
           if (world.coachId === null) {
             expect('coachTalkShut' in f, `preset ${preset}/${career} w${world.week}: nobody employed`).toBe(false)
           } else {
             PLAYED.coachedWeeks++
             const open = f.bondBand === 'steady' || f.bondBand === 'close'
+            const cpNow = coachTalkCheckpointAt(world.week - coachSinceWeek(world))
+            const key = `${coachSinceWeek(world)}:${cpNow}`
+            if (cpNow !== null && !open && coachTalkCheckpointDue(world) !== null) shutWindows.add(key)
             if (open) {
               PLAYED.openWeeks++
               expect(f.coachTalkShut, `preset ${preset}/${career} w${world.week}: ${f.bondBand}`).toBeUndefined()
@@ -415,15 +479,16 @@ describe('R52 J1 E – real careers: the bond posed for 60 weeks of a stint, and
             }
             if (f.coachTalkShut !== undefined) {
               PLAYED.shutWeeks++
+              factWindows.add(key)
               expect(f.bondBand, `preset ${preset}/${career} w${world.week}`).toBe(f.coachTalkShut)
               const printed = note !== null && ALL_LINES.includes(note)
-              if (printed) PLAYED.printed++
-              const reason = printed ? 'printed' : travelling(f) ? 'travel' : !roofStage(f) ? 'roof' : f.injured !== null ? 'injured' : 'other'
-              PLAYED.reasons[reason] = (PLAYED.reasons[reason] ?? 0) + 1
+              expect(printed, `preset ${preset}/${career} w${world.week}: the fact is printed where it is present ("${note}")`).toBe(true)
+              PLAYED.printed++
               // the lag: the roll read LAST week's settled bond, the snapshot reads this tick's
               if (rollBand === 'steady' || rollBand === 'close') PLAYED.edgeOpenRoll++
-            } else if (CHECKPOINTS.includes(world.week - coachSinceWeek(world)) && (rollBand === 'strained' || rollBand === 'cold') && coachTalkCheckpointDue(world) !== null) {
-              // shut when the roll ran, open by the time of the snapshot, and still unspoken: the talk is raised in a later week of the window
+            } else if (open && cpNow !== null && (rollBand === 'strained' || rollBand === 'cold') && coachTalkCheckpointDue(world) !== null) {
+              // shut when the roll ran, OPEN by the time of the snapshot (the band edge), and still unspoken: the talk is raised in a later week of the window. (J1b: any week of the window now, and the snapshot's band must be open –
+              // a window week the fact is absent on because the week is AWAY is not an edge.)
               PLAYED.edgeShutRoll++
             }
           }
@@ -435,17 +500,36 @@ describe('R52 J1 E – real careers: the bond posed for 60 weeks of a stint, and
             if (log[seen]!.kind === 'small-talk') log[seen]!.answer = 'more'
           }
         }
+        PLAYED.shutWindows += shutWindows.size
+        PLAYED.factWindows += factWindows.size
       }
     })
   }
 
+  it('⭐⭐ the cap oracle was asked, and the capped feed answers every earlier week as it was on the day (anti-vacuity: the feed held more than a season of rows)', () => {
+    expect(PLAYED.capChecked, 'the oracle compared earlier weeks (denominator)').toBeGreaterThan(300)
+    expect(PLAYED.capMismatch, `earlier weeks read now from the capped feed that differ from the same week read on the day (max feed ${PLAYED.maxEvents}, widest 4 weeks of ordinary rows ${PLAYED.maxOrdinary4})`).toBe(0)
+    expect(PLAYED.maxEvents, 'the feed grew past a season of rows, so the cap was in play').toBeGreaterThan(200)
+  })
+
   afterAll(() => {
     if (!REPORT) return
-    const lines: string[] = ['J1_POSED']
-    const tally = (xs: Posed[]): string => {
+    const lines: string[] = ['J1B_POSED']
+    const tally = (xs: CpWindow[]): string => {
       const n = xs.length
-      const c = (r: Posed['reason']): number => xs.filter((x) => x.reason === r).length
-      return `n=${n} printed=${c('printed')} travel=${c('travel')} injured=${c('injured')} roof=${c('roof')} other=${c('other')}`
+      const printed = xs.filter((x) => x.printed.length === 1).length
+      const double = xs.filter((x) => x.printed.length >= 2).length
+      const noFree = xs.filter((x) => x.free.length === 0)
+      const approxMiss = xs.filter((x) => x.free.length > 0 && x.printed.length === 0).length
+      // the approximation can only be an injury (the roof cannot move inside four weeks of a school-age stint, the bond is posed): every miss must have a week that was away by a layoff and not by travel
+      const approxMissInjured = xs.filter((x) => x.free.length > 0 && x.printed.length === 0 && x.away.injured > 0).length
+      const shifted = xs.filter((x) => x.printed.length === 1 && x.free.length > 0 && x.printed[0] !== x.free[0]).length
+      const at = (k: number): number => xs.filter((x) => x.printed.length === 1 && x.printed[0] === k).length
+      const ceil = (k: number): number => xs.filter((x) => x.free.length > 0 && x.free[0]! <= k).length
+      const travelOnly = noFree.filter((x) => x.away.injured === 0 && x.away.roof === 0).length
+      const injured = noFree.filter((x) => x.away.injured > 0).length
+      const roof = noFree.filter((x) => x.away.roof > 0 && x.away.injured === 0).length
+      return `n=${n} printed=${printed} (${((100 * printed) / n).toFixed(1)}%) double=${double} approxMiss=${approxMiss} (by a layoff earlier in the window: ${approxMissInjured}) shifted=${shifted} noFreeWeek=${noFree.length} [travelOnly=${travelOnly} injuredAmong=${injured} roof=${roof}] printedAtOffset=[${[0, 1, 2, 3].map(at)}] ceilingByOffset=[${[0, 1, 2, 3].map(ceil)}]`
     }
     for (const band of SHUT) {
       for (const cp of CHECKPOINTS) lines.push(`  ${band} cp${cp}: ${tally(POSED.filter((h) => h.band === band && h.cp === cp))}`)
@@ -453,11 +537,112 @@ describe('R52 J1 E – real careers: the bond posed for 60 weeks of a stint, and
     }
     lines.push(`  BOTH: ${tally(POSED)}`)
     console.log(lines.join('\n'))
-    const w = (k: number | null): number => WIDEN.filter((x) => (k === null ? x.offset === null : x.offset !== null && x.offset <= k)).length
-    console.log(`J1_WIDEN n=${WIDEN.length} firstFreeWeekAtOffset<=0:${w(0)} <=1:${w(1)} <=2:${w(2)} <=3:${w(3)} none-in-window:${w(null)}`)
-    console.log(`J1_PLAYED ${JSON.stringify(PLAYED)} coachedYears=${(PLAYED.coachedWeeks / 52).toFixed(2)} notesPerCoachedYear=${(PLAYED.printed / (PLAYED.coachedWeeks / 52)).toFixed(4)}`)
-    const f3 = WEEK_NOTES.filter((n) => n.claims.coachFeelRead !== undefined)
-    const quoting = f3.map((n, i) => ({ id: `RU09D-CFW-${String(i + 1).padStart(2, '0')}`, step: n.claims.coachFeelRead, quotes: /["“”«»]/.test(String(n.text)) })).filter((x) => x.quotes)
-    console.log(`J1_F3_QUOTES ${quoting.length} of ${f3.length}: ${quoting.map((x) => `${x.id}(${x.step})`).join(', ')}`)
+    console.log(`J1B_PLAYED ${JSON.stringify(PLAYED)} coachedYears=${(PLAYED.coachedWeeks / 52).toFixed(2)} notesPerCoachedYear=${(PLAYED.printed / (PLAYED.coachedWeeks / 52)).toFixed(4)}`)
+  })
+})
+
+// =================================================================================================
+// F. J1b – THE FACT WAITS FOR THE FIRST WEEK THE LINE CAN BE HEARD
+// =================================================================================================
+// THE ARCHITECT'S RULING (14.10, on J1's 54% lost to travel): present on the FIRST week of the window (cp <= w < cp + 4) on which the line could be heard – and on no other week; once per checkpoint, still derived. These arms pose the away weeks as
+// PAID TRIPS in the event log (the diary's own `travelled`: the NET travel spend of the week) in a bare world, and read the fact through the real snapshot, so the window, the diary's helper and the world's rule are all in the path.
+let eventSeq = 900000
+const tripAt = (world: WorldState, week: number): void => {
+  world.events.push({ id: ++eventSeq, week, type: 'expense', text: 'A trip', amountCents: -5000, category: 'travel' })
+}
+const refundAt = (world: WorldState, week: number): void => {
+  world.events.push({ id: ++eventSeq, week, type: 'income', text: 'The trip refunded', amountCents: 5000, category: 'travel' })
+}
+const factAt = (world: WorldState, week: number): 'strained' | 'cold' | undefined => {
+  world.week = week
+  return toSnapshot(world).diary.facts.coachTalkShut
+}
+
+describe('R52 J1b F – the fact waits for the first week the line can be heard, and says it once', () => {
+  /** [what, the window offsets that are AWAY (a paid trip), the offset the fact is on – or null when no week of the window is free] */
+  const PATTERNS: readonly [string, readonly number[], number | null][] = [
+    ['nothing away', [], 0],
+    ['the first week away', [0], 1],
+    ['two weeks away', [0, 1], 2],
+    ['three weeks away', [0, 1, 2], 3],
+    ['the second week away, the first is free', [1], 0],
+    ['a gap: away, free, away', [0, 2], 1],
+    ['only the last week away', [3], 0],
+    ['all four weeks away', [0, 1, 2, 3], null],
+  ]
+
+  it('⭐⭐⭐ travel at the window\'s first week moves the note to the first free week; a window with no free week prints nothing; after the note\'s week the fact is absent for the rest of the window – and outside the window, a week before and four after', () => {
+    let moved = 0
+    for (const band of SHUT) {
+      for (const cp of CHECKPOINTS) {
+        for (const [what, away, on] of PATTERNS) {
+          const world = coached(`r52-j1b-${band}-${cp}-${what}`, band)
+          for (const o of away) tripAt(world, cp + o)
+          const seen: number[] = []
+          for (let week = cp - 2; week <= cp + 8; week++) {
+            world.week = week
+            const where = `${band} / checkpoint ${cp} / ${what} / week ${week} (offset ${week - cp})`
+            const snap = toSnapshot(world)
+            const expected = on !== null && week === cp + on
+            expect(snap.diary.facts.coachTalkShut, where).toBe(expected ? band : undefined)
+            if (!expected) expect('coachTalkShut' in snap.diary.facts, `${where}: the key is ABSENT, not undefined-valued`).toBe(false)
+            if (expected) {
+              seen.push(week)
+              expect(snap.diary.weekNote !== null && LINES[band].includes(snap.diary.weekNote), `${where}: the note printed is the band's own ("${snap.diary.weekNote}")`).toBe(true)
+              if (on > 0) moved++
+            }
+          }
+          expect(seen.length, `${band} / ${cp} / ${what}: once, or never`).toBe(on === null ? 0 : 1)
+        }
+      }
+    }
+    // 2 bands x 3 checkpoints x the four patterns whose free week is not the first (1, 2, 3 and the gap) = 24: the arm moved the note in every one of them
+    expect(moved, 'anti-vacuity: the arm moved the note off the first week in every window whose first week was away and a later one free').toBe(24)
+  })
+
+  it('⭐⭐ a checkpoint spoken inside the window clears it – nothing is printed after the row, and the same window not spoken (the control) prints on its first free week', () => {
+    const cp = 32
+    const ids = COACH_TALK_CHECKPOINT_ROWS[cp] ?? []
+    const detail = `observation:${ids[0]}`
+    for (const band of SHUT) {
+      // away on the first week; she speaks on the second, the very week the note would print
+      const spoken = coached(`r52-j1b-spoken-${band}`, band)
+      tripAt(spoken, cp)
+      expect(factAt(spoken, cp), `${band}: away on the first week`).toBeUndefined()
+      expect(factAt(spoken, cp + 1), `${band}: control – not spoken, the first free week`).toBe(band)
+      spoken.lifeLog = [{ week: cp + 1, kind: 'small-talk', detail, answer: 'easy' }]
+      for (let week = cp + 1; week <= cp + 3; week++) {
+        expect(factAt(spoken, week), `${band} / week ${week}: a checkpoint she spoke prints no silence`).toBeUndefined()
+        expect(coachTalkCheckpointDue(spoken), `${band} / week ${week}: spoken`).toBeNull()
+      }
+      // free on the first week, so the note printed; she speaks later in the window: nothing more, and nothing taken back
+      const later = coached(`r52-j1b-later-${band}`, band)
+      expect(factAt(later, cp), `${band}: free first week`).toBe(band)
+      later.lifeLog = [{ week: cp + 2, kind: 'small-talk', detail, answer: 'easy' }]
+      for (let week = cp + 1; week <= cp + 3; week++) expect(factAt(later, week), `${band} / week ${week}`).toBeUndefined()
+    }
+  })
+
+  it('⭐⭐ ONE SPELLING, THE DIARY\'S OWN: a refunded trip nets to 0 and is a free week, a paid trip and a played tournament are away weeks – and the same answer holds for the week before as for the week itself', () => {
+    for (const band of SHUT) {
+      for (const cp of CHECKPOINTS) {
+        const refunded = coached(`r52-j1b-refund-${band}-${cp}`, band)
+        tripAt(refunded, cp)
+        refundAt(refunded, cp)
+        refunded.week = cp
+        const facts = toSnapshot(refunded).diary.facts
+        expect(facts.travelled, `${band} / ${cp}: the diary reads the NET of the week, a refunded trip is no trip`).toBe(false)
+        expect(facts.coachTalkShut, `${band} / ${cp}: and so the first week is free`).toBe(band)
+        // the SAME refunded week, now an EARLIER week of the window: the look-back must read it the same way (it is free, so the fact is not repeated)
+        expect(factAt(refunded, cp + 1), `${band} / ${cp}: the refunded week was free, so the note had its week`).toBeUndefined()
+
+        const played = coached(`r52-j1b-played-${band}-${cp}`, band)
+        played.events.push({ id: ++eventSeq, week: cp, type: 'tournament', text: 'A tournament', finishIdx: 3 })
+        played.week = cp
+        expect(toSnapshot(played).diary.facts.playedTournament, `${band} / ${cp}: the fixture is a played week`).toBe(true)
+        expect(factAt(played, cp), `${band} / ${cp}: a played week is away`).toBeUndefined()
+        expect(factAt(played, cp + 1), `${band} / ${cp}: and the note moves to the next`).toBe(band)
+      }
+    }
   })
 })

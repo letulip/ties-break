@@ -103,8 +103,9 @@ export interface WeekClaims {
    *  unselectable on every other week by construction, which is what «изредка» means here. */
   coachFeelRead?: Exclude<CoachFeel, 'too-early'>
   /** ⭐ R52 J1 (14.10) – ASSERTS THE BOND SHUT A STINT CHECKPOINT: on the week her coach talk was due she did not bring up the coach, because at this band she does not confide – and nothing else about her or about
-   *  the coach. VALUED, `coachFeelRead`'s shape: the two bands are mutually exclusive things and the copy is written per band. The fact is `DiaryFacts.coachTalkShut`, present only on the first week of the window
-   *  (world/lifeBeat/smallTalk.ts `coachTalkShutRead`), so a line carrying this claim is unselectable on every other week by construction. */
+   *  the coach. VALUED, `coachFeelRead`'s shape: the two bands are mutually exclusive things and the copy is written per band. The fact is `DiaryFacts.coachTalkShut`, present only on ONE week of the checkpoint's window – the first
+   *  on which the line could be heard (J1b, 14.10: J1 had it on the window's first week alone, and a travelling week took the note from 54% of shut checkpoints; world/lifeBeat/smallTalk.ts `coachTalkShutRead`) – so a line carrying this claim is
+   *  unselectable on every other week by construction. */
   coachTalkShut?: 'strained' | 'cold'
   offSeason?: true
   /** asserts a practice friendly this week */
@@ -367,7 +368,9 @@ export const WEEK_NOTE_CHANCE = 1 / 3
  *  (R2-18). A twenty-nine-year-old on tour has fifteen of these a year and spends none of them in
  *  her parents' kitchen. `underOneRoof` is the question about the house; this is the question about
  *  the calendar, and a line that needs both has to ask for both. */
-export const notTravellingWeek = (f: DiaryFacts): boolean =>
+// ⭐ R52 J1b (14.10) – IT TAKES THE THREE FACTS IT READS AND NOT THE WHOLE `DiaryFacts`, so the silence note's look-back (`silenceHeardAtFor`, diary.ts) can ask THIS predicate of an earlier week's journey reading (`weekAwayOf`)
+// instead of re-spelling it. Every other caller passes a whole `DiaryFacts`, which is one.
+export const notTravellingWeek = (f: Pick<DiaryFacts, 'playedTournament' | 'travelled' | 'travelHomeScene'>): boolean =>
   !f.playedTournament && !f.travelled && f.travelHomeScene === null
 
 /** An ordinary training week: at home, healthy, and the calendar is holding nothing.
@@ -456,14 +459,18 @@ const heardAtTable = (f: DiaryFacts, step: Exclude<CoachFeel, 'too-early'>): boo
 
 // --- R52 J1: THE CHECKPOINT THE BOND SHUT, one predicate for four lines ----------------------------------------------------
 //
-// SAME DOCTRINE AS `heardAtTable` ABOVE: written once, so four lines cannot carry four spellings of «the first week of a checkpoint the bond shut, at a table the parent sat at». It asks four things:
-//  - `f.coachTalkShut === band` – the fact is PRESENT only on that first week (world/lifeBeat/smallTalk.ts `coachTalkShutRead`): the equality picks the band, the presence is the window.
-//  - `underOneRoof` – the parent writes about the table; from 22 her life reaches the parent by calls.
-//  - `notTravellingWeek` – she has to be AT the table. NOT `plainTraining`: the talk is due, not chatter, so a holiday, an exam week or the off-season is still a week she sat there and said nothing.
-//  - `f.injured === null` – ⚠ THE ONE NARROWING THE BRIEF DID NOT NAME, AND THE STANDING RULE FORCES IT: «a layoff takes the note». tests/week-notes.test.ts «an injured week is not offered a line about baking» holds
-//    every line licensed on an injured week to the `injured` claim, and these four are about the table, not the body. A checkpoint that falls in a layoff week shows the injury note instead; the spec's measurement counts it.
-const silentAtTable = (f: DiaryFacts, band: 'strained' | 'cold'): boolean =>
-  f.coachTalkShut === band && underOneRoof(f) && notTravellingWeek(f) && f.injured === null
+// SAME DOCTRINE AS `heardAtTable` ABOVE: written once, so four lines cannot carry four spellings of «a checkpoint the bond shut, at a table the parent sat at». It asks two things:
+//  - `f.coachTalkShut === band` – the fact is PRESENT only on the first week of the checkpoint's window on which the line could be heard (J1b, 14.10; world/lifeBeat/smallTalk.ts `coachTalkShutRead`): the equality picks the band, the presence is the week.
+//  - `silenceCouldBeHeard` – the licence's own inputs, WRITTEN ONCE FOR TWO READERS (J1b): this licence asks it of the week it prints on, and the fact asks it of that week and of every earlier week of the window to find the FIRST (`silenceHeardAtFor`, diary.ts),
+//    so «could the line be heard at week u» has one spelling and cannot drift between the week the fact waits for and the week the licence prints on. It asks three things, each with a reason:
+//      · `underOneRoof` – the parent writes about the table; from 22 her life reaches the parent by calls.
+//      · `notTravellingWeek` – she has to be AT the table. NOT `plainTraining`: the talk is due, not chatter, so a holiday, an exam week or the off-season is still a week she sat there and said nothing.
+//      · `f.injured === null` – ⚠ THE ONE NARROWING THE BRIEF DID NOT NAME, AND THE STANDING RULE FORCES IT: «a layoff takes the note». tests/week-notes.test.ts «an injured week is not offered a line about baking» holds
+//        every line licensed on an injured week to the `injured` claim, and these four are about the table, not the body. A checkpoint that falls in a layoff week shows the injury note instead; the spec's measurement counts it.
+//    It takes the FIVE facts it reads and not the whole `DiaryFacts`, so the look-back can hand it the journey reading of a week it has no `DiaryFacts` for.
+export const silenceCouldBeHeard = (f: Pick<DiaryFacts, 'lifeStage' | 'playedTournament' | 'travelled' | 'travelHomeScene' | 'injured'>): boolean =>
+  underOneRoof(f) && notTravellingWeek(f) && f.injured === null
+const silentAtTable = (f: DiaryFacts, band: 'strained' | 'cold'): boolean => f.coachTalkShut === band && silenceCouldBeHeard(f)
 
 // ⚠ R2-18: THE WARNING THAT USED TO SIT HERE IS NOW A FUNCTION. It read "Narrative distance only.
 // `notTravellingWeek` means 'not travelling'; it never proves that a grown woman spent the week in her parents'
@@ -2431,7 +2438,7 @@ export function weekNoteLine(facts: DiaryFacts, seed: string): DiaryLine | null 
   // the fact is present on change: on every other week `heard` is empty and `pool` IS `licensed`, the list this
   // function always drew from, so every other draw, and the entry point of every rotating band, is what it was.
   const heard = licensed.filter((n) => n.claims.coachFeelRead !== undefined)
-  // ⭐⭐ R52 J1 (14.10) – ON THE FIRST WEEK OF A CHECKPOINT THE BOND SHUT, THE SILENCE LINES ARE THE POOL: they lead the ten above and everything else, and the coin below does NOT silence the week.
+  // ⭐⭐ R52 J1 (14.10) – ON THE WEEK A CHECKPOINT'S SILENCE IS HEARD (J1b: the first week of its window the line could be heard, not the window's first week), THE SILENCE LINES ARE THE POOL: they lead the ten above and everything else, and the coin below does NOT silence the week.
   //
   // THE OWNER (round 52, his answers on the close №1), «давай по рекомендациям»: at a strained or cold bond she does not confide, AND THE SILENCE SHOWS. A note that printed one week in three would show it one time in
   // three, and a checkpoint is DUE, not chatter (H3's own reason for letting the talk past the weekly die: the lottery is what the owner asked to be rid of). The fact is present on ONE week per checkpoint, so this

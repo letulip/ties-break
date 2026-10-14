@@ -26,7 +26,8 @@ import { buildKnockPrompt, knockGoverns, knockLive } from '../knock'
 // questions rather than a rule written out at this seam. See `carriedOnTheWire` below.
 import { activeAdDeals, activeKitDeal, hasLiveOffer, isOfferLive, seasonLastWeek } from '../offers'
 import { travelCoverShare } from '../academy'
-import { buildDiarySnapshot, lastKidTitleOf } from '../diary'
+import { buildDiarySnapshot, lastKidTitleOf, silenceHeardAtFor } from '../diary'
+import type { DiaryWorldView } from '../diary'
 import { buildKidLife, FRIENDS_WINDOW, nextAcademicYearStart, schoolEndWeek, schoolIsOver } from '../kidLife'
 // v54 / round-23 #6b: the length of the course and the place she agreed to pay for. Both are leaves
 // (`ending.ts` is a constants module; `collegeOffer.ts` imports nothing but types and `Rng`), so
@@ -1671,8 +1672,6 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
   // ⭐ R52 F3 – ...and the SAME answer on the one week of a period it was re-read, for the diary's week note. Asked from
   // `feel` so the tile and the note cannot disagree; `null` on every other week (`coachFeelRead`'s own rules).
   const feelRead = coachFeelRead(world, feel)
-  // ⭐ R52 J1 (14.10) – ...and the band that SHUT a due stint checkpoint, on the first week of its window, for the diary's silence note (the owner: «давай по рекомендациям» – the silence shows). Derived, zero draws.
-  const talkShut = coachTalkShutRead(world)
   // ⭐ RU-23 – THE COACH'S THREE READS ON HER ROOM, each ONCE: the ref is the decision and the string beside it is that ref's English, so the two wires cannot disagree (class (b): derived here, persisted nowhere).
   const roomNoteC = coachRoomNoteRef(world)
   const declineNoteC = coachDeclineNoteRef(world)
@@ -1709,7 +1708,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
   // Diary-1: the facts + the selected lines, assembled from a narrow view of the world. Selection
   // draws only from `seed:diary:*` / `seed:memory:*` sub-streams at SNAPSHOT time – zero MAIN
   // draws, so the frozen capture (41550 / e6b0c709) is untouched by construction.
-  const diary = buildDiarySnapshot({
+  const diaryView: DiaryWorldView = {
     seed: world.seed,
     week: world.week,
     ageYears: kidAgeAt(world, world.week),
@@ -1790,8 +1789,6 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // ⭐ R52 F3 – HER FEEL FOR THE COACH ON THE WEEK IT WAS RE-READ, for the week note: carried, and ABSENT on every
     // other week (`DiaryFacts.coachFeelRead`), so an uncoached career's diary facts are exactly what they were.
     ...(feelRead === null ? {} : { coachFeelRead: feelRead }),
-    // ⭐ R52 J1 – THE CHECKPOINT THE BOND SHUT: carried, and ABSENT on every other week (`DiaryFacts.coachTalkShut`), so a career with no shut checkpoint has the diary facts it always had.
-    ...(talkShut === null ? {} : { coachTalkShut: talkShut }),
     // W2: how hard the PLAYER worked her this week – the one fact about a training week that is his
     // decision rather than the world's, and the subject of the ordinary week's note.
     // ⭐ ROUND-21 #2: the ONE predicate, asked here and carried – see `coachTravelsWithHer`.
@@ -1896,7 +1893,12 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     ...birthdayGiftFactsOf(world),
     knockChoice: knockGoverns(world.knock, world.week) ? world.knock!.choice : null,
     knockPart: knockGoverns(world.knock, world.week) ? world.knock!.part : null,
-  })
+  }
+  // ⭐ R52 J1 / J1b (14.10) – THE BAND THAT SHUT A DUE STINT CHECKPOINT, on the first week of its window on which the line could be heard, for the diary's silence note (the owner: «давай по рекомендациям» – the silence shows). It is read HERE, after the
+  // view above, because which week that is is the diary's reading of the week's journey (`silenceHeardAtFor(diaryView)`: the same function the facts are assembled with, asked of the current week and of the weeks before it) and the window is the
+  // world's (`coachTalkShutRead`). CARRIED into the view and ABSENT on every other week (`DiaryFacts.coachTalkShut`), so a career with no shut checkpoint has the diary facts it always had. Derived, zero draws.
+  const talkShut = coachTalkShutRead(world, silenceHeardAtFor(diaryView))
+  const diary = buildDiarySnapshot(talkShut === null ? diaryView : { ...diaryView, coachTalkShut: talkShut })
   // THE SKILLS RADAR'S VIEW OF HER, assembled ONCE and read twice - by the contour (`buildRadar`)
   // and by the Weekly Story's training line (`buildTrainingRead`). Hoisted rather than inlined
   // because the two readings MUST see the same girl: a second literal here would be a second place

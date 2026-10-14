@@ -1206,9 +1206,9 @@ export interface DiaryFacts {
    *
    *  Derived at snapshot time, never persisted – no schema move. */
   coachFeelRead?: Exclude<CoachFeel, 'too-early'>
-  /** ⭐ R52 J1 (14.10) – THE BAND THAT SHUT A DUE STINT CHECKPOINT, on the first week of its window: `'strained'` or `'cold'`, the bonds at which she does not confide. ABSENT on every other week (the key is not
+  /** ⭐ R52 J1 (14.10) – THE BAND THAT SHUT A DUE STINT CHECKPOINT, on the first week of its window on which the line could be heard (J1b, 14.10: J1 had it on the window's first week alone, and a travelling week took the note from 54% of shut checkpoints): `'strained'` or `'cold'`, the bonds at which she does not confide. ABSENT on every other week (the key is not
    *  there, not `undefined`-valued), so a coached career at a steady or close bond and every uncoached one carry exactly the facts they carried before. `world/lifeBeat/smallTalk.ts`'s `coachTalkShutRead` is the one
-   *  place that decides; the diary only carries it, for the week note that shows what the silence cost. */
+   *  place that decides, asking the diary (`silenceHeardAtFor`) which weeks the line could be heard; the diary otherwise only carries it, for the week note that shows what the silence cost. */
   coachTalkShut?: 'strained' | 'cold'
   /** THE AGE SHE TURNS THIS WEEK, or null on the other fifty-one (owner, 30.07). Derived from her birth
    *  month against the calendar - no schema, and it cannot disagree with `kidAgeExact` because both read

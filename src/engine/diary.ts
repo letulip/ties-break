@@ -69,7 +69,7 @@ import {
 import { TRAVEL_NOTES, COACH_TRIP_NOTES, travelNoteFor, travelNoteLine, coachTripNoteFor, coachTripNoteLine } from './diary/travelNotes'
 export { TRAVEL_NOTES, COACH_TRIP_NOTES, travelNoteFor, travelNoteLine, coachTripNoteFor, coachTripNoteLine }
 export type { TravelClaims, TravelNote } from './diary/travelNotes'
-import { WEEK_NOTE_GRIND, WEEK_NOTE_LIGHT, WEEK_NOTE_CHANCE, WEEK_NOTES, BEREAVED_WEEKS, DIVORCED_WEEKS, weekNoteFor, weekNoteLine } from './diary/weekNotes'
+import { WEEK_NOTE_GRIND, WEEK_NOTE_LIGHT, WEEK_NOTE_CHANCE, WEEK_NOTES, BEREAVED_WEEKS, DIVORCED_WEEKS, weekNoteFor, weekNoteLine, silenceCouldBeHeard } from './diary/weekNotes'
 export { WEEK_NOTE_GRIND, WEEK_NOTE_LIGHT, WEEK_NOTE_CHANCE, WEEK_NOTES, BEREAVED_WEEKS, DIVORCED_WEEKS, weekNoteFor, weekNoteLine }
 export type { WeekClaims, WeekNote } from './diary/weekNotes'
 import { DIARY_POOL, diaryLine, diaryLinePair } from './diary/pool'
@@ -83,6 +83,8 @@ export type { DiarySurface, DiaryClaims, DiaryPhrase } from './diary/pool'
 // pin's scope moves.
 import { capitalise, short } from './diary/words'
 import type { DiaryWorldView } from './diary/facts'
+import { weekAwayOf } from './diary/weekAway'
+import type { WeekAwayArgs } from './diary/weekAway'
 import { travelHomeSceneFor, TRAVEL_SLEEP_CHANCE_EMPTY, TRAVEL_SLEEP_CHANCE_FRESH, travelSleepChance, TRAVEL_FINAL_SLEEP_CHANCE_EMPTY, TRAVEL_FINAL_SLEEP_CHANCE_FRESH, travelFinalSleepChance, travelHomeMoodFor, travelHomeFactsFor } from './diary/travelHome'
 export { travelHomeSceneFor, TRAVEL_SLEEP_CHANCE_EMPTY, TRAVEL_SLEEP_CHANCE_FRESH, travelSleepChance, TRAVEL_FINAL_SLEEP_CHANCE_EMPTY, TRAVEL_FINAL_SLEEP_CHANCE_FRESH, travelFinalSleepChance, travelHomeMoodFor, travelHomeFactsFor }
 export type { TravelHomeFacts } from './diary/travelHome'
@@ -100,6 +102,35 @@ export type { DiaryWorldView } from './diary/facts'
 // ⚠ 'school' IS LAST ON PURPOSE (W4-SCHOOL). Leaving school lands on a fixed September week and a
 // title can land on the same one; a result she played for outranks a date on a calendar, every time.
 const MILESTONE_PRIORITY: readonly MilestoneType[] = ['title', 'final', 'prize', 'international', 'injury', 'season-rank', 'school']
+
+/** ⭐ R52 J1b (14.10) – THE ONE SPELLING OF WHAT A WEEK'S JOURNEY READING IS ASKED WITH. `assembleDiaryFacts` asks it of the view's own week and `silenceHeardAtFor` of an earlier one; the week is the only argument that differs – and
+ *  `pendingUnfinished`, which can be true only of THE VIEW'S OWN week: a reveal in flight belongs to the week being played, and the tick refuses to leave a week with one (the unrevealed-tournament guard), so every week that is over has none.
+ *  Everything else is the view's own: `condition`, `lifeStage`, `birthdayAge` and `injury` feed the scene's MOOD and facts and not its WHETHER (`travelHomeSceneFor` reads the events, the week and the pending flag only), so an earlier
+ *  week read with today's values answers the licence's question exactly. */
+function weekAwayArgsOf(view: DiaryWorldView, lifeStage: WeekAwayArgs['lifeStage'], week: number): WeekAwayArgs {
+  return {
+    events: view.events,
+    milestones: view.milestones,
+    week,
+    seed: view.seed,
+    kidId: view.kidId,
+    condition: view.condition,
+    lifeStage,
+    birthdayAge: view.birthdayAge,
+    injury: view.injury,
+    pendingUnfinished: week === view.week && view.pendingUnfinished,
+  }
+}
+
+/** ⭐⭐⭐ ROUND 52 J1b (14.10) – «COULD THE SILENCE LINE BE HEARD ON WEEK u?», for the view's own week and for any earlier one. `toSnapshot` hands it to `coachTalkShutRead` (world/lifeBeat/smallTalk.ts), which owns the window and asks it
+ *  for each week of it to find the FIRST: the fact waits there. It is the licence's own predicate (`silenceCouldBeHeard`: the roof, a week she did not travel, not laid off) over the journey reading of THAT week (`weekAwayOf`, the function
+ *  `assembleDiaryFacts` reads the current week with), so the answer for the week being printed on and for the weeks before it has ONE spelling.
+ *  ⚠ THE VIEW'S LIFE STAGE AND INJURY ARE TODAY'S, for every week asked: neither has a per-week record, and none is invented (the approximation, and what it costs, is in the spec's addendum and on `coachTalkShutRead`). Pure; the scene of a past week is
+ *  re-derived on its own `seed:travel:<week>` and nothing is drawn from MAIN. */
+export function silenceHeardAtFor(view: DiaryWorldView): (week: number) => boolean {
+  const lifeStage = diaryLifeStageFor(view.ageYears, view.schoolOver, view.inCollege)
+  return (week) => silenceCouldBeHeard({ lifeStage, injured: view.injury, ...weekAwayOf(weekAwayArgsOf(view, lifeStage, week)) })
+}
 
 /** Assemble the facts – every field read off state that already exists, and (since R14-2) exactly
  *  TWO that are drawn: `travelHomeScene` and the coin inside `travelHomeMood`, each on its own
@@ -135,26 +166,12 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     spiritBand,
   })
   const resultFresh = lastResult !== null && lastResult.week === week
-  const thisWeek = view.events.filter((e) => e.week === week)
-  // Net, not any-event: a skipped tournament refunds its travel in the same week and nets to 0 –
-  // she never boarded, so the diary must not claim the trip.
-  const travelCents = thisWeek
-    .filter((e) => e.category === 'travel')
-    .reduce((sum, e) => sum + (e.amountCents ?? 0), 0)
+  // ⭐ R52 J1b (14.10) – THE WEEK'S JOURNEY FACTS ARE ONE FUNCTION OF THE WEEK (`diary/weekAway.ts`, moved there verbatim with their notes): this reads the view's own week and `silenceHeardAtFor` reads the weeks before it with the
+  // same function, so the diary and the silence cannot disagree about which week was an away week.
+  const away = weekAwayOf(weekAwayArgsOf(view, lifeStage, week))
+  const { thisWeek, travelHome } = away
   const freshMilestone =
     MILESTONE_PRIORITY.find((t) => view.milestones.some((m) => m.type === t && m.week === week)) ?? null
-  const travelHome = travelHomeFactsFor({
-    events: view.events,
-    milestones: view.milestones,
-    week,
-    seed: view.seed,
-    kidId: view.kidId,
-    condition: view.condition,
-    lifeStage,
-    birthdayAge: view.birthdayAge,
-    injury: view.injury,
-    pendingUnfinished: view.pendingUnfinished,
-  })
   return {
     week,
     ageYears: view.ageYears,
@@ -251,11 +268,9 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     lineageOpen: view.lineageOpen,
     lineageEndedHurt: view.lineageEndedHurt,
     injured: view.injury,
-    travelled: travelCents < 0,
-    playedTournament: thisWeek.some(
-      (e) => e.type === 'tournament' || (e.match !== undefined && !e.friendly),
-    ),
-    playedPractice: thisWeek.some((e) => e.match !== undefined && e.friendly === true),
+    travelled: away.travelled,
+    playedTournament: away.playedTournament,
+    playedPractice: away.playedPractice,
     // W4-SCHOOL: `schoolOver` comes off the view rather than being re-derived here – the diary is
     // a reporter and this module owns no calendar arithmetic of its own.
     examsWeek: isExamWeek(week, view.schoolOver),
@@ -274,7 +289,7 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     // questions the simulation does not answer. Purpose-scoped sub-streams (`seed:travel:<week>` and
     // `seed:travelmood:<week>`), stable for the whole week, zero MAIN draws. Everything else about
     // the journey IS read – see travelHomeFactsFor.
-    travelHomeScene: travelHome?.scene ?? null,
+    travelHomeScene: away.travelHomeScene,
     travelHomeMood: travelHome?.mood ?? null,
     // W4: what the knock is doing to this week. Read, not drawn - it is a decision the player made
     // and the world persisted, which is the whole reason the knock cost a schema bump.
@@ -290,7 +305,7 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     // reading of the coach ledger or of the weeks together). A conditional spread, so the key is ABSENT on every other
     // week and an uncoached career's facts are byte-identical to what they were.
     ...(view.coachFeelRead === undefined ? {} : { coachFeelRead: view.coachFeelRead }),
-    // ⭐ R52 J1 – the band that shut a due stint checkpoint, on its first week: CARRIED like the line above, never re-derived here, and the key is ABSENT on every other week.
+    // ⭐ R52 J1 / J1b – the band that shut a due stint checkpoint, on the first week of its window on which the line could be heard: CARRIED like the line above, never re-derived here (the world layer decides it, asking `silenceHeardAtFor` for the weeks), and the key is ABSENT on every other week.
     ...(view.coachTalkShut === undefined ? {} : { coachTalkShut: view.coachTalkShut }),
   }
 }

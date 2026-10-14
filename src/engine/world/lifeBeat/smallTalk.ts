@@ -126,26 +126,42 @@ export function coachTalkCheckpointDue(world: WorldState): number | null {
   return spoken ? null : cp
 }
 
-/** ⭐⭐⭐ ROUND 52 J1 (14.10) – THE CHECKPOINT THE BOND SHUT: the band that shut it, on the FIRST week of its window, or `null`. This is the diary fact `coachTalkShut`.
+/** ⭐⭐⭐ ROUND 52 J1 (14.10), WIDENED BY J1b (14.10) – THE CHECKPOINT THE BOND SHUT: the band that shut it, on the FIRST WEEK OF ITS WINDOW ON WHICH THE LINE COULD BE HEARD, or `null`. This is the diary fact `coachTalkShut`.
  *
  *  THE OWNER, 14.10 (round 52, his answers on the close №1): «давай по рекомендациям» – at `strained` / `cold` she does not confide at a stint checkpoint either (`raiseCoachCheckpointTalk` keeps the bond gate),
  *  AND THE SILENCE SHOWS: the week note says the talk that would have told him whether this is the right coach did not happen, so he sees what the relationship cost.
  *
- *  PRESENT iff all four: a coach is employed; it is the checkpoint's FIRST week (weeks together EQUAL the checkpoint – the week her feel was re-read, and the one week of the window the note speaks, so it appears once per
- *  checkpoint by construction: at most three times in a stint's first 56 weeks); the checkpoint is still due and unspoken (`coachTalkCheckpointDue`); and the bond does not let her confide (`bondLetsHerConfide`).
- *  ⚠ THE VALUE IS THE BAND, `coachFeelRead`'s shape: the copy is written per band. The predicate decides «shut»; the table shuts exactly `strained` and `cold`, so any band it shuts that is not `cold` is `strained`.
+ *  ⚠ J1b, 14.10 – IT IS NOT «THE FIRST WEEK» ANY MORE, AND THE REASON IS J1's OWN MEASUREMENT: asked on the window's first week alone, the note printed on 62 of 144 shut checkpoints (43.1%) and was LOST TO A TRAVELLING WEEK on 78 (54.2%) –
+ *  a tournament, a journey or the week home; stints begun at week 0 read 72%, the same three calendar weeks in every career. The architect's ruling: 43% is not «the silence shows». The window is four weeks long ([cp, cp + `COACH_FEEL.periodWeeks`),
+ *  `coachTalkCheckpointAt`) and the talk is still due, and still shut, in all of them, so the fact WAITS for the first week of it on which the line could be heard, and is on no other week.
  *
- *  ⚠ WHAT IT DOES NOT ASK: whether another beat held the week, whether she is in college, whether the week is a plain one. The first is a different reason for the same silence (the bond is the only one the note names);
- *  the other two are the NOTE's licences (`underOneRoof`, `notTravellingWeek`, weekNotes.ts), where the copy can say which kind of week it is.
+ *  PRESENT at week w iff ALL of:
+ *   (a) a coach is employed, w is inside a checkpoint's window, that checkpoint is still due and unspoken (`coachTalkCheckpointDue` – a talk she gave INSIDE the window clears it), and the bond does not let her confide (`bondLetsHerConfide`): J1's clauses, unchanged;
+ *   (b) `heardAt(w)` – w is a week the line could be heard;
+ *   (c) `heardAt(u)` is false for EVERY earlier week u of the window (`coachSinceWeek + cp` <= u < w) – the note has not had its week yet. (c) is what makes it ONCE per checkpoint: after the week it prints on, every later week of the window has an earlier week it could have printed on.
+ *  ⚠ A WINDOW WHOSE FOUR WEEKS ARE ALL AWAY PRINTS NOTHING (J1 counted 10%): that is the price of a note said only at the table, not a defect, and the checkpoint is then skipped for good as the talk itself is (`coachTalkCheckpointAt`).
+ *
+ *  ⚠⚠ `heardAt` IS THE DIARY'S ANSWER AND NOT A SPELLING OF THIS MODULE'S: `toSnapshot` hands in `silenceHeardAtFor(view)` (diary.ts), which asks `silenceCouldBeHeard` – the licence's own three inputs, `underOneRoof`, `notTravellingWeek` and
+ *  `injured === null`, the predicate the four lines are licensed by – of the week's journey facts, read by THE SAME helper `assembleDiaryFacts` reads the current week with (`weekAwayOf`, diary/weekAway.ts). So «could the line be heard at week u» has one spelling for
+ *  u = w and for every earlier u, and this module holds none of it: it holds the window arithmetic (the world's) and nothing about travel (the diary's). It is a parameter and not an import, so the world layer reaches no further into the diary than the snapshot already does.
+ *
+ *  ⚠ WHAT THE EARLIER WEEKS ARE READ WITH (J1b's approximation, COUNTED in the spec's addendum – no history is invented): the EVENTS of week u are the log's and exact (a refunded trip nets to 0 at u as it does at w, and three weeks back is inside the capped feed: weekAway.ts);
+ *  three inputs have NO per-week record and take TODAY'S value – her life stage (the roof), an injury (she is not laid off today, or (b) would have stopped us, but she may have been at u and healed since) and the bond and the spoken state (a week at which the bond was open and the talk was
+ *  merely held by another beat reads as shut). Each of these can only make the rule MISS a window whose first free week was hidden behind it; none can print a checkpoint twice, because a week that printed was hearable under today's values too and so hides every later week.
+ *  ⚠ WHAT IT STILL DOES NOT ASK: whether another beat held the week (a different reason for the same silence – the bond is the only one the note names) or whether the week is a PLAIN one (a holiday, an exam week, the off-season is still a table). The roof, the journey and the layoff are `heardAt`'s.
  *  ⚠ THE SNAPSHOT READS THE BOND AFTER THIS TICK, while the roll read last week's settled value (`phaseHerWeek`, `rollSmallTalk` runs before `accrueSpirit`): at a band edge the two can differ by a week. The next window week is read
  *  by the roll with the new value, so a talk the roll shut and the snapshot calls open is still raised in the window; the spec's addendum counts both edges.
- *  Derived, nothing persisted, ZERO draws (no MAIN, no new stream). The cheap clauses come first, so the log is read only on a checkpoint's first week at a shut bond. */
-export function coachTalkShutRead(world: WorldState): 'strained' | 'cold' | null {
+ *  Derived, nothing persisted, ZERO draws (no MAIN, no new stream). The cheap clauses come first, so the log is read, and the earlier weeks asked, only inside a checkpoint's window at a shut bond (at most four weeks of a stint's first 56, three times). */
+export function coachTalkShutRead(world: WorldState, heardAt: (week: number) => boolean): 'strained' | 'cold' | null {
   if (world.coachId === null) return null
-  const together = coachWeeksTogether(world)
-  if (coachTalkCheckpointAt(together) !== together) return null
+  const cp = coachTalkCheckpointAt(coachWeeksTogether(world))
+  if (cp === null) return null
   if (bondLetsHerConfide(world)) return null
   if (coachTalkCheckpointDue(world) === null) return null
+  if (!heardAt(world.week)) return null
+  for (let u = coachSinceWeek(world) + cp; u < world.week; u++) {
+    if (heardAt(u)) return null
+  }
   return bondBandOf(world.bond ?? ECONOMY.bond.start) === 'cold' ? 'cold' : 'strained'
 }
 
