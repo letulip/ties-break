@@ -45,8 +45,15 @@ last-reviewed: 2026-10-14
 ## Gates
 All verdicts from sentinel files (mtime checked fresher than each run), clean worktree with
 `npm ci`, every one at the single final SHA named here:
-- check / sim / e2e / lqa:ru / container twin: PENDING (the continuation's chain)
-The first chain (night, at `8f529171`) was green end to end; the continuation re-runs everything.
+every one at `a52e73ce` (the continuation's chain; the night chain at `8f529171` was green too):
+- check: GREEN – `R51C_CHECK_EXIT=0` (/tmp/r51c-gate-check.log; component 321/321, unit 432 s) –
+  green on the FIRST run: the mechanical digest harvest closed every tail before the gate.
+- sim: GREEN – `R51C_SIM_EXIT=0`, 13 files in 384 s (/tmp/r51c-gate-sim.log).
+- e2e: GREEN – `R51C_E2E_EXIT=0`, 145 journeys (/tmp/r51c-gate-e2e.log).
+- lqa:ru: GREEN – `R51C_LQA_EXIT=0`, 0 English keys, all routes (/tmp/r51c-gate-lqa.log).
+- container twin: GREEN – `R51C_CONTAINER_EXIT=0`, 6/6, podman linux/amd64 node:22, `npm ci` in
+  the container (scratchpad l37-gate3/twin-gate.log); VM stopped after.
+- build line: `a52e73c` baked into the gate worktree's dist (index-D-9-Yhn6.js).
 Known shared-checkout-only red: tools:registry (another session's staged devlog files) – green in
 the clean worktree by design.
 
