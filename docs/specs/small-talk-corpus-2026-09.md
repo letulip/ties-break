@@ -2714,6 +2714,181 @@ hesitation.
 - `deep` `"I will. I would like to remember exactly how it sounded."`
 - `quiet` `"I will. It was a nice bit of the week."`
 
+## Addendum 14.10 (third continuation) – `worry` and `decision` for the school years: four, because each cell held one and both waited on a career fact (round 51)
+
+**The owner, 14.10:** «остальные школьные темы тонкие - это тоже можно сюда же взять на двух языках, весь тон-оф-войс для референса и все рулинги у тебя есть.»
+
+**The hole, measured.** Builder B12's corpus bench (`npm run bench:smalltalk -- --seeds 60`, K4) counted what a school-age girl can be handed, per subject, and builders E1 and E2 re-measured it after their rows. The two cells still under this document's own floor (§3b, «minimum situations per subject × stage (3–4)») were school `worry` **1** and school `decision` **1**. K4 counts a row by the stages it lists and not by its fact, and each of those two is held by a gated row: R46 `line-call` waits on `played-recently` and R47 `march-entry` on `march-entry-open`. So the count flattered the cells: R46 reaches a career only in the weeks after a match was played, and R47 only in the weeks before a March deadline. Measured on 120 careers walked for sixteen years (a close bond, a fresh world with nothing earned, the same 1,882 school conversations on both arms), the school years handed out **no worry at all and 23 decisions (1.2%)** before this item – the 23 are R47 in the weeks its door was open – against 128 worries (6.8%) and 390 decisions (20.7%) after it. After-school, `worry` and `decision` already held three each.
+
+**What they are, here.** A `worry` is something she carries and brings to the parent: small, sized for the school years, and not a crisis, an injury or money – those are other beats. A `decision` is a choice she has to make and wants to talk through: small and hers, and not a fork of the career (the March entry in R47 and the college fork are other beats). Each of the four is one scene told four ways (§2, §4); the parent's three buttons are the same for all four voices, and her replies then add one fact of their own.
+
+| row | subject | stages | what it is |
+| --- | --- | --- | --- |
+| R63 `the-film-she-has-not-seen` | worry | school | she told a girl she had seen the film the girl loves, and she has not; the girl keeps bringing it up |
+| R64 `the-girl-she-walked-past` | worry | school, after-school | a girl was crying by herself near the gate, she walked past, and she cannot tell whether she should have stopped |
+| R65 `the-maybe-she-gave` | decision | school, after-school | a younger girl asked her to hit and she said maybe; an answer is owed |
+| R66 `the-match-she-said-she-would-watch` | decision | school, after-school | a friend's match is the last one on, she said she would stay and watch, and it is a long wait |
+
+**Where they sit.** Last in this document, after R62, so the catalogue's first 61 rows keep their order. A situation is chosen by position in the filtered pool, so a pool of a different length reads a different position for the same seed: a career already under way may be shown a different situation next time than it would have been. That draw is on its own sub-stream (`seed:life:smalltalk:situation:<week>`), nothing is stored and the main stream does not move.
+
+**Stages and facts.** A film and a small lie are a school-years sentence, so R63 stops at school. A gate, a younger girl who asks for a hit and a friend's match do not depend on her age, so the other three reach school and after-school, the way `court-four` and the earlier tranche do. All four are `generated` (no career fact), and that is the point of the item: a gated row does not lift a cell on a career that has not earned the fact, and R46 and R47 are what held these two cells at one.
+
+**What the lines were written against.**
+
+- Nothing a career could contradict: no result, score, placing, injury, money, tiredness or coach. The girls, the film, the gate and the match exist only inside the sentence and nothing in the engine reads them. Condition is the engine's, so R66 says the wait is long and that she promised – never that she is tired. R66's match is a friend's and not hers, and no button asks for an outcome (R36's lesson). R64 names no cause for the crying: nobody lost anything here.
+- No professional appears – no coach, umpire, teacher or physio – so none needs a pronoun (R15-7), and no masculine pronoun anywhere (`tests/coach-voice.test.ts`). The `she` and `her` in these rows are players and girls.
+- No «today», no exclamation mark (the fiery voice carries its edge in short verdicts, as R53–R62 do), no digit, no long dash.
+- Her replies describe what the OTHER girl did, or what she will do with the thought – never a persistent pattern of her own tennis (R34's finding). ⚠ R65 in particular: no voice says she is the stronger player, or that she has the time. She says she will hit once, or that she will answer by the end of the week.
+- The facts are the same in all four voices. Each invite reply then adds one fact of its own, and no voice contradicts another's edition of the scene.
+- ⚠ Every new line was searched for in `src/` before it was emitted: round 51's «Nobody argued.» sat in `albumCorpus.ts` too and turned an album test red at the closing gate.
+
+**The arithmetic after these four**, derived by `tools/small-talk-corpus-parse.ts` rather than carried: 65 rows, 260 openers, 195 labels, 780 replies and 20 shared beats (a worry and a decision have no second beat). The figures in the older sections are of the 51, 55, 58 and 61 and stay as the record of the passes that produced them.
+
+**Measured after** (`npm run bench:smalltalk -- --seeds 60`, the bench B12 ran, 14.10): K4 `worry` school **1 → 3** and after-school **3 → 4**, `decision` school **1 → 3** and after-school **3 → 5**. The other K4 cells read exactly as builder E2 reported them (`good-news` 3 and 4, `curiosity` 3 and 4, `observation` 3 and 4, `story` 5 and 9), which is the check that this is the same arm and that nothing but these four cells moved; K4 counts the catalogue and does not depend on the seeds. **Cells under the floor: two → zero.** ⚠ K4 counts by listing, and the two school cells are 3 listed and **2 reachable on a bare career** (R46 and R47 are the third): the same is true of school `good-news` and `curiosity`, whose third rows are R52 and R48. K2 and K3: zero repeats wherever an alternative existed, in the posed career (adjacent 104/2340 → 0, within three 232/2340 → 0) and the bare one (127/2340 → 0, 271/2340 → 0) alike. K5: 65 situations · 260 voice columns, the same gated situations flagged as before and none of the four among them.
+
+**The subject mix after the whole tranche** – the real draw, 120 careers walked for sixteen years with a close bond and a fresh world, the walk of `tests/round51-school-worry-decision-pool.test.ts`. The school years hand out 1,882 conversations and after-school 1,512 on every tree in the table, because the cadence does not depend on the pool. «Before the tranche» is the tree before builder B12's stories (0fe15aca), «before this item» the tree after E2 (2ef31844).
+
+| subject | school, before the tranche | school, before this item | school, final | after-school, before the tranche | after-school, before this item | after-school, final |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| observation | 0% | 29.8% | **22.8%** | 0% | 23.2% | **22.8%** |
+| curiosity | 33.4% | 29.3% | **20.9%** | 27.0% | 21.2% | **20.6%** |
+| decision | 1.8% | 1.2% | **20.7%** | 26.9% | 20.6% | **21.8%** |
+| story | 32.5% | 20.7% | **14.5%** | 17.2% | 12.8% | **12.6%** |
+| good-news | 32.4% | 19.1% | **14.3%** | 20.6% | 15.7% | **15.3%** |
+| worry | 0% | 0% | **6.8%** | 8.3% | 6.4% | **7.0%** |
+
+Counts, final tree: school observation 430, curiosity 393, decision 390, story 272, good-news 269, worry 128; after-school observation 344, decision 330, curiosity 311, good-news 231, story 190, worry 106.
+
+**How to read it.** The final shares sit within 1.5 points of the weights of the `level` mood register (`SMALL_TALK_SUBJECT_WEIGHT`: curiosity 3, decision 3, observation 3, story 2, good-news 2, worry 1 – that is 21, 21, 21, 14, 14 and 7%), and a fresh career is in that register in every week (measured: 104 of 104 walked weeks). The earlier skews were the memory rule and the pool depths, not the weights: a subject with one situation is kept off the table for two conversations after each use, so the subject with the most rows won (story reached 49% on builder B12's tree, 914 of 1,870), and each builder's rows moved the share to the next subject that was thin. Now every subject has at least two reachable rows at school and the draw looks like the weights. ⚠ **Worry is the rarest by design**: it weighs 5 of 12 when her spirits are low and 1 of 14 in a level week, so a walk of fresh careers understates it – a career with a low stretch is handed far more of it. This addendum changes no weight.
+
+### R63 · `the-film-she-has-not-seen` · worry · school · generated
+**Kernel:** She told a girl she had seen the film the girl loves, and she has not. The girl keeps bringing it up, and the lie has already grown by a sentence.
+**Authoritative claims:** none – the girl and the film exist only inside the sentence, no title is named, and nothing here touches a result or her tennis. The lie is hers and it is small; nothing says anybody was hurt by it.
+**Fixed in all four voices:** she told a girl she had seen the film the girl loves, and she has not. Each invite reply carries the same fact: she told the girl the ending was good. The respond stance takes the parent's own confession and the third says one sentence puts it right; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I told a girl I'd seen the film she loves. I haven't. Now she wants to talk about it every single day."` |
+| `fiery` | `"I lied about a film. A girl loves it, I said I'd seen it, and now she will not stop talking about it."` |
+| `deep` | `"I told a girl I had seen the film she loves. I had not. Every time she mentions it, the lie feels a little bigger."` |
+| `quiet` | `"A girl keeps mentioning a film. I told her I'd seen it. I haven't."` |
+
+**Parent:** *Ask what she told the girl about it* · *Say you have done the same* · *Say it can be put right with one sentence*
+
+**invite** · *Ask what she told the girl about it*
+- `sunny` `"That I loved the ending. I don't even know how it ends."`
+- `fiery` `"That the ending was the best part. I have never seen the ending."`
+- `deep` `"That I loved the ending. I do not know what happens in it. I said it as if I did."`
+- `quiet` `"That the ending was good. She was pleased."`
+
+**respond** · *Say you have done the same*
+- `sunny` `"Have you? Good. Then I'm in decent company."`
+- `fiery` `"Of course you have. So that's where I get it."`
+- `deep` `"I did not think you ever had. It makes it feel smaller."`
+- `quiet` `"All right. That helps a little."`
+
+**space** · *Say it can be put right with one sentence*
+- `sunny` `"One sentence. I can do one sentence. Maybe after the weekend."`
+- `fiery` `"One sentence? Then I've been dreading nothing."`
+- `deep` `"It is one sentence. It is the saying of it that I keep rehearsing."`
+- `quiet` `"One sentence. I'll find a time."`
+
+### R64 · `the-girl-she-walked-past` · worry · school, after-school · generated
+**Kernel:** A girl was crying by herself near the gate. She walked past, and she cannot decide whether she should have stopped.
+**Authoritative claims:** none – the girl exists only inside the sentence. ⚠ **No cause is named for the crying, and no match, score or result either**: nothing says anybody lost, and no button asks why. Nobody is hurt and nobody is in danger; the weight is only that she cannot tell whether the girl wanted company.
+**Fixed in all four voices:** a girl crying by herself near the gate, and that she walked past. Each invite reply carries the same fact: the girl was sitting on her bag with her hood up. The respond stance takes the parent's own history and the third says that noticing counts; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"A girl was crying on her own by the gate and I walked past. I think I should have stopped."` |
+| `fiery` | `"I walked straight past a girl who was crying. Straight past. I should have stopped."` |
+| `deep` | `"A girl was crying by herself near the gate and I walked past her. I keep going back to the moment I decided not to stop."` |
+| `quiet` | `"A girl was sitting by the gate, crying. I kept walking."` |
+
+**Parent:** *Ask what she saw* · *Say you have walked past too* · *Say it counts that she noticed*
+
+**invite** · *Ask what she saw*
+- `sunny` `"She was sitting on her bag with her hood up. All on her own."`
+- `fiery` `"On her bag, hood up, on her own. Nobody anywhere near her."`
+- `deep` `"She was sitting on her bag with her hood up, and nobody was near her."`
+- `quiet` `"On her bag, with her hood up."`
+
+**respond** · *Say you have walked past too*
+- `sunny` `"You too? Then it's not just me. I still wish I'd stopped."`
+- `fiery` `"Everyone has. That's not an excuse. That's the problem."`
+- `deep` `"I believe you. It does not make her any less alone."`
+- `quiet` `"Okay. That doesn't change it, but okay."`
+
+**space** · *Say it counts that she noticed*
+- `sunny` `"Does it? Then I'll say hello to her next time. That's a start."`
+- `fiery` `"Noticing doesn't do anything for her. Next time I'm stopping."`
+- `deep` `"Perhaps. It is the only part of it I got right."`
+- `quiet` `"Maybe. I'll look for her."`
+
+### R65 · `the-maybe-she-gave` · decision · school, after-school · generated
+**Kernel:** A younger girl asked her to hit with her, and she said maybe. An answer is owed and she has not decided.
+**Authoritative claims:** none – the younger girl exists only inside the sentence. ⚠ **Nothing here changes a session, a plan or her load**: one hit is a hit and not a lesson, and no professional is involved. No voice says she is the stronger player.
+**Fixed in all four voices:** a younger girl asked her to hit, and she said maybe. Each invite reply carries the same fact: the younger girl waits at the end of the court for a gap. The respond stance takes the parent's own history and the third lets the answer wait; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"A younger girl asked if I'd hit with her. I said maybe. I should probably say yes or no."` |
+| `fiery` | `"A younger girl asked me to hit with her and I said maybe. Maybe isn't an answer. I know that."` |
+| `deep` | `"A younger girl asked me to hit with her. I said maybe, and I keep seeing her face when I said it."` |
+| `quiet` | `"A younger girl asked if I'd hit with her. I said maybe."` |
+
+**Parent:** *Ask what the younger girl is like* · *Say someone once made time for you* · *Say she can answer when she knows*
+
+**invite** · *Ask what the younger girl is like*
+- `sunny` `"Shy, I think. She keeps standing at the end of the court, waiting for a gap."`
+- `fiery` `"She doesn't say much. She stands at the end of the court and waits for a gap."`
+- `deep` `"She does not say much. She stands at the end of the court and waits for a gap, as if she has done it before."`
+- `quiet` `"Quiet. She waits at the end of the court for a gap."`
+
+**respond** · *Say someone once made time for you*
+- `sunny` `"Did they? Then I think I'll say yes. One hit, to start."`
+- `fiery` `"Fine. One hit, and then we'll see. I'm not a ball machine."`
+- `deep` `"I did not know that. It makes it harder to say no, which I suppose is the point."`
+- `quiet` `"All right. I'll tell her yes."`
+
+**space** · *Say she can answer when she knows*
+- `sunny` `"Good. I'll tell her by the end of the week, either way."`
+- `fiery` `"Fine. But she's waiting. I'd like to stop making her wait."`
+- `deep` `"I know. I do not want to leave her wondering for long."`
+- `quiet` `"Okay. Not for long, though."`
+
+### R66 · `the-match-she-said-she-would-watch` · decision · school, after-school · generated
+**Kernel:** A friend has a match that is the last one on, and she said she would stay and watch it. It is a long wait and she cannot decide whether to stay for all of it.
+**Authoritative claims:** none – the friend and her match exist only inside the sentence, and the match is not hers. ⚠ **No result, score or placing is named and no button asks for one** (R36's lesson). ⚠ **Nobody says she is tired**: condition is the engine's, so the pull is that the wait is long and that she promised.
+**Fixed in all four voices:** a friend's match, the last one on, and that she said she would stay and watch it. Each invite reply carries the same fact: she promised all of it. The respond stance takes the parent's view of a promise and the third lets her go when she has had enough; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I told a friend I'd stay and watch her match. It's the last one on, so that's a lot of waiting."` |
+| `fiery` | `"I made a promise too quickly. I said I'd watch a friend's match, and it's the last one on."` |
+| `deep` | `"I told a friend I would stay and watch her match. I meant it then. It is the last match on, and I am not sure I mean it now."` |
+| `quiet` | `"I said I'd watch a friend's match. It's the last one on."` |
+
+**Parent:** *Ask how much she promised to watch* · *Say you would keep a promise like that* · *Say she can go when she has had enough*
+
+**invite** · *Ask how much she promised to watch*
+- `sunny` `"All of it. That was the silly part. Half would have been fine."`
+- `fiery` `"All of it. I said all of it. Why did I say all of it."`
+- `deep` `"All of it. I told her I would stay to the end, and she thanked me."`
+- `quiet` `"All of it. That's what I said."`
+
+**respond** · *Say you would keep a promise like that*
+- `sunny` `"I know you would. I think that's why I haven't gone yet."`
+- `fiery` `"Fine. Then I stay. I'm not going to enjoy the last hour, though."`
+- `deep` `"I know. That is what I am weighing it against."`
+- `quiet` `"I know. That's what I keep thinking."`
+
+**space** · *Say she can go when she has had enough*
+- `sunny` `"Okay. Then I'll stay for the start and see how I feel."`
+- `fiery` `"Good. I'll stay for the start, and I'm not saying sorry for the rest."`
+- `deep` `"Perhaps. I would still know I had left, though."`
+- `quiet` `"Okay. I'll see how long I last."`
+
 ---
 
 ## P3.7 The corpus at 43, and the whole document at 51 – counted by script, not claimed

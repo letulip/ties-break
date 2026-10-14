@@ -3,7 +3,7 @@
 // Builder E1 (`tests/round51-school-observation-pool.test.ts`) and builder E2
 // (`tests/round51-school-curiosity-goodnews-pool.test.ts`) ask the same question of different rows – «does the real draw
 // hand a school-age girl, and a girl just out of school, this row?» – and they ask it of the same kind of career, walked the
-// same way. A third sibling is coming (worry and decision). The walk was first pasted from round 51 №17's story test into
+// same way. A third sibling followed (`tests/round51-school-worry-decision-pool.test.ts`, builder E3, seed prefix `r51-e3-`). The walk was first pasted from round 51 №17's story test into
 // E1's file; a second paste into E2's would have been the second LOCAL copy of one body, which is the shape T5.14 RULE B
 // refuses for its five merged families (`tests/principles-t514-merged-families.test.ts`) – so the body has one home, here, and
 // each file keeps only what is its own: the row ids, the subject it counts, and the seed prefix that names its careers.

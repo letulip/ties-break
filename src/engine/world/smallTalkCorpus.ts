@@ -1,5 +1,5 @@
 // ⭐⭐⭐ THE SMALL-TALK CORPUS – **GENERATED FROM `docs/specs/small-talk-corpus-2026-09.md`,
-// NEVER RETYPED.** 61 situations × 4 voices: 244 openers, 183 stance labels, 732 replies, 20 shared second beats.
+// NEVER RETYPED.** 65 situations × 4 voices: 260 openers, 195 stance labels, 780 replies, 20 shared second beats.
 //
 // ⭐⭐ THIS IS THE WHOLE CATALOGUE AND NOT A SECOND HALF OF ONE. `SMALL_TALK_SHIPPED` – the eight
 // situations hand-written in `lifeBeat.ts` since wave 2 – was deleted in round 44 and those eight are
@@ -16,7 +16,7 @@
 // ⚠ IT IS ORDINARY COMMITTED SOURCE AND NOT A BUILD STEP (the round's own ruling). Nothing in
 // `npm run check`, `npm run build` or the dev server generates it; the emitter is a one-off.
 //
-// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 1159 authored strings. An agent retyping them
+// ⭐ WHY GENERATION RATHER THAN TRANSCRIPTION: 1235 authored strings. An agent retyping them
 // produces typos that no test can catch, because a test written by the same agent compares against
 // what was typed. The document is the source of truth; this file is its projection.
 //
@@ -4748,6 +4748,314 @@ export const SMALL_TALK_CORPUS: readonly SmallTalkSituation[] = [
           space: {
             label: 'Let her just have this',
             said: '"I will. It was a nice bit of the week."',
+          },
+        },
+      },
+    },
+  },
+  // R63 · the-film-she-has-not-seen
+  {
+    id: 'the-film-she-has-not-seen',
+    subject: 'worry',
+    stages: ['school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"I told a girl I\'d seen the film she loves. I haven\'t. Now she wants to talk about it every single day."',
+        branches: {
+          invite: {
+            label: 'Ask what she told the girl about it',
+            said: '"That I loved the ending. I don\'t even know how it ends."',
+          },
+          respond: {
+            label: 'Say you have done the same',
+            said: '"Have you? Good. Then I\'m in decent company."',
+          },
+          space: {
+            label: 'Say it can be put right with one sentence',
+            said: '"One sentence. I can do one sentence. Maybe after the weekend."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"I lied about a film. A girl loves it, I said I\'d seen it, and now she will not stop talking about it."',
+        branches: {
+          invite: {
+            label: 'Ask what she told the girl about it',
+            said: '"That the ending was the best part. I have never seen the ending."',
+          },
+          respond: {
+            label: 'Say you have done the same',
+            said: '"Of course you have. So that\'s where I get it."',
+          },
+          space: {
+            label: 'Say it can be put right with one sentence',
+            said: '"One sentence? Then I\'ve been dreading nothing."',
+          },
+        },
+      },
+      deep: {
+        opener: '"I told a girl I had seen the film she loves. I had not. Every time she mentions it, the lie feels a little bigger."',
+        branches: {
+          invite: {
+            label: 'Ask what she told the girl about it',
+            said: '"That I loved the ending. I do not know what happens in it. I said it as if I did."',
+          },
+          respond: {
+            label: 'Say you have done the same',
+            said: '"I did not think you ever had. It makes it feel smaller."',
+          },
+          space: {
+            label: 'Say it can be put right with one sentence',
+            said: '"It is one sentence. It is the saying of it that I keep rehearsing."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"A girl keeps mentioning a film. I told her I\'d seen it. I haven\'t."',
+        branches: {
+          invite: {
+            label: 'Ask what she told the girl about it',
+            said: '"That the ending was good. She was pleased."',
+          },
+          respond: {
+            label: 'Say you have done the same',
+            said: '"All right. That helps a little."',
+          },
+          space: {
+            label: 'Say it can be put right with one sentence',
+            said: '"One sentence. I\'ll find a time."',
+          },
+        },
+      },
+    },
+  },
+  // R64 · the-girl-she-walked-past
+  {
+    id: 'the-girl-she-walked-past',
+    subject: 'worry',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"A girl was crying on her own by the gate and I walked past. I think I should have stopped."',
+        branches: {
+          invite: {
+            label: 'Ask what she saw',
+            said: '"She was sitting on her bag with her hood up. All on her own."',
+          },
+          respond: {
+            label: 'Say you have walked past too',
+            said: '"You too? Then it\'s not just me. I still wish I\'d stopped."',
+          },
+          space: {
+            label: 'Say it counts that she noticed',
+            said: '"Does it? Then I\'ll say hello to her next time. That\'s a start."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"I walked straight past a girl who was crying. Straight past. I should have stopped."',
+        branches: {
+          invite: {
+            label: 'Ask what she saw',
+            said: '"On her bag, hood up, on her own. Nobody anywhere near her."',
+          },
+          respond: {
+            label: 'Say you have walked past too',
+            said: '"Everyone has. That\'s not an excuse. That\'s the problem."',
+          },
+          space: {
+            label: 'Say it counts that she noticed',
+            said: '"Noticing doesn\'t do anything for her. Next time I\'m stopping."',
+          },
+        },
+      },
+      deep: {
+        opener: '"A girl was crying by herself near the gate and I walked past her. I keep going back to the moment I decided not to stop."',
+        branches: {
+          invite: {
+            label: 'Ask what she saw',
+            said: '"She was sitting on her bag with her hood up, and nobody was near her."',
+          },
+          respond: {
+            label: 'Say you have walked past too',
+            said: '"I believe you. It does not make her any less alone."',
+          },
+          space: {
+            label: 'Say it counts that she noticed',
+            said: '"Perhaps. It is the only part of it I got right."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"A girl was sitting by the gate, crying. I kept walking."',
+        branches: {
+          invite: {
+            label: 'Ask what she saw',
+            said: '"On her bag, with her hood up."',
+          },
+          respond: {
+            label: 'Say you have walked past too',
+            said: '"Okay. That doesn\'t change it, but okay."',
+          },
+          space: {
+            label: 'Say it counts that she noticed',
+            said: '"Maybe. I\'ll look for her."',
+          },
+        },
+      },
+    },
+  },
+  // R65 · the-maybe-she-gave
+  {
+    id: 'the-maybe-she-gave',
+    subject: 'decision',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"A younger girl asked if I\'d hit with her. I said maybe. I should probably say yes or no."',
+        branches: {
+          invite: {
+            label: 'Ask what the younger girl is like',
+            said: '"Shy, I think. She keeps standing at the end of the court, waiting for a gap."',
+          },
+          respond: {
+            label: 'Say someone once made time for you',
+            said: '"Did they? Then I think I\'ll say yes. One hit, to start."',
+          },
+          space: {
+            label: 'Say she can answer when she knows',
+            said: '"Good. I\'ll tell her by the end of the week, either way."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"A younger girl asked me to hit with her and I said maybe. Maybe isn\'t an answer. I know that."',
+        branches: {
+          invite: {
+            label: 'Ask what the younger girl is like',
+            said: '"She doesn\'t say much. She stands at the end of the court and waits for a gap."',
+          },
+          respond: {
+            label: 'Say someone once made time for you',
+            said: '"Fine. One hit, and then we\'ll see. I\'m not a ball machine."',
+          },
+          space: {
+            label: 'Say she can answer when she knows',
+            said: '"Fine. But she\'s waiting. I\'d like to stop making her wait."',
+          },
+        },
+      },
+      deep: {
+        opener: '"A younger girl asked me to hit with her. I said maybe, and I keep seeing her face when I said it."',
+        branches: {
+          invite: {
+            label: 'Ask what the younger girl is like',
+            said: '"She does not say much. She stands at the end of the court and waits for a gap, as if she has done it before."',
+          },
+          respond: {
+            label: 'Say someone once made time for you',
+            said: '"I did not know that. It makes it harder to say no, which I suppose is the point."',
+          },
+          space: {
+            label: 'Say she can answer when she knows',
+            said: '"I know. I do not want to leave her wondering for long."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"A younger girl asked if I\'d hit with her. I said maybe."',
+        branches: {
+          invite: {
+            label: 'Ask what the younger girl is like',
+            said: '"Quiet. She waits at the end of the court for a gap."',
+          },
+          respond: {
+            label: 'Say someone once made time for you',
+            said: '"All right. I\'ll tell her yes."',
+          },
+          space: {
+            label: 'Say she can answer when she knows',
+            said: '"Okay. Not for long, though."',
+          },
+        },
+      },
+    },
+  },
+  // R66 · the-match-she-said-she-would-watch
+  {
+    id: 'the-match-she-said-she-would-watch',
+    subject: 'decision',
+    stages: ['school', 'after-school'],
+    fact: null,
+    voices: {
+      sunny: {
+        opener: '"I told a friend I\'d stay and watch her match. It\'s the last one on, so that\'s a lot of waiting."',
+        branches: {
+          invite: {
+            label: 'Ask how much she promised to watch',
+            said: '"All of it. That was the silly part. Half would have been fine."',
+          },
+          respond: {
+            label: 'Say you would keep a promise like that',
+            said: '"I know you would. I think that\'s why I haven\'t gone yet."',
+          },
+          space: {
+            label: 'Say she can go when she has had enough',
+            said: '"Okay. Then I\'ll stay for the start and see how I feel."',
+          },
+        },
+      },
+      fiery: {
+        opener: '"I made a promise too quickly. I said I\'d watch a friend\'s match, and it\'s the last one on."',
+        branches: {
+          invite: {
+            label: 'Ask how much she promised to watch',
+            said: '"All of it. I said all of it. Why did I say all of it."',
+          },
+          respond: {
+            label: 'Say you would keep a promise like that',
+            said: '"Fine. Then I stay. I\'m not going to enjoy the last hour, though."',
+          },
+          space: {
+            label: 'Say she can go when she has had enough',
+            said: '"Good. I\'ll stay for the start, and I\'m not saying sorry for the rest."',
+          },
+        },
+      },
+      deep: {
+        opener: '"I told a friend I would stay and watch her match. I meant it then. It is the last match on, and I am not sure I mean it now."',
+        branches: {
+          invite: {
+            label: 'Ask how much she promised to watch',
+            said: '"All of it. I told her I would stay to the end, and she thanked me."',
+          },
+          respond: {
+            label: 'Say you would keep a promise like that',
+            said: '"I know. That is what I am weighing it against."',
+          },
+          space: {
+            label: 'Say she can go when she has had enough',
+            said: '"Perhaps. I would still know I had left, though."',
+          },
+        },
+      },
+      quiet: {
+        opener: '"I said I\'d watch a friend\'s match. It\'s the last one on."',
+        branches: {
+          invite: {
+            label: 'Ask how much she promised to watch',
+            said: '"All of it. That\'s what I said."',
+          },
+          respond: {
+            label: 'Say you would keep a promise like that',
+            said: '"I know. That\'s what I keep thinking."',
+          },
+          space: {
+            label: 'Say she can go when she has had enough',
+            said: '"Okay. I\'ll see how long I last."',
           },
         },
       },

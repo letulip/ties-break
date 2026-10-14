@@ -195,10 +195,11 @@ describe('round 51 №17 A – the school years have stories to draw', () => {
     }
   })
 
-  it('the four are ordinary rows – ungated, story, four-voiced, with a second beat – and they sit at positions 52 to 55, so the first 51 keep their order (the three observations and the three curiosity and good-news rows of the same day follow them)', () => {
+  it('the four are ordinary rows – ungated, story, four-voiced, with a second beat – and they sit at positions 52 to 55, so the first 51 keep their order (the three observations, the three curiosity and good-news rows and the four worry and decision rows of the same day follow them)', () => {
     // ⚠ RE-AIMED 14.10 (r51 continuation, builder E1): «the last four» became «the four before the last three» when R57–R59 (observations, tests/round51-school-observation-pool.test.ts) were appended after them; the order of what was there did not move.
     // ⚠ RE-AIMED AGAIN 14.10 (r51 continuation, builder E2): «the four before the last three» became «the four before the last six» when R60–R62 (tests/round51-school-curiosity-goodnews-pool.test.ts) were appended after the observations; the order of what was there did not move.
-    expect(SMALL_TALK_SITUATIONS.slice(-10, -6).map((s) => s.id), 'appended last: a pool of a different length reads a different position, but the order of what was there does not move').toEqual([...NEW_STORIES])
+    // ⚠ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E3): «the four before the last six» became «the four before the last ten» when R63–R66 (tests/round51-school-worry-decision-pool.test.ts) were appended after R60–R62; the order of what was there did not move.
+    expect(SMALL_TALK_SITUATIONS.slice(-14, -10).map((s) => s.id), 'appended last: a pool of a different length reads a different position, but the order of what was there does not move').toEqual([...NEW_STORIES])
     for (const id of NEW_STORIES) {
       const s = SMALL_TALK_SITUATIONS.find((r) => r.id === id)!
       expect(s.subject, `${id}: subject`).toBe('story')
