@@ -1213,6 +1213,9 @@ The other two answers to the same question, every other situation, and every bon
   card's ring and the wrap-up coach letter both call it, so they cannot show different things.
 - The hunch band is `chemistryHunch(pair.chem)` in `chemistry.ts`, computed in the prompt assembly from
   the world and handed to the pure follow-up builder as a parameter.
+  *Round 52 (14.10) changed the reader:* the band now comes from `feelHunch(coachFeel(world))` (§17), so her line can lean
+  while the ring still shows «?». `chemistryHunch` stays – it is the line a confident feel must clear – and B13 below is its
+  measurement, unchanged.
 - Coach-market rows are not memoised: `toSnapshot` builds them fresh from the world on every snapshot
   (`memoise` in `world/snapshot.ts` serves only the rated field and the tournament preview tables). So the
   ring shows the opened figure on the first snapshot after the answer – a test cuts a snapshot before and
