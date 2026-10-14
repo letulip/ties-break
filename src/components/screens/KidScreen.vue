@@ -1082,6 +1082,11 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
 /* A tile that is a door. The lift is small on purpose - this is a cell in a grid, not a card. */
 .kid-tile-door {
   cursor: pointer;
+  /* ROUND 52 H1 (14.10, owner: «да, шрифт на плашке тоже поправь»). THE TILE IS A <button>, AND A BUTTON DOES NOT INHERIT `font-family`: the browser's own sheet gives it the platform's button face, the global
+     `button` rule in style.css sets a size and no family, and Card.vue sets none – so the name, the tier and the round-52 feel line all rendered in that face (Arial in Playwright's Chromium, per builder F2, who
+     found it measuring the feel line) while the sibling tiles, which are divs, wear Manrope. `inherit` and not a token: the tile then wears whatever its siblings inherit from the same grid, so the two cannot
+     drift apart. The family ONLY, not `font: inherit` – that shorthand would also reset the size and the line-height, a change nobody asked for. Held by tests/component/r52-h1-coach-tile-font.test.ts. */
+  font-family: inherit;
   transition:
     transform var(--dur-slow) cubic-bezier(0.2, 0.8, 0.2, 1),
     border-color var(--dur-slow) linear;
