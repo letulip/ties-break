@@ -62,14 +62,16 @@ export interface Said {
 /** ROUND 52 F4 (14.10): `observe` is called every week, BEFORE the roll, with the world exactly as the roll will read it. The coach-feel test uses it to record her feel at the moment a
  *  coach-feel situation is drawn – the only honest way to ask "was the fact true when it was drawn", since a roll changes the log and the next week changes the world. Optional, so
  *  every earlier caller walks exactly the walk it walked. */
-export function walk(world: WorldState, weeks: number, observe?: (world: WorldState, week: number) => void): Said[] {
+/** ROUND 52 H3 (14.10): `roll` is the weekly roll under test, `rollSmallTalk` unless a sibling passes another – the stint-checkpoint test walks the SAME career with a frozen copy of the pre-H3 roll as its control,
+ *  and a pasted copy of this loop is what T5.14 RULE B refuses. Optional and last, so every earlier caller walks exactly the walk it walked. */
+export function walk(world: WorldState, weeks: number, observe?: (world: WorldState, week: number) => void, roll: (world: WorldState) => void = rollSmallTalk): Said[] {
   const out: Said[] = []
   for (let w = 0; w < weeks; w++) {
     world.week = w
     const before = lifeLogOf(world).length
     const stage = stageAt(world, w)
     if (observe !== undefined) observe(world, w)
-    rollSmallTalk(world)
+    roll(world)
     const log = world.lifeLog ?? []
     if (log.length === before) continue
     const row = log[log.length - 1]

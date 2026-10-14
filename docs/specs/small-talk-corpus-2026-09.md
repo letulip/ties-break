@@ -3281,6 +3281,80 @@ Counts, final tree: school observation 430, curiosity 393, decision 390, story 2
 
 ---
 
+## Addendum 14.10 (round 52, builder H3) – the stint checkpoints: her talk about the coach arrives on its own at weeks 12, 32 and 56 of a stint
+
+**The owner, 14.10:** «на тему смол-тока – нам это важно и критично как раз знать не один раз в 19 лет, а в первые год-два сотрудничества, чтобы понять это "тот" тренер или лучше поменять. Давай что-то на эту тему решим.»
+
+**What this is.** R67–R75 are nine situations about the coach, and until now they came up in ordinary small talk, on the lottery: H2 measured 0.063 of them a coached year (16 conversations in 252 coached years), and the half-year rows did not drop once in 36 careers. This addendum adds the mechanism the design in `docs/rounds/round-52.md` asks for. At **12, 32 and 56 weeks together** (about three months, seven and thirteen) the roll asks first whether a checkpoint is due, and if one is, she brings up the coach on that week and does not wait for the die. The weeks are `COACH_TALK_CHECKPOINTS` in `src/engine/world/coachFeel.ts`; the due-check and the raise are `coachTalkCheckpointDue` and `raiseCoachCheckpointTalk` in `src/engine/world/lifeBeat/smallTalk.ts`, called on the first line of `rollSmallTalk`. No string changed (the rows exist) and nothing is persisted (no schema move).
+
+**The rules, as built.**
+
+| rule | as built | why |
+| --- | --- | --- |
+| when | a week whose weeks together `w` has `cp <= w < cp + 4`, for cp in 12 / 32 / 56 | each checkpoint is a multiple of the feel period (4), so her feel was just re-read that week; 32 and 56 sit inside the half-year and year windows of H2, and the window is one period long |
+| once | the checkpoint is **said** when a small-talk row of one of its three situations was raised at a week at or after `coachSinceWeek + cp`; read off the life log | the log is the memory, as it is for the season tally; a row the lottery raised inside the window counts, one raised before it does not; a re-hire or a release moves the stint start, so a new coach restarts all three |
+| which row | the one of the checkpoint's three situations that `reachableSituations` says is reachable now: her real feel, the stint's window, the stage and her voice have already said which | one spelling of her side, not a second table of sides next to the facts; `too-early` and college are on no side |
+| if the week is taken | a live card or a pending beat holds the week; she tries again **the next week** of the window | the lottery's own two guards, `liveSoftBeat` and `pendingLifeBeat`: one thing at a time |
+| after the window | the checkpoint is **skipped for good** | «a year in» said at week 60 is no longer on time, her feel has been re-read since, and the next checkpoint is the place for the next word |
+| not at | a bond band with no small talk (strained, cold: `smallTalkPerWeek` is 0); college; nobody employed | at strained and cold she does not confide, and the tile and the week notes still speak. This is a single clause in `raiseCoachCheckpointTalk` if the owner rules otherwise |
+| exempt from | the weekly chance (the 8% and 4% die) and the season cap of four | it is not chatter: a talk that is **due** at a fixed week is the thing the owner asked for, and a die or a full season must not eat the one conversation that tells him whether to keep the coach. The row still lands in the log, so it counts toward the season's tally for the chatter that follows |
+| draws | none on MAIN; no gate die, no subject draw and no situation draw (the pick is determined); one frame draw on its own key `seed:smalltalk:frame:<week>`, as every small-talk row has | invariant 2; the row enters the recency memory like any other, and (next row) the memory can refuse it |
+| repeats | a pick that is among her **last two** small-talk rows is refused, and that week is a held week like any other | the owner's round-43 law (#8(a)): she does not repeat what she has just said. The ordinary pick keeps it by narrowing the pool; a checkpoint's pick is a pool of one, so the memory can only veto. **This rule is not in the design.** The first draft did not have it and repeated one of her last two conversations in 9 of 4728 (`tests/round51-school-story-pool.test.ts`, «the memory still holds»); the lottery had raised the same coach situation in the weeks before the window opened, where it does not count as the checkpoint's talk |
+
+**Prediction** (written before the scale run; the two-career gate arm of the test file had been run once while the harness was built and read six windows of six, and the figures below are the reasoning, not that sample). Cohort: econ-bench presets that start with a coach, 7 presets × 6 careers × 312 weeks, in two parent arms: *answers* (a card is answered the week it is raised, so it holds nothing) and *ignores* (a card lives its three weeks unanswered).
+
+| what is measured | predicted | reasoning |
+| --- | --- | --- |
+| stints that reached 60 weeks and got all three talks, among those with at least one steady-or-close week in each window | **answers 96–100%, ignores 92–99%**; the owner's target is 90% | a window is four weeks and the only things that hold a week are a pending beat (rare) and, in *ignores*, a card raised in the two weeks before (a card is live for three weeks, so it can hold the first two weeks of a window and never the last two); missing a window takes a card plus a second blocker |
+| talked windows that were deferred | **answers under 5%, ignores 8–16%**; none later than three weeks | a card is raised in about 4–8% of weeks and holds the next two |
+| coach talks per coached year, first two years of a stint | **with the mechanism 1.3–1.6, without it 0.05–0.5**; three talks in two years is 1.5 before gates | F4/H2 measured 0.052 and 0.063 for the rows alone; the two-career gate arm read about 0.5 without the mechanism, so the lower bound is a range |
+| sides at each checkpoint, against builder F1's bench B14 at the nearest weeks | week 12: warm 24%, unsure 48%, cold 28% (B14 at 13); week 32: 26% / 38% / 36% (between B14's 26 and 52); week 56: 28% / 22% / 50% (B14 at 52). Played pairs differ from the bench's, so ±10 points | the cold share rises and the unsure share falls with the stint, which is the shape B14 measured |
+| windows with no talk because the bond was strained or cold for the whole window | **under 3% of windows** | the bench policies keep the bond steady or better; this is by design and is counted, not a miss |
+| windows missed for any other reason | **0–3%** | if it is more, the cause is named below |
+
+**Measured** (14.10, the tree this addendum ships with). Two runs of the played-career harness in `tests/r52-coach-talk-checkpoints.test.ts` §H. **The scale run**, `R52_H3_REPORT=1 R52_H3_SCALE=big npx vitest run --project unit tests/r52-coach-talk-checkpoints.test.ts -t "how many stints"`: 7 presets that start with a coach × 6 careers × 312 weeks = 42 careers, each kept its founding coach, so 42 stints and every one past 60 weeks (83.2 coached years in the first two years of a stint). **The wide run** for the sides, `R52_H3_CAREERS=24 R52_H3_WEEKS=70 R52_H3_ARMS=answers R52_H3_NOOFF=1`: 168 stints. The scale run ends with vitest's own «Timeout calling onTaskUpdate» (the birpc stall the house documents for a file longer than 60 s); the test in it passed. The gate runs a two-career, 156-week arm of about five seconds.
+
+| what is measured | predicted | measured |
+| --- | --- | --- |
+| stints past 60 weeks that got all three talks, among those with a steady-or-close week in every window | answers 96–100%, ignores 92–99%; the owner's target is 90% | **scale run: 40 of 40 (100%) in both arms. Wide run: 152 of 155 (98.1%).** |
+| the same over ALL stints past 60 weeks, the strained-or-cold ones included | not predicted separately | scale run 40 of 42 (95.2%); wide run 152 of 168 (**90.5%**, only just over the 90%, and every point of the gap is the bond or the veto below) |
+| talked windows that were deferred | answers under 5%, ignores 8–16%; none later than three weeks | answers 1 of 124 (0.8%, at +2); **ignores 15 of 124 (12.1%): 2 at +1 week, 13 at +2**; wide run 5 of 488 (1.0%, all at +2). None later than two weeks |
+| coach talks per coached year, first two years of a stint | with the mechanism 1.3–1.6, without 0.05–0.5 | **with 1.575 (answers) and 1.563 (ignores); without 0.180 and 0.168** – about nine times as many. Three talks in two years is 1.5; the other 0.07 is the lottery |
+| windows with no talk because the bond was strained or cold for the whole window | under 3% | scale run 2 of 126 (1.6%); wide run 13 of 504 (2.6%). Counted, not a miss: by design |
+| windows missed for any other reason | 0–3% | scale run 0 of 124; wide run **3 of 491 (0.6%)** – all three are the recency veto, below |
+| MAIN draws with and without the mechanism | identical | identical in all 42 careers and both parent arms: the draw count and the next three values |
+
+**The sides at each checkpoint**, against builder F1's bench B14 at the nearest weeks (`docs/specs/the-chemistry-2026-09.md` §17.3), wide run, 488 talks:
+
+| checkpoint | talks | warm | unsure | cold | B14 (warm / unsure / cold) |
+| --- | --- | --- | --- | --- | --- |
+| 12 | 166 | 38 (22.9%) | 83 (50.0%) | 45 (27.1%) | week 13: 23.9 / 47.8 / 28.4 |
+| 32 | 167 | 51 (30.5%) | 65 (38.9%) | 51 (30.5%) | between weeks 26 and 52: about 25.7 / 38.5 / 35.8 |
+| 56 | 155 | 65 (41.9%) | 39 (25.2%) | 51 (32.9%) | week 52: 27.9 / 23.3 / 48.8 |
+
+(The scale run, 42 stints, has the same shape: 10 / 24 / 8 at 12, 9 / 23 / 10 at 32, 16 / 10 / 14 at 56.) **The prediction held at 12 (within 3 points) and at 32 (within 6) and MISSED at 56**: warm 14 points above the band and cold 16 below. At 155 talks a share has a standard error near 4 points, so it is not noise. The played careers' pairs are warmer a year in than B14's 1200 random pairs, so the cold talk (R75, the one that asks to talk about another coach) is met by a third of the stints against the half B14 would suggest. The mechanism reads her real feel and is indifferent to this; it is reported as a finding and was not investigated further.
+
+**The three windows that were not talked, and why.** Each had a steady bond, a school stage and no other beat near it, and each had the same cause: the recency veto. In two of them the lottery had raised R68 (`practice-feels-different`) at week 7, the first week after the «too early» weeks, and nothing was said between; at week 12 the pick would have repeated her latest conversation. In the third the lottery had raised R71 (`half-a-year-and-still-unsure`) at week 25, a week after the half-year window opened, with nothing since; the pick at week 32 would have repeated it. So in all three the player did hear that conversation, five to seven weeks early, and the checkpoint stayed quiet instead of saying it twice. The alternative (count a same-side row from the two periods before a checkpoint as its talk) would make these three windows talked and is a rule the owner can ask for.
+
+**What it costs the pins that read the draw.** `npx vitest run --project unit coach-travel-edge i18n-l3-7-twin succession-s1-start-year i18n-l3-5-life-beats wave3-small-talk round42-small-talk-exchange wave3-soft-surface r52-coach-feel-talk round44-corpus-roundtrip principles-a06-life-beat-direction principles-a03 import-cycles tests/condition.test.ts r51-coach-real-hunch sim-serialisation principles-b08-presence-reach round51- pin-hygiene principles-t514 world-symbol`: 34 files, 8 red, 26 green (37 tests of 505). **Control: with `COACH_TALK_CHECKPOINTS` emptied** (which `tests/r52-coach-talk-checkpoints.test.ts` §G shows is the pre-H3 roll, row for row) the same digest files are red anyway, because F4's and H2's rows had already lengthened a coached career's pool:
+
+| file | red with the mechanism | red with it emptied | what it is |
+| --- | --- | --- | --- |
+| `coach-travel-edge-recent-schemas` | 10 | 10 | digests of a played coached career, v85–v94 roll-backs |
+| `succession-s1-start-year` | **9** | 3 | three default careers at creation and after 110 weeks: **H3 adds 6** |
+| `coach-travel-edge-late-schemas` | 8 | 8 | v77–v84 |
+| `coach-travel-edge-prior-schemas` | 3 | 3 | v74–v76 |
+| `coach-travel-edge` | 3 | 3 | a hired coach who stays at home |
+| `i18n-l3-5-life-beats` | 1 | 1 | PICK-STABILITY, career 5/0 |
+| `i18n-l3-7-twin` | 2 | 2 | the twin's two leaves, red before F4 as well (`tests/r52-coach-feel-talk.test.ts` header) |
+| `round51-school-story-pool` | **1** | 0 | **not a digest: a sample floor.** «the story subject was actually drawn» wants more than 250 school stories in 120 careers × 12 years and reads 241. A checkpoint talk is a conversation of its own that counts toward the season's tally of four, so in a close-bond season with one the lottery has a slot fewer. The second case of that file, «the memory still holds», was red (9 of 4728) until the recency veto and is green |
+
+None of them is re-stamped here: the architect harvests the digests once at the close. `tests/condition.test.ts` (the frozen MAIN capture, 41550 draws / hash `e6b0c709`) did not move, and `wave3-small-talk`, `round42-small-talk-exchange`, `wave3-soft-surface`, `r52-coach-feel-talk` and `round44-corpus-roundtrip` stay green.
+
+**The two levers, if the owner rules otherwise.** (1) At a strained or cold bond she does not confide here; to let the talk through anyway, delete the one `smallTalkChanceFor(...) <= 0` clause in `raiseCoachCheckpointTalk`. (2) The recency veto is `repeatsOneOfHerLastTwo`; without it the three windows above are talked and she may repeat herself in about one career in thirteen (9 repeats in the 120 careers of the story-pool walk).
+
+---
+
 ## P3.7 The corpus at 43, and the whole document at 51 – counted by script, not claimed
 
 ⚠⚠ **THIS SECTION SAID 44 UNTIL THE REPLIES PASS RE-RAN ITS OWN COUNT, AND IT WAS THE DOCUMENT'S OWN

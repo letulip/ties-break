@@ -10,6 +10,8 @@ import { ECONOMY } from '../../economy'
 import { bondBandOf, moodRegisterOf, spiritBandOf } from '../../spirit'
 import { seasonIndexOf } from '../ledger'
 import { COACH_REAL_SITUATION_ID, SMALL_TALK_SUBJECTS, smallTalkSituationIdOf, smallTalkSubjectFor } from './smallTalkCopy'
+import { coachTalkCheckpointAt, coachWeeksTogether } from '../coachFeel'
+import { coachSinceWeek } from '../coachStint'
 import {
   drawSmallTalkFrame,
   lifeLogOf,
@@ -22,6 +24,7 @@ import {
   smallTalkDetailFor,
   voiceOf,
   withoutRecentSituations,
+  SMALL_TALK_EXCLUDE_LAST,
   SMALL_TALK_STANCE_ID,
   SMALL_TALK_SUBJECT_WEIGHT,
 } from '../lifeBeat'
@@ -82,6 +85,81 @@ export function smallTalkEligible(world: WorldState): boolean {
   return smallTalkChanceFor(bondBandOf(world.bond ?? ECONOMY.bond.start)) > 0
 }
 
+/** ⭐⭐⭐ ROUND 52 H3 (14.10) – THE THREE ROWS OF EACH STINT CHECKPOINT, warm / unsure / cold, by the checkpoint's week (`COACH_TALK_CHECKPOINTS`, world/coachFeel.ts):
+ *  12 is her first impression (R67–R69), 32 half a year (R70–R72), 56 a year together (R73–R75). IDS AND NOTHING ELSE – which of the three she says is not decided here:
+ *  `reachableSituations` already holds the one spelling of her side (her real `coachFeel`), of the stint's window, of college and of her voice, and the pick below asks IT, so there
+ *  is no second table of sides to drift from the facts. `tests/r52-coach-talk-checkpoints.test.ts` pins each id to its row and its fact. */
+export const COACH_TALK_CHECKPOINT_ROWS: Readonly<Record<number, readonly string[]>> = {
+  12: ['the-thing-that-makes-sense', 'practice-feels-different', 'the-thing-she-cannot-name'],
+  32: ['half-a-year-and-it-fits', 'half-a-year-and-still-unsure', 'months-in-and-still-waiting'],
+  56: ['a-year-and-she-would-not-swap', 'a-year-and-she-still-does-not-know', 'a-year-in-we-need-to-talk'],
+}
+
+/** ⭐⭐⭐ ROUND 52 H3 (14.10) – WHICH STINT CHECKPOINT IS OPEN THIS WEEK AND HAS NOT BEEN SPOKEN, or `null`.
+ *
+ *  ⚠ THE LOG IS THE MEMORY, as `smallTalkThisSeason`'s is: a checkpoint is SPOKEN when a small-talk row of one of its three situations was raised at a week at or after
+ *  `coachSinceWeek + cp`. Nothing persisted, so there is no schema move, and a row the lottery raised INSIDE the window counts exactly like the forced one (she has said it; she
+ *  does not say it again). The comparison is on the STINT: a re-hire or a release moves `coachSinceWeek`, so the rows of the old stint fall behind the new `from` and the
+ *  checkpoints start over – a new coach is a new first impression.
+ *  ⚠ A ROW RAISED BEFORE `from` DOES NOT COUNT (the lottery's R67 at week 8 is not the three-month talk). Pure, no draw, no key: the cheap clauses come first, so every
+ *  week outside a window and every stint with nobody employed returns before the log is read. */
+export function coachTalkCheckpointDue(world: WorldState): number | null {
+  if (world.coachId === null) return null
+  const cp = coachTalkCheckpointAt(coachWeeksTogether(world))
+  if (cp === null) return null
+  const ids = COACH_TALK_CHECKPOINT_ROWS[cp] ?? []
+  const from = coachSinceWeek(world) + cp
+  const spoken = lifeLogOf(world).some(
+    (row) => row.kind === 'small-talk' && row.week >= from && ids.includes(smallTalkSituationIdOf(row.detail) ?? ''),
+  )
+  return spoken ? null : cp
+}
+
+/** ⭐⭐ ROUND 52 H3 – THE RECENCY MEMORY, AS A VETO: DID SHE JUST SAY THIS ONE? The owner's round-43 law (#8(a)): «они точно не должны так часто повторяться, иначе в чём смысл» – the ordinary pick keeps it by
+ *  NARROWING the pool, but a checkpoint's pick is a pool of one, so the memory can only refuse. Without it the first draft repeated one of her last two conversations in 9 of 4728 (the lottery had raised the
+ *  same coach situation in the weeks BEFORE the window opened, where it does not count as said): `tests/round51-school-story-pool.test.ts` «the memory still holds» caught it.
+ *  Same width as the pool's (`SMALL_TALK_EXCLUDE_LAST` small-talk rows, newest first), same comparison (the stored detail). */
+function repeatsOneOfHerLastTwo(world: WorldState, detail: string): boolean {
+  const log = lifeLogOf(world)
+  let looked = 0
+  for (let i = log.length - 1; i >= 0 && looked < SMALL_TALK_EXCLUDE_LAST; i--) {
+    if (log[i]!.kind !== 'small-talk') continue
+    if (log[i]!.detail === detail) return true
+    looked++
+  }
+  return false
+}
+
+/** ⭐⭐⭐ ROUND 52 H3 (14.10) – THE CHECKPOINT TALK, RAISED: `true` when this week she brought up the coach on her own.
+ *
+ *  The owner: «нам это важно и критично как раз знать не один раз в 19 лет, а в первые год-два сотрудничества, чтобы понять это "тот" тренер или лучше поменять».
+ *
+ *  ⚠ IT IGNORES THE WEEKLY CHANCE AND THE SEASON CAP, AND THAT IS THE POINT, not an oversight: those two exist to keep ORDINARY chatter rare and spread out, and a talk that is DUE
+ *  at a fixed week of the stint is not chatter – gating it by an 8% die is the lottery the owner asked to be rid of, and a season already full of small things must not eat
+ *  the one conversation that tells him whether to keep the coach. (The row still lands in the log, so it counts toward the season's tally for the chatter that follows.)
+ *  ⚠ WHAT IT DOES NOT IGNORE: a coach in the chair (`coachTalkCheckpointDue`), a bond band that lets her confide at all – the SAME `smallTalkChanceFor > 0` clause the lottery
+ *  stops at, so at `strained` / `cold` she does not confide here either (the tile and the week notes still speak; the clause is one line if he rules otherwise) – and
+ *  the room another beat leaves (`pendingLifeBeat` / `liveSoftBeat`, the lottery's own two guards: one at a time). Blocked, it tries again NEXT week until the window closes.
+ *  ⚠ THE PICK IS DETERMINED: the checkpoint's three situations are found through `reachableSituations`, so her real feel, the stint's window, college and her voice have already
+ *  said which (at most one of the three is true at once; `too-early` is on no side). No subject draw, no situation draw. ⚠ THE RECENCY MEMORY STILL APPLIES, AS A VETO (`repeatsOneOfHerLastTwo`): a situation
+ *  she said one or two conversations ago is not said again, so that week is a held week like any other (it tries the next; after the window the checkpoint is skipped). The FRAME is still drawn, on its own
+ *  purpose-scoped key, because every small-talk row carries one.
+ *  ⚠ ZERO MAIN DRAWS: no `rng`, only `seed:smalltalk:frame:<week>` and the feel's own sub-stream. */
+function raiseCoachCheckpointTalk(world: WorldState): boolean {
+  const cp = coachTalkCheckpointDue(world)
+  if (cp === null) return false
+  if (smallTalkChanceFor(bondBandOf(world.bond ?? ECONOMY.bond.start)) <= 0) return false
+  if (pendingLifeBeat(world) !== null || liveSoftBeat(world) !== null) return false
+  const stage = lifeStageOf(world)
+  const ids = COACH_TALK_CHECKPOINT_ROWS[cp] ?? []
+  const row = reachableSituations(world, voiceOf(world), stage).find((s) => ids.includes(s.id))
+  if (row === undefined) return false
+  const detail = smallTalkDetailFor(row.subject, row.id)
+  if (repeatsOneOfHerLastTwo(world, detail)) return false
+  raiseLifeBeat(world, 'small-talk', detail, undefined, drawSmallTalkFrame(world, presenceOf(stage)))
+  return true
+}
+
 /** ⭐⭐⭐ THE WEEKLY ROLL, and the ONE writer of a `'small-talk'` row.
  *
  *  ⚠ rollSmallTalk: AND THE SECOND RULING, HONOURED HERE
@@ -91,6 +169,8 @@ export function smallTalkEligible(world: WorldState): boolean {
  *  → docs/notes/life-beats/smallTalk.md#rollsmalltalk--the-weekly-roll--the-one-writer-of-a-small-talk-row
  */
 export function rollSmallTalk(world: WorldState): void {
+  // ⭐ ROUND 52 H3 – A DUE STINT CHECKPOINT TAKES THE WEEK BEFORE THE LOTTERY IS ASKED (see `raiseCoachCheckpointTalk`); on every other week it returns false having derived nothing.
+  if (raiseCoachCheckpointTalk(world)) return
   if (!smallTalkEligible(world)) return
   const chance = smallTalkChanceFor(bondBandOf(world.bond ?? ECONOMY.bond.start))
   // ⭐ ONE UNIFORM, ONE WEEK, ITS OWN KEY. `<` and not `<=`, `rollArrival`'s own note: `rngFromSeed`

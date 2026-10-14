@@ -152,3 +152,28 @@ export function coachFeelStintFacts(refuse: (world: WorldState) => boolean): Rec
     'coach-feel-cold-year': read(COACH_TALK_YEAR_FROM_WEEK, COACH_TALK_YEAR_UNTIL_WEEK, COLD_SIDE),
   }
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+// ⭐⭐⭐ ROUND 52 H3 (14.10) – THE STINT CHECKPOINTS: the weeks of a coaching stint at which her talk about the coach ARRIVES ON ITS OWN
+// ---------------------------------------------------------------------------------------------------------------------
+// The owner: «на тему смол-тока – нам это важно и критично как раз знать не один раз в 19 лет, а в первые год-два сотрудничества, чтобы понять это "тот" тренер или
+// лучше поменять». R67–R75 are ordinary small talk, so a stint met any one of them on a lottery (the H2 measurement: R70 and R71 did not drop once in 36 careers). The
+// mechanism that raises them at a fixed point of the stint lives in `world/lifeBeat/smallTalk.ts` (it needs the life log, which this leaf must not import); the WEEKS are here,
+// beside the windows they have to sit inside.
+
+/** ⭐⭐⭐ THE WEEKS TOGETHER AT WHICH SHE BRINGS UP THE COACH WITHOUT WAITING FOR THE LOTTERY: 12 (about three months – her first impression, once the six «too early»
+ *  weeks are well behind), 32 (about seven months, eight weeks inside the half-year window [24, 44)) and 56 (about thirteen months, eight weeks inside the year window [48, ∞)).
+ *
+ *  ⚠ EVERY ONE A MULTIPLE OF `COACH_FEEL.periodWeeks` (4): her doubt is redrawn on a period boundary (`coachFeelScore`'s `floor(weeksTogether / periodWeeks)`), so the week
+ *  a checkpoint opens is a week her feel was JUST re-read – she talks about the coach on the freshest reading she has. A checkpoint that fell mid-period would speak
+ *  from a feel up to three weeks old. `tests/r52-coach-talk-checkpoints.test.ts` pins the multiples and the two containments.
+ *
+ *  ⚠ NOT A TABLE OF CHANCES: a checkpoint is a week the talk is DUE, not a week it may drop. The owner's complaint was exactly «раз в 19 лет». */
+export const COACH_TALK_CHECKPOINTS: readonly number[] = [12, 32, 56]
+
+/** WHICH CHECKPOINT'S WINDOW THIS STINT AGE IS INSIDE, or `null`. A window is ONE FEEL PERIOD long: [cp, cp + `COACH_FEEL.periodWeeks`) – four tries for a week another beat
+ *  did not take, and ⚠ AFTER IT THE CHECKPOINT IS SKIPPED FOR GOOD: «a year in» said at week 60 is no longer on time, her feel has been re-read since, and the next
+ *  checkpoint (or the ordinary lottery) is the right place for the next word. Pure, no world, no draw. */
+export function coachTalkCheckpointAt(weeksTogether: number): number | null {
+  return COACH_TALK_CHECKPOINTS.find((cp) => weeksTogether >= cp && weeksTogether < cp + COACH_FEEL.periodWeeks) ?? null
+}
