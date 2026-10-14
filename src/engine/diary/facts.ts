@@ -283,6 +283,7 @@ export interface DiaryWorldView
     | 'birthdayGift'
     | 'birthdayWanted'
     | 'coachFeelRead'
+    | 'coachTalkShut'
     | 'birthdayRepeatAge'
   > {
   seed: string

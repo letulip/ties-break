@@ -702,3 +702,17 @@ Ten new rows, two for each of the five steps of her feel that have a voice (`too
 | RU09D-CFW-08 | `She quoted the coach at dinner. Twice.` | `За ужином она цитировала тренера. Дважды.` | `DRAFT` |
 | RU09D-CFW-09 | `She does not talk about practice any more.` | `О тренировках она больше не рассказывает.` | `DRAFT` |
 | RU09D-CFW-10 | `Practice came and went without a word at dinner.` | `Тренировка прошла, а за ужином о ней ни слова.` | `DRAFT` |
+
+⚙ 14.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. R52 J1, the owner's ruling on the close (14.10, №1, «давай по рекомендациям»): at a strained or cold bond she does not confide at a stint checkpoint either – and the silence shows. Four more week-note lines, two for each band, in the parent's voice. Both languages in one change.
+
+- **Printed on one week per checkpoint.** The first week of a stint checkpoint (twelve, thirty-two and fifty-six weeks with the coach) whose talk the bond shut, at the table (the two roof stages), on a week she did not travel and was not laid off. It leads the week, and the one-in-three coin does not silence it.
+- **At the cold bond she has no words in the line** – the parent sees the shut door and nothing of hers is quoted (who-she-is §5b: at the flat pool «losing her voice is the point»). Of the strained pair one row keeps the flat pool's «Нормально» and nothing after it.
+- **The coach is never gendered** (R15-7): «тренере» is a noun in all four rows, and no verb or adjective names the coach's sex. The parent's own gender is not named either: «мы» and impersonal forms only.
+- **The English has no contractions.** The short dash only, no «!», every row inside the 80-character scrap.
+
+| id | English | Russian | Status |
+| --- | --- | --- | --- |
+| RU09D-CFW-11 | `Asked about the coach, she said: "Fine." Nothing after it.` | `На вопрос о тренере она ответила: «Нормально». И больше ни слова.` | `DRAFT` |
+| RU09D-CFW-12 | `She did not mention the coach once. We did not know how to ask.` | `О тренере она не обмолвилась ни разу. Мы не знали, как спросить.` | `DRAFT` |
+| RU09D-CFW-13 | `The coach was not mentioned. She had closed up, and we left it alone.` | `О тренере никто не заговаривал. Она замкнулась, и мы не лезли.` | `DRAFT` |
+| RU09D-CFW-14 | `Dinner was quiet. Whatever she thinks of the coach, she kept it to herself.` | `Ужин прошёл тихо. Что она думает о тренере, осталось при ней.` | `DRAFT` |

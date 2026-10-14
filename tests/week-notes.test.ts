@@ -371,6 +371,10 @@ function* sweepStages(): Generator<DiaryFacts> {
     // flat of her own, `HOLDS.domestic`) and cross every calendar of this sweep through `plainTraining` (which is what
     // catches one reaching a holiday, a journey, a knock or a layoff).
     ...(['unsure', 'seems-good', 'seems-off', 'good', 'off'] as const).map((coachFeelRead) => ({ coachFeelRead })),
+    // ⭐ R52 J1 – THE CHECKPOINT THE BOND SHUT, ONE SHAPE PER BAND, for the same reason once more: `homeWeek` holds `coachTalkShut` absent on every fixture, so the four silence lines would be licensed in NONE of them and
+    // every guard in this file would pass over them without looking. The band rides WITH the fact (`bondBand` is the independent second spelling `HOLDS.coachTalkShut` checks it against), at all four stages
+    // (which catches a house line reaching a flat of her own) and across every calendar, knock and injury of this sweep (which catches one reaching a layoff).
+    ...(['strained', 'cold'] as const).map((coachTalkShut) => ({ coachTalkShut, bondBand: coachTalkShut })),
   ]
   for (const lifeStage of STAGES) {
     const schoolOver = lifeStage !== 'school'
@@ -558,6 +562,9 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   // the line: a second spelling, so a licence and its claim cannot be wrong together. VALUED, and `too-early` fails by
   // name – no line may claim it, and a table that only knew five values would wave a sixth through.
   coachFeelRead: (f, value) => f.coachFeelRead !== undefined && f.coachFeelRead === value && value !== 'too-early',
+  // ⭐ R52 J1 – the band that shut the checkpoint, re-derived off the FACT and off the diary's own `bondBand` rather than off `silentAtTable` in weekNotes.ts that produced the line: a second spelling, and a third
+  // (the bond band the fact was derived from) that must agree with it. VALUED, and only the two shut bands pass: a line may not claim `steady`, where she does confide.
+  coachTalkShut: (f, value) => f.coachTalkShut !== undefined && f.coachTalkShut === value && f.bondBand === value && (value === 'strained' || value === 'cold'),
   // ⭐ v72 – the three claims her own voice carries, each re-derived off the facts and NOT off the
   // predicate in weekNotes.ts that produced the line. Same method as every entry above: a second
   // spelling, so a licence and its claim cannot be wrong together.
@@ -2224,7 +2231,10 @@ describe('R52 F3 — her feel for the coach reaches the week note', () => {
 
   it('5 ENGLISH – every OTHER shipped line is byte-identical: the pool minus the ten still hashes to its value before this change', () => {
     const statics = WEEK_NOTES.map((n) => n.text).filter((t): t is string => typeof t === 'string')
-    const rest = statics.filter((t) => !ALL.includes(t))
+    // ⚠ RE-AIMED 14.10 (R52 J1): four lines joined the pool – the checkpoint the bond shut (claim `coachTalkShut`). The count and the hash below are of the REST of the pool and do not move: the four are taken out of `rest` by
+    // claim, the way the ten are taken out by text, and their words are pinned as data in tests/r52-checkpoint-silence.test.ts.
+    const SILENCE = WEEK_NOTES.filter((n) => n.claims.coachTalkShut !== undefined).map((n) => n.text)
+    const rest = statics.filter((t) => !ALL.includes(t) && !SILENCE.includes(t))
     expect(rest, 'the shipped static lines').toHaveLength(301)
     expect(WEEK_NOTES.length - statics.length, 'and the template lines').toBe(26)
     // ⚠ CAPTURED FROM THE PRISTINE TREE (HEAD 19d6c40f, weekNotes.ts clean) BEFORE the ten were added. A red here means an

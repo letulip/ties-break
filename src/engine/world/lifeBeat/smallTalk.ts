@@ -53,6 +53,17 @@ export function smallTalkChanceFor(band: BondBand): number {
   return ECONOMY.life.smallTalkPerWeek[band]
 }
 
+/** ⭐⭐⭐ ROUND 52 J1 (14.10) – DOES HER BOND LET HER CONFIDE? THE ONE SPELLING, asked in three places that used to write the clause for themselves (twice already, once as `> 0` and once as `<= 0`):
+ *  the lottery's gate (`smallTalkEligible`), the checkpoint talk (`raiseCoachCheckpointTalk`) and the diary fact that says a checkpoint was SHUT (`coachTalkShutRead`).
+ *
+ *  THE OWNER, 14.10 (round 52, his answers on the close №1), approving the recommendation – «давай по рекомендациям»: at a strained or cold bond she does not confide at a stint checkpoint either (the
+ *  checkpoint talk keeps the bond gate every small talk has), AND THE SILENCE SHOWS: a checkpoint the bond shuts leaves a parent-voice note on the week's scrap, so the player sees what the relationship cost.
+ *  ⚠ The gate and the note must therefore read ONE answer: two spellings would let a band open the talk and print the silence in the same week, or do neither. The table (`smallTalkPerWeek`) is zero at
+ *  `strained` and `cold` and positive at `steady` and `close`; the bond is read as the roll reads it (`?? ECONOMY.bond.start`, a save with no bond yet). Pure, no draw. */
+function bondLetsHerConfide(world: WorldState): boolean {
+  return smallTalkChanceFor(bondBandOf(world.bond ?? ECONOMY.bond.start)) > 0
+}
+
 /** ⭐⭐ HOW MANY SMALL-TALK ROWS THIS SEASON ALREADY HOLDS – **THE LOG IS THE COUNTER**, and
  *  there is no new state anywhere in this step (who-she-is §5b line item 6).
  *
@@ -82,7 +93,7 @@ export function smallTalkEligible(world: WorldState): boolean {
   if (pendingLifeBeat(world) !== null) return false
   if (liveSoftBeat(world) !== null) return false
   if (smallTalkThisSeason(world) >= ECONOMY.life.smallTalkCapPerSeason) return false
-  return smallTalkChanceFor(bondBandOf(world.bond ?? ECONOMY.bond.start)) > 0
+  return bondLetsHerConfide(world)
 }
 
 /** ⭐⭐⭐ ROUND 52 H3 (14.10) – THE THREE ROWS OF EACH STINT CHECKPOINT, warm / unsure / cold, by the checkpoint's week (`COACH_TALK_CHECKPOINTS`, world/coachFeel.ts):
@@ -115,6 +126,29 @@ export function coachTalkCheckpointDue(world: WorldState): number | null {
   return spoken ? null : cp
 }
 
+/** ⭐⭐⭐ ROUND 52 J1 (14.10) – THE CHECKPOINT THE BOND SHUT: the band that shut it, on the FIRST week of its window, or `null`. This is the diary fact `coachTalkShut`.
+ *
+ *  THE OWNER, 14.10 (round 52, his answers on the close №1): «давай по рекомендациям» – at `strained` / `cold` she does not confide at a stint checkpoint either (`raiseCoachCheckpointTalk` keeps the bond gate),
+ *  AND THE SILENCE SHOWS: the week note says the talk that would have told him whether this is the right coach did not happen, so he sees what the relationship cost.
+ *
+ *  PRESENT iff all four: a coach is employed; it is the checkpoint's FIRST week (weeks together EQUAL the checkpoint – the week her feel was re-read, and the one week of the window the note speaks, so it appears once per
+ *  checkpoint by construction: at most three times in a stint's first 56 weeks); the checkpoint is still due and unspoken (`coachTalkCheckpointDue`); and the bond does not let her confide (`bondLetsHerConfide`).
+ *  ⚠ THE VALUE IS THE BAND, `coachFeelRead`'s shape: the copy is written per band. The predicate decides «shut»; the table shuts exactly `strained` and `cold`, so any band it shuts that is not `cold` is `strained`.
+ *
+ *  ⚠ WHAT IT DOES NOT ASK: whether another beat held the week, whether she is in college, whether the week is a plain one. The first is a different reason for the same silence (the bond is the only one the note names);
+ *  the other two are the NOTE's licences (`underOneRoof`, `notTravellingWeek`, weekNotes.ts), where the copy can say which kind of week it is.
+ *  ⚠ THE SNAPSHOT READS THE BOND AFTER THIS TICK, while the roll read last week's settled value (`phaseHerWeek`, `rollSmallTalk` runs before `accrueSpirit`): at a band edge the two can differ by a week. The next window week is read
+ *  by the roll with the new value, so a talk the roll shut and the snapshot calls open is still raised in the window; the spec's addendum counts both edges.
+ *  Derived, nothing persisted, ZERO draws (no MAIN, no new stream). The cheap clauses come first, so the log is read only on a checkpoint's first week at a shut bond. */
+export function coachTalkShutRead(world: WorldState): 'strained' | 'cold' | null {
+  if (world.coachId === null) return null
+  const together = coachWeeksTogether(world)
+  if (coachTalkCheckpointAt(together) !== together) return null
+  if (bondLetsHerConfide(world)) return null
+  if (coachTalkCheckpointDue(world) === null) return null
+  return bondBandOf(world.bond ?? ECONOMY.bond.start) === 'cold' ? 'cold' : 'strained'
+}
+
 /** ⭐⭐ ROUND 52 H3 – THE RECENCY MEMORY, AS A VETO: DID SHE JUST SAY THIS ONE? The owner's round-43 law (#8(a)): «они точно не должны так часто повторяться, иначе в чём смысл» – the ordinary pick keeps it by
  *  NARROWING the pool, but a checkpoint's pick is a pool of one, so the memory can only refuse. Without it the first draft repeated one of her last two conversations in 9 of 4728 (the lottery had raised the
  *  same coach situation in the weeks BEFORE the window opened, where it does not count as said): `tests/round51-school-story-pool.test.ts` «the memory still holds» caught it.
@@ -137,7 +171,7 @@ function repeatsOneOfHerLastTwo(world: WorldState, detail: string): boolean {
  *  ⚠ IT IGNORES THE WEEKLY CHANCE AND THE SEASON CAP, AND THAT IS THE POINT, not an oversight: those two exist to keep ORDINARY chatter rare and spread out, and a talk that is DUE
  *  at a fixed week of the stint is not chatter – gating it by an 8% die is the lottery the owner asked to be rid of, and a season already full of small things must not eat
  *  the one conversation that tells him whether to keep the coach. (The row still lands in the log, so it counts toward the season's tally for the chatter that follows.)
- *  ⚠ WHAT IT DOES NOT IGNORE: a coach in the chair (`coachTalkCheckpointDue`), a bond band that lets her confide at all – the SAME `smallTalkChanceFor > 0` clause the lottery
+ *  ⚠ WHAT IT DOES NOT IGNORE: a coach in the chair (`coachTalkCheckpointDue`), a bond band that lets her confide at all – the SAME clause the lottery (`bondLetsHerConfide`, one spelling since R52 J1)
  *  stops at, so at `strained` / `cold` she does not confide here either (the tile and the week notes still speak; the clause is one line if he rules otherwise) – and
  *  the room another beat leaves (`pendingLifeBeat` / `liveSoftBeat`, the lottery's own two guards: one at a time). Blocked, it tries again NEXT week until the window closes.
  *  ⚠ THE PICK IS DETERMINED: the checkpoint's three situations are found through `reachableSituations`, so her real feel, the stint's window, college and her voice have already
@@ -148,7 +182,7 @@ function repeatsOneOfHerLastTwo(world: WorldState, detail: string): boolean {
 function raiseCoachCheckpointTalk(world: WorldState): boolean {
   const cp = coachTalkCheckpointDue(world)
   if (cp === null) return false
-  if (smallTalkChanceFor(bondBandOf(world.bond ?? ECONOMY.bond.start)) <= 0) return false
+  if (!bondLetsHerConfide(world)) return false
   if (pendingLifeBeat(world) !== null || liveSoftBeat(world) !== null) return false
   const stage = lifeStageOf(world)
   const ids = COACH_TALK_CHECKPOINT_ROWS[cp] ?? []

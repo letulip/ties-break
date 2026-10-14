@@ -290,6 +290,8 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     // reading of the coach ledger or of the weeks together). A conditional spread, so the key is ABSENT on every other
     // week and an uncoached career's facts are byte-identical to what they were.
     ...(view.coachFeelRead === undefined ? {} : { coachFeelRead: view.coachFeelRead }),
+    // ⭐ R52 J1 – the band that shut a due stint checkpoint, on its first week: CARRIED like the line above, never re-derived here, and the key is ABSENT on every other week.
+    ...(view.coachTalkShut === undefined ? {} : { coachTalkShut: view.coachTalkShut }),
   }
 }
 

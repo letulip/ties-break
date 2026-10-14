@@ -101,6 +101,7 @@ import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
 import { buildLifeBeatPrompt, buildSoftBeatInvite, forkWantOf, latchedEpisode, spouseViewOccasionThisWeek, FORK_WANT_ANSWER } from './lifeBeat'
 import { coachFeel, coachFeelRead } from './coachFeel'
+import { coachTalkShutRead } from './lifeBeat/smallTalk'
 // ⚠ A BEAT KIND THAT LIVES IN ITS OWN MODULE IS ASKED DIRECTLY (A-06 / T6.10, 28.09). `ownKeyThisWeek`
 // imports the hub, so the hub cannot re-export it back without the cycle A-06 is about – see
 // `world/lifeBeat/ownKey.ts`'s header. The read below did not move.
@@ -1670,6 +1671,8 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
   // ⭐ R52 F3 – ...and the SAME answer on the one week of a period it was re-read, for the diary's week note. Asked from
   // `feel` so the tile and the note cannot disagree; `null` on every other week (`coachFeelRead`'s own rules).
   const feelRead = coachFeelRead(world, feel)
+  // ⭐ R52 J1 (14.10) – ...and the band that SHUT a due stint checkpoint, on the first week of its window, for the diary's silence note (the owner: «давай по рекомендациям» – the silence shows). Derived, zero draws.
+  const talkShut = coachTalkShutRead(world)
   // ⭐ RU-23 – THE COACH'S THREE READS ON HER ROOM, each ONCE: the ref is the decision and the string beside it is that ref's English, so the two wires cannot disagree (class (b): derived here, persisted nowhere).
   const roomNoteC = coachRoomNoteRef(world)
   const declineNoteC = coachDeclineNoteRef(world)
@@ -1787,6 +1790,8 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // ⭐ R52 F3 – HER FEEL FOR THE COACH ON THE WEEK IT WAS RE-READ, for the week note: carried, and ABSENT on every
     // other week (`DiaryFacts.coachFeelRead`), so an uncoached career's diary facts are exactly what they were.
     ...(feelRead === null ? {} : { coachFeelRead: feelRead }),
+    // ⭐ R52 J1 – THE CHECKPOINT THE BOND SHUT: carried, and ABSENT on every other week (`DiaryFacts.coachTalkShut`), so a career with no shut checkpoint has the diary facts it always had.
+    ...(talkShut === null ? {} : { coachTalkShut: talkShut }),
     // W2: how hard the PLAYER worked her this week – the one fact about a training week that is his
     // decision rather than the world's, and the subject of the ordinary week's note.
     // ⭐ ROUND-21 #2: the ONE predicate, asked here and carried – see `coachTravelsWithHer`.

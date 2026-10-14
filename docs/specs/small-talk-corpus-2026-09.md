@@ -3353,6 +3353,58 @@ None of them is re-stamped here: the architect harvests the digests once at the 
 
 **The two levers, if the owner rules otherwise.** (1) At a strained or cold bond she does not confide here; to let the talk through anyway, delete the one `smallTalkChanceFor(...) <= 0` clause in `raiseCoachCheckpointTalk`. (2) The recency veto is `repeatsOneOfHerLastTwo`; without it the three windows above are talked and she may repeat herself in about one career in thirteen (9 repeats in the 120 careers of the story-pool walk).
 
+
+### Round 52 J1 (14.10) – the checkpoint the bond shut, and the silence that shows
+
+**The ruling.** The owner approved the recommendation («давай по рекомендациям», round 52, his answers on the close, №1): at a strained or cold bond she does not confide at a stint checkpoint either – the checkpoint talk keeps the bond gate every small talk has – and **the silence shows**. A checkpoint the bond shuts leaves a note in the parent's voice on the week's diary scrap, so the player can see what the relationship cost. This is the first lever of the paragraph above, answered: the clause stays, and now it is visible.
+
+**The rule, in five parts.**
+
+1. *One spelling.* `bondLetsHerConfide(world)` in `world/lifeBeat/smallTalk.ts` answers «does the bond let her confide». The lottery's gate (`smallTalkEligible`), the checkpoint talk (`raiseCoachCheckpointTalk`) and the new fact all call it; the first two behave exactly as before. A test moves the table and watches all three move together.
+2. *A fact, derived.* `DiaryFacts.coachTalkShut: 'strained' | 'cold'`, valued by the band like `coachFeelRead`. It is present on a week if and only if a coach is employed, a stint checkpoint is due and not yet spoken, the bond does not let her confide, and it is the first week of that checkpoint's window (weeks together equal the checkpoint: 12, 32 or 56). So it appears once per checkpoint – at most three times in a stint's first 56 weeks – and the key is absent on every other week; an uncoached career's facts, and a coached career's at a steady or close bond, are byte-identical to what they were. Nothing is persisted and nothing is drawn (no MAIN, no new stream).
+3. *Four lines*, in the parent's voice, drafts for his pass (`RU09D-CFW-11` to `-14` in Russian). The licence is the fact's band, she is at the table (`underOneRoof`), she did not travel that week (`notTravellingWeek`) and she is not laid off. It is not necessarily a plain training week: a holiday, an exam week or the off-season still has a table.
+
+| band | line |
+| --- | --- |
+| strained | `Asked about the coach, she said: "Fine." Nothing after it.` |
+| strained | `She did not mention the coach once. We did not know how to ask.` |
+| cold | `The coach was not mentioned. She had closed up, and we left it alone.` |
+| cold | `Dinner was quiet. Whatever she thinks of the coach, she kept it to herself.` |
+
+   The doctrine of who-she-is §5b holds. At strained and cold the voices collapse into one flat pool and tier 0 (her quoted words inside the parent's story) is absent at cold, so the two cold lines carry **no words of hers**, and the strained pair has one flat-pool answer («Fine.») and one line that quotes nobody. The coach is a noun and never a pronoun (R15-7), there are no contractions, and every line fits the 80-character scrap.
+4. *The lead.* In `weekNoteLine`, on a week a silence line is licensed the silence lines are the whole pool – they lead the ten coach-feel lines of F3 and everything else – and the one-in-three coin does **not** silence the week. A checkpoint is due, not chatter (H3's own reason for the talk). The coin is still drawn, from the same stream in the same order, and only its `return null` is skipped on that week, so no other week's output moves.
+5. *The one narrowing the brief did not name.* The licence also requires that she is not laid off. A standing rule of this pool, pinned in `tests/week-notes.test.ts`, is that every line licensed on an injured week claims the injury («a layoff takes the note»); a checkpoint that falls in a layoff week therefore shows the injury note and not the silence. The measurement below counts those.
+
+**Prediction, written before the measurement (J1, 14.10).** *Posed:* a coached career whose bond is held in the cold band (and, in a second arm, the strained band) for the first 60 weeks of the stint meets three shut checkpoints, at 12, 32 and 56 weeks together. The fact is present on all three (the coach and the bond are posed, nothing else can spoil it). The note prints when that first week is a roof-stage week she did not travel and was not laid off. A tournament or a journey is a large share of a junior's calendar, so I expect **50–65% of the shut checkpoints to print (1.5–1.9 of 3)**, and the shortfall to be travel (**30–45%**), a layoff (**2–8%**) and the roof stages never (**0%**, the first 60 weeks are school age). I therefore expect travel to cost **more than a quarter**, which would put the widening to the first non-travelling week in front of the architect. *Played:* shut checkpoints are rare in a played career (H3 measured 2.6% of windows with a strained or cold bond all through), so I expect about **0.02 silence notes per coached year** (range 0–0.05), and **exactly none at a steady or close bond**, where the fact cannot be present by construction.
+
+**Measured (J1, 14.10)** with `tests/r52-checkpoint-silence.test.ts` at `R52_J1_REPORT=1`. *Posed:* presets 2 and 5, twelve careers each, the bench's `POLICIES[0]`, the bond held at cold (arm one) and at strained (arm two) for the 60 weeks after the stint began; the stint begins at a spread of weeks of the calendar (0, 5, 10, 15, ... – a coach let go and hired back, H3's fixture). *Played:* presets 1, 2, 4, 5, 6, 7 and 8, six careers each, 156 weeks, the parent answering each card the week it is raised (H3's `answers` arm), the bond left to move.
+
+| posed, 144 shut checkpoints (24 careers x 3 checkpoints x 2 bands) | predicted | measured |
+| --- | --- | --- |
+| the fact present on the checkpoint's first week and on no other of the 60 | all 144 | **144 of 144** |
+| the note printed | 50–65% | **62 (43.1%)** – a miss, low by seven points |
+| lost to a travelling week (a tournament, a journey, the week home) | 30–45% | **78 (54.2%)** – a miss, high by nine |
+| lost to a layoff | 2–8% | 4 (2.8%) |
+| lost to the roof stages | 0% | 0 |
+| lost for no named reason | 0 | 0 |
+
+**Travel costs the note more than half of the shut checkpoints, well over the quarter that was the line for telling the architect.** The two bands read the same twenty-four careers (the bond does not feed the calendar), so they give identical numbers and the sample is 72 distinct checkpoints rather than 144. The first measurement began every stint at week 0 (`R52_J1_ALIGNED=1`), which puts the checkpoints on the same three calendar weeks of every career, and the bench calendar is the same in all of them: 30 printed (20.8%), 104 lost to travel (72.2%), 10 to a layoff (6.9%). The spread start is the better estimate of a hire on any week; both are far over a quarter. The bench policy enters tournaments eagerly, and a parent who plans lighter has more free weeks.
+
+**Not built, for the architect: the first free week of the window.** If the note could print on the first week of the four-week window that is at the table, at home and not a layoff, instead of only on the first week, the same 144 checkpoints would carry it as follows. Week 0 (as built) 62 (43%); by week 1, 100 (69%); by week 2, 112 (78%); by week 3, 130 (90%); never in the window, 14 (10%). Doing it would mean the fact lasting through the window until the checkpoint is spoken, which is a change to `coachTalkShutRead`'s first-week clause and to the "once per checkpoint" argument above, and nothing of it is built.
+
+| played, 126 coached years (6552 coached weeks) | predicted | measured |
+| --- | --- | --- |
+| weeks at a steady or close bond carrying the fact, or a silence line | none | **none, in 5709 weeks** |
+| first weeks of a checkpoint the bond shut | – | 3 (0.024 a coached year) |
+| silence notes printed | about 0.02 a coached year (0–0.05) | **0** – two on a travelling week, one in a layoff; at the 43% print share the chance of none in three is 0.19, so this is not a miss |
+| the roll read a steady bond and the snapshot a strained one, or the reverse, on a checkpoint's first week (the one-week lag, `coachTalkShutRead`) | – | 0 and 0 |
+
+A shut checkpoint is rare in a played career, as H3 found, and the note is rarer: it is a signal for the careers that have earned it, not a regular line. On that first week F3's coach-feel lines are displaced by design (the checkpoints are multiples of the feel period, so her feel is re-read the same week).
+
+**What it costs the pins.** Three pool-size pins in `tests/i18n-l3-4-diary-corpora.test.ts` are re-aimed with a dated note (explicit rows 145 to 149, static cells 311 to 315, week notes 337 to 341), and F3's «every other line is byte-identical» pin in `tests/week-notes.test.ts` takes the four out of the rest by claim, its count (301) and hash unchanged. **Every digest family H3's table named is green with this change** (the ten `coach-travel-edge*` files, `succession-s1-start-year`, `i18n-l3-5-life-beats` with its PICK-STABILITY, `i18n-l3-7-twin`, `r51-coach-real-hunch`, `round51-school-story-pool`: 16 files, 199 tests), **and still green with the fact made absurd** (the bond clause deleted, so every coached career carries it at 12, 32 and 56). So none of them reads the week note or the diary facts, and this change gives the architect nothing to harvest there. The frozen MAIN capture (`tests/condition.test.ts`, 41550 draws, `e6b0c709`) did not move: the fact and the lines draw nothing from MAIN.
+
+**Proved by mutation, each restored byte for byte:** dropping the bond clause from the fact, dropping the lead, dropping the coin exemption, dropping the layoff narrowing (the standing rule's own pin goes red) and re-spelling the clause in the checkpoint talk (the one-spelling arm goes red) each turn at least one arm red.
+
 ---
 
 ## P3.7 The corpus at 43, and the whole document at 51 – counted by script, not claimed
