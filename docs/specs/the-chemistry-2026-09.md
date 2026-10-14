@@ -1357,3 +1357,62 @@ the pairs that seem good at week 13, about two in three show +3 or more at week 
 clearly cold; of those that seem off, five in six end it at -3 or less. A confident step is rare in the first quarter (3.7% of pairs at
 week 13) and common by the end of the year (62% at week 52), because it needs the gauge to agree. Every number here is on the stated
 even-record stream, as in B12 and B13, not on played careers.
+
+### 17.4 F1b (14.10) – a gauge that speaks clearly leads her feel
+
+**The case.** When the family hires a coach back, the stint starts again from zero, but the pair keeps every week they trained together before, so the gauge on
+the card can already read +10. In 17.1 her feel was gated by the clock: under six weeks she said "too early", and the level carried only a few percent of her
+score until a year was out. With the gauge at +10 she could say "too early to tell", or "seems fine, but…" when the trend was negative. The owner's answer
+behind 17.1 is that the gauge on the coach's card is where the parent sees her confirmed or refuted – so she must not stand against a gauge that is already
+speaking.
+
+**Why not add the old stints up.** The record of coach changes keeps the week but not which coach, so past stints cannot be summed. The rule is therefore stated on
+the level, not on time.
+
+**The rule.** Two lines, both on the same ±3 the small-talk hunch uses (the constants are reused, not retyped):
+
+1. "Too early" needs a short stint (under six weeks) **and** a quiet gauge (under 3 in size). If the gauge already speaks clearly, she knows this coach.
+2. When the gauge is at ±3 or more, the level carries at least 70% of her score (the cap) from the first week, instead of building up to it over a year.
+
+**What it guarantees.** With the gauge at +3 or more the level term is at least 0.5, so the lowest score she can have is 0.3 × (−1) + 0.7 × 0.5 − 0.12 = −0.07,
+still above the −0.25 line. She is never "seems off", "off" or "too early" against a warm gauge; the cold side mirrors it (the highest score is +0.07). So with the
+gauge at ±3 or more her step is never on the opposite side of it, confident or hedged. That is a property test over every affinity, level, stint and the doubt's two
+extreme values. The re-hire case is pinned too, twice: on the pure function, and through the real hire of a coach whose row already holds a pair – a gauge at +10
+against a strongly negative trend, in the first five weeks of the new stint, reads "good" (and −10 reads "off").
+
+**What does not change.** A quiet gauge works as before: a new coach with no history, or a pair under ±3, is "too early" for six weeks and then goes by the trend, with
+the level's weight building up over a year. From week 52 on nothing can change, because the ramp has already reached its cap. No draw, no save field, no schema move.
+
+#### Prediction, written before the run
+
+Bench B14 again (`npm run bench:chemistry -- --feel`): the same 1200 pairs, the same three coached years, the same targets as 17.2. The new rule acts only where the
+gauge is at ±3 or more **and** the stint weight is still under the cap or the stint under six weeks. Two things follow before any run.
+
+- **From week 52 nothing moves.** The ramp reaches 0.7 at week 52, so the new rule gives the same weight there and the gate no longer matters: the week-52 shares and
+  the whole of years two and three should come back identical to 17.3. That is stronger than the first expectation (that weeks 26 and 52 both shift toward good and
+  off) – the arithmetic leaves week 52 alone. If week 52 moves, the bench arm is wrong, not the rule.
+- **Before week 52 only pairs past the line change.** At week 13 almost nobody does: a fresh pair has to reach 3 within a quarter, which only the strongest affinities
+  manage, and those are already confident. At week 26 it is the pairs with a weak affinity whose level got past the line on weather and events: their trend kept her
+  unsure while the gauge was already speaking, and now the gauge wins.
+
+| what is measured | 17.3 measured | predicted now |
+| --- | --- | --- |
+| (a) week 5 | too early for 100.0% | 100.0% (drift and weather together move a fresh pair by about half a point a week, so none reaches 3 in five) |
+| (a) week 6 | 47.7%, 25.8%, 26.5%, 0.0%, 0.0% | the same, within 0.2 points |
+| (a) week 13 | 47.8%, 22.7%, 25.9%, 1.2%, 2.5% | unsure 47.0–47.8%; good 1.2–2.0%; off 2.5–3.5%; each hedged step down by at most 0.5 point |
+| (a) week 26 | 43.1%, 14.4%, 13.1%, 10.6%, 18.8% | unsure 39–42%; seems-good 13.4–14.4%; seems-off 12.0–13.1%; good 11.5–13%; off 20–22.5% |
+| (a) week 52 | 23.3%, 6.8%, 8.0%, 21.1%, 40.8% | **identical** |
+| (b) from week 13 | rows as in 17.3 | within 3 points of 17.3 |
+| (b) from week 26 | good: +3 or more 95.3%; off: −3 or less 100.0% | good 90–96%, off 95–100% (the pairs that moved in are the ones whose level may fall back under the line by week 52); the other rows within 3 points |
+| (c) doubt errors from week 13 | 5.8% combined (11.4% warm, 1.0% cold) | 5.0–5.8%, not higher |
+| (c) doubt errors from week 26 | 6.4% | 5.2–6.4%, not higher |
+| (d) flicker, first coached year | median 1.1, p90 5.7, mean 2.5; 12.3% never change | median 1.1–1.6; p90 5.7–6.8; mean 2.6–3.1; never change 10–12.3% |
+| (d) flicker, years two and three | median 0.0, p90 3.5, mean 1.0; 57.1% never change | **identical** |
+| (e) confident and wrong | 0 of 115,162 | 0 of about 116,000–117,500 (more pairs are confident for part of the year) |
+
+The one risk is flicker. A pair whose level hovers around ±3 now changes weight as well as label each time it crosses, which can add a change or two for those pairs. I
+expect the first-year median to move by at most half a change and the p90 by at most about one change; the doubt errors cannot go up, because the only hedged steps
+the rule removes are the ones on the wrong side of a speaking gauge.
+
+**Targets** (unchanged): unsure at week 13 between 30% and 60%; hedged-wrong at most 15%; flicker median at most 4 a year; confident-wrong exactly 0. If one misses, the
+work stops and is reported – no knob is moved.
