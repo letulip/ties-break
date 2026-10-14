@@ -26,6 +26,12 @@
 //   warning above). Zero row, text or next-draw digests moved on either platform; B9's bank-model
 //   display moved nothing here (no bench career holds a part-sold asset). Captures: L37_CAPTURE on
 //   this Mac; podman --platform linux/amd64 node:22, npm ci in the container, LINUX_CAP_EXIT=0.
+// ⚠ REFRESHED AGAIN 14.10 (r51 continuation, both platforms on the final tree): the diff is EXACTLY
+//   14 leaves on BOTH – the `world` + `worldFields.lifeLog` pair of all 7 careers: the ten new
+//   school-years small-talk rows (R57–R66, pool 55→65) moved the walked picks on the purpose-scoped
+//   sub-stream. No snapshot leaf moved: no bench career holds a pending `coach-real` prompt or an
+//   answered `view` row in its current stint, so builder D's hunch and opened reading are
+//   invisible here. Zero row, text or next-draw digests on either platform.
 //
 // ⚠⚠ TWO PLATFORM FAMILIES, BOTH TRUE (10.10, the day-long hunt). The PR runner (ubuntu/x64,
 // node 22) produces snapshot digests no darwin/arm64 machine can – measured to the last cell: a
