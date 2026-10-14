@@ -51,7 +51,10 @@ const BIRTHS: Record<string, [number, number] | null> = { default: null, dec31: 
  *  UNVERIFIED guess of mine and is withdrawn: the likelier reading is that gamma's talks fell in
  *  subjects B12 never grew (he appended STORY rows only, so a non-story pick index did not move),
  *  while E1-E3 grew every other school subject. Same purpose-scoped sub-stream class either way;
- *  every `rngN` (the MAIN position) stayed pinned green. */
+ *  every `rngN` (the MAIN position) stayed pinned green.
+ *  ⚠ RE-STAMPED 14.10 (round 52 close, architect): the three gamma `hN` moved with F4's gated
+ *  coach-feel rows (R67-R69) – gamma's walked world reaches a true feel fact and a small-talk draw;
+ *  alpha and beta did not. Same sub-stream class; every `rngN` green. */
 const BASELINE: Record<string, { rng0: string; h0: string; rngN: string; hN: string }> = {
   's1-alpha|default': { rng0: '-1306492581:0', h0: '1662620015bc23c9', rngN: '-1625113431:87894', hN: 'e4a981f68460099e' },
   's1-alpha|dec31': { rng0: '-1306492581:0', h0: 'e3c0dbdc02dfe2c4', rngN: '-1625113431:87894', hN: 'f9cc31e574c62bca' },
@@ -59,9 +62,9 @@ const BASELINE: Record<string, { rng0: string; h0: string; rngN: string; hN: str
   's1-beta|default': { rng0: '2140152401:0', h0: '2376db693585cb49', rngN: '-73975459:87900', hN: '3324a69d52d1e0d7' },
   's1-beta|dec31': { rng0: '2140152401:0', h0: 'a2dd35eb5fdb72f9', rngN: '-73975459:87900', hN: '8ec8427b8622bada' },
   's1-beta|jan6': { rng0: '2140152401:0', h0: '954e24dc6bc505f9', rngN: '-73975459:87900', hN: '2a8d42437a3f398c' },
-  's1-gamma|default': { rng0: '-2119545102:0', h0: '5f847e633dd4e992', rngN: '1792860147:87901', hN: 'edd9ef9a657046bb' },
-  's1-gamma|dec31': { rng0: '-2119545102:0', h0: 'ab3e8951a687d2e4', rngN: '1792860147:87901', hN: 'f042c9a05f6c4bd9' },
-  's1-gamma|jan6': { rng0: '-2119545102:0', h0: 'ae71ca27f9886772', rngN: '1792860147:87901', hN: '5274ef47a7038186' },
+  's1-gamma|default': { rng0: '-2119545102:0', h0: '5f847e633dd4e992', rngN: '1792860147:87901', hN: '3566ba830a871059' },
+  's1-gamma|dec31': { rng0: '-2119545102:0', h0: 'ab3e8951a687d2e4', rngN: '1792860147:87901', hN: '5b12c8c31c8fef13' },
+  's1-gamma|jan6': { rng0: '-2119545102:0', h0: 'ae71ca27f9886772', rngN: '1792860147:87901', hN: '4358912fcd907943' },
 }
 
 function digest(world: unknown): string {

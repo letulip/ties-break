@@ -566,7 +566,11 @@ describe('§7 every sentence a sink\'s seat can hold is a key of the frozen v92 
 // content – builder D's hunch line (D's own control: switching it off at the source alone turned
 // '5/0' green, 913777ed) and E1–E3's ten school rows (pool 55→65). Not a MAIN draw: every builder's
 // arm compared rngMain. Was '38f6336d' / 'e5d188d9'.
-const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': '41e7bb05', '0/1': 'ac91e65e' }
+// ⚠ RE-STAMPED 14.10 (round 52 close, architect): '5/0' moved with F4's gated coach-feel rows (the
+// coached career reaches a true feel fact on a small-talk week; F4's control arm at its parent was
+// green). Checking '0/1' AFTER stamping '5/0' – the first-red-stops blind spot is now part of the
+// harvest procedure. Was '41e7bb05'.
+const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': '1692c8b6', '0/1': 'ac91e65e' }
 /** and the bench's MAIN stream, three draws on from the last week of each career, from the same pre-wave runs – the wave draws nothing, and the next draws prove the position is the pre-wave one */
 const PRE_WAVE_NEXT3: Record<string, number[]> = {
   '5/0': [0.18923983839340508, 0.10872006509453058, 0.37577401218004525],
