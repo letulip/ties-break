@@ -81,7 +81,8 @@ import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutive
 // and must ask the engine's own predicate rather than spell `e.friendly` a third and fourth time.
 export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution, practiceMatchId, isPracticeMatchEvent }
 export type { PracticeCaution } from './world/planner'
-import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRetainerBandOf, coachRoomNote, eliteGateStandingOf, supportPayrollWeeklyCents, coachMarketLabourCents, coachProgressScore, coachRateCents, coachRaiseDue, resolveCoachRaise, settleCoachDeal, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
+import { openingCoachId, practiceCoachRateFor, hireCoach, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRetainerBandOf, coachRoomNote, eliteGateStandingOf, supportPayrollWeeklyCents, coachMarketLabourCents, coachProgressScore, coachRateCents, coachRaiseDue, resolveCoachRaise, settleCoachDeal, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
+import { coachSinceWeek } from './world/coachStint' // ⭐ ROUND 52 F1: the stint's age lives in a leaf the life-beat hub can reach; the NAME on this surface is unchanged
 // ⭐⭐ ROUND 42 #42 – `supportPayrollWeeklyCents` joins the barrel: it is read by `coachMarket`'s own
 // affordability arithmetic and by `householdWeekly`, and the bench that priced the cap
 // (`tools/r42-team-budget-cap.ts`) asks it the same question the screens do rather than summing two

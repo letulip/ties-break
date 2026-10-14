@@ -563,6 +563,13 @@ export interface Snapshot {
    *  that goes unread. */
   /** WHO SHE TRAINS WITH (v23): the roster coach's id, or null for the parent on the court. */
   coachId: string | null
+  /** ⭐⭐ ROUND 52 (14.10) – HOW SHE FEELS ABOUT THE COACH SHE HAS: one of six steps, never a number (`CoachFeel`). The owner: «ребенок может намекать, что ей
+   *  ок, норм или вообще не ок с этим тренером, чтобы у игрока была какая-то обратная связь от ребенка для принятия решения в случае если химия не растет или
+   *  незаметно». DERIVED (class b) at snapshot time by `engine/world/coachFeel.ts` from the pair's affinity, its level and the stint's age – no save key, no
+   *  schema move, zero MAIN draws. The step is the UI's to word; this wave ships ids and no copy.
+   *  ⚠ THE KEY IS ABSENT – NOT `null`, NOT `undefined` – WHEN NOBODY IS EMPLOYED (the parent on the court has no coach to feel anything about; `openingFundsCents`
+   *  above has the measurement: a `null` moves every L3-7 twin digest and an always-present key with no value breaks D-07's byte census). */
+  coachFeel?: CoachFeel
   /** THE COACH MARKET (screen T): every coach, priced and read for her. Derived, never stored. */
   coachMarket: CoachMarketRow[]
   /** What the coach costs, weekly and over the coming year.
@@ -1115,3 +1122,14 @@ export function psychologistFocusNudge(
   if (!snap) return false
   return snap.diary.facts.offSeasonWeek && snap.psychologistFocusOpen.length > 0
 }
+
+/** ⭐⭐ ROUND 52 (14.10) – HOW SHE FEELS ABOUT HER COACH, as one of six steps (`Snapshot.coachFeel`; the arithmetic is `coachFeelOf` in `engine/chemistry.ts`).
+ *
+ *  `too-early` – they have worked together under six weeks; she has nothing to say yet.
+ *  `unsure` – «я пока не очень поняла»: the pair leans neither way far enough for her to say.
+ *  `seems-good` / `seems-off` – «вроде нормально, но»: she leans one way and is NOT certain. These two are where her doubt lives, and the coach card's gauge is
+ *  what confirms or refutes them.
+ *  `good` / `off` – she is sure, and ONLY when the gauge would show a figure of the same sign: a confident step against the truth is impossible by construction.
+ *
+ *  The ids are machine-readable and carry no wording; the words are the screens' to add. */
+export type CoachFeel = 'too-early' | 'unsure' | 'seems-good' | 'seems-off' | 'good' | 'off'

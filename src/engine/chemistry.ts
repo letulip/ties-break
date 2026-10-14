@@ -32,15 +32,16 @@
 //   4. THE PHASE       the relationship's own weather – a slow, bounded, mean-reverting walk that
 //                      makes flat stretches and long good runs instead of white noise.
 //
-// ⚠ RNG DISCIPLINE (CLAUDE.md invariant 2, spec §6 fence 4). THREE purpose-scoped sub-streams and
+// ⚠ RNG DISCIPLINE (CLAUDE.md invariant 2, spec §6 fence 4). FOUR purpose-scoped sub-streams and
 // ZERO draws on MAIN:
 //
 //   `${seed}:chemistry:${coachId}`          the affinity, once, re-derived at every call site
 //   `${seed}:chemistry:${coachId}:${week}`  the week's weather shock, re-derived at the call site
 //   `${seed}:chemistry:readable:${coachId}` the pair's own readable threshold (§8d, 18.09), likewise
+//   `${seed}:coachfeel:${coachId}:${period}` her feel's doubt, one number a four-week period (§5c, 14.10)
 //
-// Both are `rngFromSeed` generators built from a string and thrown away; neither persists a position
-// and neither can reach the weekly MAIN stream, so the frozen capture (41550 / e6b0c709) cannot see
+// Each is an `rngFromSeed` generator built from a string and thrown away; none persists a position
+// and none can reach the weekly MAIN stream, so the frozen capture (41550 / e6b0c709) cannot see
 // this module at all. ⚠ AND INPUT-INDEPENDENCE HOLDS BY CONSTRUCTION, which is the fairness property
 // rather than a convenience: the week's shock is keyed on the coach's IDENTITY and the week NUMBER,
 // so it is the same number whether the player hired him, fired him or never opened the market. What
@@ -56,6 +57,9 @@ import { ECONOMY } from './economy'
 import { rngFromSeed } from './rng'
 import type { SpiritBand } from './spirit'
 import type { Temperament } from './spirit'
+// A TYPE ONLY, and the wire's own: the six steps ride `Snapshot.coachFeel`, so the vocabulary is declared where
+// the UI reads it (§5c below) and this leaf carries nothing but the arithmetic that picks one.
+import type { CoachFeel } from '../shared/protocol'
 
 // =================================================================================================
 // 1. THE MANNER – a new fact about the coach, orthogonal to his style
@@ -435,6 +439,152 @@ export function chemistryHunch(chem: number | undefined): ChemistryHunch {
   if (chem >= CHEMISTRY_HUNCH_WARM_AT) return 'warm'
   if (chem <= CHEMISTRY_HUNCH_COLD_AT) return 'cold'
   return 'even'
+}
+
+// =================================================================================================
+// 5c. HER FEEL FOR THE COACH – one step of six, never a number (round 52, 14.10)
+// =================================================================================================
+//
+// The owner, 14.10: «я хочу сделать систему, что ребенок может намекать, что ей ок, норм или вообще
+// не ок с этим тренером, чтобы у игрока была какая-то обратная связь от ребенка для принятия решения
+// в случае если химия не растет или незаметно». Two design answers, and the arithmetic below is both
+// of them:
+//
+//   THE SIGNAL: «по тренду да, но и надо в процессе года тоже потом дальше либо подтверждать эту
+//   химию, либо опровергать, т.е. у нас живые отношения» – she starts from the pair's TREND (the
+//   drift its affinity signs, `chemistryDriftPerYear`) and, as they work together, the LEVEL (the
+//   gauge) takes over from it. That hand-over is the confirming or refuting he asked for.
+//
+//   THE RELIABILITY: «с шумом, но незначительным, т.е. не "всё плохо" а "я пока не очень поняла" или
+//   "вроде нормально, но"… она еще не уверена, а просто сомневается, как раз и на гаудже химии на
+//   карточке тренера увидим подтверждение или опровержение» – the noise is DOUBT, never an error: it
+//   can leave her unsure or hedging, and it can NEVER make her confident against the gauge.
+//
+// ⚠⚠ NO PHASE TERM, ON PURPOSE. The weekly weather swings ±0.3; read straight, her feel would flicker
+// from week to week and the parent would learn to ignore it. The weather reaches her through `chem`,
+// which is what its integral IS – «подтверждать или опровергать» is the level doing its work.
+//
+// ⚠ A STEP AND NOT A NUMBER, for the reason `chemistryReading` keeps `phase` off the wire: a score
+// printed to the player is a second gauge with a different bar. The six ids are the UI's to word.
+
+/** THE KNOBS OF HER FEEL – every number is named here and nothing below reads a literal. Measured, not
+ *  guessed (invariant 5): `tools/chemistry-bench.ts` B14 and `docs/specs/the-chemistry-2026-09.md` §17
+ *  carry the shares each of these produces. */
+export const COACH_FEEL = {
+  /** Weeks together before she has anything to say. Six, because «a sentence in week 3 about a
+   *  relationship is noise» (C7, 16.09) and the first six weeks are the longest a pair has no
+   *  history at all; below it the step is `too-early`, whatever the pair. */
+  tooEarlyWeeks: 6,
+  /** The level term is `chem / levelScale`, clamped to ±1: a pair at ±6 has said everything its level
+   *  can say. Twice the confident line (±3, `CHEMISTRY_HUNCH_*`), so a pair just past the line speaks
+   *  at half its volume and a clear one at full. */
+  levelScale: 6,
+  /** The most the level may weigh against the trend (the trend keeps the rest). Not 1: even after a
+   *  year she still carries a first impression of the person, and the trend IS that impression. */
+  levelWeightMax: 0.7,
+  /** Weeks together at which the level has reached `levelWeightMax` – a year, because the owner's
+   *  sentence is «в процессе года» and a season is what a year IS in this game. The weight is linear
+   *  to there, so no week is a cliff. */
+  levelWeightWeeks: 52,
+  /** The doubt is redrawn once a period, in weeks – constant inside it, so a hint does not flicker
+   *  between two visits to the same screen. Four weeks is a month, the length of a feeling. */
+  periodWeeks: 4,
+  /** The doubt's half-width, in score units: «с шумом, но незначительным». Under half of `leanAt`
+   *  either way – enough to leave a borderline pair unsure one month and hedging the next, too little
+   *  to turn a pair whose score is well clear of the line round. */
+  jitter: 0.12,
+  /** How far the score must lean before she leans with it. A quarter of the range: below it she is
+   *  honestly «not sure yet», above it she hedges, and she is only CONFIDENT when the gauge agrees. */
+  leanAt: 0.25,
+} as const
+
+/** All six steps, in the order a pair meets them (`too-early` first, then the two doubts, then the
+ *  two certainties). Exported so a sweep walks the set by name instead of re-listing it. */
+export const COACH_FEEL_STEPS: readonly CoachFeel[] = ['too-early', 'unsure', 'seems-good', 'seems-off', 'good', 'off']
+
+/** THE PAIR'S TREND AS ONE SIGNED NUMBER IN [-1, +1] – the drift its affinity signs, divided by the
+ *  drift of the best (or worst) pair there can be. Read off the constants, never retyped: with the
+ *  shipped 12 and -10 this is the affinity itself, and if either moves the trend follows. */
+function coachFeelTrend(affinity: number): number {
+  const c = ECONOMY.chemistry
+  const drift = chemistryDriftPerYear(affinity)
+  return clamp(drift / (drift >= 0 ? c.driftAtPerfect : -c.driftAtAnti), -1, 1)
+}
+
+/** ⭐ HER DOUBT FOR ONE FOUR-WEEK PERIOD, uniform in [-jitter, +jitter).
+ *
+ *  ⚠ PURPOSE-SCOPED, ZERO MAIN. `rngFromSeed` on a string built from the career's seed, the coach's
+ *  IDENTITY and the period number, thrown away after one draw and persisting nothing – the same
+ *  doctrine as `affinityFor`. So it is the same number whether the player looked at the screen on
+ *  week 12 or 15, whether he hired the coach early or late, and a rebuilt snapshot after a reload
+ *  cannot move it. Exported so the tests can hold «constant inside a period, different across periods». */
+export function coachFeelJitter(seed: string, coachId: string, period: number): number {
+  const r = rngFromSeed(`${seed}:coachfeel:${coachId}:${period}`)
+  return (r() * 2 - 1) * COACH_FEEL.jitter
+}
+
+/** ⭐⭐ HER SCORE – `S = (1 - wL) * trend + wL * level + doubt`, in roughly [-1.1, +1.1].
+ *
+ *  `wL` climbs linearly from 0 to `levelWeightMax` over `levelWeightWeeks`: in her first weeks she
+ *  goes by who the two of them seem to be (the trend), and by the end of a year mostly by how it has
+ *  actually gone (the level). An ABSENT pair reads `chem` 0 – she has no history with him, so the
+ *  level term has nothing to add.
+ *
+ *  ⚠ A SCORE IS NOT A STEP. The classification lives in `coachFeelStep`, so the edges can be pinned
+ *  on a score without hunting for a pair that produces it. */
+export function coachFeelScore(
+  pair: CoachPair | undefined,
+  affinity: number,
+  weeksTogether: number,
+  seed: string,
+  coachId: string,
+): number {
+  const f = COACH_FEEL
+  const level = clamp((pair?.chem ?? 0) / f.levelScale, -1, 1)
+  const wL = Math.min(f.levelWeightMax, (f.levelWeightMax * weeksTogether) / f.levelWeightWeeks)
+  const period = Math.floor(weeksTogether / f.periodWeeks)
+  return (1 - wL) * coachFeelTrend(affinity) + wL * level + coachFeelJitter(seed, coachId, period)
+}
+
+/** A SCORE AND A LEVEL IN, ONE OF FIVE LIVE STEPS OUT (`too-early` is the caller's gate, not a score's).
+ *
+ *  ⭐⭐ CONFIDENCE IS THE GAUGE'S TO CONFIRM. `good` needs the score to lean warm AND the level to be
+ *  past the warm line; `off`, the mirror. That line is `chemistryHunch`'s own (±`CHEMISTRY_HUNCH_*`),
+ *  and it sits above the largest bar a pair can draw (`ECONOMY.chemistry.readableCeiling`, 2.5) – so
+ *  whenever she is confident, the coach card's gauge is showing a figure of the SAME sign. A confident
+ *  step against the truth is impossible by construction, which is how «она еще не уверена, а просто
+ *  сомневается» is kept honest: her noise lives entirely in the hedged steps, and the gauge confirms
+ *  or refutes those. Pinned as a property in `tests/r52-coach-feel.test.ts`. */
+export function coachFeelStep(score: number, chem: number): Exclude<CoachFeel, 'too-early'> {
+  if (score >= COACH_FEEL.leanAt) return chemistryHunch(chem) === 'warm' ? 'good' : 'seems-good'
+  if (score <= -COACH_FEEL.leanAt) return chemistryHunch(chem) === 'cold' ? 'off' : 'seems-off'
+  return 'unsure'
+}
+
+/** ⭐⭐⭐ HOW SHE FEELS ABOUT HER COACH – the whole derivation, pure.
+ *
+ *  `weeksTogether` is the stint's age (`world.week - coachSinceWeek(world)`), `affinity` the pair's
+ *  disposition (`affinityFor`, re-derived by the caller and never stored), `pair` the persisted
+ *  row or `undefined` before the first week she trains with him. ZERO MAIN draws and nothing
+ *  persisted: the only randomness is `coachFeelJitter`'s purpose-scoped sub-stream. */
+export function coachFeelOf(
+  pair: CoachPair | undefined,
+  affinity: number,
+  weeksTogether: number,
+  seed: string,
+  coachId: string,
+): CoachFeel {
+  // `!(x >= n)` rather than `x < n`, so a NaN stint (it cannot happen; the guard costs nothing) reads
+  // «too early» and never «unsure».
+  if (!(weeksTogether >= COACH_FEEL.tooEarlyWeeks)) return 'too-early'
+  return coachFeelStep(coachFeelScore(pair, affinity, weeksTogether, seed, coachId), pair?.chem ?? 0)
+}
+
+/** WHICH WAY HER SMALL-TALK HUNCH LEANS GIVEN HOW SHE FEELS (round 52 re-points round 51's hunch at the
+ *  feel, so the hunch line and the coach card's tile cannot say two things): good or seems-good is
+ *  warm, off or seems-off is cold, and «not sure» and «too early» both read even. */
+export function feelHunch(feel: CoachFeel): ChemistryHunch {
+  return feel === 'good' || feel === 'seems-good' ? 'warm' : feel === 'off' || feel === 'seems-off' ? 'cold' : 'even'
 }
 
 // --- the two helpers, once ----------------------------------------------------------------------

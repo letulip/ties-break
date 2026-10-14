@@ -16,6 +16,8 @@
 // ⚠ `setViewport` RUNS BEFORE THE MOUNT – happy-dom caches a media query on the first computed-style read.
 //
 // ⚠⚠ MUTATION ARMS – the reds measured for this file are listed in the unit file's header table.
+// ⚠ ROUND 52 F1 (14.10): the hunch is read off HOW SHE FEELS (`coachFeel` -> `feelHunch`), so the poses below carry a stint as well as a level (see `BAND_CHEM`). The copy,
+// language and phone cases are unchanged; only the pose that picks WHICH band the engine's card carries moved.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { mount, type VueWrapper } from '@vue/test-utils'
@@ -64,9 +66,9 @@ afterEach(() => {
 })
 
 /** A career with a coach, a pair posed at `chem`, and her coach-real card raised and waiting – the REAL commands. */
-function asking(voice: Temperament, chem: number, seed = `r51-8-mounted-${voice}`): WorldState {
+function asking(voice: Temperament, chem: number, seed = `r51-8-mounted-${voice}`, week = 30): WorldState {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'middle' })
-  world.week = 30
+  world.week = week
   world.temperament = voice
   world.coachPairs[world.coachId!] = { chem, phase: 0, standing: 0 }
   raiseLifeBeat(world, 'small-talk', DETAIL)
@@ -90,7 +92,9 @@ async function pressAnswer(w: VueWrapper, prompt: LifeBeatPrompt, optionId: stri
   await nextTick()
   return w.findAll('.life-beat-continued').map((n) => flat(n.text()))
 }
-const BAND_CHEM: [ChemistryHunch, number][] = [['warm', 12], ['even', 0.4], ['cold', -12]]
+// ⚠ ROUND 52 F1 (14.10): the band is her FEEL's now, so each pose carries a STINT as well as a level – [band, level, weeks together]. The founding coach has been
+// here since week 0, so the pose's week IS the stint: a clear level at 80 weeks is `good` / `off` (warm / cold), anything under six weeks is `too-early` (even).
+const BAND_CHEM: [ChemistryHunch, number, number][] = [['warm', 12, 80], ['even', 0.4, 3], ['cold', -12, 80]]
 
 // =================================================================================================
 // A. THE DIALOG
@@ -98,8 +102,8 @@ const BAND_CHEM: [ChemistryHunch, number][] = [['warm', 12], ['even', 0.4], ['co
 describe('round 51 №8 A – her reply to «a good coach explains» ends with her hunch', () => {
   it('⭐ English: the `view` reply is her old line and ONE more – the hunch for the pair\'s band – and `more` carries none', async () => {
     for (const voice of TEMPERAMENTS) {
-      for (const [band, chem] of BAND_CHEM) {
-        const prompt = promptOf(asking(voice, chem))
+      for (const [band, chem, weeks] of BAND_CHEM) {
+        const prompt = promptOf(asking(voice, chem, undefined, weeks))
         const w = mountBeat(prompt)
         const viewPlain = prompt.followUps.find((f) => f.optionId === VIEW)!
         const paragraphs = await pressAnswer(w, prompt, VIEW)
@@ -122,11 +126,11 @@ describe('round 51 №8 A – her reply to «a good coach explains» ends with h
     installCatalog('ru', RU)
     await setLocale('ru')
     for (const voice of TEMPERAMENTS) {
-      for (const [band, chem] of BAND_CHEM) {
+      for (const [band, chem, weeks] of BAND_CHEM) {
         const line = COACH_REAL_HUNCH[voice][band]
         expect(RU[line], `${voice}/${band}: the table has a Russian row for this line`).toBeTruthy()
         expect(RU[line]).toMatch(CYRILLIC)
-        const prompt = promptOf(asking(voice, chem))
+        const prompt = promptOf(asking(voice, chem, undefined, weeks))
         const w = mountBeat(prompt)
         const paragraphs = await pressAnswer(w, prompt, VIEW)
         expect(paragraphs.at(-1), `${voice}/${band}`).toBe(flat(RU[line]))
@@ -202,7 +206,7 @@ describe('round 51 №8 C – the reply with the hunch still has a reachable way
         }
         // the longest hunch of the whole table, in the language being measured
         const longest = TEMPERAMENTS.flatMap((v) => (['warm', 'even', 'cold'] as const).map((b) => ({ v, b, len: (locale === 'ru' ? RU[COACH_REAL_HUNCH[v][b]] : COACH_REAL_HUNCH[v][b]).length }))).sort((a, b) => b.len - a.len)[0]!
-        const prompt = promptOf(asking(longest.v, longest.b === 'warm' ? 12 : longest.b === 'cold' ? -12 : 0.4))
+        const prompt = promptOf(asking(longest.v, longest.b === 'warm' ? 12 : longest.b === 'cold' ? -12 : 0.4, undefined, longest.b === 'even' ? 3 : 80))
         const w = mountBeat(prompt, vp)
         const paragraphs = await pressAnswer(w, prompt, VIEW)
         expect(paragraphs.length, 'the reply is up with its hunch – nothing below is vacuous').toBe(2)

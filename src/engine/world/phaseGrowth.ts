@@ -68,7 +68,9 @@ import { coachById, type Coach } from '../coach'
 // ⭐⭐ THE CHEMISTRY WAVE C1. `engine/chemistry.ts` is a LEAF – `ECONOMY`, two rng helpers and two
 // types – so both arrows below close nothing, and `spiritBandOf` is the world's ONE reading of her
 // spirit number, asked here rather than re-spelled (its own docblock refuses a second reader).
-import { accrueChemistry, affinityFor, freshCoachPair, type ChemistryWeek } from '../chemistry'
+import { accrueChemistry, freshCoachPair, type ChemistryWeek } from '../chemistry'
+// ⭐ ROUND 52 F1: the affinity's four arguments are spelled ONCE, in the leaf her feel for the coach also reads (`world/coachFeel.ts`)
+import { coachPairAffinity } from './coachFeel'
 import { spiritBandOf } from '../spirit'
 import { KID_ID } from './constants'
 import { KNOCK_REST_GROWTH, knockRestWeek } from '../knock'
@@ -484,7 +486,7 @@ export function growAndLive(world: WorldState, rng: Rng, away = false): void {
  *  capture (41550 / e6b0c709) cannot see this pass. */
 function accrueCoachPair(world: WorldState, coach: Coach): number {
   const before = world.coachPairs[coach.id] ?? freshCoachPair()
-  const affinity = affinityFor(world.seed, coach.id, world.temperament, coach.manner)
+  const affinity = coachPairAffinity(world, coach)
   const after = accrueChemistry(before, affinity, world.seed, coach.id, world.week, herWeekForChemistry(world))
   world.coachPairs[coach.id] = after
   return after.chem

@@ -637,7 +637,8 @@ import { MET_DRY, MET_HEADING, MET_HEADING_HEADLINE, MET_HER_LINE, MET_MENTION, 
 // → docs/notes/life-beats/hub.md#lifebeatts-3c--small-talk--the-copy-moved
 import { COACH_REAL_HUNCH, COACH_REAL_SITUATION_ID, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_CARD, SMALL_TALK_FRAME_REGISTER, SMALL_TALK_HEADING, SMALL_TALK_LINE, SMALL_TALK_SUBJECTS, smallTalkSituationIdOf, smallTalkSubjectFor } from './lifeBeat/smallTalkCopy'
 import type { LegacySmallTalkSubject, SmallTalkSubject } from './lifeBeat/smallTalkCopy'
-import { chemistryHunch, type ChemistryHunch } from '../chemistry' // ⭐ ROUND 51 №8: her hunch about the coach is a band of the pair's chemistry
+import { feelHunch, type ChemistryHunch } from '../chemistry' // ⭐ ROUND 51 №8: her hunch about the coach is a band; ROUND 52 F1 (14.10): the band is read off HOW SHE FEELS (below), not off the raw level
+import { coachFeel } from './coachFeel'
 export { LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_SUBJECTS, smallTalkSubjectFor }
 export type { LegacySmallTalkSubject, SmallTalkSubject }
 
@@ -2425,8 +2426,13 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
   const heard: HeardRead | null = row.heard === true ? { voice, wants } : null
   // ⭐⭐⭐ ROUND 42 #15 – EVERY ANSWER THAT EARNS A SECOND LINE OF HERS, in one list. The fork still
   // has exactly the one it always had; tier 1 has three since the small-talk exchange.
-  // ⭐ ROUND 51 №8 – and the pair's band for her hunch (only small talk takes one): `null` when nobody is employed, `'even'` for a coach with no row on the books yet. Pure, no draw.
-  const hunch = row.kind === 'small-talk' && world.coachId !== null ? chemistryHunch(world.coachPairs?.[world.coachId]?.chem) : null
+  // ⭐ ROUND 51 №8 – and the pair's band for her hunch (only small talk takes one): `null` when nobody is employed, `'even'` for a coach she has not known six weeks. Pure, no draw.
+  // ⚠⚠ ROUND 52 F1 (14.10) – RE-POINTED AT HOW SHE FEELS, NOT AT THE RAW LEVEL. Round 51 read `chemistryHunch(pair.chem)`, which could say nothing until the level was
+  // past +-3; the owner's wish was her hint for the case «химия не растет или незаметно», so the hunch now follows the one reading of her feel (`coachFeel`) the coach card's
+  // tile and the week notes read too – good and seems-good lean warm, off and seems-off cold, unsure and too-early even – and a hedged hunch is allowed to lean on a
+  // level the gauge cannot show yet. One question, one answer: the line and the tile cannot disagree.
+  const feel = row.kind === 'small-talk' ? coachFeel(world) : null
+  const hunch = feel === null ? null : feelHunch(feel)
   const followUps = lifeBeatFollowUps(row.kind, row.detail, voice, band, hunch)
   // ⭐⭐ ROUND 42 #24 – THE FRAME'S REGISTER IS THE SUBJECT'S, NOT THE WEEK'S, ON TIER 1 AND NOWHERE
   // ELSE. Spec §2 cut the one-to-one between the Mood register and the subject («mood sets the

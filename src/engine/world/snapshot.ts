@@ -100,6 +100,7 @@ import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
 import { buildLifeBeatPrompt, buildSoftBeatInvite, forkWantOf, latchedEpisode, spouseViewOccasionThisWeek, FORK_WANT_ANSWER } from './lifeBeat'
+import { coachFeel } from './coachFeel'
 // ⚠ A BEAT KIND THAT LIVES IN ITS OWN MODULE IS ASKED DIRECTLY (A-06 / T6.10, 28.09). `ownKeyThisWeek`
 // imports the hub, so the hub cannot re-export it back without the cycle A-06 is about – see
 // `world/lifeBeat/ownKey.ts`'s header. The read below did not move.
@@ -1665,6 +1666,7 @@ function carriedOnTheWire(world: WorldState): Offer[] {
 
 export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snapshot {
   const pending = pendingView(world)
+  const feel = coachFeel(world)
   // ⭐ RU-23 – THE COACH'S THREE READS ON HER ROOM, each ONCE: the ref is the decision and the string beside it is that ref's English, so the two wires cannot disagree (class (b): derived here, persisted nowhere).
   const roomNoteC = coachRoomNoteRef(world)
   const declineNoteC = coachDeclineNoteRef(world)
@@ -2277,6 +2279,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // anything: no screen, store, composable or viz module named it. The persisted v34 field, the
     // entry gates and `world/ladder.ts` are untouched; only the wire copy goes.
     coachId: world.coachId,
+    // ⭐⭐ ROUND 52 F1 (14.10) – HOW SHE FEELS ABOUT THE COACH SHE HAS (`Snapshot.coachFeel`, one of six ids, no wording). A conditional spread, so the key is ABSENT – not `null`,
+    // not `undefined` – when nobody is employed: `null` moves every L3-7 twin digest and an always-present valueless key breaks D-07's byte census (`openingFundsCents` below measured both).
+    ...(feel === null ? {} : { coachFeel: feel }),
     coachMarket: coachMarket(world),
     coachBilling: coachBilling(world),
     coachRoomNote: coachNoteText(roomNoteC),

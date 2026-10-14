@@ -186,12 +186,18 @@ export function smallTalkSituationIdOf(detail: string): string | null {
 }
 
 /** ⭐⭐⭐ ROUND 51 №8 (14.10) – HER HUNCH ABOUT THE COACH, the one second line that `coach-real`'s
- *  `respond` reply gains: four voices x three bands (the pair's actual chemistry, `chemistryHunch`).
+ *  `respond` reply gains: four voices x three bands (how she FEELS about the coach: `coachFeel` through `feelHunch`).
  *  EVERY WORD A DRAFT for the owner's вычитка (invariant 4).
  *
  *  ⚠⚠ IT IS TRUE, AND THAT IS THE WHOLE OF IT. The line is picked by the pair's real band, so a cold
  *  line is a cold pair and a warm line a warm one – a hunch that could be wrong would teach the player
- *  to ignore it. It names a MOOD («I've a feeling»), never a number, never a verdict on the coach's
+ *  to ignore it.
+ *  ⚠⚠ ROUND 52 F1 (14.10) – THE BAND IS HER FEEL'S NOW, AND «TRUE» MEANS WHAT HER FEEL MEANS BY IT. A CONFIDENT
+ *  feel (good / off) is only ever picked when the coach card's gauge shows a figure of the same sign, so
+ *  those lines are as true as they were. A HEDGED one (seems-good / seems-off) is the owner's «вроде
+ *  нормально, но» – it may turn out wrong, and the gauge is what refutes it. Hedged cases borrow the
+ *  confident lines until a later builder writes their own; no wording changed here.
+ *  It names a MOOD («I've a feeling»), never a number, never a verdict on the coach's
  *  skill: chemistry is how the two of them fit, not how good the coach is.
  *  ⚠ ZERO BOND AND NOTHING ELSE MOVES (ruling V2, «tier-1 replies move nothing»): the new effect is
  *  informational. The reading the parent gets on the coach's card is the other half, in

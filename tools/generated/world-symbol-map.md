@@ -2,21 +2,21 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (670 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (671 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-539 exported names across 68 owning modules.
+539 exported names across 69 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 55 |
-| `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 24 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 23 |
+| `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 23 |
 | `src/engine/world/psychologist.ts` | THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2) | 23 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 22 |
@@ -77,6 +77,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/matchNews.ts` | MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the streak the Home card reads off them | 2 |
 | `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 2 |
 | `src/engine/world/bookings.ts` | THE BOOKINGS, read side: what the family has put in the diary for a given week | 1 |
+| `src/engine/world/coachStint.ts` | WHEN THE CURRENT COACHING ARRANGEMENT BEGAN – a LEAF (round 52 F1, 14.10) | 1 |
 | `src/engine/world/fieldNews.ts` | ⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10) | 1 |
 | `src/engine/world/knockHistory.ts` | THE KNOCK'S RECORD: the capped history of every knock she has had, and the one writer that closes one out | 1 |
 | `src/engine/world/phaseFinance.ts` | ⭐ R2-10 STEP 2, PHASE 2 – WHAT THE WEEK COSTS: the family's money, the coach's bill, the college's tuition and the kit that wears out | 1 |
@@ -145,35 +146,6 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `spouseViewOccasionThisWeek` – `src/engine/world/lifeBeat.ts`
 - `withoutRecentSituations` – `src/engine/world/lifeBeat.ts`
 
-### `src/engine/world/coachMarket.ts`
-
-THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does.
-
-- `COACH_EDGE_REVEAL_WEEKS` – `src/engine/world/coachMarket.ts`
-- `coachBilling` – `src/engine/world/coachMarket.ts`
-- `coachEdgeView` – `src/engine/world/coachMarket.ts`
-- `coachLadderNote` – `src/engine/world/coachMarket.ts`
-- `coachMarket` – `src/engine/world/coachMarket.ts`
-- `coachMarketLabourCents` – `src/engine/world/coachMarket.ts`
-- `coachPlaqueLine` – `src/engine/world/coachMarket.ts`
-- `coachProgressScore` – `src/engine/world/coachMarket.ts`
-- `coachRaiseDue` – `src/engine/world/coachMarket.ts`
-- `coachRateCents` – `src/engine/world/coachMarket.ts`
-- `coachRetainerBandOf` – `src/engine/world/coachMarket.ts`
-- `coachRoomNote` – `src/engine/world/coachMarket.ts`
-- `coachSinceWeek` – `src/engine/world/coachMarket.ts`
-- `coachTravelsWithHer` – `src/engine/world/coachMarket.ts`
-- `eliteGateStandingOf` – `src/engine/world/coachMarket.ts`
-- `hireCoach` – `src/engine/world/coachMarket.ts`
-- `matchesEverPlayed` – `src/engine/world/coachMarket.ts`
-- `openingCoachId` – `src/engine/world/coachMarket.ts`
-- `practiceCoachRateFor` – `src/engine/world/coachMarket.ts`
-- `resolveCoachRaise` – `src/engine/world/coachMarket.ts`
-- `setCoachOnEventWeeks` – `src/engine/world/coachMarket.ts`
-- `setCoachOnJuniorEvents` – `src/engine/world/coachMarket.ts`
-- `settleCoachDeal` – `src/engine/world/coachMarket.ts`
-- `supportPayrollWeeklyCents` – `src/engine/world/coachMarket.ts`
-
 ### `src/engine/world/assets.ts`
 
 ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money.
@@ -201,6 +173,34 @@ THE COACH MARKET: who is available at her age and rung, what they cost, and what
 - `unitPriceCents` – `src/engine/world/assets.ts`
 - `unitPriceHistory` – `src/engine/world/assets.ts`
 - `weeklyAssetUpkeepCents` – `src/engine/world/assets.ts`
+
+### `src/engine/world/coachMarket.ts`
+
+THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does.
+
+- `COACH_EDGE_REVEAL_WEEKS` – `src/engine/world/coachMarket.ts`
+- `coachBilling` – `src/engine/world/coachMarket.ts`
+- `coachEdgeView` – `src/engine/world/coachMarket.ts`
+- `coachLadderNote` – `src/engine/world/coachMarket.ts`
+- `coachMarket` – `src/engine/world/coachMarket.ts`
+- `coachMarketLabourCents` – `src/engine/world/coachMarket.ts`
+- `coachPlaqueLine` – `src/engine/world/coachMarket.ts`
+- `coachProgressScore` – `src/engine/world/coachMarket.ts`
+- `coachRaiseDue` – `src/engine/world/coachMarket.ts`
+- `coachRateCents` – `src/engine/world/coachMarket.ts`
+- `coachRetainerBandOf` – `src/engine/world/coachMarket.ts`
+- `coachRoomNote` – `src/engine/world/coachMarket.ts`
+- `coachTravelsWithHer` – `src/engine/world/coachMarket.ts`
+- `eliteGateStandingOf` – `src/engine/world/coachMarket.ts`
+- `hireCoach` – `src/engine/world/coachMarket.ts`
+- `matchesEverPlayed` – `src/engine/world/coachMarket.ts`
+- `openingCoachId` – `src/engine/world/coachMarket.ts`
+- `practiceCoachRateFor` – `src/engine/world/coachMarket.ts`
+- `resolveCoachRaise` – `src/engine/world/coachMarket.ts`
+- `setCoachOnEventWeeks` – `src/engine/world/coachMarket.ts`
+- `setCoachOnJuniorEvents` – `src/engine/world/coachMarket.ts`
+- `settleCoachDeal` – `src/engine/world/coachMarket.ts`
+- `supportPayrollWeeklyCents` – `src/engine/world/coachMarket.ts`
 
 ### `src/engine/world/psychologist.ts`
 
@@ -933,6 +933,12 @@ MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the
 THE BOOKINGS, read side: what the family has put in the diary for a given week.
 
 - `vacationForWeek` – `src/engine/world/bookings.ts`
+
+### `src/engine/world/coachStint.ts`
+
+WHEN THE CURRENT COACHING ARRANGEMENT BEGAN – a LEAF (round 52 F1, 14.10).
+
+- `coachSinceWeek` – `src/engine/world/coachStint.ts`
 
 ### `src/engine/world/fieldNews.ts`
 
