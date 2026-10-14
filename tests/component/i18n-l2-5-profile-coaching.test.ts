@@ -162,7 +162,13 @@ describe('L2-5 parity – the English the screens shipped, with no catalog', () 
     expect(doorLines).toEqual(['You', COACH_TIER_LABEL.self])
     // ...and a hired coach's: her name over «<tier> tier», and the other voice of the radar blurb
     const hired = mountKid(coached)
-    expect(hired.findAll('.kid-tile-door .kid-tile-line').map((n) => n.text())).toEqual([coached.coachMarket.find((c) => c.current)!.name, `${COACH_TIER_LABEL.middle} tier`])
+    // ⚠ RE-AIMED 14.10 (r52 F2): a hired coach's tile carries a THIRD line now – her feel for the coach, one UI phrase per step of `Snapshot.coachFeel`. The pair this assertion held (name, tier) is unchanged
+    // and is still the first two; the third is only held to EXIST and to be a phrase and not the engine's id (the six steps, both languages and the label are held in tests/component/r52-f2-coach-feel-tile.test.ts).
+    const hiredLines = hired.findAll('.kid-tile-door .kid-tile-line').map((n) => n.text())
+    expect(hiredLines.slice(0, 2)).toEqual([coached.coachMarket.find((c) => c.current)!.name, `${COACH_TIER_LABEL.middle} tier`])
+    expect(coached.coachFeel, 'a hired coach: the engine reports a step').toBeDefined()
+    expect(hiredLines, 'name, tier, and her feel').toHaveLength(3)
+    expect(hiredLines[2], 'a phrase, not the engine\'s id').not.toBe(coached.coachFeel)
     expect(hired.get('.kid-panel-radar .kid-panel-note').text()).toMatch(/^What her coach can tell so far\. The dashed shape is where she started/)
     hired.unmount()
     expect(text).toContain('Skills')

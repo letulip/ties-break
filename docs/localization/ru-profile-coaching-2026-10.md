@@ -1548,3 +1548,26 @@ A tap on the chemistry ring of a coach card opens `ChemistryHelpDialog.vue`: a t
 | RU23-CHM-05 | `They have worked together, but it is not readable yet – it needs more time together.` | `Они уже работали вместе, но значение ещё не прочитано – нужно больше времени вместе.` | `APPROVED` |
 | RU23-CHM-06 | `Right now it reads {0}%.` | `Сейчас значение: {0}%.` | `APPROVED` |
 | RU23-CHM-07 | `When a coach is let go, it stays where it was – it does not fade – and carries on if you hire that coach again.` | `Если с тренером расстаться, взаимопонимание останется на месте – оно не угасает – и продолжится, если нанять этого тренера снова.` | `APPROVED` |
+
+## ⚙ 14.10 agent-authored (бланкет) – r52 F2: the coach tile's feel line
+
+⚙ 14.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's request: «я хочу сделать систему, что ребенок может намекать, что ей ок, норм или вообще не ок с этим тренером, чтобы у игрока была какая-то обратная связь от ребенка для принятия решения». The channel he picked for it is the tile «Тренер» («видна в любой момент… игрок может проверить сам»), and on how sure she may sound: «не "всё плохо" а "я пока не очень поняла" или "вроде нормально, но" или что-то в таком духе, т.е. она еще не уверена, а просто сомневается».
+
+The Coach tile on the daughter's screen gains a third line, **only while a coach is employed** (a self-coached career has no feel to show), and the tile's accessible name gains the same phrase – a button's `aria-label` replaces its content for a screen reader, so a visible line alone would be silent. Six step phrases and one label: seven keys, all new. The old label `Coach – open the Coach Market` (RU05-P10) is untouched and is still the label of a self-coached tile.
+
+- **Her words are in guillemets, the narrator's are not.** The three hedged steps (`unsure`, `seems-good`, `seems-off`) are what she SAYS. `Вроде нормально, но…` is his phrase verbatim; `Пока не поняла` is his `я пока не очень поняла` without the `я` and the `очень` – the full phrase is the alternative if he wants the hedge back, at the cost of a third line at 320 (measured below). The other three are the narrator's: `Ещё знакомятся`, `Ладят`, `Не ладят`.
+- **No sex for the coach, no pronoun (R15-7).** `Ладят` and `Не ладят` name nobody; `поняла` is HER verb; `Ещё знакомятся` is the pair. The English follows the same rule – the drafts `Still getting to know them` and `They click` were not used, because a «them» can only be the coach.
+- **`Ещё присматриваются` (the architect's draft) was not used.** The word is 99.7 px against an 89 px inner box (Manrope 11.5 px / 500, Chromium), so `overflow-wrap: break-word` would cut it as `присматривают` / `ся`; `знакомятся` is 64 px.
+- **How they weigh.** The four hedged steps wear the tile's soft class (the tier line's weight and ink); the two steps she is sure of (`Ладят`, `Не ладят`) wear the name line's weight. No colour is added.
+- **Measured** in a real Chromium with the app's own Manrope files, 11.5 px, wrapping, `overflow-wrap: break-word`; the inner box is 89 px at 375 and 70.7 px at 320 (r51 B14's numbers). Lines at 375 / at 320: `Ещё знакомятся` 1 / 2 · `«Пока не поняла»` 2 / 2 · `«Вроде получается»` 2 / 2 (⚠ its widest word, `получается»`, is 69.8 px against 70.7 – a margin of 0.9 px at 320, and at weight 600 the closing guillemet orphans onto a third line, which is why the hedged steps stay soft) · `«Вроде нормально, но…»` 3 / 3 (his words verbatim; the widest word, `нормально,`, is 64 px, so nothing breaks inside a word) · `Ладят` 1 / 1 · `Не ладят` 1 / 1. English: `Still getting acquainted` 2 / 2 · `"Can't tell yet"` 1 / 2 · `"Seems to be working"` 2 / 2 · `"Seems fine, but…"` 2 / 2 · `Clicking well` 1 / 1 · `Not clicking` 1 / 1.
+- **The measured case is the worst case.** The Coach tile is a button, and a button takes the platform's own font rather than Manrope (true of the whole tile today, not only of this line), which runs about 7% narrower – so what fits in Manrope fits there. Re-measured on the real screen at 375 and 320, every phrase in both languages stays inside its tile with no word cut. The one visible cost is the Russian `«Вроде нормально, но…»`: three lines make the tile row 141 px tall at 375 (156 px at 320) against 124 px for the tallest friends note, and the School and Friends tiles stretch with it. If he finds that too tall, the cheapest cut is to drop the guillemets of that one phrase.
+
+| id | English | Russian | Status |
+| --- | --- | --- | --- |
+| RU23-CFL-01 | `Still getting acquainted` | `Ещё знакомятся` | `DRAFT` |
+| RU23-CFL-02 | `"Can't tell yet"` | `«Пока не поняла»` | `DRAFT` |
+| RU23-CFL-03 | `"Seems to be working"` | `«Вроде получается»` | `DRAFT` |
+| RU23-CFL-04 | `"Seems fine, but…"` | `«Вроде нормально, но…»` | `DRAFT` |
+| RU23-CFL-05 | `Clicking well` | `Ладят` | `DRAFT` |
+| RU23-CFL-06 | `Not clicking` | `Не ладят` | `DRAFT` |
+| RU23-CFL-07 | `Coach – {feel} – open the Coach Market` | `Тренер – {feel} – открыть рынок тренеров` | `DRAFT` |

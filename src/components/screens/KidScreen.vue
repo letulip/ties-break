@@ -50,7 +50,7 @@ import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
 import CountingResultsTable from '../CountingResultsTable.vue'
 import SkillsRadar from '../SkillsRadar.vue'
-import type { RadarAxis } from '../../shared/protocol'
+import type { CoachFeel, RadarAxis } from '../../shared/protocol'
 import { useKidEmotion } from '../../composables/kidEmotion'
 // The app's one red-to-green ramp, shared with the Season and Calendar odds rings. `{ pct }` names
 // the scale IN the call: this number is a 0..100 percentage, not a 0..1 share, and the signature
@@ -292,6 +292,35 @@ const coachName = computed(() => coachRow.value?.name ?? t('You'))
 const coachTierLabel = computed(() =>
   coachRow.value ? t('{0} tier', [COACH_TIER_WORD[coachRow.value.tier]]) : COACH_TIER_WORD.self,
 )
+
+/** ⭐⭐ ROUND 52 F2 (14.10) – HER FEEL FOR THE COACH, the tile's third line (docs/rounds/round-52.md has the owner's request and his three forks; his words for the hedged steps
+ *  are quoted in the table docs/localization/ru-profile-coaching-2026-10.md, section r52 F2, and in tests/component/r52-f2-coach-feel-tile.test.ts).
+ *  The engine carries the STEP (`Snapshot.coachFeel`, one of six ids; the key is ABSENT while nobody is employed) and never a word: the words are the UI's, ONE `t()` literal per step so
+ *  the extractor reads each as a catalog key of its own.
+ *  ⚠ NOBODY IS PRONOUNED HERE (R15-7: the coach carries no sex in copy). The pair is the subject (`Clicking well`) or nobody is, and the only voice in a sentence is HERS, in quotes, on the
+ *  three steps where she hedges. ⚠ NO `default`, ON PURPOSE: a seventh step added to `CoachFeel` is a compile error on this switch, not a tile that quietly stays empty. */
+function coachFeelText(feel: CoachFeel): string {
+  switch (feel) {
+    case 'too-early':
+      return t('Still getting acquainted')
+    case 'unsure':
+      return t('"Can\'t tell yet"')
+    case 'seems-good':
+      return t('"Seems to be working"')
+    case 'seems-off':
+      return t('"Seems fine, but…"')
+    case 'good':
+      return t('Clicking well')
+    case 'off':
+      return t('Not clicking')
+  }
+}
+const coachFeelLine = computed(() => {
+  const feel = game.snapshot?.coachFeel
+  return feel ? coachFeelText(feel) : null
+})
+/** The two steps she is SURE of speak in the name line's own weight; the four where she hedges take the tier line's soft class – the doubt is in the typography too, and no colour is added. */
+const coachFeelSure = computed(() => game.snapshot?.coachFeel === 'good' || game.snapshot?.coachFeel === 'off')
 
 /** WHO IS DOING THE READING, on the panel under the tile (R15-18, one screen over).
  *
@@ -559,12 +588,20 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
           as="button"
           class="kid-tile kid-tile-door"
           pad="11px 9px"
-          :aria-label="t('Coach – open the Coach Market')"
+          :aria-label="
+            coachFeelLine
+              ? t('Coach – {feel} – open the Coach Market', { feel: coachFeelLine })
+              : t('Coach – open the Coach Market')
+          "
           @click="emit('navigate', 'market')"
         >
           <p class="kid-tile-label">{{ t('Coach') }}</p>
           <p class="kid-tile-line">{{ coachName }}</p>
           <p class="kid-tile-line kid-tile-line-soft">{{ coachTierLabel }}</p>
+          <!-- ROUND 52 F2: HER FEEL FOR THE COACH (`coachFeelText`) – only while a coach is employed; the snapshot has no key for a self-coached career. The four steps where she hedges take the
+               soft class like the tier line, the two she is sure of take the name line's weight. It wraps like every tile line (round 51 B14). ⚠ THE aria-label ABOVE CARRIES THE SAME PHRASE:
+               a button's label replaces its content for a screen reader, so a visible line alone would be silent. -->
+          <p v-if="coachFeelLine" class="kid-tile-line kid-tile-feel" :class="{ 'kid-tile-line-soft': !coachFeelSure }">{{ coachFeelLine }}</p>
         </Card>
       </div>
 
