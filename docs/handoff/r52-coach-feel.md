@@ -82,6 +82,12 @@ green files, and «а еще вот такое там нашел в трейсе
 - The Russian shop shelf row wraps 4 + 2 at 375 px (was 3 + 3) – he will look in the app.
 
 ## Gates
+REVIEW CHAIN at `b9131a4a` (clean worktree, npm ci, every verdict from its own file, fresh): check
+`R52S_CHECK_EXIT=0` (unit 487 s with one accepted bulk-pool late ack, component 325/325, build), sim
+`R52S_SIM_EXIT=0` (13/400 s), e2e on the Mac `R52S_E2E_EXIT=0` (151) and in CI's Linux image
+`R52S_LINUX_E2E_EXIT=0` (151), lqa:ru `R52S_LQA_EXIT=0`, the twin in CI's container
+`R52S_CONTAINER_EXIT=0` (6/6), frozen capture 51/51 standalone, schema untouched against `main`,
+build line `b9131a4`.
 J3 CHAIN at `778c0abb` (clean worktree, npm ci, verdicts from files): check `R52M_CHECK_EXIT=0`
 (unit 467 s, component 325/325, build), e2e on the Mac `R52M_E2E_EXIT=0` (147), the whole e2e in
 CI's Linux image `R52N_LINUX_E2E_EXIT=0` (147), frozen capture 51/51, schema untouched, build line
