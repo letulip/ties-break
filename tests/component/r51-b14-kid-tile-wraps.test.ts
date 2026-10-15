@@ -115,9 +115,11 @@ function mountKid(snap: Snapshot): VueWrapper {
  *  accessor, because happy-dom only guarantees the accessor for the properties it knows by name. */
 const prop = (el: Element, name: string): string => getComputedStyle(el).getPropertyValue(name)
 
-/** School, Friends and Coach: the three tiles that carry the `kid-tile-line` PAIR. Personality has one line, Condition and Mood none. */
+/** School, Friends and Coach: the three tiles that carry the `kid-tile-line` PAIR – and, since round 52 F2, a TRIPLE on the Coach tile while a coach is employed. Personality has one line, Condition and Mood none.
+ *  ⚠ RE-AIMED 14.10 (r52 F2): the filter was `=== 2`, and the Coach tile of the default career now carries a third line (her feel for the coach), so it found two tiles and failed on the COUNT. `>= 2` still
+ *  selects exactly these three, and the third line of the Coach tile is held by the very cascade assertions below (and by tests/component/r52-f2-coach-feel-tile.test.ts). */
 function pairTiles(w: VueWrapper) {
-  const tiles = w.findAll('.kid-tile').filter((t) => t.findAll('.kid-tile-line').length === 2)
+  const tiles = w.findAll('.kid-tile').filter((t) => t.findAll('.kid-tile-line').length >= 2)
   expect(tiles, 'School, Friends and Coach – the three tiles that carry a pair of lines').toHaveLength(3)
   return tiles
 }

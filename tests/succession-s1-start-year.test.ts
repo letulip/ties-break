@@ -51,17 +51,26 @@ const BIRTHS: Record<string, [number, number] | null> = { default: null, dec31: 
  *  UNVERIFIED guess of mine and is withdrawn: the likelier reading is that gamma's talks fell in
  *  subjects B12 never grew (he appended STORY rows only, so a non-story pick index did not move),
  *  while E1-E3 grew every other school subject. Same purpose-scoped sub-stream class either way;
- *  every `rngN` (the MAIN position) stayed pinned green. */
+ *  every `rngN` (the MAIN position) stayed pinned green.
+ *  ⚠ RE-STAMPED 14.10 (round 52 close, architect): the three gamma `hN` moved with F4's gated
+ *  coach-feel rows (R67-R69) – gamma's walked world reaches a true feel fact and a small-talk draw;
+ *  alpha and beta did not. Same sub-stream class; every `rngN` green.
+ *  ⚠ RE-STAMPED 14.10 (round 52 continuation close, architect): all nine `hN` moved with H2's stint
+ *  rows and H3's checkpoints (dac4e94e) – every walked career employs a coach, so each now raises a
+ *  due coach talk at weeks together 12/32/56 inside the 110-week walk. Every `rngN` green.
+ *  ⚠ RE-STAMPED 15.10 (round 52, his review-sheet answers, architect): all nine `hN` moved with J6 (4cc2349c) – the
+ *  half-year checkpoint 32 → 28 and the windows [24,32) / [48,64) («Точку на 28-ю нед.», «Окно 48–63 нед.»), so the
+ *  walked careers raise their coach talks on other weeks. Every `rngN` green – each of the nine failed only at `hN`. */
 const BASELINE: Record<string, { rng0: string; h0: string; rngN: string; hN: string }> = {
-  's1-alpha|default': { rng0: '-1306492581:0', h0: '1662620015bc23c9', rngN: '-1625113431:87894', hN: 'e4a981f68460099e' },
-  's1-alpha|dec31': { rng0: '-1306492581:0', h0: 'e3c0dbdc02dfe2c4', rngN: '-1625113431:87894', hN: 'f9cc31e574c62bca' },
-  's1-alpha|jan6': { rng0: '-1306492581:0', h0: 'baccabf4e3897d71', rngN: '-1625113431:87894', hN: '42589927c0bc2b20' },
-  's1-beta|default': { rng0: '2140152401:0', h0: '2376db693585cb49', rngN: '-73975459:87900', hN: '3324a69d52d1e0d7' },
-  's1-beta|dec31': { rng0: '2140152401:0', h0: 'a2dd35eb5fdb72f9', rngN: '-73975459:87900', hN: '8ec8427b8622bada' },
-  's1-beta|jan6': { rng0: '2140152401:0', h0: '954e24dc6bc505f9', rngN: '-73975459:87900', hN: '2a8d42437a3f398c' },
-  's1-gamma|default': { rng0: '-2119545102:0', h0: '5f847e633dd4e992', rngN: '1792860147:87901', hN: 'edd9ef9a657046bb' },
-  's1-gamma|dec31': { rng0: '-2119545102:0', h0: 'ab3e8951a687d2e4', rngN: '1792860147:87901', hN: 'f042c9a05f6c4bd9' },
-  's1-gamma|jan6': { rng0: '-2119545102:0', h0: 'ae71ca27f9886772', rngN: '1792860147:87901', hN: '5274ef47a7038186' },
+  's1-alpha|default': { rng0: '-1306492581:0', h0: '1662620015bc23c9', rngN: '-1625113431:87894', hN: 'cf9af462d81fbd1b' },
+  's1-alpha|dec31': { rng0: '-1306492581:0', h0: 'e3c0dbdc02dfe2c4', rngN: '-1625113431:87894', hN: '346b745d99c82e53' },
+  's1-alpha|jan6': { rng0: '-1306492581:0', h0: 'baccabf4e3897d71', rngN: '-1625113431:87894', hN: 'bd4810a5198b9f1c' },
+  's1-beta|default': { rng0: '2140152401:0', h0: '2376db693585cb49', rngN: '-73975459:87900', hN: 'afe11868de995edd' },
+  's1-beta|dec31': { rng0: '2140152401:0', h0: 'a2dd35eb5fdb72f9', rngN: '-73975459:87900', hN: 'cfc875bf7a0ce3de' },
+  's1-beta|jan6': { rng0: '2140152401:0', h0: '954e24dc6bc505f9', rngN: '-73975459:87900', hN: 'c2f91c6c77506cf2' },
+  's1-gamma|default': { rng0: '-2119545102:0', h0: '5f847e633dd4e992', rngN: '1792860147:87901', hN: 'f50756434ccc0889' },
+  's1-gamma|dec31': { rng0: '-2119545102:0', h0: 'ab3e8951a687d2e4', rngN: '1792860147:87901', hN: 'b1429d28f8c02d2e' },
+  's1-gamma|jan6': { rng0: '-2119545102:0', h0: 'ae71ca27f9886772', rngN: '1792860147:87901', hN: '8355b8e807f76e38' },
 }
 
 function digest(world: unknown): string {

@@ -1,7 +1,7 @@
 // THE CARPET'S INVENTORY – wave L4-2. «Every screen and dialog» is only a claim until something names the ones that are NOT in it, so
 // every `.vue` under src/components is accounted for in exactly one of three places, and the instrument test (i18n-l4-2-xx-carpet-instrument)
 // holds the three to the directory BOTH ways – a component added to the app without a carpet decision is red:
-//   MOUNTED      imported by one of the four registries (derived from the files' own import lines – nothing to keep in sync here);
+//   MOUNTED      imported by one of the carpet's registries (derived from the files' own import lines – nothing to keep in sync here);
 //   CONTAINED    rendered INSIDE a mounted surface – the value names the surface, and the carpet asserts at run time that the surface's
 //                mounted tree really holds the component (the walk of `renderedComponents`), so the claim cannot rot into a lie;
 //   NOT_MOUNTED  in no surface the carpet poses – the value says why. Each is a gap in the pass, listed by name.

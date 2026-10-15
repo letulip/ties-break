@@ -435,15 +435,34 @@ describe('wave 3 T8 B – a silent home takes ZERO draws', () => {
     world.lifeLog = []
     rngKeys.length = 0
     rollSmallTalk(world)
-    expect(allKeys(world), 'the hazard, the subject, the situation, the frame – in that order').toEqual([
+    // ⚠⚠ RE-AIMED 14.10 BY ROUND 52 F5 (the closing check's catch). THE FOUR ARE UNTOUCHED AND STILL EXACT – hazard, subject, situation, frame, once each, in that order, and no sibling's key.
+    // WHAT CHANGED IS THE ALLOWANCE: builder F4's three gated coach-feel facts are asked while the pool is built, between the hazard and the subject, and each re-derived `coachFeel(world)` –
+    // three times `${seed}:coaches`, `${seed}:chemistry:<coachId>` and `${seed}:coachfeel:<coachId>:<period>`, 13 keys where there were 4. They are READS of the pair's existing sub-streams (zero MAIN)
+    // and not a section deriving a stream of its own, so the law this block holds is not what they broke; WASTE was – so `reachableSituations` now hands the facts ONE lazy read of her feel
+    // (`feelOnce`) and the pin allows exactly that read: the roster, the pair's chemistry and the period jitter, EACH AT MOST ONCE. A fact that reads the pair's WEEK key (`chemistry:<id>:<week>`),
+    // a sibling's key, or the same stream twice is still red. The silent-home arm above is untouched: a silent week asks no fact, so it derives nothing.
+    // MUTATION (14.10): `feelOnce` made a plain `coachFeel(world)` again (the triple read put back) – this arm goes RED on the repeated keys; restored, tree-identical by hash.
+    const keys = allKeys(world)
+    const pair = world.coachId
+    const feelRead = {
+      'the roster': (k: string) => k === `${world.seed}:coaches`,
+      'the pair chemistry': (k: string) => k === `${world.seed}:chemistry:${pair}`,
+      'the period jitter': (k: string) => k.startsWith(`${world.seed}:coachfeel:${pair}:`),
+    }
+    expect(
+      keys.filter((k) => !Object.values(feelRead).some((is) => is(k))),
+      'the hazard, the subject, the situation, the frame – in that order, once each, and no other key',
+    ).toEqual([
       `${world.seed}:life:smalltalk:${week}`,
       `${world.seed}:life:smalltalk:subject:${week}`,
       `${world.seed}:life:smalltalk:situation:${week}`,
       `${world.seed}:smalltalk:frame:${week}`,
     ])
-    // ⭐ AND THE FOUR ARE FOUR DIFFERENT KEYS, which is the law stated rather than implied: a second
-    // fact read off the hazard's own key would have shown up here as a repeat.
-    expect(new Set(allKeys(world)).size, 'no two of them share a key').toBe(4)
+    for (const [what, is] of Object.entries(feelRead)) expect(keys.filter(is).length, `her feel: ${what} is derived at most once a pass`).toBeLessThanOrEqual(1)
+    expect(keys.filter(feelRead['the period jitter']).length, 'and the pass DID ask her feel, so the allowance above is not vacuous').toBe(1)
+    // ⭐ AND EVERY KEY OF THE HIT IS A DIFFERENT KEY, which is the law stated rather than implied: a second
+    // fact read off the hazard's own key – or a fact re-deriving her feel – would have shown up here as a repeat.
+    expect(new Set(keys).size, 'no two of them share a key').toBe(keys.length)
     expect(lifeLogOf(world).length, 'and it really was a hit').toBe(1)
     // ⚠ AND NO OTHER `:life:` KEY EXISTS ON THIS TREE. `seed:life:ends:*` is WAVE 4's and may not be
     // created early (brief §3); the arrival's three are the other file's.

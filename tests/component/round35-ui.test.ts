@@ -218,9 +218,22 @@ function weightRequests() {
   return { byFamily, inherited, bodyShorthand }
 }
 
-/** The first family in a computed stack, unquoted – "Manrope, system-ui, …" -> "Manrope". */
-const firstFamily = (el: Element): string =>
-  (getComputedStyle(el).fontFamily.split(',')[0] ?? '').trim().replace(/^['"]|['"]$/g, '')
+/** The first family in a computed stack, unquoted – "Manrope, system-ui, …" -> "Manrope".
+ *  ⚠ RE-AIMED 14.10 (r52 J2): the global `button` rule now says `font-family: inherit` (the owner's «every button speaks
+ *  the app's font»), and this runner answers the KEYWORD where a browser answers the parent's family – the same blindness
+ *  `weightOf` below maps for `normal`. Read raw, every button came back `inherit`: the CTA arm went red, and
+ *  `rendersARealFace` passed every button vacuously (a family it does not ship «is not this item's business»). So
+ *  `inherit` is resolved the way the browser resolves it, up the tree. The real-browser proof that every button draws
+ *  the app's face is e2e/r52-button-font.spec.ts. */
+const firstFamily = (el: Element): string => {
+  let node: Element | null = el
+  let family = getComputedStyle(el).fontFamily.trim()
+  while (family === 'inherit' && node.parentElement) {
+    node = node.parentElement
+    family = getComputedStyle(node).fontFamily.trim()
+  }
+  return (family.split(',')[0] ?? '').trim().replace(/^['"]|['"]$/g, '')
+}
 /** ⚠⚠ RE-AIMED BY ROUND 35 #8's SECOND HALF, AND IT CORRECTS THE ARM'S OWN MEASUREMENT. This was
  *  `Number(getComputedStyle(el).fontWeight)`, and on 97 of the elements it walked that value is not
  *  a number at all – this runner answers the CSS keyword (`normal`), or nothing, wherever no rule

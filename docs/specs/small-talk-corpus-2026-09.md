@@ -2889,7 +2889,635 @@ Counts, final tree: school observation 430, curiosity 393, decision 390, story 2
 - `deep` `"Perhaps. I would still know I had left, though."`
 - `quiet` `"Okay. I'll see how long I last."`
 
+## Addendum 14.10 (round 52, builder F4) – three coach-feel situations: she brings up how it is going with her coach, and which of the three depends on how she feels about it
+
+**The owner, 14.10:** «я хочу сделать систему, что ребенок может намекать, что ей ок, норм или вообще не ок с этим тренером, чтобы у игрока была какая-то обратная связь от ребенка для принятия решения». Of the three channels offered (the plate on her screen, the week notes, a conversation) he chose this one as well: «Отдельный разговор – редкая беседа о тренере её голосом… самый живой». On how sure she may sound: «не "всё плохо" а "я пока не очень поняла" или "вроде нормально, но" или что-то в таком духе, т.е. она еще не уверена, а просто сомневается».
+
+**What this is.** Her feel for the coach is one reading, `coachFeel(world)` (round 52 F1: a scale of five steps and «too early»). The Coach plate on her screen (F2) and the diary's week notes (F3) already say it. This is the third channel: three small-talk situations in her own voice, each waiting on one SIDE of that scale, so that the conversation can only be about what is true. The owner's «rare» is the existing cadence – this addendum changes no weekly chance, no season cap, no depth of the memory and no subject weight.
+
+| row | subject | stages | fact | what it is |
+| --- | --- | --- | --- | --- |
+| R67 `the-thing-that-makes-sense` | good-news | school, after-school, independent | `coach-feel-warm` | something her coach asks for has started to make sense to her; she is glad, and does not say it will last |
+| R68 `practice-feels-different` | observation | school, after-school, independent | `coach-feel-unsure` | practice with her coach feels different, and she cannot tell yet whether different is better |
+| R69 `the-thing-she-cannot-name` | worry | school, after-school, independent | `coach-feel-cold` | practice with her coach is «fine», but something is not landing, and she has not found a way to say it that is fair |
+
+**The three facts.** All three live in `lifeBeat.ts`'s `SMALL_TALK_FACT` beside the five that were there, and all three read `coachFeel(world)` and nothing else – the primitive the plate and the notes read (the parity law: a gate that re-derived a band from the chemistry level would be a second answer to «how does she feel about her coach»).
+
+| fact | true when her feel is | false on |
+| --- | --- | --- |
+| `coach-feel-warm` | `seems-good` or `good` | `too-early`, `unsure`, `seems-off`, `off`, no coach, college |
+| `coach-feel-unsure` | `unsure` | `too-early`, `seems-good`, `good`, `seems-off`, `off`, no coach, college |
+| `coach-feel-cold` | `seems-off` or `off` | `too-early`, `unsure`, `seems-good`, `good`, no coach, college |
+
+**Where they sit.** Last in this document, after R66, so the catalogue's first 65 rows keep their order. A situation is chosen by position in the filtered pool, so a pool of a different length reads a different position for the same seed: a career already under way may be shown a different situation next time than it would have been. That draw is on its own sub-stream (`seed:life:smalltalk:situation:<week>`), nothing is stored and the main stream does not move.
+
+**Stages and facts.** School, after-school and independent – **not college**, twice over. The coach does not work in college weeks (`coachWorksThisWeek`: «the family stops paying»), so a girl in a dorm has no practice to be unsure about; and each fact carries `!inCollege(world)` besides (the C-07 clause of `march-entry-open`), so the FACT is true to itself and not only the stage list. In the independent years she talks about her coach on the phone; the lines say nothing about where she is, as R45 and `court-four` do not, and the presence layer's frame says it. `too-early` (the first weeks together) has no row and no fact: there is nothing to talk about yet, and a girl asked about someone she met last week would be inventing a feeling. With nobody employed `coachFeel` is `null` and every fact is false.
+
+**Subjects, by this document's own definitions.** R67 is a good news – something good she brings home, kept small and true. R68 is an observation and not a curiosity: something she noticed, and she asks the parent for nothing. R69 is a worry – small, hers, and not a crisis. Each subject keeps every row it had; the three new rows join a cell only while their fact is true.
+
+**What the lines were written against.**
+
+- **The gate licenses a FEELING and nothing else.** She may say how it feels with her coach; she may not say that the coach is good or bad, that she has improved or fallen back (the fog law – R45: a practice that felt easy is a mood and never a training gain), or any result.
+- **His register is doubt and never a verdict.** «Не "всё плохо"»: no line calls anything bad, wrong or over. The cold row says practice is FINE first, in every voice; the unsure row says she cannot tell; the warm row will not promise that it lasts. A girl who is sure (`good`, `off`) reads the same row as a girl who is not (`seems-good`, `seems-off`) – the lines are true of both.
+- **The coach is never pronoun-ed and never gendered (R15-7).** «My coach» and «the coach» as nouns only, and no line that names the coach carries a third-person pronoun at all. The Russian keeps the same discipline: no past-tense verb or adjective takes the coach as its subject.
+- **Her answers move nothing** (ruling V2: tier-1 replies move nothing). No effect is added; only R48 `coach-real`'s `view` opens the chemistry gauge, and these rows do not touch it. The player's feedback is what she says; what he does with it is his.
+- No «today», no exclamation mark, no digit, no long dash; the fiery voice carries its edge in short verdicts, as R53–R66 do. Her replies describe what she noticed or what she will do with the thought – never a persistent pattern of her own tennis (R34's finding).
+- The facts are the same in all four voices. Each invite reply then adds one fact of its own, and no voice contradicts another's edition of the scene.
+- ⚠ Every new line was searched for in `src/` before it was emitted (round 51's «Nobody argued.» sat in `albumCorpus.ts` too and turned an album test red at the closing gate); the sweep is kept in `tests/r52-coach-feel-talk.test.ts`.
+
+**The arithmetic after these three**, derived by `tools/small-talk-corpus-parse.ts` rather than carried: 68 rows, 272 openers, 204 labels, 816 replies and 20 shared beats (a good news, an observation and a worry have no second beat). The figures in the older sections are of the 51, 55, 58, 61 and 65 and stay as the record of the passes that produced them.
+
+**Measured after** (14.10, the tree this addendum ships with).
+
+**K4** (`npm run bench:smalltalk -- --seeds 60`, the bench B12 ran): `good-news`, `observation` and `worry` each gain one listed row at school (3 → 4, 3 → 4, 3 → 4), after-school (4 → 5, 4 → 5, 4 → 5) and independent (to 9, 8 and 8); college is unchanged (8, 7 and 7) because the rows do not list it. Cells under the floor: zero before and zero after. K4 counts a row by the stages it lists and not by its fact, so these three are listed everywhere they can be heard but reachable only while her feel is on their side. **K2 and K3:** zero repeats wherever an alternative existed, in the posed career (adjacent 104/2340 → 0, within three 232/2340 → 0) and the bare one (121/2340 → 0, 247/2340 → 0) alike. **K5:** 68 situations · 272 voice columns; ten voice columns flagged "never drawn", three of them the `march-entry-open` ones as before and seven the new rows' (R67 fiery and deep, R68 sunny, fiery and deep, R69 quiet and deep). That is RARITY and not unreachability: the bench's posed career poses `coach-employed` but no feel, and its 24 real careers are too few to meet a row that comes about once in nineteen coached years. The test's walk below draws every row at all three stages.
+
+**⚠ HOW OFTEN A PLAYER MEETS ONE – and it is rare, rarer than «редкая беседа» can mean.** The real draw on played, coached careers (7 presets that start with a coach × 6 careers × 312 weeks = **252 coached years**; `R52_F4_SCALE=big R52_F4_REPORT=1 npx vitest run --project unit tests/r52-coach-feel-talk.test.ts -t "how often|round 52 F4 D"`): she talked 304 times (1.21 a coached year – the played bond keeps the weekly chance under the close-bond 0.08 the bench uses) and **13** of those conversations were a coach-feel one: warm 4, unsure 5, cold 4. That is **0.052 a coached year, about one in nineteen**, 4.3% of her conversations, and any ONE of the three about once in 50–63 coached years. A fourteen-year career meets 0.7 of them: a coin toss whether a player meets even one. On the walk of the same file with a close bond and her level posed (36 careers × 24 years = 864 coached years, 3.3 conversations a year, 2849 in all) the draw hands out 71: warm 23 (6 school, 6 after-school, 11 independent), unsure 35 (9, 9, 17) and cold 13 (1, 2, 10) – 0.082 a coached year, and every one of the 71 had its fact true at the moment of the roll. The cold row is rarest at school because a school-years pool is small and `worry` is the lightest subject (1 of 14 in a level week): the rows join cells of 3–9 and a subject is drawn by its weight first.
+
+**What would move it, not built.** The rarity is the cadence and the pool depth, which this addendum deliberately left alone (no weight, no chance, no cap moved). The lever, if the owner's feedback channel should be SEEN, is a lead like the week notes got in F3: when a coach-feel fact is true, the matching row takes the pick on a share of the conversations (its own purpose-scoped sub-stream, zero MAIN draws). Predicted from the measured 1.21 conversations a coached year, and since some side is true on every coached week past the first six: a share of 1/4 is about 0.3 a coached year (once in three years), 1/3 about 0.4, 1/2 about 0.6. It changes the draw of every coached career (the digest pins move again), so it is the architect's call, as F3's was.
+
+### R67 · `the-thing-that-makes-sense` · good-news · school, after-school, independent · **fact: `coach-feel-warm`**
+**Kernel:** Something her coach asks for has started to make sense to her. She is glad of it and careful with it: she tells the parent, and she does not say it will last.
+**Authoritative claims:** `coach-feel-warm` – she has a coach and her feel for the coach stands on the warm side of the scale, `seems-good` or `good`. It licenses that things are coming together for her – **not** that the coach is good, that she has improved (the fog law, R45: a practice that felt easy is a mood and never a training gain), or any result. ⚠ One set of lines serves both steps, so every voice keeps a clause that is true of the hedged step and of the confident one: it might not stay, or she will say so if it does.
+**Fixed in all four voices:** something her coach asks for has started to make sense to her, and she is not promising it will last. Each invite reply carries the same fact: the instruction is about where to be before the ball arrives. The respond stance takes the parent's gladness and the third says it need not last to be good news; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Something my coach asks for has started to make sense. I'm trying not to say it too loudly."` |
+| `fiery` | `"I think I finally get what my coach has been asking for. Don't make a fuss. It might not stay."` |
+| `deep` | `"Something my coach asks for has begun to make sense. I wanted to tell you, and I did not want to promise it will last."` |
+| `quiet` | `"My coach asked for the same thing twice. It made sense both times."` |
+
+**Parent:** *Ask what has started to make sense* · *Say you are glad it makes sense* · *Say it does not have to last to be good news*
+
+**invite** · *Ask what has started to make sense*
+- `sunny` `"Where to be before the ball arrives. It sounded like nothing until I saw what it was for."`
+- `fiery` `"Where to be before the ball arrives. Obvious, I know. It wasn't obvious until it was."`
+- `deep` `"Where to be before the ball arrives. It is a small thing. I have been turning it over, and it fits."`
+- `quiet` `"Where to be before the ball arrives. I wrote it down so I wouldn't lose it."`
+
+**respond** · *Say you are glad it makes sense*
+- `sunny` `"Thanks. I wanted somebody to know. I'm keeping it quiet everywhere else."`
+- `fiery` `"Good. Be glad quietly. If it goes, I don't want to explain it."`
+- `deep` `"Thank you. I wanted somebody to know before I knew whether it holds."`
+- `quiet` `"Thanks. I only wanted to mention it."`
+
+**space** · *Say it does not have to last to be good news*
+- `sunny` `"That's fair. It's nice this week, even if it doesn't stay."`
+- `fiery` `"Fine. It's good news right now. If it stays, I'll say so."`
+- `deep` `"I know. I would still like it to stay. I'll try not to hold on too tightly."`
+- `quiet` `"True. I'll take it while it's here."`
+
+### R68 · `practice-feels-different` · observation · school, after-school, independent · **fact: `coach-feel-unsure`**
+**Kernel:** Practice with her coach feels different, and she cannot tell yet whether different is better. She says exactly that and asks the parent for nothing.
+**Authoritative claims:** `coach-feel-unsure` – she has a coach and her feel is `unsure`, the owner's «я пока не очень поняла». It licenses that she has not made up her mind – **not** that anything about the training changed (the engine models no session), and not that it is better or worse. ⚠ The one thing a reply names as different is the ORDER of a session, the hard part first: a texture of the sentence that nothing in the engine reads and no button asks the parent to confirm.
+**Fixed in all four voices:** practice with her coach feels different, and she cannot tell yet whether that is better. Each invite reply carries the same fact: the order of the session changed and the hard part comes first. The respond stance takes the parent's patience and the third lets her keep noticing; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Practice with my coach feels different. I can't tell yet if different is better."` |
+| `fiery` | `"Practice with my coach is different. Better or worse, I can't say, and it's annoying."` |
+| `deep` | `"Practice with my coach has changed in a way I cannot name. I do not know yet if it is better. I keep waiting to know."` |
+| `quiet` | `"Practice with my coach felt different this week. I haven't worked out if that's good."` |
+
+**Parent:** *Ask what is different* · *Say it can take a while to know* · *Say she can just keep noticing*
+
+**invite** · *Ask what is different*
+- `sunny` `"The order, mostly. We do the hard part first now. I can't decide if I like it."`
+- `fiery` `"The order. The hard part comes first now. I'd like a reason and I haven't got one."`
+- `deep` `"The order of things. The hard part comes first now. I am still deciding what I think of it."`
+- `quiet` `"The order. The hard part comes first."`
+
+**respond** · *Say it can take a while to know*
+- `sunny` `"That's what I'm hoping. I'll keep showing up and see."`
+- `fiery` `"A while isn't an answer. Fine. I'll give it a while."`
+- `deep` `"I know. I only wanted to say that I don't know yet."`
+- `quiet` `"Probably. I'll give it time."`
+
+**space** · *Say she can just keep noticing*
+- `sunny` `"I can do that. Noticing is the easy part. Deciding is the hard part."`
+- `fiery` `"Noticing, fine. I'll keep track."`
+- `deep` `"Yes. I will keep noticing, and I will say when I know."`
+- `quiet` `"Okay. I'll keep an eye on it."`
+
+### R69 · `the-thing-she-cannot-name` · worry · school, after-school, independent · **fact: `coach-feel-cold`**
+**Kernel:** Practice with her coach is fine, but something is not landing. She cannot name it and has not found a way to say it that is fair, so she brings it as a feeling and not as a complaint.
+**Authoritative claims:** `coach-feel-cold` – she has a coach and her feel stands on the cold side, `seems-off` or `off`, the owner's «вроде нормально, но…». It licenses that something is not landing for her – **not** that the coach is bad, that anything is wrong, or what the something is. ⚠⚠ His register is doubt and never «всё плохо»: every voice says practice is FINE first, calls the thing small and unnamed, and one of them says outright that she does not want to be unfair to her coach by guessing. The confident step (`off`) reads the same row: a girl who is sure something is wrong may still be unable to say it, which is the honest version of both.
+**Fixed in all four voices:** practice with her coach is fine, something small and unnamed does not land, and she has not said it. Each invite reply carries the same fact: she cannot tell what it is, it is small, and it keeps coming back. The respond stance takes the parent's having felt that way before and the third lets her say it once she knows what it is; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Practice with my coach is fine. It really is. There's just something I can't quite put into words."` |
+| `fiery` | `"Practice with my coach is fine. That's the verdict. I just have a feeling something isn't landing, and I don't know how to say it."` |
+| `deep` | `"Practice with my coach is fine. It is only that something does not land, and I have not found a way to say it that is fair."` |
+| `quiet` | `"Practice with my coach was fine. I keep thinking there's something I haven't said."` |
+
+**Parent:** *Ask what she thinks is not landing* · *Say you have felt that way before* · *Say she can find the words once she knows what it is*
+
+**invite** · *Ask what she thinks is not landing*
+- `sunny` `"I can't tell. It isn't big. It's small and it keeps showing up."`
+- `fiery` `"If I knew, I'd have said it. It's small, it keeps coming back, and that's what's annoying."`
+- `deep` `"I cannot tell. It is small, and it comes back. I do not want to be unfair to my coach by guessing."`
+- `quiet` `"I can't tell. It's small. It keeps coming back."`
+
+**respond** · *Say you have felt that way before*
+- `sunny` `"Have you? That's a relief. I thought I was just making a fuss."`
+- `fiery` `"Then you know it isn't nothing. I'm not making it up."`
+- `deep` `"I thought it might only be me. It helps to know it isn't."`
+- `quiet` `"Okay. Knowing that helps a bit."`
+
+**space** · *Say she can find the words once she knows what it is*
+- `sunny` `"Okay. That takes the pressure off. I'll say it when I can."`
+- `fiery` `"Fine. But it's going to come out one way or another."`
+- `deep` `"Thank you. I would rather say it once, and say it properly."`
+- `quiet` `"Okay. I'll say it when I know what it is."`
+
+## Addendum 14.10 (round 52, builder H2) – six stint situations: she brings up the coach again at half a year and at a year together, and which of the three depends on how she feels about it
+
+**Superseded in part, 15.10 (J6).** The owner narrowed the two windows below on his review of R71 and R73 to R75: half a year is now weeks together 24 to 31 (not 24 to 43) and a year is weeks 48 to 63 (not 48 and later). The tables and the paragraph «Why those weeks» below are the record of 14.10; the current numbers are in «Addendum, round 52 J6 (15.10)», at the end of the H3 section.
+
+**The owner, 14.10:** «на тему смол-тока – нам это важно и критично как раз знать не один раз в 19 лет, а в первые год-два сотрудничества, чтобы понять это "тот" тренер или лучше поменять». Earlier the same day, on how sure she may sound: «не "всё плохо" а "я пока не очень поняла" или "вроде нормально, но"… она еще не уверена, а просто сомневается».
+
+**What this is.** The first three coach-feel situations (R67–R69) are her first impression, heard in the weeks after the six that count as too early. The owner wants her voice on the coach during the first year or two of a stint, not once in a career. This addendum adds the other two checkpoints of the design in `docs/rounds/round-52.md` (weeks together 12, 32 and 56): three situations for **half a year** (R70–R72) and three for **a year together** (R73–R75), each behind one side of the same feel (`coachFeel`) and now also behind the stint's age. The mechanism that brings them up at the checkpoint weeks is a separate item; until it lands, they come up in ordinary small talk, whenever their fact is true.
+
+| row | subject | stages | fact | what it is |
+| --- | --- | --- | --- | --- |
+| R70 `half-a-year-and-it-fits` | good-news | school, after-school, independent | `coach-feel-warm-half` | months in, practice with her coach fits her; the drill changed twice this month just as she was getting restless |
+| R71 `half-a-year-and-still-unsure` | observation | school, after-school, independent | `coach-feel-unsure-half` | half a year and she still cannot say whether it is the right coach; her answer changes from one month to the next |
+| R72 `months-in-and-still-waiting` | worry | school, after-school, independent | `coach-feel-cold-half` | practice is fine, and months in she is still waiting for it to click; she blames nobody |
+| R73 `a-year-and-she-would-not-swap` | good-news | school, after-school, independent | `coach-feel-warm-year` | a year in, she would not change it; every session starts with a question about what she wants to work on |
+| R74 `a-year-and-she-still-does-not-know` | decision | school, after-school, independent | `coach-feel-unsure-year` | a year and she still does not know; she asks whether they should look around, which would only mean looking |
+| R75 `a-year-in-we-need-to-talk` | decision | school, after-school, independent | `coach-feel-cold-year` | practice is fine and a year in it still is not working; she thinks they should talk about whether this is the right coach |
+
+**The six facts.** Each is the side of the scale R67–R69 use, with a window of weeks together added. The side is read from `coachFeel(world)` and nothing else (the parity law of R67–R69). The window is `world.week` minus `coachSinceWeek(world)`, the stint's age, which restarts on every hire and every release, so a new coach is a new first impression and then a new half year.
+
+| fact | true when | false on |
+| --- | --- | --- |
+| `coach-feel-warm-half` | weeks together 24 to 43, feel `seems-good` or `good` | any other week; `too-early`, `unsure`, `seems-off`, `off`; no coach; college |
+| `coach-feel-unsure-half` | weeks together 24 to 43, feel `unsure` | any other week; `too-early`, `seems-good`, `good`, `seems-off`, `off`; no coach; college |
+| `coach-feel-cold-half` | weeks together 24 to 43, feel `seems-off` or `off` | any other week; `too-early`, `unsure`, `seems-good`, `good`; no coach; college |
+| `coach-feel-warm-year` | weeks together 48 or more, feel `seems-good` or `good` | before week 48; the other sides; no coach; college |
+| `coach-feel-unsure-year` | weeks together 48 or more, feel `unsure` | before week 48; the other sides; no coach; college |
+| `coach-feel-cold-year` | weeks together 48 or more, feel `seems-off` or `off` | before week 48; the other sides; no coach; college |
+
+**Why those weeks.** Her feel is redrawn every four weeks (`COACH_FEEL.periodWeeks`), and the checkpoints 12, 32 and 56 are multiples of four, so the feel has just been read on the week a checkpoint arrives. The half-year window opens at 24 (six periods, half a year rounded down to a period), so the checkpoint at 32 sits eight weeks inside it, and it closes at 44 (eleven periods), twelve weeks after the checkpoint: room for the mechanism to try again if the checkpoint week is taken by another beat. It closes four weeks before the year window opens at 48 (twelve periods, a year rounded down to a period; the checkpoint at 56 sits eight weeks inside), so a line that says «months» is never heard beside one that says «a year». The year window has no end: «a year» is a floor and the stint does not get younger. ⚠ That makes «a year in» loose in a stint of three years; if the owner wants it tighter it is one constant (`COACH_TALK_YEAR_UNTIL_WEEK`).
+
+**Where they sit.** Last in this document, after R69, so the catalogue's first 68 rows keep their order. A situation is chosen by position in the filtered pool, so a pool of a different length reads a different position for the same seed: a career already under way may be shown a different situation next time than it would have been. That draw is on its own sub-stream (`seed:life:smalltalk:situation:<week>`), nothing is stored and the main stream does not move.
+
+**Stages and facts.** School, after-school and independent, **not college**, for the reason R67–R69 give: the coach does not work in college weeks, and each fact refuses college besides (the same `inCollege` the other coach-feel facts use; the leaf that holds the six is handed it by the hub, so there is one spelling of that question). `too-early` has no row, and with nobody employed `coachFeel` is `null` and every fact is false.
+
+**Subjects, by this document's own definitions.** R70 and R73 are good news: something good she brings home, kept small and true. R71 is an observation: something she noticed about herself, and she asks the parent for nothing. R72 is a worry: small, hers, not a crisis. R74 and R75 are decisions: a choice she wants to talk through. Here the choice is whether to look at other coaches, and the conversation is all it is. Nothing in these rows opens the coach market, hires or releases anyone, and no answer moves the bond, her spirits or the coach pair (ruling V2: her answers move nothing). Each subject keeps every row it had; the six new rows join a cell only while their fact is true.
+
+**What the lines were written against.**
+
+- **The gate licenses a feeling and nothing else.** She may say how it feels to be with this coach after months or a year; she may not say that the coach is good or bad, that she has improved or fallen back (the fog law, R45), or any result. Where a line says the drill changed, it is a texture of her telling, which nothing in the engine reads (the engine models no session).
+- **His register is doubt and never a verdict.** The cold rows (R72, R75) say practice is FINE first, in every voice, as R69 does, and then that it has not clicked or is not working for her. R72 says outright that she blames nobody; R75 asks to TALK and does not ask for anyone to go. The unsure rows say she cannot tell, and R71 says her answer moves from month to month, which is what the feel does (it is redrawn every four weeks). A girl who is sure (`good`, `off`) reads the same row as a girl who is not (`seems-good`, `seems-off`): the lines are true of both.
+- **The age is said in words that match the window.** The half-year rows say «months» or «half a year», never «a year»; the year rows say «a year» and never «months». The test keeps that, so a line cannot contradict the weeks the fact stands on.
+- **The coach is never pronoun-ed and never gendered (R15-7).** «My coach» and «the coach» as nouns only, and no line that names the coach carries a third-person pronoun. The Russian keeps the same discipline: no past-tense verb or adjective takes the coach as its subject (where the English says the coach changed the drill, the Russian says the drill was changed).
+- No «today», no exclamation mark (the fiery voice carries its edge in short verdicts), no digit, no long dash. Her replies describe what she noticed or what she will do with the thought, never a pattern of her own tennis (R34's finding).
+- The facts are the same in all four voices. Each invite reply adds one fact of its own, and the respond and space replies add none.
+- Every new line was searched for in `src/` before it was emitted (round 51's «Nobody argued.» sat in `albumCorpus.ts` too and turned an album test red at the closing gate); the sweep is kept in `tests/r52-coach-feel-talk.test.ts`.
+
+**The arithmetic after these six**, derived by `tools/small-talk-corpus-parse.ts` rather than carried: 74 rows, 296 openers, 222 labels, 888 replies and 20 shared beats (a good news, an observation, a worry and a decision have no second beat). The figures in the older sections are of the 51, 55, 58, 61, 65 and 68 and stay as the record of the passes that produced them.
+
+**Measured after** (14.10, the tree this addendum ships with).
+
+**The facts and the roll.** Over a grid of five careers, fourteen weeks and seven chemistry levels that reaches all six steps of the scale and both sides of every window edge (weeks 23|24, 43|44 and 47|48), each fact is true exactly when her feel is on its side and the stint is inside its window. Cut down to the six rows, the shipped roll raises each of them on a pose where its fact is true, raises a half-year row only on weeks 24 to 43 and a year row only from week 48, and none of the answers moves the bond, her spirits or the coach pair. A stint counted from the last hire reads the same: let go and hired back at week 100, week 124 is a half-year week and week 148 a year week. Six deliberate breaks of the leaf `coachFeel.ts`, each restored byte for byte, turn the test file red: the half-year window closing at 48 instead of 44 (5 tests), the year window opening at 44 instead of 48 (5), the cold year reading `unsure` as well (7), the college clause removed (1), and each edge moved by one week (4 and 6).
+
+**K4** (`npm run bench:smalltalk -- --seeds 60`): every cell passes. The six rows list school, after-school and independent, so each of those three stages gains two good news, one observation, one worry and two decisions; the reachable cells now read school 6 / 5 / 5 / 5, after-school 7 / 6 / 6 / 7 and independent 11 / 9 / 9 / 9 (good news / observation / worry / decision), and college is unchanged at 8 / 7 / 7 / 7 because the rows do not list it. **K2 and K3:** zero repeats wherever an alternative existed, in the posed career (adjacent 104/2340 → 0, within three 232/2340 → 0) and the bare one (115/2340 → 0, 233/2340 → 0) alike. **K5:** 74 situations · 296 voice columns; 29 voice columns flagged "never drawn": the three `march-entry-open` ones as before, eight of R67–R69 and eighteen of the new six. That is rarity and not unreachability: the bench's posed career poses a coach but neither a feel nor a stint age, and the half-year window is twenty weeks long.
+
+**How often a player meets one, before any checkpoint mechanism – still rare.** On played, coached careers (7 presets that start with a coach × 6 careers × 312 weeks = **252 coached years**; `R52_F4_SCALE=big R52_F4_REPORT=1 npx vitest run --project unit tests/r52-coach-feel-talk.test.ts -t "H2 R|H2 M"`) she talked 304 times and **16** of those conversations were a stint row: **0.063 a coached year**, against 0.052 for the three first-impression rows (13), so any of the nine coach-feel rows comes up about **0.115 a coached year – once in nine coached years**, where R67–R69 alone were once in nineteen. On the walk of the same file (36 careers × 24 years, a close bond, her level posed) the draw hands out 102 stint rows: `a-year-and-she-still-does-not-know` 41, `a-year-in-we-need-to-talk` 37, `a-year-and-she-would-not-swap` 22, `months-in-and-still-waiting` 2 and the two other half-year rows **none**, every one with its fact true at the roll. The half-year rows are the rare ones by construction: their window is twenty weeks of a stint, about one conversation, and each is one row among several in its subject. Ordinary small talk will not put the owner's «half a year» in front of a player; the checkpoint mechanism is what does, and that is the next item.
+
+**What it costs the pins that read the draw.** The six rows join a coached career's pool for part of every stint, and a situation is picked by position in the pool, so the digest pins that hash a played career move again (coach-travel-edge, succession-s1-start-year, the l3-7 twin and PICK-STABILITY in i18n-l3-5). They are not re-stamped here; with the six facts forced to false all thirteen of those files are green, which is the control that the rows, and nothing else in the change, moved them.
+
+### R70 · `half-a-year-and-it-fits` · good-news · school, after-school, independent · **fact: `coach-feel-warm-half`**
+**Kernel:** A few months into the stint, practice with her coach fits her. She is glad of it and says so plainly. She does not say the coach is the best, or that she has improved; only that it fits.
+**Authoritative claims:** `coach-feel-warm-half` – she has a coach, they have been together at least twenty-four weeks and fewer than forty-four, and her feel for the coach stands on the warm side of the scale, `seems-good` or `good`. It licenses that the arrangement fits her – **not** that the coach is good, that she has improved (the fog law, R45) or any result. ⚠ One set of lines serves both steps, so every voice keeps a clause that is true of the hedged step and of the confident one: «seems to», «so far», «I don't think».
+**Fixed in all four voices:** a few months in, practice with her coach fits her, and she says it plainly. Each invite reply carries the same fact: twice this month the drill changed just as she was getting restless, and she had not said anything. The respond stance takes the parent's gladness and the third lets her leave it unexplained; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"A few months in, and practice with my coach just fits. I noticed this week. I wanted you to know."` |
+| `fiery` | `"Months in, and practice finally makes sense. My coach seems to know what I need before I do. I'll only say it once."` |
+| `deep` | `"Months in, practice with my coach fits. I checked it against how I felt last month and the month before. It has held so far."` |
+| `quiet` | `"It's been a few months. I stopped looking at the clock in practice with my coach, and I only noticed this week."` |
+
+**Parent:** *Ask what she has noticed* · *Say you are glad it fits* · *Say she does not have to explain it*
+
+**invite** · *Ask what she has noticed*
+- `sunny` `"Twice this month my coach changed the drill right when I was getting restless. I hadn't said anything. It's a small thing, but I noticed."`
+- `fiery` `"Twice this month my coach changed the drill right as I got restless. I hadn't said a word. Make of that what you like."`
+- `deep` `"Twice this month my coach changed the drill at the moment I began to get restless. I had said nothing. I have thought about that more than I expected to."`
+- `quiet` `"Twice this month my coach changed the drill when I was getting restless. I hadn't said anything."`
+
+**respond** · *Say you are glad it fits*
+- `sunny` `"Thanks. It's nice to say it out loud to someone."`
+- `fiery` `"Good. So am I. Don't make a thing of it."`
+- `deep` `"Thank you. I waited a while to say it, so that it would not be something I said in a good week."`
+- `quiet` `"Thanks. I just thought you should know."`
+
+**space** · *Say she does not have to explain it*
+- `sunny` `"Okay, good, because I can't. It just fits."`
+- `fiery` `"Good, because I can't. It fits. That's the whole report."`
+- `deep` `"I could not explain it if I tried. It fits, and I am content to leave it there."`
+- `quiet` `"Okay. It just fits."`
+
+### R71 · `half-a-year-and-still-unsure` · observation · school, after-school, independent · **fact: `coach-feel-unsure-half`**
+**Kernel:** Half a year with her coach, and she still cannot say whether it is the right one. She says exactly that and asks the parent for nothing. What she has noticed is about her own mind: the answer changes from one month to the next.
+**Authoritative claims:** `coach-feel-unsure-half` – she has a coach, they have been together at least twenty-four weeks and fewer than forty-four, and her feel is `unsure`: the owner's «я пока не очень поняла», at half a year. It licenses that she has not made up her mind – **not** that this is the wrong coach, that anything about the training changed, or that she is better or worse. ⚠ «From one month to the next» is the engine's own truth said as a texture and not a number: her doubt is redrawn every four weeks.
+**Fixed in all four voices:** half a year with her coach, and she still cannot say whether it is the right one. Each invite reply carries the same fact: her answer changes from one month to the next. The respond stance takes the parent's view that half a year is not long, and the third lets her not know yet; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"It's been half a year with my coach, and I still can't tell if it's the right fit. I thought I'd know by now."` |
+| `fiery` | `"Half a year with my coach and I still can't say if it's the right one. You'd think I'd know by now."` |
+| `deep` | `"Half a year with my coach, and I have tried more than once to decide whether it is the right one. I cannot. Nothing has settled it either way."` |
+| `quiet` | `"Half a year with my coach, give or take. I'm still not sure what I think."` |
+
+**Parent:** *Ask what keeps her unsure* · *Say half a year is not that long to know* · *Say she does not have to know yet*
+
+**invite** · *Ask what keeps her unsure*
+- `sunny` `"It changes. Some months I'd say yes straight away, and the next month I'm not so sure. It doesn't settle."`
+- `fiery` `"It changes. One month I'd say yes, the next I'd say I don't know. It refuses to hold still. I'd like it to pick a side."`
+- `deep` `"My answer changes from one month to the next. In one I am nearly sure, and in the next I am not. I cannot find what moves it."`
+- `quiet` `"It changes month to month. This month I'm not sure."`
+
+**respond** · *Say half a year is not that long to know*
+- `sunny` `"Maybe not. I just thought it would be clearer by now."`
+- `fiery` `"Maybe. Half a year feels like plenty to me. Fine. I'll give it longer."`
+- `deep` `"Perhaps. I would still have liked to know by now. I will try to be patient with not knowing."`
+- `quiet` `"Maybe. I'll wait and see."`
+
+**space** · *Say she does not have to know yet*
+- `sunny` `"That helps. I'll stop quizzing myself every week."`
+- `fiery` `"Good. Then I'll stop asking myself every week. It hasn't helped."`
+- `deep` `"Thank you. It is a relief to be allowed not to know. I will say so when I do."`
+- `quiet` `"Okay. I'll let it be for now."`
+
+### R72 · `months-in-and-still-waiting` · worry · school, after-school, independent · **fact: `coach-feel-cold-half`**
+**Kernel:** Months in, practice with her coach is fine, and she keeps waiting for it to click. It has not. She does not blame anyone, and she brings it as a worry and not as a complaint.
+**Authoritative claims:** `coach-feel-cold-half` – she has a coach, they have been together at least twenty-four weeks and fewer than forty-four, and her feel stands on the cold side, `seems-off` or `off`: the owner's «вроде нормально, но…», at half a year. It licenses that it has not clicked for her yet – **not** that the coach is bad, that anything is wrong, or what would make it click. ⚠⚠ His register is doubt and never «всё плохо»: every voice says practice is FINE first, as R69 does, says «yet» or «not really», and the invite reply says she blames nobody. The confident step (`off`) reads the same row.
+**Fixed in all four voices:** months in, practice is fine, and she keeps waiting for it to click. Each invite reply carries the same fact: she is waiting for it to feel as though she and her coach are working on the same thing, and she blames nobody. The respond stance takes the parent's having waited for something too, and the third lets her decide nothing yet; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"It's been a few months and practice with my coach is fine. I'm still waiting for it to click, though. It hasn't yet."` |
+| `fiery` | `"It's been months. Practice with my coach is fine. I keep waiting for it to click. It hasn't, not really."` |
+| `deep` | `"Practice with my coach has been fine for months. I keep waiting for it to click. Lately I have started to wonder whether it will."` |
+| `quiet` | `"Months now, and practice with my coach is still fine. I keep waiting for it to be more than fine."` |
+
+**Parent:** *Ask what she is waiting for* · *Say you have waited for something to click too* · *Say she does not have to decide anything yet*
+
+**invite** · *Ask what she is waiting for*
+- `sunny` `"For it to feel like we're working on the same thing. I can't say it any better than that. I'm not blaming anyone."`
+- `fiery` `"For us to be working on the same thing. That's all. It's nobody's fault, so you can skip that question."`
+- `deep` `"For it to feel as if we are working on the same thing. I do not blame anyone for that. I only notice that it has not come."`
+- `quiet` `"For it to feel like we're working on the same thing. I'm not blaming anyone."`
+
+**respond** · *Say you have waited for something to click too*
+- `sunny` `"Did you? That helps, actually. I was worried I was being picky."`
+- `fiery` `"Then you know. It isn't nothing. It just sits there."`
+- `deep` `"Did you? Then I am a little less afraid that it is only me."`
+- `quiet` `"Oh. Okay. That helps a little."`
+
+**space** · *Say she does not have to decide anything yet*
+- `sunny` `"Good. I wasn't going to. I just needed to say it somewhere."`
+- `fiery` `"I wasn't going to decide anything. I just wanted it said."`
+- `deep` `"I know. I am not deciding. I only did not want to carry it alone."`
+- `quiet` `"Okay. I wasn't going to."`
+
+### R73 · `a-year-and-she-would-not-swap` · good-news · school, after-school, independent · **fact: `coach-feel-warm-year`**
+**Kernel:** A year with her coach, and she would not change it. She says so plainly, as something she has noticed and is glad of. She does not say the coach is the best, or that she has improved; only that she would not swap.
+**Authoritative claims:** `coach-feel-warm-year` – she has a coach, they have been together at least forty-eight weeks, and her feel stands on the warm side of the scale, `seems-good` or `good`. It licenses that she would stay – **not** that the coach is good, that she has improved (the fog law, R45) or any result. ⚠ One set of lines serves both steps: the hedged ones say «I don't think I'd», the confident ones say it flat, and every invite reply is true of both.
+**Fixed in all four voices:** a year with her coach, and she would not change it. Each invite reply carries the same fact: every session starts with her coach asking what she wants to work on, and after a year she still has an answer ready. The respond stance takes the parent's gladness and the third lets her simply enjoy it; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"A whole year with my coach already. I don't think I'd change a thing."` |
+| `fiery` | `"A whole year with my coach. I wouldn't swap it. There. I said it."` |
+| `deep` | `"A year with my coach. I have asked myself whether I would change it, more than once, and each time the answer was no."` |
+| `quiet` | `"A year with my coach, give or take. I wouldn't change anything."` |
+
+**Parent:** *Ask what she would miss* · *Say you are glad it has gone this way* · *Say it is fine to just enjoy it*
+
+**invite** · *Ask what she would miss*
+- `sunny` `"How my coach starts every session by asking what I want to work on. A year of it, and I still have an answer ready."`
+- `fiery` `"How every session starts. My coach asks what I want to work on. A year of that, and I still have an answer ready."`
+- `deep` `"That every session begins with my coach asking what I want to work on. I have answered that question for a year, and it has never been an empty ritual."`
+- `quiet` `"That every session starts with a question about what I want to work on. I've always had an answer."`
+
+**respond** · *Say you are glad it has gone this way*
+- `sunny` `"Me too. I didn't know a year could feel this short."`
+- `fiery` `"Good. I'm glad too. Don't tell my coach I said so."`
+- `deep` `"Thank you. A year is long enough for me to trust it, and I did not expect to say that."`
+- `quiet` `"Thanks. Me too."`
+
+**space** · *Say it is fine to just enjoy it*
+- `sunny` `"Okay. That's what I'll do."`
+- `fiery` `"I will. I'm not going to analyse it."`
+- `deep` `"I will try. I tend to look for the catch, and I would like to stop."`
+- `quiet` `"Okay. I will."`
+
+### R74 · `a-year-and-she-still-does-not-know` · decision · school, after-school, independent · **fact: `coach-feel-unsure-year`**
+**Kernel:** A year with her coach, and she still does not know whether it is the right one. She has started to wonder whether they should look around, and she asks the parent what they think. It is a question and not a request.
+**Authoritative claims:** `coach-feel-unsure-year` – she has a coach, they have been together at least forty-eight weeks, and her feel is `unsure`. It licenses that she has not decided and would like to talk about looking – **not** that this is the wrong coach, or that anyone should be replaced. ⚠ **Nothing here opens the coach market, hires or releases anyone**: «look around» is a thing she asks, and what the parent does with it is the parent's.
+**Fixed in all four voices:** a year with her coach, she still does not know, and she asks whether they should look around. Each invite reply carries the same fact: looking around would only mean looking, to see who else is out there, and she is not saying leave. The respond stance takes the parent's offer to look together and the third takes the parent's saying there is no hurry; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"It's been a year with my coach, and I honestly can't tell if it's right. Should we maybe look around?"` |
+| `fiery` | `"A year with my coach and I still don't know. Should we be looking around?"` |
+| `deep` | `"A year with my coach, and I still cannot say whether it is the right one. I have started to think we should look around, and I wanted to ask you before I decided anything."` |
+| `quiet` | `"A year with my coach, give or take. I still don't know. Do you think we should look around?"` |
+
+**Parent:** *Ask what looking around would mean* · *Say you could look around together* · *Say there is no hurry to decide*
+
+**invite** · *Ask what looking around would mean*
+- `sunny` `"Only looking. Seeing who else is out there. I'm not saying leave. I'd just like to know what the choice is."`
+- `fiery` `"Looking. That's all. Not leaving. I want to see what else there is, so that staying is a choice and not a habit."`
+- `deep` `"Only looking. I am not asking to leave. I would like to know what else exists, so that if I stay, I stay because I chose it."`
+- `quiet` `"Just looking. Not leaving. I'd like to know what else there is."`
+
+**respond** · *Say you could look around together*
+- `sunny` `"Together would be better. I wouldn't know where to start."`
+- `fiery` `"Together. Good. But I'm the one who says yes or no."`
+- `deep` `"I would like that. I would not want to do it alone, and I would not want it done for me."`
+- `quiet` `"Okay. Together is good."`
+
+**space** · *Say there is no hurry to decide*
+- `sunny` `"That's a relief. I'll keep going and see how it feels."`
+- `fiery` `"Fine. No hurry. But I'm not going to wonder forever."`
+- `deep` `"Thank you. I will keep going to practice and keep watching how I feel. I will tell you when it settles."`
+- `quiet` `"Okay. I'll keep going and see."`
+
+### R75 · `a-year-in-we-need-to-talk` · decision · school, after-school, independent · **fact: `coach-feel-cold-year`**
+**Kernel:** A year in, practice with her coach is fine, and it still is not working for her. She thinks they should talk about it. She has not decided anything, and she wants the parent in the conversation.
+**Authoritative claims:** `coach-feel-cold-year` – she has a coach, they have been together at least forty-eight weeks, and her feel stands on the cold side, `seems-off` or `off`. It licenses that she wants to talk – **not** that the coach is bad, that anything is wrong, or that the coach must go. ⚠⚠ This is the owner's «тот тренер или лучше поменять» put into her mouth as a conversation, and it keeps his register: practice is FINE first, in every voice; it still does not land; and she asks to TALK. The confident step (`off`) reads the same row, because a girl who is sure something is not working may still not know the answer. Nothing here opens the coach market, hires or releases anyone.
+**Fixed in all four voices:** a year in, practice is fine and it still is not working for her, and she thinks they need to talk about it. Each invite reply carries the same fact: what she wants to talk about is whether this is the right coach for her, and she does not know the answer. The respond stance takes the parent's wish to talk it through and the third lets her start when she is ready; neither adds a fact.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"A year in, and practice with my coach is fine, but it still isn't working for me. I think we should talk about it."` |
+| `fiery` | `"A year in. Practice with my coach is fine, and it still isn't working. I think we need to talk about it."` |
+| `deep` | `"Practice with my coach has been fine for a year, and it has never quite felt right. I have thought about this for a long time, and I think we need to talk."` |
+| `quiet` | `"A year of practice with my coach, give or take. It's fine, and it still isn't working. Can we talk about it?"` |
+
+**Parent:** *Ask what she wants to talk about* · *Say you would like to talk it through* · *Say she can start whenever she is ready*
+
+**invite** · *Ask what she wants to talk about*
+- `sunny` `"Whether this is the right coach for me. I don't know the answer. I only know I can't keep not asking."`
+- `fiery` `"Whether this is the right coach for me. I don't have the answer. I'm done pretending I'm not asking."`
+- `deep` `"Whether this is the right coach for me. I do not know the answer, and I do not think it is anyone's fault. I only know I cannot go on not asking."`
+- `quiet` `"Whether this is the right coach for me. I don't know. I just can't keep not asking."`
+
+**respond** · *Say you would like to talk it through*
+- `sunny` `"Thank you. I was a bit scared to bring it up."`
+- `fiery` `"Good. That's all I wanted. Talking. We can argue about the rest later."`
+- `deep` `"Thank you. I was afraid that asking would sound like an accusation. I only want it to be a question."`
+- `quiet` `"Okay. Thanks. I'd like that."`
+
+**space** · *Say she can start whenever she is ready*
+- `sunny` `"Okay. I want to find the words first."`
+- `fiery` `"Fine. Soon, though. I've waited a year already."`
+- `deep` `"Thank you. I will say it when I can say it without making it worse."`
+- `quiet` `"Okay. I'll let you know."`
+
 ---
+
+## Addendum 14.10 (round 52, builder H3) – the stint checkpoints: her talk about the coach arrives on its own at weeks 12, 32 and 56 of a stint
+
+**Superseded in part, 15.10 (J6).** The half-year checkpoint moved from week 32 to week 28 on his review of R71, so the checkpoints are now 12, 28 and 56, and the half-year window ends at 32. The numbers in this addendum (the rules table, the sides at week 32, the measurements and the pin table) are the record of 14.10; see «Addendum, round 52 J6 (15.10)» below.
+
+**The owner, 14.10:** «на тему смол-тока – нам это важно и критично как раз знать не один раз в 19 лет, а в первые год-два сотрудничества, чтобы понять это "тот" тренер или лучше поменять. Давай что-то на эту тему решим.»
+
+**What this is.** R67–R75 are nine situations about the coach, and until now they came up in ordinary small talk, on the lottery: H2 measured 0.063 of them a coached year (16 conversations in 252 coached years), and the half-year rows did not drop once in 36 careers. This addendum adds the mechanism the design in `docs/rounds/round-52.md` asks for. At **12, 32 and 56 weeks together** (about three months, seven and thirteen) the roll asks first whether a checkpoint is due, and if one is, she brings up the coach on that week and does not wait for the die. The weeks are `COACH_TALK_CHECKPOINTS` in `src/engine/world/coachFeel.ts`; the due-check and the raise are `coachTalkCheckpointDue` and `raiseCoachCheckpointTalk` in `src/engine/world/lifeBeat/smallTalk.ts`, called on the first line of `rollSmallTalk`. No string changed (the rows exist) and nothing is persisted (no schema move).
+
+**The rules, as built.**
+
+| rule | as built | why |
+| --- | --- | --- |
+| when | a week whose weeks together `w` has `cp <= w < cp + 4`, for cp in 12 / 32 / 56 | each checkpoint is a multiple of the feel period (4), so her feel was just re-read that week; 32 and 56 sit inside the half-year and year windows of H2, and the window is one period long |
+| once | the checkpoint is **said** when a small-talk row of one of its three situations was raised at a week at or after `coachSinceWeek + cp`; read off the life log | the log is the memory, as it is for the season tally; a row the lottery raised inside the window counts, one raised before it does not; a re-hire or a release moves the stint start, so a new coach restarts all three |
+| which row | the one of the checkpoint's three situations that `reachableSituations` says is reachable now: her real feel, the stint's window, the stage and her voice have already said which | one spelling of her side, not a second table of sides next to the facts; `too-early` and college are on no side |
+| if the week is taken | a live card or a pending beat holds the week; she tries again **the next week** of the window | the lottery's own two guards, `liveSoftBeat` and `pendingLifeBeat`: one thing at a time |
+| after the window | the checkpoint is **skipped for good** | «a year in» said at week 60 is no longer on time, her feel has been re-read since, and the next checkpoint is the place for the next word |
+| not at | a bond band with no small talk (strained, cold: `smallTalkPerWeek` is 0); college; nobody employed | at strained and cold she does not confide, and the tile and the week notes still speak. This is a single clause in `raiseCoachCheckpointTalk` if the owner rules otherwise |
+| exempt from | the weekly chance (the 8% and 4% die) and the season cap of four | it is not chatter: a talk that is **due** at a fixed week is the thing the owner asked for, and a die or a full season must not eat the one conversation that tells him whether to keep the coach. The row still lands in the log, so it counts toward the season's tally for the chatter that follows |
+| draws | none on MAIN; no gate die, no subject draw and no situation draw (the pick is determined); one frame draw on its own key `seed:smalltalk:frame:<week>`, as every small-talk row has | invariant 2; the row enters the recency memory like any other, and (next row) the memory can refuse it |
+| repeats | a pick that is among her **last two** small-talk rows is refused, and that week is a held week like any other | the owner's round-43 law (#8(a)): she does not repeat what she has just said. The ordinary pick keeps it by narrowing the pool; a checkpoint's pick is a pool of one, so the memory can only veto. **This rule is not in the design.** The first draft did not have it and repeated one of her last two conversations in 9 of 4728 (`tests/round51-school-story-pool.test.ts`, «the memory still holds»); the lottery had raised the same coach situation in the weeks before the window opened, where it does not count as the checkpoint's talk |
+
+**Prediction** (written before the scale run; the two-career gate arm of the test file had been run once while the harness was built and read six windows of six, and the figures below are the reasoning, not that sample). Cohort: econ-bench presets that start with a coach, 7 presets × 6 careers × 312 weeks, in two parent arms: *answers* (a card is answered the week it is raised, so it holds nothing) and *ignores* (a card lives its three weeks unanswered).
+
+| what is measured | predicted | reasoning |
+| --- | --- | --- |
+| stints that reached 60 weeks and got all three talks, among those with at least one steady-or-close week in each window | **answers 96–100%, ignores 92–99%**; the owner's target is 90% | a window is four weeks and the only things that hold a week are a pending beat (rare) and, in *ignores*, a card raised in the two weeks before (a card is live for three weeks, so it can hold the first two weeks of a window and never the last two); missing a window takes a card plus a second blocker |
+| talked windows that were deferred | **answers under 5%, ignores 8–16%**; none later than three weeks | a card is raised in about 4–8% of weeks and holds the next two |
+| coach talks per coached year, first two years of a stint | **with the mechanism 1.3–1.6, without it 0.05–0.5**; three talks in two years is 1.5 before gates | F4/H2 measured 0.052 and 0.063 for the rows alone; the two-career gate arm read about 0.5 without the mechanism, so the lower bound is a range |
+| sides at each checkpoint, against builder F1's bench B14 at the nearest weeks | week 12: warm 24%, unsure 48%, cold 28% (B14 at 13); week 32: 26% / 38% / 36% (between B14's 26 and 52); week 56: 28% / 22% / 50% (B14 at 52). Played pairs differ from the bench's, so ±10 points | the cold share rises and the unsure share falls with the stint, which is the shape B14 measured |
+| windows with no talk because the bond was strained or cold for the whole window | **under 3% of windows** | the bench policies keep the bond steady or better; this is by design and is counted, not a miss |
+| windows missed for any other reason | **0–3%** | if it is more, the cause is named below |
+
+**Measured** (14.10, the tree this addendum ships with). Two runs of the played-career harness in `tests/r52-coach-talk-checkpoints.test.ts` §H. **The scale run**, `R52_H3_REPORT=1 R52_H3_SCALE=big npx vitest run --project unit tests/r52-coach-talk-checkpoints.test.ts -t "how many stints"`: 7 presets that start with a coach × 6 careers × 312 weeks = 42 careers, each kept its founding coach, so 42 stints and every one past 60 weeks (83.2 coached years in the first two years of a stint). **The wide run** for the sides, `R52_H3_CAREERS=24 R52_H3_WEEKS=70 R52_H3_ARMS=answers R52_H3_NOOFF=1`: 168 stints. The scale run ends with vitest's own «Timeout calling onTaskUpdate» (the birpc stall the house documents for a file longer than 60 s); the test in it passed. The gate runs a two-career, 156-week arm of about five seconds.
+
+| what is measured | predicted | measured |
+| --- | --- | --- |
+| stints past 60 weeks that got all three talks, among those with a steady-or-close week in every window | answers 96–100%, ignores 92–99%; the owner's target is 90% | **scale run: 40 of 40 (100%) in both arms. Wide run: 152 of 155 (98.1%).** |
+| the same over ALL stints past 60 weeks, the strained-or-cold ones included | not predicted separately | scale run 40 of 42 (95.2%); wide run 152 of 168 (**90.5%**, only just over the 90%, and every point of the gap is the bond or the veto below) |
+| talked windows that were deferred | answers under 5%, ignores 8–16%; none later than three weeks | answers 1 of 124 (0.8%, at +2); **ignores 15 of 124 (12.1%): 2 at +1 week, 13 at +2**; wide run 5 of 488 (1.0%, all at +2). None later than two weeks |
+| coach talks per coached year, first two years of a stint | with the mechanism 1.3–1.6, without 0.05–0.5 | **with 1.575 (answers) and 1.563 (ignores); without 0.180 and 0.168** – about nine times as many. Three talks in two years is 1.5; the other 0.07 is the lottery |
+| windows with no talk because the bond was strained or cold for the whole window | under 3% | scale run 2 of 126 (1.6%); wide run 13 of 504 (2.6%). Counted, not a miss: by design |
+| windows missed for any other reason | 0–3% | scale run 0 of 124; wide run **3 of 491 (0.6%)** – all three are the recency veto, below |
+| MAIN draws with and without the mechanism | identical | identical in all 42 careers and both parent arms: the draw count and the next three values |
+
+**The sides at each checkpoint**, against builder F1's bench B14 at the nearest weeks (`docs/specs/the-chemistry-2026-09.md` §17.3), wide run, 488 talks:
+
+| checkpoint | talks | warm | unsure | cold | B14 (warm / unsure / cold) |
+| --- | --- | --- | --- | --- | --- |
+| 12 | 166 | 38 (22.9%) | 83 (50.0%) | 45 (27.1%) | week 13: 23.9 / 47.8 / 28.4 |
+| 32 | 167 | 51 (30.5%) | 65 (38.9%) | 51 (30.5%) | between weeks 26 and 52: about 25.7 / 38.5 / 35.8 |
+| 56 | 155 | 65 (41.9%) | 39 (25.2%) | 51 (32.9%) | week 52: 27.9 / 23.3 / 48.8 |
+
+(The scale run, 42 stints, has the same shape: 10 / 24 / 8 at 12, 9 / 23 / 10 at 32, 16 / 10 / 14 at 56.) **The prediction held at 12 (within 3 points) and at 32 (within 6) and MISSED at 56**: warm 14 points above the band and cold 16 below. At 155 talks a share has a standard error near 4 points, so it is not noise. The played careers' pairs are warmer a year in than B14's 1200 random pairs, so the cold talk (R75, the one that asks to talk about another coach) is met by a third of the stints against the half B14 would suggest. The mechanism reads her real feel and is indifferent to this; it is reported as a finding and was not investigated further.
+
+**The three windows that were not talked, and why.** Each had a steady bond, a school stage and no other beat near it, and each had the same cause: the recency veto. In two of them the lottery had raised R68 (`practice-feels-different`) at week 7, the first week after the «too early» weeks, and nothing was said between; at week 12 the pick would have repeated her latest conversation. In the third the lottery had raised R71 (`half-a-year-and-still-unsure`) at week 25, a week after the half-year window opened, with nothing since; the pick at week 32 would have repeated it. So in all three the player did hear that conversation, five to seven weeks early, and the checkpoint stayed quiet instead of saying it twice. The alternative (count a same-side row from the two periods before a checkpoint as its talk) would make these three windows talked and is a rule the owner can ask for.
+
+**What it costs the pins that read the draw.** `npx vitest run --project unit coach-travel-edge i18n-l3-7-twin succession-s1-start-year i18n-l3-5-life-beats wave3-small-talk round42-small-talk-exchange wave3-soft-surface r52-coach-feel-talk round44-corpus-roundtrip principles-a06-life-beat-direction principles-a03 import-cycles tests/condition.test.ts r51-coach-real-hunch sim-serialisation principles-b08-presence-reach round51- pin-hygiene principles-t514 world-symbol`: 34 files, 8 red, 26 green (37 tests of 505). **Control: with `COACH_TALK_CHECKPOINTS` emptied** (which `tests/r52-coach-talk-checkpoints.test.ts` §G shows is the pre-H3 roll, row for row) the same digest files are red anyway, because F4's and H2's rows had already lengthened a coached career's pool:
+
+| file | red with the mechanism | red with it emptied | what it is |
+| --- | --- | --- | --- |
+| `coach-travel-edge-recent-schemas` | 10 | 10 | digests of a played coached career, v85–v94 roll-backs |
+| `succession-s1-start-year` | **9** | 3 | three default careers at creation and after 110 weeks: **H3 adds 6** |
+| `coach-travel-edge-late-schemas` | 8 | 8 | v77–v84 |
+| `coach-travel-edge-prior-schemas` | 3 | 3 | v74–v76 |
+| `coach-travel-edge` | 3 | 3 | a hired coach who stays at home |
+| `i18n-l3-5-life-beats` | 1 | 1 | PICK-STABILITY, career 5/0 |
+| `i18n-l3-7-twin` | 2 | 2 | the twin's two leaves, red before F4 as well (`tests/r52-coach-feel-talk.test.ts` header) |
+| `round51-school-story-pool` | **1** | 0 | **not a digest: a sample floor.** «the story subject was actually drawn» wants more than 250 school stories in 120 careers × 12 years and reads 241. A checkpoint talk is a conversation of its own that counts toward the season's tally of four, so in a close-bond season with one the lottery has a slot fewer. The second case of that file, «the memory still holds», was red (9 of 4728) until the recency veto and is green |
+
+None of them is re-stamped here: the architect harvests the digests once at the close. `tests/condition.test.ts` (the frozen MAIN capture, 41550 draws / hash `e6b0c709`) did not move, and `wave3-small-talk`, `round42-small-talk-exchange`, `wave3-soft-surface`, `r52-coach-feel-talk` and `round44-corpus-roundtrip` stay green.
+
+**The two levers, if the owner rules otherwise.** (1) At a strained or cold bond she does not confide here; to let the talk through anyway, delete the one `smallTalkChanceFor(...) <= 0` clause in `raiseCoachCheckpointTalk`. (2) The recency veto is `repeatsOneOfHerLastTwo`; without it the three windows above are talked and she may repeat herself in about one career in thirteen (9 repeats in the 120 careers of the story-pool walk).
+
+
+### Addendum, round 52 J1 (14.10) – the checkpoint the bond shut, and the silence that shows
+
+**The ruling.** The owner approved the recommendation («давай по рекомендациям», round 52, his answers on the close, №1): at a strained or cold bond she does not confide at a stint checkpoint either – the checkpoint talk keeps the bond gate every small talk has – and **the silence shows**. A checkpoint the bond shuts leaves a note in the parent's voice on the week's diary scrap, so the player can see what the relationship cost. This is the first lever of the paragraph above, answered: the clause stays, and now it is visible.
+
+**The rule, in five parts.**
+
+1. *One spelling.* `bondLetsHerConfide(world)` in `world/lifeBeat/smallTalk.ts` answers «does the bond let her confide». The lottery's gate (`smallTalkEligible`), the checkpoint talk (`raiseCoachCheckpointTalk`) and the new fact all call it; the first two behave exactly as before. A test moves the table and watches all three move together.
+2. *A fact, derived.* `DiaryFacts.coachTalkShut: 'strained' | 'cold'`, valued by the band like `coachFeelRead`. It is present on a week if and only if a coach is employed, a stint checkpoint is due and not yet spoken, the bond does not let her confide, and it is the first week of that checkpoint's window (weeks together equal the checkpoint: 12, 32 or 56) – ⚠ widened on 14.10 by J1b, below, to the first week of the window on which the line could be heard. So it appears once per checkpoint – at most three times in a stint's first 56 weeks – and the key is absent on every other week; an uncoached career's facts, and a coached career's at a steady or close bond, are byte-identical to what they were. Nothing is persisted and nothing is drawn (no MAIN, no new stream).
+3. *Four lines*, in the parent's voice, drafts for his pass (`RU09D-CFW-11` to `-14` in Russian). The licence is the fact's band, she is at the table (`underOneRoof`), she did not travel that week (`notTravellingWeek`) and she is not laid off. It is not necessarily a plain training week: a holiday, an exam week or the off-season still has a table.
+
+| band | line |
+| --- | --- |
+| strained | `Asked about the coach, she said: "Fine." Nothing after it.` |
+| strained | `She did not mention the coach once. We did not know how to ask.` |
+| cold | `The coach was not mentioned. She had closed up, and we left it alone.` |
+| cold | `Dinner was quiet. Whatever she thinks of the coach, she kept it to herself.` |
+
+   The doctrine of who-she-is §5b holds. At strained and cold the voices collapse into one flat pool and tier 0 (her quoted words inside the parent's story) is absent at cold, so the two cold lines carry **no words of hers**, and the strained pair has one flat-pool answer («Fine.») and one line that quotes nobody. The coach is a noun and never a pronoun (R15-7), there are no contractions, and every line fits the 80-character scrap.
+4. *The lead.* In `weekNoteLine`, on a week a silence line is licensed the silence lines are the whole pool – they lead the ten coach-feel lines of F3 and everything else – and the one-in-three coin does **not** silence the week. A checkpoint is due, not chatter (H3's own reason for the talk). The coin is still drawn, from the same stream in the same order, and only its `return null` is skipped on that week, so no other week's output moves.
+5. *The one narrowing the brief did not name.* The licence also requires that she is not laid off. A standing rule of this pool, pinned in `tests/week-notes.test.ts`, is that every line licensed on an injured week claims the injury («a layoff takes the note»); a checkpoint that falls in a layoff week therefore shows the injury note and not the silence. The measurement below counts those.
+
+**Prediction, written before the measurement (J1, 14.10).** *Posed:* a coached career whose bond is held in the cold band (and, in a second arm, the strained band) for the first 60 weeks of the stint meets three shut checkpoints, at 12, 32 and 56 weeks together. The fact is present on all three (the coach and the bond are posed, nothing else can spoil it). The note prints when that first week is a roof-stage week she did not travel and was not laid off. A tournament or a journey is a large share of a junior's calendar, so I expect **50–65% of the shut checkpoints to print (1.5–1.9 of 3)**, and the shortfall to be travel (**30–45%**), a layoff (**2–8%**) and the roof stages never (**0%**, the first 60 weeks are school age). I therefore expect travel to cost **more than a quarter**, which would put the widening to the first non-travelling week in front of the architect. *Played:* shut checkpoints are rare in a played career (H3 measured 2.6% of windows with a strained or cold bond all through), so I expect about **0.02 silence notes per coached year** (range 0–0.05), and **exactly none at a steady or close bond**, where the fact cannot be present by construction.
+
+**Measured (J1, 14.10)** with `tests/r52-checkpoint-silence.test.ts` at `R52_J1_REPORT=1`. *Posed:* presets 2 and 5, twelve careers each, the bench's `POLICIES[0]`, the bond held at cold (arm one) and at strained (arm two) for the 60 weeks after the stint began; the stint begins at a spread of weeks of the calendar (0, 5, 10, 15, ... – a coach let go and hired back, H3's fixture). *Played:* presets 1, 2, 4, 5, 6, 7 and 8, six careers each, 156 weeks, the parent answering each card the week it is raised (H3's `answers` arm), the bond left to move.
+
+| posed, 144 shut checkpoints (24 careers x 3 checkpoints x 2 bands) | predicted | measured |
+| --- | --- | --- |
+| the fact present on the checkpoint's first week and on no other of the 60 | all 144 | **144 of 144** |
+| the note printed | 50–65% | **62 (43.1%)** – a miss, low by seven points |
+| lost to a travelling week (a tournament, a journey, the week home) | 30–45% | **78 (54.2%)** – a miss, high by nine |
+| lost to a layoff | 2–8% | 4 (2.8%) |
+| lost to the roof stages | 0% | 0 |
+| lost for no named reason | 0 | 0 |
+
+**Travel costs the note more than half of the shut checkpoints, well over the quarter that was the line for telling the architect.** The two bands read the same twenty-four careers (the bond does not feed the calendar), so they give identical numbers and the sample is 72 distinct checkpoints rather than 144. The first measurement began every stint at week 0 (`R52_J1_ALIGNED=1`), which puts the checkpoints on the same three calendar weeks of every career, and the bench calendar is the same in all of them: 30 printed (20.8%), 104 lost to travel (72.2%), 10 to a layoff (6.9%). The spread start is the better estimate of a hire on any week; both are far over a quarter. The bench policy enters tournaments eagerly, and a parent who plans lighter has more free weeks.
+
+**Not built by J1, built by J1b the same day (below): the first free week of the window.** If the note could print on the first week of the four-week window that is at the table, at home and not a layoff, instead of only on the first week, the same 144 checkpoints would carry it as follows. Week 0 (as built) 62 (43%); by week 1, 100 (69%); by week 2, 112 (78%); by week 3, 130 (90%); never in the window, 14 (10%). Doing it would mean the fact lasting through the window until the checkpoint is spoken, which is a change to `coachTalkShutRead`'s first-week clause and to the "once per checkpoint" argument above, and nothing of it is built. ⚠ **Built on 14.10 by J1b, below**; the figures in this paragraph were the ceiling it was measured against.
+
+| played, 126 coached years (6552 coached weeks) | predicted | measured |
+| --- | --- | --- |
+| weeks at a steady or close bond carrying the fact, or a silence line | none | **none, in 5709 weeks** |
+| first weeks of a checkpoint the bond shut | – | 3 (0.024 a coached year) |
+| silence notes printed | about 0.02 a coached year (0–0.05) | **0** – two on a travelling week, one in a layoff; at the 43% print share the chance of none in three is 0.19, so this is not a miss |
+| the roll read a steady bond and the snapshot a strained one, or the reverse, on a checkpoint's first week (the one-week lag, `coachTalkShutRead`) | – | 0 and 0 |
+
+A shut checkpoint is rare in a played career, as H3 found, and the note is rarer: it is a signal for the careers that have earned it, not a regular line. On that first week F3's coach-feel lines are displaced by design (the checkpoints are multiples of the feel period, so her feel is re-read the same week).
+
+**What it costs the pins.** Three pool-size pins in `tests/i18n-l3-4-diary-corpora.test.ts` are re-aimed with a dated note (explicit rows 145 to 149, static cells 311 to 315, week notes 337 to 341), and F3's «every other line is byte-identical» pin in `tests/week-notes.test.ts` takes the four out of the rest by claim, its count (301) and hash unchanged. **Every digest family H3's table named is green with this change** (the ten `coach-travel-edge*` files, `succession-s1-start-year`, `i18n-l3-5-life-beats` with its PICK-STABILITY, `i18n-l3-7-twin`, `r51-coach-real-hunch`, `round51-school-story-pool`: 16 files, 199 tests), **and still green with the fact made absurd** (the bond clause deleted, so every coached career carries it at 12, 32 and 56). So none of them reads the week note or the diary facts, and this change gives the architect nothing to harvest there. The frozen MAIN capture (`tests/condition.test.ts`, 41550 draws, `e6b0c709`) did not move: the fact and the lines draw nothing from MAIN.
+
+**Proved by mutation, each restored byte for byte:** dropping the bond clause from the fact, dropping the lead, dropping the coin exemption, dropping the layoff narrowing (the standing rule's own pin goes red) and re-spelling the clause in the checkpoint talk (the one-spelling arm goes red) each turn at least one arm red.
+
+### Addendum, round 52 J1b (14.10) – the silence waits for the first week it can be heard
+
+**The ruling.** The architect, on J1's own number: 43% is not «the silence shows». J1 measured the note on the checkpoint's first week alone and found a travelling week took 54.2% of the 144 shut checkpoints (stints begun at week 0 read 72%). So the fact is **widened**, not retuned: it is present on the **first week of the checkpoint's window (cp <= w < cp + 4) on which the line could be heard**, and on no other week. Still once per checkpoint, still derived: nothing is persisted, no schema move, zero draws, and the four lines stay exactly as they are.
+
+**The rule, as built.** At week *w* inside the window, `coachTalkShut` is present if and only if (a) a checkpoint is due and unspoken and the bond does not let her confide (J1's clauses, unchanged; a talk she gave inside the window clears it), (b) *w* is a week the line could be heard, and (c) no earlier week *u* of the window (cp <= *u* < *w*) was. «Could be heard» is the licence's own three inputs: she is at the table (`underOneRoof`), she did not travel (`notTravellingWeek`) and she is not laid off.
+- *Where it lives.* `coachTalkShutRead(world, heardAt)` in `world/lifeBeat/smallTalk.ts` owns the window arithmetic (the world's). `heardAt` is `silenceHeardAtFor(view)` in `diary.ts`, which asks `silenceCouldBeHeard` (`diary/weekNotes.ts`, the predicate the licence now uses too) of the week's journey facts. `toSnapshot` assembles the diary view first, then asks, then hands the view the fact; the world layer imports nothing new.
+- *One spelling.* The week's journey facts (the events at the week, the **net** travel spend – a refunded trip nets to 0 –, «did she play», the scene of the journey home) were read inline in `assembleDiaryFacts`. They are now one pure function of the week, `weekAwayOf` in the new leaf `diary/weekAway.ts`, called by `assembleDiaryFacts` for the current week (its output byte-identical: the diary tests) and by `silenceHeardAtFor` for each earlier week. `notTravellingWeek` takes the three facts it reads rather than a whole `DiaryFacts`, so the same predicate answers both. The net travel spend also had two spellings (the diary's inline sum and `travelCentsIn`); it has one now.
+- *The cap.* The look-back reaches 3 weeks. `pruneEvents` spares the newest `EVENTS_ORDINARY_FLOOR` (120) ordinary rows – the travel rows and the tournament summary are ordinary – and trims her matches oldest-first, so the last three weeks are the last to go. The arms pin it with an oracle: at every snapshot of the played careers, the reading of each of the previous three weeks taken now from the capped log is compared with the reading recorded on that week.
+- *What has no history.* The roof (life stage), an injury, the bond band and the spoken state have no per-week record, so an earlier week is read with **today's** value and the approximation is counted below. A reveal in flight (`pendingUnfinished`) belongs to the current week only – the tick refuses to leave a week with one – so an earlier week is read with none.
+
+**Prediction, written before the run (J1b, 14.10).** The same 144 posed shut checkpoints (24 careers x 3 checkpoints x 2 bands; the two bands read one calendar, so 72 distinct). J1's own count of the window is the ceiling: a free week exists in the window of 130 of 144 (90.3%). So:
+1. **Printed 85–92%** (123–132 of 144), the shortfall being the checkpoints whose four weeks are all away – **about 14 of 144 (10%)**, which is what J1 counted as «never in the window».
+2. **Zero double prints.** A week that printed was hearable under today's values, so it hides every later week of the window; the argument is on `coachTalkShutRead`. The arm counts checkpoints with two printed weeks.
+3. **The print lands on the first free week**: by offset 0 62 (43%), by offset 1 100 (69%), by offset 2 112 (78%), by offset 3 130 (90%) – the shape J1 counted, now as a printed share.
+4. **The approximation costs 1% or less (at most 1–2 of 144 misses).** The roof cannot change inside four weeks of a school-age stint (0 expected); the bond is posed (0). What is left is a layoff that began and ended inside one window before the first free week: J1 saw a layoff on the first week of 4 of 144, and only the subset that heals in time and hides a free week behind it can cost a print.
+5. **The cap costs nothing**: 0 disagreements between the reading of an earlier week now and the reading recorded on that week, over every snapshot of the played careers.
+*Played:* the shut-checkpoint rate does not move (J1: 3 in 126 coached years, 0.024 a year); the widening turns a print share of 0 of 3 into about 90% of whichever arrive, so I expect **0–3 silence notes in 126 coached years**, and none at a steady or close bond, where the fact cannot be present.
+
+**Measured (J1b, 14.10)** with `tests/r52-checkpoint-silence.test.ts` at `R52_J1_REPORT=1` (`-t "J1 E"`): the same 144 posed shut checkpoints as J1 (presets 2 and 5, twelve careers each, both bands, the stint begun at a spread of weeks), and the same played run (7 presets x 6 careers x 156 weeks, 126 coached years). *Before J1b the note printed on 62 of the 144 (43.1%); it now prints on 128 (88.9%).*
+
+| posed, 144 shut checkpoints | predicted | measured |
+| --- | --- | --- |
+| the note printed | 85–92% (123–132) | **128 (88.9%)** |
+| double prints (a checkpoint printed twice) | 0 | **0** |
+| no free week in the window, so no note | about 14 (10%) | **14 (9.7%)** – 4 whose four weeks were all away on a trip or a tournament, 10 where a layoff covered at least one of the four; 0 roof |
+| the approximation's cost: a free week existed and nothing printed | 1% or less (1–2 of 144) | **2 (1.4%)** – inside the count, 0.4 points over the percent |
+| a print on a week other than the first free week | 0 | **0** |
+| cumulative print by window week (0 / 1 / 2 / 3) | 62 / 100 / 112 / 130 (J1's ceiling) | 62 / 100 / 112 / **128** |
+
+By checkpoint, per band: 12 weeks together 21 of 24 (87.5%), 32 weeks 23 of 24 (95.8%), 56 weeks 20 of 24 (83.3%). The two bands read one calendar and give identical numbers, so the sample is 72 distinct windows and **the two approximation misses are one window read twice**: the checkpoint at 56 weeks of one career, whose first free week was the window's last, hidden behind a layoff earlier in the window that had healed by then (the arm checks that every miss has such a week; it is the approximation working as documented on `coachTalkShutRead`: an injury has no per-week record, so an earlier week is read as healthy). The roof stages cost 0 (school age), the bond is posed and so cost nothing here, and the 14 windows with no free week are the honest 10% J1 counted: the note is only ever said at the table.
+
+| played, 126 coached years (6552 coached weeks) | predicted | measured |
+| --- | --- | --- |
+| weeks at a steady or close bond carrying the fact, or a silence line | none | **none, in 5709 weeks** |
+| windows in which the bond was shut on some week with the talk still due | – | 3 (J1 saw the same 3) |
+| silence notes printed | 0–3 in 126 years | **2 (0.016 a coached year)** – J1 printed 0 of the 3; the third window had no week that was both shut and free |
+| the roll read the bond shut and the snapshot read it open, on a window week, with the talk still due (the band edge) | – | 1 (the roll reads the new bond the next week, so the talk is raised in the window); the reverse, on a week carrying the fact: 0 |
+| **the cap oracle**: an earlier week read now from the capped feed against the same week read on the day | 0 disagreements | **0 of 19,404 comparisons**; the feed reached 402 rows (the cap is 400, so pruning was in play), and the widest four weeks of ordinary rows (neither kept nor a match) were 50, against the floor of 120 |
+
+A shut checkpoint is still rare in a played career (0.024 a coached year), and the widening makes the rare one visible: two of the three that arrived now leave the note. The `R52_J1_REPORT=1` run takes about 125 seconds and **exits 1 with all 24 tests green** – `Timeout calling "onTaskUpdate"`, the birpc 60-second ceiling the sim suite also carries (CLAUDE.md), not a failure.
+
+**Proved by mutation, each restored byte for byte (`shasum` before = after):** dropping clause (c), the earlier-weeks check, turns four tests red (J1's once-per-checkpoint arm and three of F: the fact on every later free week); dropping clause (b), the week itself, turns three red (the fact on the away weeks); widening the window's bound by one week in `coachTalkCheckpointAt` turns the travel-pattern arm red (the window with four away weeks prints on its fifth).
+
+---
+
+### Addendum, round 52 J6 (15.10) – the half-year talk moves to week 28, and the windows close: half a year [24, 32), a year [48, 64)
+
+**The owner, 15.10**, two questions on his review sheet and his two answers.
+
+- On R71: «реплика говорит «полгода», но окно факта открыто с 24-й по 43-ю неделю, а обязательная точка — 32-я (почти восемь месяцев).» His answer: **«Точку на 28-ю нед.»**
+- On R73–R75: ««год» доступен с 48-й недели без верхней границы. Может ли R73–R75 выпасть в обычном small talk спустя два-три года с тем же тренером?» His answer: **«Окно 48–63 нед.»**
+
+**What changed.** Three numbers and one table key, all in the code that decides *when*; no string changed in either language, nothing is persisted, and nothing draws from the main stream.
+
+| where | before | after |
+| --- | --- | --- |
+| `COACH_TALK_CHECKPOINTS` (`world/coachFeel.ts`) | 12, 32, 56 | 12, **28**, 56 |
+| the half-year row of `COACH_TALK_CHECKPOINT_ROWS` (`world/lifeBeat/smallTalk.ts`) | keyed 32 | keyed **28** |
+| `COACH_TALK_HALF_YEAR_UNTIL_WEEK` (the half-year window closes) | 44 | **32** |
+| `COACH_TALK_YEAR_UNTIL_WEEK` (the year window closes) | no ceiling | **64** |
+
+The two opening weeks (24 and 48) stay. A half-year line can now be told only on weeks together 24 to 31, and the checkpoint takes the last four of them (28 to 31), so ordinary small talk has four weeks (24 to 27) in which it could say «half a year» on its own. A year line can be told only on weeks 48 to 63: the checkpoint at 56 takes weeks 56 to 59, and ordinary small talk has weeks 48 to 55 and 60 to 63. Past week 63 of a stint no «half a year» and no «a year» line is true, so a girl two or three years into the same coach hears neither. Every edge (24, 28, 32, 48, 56, 64) is a multiple of four, the length of a feel period, so each one still falls on a week her feel was just re-read. Week 28 is six and a half months, which is why he could call the line «полгода» and not be contradicted by the calendar.
+
+**Prediction, written before the run (J6, 15.10).** Same cohort and harness as H3 (`tests/r52-coach-talk-checkpoints.test.ts` section H, `R52_H3_REPORT=1 R52_H3_SCALE=big`: 7 presets that start with a coach, 6 careers each, 312 weeks, both parent arms; and the wide run for the sides, `R52_H3_CAREERS=24 R52_H3_WEEKS=70 R52_H3_ARMS=answers R52_H3_NOOFF=1`), measured against H3's own figures above. One new count, rows of the six stint situations per coached year split into the checkpoint's own weeks and everything else (`tests/r52-coach-talk-windows.test.ts`, `R52_J6_REPORT=1`), run on the parent commit and on this one.
+
+| what is measured | H3, 14.10 | predicted now | reasoning |
+| --- | --- | --- | --- |
+| stints past 60 weeks that got all three talks (steady or close bond in every window) | 100% scale (40 of 40), 98.1% wide (152 of 155) | **scale 100%, wide 98 to 100%** (152 to 155 of 155) | H3's three misses were all the recency veto. The half-year one was a lottery row at week 25, ahead of the old checkpoint; with the checkpoint at 28 the lottery has four weeks before it instead of eight, so that cause can only get rarer. The other two (a row at week 7, before checkpoint 12) are untouched |
+| coach talks per coached year, first two years of a stint, checkpoints live | 1.575 (answers), 1.563 (ignores) | **1.52 to 1.56** | three checkpoint talks in two years is 1.5; the rest was the lottery, and the stint rows' lottery weeks in those two years drop from 68 to 16 |
+| the same with the checkpoints emptied (the lottery alone) | 0.180 and 0.168 | **0.10 to 0.14** | the first-impression rows (R67 to R69) are untouched; the stint rows lose about two thirds of their weeks in the first two years (76 to 24) |
+| sides at the half-year checkpoint, now at week 28 | week 32: warm 30.5%, unsure 38.9%, cold 30.5% (51 / 65 / 51 of 167) | **warm 27 to 34%, unsure 38 to 46%, cold 24 to 32%** | the bench B14 says the cold share rises and the unsure share falls with the stint, so week 28 sits about two points earlier on that slope than 32. At 167 talks a share has a standard error near four points, so the move will not be told apart from noise |
+| ordinary small talk's R70 to R72 rows per coached year | not counted; about 16 lottery weeks per stint | **before 0.004 to 0.008 (1 to 2 rows in 252 coached years), after 0.000 to 0.004 (0 to 1)** | exposure falls from 16 weeks to 4 per stint, a quarter; at H2's rates (about 0.001 to 0.002 a week) that is one row or none |
+| ordinary small talk's R73 to R75 rows per coached year | not counted; H2 saw 16 stint rows in 252 coached years, about 14 of them these | **before 0.05 to 0.10 (12 to 26 rows), after 0.000 to 0.008 (0 to 2)** | exposure falls from about 250 weeks per stint to 12, a twentieth |
+| rows outside their windows | none could be (the old windows) | **exactly 0**: no R70 to R72 row outside weeks together [24, 32), no R73 to R75 row outside [48, 64), the half-year talk always inside [28, 32) | a hard property, not a rate |
+| the silence J1 and J1b print for a checkpoint the bond shut | 88.9% of 144 shut checkpoints printed (128), 23 of 24 at week 32 | **still 85 to 92% in all, on the first free week of [28, 32)** | the rule did not change; the weeks the window sits on did, so the share at the half-year checkpoint may move by a window or two |
+| MAIN draws | identical with and without the mechanism | **identical** | nothing here touches the main stream; the frozen capture (41550 draws, hash `e6b0c709`) must not move |
+
+The pins that hash a played coached career (the coach-travel files, `succession-s1-start-year`, PICK-STABILITY in `i18n-l3-5-life-beats`, the `i18n-l3-7-twin` leaves) are expected to go red again, because the half-year talk lands four weeks earlier and the stint rows come up far less often; the story-pool sample floor may too. None is re-stamped here.
+
+**Measured (J6, 15.10).** Two arms of the same harness: this tree, and a worktree at the parent commit `a4db32f6`, which is the change reverted in full (checkpoints 12, 32, 56, the half-year window to 44, the year window without a ceiling). The parent arm reproduces H3's 14.10 figures to the digit (40 of 40 and 152 of 155; 1.575 and 1.563; 0.180 and 0.168; 51 / 65 / 51 at week 32), so the two arms differ in this change and in nothing else. Denominators: the scale run is 42 stints (7 presets, 6 careers each, 312 weeks: 252 coached years, 83.2 of them in the first two years of a stint, 126 checkpoint windows of which 124 had a steady or close week); the wide run is 168 stints of 70 weeks (504 windows, 491 with an eligible week). Commands: the H3 harness as above, `R52_J6_REPORT=1 R52_J6_SCALE=big npx vitest run --project unit tests/r52-coach-talk-windows.test.ts -t "lottery rows"` (the parent arm with `R52_J6_BEFORE=1`, which counts against the 14.10 windows), and `R52_J1_REPORT=1 npx vitest run --project unit tests/r52-checkpoint-silence.test.ts -t "J1 E"`.
+
+| what is measured | predicted | measured, parent then J6 |
+| --- | --- | --- |
+| stints past 60 weeks with all three talks, among those with a steady or close week in every window | scale 100%, wide 98 to 100% | **scale 40 of 40 (100%) then 40 of 40; wide 152 of 155 (98.1%) then 152 of 155.** Over all 42 stints it is 40 (95.2%) both times, the other two being a shut bond. The three wide-run misses are the same three recency vetoes: the half-year one is the lottery's row at week 25, which the narrower window still allows (weeks 24 to 27), so that cause did not get rarer in this cohort, against the prediction's reasoning; the figure stayed inside the range |
+| coach talks per coached year, first two years, checkpoints live | 1.52 to 1.56 | **1.575 then 1.539** (answers); ignores 1.563 then 1.539 |
+| the same with the checkpoints emptied (the lottery alone) | 0.10 to 0.14 | **0.180 then 0.084** (answers); ignores 0.168 then 0.084. Below the range: the stint rows were 0.096 of the 0.180, and none was drawn in the 83.2 coached years after the change, so what is left is R67 to R69 alone |
+| sides at the half-year checkpoint (wide run, 167 talks; the checkpoint was at 32, now at 28) | warm 27 to 34%, unsure 38 to 46%, cold 24 to 32% | **warm 51 / unsure 65 / cold 51 (30.5 / 38.9 / 30.5) then 52 / 64 / 51 (31.1 / 38.3 / 30.5).** One talk moved between sides, well inside the noise. Scale run: 9 / 23 / 10 then 11 / 21 / 10 |
+| R70 to R72 ordinary rows per coached year (252 coached years) | before 0.004 to 0.008 (1 to 2 rows), after 0.000 to 0.004 (0 or 1) | **with the checkpoints live 0 then 0; the lottery alone 1 (0.004) then 0** |
+| R73 to R75 ordinary rows per coached year | before 0.05 to 0.10 (12 to 26 rows), after 0.000 to 0.008 (0 to 2) | **live 12 (0.048) then 0; the lottery alone 15 (0.060) then 0.** All twelve were past week 64: four on weeks 72 to 95, eight on week 120 or later, the last on weeks 268 to 271, a stint of five years. That is the «a year» line he asked about |
+| rows outside their windows | exactly 0 | **0 of 82 stint rows with the checkpoints live** (42 half-year rows, all on weeks 28 to 31, and 40 year rows, all on weeks 56 to 59) and 0 of 0 with them emptied. The reachability sweep agrees: a half-year row is in the pool on exactly weeks 24 to 31 and a year row on exactly weeks 48 to 63, in a founding stint and in one re-hired at week 100, on all three sides at each edge |
+| windows deferred (not predicted) | | answers 1 of 124, at +2 weeks, then the same; ignores 15 of 124 (12.1%) then 12 of 124 (9.7%: 2 at +1, 10 at +2) |
+| the silence J1 and J1b print, bond posed shut for 60 weeks (144 shut checkpoints) | still 85 to 92% in all, on the first free week of [28, 32) | **MISSED: 128 of 144 (88.9%) then 112 of 144 (77.8%).** The first-impression and year checkpoints are as J1b measured them (21 of 24 and 20 of 24); the half-year one is **15 of 24 (62.5%) at 28 against 23 of 24 (95.8%) at 32**. In 8 of the 24 posed windows all four weeks 28 to 31 are away weeks in the bench calendar (travel alone in 5, an injury among the weeks in 3), against 1 of 24 at 32. That is where the new window falls in a calendar, and not the rule: the suite is green and the note still prints on the first free week of every window that has one. In played careers nothing moved: 3 shut windows, 2 notes, 0.016 a coached year, as J1b counted |
+| MAIN draws | identical | **identical** in the H3 harness (both parent arms), and the frozen capture (41550 draws, hash `e6b0c709`) did not move |
+
+**Proved by mutation, each restored byte for byte (`shasum` before = after: `coachFeel.ts` 6aabb427fb01f896, `smallTalk.ts` 7a5da2560628fdfa).** The checkpoint put back at 32 (the array and the rows key) turns 29 tests red of 91 in four files (the new file 2, the checkpoint file 19, the silence file 8, the feel-talk file 0). The half-year window put back at 44 turns 8 red of 72 (the new file 3, the feel-talk file 5, the checkpoint file 0). The year window put back to no ceiling turns 10 red of 72 (the new file 4, among them the played careers; the feel-talk file 6, among them the 24-year walk). The half-year window's close is invisible to the checkpoint file and to the played gate cohort; the reachability sweep in the new file is what holds it.
+
+**What it costs the pins.** The pins that were pinned to 32, to [24, 44) or to an open year are re-aimed with dated notes naming his rulings: the checkpoint file (the design table, the rows key, the edge table, the re-hire case), the feel-talk file (both windows, the grid weeks and its edges, the numbers case, the re-hire case, the parity poses, the long-stint roll) and the silence file (its checkpoint list and two cases). The digest family, run on this tree and on the parent (34 files, 505 tests): **green on the parent, 36 tests red on this tree in 7 files**, so every one is red because of this change and of nothing earlier.
+
+| file | red on this tree | red on the parent |
+| --- | --- | --- |
+| `coach-travel-edge-recent-schemas` | 10 of 10 | 0 |
+| `coach-travel-edge-late-schemas` | 8 of 8 | 0 |
+| `coach-travel-edge-prior-schemas` | 3 of 6 | 0 |
+| `coach-travel-edge` | 3 of 5 | 0 |
+| `succession-s1-start-year` | 9 of 24 | 0 |
+| `i18n-l3-7-twin` | 2 of 6 | 0 |
+| `i18n-l3-5-life-beats` (PICK-STABILITY) | 1 of 35 | 0 |
+
+The story-pool sample floor in `round51-school-story-pool` stays green. The other 27 files stay green, among them `tests/condition.test.ts`, `wave3-small-talk`, `import-cycles`, `principles-a03`, `principles-a06`, `principles-b08`, `principles-t514`, `pin-hygiene` and `world-symbol`. None of the seven is re-stamped here; the architect harvests them once at the close.
 
 ## P3.7 The corpus at 43, and the whole document at 51 – counted by script, not claimed
 

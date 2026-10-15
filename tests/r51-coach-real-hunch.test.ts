@@ -39,6 +39,16 @@
 // ⚠ A BOUNDARY PINNED ON THE NAMED CONSTANTS: the band edges are read from `CHEMISTRY_HUNCH_*`, so retuning
 // them moves the pin with them on purpose – the MEASUREMENT lives in tools/chemistry-bench.ts B13 and the
 // spec amendment (docs/specs/the-chemistry-2026-09.md §16), not here.
+// ⚠⚠ ROUND 52 F1 (14.10) – D IS RE-AIMED: THE PROMPT NOW READS HOW SHE FEELS, NOT THE RAW LEVEL. The `view` follow-up's band comes from
+// `feelHunch(coachFeel(world))` (good and seems-good warm, off and seems-off cold, unsure and too-early even), so «the card leans the way the
+// pair really leans» is now «the way her feel leans»: a CONFIDENT feel is confirmed by the gauge (chem past +-3), a HEDGED one may lean while
+// the gauge still says «?». What changed in this file: the prompt case poses a STINT (the founding coach is `week` weeks old, so weeks together =
+// the pose's week) instead of a level at week 30 – a clear level at 80 weeks is `good`/`off`, any level under six weeks is `too-early` – and a
+// new test finds, by a fixed scan, careers whose TREND alone hedges warm or cold at week 13 with the gauge silent. `chemistryHunch` and its
+// constants stay and are still pinned below: they are the feel's CONFIDENT line (`coachFeelStep`), no longer the prompt's reader. The copy
+// arms (table rules, the byte-identical sweep, the mounted language cases) are untouched.
+// MUTATION ARMS FOR THE RE-AIM (14.10, full table in tests/r52-coach-feel.test.ts): warm and cold swapped in `feelHunch` (M7) RED here 2 unit + 2 mounted; the hub
+// reading the RAW level again (M13) RED here 2 – the prompt case and the hedged-feel case, which is the one that CANNOT be satisfied by a band of the level.
 import { describe, it, expect } from 'vitest'
 import {
   SMALL_TALK_SITUATIONS,
@@ -58,6 +68,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { chemistryReadingFor, coachReadingOpened } from '../src/engine/world/coachMarket'
+import { coachFeel } from '../src/engine/world/coachFeel'
 import { coachRealViewedSince } from '../src/engine/world/lifeBeat/smallTalk'
 import { COACH_REAL_HUNCH, COACH_REAL_SITUATION_ID, smallTalkSituationIdOf } from '../src/engine/world/lifeBeat/smallTalkCopy'
 import { CHEMISTRY_HUNCH_COLD_AT, CHEMISTRY_HUNCH_WARM_AT, chemistryHunch, chemistryReadableAt, chemistryReading, type ChemistryHunch } from '../src/engine/chemistry'
@@ -371,27 +382,27 @@ describe('round 51 №8 D – her hunch', () => {
     expect(lifeBeatFollowUps('met', 'x', 'sunny', 'close', 'cold')).toEqual([])
   })
 
-  it('⭐ THE PROMPT READS THE PAIR: the card the engine assembles leans the way the pair really leans, in every voice', () => {
-    const cases: [number, ChemistryHunch][] = [
-      [9, 'warm'],
-      [CHEMISTRY_HUNCH_WARM_AT, 'warm'],
-      [CHEMISTRY_HUNCH_WARM_AT - 0.01, 'even'],
-      [0.4, 'even'],
-      [0, 'even'],
-      [CHEMISTRY_HUNCH_COLD_AT + 0.01, 'even'],
-      [CHEMISTRY_HUNCH_COLD_AT, 'cold'],
-      [-9, 'cold'],
+  it('⭐ THE PROMPT READS HER FEEL: the card the engine assembles leans the way she feels, in every voice (a clear level after a season-and-a-half or on a coach hired back, and nothing before six weeks while the gauge is quiet)', () => {
+    // [level on the books, weeks together (= the pose's week: a founding coach has been here since week 0), the band her feel gives]
+    const cases: [number, number, ChemistryHunch][] = [
+      [9, 80, 'warm'], //   a clear warm level after 80 weeks: `good`
+      [-9, 80, 'cold'], //  ...and a clear cold one: `off`
+      [0.4, 3, 'even'], //  under six weeks she has nothing to say, whatever the pair – while the gauge is QUIET
+      // ⚠ F1b (14.10): these two used to read 'even' («even if a level were somehow already on the books»). A level of ±9 is a gauge past the hunch line, and a gauge that speaks
+      // clearly outranks the clock: a coach hired back keeps the pair and restarts the stint, and ±9 on the books at week 3 is exactly that case. She reads it at once.
+      [9, 3, 'warm'],
+      [-9, 3, 'cold'],
     ]
     for (const voice of TEMPERAMENTS as readonly Temperament[]) {
-      for (const [chem, band] of cases) {
-        const world = posed(`r51-8-prompt-${voice}-${chem}`)
+      for (const [chem, weeks, band] of cases) {
+        const world = posed(`r51-8-prompt-${voice}-${chem}-${weeks}`, weeks)
         world.temperament = voice
         world.coachPairs[coachOf(world)] = pairOf(chem)
         asked(world, null)
         const invite = buildSoftBeatInvite(world)
         if (invite === null) throw new Error('no soft card for the raised row')
         const view = invite.prompt.followUps.find((f) => f.optionId === VIEW)!
-        expect(view.said.at(-1), `${voice} chem ${chem}`).toBe(COACH_REAL_HUNCH[voice][band])
+        expect(view.said.at(-1), `${voice} chem ${chem} at week ${weeks}`).toBe(COACH_REAL_HUNCH[voice][band])
         const others = invite.prompt.followUps.filter((f) => f.optionId !== VIEW)
         const shipped = lifeBeatFollowUps('small-talk', DETAIL, voice, 'close').filter((f) => f.optionId !== VIEW)
         expect(others.map((f) => f.said), 'the other two replies are the ones that shipped').toEqual(shipped.map((f) => f.said))
@@ -400,8 +411,36 @@ describe('round 51 №8 D – her hunch', () => {
     }
   })
 
+  it('⭐ ROUND 52 – A HEDGED FEEL LEANS HER LINE WHILE THE GAUGE STILL SAYS «?»: the trend alone, at a level under every bar, tips the card warm or cold', () => {
+    // 0.4 is under the lowest bar a pair can draw (1), so the ring is unreadable on every seed and the ROUND-51 rule (a band of the raw level)
+    // could only ever say «even» here. Round 52's feel can say more: «вроде нормально, но» – and the gauge is what confirms or refutes it later.
+    const found: { warm?: string; cold?: string } = {}
+    for (let i = 0; i < 80 && (found.warm === undefined || found.cold === undefined); i++) {
+      const world = posed(`r52-hedge-${i}`, 13)
+      world.coachPairs[coachOf(world)] = pairOf(0.4)
+      const feel = coachFeel(world)
+      if (feel === 'seems-good' && found.warm === undefined) found.warm = world.seed
+      if (feel === 'seems-off' && found.cold === undefined) found.cold = world.seed
+    }
+    expect(found.warm, 'the fixed scan finds a career whose trend hedges good at week 13').toBeDefined()
+    expect(found.cold, 'and one that hedges off').toBeDefined()
+    for (const [band, seed] of [['warm', found.warm!], ['cold', found.cold!]] as const) {
+      const world = posed(seed, 13)
+      const id = coachOf(world)
+      world.coachPairs[id] = pairOf(0.4)
+      expect(chemistryReading(world.coachPairs[id], world.seed, id), 'the gauge is silent').toBeNull()
+      expect(chemistryHunch(0.4), 'and the old rule reads «even» on this level').toBe('even')
+      asked(world, null)
+      const voice = world.temperament ?? 'sunny'
+      const view = buildSoftBeatInvite(world)!.prompt.followUps.find((f) => f.optionId === VIEW)!
+      expect(view.said.at(-1), `${seed}: the card leans ${band}`).toBe(COACH_REAL_HUNCH[voice][band])
+    }
+  })
+
   it('a coach with no row on the books yet reads even; with nobody employed there is no hunch at all', () => {
-    const fresh = posed('r51-8-fresh-coach')
+    // ROUND 52: «no row on the books» is the first paid week, which is also the first six weeks of the stint, so the case is posed as a coach she has
+    // known three weeks – `too-early`, hence «even». (The same absent pair after a long stint reads chem 0 and her trend: `tests/r52-coach-feel.test.ts`.)
+    const fresh = posed('r51-8-fresh-coach', 3)
     delete fresh.coachPairs[coachOf(fresh)]
     asked(fresh, null)
     const voice = fresh.temperament ?? 'sunny'

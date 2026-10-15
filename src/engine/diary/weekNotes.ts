@@ -14,7 +14,7 @@ import { bodyGroupOf, bodyPartOf, type BodyGroup } from '../body'
 // ⭐ R2-09: the noun moved to an engine leaf; the FACTS shape is still the wire's (see the cycle
 // note in world/birthdayGift.ts – this module is inside world/birthday.ts's own import closure).
 import { BIRTHDAY_DAY_NOUN } from '../world/birthdayGift'
-import type { DiaryFacts, DiaryLifeStage, MoodRegister, MotherhoodBand } from '../../shared/protocol'
+import type { CoachFeel, DiaryFacts, DiaryLifeStage, MoodRegister, MotherhoodBand } from '../../shared/protocol'
 // ⭐ v72: who she is, type-only – the four ids and their physics live in engine/spirit.ts.
 import type { Temperament } from '../spirit'
 import { ageWord, capitalise, familyHomeVoice, independentVoice, underOneRoof, type DiaryLine } from './words'
@@ -96,6 +96,17 @@ export interface WeekClaims {
    *  `vacationWeek` alone, so «A week away as a family» and «She came back browner» printed at the end
    *  of a week she spent in her own kitchen. */
   vacationAt?: 'home' | 'away'
+  /** ⭐ R52 F3 – ASSERTS HOW SHE FELT ABOUT THE COACH on the one week of a period her feel was re-read, and nothing
+   *  else about her or about the coach. VALUED, `vacationAt`'s shape: the five steps that have a voice are mutually
+   *  exclusive things and the copy is written per step. `too-early` is not a value – it is never spoken. The fact is
+   *  `DiaryFacts.coachFeelRead`, present only on that week (world/coachFeel.ts), so a line carrying this claim is
+   *  unselectable on every other week by construction, which is what «изредка» means here. */
+  coachFeelRead?: Exclude<CoachFeel, 'too-early'>
+  /** ⭐ R52 J1 (14.10) – ASSERTS THE BOND SHUT A STINT CHECKPOINT: on the week her coach talk was due she did not bring up the coach, because at this band she does not confide – and nothing else about her or about
+   *  the coach. VALUED, `coachFeelRead`'s shape: the two bands are mutually exclusive things and the copy is written per band. The fact is `DiaryFacts.coachTalkShut`, present only on ONE week of the checkpoint's window – the first
+   *  on which the line could be heard (J1b, 14.10: J1 had it on the window's first week alone, and a travelling week took the note from 54% of shut checkpoints; world/lifeBeat/smallTalk.ts `coachTalkShutRead`) – so a line carrying this claim is
+   *  unselectable on every other week by construction. */
+  coachTalkShut?: 'strained' | 'cold'
   offSeason?: true
   /** asserts a practice friendly this week */
   practice?: true
@@ -357,7 +368,9 @@ export const WEEK_NOTE_CHANCE = 1 / 3
  *  (R2-18). A twenty-nine-year-old on tour has fifteen of these a year and spends none of them in
  *  her parents' kitchen. `underOneRoof` is the question about the house; this is the question about
  *  the calendar, and a line that needs both has to ask for both. */
-export const notTravellingWeek = (f: DiaryFacts): boolean =>
+// ⭐ R52 J1b (14.10) – IT TAKES THE THREE FACTS IT READS AND NOT THE WHOLE `DiaryFacts`, so the silence note's look-back (`silenceHeardAtFor`, diary.ts) can ask THIS predicate of an earlier week's journey reading (`weekAwayOf`)
+// instead of re-spelling it. Every other caller passes a whole `DiaryFacts`, which is one.
+export const notTravellingWeek = (f: Pick<DiaryFacts, 'playedTournament' | 'travelled' | 'travelHomeScene'>): boolean =>
   !f.playedTournament && !f.travelled && f.travelHomeScene === null
 
 /** An ordinary training week: at home, healthy, and the calendar is holding nothing.
@@ -403,6 +416,13 @@ const inHerVoice = (f: DiaryFacts): boolean =>
  *  NOT here: at `cold` there is no tier-0 line at all (who-she-is §5b's tier table). */
 const wallsUp = (f: DiaryFacts): boolean => f.bondBand === 'strained'
 
+/** ⭐⭐ R52 J1c (14.10) – HER WORDS CAN BE QUOTED IN THE PARENT'S WEEK STORY THIS WEEK: the bond is anything but `cold`. Who-she-is §5b's tier table makes tier 0, her quoted line inside the parent's story,
+ *  «every few weeks at close/steady; rare at strained; absent at cold» – «losing her voice is the point» – and the owner's ruling of 14.10 (round 52, his answers on the close №1) is that at a strained or cold bond
+ *  she does not confide. Written ONCE, for the five F3 coach-feel lines that put her words in quotation marks: their shared licence, `heardAtTable`, has no bond clause of its own, so before this the parent's diary
+ *  quoted a girl who had closed off. ⚠ `strained` is deliberately NOT cut: «rare at strained» is the POOL's frequency, and which quote would be flat enough to survive there is the owner's call on wording
+ *  (invariant 4), not a licence's. */
+const herWordsQuotable = (f: DiaryFacts): boolean => f.bondBand !== 'cold'
+
 /** THE SHAPE. Her voice AND the channel, which is what every one of the 44 voiced lines needs. */
 export const voiceOf = (t: Temperament) => (f: DiaryFacts): boolean =>
   f.temperament === t && inHerVoice(f)
@@ -430,6 +450,36 @@ export const plainTraining = (f: DiaryFacts): boolean =>
   !f.offSeasonWeek &&
   !f.vacationWeek &&
   !f.playedPractice
+
+// --- R52 F3: WHAT SHE SAID ABOUT PRACTICE, one predicate for ten lines ----------------------------------------
+//
+// SAME DOCTRINE AS `homeHoliday` AND `underOneRoof`: written once, so ten lines cannot carry ten spellings of «the week
+// her feel was re-read, at a table the parent sat at». It asks three things and each has a reason:
+//  - `f.coachFeelRead === step` – the fact is PRESENT only on the first week of a period with a coach employed, and
+//    only for a step that has a voice (world/coachFeel.ts): the equality picks the step, the presence is the period.
+//  - `plainTraining` – every line is about practice, so the week must be an ordinary training week: not a holiday, not
+//    an exam week, not the off-season, not a knock, not a friendly, not a journey, not a layoff. (That is also every
+//    licence the owner's brief named – no travelling week, no injury – and it puts the line under the pool's coin.)
+//  - `underOneRoof` – the parent hears it at dinner, in the hall; from 22 her life reaches the parent by calls.
+//  - ⚠ AND IT DOES NOT ASK THE BOND (J1c, 14.10): the five lines that put her words in quotation marks add `herWordsQuotable` themselves
+//    (who-she-is §5b: tier 0 is absent at cold); the other five are the parent's observation and ride on this alone.
+const heardAtTable = (f: DiaryFacts, step: Exclude<CoachFeel, 'too-early'>): boolean =>
+  plainTraining(f) && underOneRoof(f) && f.coachFeelRead === step
+
+// --- R52 J1: THE CHECKPOINT THE BOND SHUT, one predicate for four lines ----------------------------------------------------
+//
+// SAME DOCTRINE AS `heardAtTable` ABOVE: written once, so four lines cannot carry four spellings of «a checkpoint the bond shut, at a table the parent sat at». It asks two things:
+//  - `f.coachTalkShut === band` – the fact is PRESENT only on the first week of the checkpoint's window on which the line could be heard (J1b, 14.10; world/lifeBeat/smallTalk.ts `coachTalkShutRead`): the equality picks the band, the presence is the week.
+//  - `silenceCouldBeHeard` – the licence's own inputs, WRITTEN ONCE FOR TWO READERS (J1b): this licence asks it of the week it prints on, and the fact asks it of that week and of every earlier week of the window to find the FIRST (`silenceHeardAtFor`, diary.ts),
+//    so «could the line be heard at week u» has one spelling and cannot drift between the week the fact waits for and the week the licence prints on. It asks three things, each with a reason:
+//      · `underOneRoof` – the parent writes about the table; from 22 her life reaches the parent by calls.
+//      · `notTravellingWeek` – she has to be AT the table. NOT `plainTraining`: the talk is due, not chatter, so a holiday, an exam week or the off-season is still a week she sat there and said nothing.
+//      · `f.injured === null` – ⚠ THE ONE NARROWING THE BRIEF DID NOT NAME, AND THE STANDING RULE FORCES IT: «a layoff takes the note». tests/week-notes.test.ts «an injured week is not offered a line about baking» holds
+//        every line licensed on an injured week to the `injured` claim, and these four are about the table, not the body. A checkpoint that falls in a layoff week shows the injury note instead; the spec's measurement counts it.
+//    It takes the FIVE facts it reads and not the whole `DiaryFacts`, so the look-back can hand it the journey reading of a week it has no `DiaryFacts` for.
+export const silenceCouldBeHeard = (f: Pick<DiaryFacts, 'lifeStage' | 'playedTournament' | 'travelled' | 'travelHomeScene' | 'injured'>): boolean =>
+  underOneRoof(f) && notTravellingWeek(f) && f.injured === null
+const silentAtTable = (f: DiaryFacts, band: 'strained' | 'cold'): boolean => f.coachTalkShut === band && silenceCouldBeHeard(f)
 
 // ⚠ R2-18: THE WARNING THAT USED TO SIT HERE IS NOW A FUNCTION. It read "Narrative distance only.
 // `notTravellingWeek` means 'not travelling'; it never proves that a grown woman spent the week in her parents'
@@ -1467,6 +1517,115 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
     license: (f) =>
       underOneRoof(f) && notTravellingWeek(f) && brightWeek(f) && homeHoliday(f) && f.injured === null,
   },
+  // ⭐⭐ R52 F3 (14.10) – HER FEEL FOR THE COACH, IN THE PARENT'S OWN HAND. The owner asked for a way for her to hint how
+  // it is with the coach, and chose this channel: «изредка строка в дневнике голосом родителя: "весь ужин рассказывала
+  // про тренировку" / "про тренировки – нормально, и всё" / "про тренировки молчит". Чистый намёк.» And, on how sure
+  // she is: «не "всё плохо" а "я пока не очень поняла" или "вроде нормально, но"… она еще не уверена, а просто
+  // сомневается».
+  //
+  // TWO LINES FOR EACH OF THE FIVE STEPS THAT HAVE A VOICE; `too-early` HAS NONE – there is nothing to hint at yet, and
+  // a week that says nothing is the right note for it. All ten are licensed on `heardAtTable`: the one week of a
+  // period her feel was re-read, an ordinary training week, at a roof stage – so at most one of these a month, never in
+  // a flat of her own (the parent does not sit at that dinner) and never on a week with no practice in it.
+  //
+  // ⭐⭐ R52 J1c (14.10) – FIVE OF THE TEN QUOTE HER, AND THOSE FIVE ALSO ASK `herWordsQuotable`: the bond is not `cold`.
+  // F3 licensed all ten on `heardAtTable` ALONE, and it has no bond clause, so at a cold bond the parent's diary quoted a
+  // girl who has closed off – against who-she-is §5b (tier 0, her quoted line inside the parent's week story, is «absent
+  // at cold»: «losing her voice is the point») and the owner's ruling of 14.10 (round 52, his answers on the close №1: at
+  // a strained or cold bond she does not confide). THE FIVE are the ones with her words in quotation marks: the `unsure`
+  // pair, the second `seems-good` line and the `seems-off` pair. The other five – the drill shown twice, practice coming
+  // up three times at dinner, her quoting the coach, the practice she does not talk about, the practice that came and
+  // went – are the PARENT's observation with no word of hers in them, and a shut door is something a parent observes: so
+  // at `cold` the notes still speak, for `seems-good`, `good` and `off`. `unsure` and `seems-off` have no unquoted line,
+  // so at `cold` those two steps print no hint and the week draws from the ordinary pool like any plain training week.
+  // ⚠ `strained` is NOT cut: «rare at strained» is the pool's frequency, and which quote is flat enough is the owner's
+  // call on wording (invariant 4), not a licence's. NO STRING CHANGED – the licence is the whole change.
+  //
+  // ⚠ THE HEDGE IS THE COPY, NOT A WARNING LABEL. The unsure pair says she has not made up her mind – «different»,
+  // «still working it out» – and nothing about good or bad. The seems pair leans and stops short: a drill shown twice,
+  // «starting to make sense»; the other way, a flat «fine» that closes the subject. Only `good` and `off` speak
+  // plainly, and the gauge has confirmed them (chemistry.ts: confident needs the level) – yet even `off` is silence at
+  // the table and never a verdict.
+  //
+  // ⚠ THE COACH IS NEVER GENDERED (R15-7): «the coach» as a noun, no pronoun, in both languages.
+  // ⚠ NO CONTRACTIONS, because this pool has none («It is healing», «did not»): the drafts that said «It's» and
+  // «doesn't» are spelled out to match their neighbours. Every line is inside the 80-character scrap.
+  {
+    text: 'Asked how practice went, she shrugged: "Still working it out."',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'unsure' },
+    license: (f) => heardAtTable(f, 'unsure') && herWordsQuotable(f),
+  },
+  {
+    text: 'Practice was "different", she said. Not better, not worse. Different.',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'unsure' },
+    license: (f) => heardAtTable(f, 'unsure') && herWordsQuotable(f),
+  },
+  {
+    text: "She came home with one of the coach's drills and showed it to us twice.",
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'seems-good' },
+    license: (f) => heardAtTable(f, 'seems-good'),
+  },
+  {
+    text: '"It is starting to make sense," she said about practice. That was new.',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'seems-good' },
+    license: (f) => heardAtTable(f, 'seems-good') && herWordsQuotable(f),
+  },
+  {
+    text: '"Fine," she said about practice, and changed the subject.',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'seems-off' },
+    license: (f) => heardAtTable(f, 'seems-off') && herWordsQuotable(f),
+  },
+  {
+    text: 'She tried the new drill in the hall, stopped halfway. "It is fine."',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'seems-off' },
+    license: (f) => heardAtTable(f, 'seems-off') && herWordsQuotable(f),
+  },
+  {
+    text: 'Practice came up three times at dinner. All of it good.',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'good' },
+    license: (f) => heardAtTable(f, 'good'),
+  },
+  {
+    text: 'She quoted the coach at dinner. Twice.',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'good' },
+    license: (f) => heardAtTable(f, 'good'),
+  },
+  {
+    text: 'She does not talk about practice any more.',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'off' },
+    license: (f) => heardAtTable(f, 'off'),
+  },
+  {
+    text: 'Practice came and went without a word at dinner.',
+    claims: { notTravellingWeek: true, domestic: true, coachFeelRead: 'off' },
+    license: (f) => heardAtTable(f, 'off'),
+  },
+  // ⭐⭐ R52 J1 (14.10) – THE CHECKPOINT THE BOND SHUT, IN THE PARENT'S OWN HAND. The owner approved «давай по рекомендациям» (round 52, his answers on the close №1): at a strained or cold bond she does not confide at a
+  // stint checkpoint either, AND THE SILENCE SHOWS – the player sees what the relationship cost. TWO LINES FOR EACH BAND. They LEAD the week and the coin does not silence it (see `weekNoteLine`): a checkpoint is due, not chatter.
+  //
+  // ⚠ THE FLAT POOL'S DOCTRINE APPLIES (who-she-is §5b): at `strained` and `cold` the voices collapse and tier 0, her quoted line inside the parent's story, is ABSENT AT COLD – «losing her voice is the point». So the two COLD
+  // lines carry NO words of hers (the parent observes the shut door), and of the strained pair one keeps the flat pool's shape ("Fine." and nothing after it) while the other quotes nobody.
+  // ⚠ THE COACH IS NEVER GENDERED (R15-7): «the coach» as a noun, no pronoun. ⚠ NO CONTRACTIONS, as the pool has none. Every line is inside the 80-character scrap. ALL FOUR ARE DRAFTS awaiting his pass (invariant 4).
+  {
+    text: 'Asked about the coach, she said: "Fine." Nothing after it.',
+    claims: { notTravellingWeek: true, domestic: true, coachTalkShut: 'strained' },
+    license: (f) => silentAtTable(f, 'strained'),
+  },
+  {
+    text: 'She did not mention the coach once. We did not know how to ask.',
+    claims: { notTravellingWeek: true, domestic: true, coachTalkShut: 'strained' },
+    license: (f) => silentAtTable(f, 'strained'),
+  },
+  {
+    text: 'The coach was not mentioned. She had closed up, and we left it alone.',
+    claims: { notTravellingWeek: true, domestic: true, coachTalkShut: 'cold' },
+    license: (f) => silentAtTable(f, 'cold'),
+  },
+  {
+    text: 'Dinner was quiet. Whatever she thinks of the coach, she kept it to herself.',
+    claims: { notTravellingWeek: true, domestic: true, coachTalkShut: 'cold' },
+    license: (f) => silentAtTable(f, 'cold'),
+  },
   {
     text: 'The season is over. She slept until nine and it was glorious.',
     claims: { offSeason: true, notTravellingWeek: true },
@@ -2290,12 +2449,29 @@ export const WEEK_NOTES: readonly WeekNote[] = /*#__PURE__*/ (() => [
  * `travelHomeScene`, so the scrap can never have two authors in one week.
  */
 export function weekNoteLine(facts: DiaryFacts, seed: string): DiaryLine | null {
-  const pool = WEEK_NOTES.filter((n) => n.license(facts))
-  if (pool.length === 0) return null
+  const licensed = WEEK_NOTES.filter((n) => n.license(facts))
+  if (licensed.length === 0) return null
+  // ⭐⭐ R52 F3 – ON A WEEK HER FEEL IS HEARD, THE TEN TAKE THE NOTE; the coin below still decides whether the week speaks.
+  //
+  // MEASURED, NOT GUESSED: the ten are licensed on about five weeks a coached year (the first week of a period, a plain
+  // training week, a roof stage), but on those weeks they sit in a pool of a dozen lines, so a uniform pick printed one
+  // of them about once in four coached years – a hint nobody can use, and the owner asked for it «изредка», not never.
+  // Taking the note whenever the coin lets the week speak puts it at the coin's share of those weeks. Only the weeks
+  // the fact is present on change: on every other week `heard` is empty and `pool` IS `licensed`, the list this
+  // function always drew from, so every other draw, and the entry point of every rotating band, is what it was.
+  const heard = licensed.filter((n) => n.claims.coachFeelRead !== undefined)
+  // ⭐⭐ R52 J1 (14.10) – ON THE WEEK A CHECKPOINT'S SILENCE IS HEARD (J1b: the first week of its window the line could be heard, not the window's first week), THE SILENCE LINES ARE THE POOL: they lead the ten above and everything else, and the coin below does NOT silence the week.
+  //
+  // THE OWNER (round 52, his answers on the close №1), «давай по рекомендациям»: at a strained or cold bond she does not confide, AND THE SILENCE SHOWS. A note that printed one week in three would show it one time in
+  // three, and a checkpoint is DUE, not chatter (H3's own reason for letting the talk past the weekly die: the lottery is what the owner asked to be rid of). The fact is present on ONE week per checkpoint, so this
+  // changes the output of at most three weeks of a stint and of NO other: on every other week `silent` is empty, `pool` is what it was and the coin below is the same coin.
+  const silent = licensed.filter((n) => n.claims.coachTalkShut !== undefined)
+  const pool = silent.length > 0 ? silent : heard.length > 0 ? heard : licensed
   const rng = rngFromSeed(`${seed}:weeknote:${facts.week}`)
   // The coin first, so the pick is drawn off the same stream in the same order every time.
   const coin = rng()
-  if (plainTraining(facts) && coin >= WEEK_NOTE_CHANCE) return null
+  // ⭐ J1 – the coin is still DRAWN, in the same place off the same stream (every other week's draw is untouched); only its `return null` is skipped on a silence week.
+  if (plainTraining(facts) && coin >= WEEK_NOTE_CHANCE && silent.length === 0) return null
   // ⚠ A BAND THAT ALWAYS SPEAKS STEPS THROUGH ITS POOL; THE QUIET BAND DRAWS FROM IT.
   //
   // THE LIVE TRACE FOUND THIS, not the suite, and it found it twice. W17/W18 of one season both read

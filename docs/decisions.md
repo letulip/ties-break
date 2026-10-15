@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 171 dated entries, newest 2026-10-14. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 174 dated entries, newest 2026-10-15. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -40,7 +40,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 28 | [ROUND 51, HIS MORNING ANSWERS (each verbatim in the round ledger)](#14102026--round-51-his-morning-answers-each-verbatim-in-the-round-ledger) | 2026-10-14 |
+| process-and-git | 31 | [ROUND 52, HIS TIMING ANSWERS (his two review-sheet questions)](#15102026--round-52-his-timing-answers-his-two-review-sheet-questions) | 2026-10-15 |
 | product-and-scope | 8 | [LOCALIZATION: THE NINE QUESTIONS RULED, PLUS THREE ORDERS – THE STACK LANDS WITH THE INTAKE](#07102026--localization-the-nine-questions-ruled-plus-three-orders--the-stack-lands-with-the-intake) | 2026-10-07 |
 | ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
@@ -6136,3 +6136,44 @@ byte-identity proven, and the coach market was the last product screen to leave 
 5. **The thin school-years small-talk subjects are filled in both languages** – «это тоже можно
    сюда же взять на двух языках»: every school / after-school subject cell to the K4 floor of 3.
 6. **The bank model stays on trial** – «давай так попробуем, я проверю и скажу».
+
+## 14.10.2026 – ROUND 52, HIS ANSWERS ON THE CLOSE (each verbatim in the round ledger)
+
+1. **At a strained or cold bond she does not confide at a stint checkpoint either – and the
+   silence shows** – «давай по рекомендациям»: the checkpoint talk keeps the bond gate every small
+   talk has; a checkpoint the bond shuts leaves a parent-voice diary week note, so the player sees
+   what the relationship cost.
+2. **Every button speaks the app's font** – the same answer: `font-family: inherit` in the global
+   `button` rule (measured 14.10: 12 of 12 visible buttons on the first three screens of a new game
+   drew the browser's default face, none Manrope), shipped with a real-Chromium overflow sweep and
+   before/after screenshots for his eye.
+3. **The recency veto holds at a checkpoint** – she does not say twice what she said five to seven
+   weeks earlier (0.6 % of windows, every one heard early).
+4. **The year talk's cold share is left to her feel** – a third of played stints hear R75, not
+   half; no lever pulled (a data point for the parked chemistry-pace question).
+5. **All of it rides the same wave** – «всё в эту же волну грузи»: `r52/coach-feel`, PR #176; the
+   round's DRAFT strings go to one review sheet for his later pass («собери лист на вычитку, я
+   сделаю позже»).
+
+## 15.10.2026 – ROUND 52, HIS REVIEW SHEET (his marks live in the sheet's db; counts and ids in the round ledger)
+
+1. **The round's strings are his** – 192 rows reviewed: 134 approved as drafted, 56 rewritten by him
+   and transferred verbatim; all `APPROVED` except RU09D-CFW-06 (his edit is 84 characters, over the
+   scrap's 80 – his own MUST in the voice bible) and R71's six «полгода» rows, both held `DRAFT` on
+   open questions.
+2. **F3's quoted notes stay silent at a cold bond** – «ок» on the sheet's decision.
+3. **The silence note as built** (88.9 % of shut checkpoints) – «ок».
+4. **Manrope stays; the Coach Market rows get denser on narrow screens** – «Manrope оставить. При
+   320 px прибавка до пяти строк / 90 px для повторяющихся карточек рынка слишком заметна: отдельно
+   укоротить подписи или слегка пересобрать плотность строк, не возвращая системный шрифт.»
+5. **His two questions are about the windows, not the words** – «полгода» (R71) is reachable from
+   week 24 to 43 and its checkpoint is week 32; «год» (R73–R75) has no upper bound. Open with the
+   architect's proposals, as is the Russian shelf row (4 + 2), which he left unmarked.
+
+## 15.10.2026 – ROUND 52, HIS TIMING ANSWERS (his two review-sheet questions)
+
+1. **«Полгода» means half a year** – «Точку на 28-ю нед.»: the half-year coach-talk checkpoint
+   moves from week 32 to week 28 (6.4 months together) and the half-year rows' window narrows to
+   weeks 24–31; R71's six «полгода» rows are approved with it.
+2. **«Год» means the first year** – «Окно 48–63 нед.»: the year rows (R73–R75) get an upper bound,
+   so ordinary small talk cannot raise them after ~15 months; the week-56 checkpoint stays.

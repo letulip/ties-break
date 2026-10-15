@@ -13,6 +13,7 @@ import type { TierId } from '../../engine/season/types'
 import type { SpiritBand, Temperament } from '../../engine/spirit'
 import type { MemoryFace, PortraitEmotion, PortraitStage } from '../avatarEmotion'
 import type { KnockChoice } from './health'
+import type { CoachFeel } from './snapshot'
 // v93 (L3-0), type-only: the life-moment line is a COPY of a ledger row's sentence, so it carries the row's ref when the row has one.
 import type { CopyRef } from '../i18n'
 
@@ -1191,6 +1192,24 @@ export interface DiaryFacts {
   /** W4: where the live knock is, on exactly the weeks `knockChoice` is non-null. Null together with
    *  it by construction – the note pool needs the part to name it. */
   knockPart: string | null
+  /** ⭐ R52 F3 (14.10) – HOW SHE FELT ABOUT THE COACH, on the one week of a period that her feel was re-read, so the
+   *  week note may let the parent hear it at the table (the owner: «изредка строка в дневнике голосом родителя»).
+   *
+   *  PRESENT only when all four hold, ABSENT on every other week – and the absence is the point: an uncoached career,
+   *  and the thirty-odd weeks of a coached year that are not a re-read, leave the snapshot byte-identical to what it
+   *  was before this member existed. (1) A coach is employed. (2) It is the first week of a new period of weeks
+   *  together – every `COACH_FEEL.periodWeeks`, the same weeks her doubt is redrawn on. (3) She has trained with this
+   *  coach at least one week: the week of the hire is the one BEFORE this coach. (4) Her feel is not `too-early`, which
+   *  has nothing to hint at yet. `world/coachFeel.ts`'s `coachFeelRead` is the one place that decides, and it hands the
+   *  step the coach tile shows (`Snapshot.coachFeel`) through unchanged, so the tile and the note cannot say two
+   *  things on a week they both speak.
+   *
+   *  Derived at snapshot time, never persisted – no schema move. */
+  coachFeelRead?: Exclude<CoachFeel, 'too-early'>
+  /** ⭐ R52 J1 (14.10) – THE BAND THAT SHUT A DUE STINT CHECKPOINT, on the first week of its window on which the line could be heard (J1b, 14.10: J1 had it on the window's first week alone, and a travelling week took the note from 54% of shut checkpoints): `'strained'` or `'cold'`, the bonds at which she does not confide. ABSENT on every other week (the key is not
+   *  there, not `undefined`-valued), so a coached career at a steady or close bond and every uncoached one carry exactly the facts they carried before. `world/lifeBeat/smallTalk.ts`'s `coachTalkShutRead` is the one
+   *  place that decides, asking the diary (`silenceHeardAtFor`) which weeks the line could be heard; the diary otherwise only carries it, for the week note that shows what the silence cost. */
+  coachTalkShut?: 'strained' | 'cold'
   /** THE AGE SHE TURNS THIS WEEK, or null on the other fifty-one (owner, 30.07). Derived from her birth
    *  month against the calendar - no schema, and it cannot disagree with `kidAgeExact` because both read
    *  the same two facts.

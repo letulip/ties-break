@@ -1588,6 +1588,14 @@ button {
   border-radius: var(--radius-pill);
   padding: 8px 16px;
   font-size: 14px;
+  /* EVERY BUTTON SPEAKS THE APP'S FONT (owner, 14.10, round 52 №2: «Every button speaks the app's font»). A browser does not let a
+     <button> inherit the body's face, so every button no component patched for itself drew the browser's default – Arial in
+     Chromium, the system face on a phone. Measured 14.10: on the first three screens of a new game, 12 of 12 visible buttons (the
+     language choice, the childhood prologue's first card, the onboarding intro) drew Arial and none drew Manrope.
+     ⚠ THE FAMILY ONLY, NEVER `font: inherit`. The shorthand would also reset the 14px above to the body's 15px and pull in its
+     line-height, resizing every pill in the game; KidScreen's `.kid-tile-door` says the same. The seven components that patched
+     the family for themselves are left as they are. Net and census: e2e/r52-button-font.spec.ts. */
+  font-family: inherit;
   cursor: pointer;
 }
 
@@ -6207,6 +6215,55 @@ tr.kid-row td {
   font-size: 11px;
   font-weight: 600;
   color: var(--muted);
+}
+
+/* ⭐⭐ ROUND 52 №4 (15.10) – THE MARKET'S ROWS, DENSER ON A PHONE: THE DENSITY ONLY, NEVER THE FACE AND NEVER THE WORDS.
+   The owner, on his review sheet: «Manrope оставить. При 320 px прибавка до пяти строк / 90 px для повторяющихся карточек рынка
+   слишком заметна: отдельно укоротить подписи или слегка пересобрать плотность строк, не возвращая системный шрифт.» This is the
+   SECOND route he named and nothing else: no caption is shortened (the words are his) and no `font-family` is set here (every
+   button keeps the app's face, his 14.10 ruling).
+
+   WHY THE ROWS GREW. A coach row is a <button>; since the global `button` rule took `font-family: inherit` (14.10) its paragraphs
+   draw Manrope, which sets wider than the browser's own face. The row's text column at 320 px is only 87–102 px (the portrait
+   strip, the price column and the gutters take the rest), so a wider face wraps more lines into the same column. Measured 15.10
+   against the browser-default face (the same page with `button.cm-row { font-family: revert }`), the worst row grew:
+     320x568  EN +75 px / +4 lines   RU +90 px / +5 lines     375x667  EN +41 px / +2 lines   RU +40 px / +2 lines (Mac).
+   The values below, measured by injecting them into the live page on a Mac and in CI's Linux image, bring the worst row to:
+     320x568  EN +11 Mac, +14 Linux / +1 line   RU +6 / +1     375x667  EN +10 / +1   RU −4 Mac, +6 Linux / ≤ +1.
+   e2e/r52-button-font.spec.ts reads the same relation back on every run: no row more than 30 px over its browser-default height.
+
+   ⚠ THE TYPE SIZE IS NOT A LEVER HERE. The paragraphs are 10.5 px already, under the 12 px floor, so there is none left to take;
+   letter-spacing (−0.01em, −0.02em) was measured and was not needed.
+
+   WHERE: up to 500 px, not only 320 / 375. With no rule a row passes +30 px at 340, 360, 390–393, 430, 440 and (Linux, EN) 460–481 px
+   too, and 500 is the first width measured clean on both platforms; everything wider is byte-identical to before this block.
+   ⚠ ONE KNOWN RESIDUE, measured and left: Russian at exactly 430 px, four rows of the top rung, +54 px / +3 lines → +23 px / +2 lines
+   (inside the 30 px budget, one line over the line budget). */
+@media (max-width: 500px) {
+  .cm-row {
+    /* 15.10, «слегка пересобрать плотность строк»: the text column gains 8 px, so a paragraph wraps onto fewer lines. THE LEVER THAT
+       DOES THE WORK – alone it takes 320 px from +75 px (EN) / +90 px (RU) to +35 px / +35 px. ⚠ 8 / 10 was measured and is NOT
+       enough in Russian (+55 px at 320): the wrap points move in whole words, so a smaller gain buys nothing. */
+    gap: 6px;
+    padding-right: 8px;
+  }
+  .cm-row .cm-body {
+    /* 15.10: 4 → 3 px between the name, the pill line, the paragraphs and the figures. Measured on top of the rest: the worst row at
+       320 px, EN +16 → +11 px Mac and +19 → +14 px Linux, RU +11 → +6 px. */
+    gap: 3px;
+  }
+  /* 15.10: line-height 1.35 → 1.25 on every paragraph of the row (the figures, `.cm-uplift`, had inherited the body's). Alone, on the
+     paragraphs only, it takes 320 px from +75 px (EN) / +90 px (RU) to +59 px / +73 px; with the gutters above it is what brings the
+     worst row under one line. The SIZE stays 10.5 px: it is under the 12 px floor already. */
+  .cm-row .cm-body .cm-blurb,
+  .cm-row .cm-body .cm-profile,
+  .cm-row .cm-body .cm-plaque,
+  .cm-row .cm-body .cm-decline,
+  .cm-row .cm-body .cm-load,
+  .cm-row .cm-body .cm-travel-edge,
+  .cm-row .cm-body .cm-uplift {
+    line-height: 1.25;
+  }
 }
 
 /* ⭐⭐⭐ ROUND 36 PHASE 2 – THE MARKET, TWO TO A ROW ON A TABLET. The owner, on screen AJ:

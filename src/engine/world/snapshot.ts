@@ -26,7 +26,8 @@ import { buildKnockPrompt, knockGoverns, knockLive } from '../knock'
 // questions rather than a rule written out at this seam. See `carriedOnTheWire` below.
 import { activeAdDeals, activeKitDeal, hasLiveOffer, isOfferLive, seasonLastWeek } from '../offers'
 import { travelCoverShare } from '../academy'
-import { buildDiarySnapshot, lastKidTitleOf } from '../diary'
+import { buildDiarySnapshot, lastKidTitleOf, silenceHeardAtFor } from '../diary'
+import type { DiaryWorldView } from '../diary'
 import { buildKidLife, FRIENDS_WINDOW, nextAcademicYearStart, schoolEndWeek, schoolIsOver } from '../kidLife'
 // v54 / round-23 #6b: the length of the course and the place she agreed to pay for. Both are leaves
 // (`ending.ts` is a constants module; `collegeOffer.ts` imports nothing but types and `Rng`), so
@@ -100,6 +101,8 @@ import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
 import { buildLifeBeatPrompt, buildSoftBeatInvite, forkWantOf, latchedEpisode, spouseViewOccasionThisWeek, FORK_WANT_ANSWER } from './lifeBeat'
+import { coachFeel, coachFeelRead } from './coachFeel'
+import { coachTalkShutRead } from './lifeBeat/smallTalk'
 // ⚠ A BEAT KIND THAT LIVES IN ITS OWN MODULE IS ASKED DIRECTLY (A-06 / T6.10, 28.09). `ownKeyThisWeek`
 // imports the hub, so the hub cannot re-export it back without the cycle A-06 is about – see
 // `world/lifeBeat/ownKey.ts`'s header. The read below did not move.
@@ -1665,6 +1668,10 @@ function carriedOnTheWire(world: WorldState): Offer[] {
 
 export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snapshot {
   const pending = pendingView(world)
+  const feel = coachFeel(world)
+  // ⭐ R52 F3 – ...and the SAME answer on the one week of a period it was re-read, for the diary's week note. Asked from
+  // `feel` so the tile and the note cannot disagree; `null` on every other week (`coachFeelRead`'s own rules).
+  const feelRead = coachFeelRead(world, feel)
   // ⭐ RU-23 – THE COACH'S THREE READS ON HER ROOM, each ONCE: the ref is the decision and the string beside it is that ref's English, so the two wires cannot disagree (class (b): derived here, persisted nowhere).
   const roomNoteC = coachRoomNoteRef(world)
   const declineNoteC = coachDeclineNoteRef(world)
@@ -1701,7 +1708,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
   // Diary-1: the facts + the selected lines, assembled from a narrow view of the world. Selection
   // draws only from `seed:diary:*` / `seed:memory:*` sub-streams at SNAPSHOT time – zero MAIN
   // draws, so the frozen capture (41550 / e6b0c709) is untouched by construction.
-  const diary = buildDiarySnapshot({
+  const diaryView: DiaryWorldView = {
     seed: world.seed,
     week: world.week,
     ageYears: kidAgeAt(world, world.week),
@@ -1779,6 +1786,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // W5: ...and WHICH holiday, for the frame that names it. The booking is still on file when its
     // story is told - `prunePlannerBookings` keeps four trailing weeks - and null on every other week.
     vacationPackageId: vacationForWeek(world, world.week)?.packageId ?? null,
+    // ⭐ R52 F3 – HER FEEL FOR THE COACH ON THE WEEK IT WAS RE-READ, for the week note: carried, and ABSENT on every
+    // other week (`DiaryFacts.coachFeelRead`), so an uncoached career's diary facts are exactly what they were.
+    ...(feelRead === null ? {} : { coachFeelRead: feelRead }),
     // W2: how hard the PLAYER worked her this week – the one fact about a training week that is his
     // decision rather than the world's, and the subject of the ordinary week's note.
     // ⭐ ROUND-21 #2: the ONE predicate, asked here and carried – see `coachTravelsWithHer`.
@@ -1883,7 +1893,12 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     ...birthdayGiftFactsOf(world),
     knockChoice: knockGoverns(world.knock, world.week) ? world.knock!.choice : null,
     knockPart: knockGoverns(world.knock, world.week) ? world.knock!.part : null,
-  })
+  }
+  // ⭐ R52 J1 / J1b (14.10) – THE BAND THAT SHUT A DUE STINT CHECKPOINT, on the first week of its window on which the line could be heard, for the diary's silence note (the owner: «давай по рекомендациям» – the silence shows). It is read HERE, after the
+  // view above, because which week that is is the diary's reading of the week's journey (`silenceHeardAtFor(diaryView)`: the same function the facts are assembled with, asked of the current week and of the weeks before it) and the window is the
+  // world's (`coachTalkShutRead`). CARRIED into the view and ABSENT on every other week (`DiaryFacts.coachTalkShut`), so a career with no shut checkpoint has the diary facts it always had. Derived, zero draws.
+  const talkShut = coachTalkShutRead(world, silenceHeardAtFor(diaryView))
+  const diary = buildDiarySnapshot(talkShut === null ? diaryView : { ...diaryView, coachTalkShut: talkShut })
   // THE SKILLS RADAR'S VIEW OF HER, assembled ONCE and read twice - by the contour (`buildRadar`)
   // and by the Weekly Story's training line (`buildTrainingRead`). Hoisted rather than inlined
   // because the two readings MUST see the same girl: a second literal here would be a second place
@@ -2277,6 +2292,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // anything: no screen, store, composable or viz module named it. The persisted v34 field, the
     // entry gates and `world/ladder.ts` are untouched; only the wire copy goes.
     coachId: world.coachId,
+    // ⭐⭐ ROUND 52 F1 (14.10) – HOW SHE FEELS ABOUT THE COACH SHE HAS (`Snapshot.coachFeel`, one of six ids, no wording). A conditional spread, so the key is ABSENT – not `null`,
+    // not `undefined` – when nobody is employed: `null` moves every L3-7 twin digest and an always-present valueless key breaks D-07's byte census (`openingFundsCents` above measured both).
+    ...(feel === null ? {} : { coachFeel: feel }),
     coachMarket: coachMarket(world),
     coachBilling: coachBilling(world),
     coachRoomNote: coachNoteText(roomNoteC),

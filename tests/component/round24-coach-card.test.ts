@@ -115,7 +115,9 @@ function snapshotAt(shown: number): Snapshot {
 function homeCoachCard(realised: number): { band: string; short: string; quote: string; card: string } {
   const store = useGameStore()
   store.snapshot = snapshotAt(realised)
-  const wrapper = mount(HomeScreen, { global: { stubs: { teleport: true } } })
+  // ⚠ 14.10 (r52, the owner's CI trace): `recapFresh` is a REQUIRED prop of HomeScreen – passed, so the log carries no
+  // «Missing required prop» noise; false = no fresh recap.
+  const wrapper = mount(HomeScreen, { props: { recapFresh: false }, global: { stubs: { teleport: true } } })
   const out = {
     band: wrapper.find('.coach-room').exists() ? wrapper.get('.coach-room').text() : '',
     short: wrapper.find('.coach-room-short').exists() ? wrapper.get('.coach-room-short').text() : '',

@@ -103,6 +103,20 @@ const STAGES_OF: Record<(typeof NEW_ROWS)[number], readonly DiaryLifeStage[]> = 
   'the-match-she-said-she-would-watch': ['school', 'after-school'],
 }
 /** The six subjects of the corpus. The legacy subjects of the engine's older small talk are NOT in this list. */
+/** ⚠ RE-AIMED 14.10 (r52, builder F4): the three coach-feel rows. A fresh world HAS a coach from its first week, so R69 `the-thing-she-cannot-name` joins the school worry cell in
+ *  the weeks her feel for the coach is cold – the claims below about the cell being «exactly the new rows» are about the UNGATED rows, so those weeks are read without it. */
+/** ⚠ RE-AIMED A SECOND TIME 14.10 (r52, builder H2): the SIX stint rows (R70–R75) join them for the same reason. A fresh world's coach is half a year old at week 24 and a year old at week 48, so in the weeks her feel is cold the school worry cell gains R72 and, from week 48, the school decision cell gains R74 or R75; both claims below are about the UNGATED rows, so those weeks are read without them. */
+const COACH_FEEL_ROWS = [
+  'the-thing-that-makes-sense',
+  'practice-feels-different',
+  'the-thing-she-cannot-name',
+  'half-a-year-and-it-fits',
+  'half-a-year-and-still-unsure',
+  'months-in-and-still-waiting',
+  'a-year-and-she-would-not-swap',
+  'a-year-and-she-still-does-not-know',
+  'a-year-in-we-need-to-talk',
+]
 const CORPUS_SUBJECTS = ['story', 'observation', 'curiosity', 'good-news', 'worry', 'decision'] as const
 
 function subjectOf(id: (typeof NEW_ROWS)[number]): 'worry' | 'decision' {
@@ -164,11 +178,11 @@ describe('round 51 (continuation) A – the two cells reach the floor, and they 
     for (let w = 0; w < 104; w++) {
       world.week = w
       for (const voice of TEMPERAMENTS) {
-        const worry = idsAt(world, voice, 'school', 'worry')
+        const worry = idsAt(world, voice, 'school', 'worry').filter((id) => !COACH_FEEL_ROWS.includes(id))
         expect(worry, `week ${w}/${voice}: R46 needs a match played and a fresh career has played none`).not.toContain('line-call')
         // With nothing played the whole reachable worry cell is the two new rows, in EVERY week.
         expect([...worry].sort(), `week ${w}/${voice}: school worry on a bare career`).toEqual([...NEW_WORRIES].sort())
-        const decision = idsAt(world, voice, 'school', 'decision')
+        const decision = idsAt(world, voice, 'school', 'decision').filter((id) => !COACH_FEEL_ROWS.includes(id))
         expect(decision, `week ${w}/${voice}: the bare career's school decisions`).toEqual(expect.arrayContaining([...NEW_DECISIONS]))
         if (decision.includes('march-entry')) {
           openWeeks++
@@ -200,9 +214,11 @@ describe('round 51 (continuation) A – the two cells reach the floor, and they 
     }
   })
 
-  it('the four are ordinary rows – ungated, four-voiced, NO second beat, the right subject and stages – and they are the LAST four', () => {
+  it('the four are ordinary rows – ungated, four-voiced, NO second beat, the right subject and stages – and they sit nine from the end (R67–R75 follow them)', () => {
     expect(
-      SMALL_TALK_SITUATIONS.slice(-4).map((s) => s.id),
+      // ⚠ RE-AIMED A FIFTH TIME 14.10 (r52, builder F4): «the last four» became «the four before the last three» when R67–R69 (tests/r52-coach-feel-talk.test.ts) were appended after R66; the order of what was there did not move.
+      // ⚠ RE-AIMED A SIXTH TIME 14.10 (r52, builder H2): «the four before the last three» became «the four before the last nine» when R70–R75 (tests/r52-coach-feel-talk.test.ts) were appended after R69; the order of what was there did not move.
+      SMALL_TALK_SITUATIONS.slice(-13, -9).map((s) => s.id),
       'appended last: a pool of a different length reads a different position, but the order of what was there does not move',
     ).toEqual([...NEW_ROWS])
     for (const id of NEW_ROWS) {

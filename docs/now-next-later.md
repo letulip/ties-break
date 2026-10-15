@@ -29,7 +29,7 @@ last-reviewed: 2026-09-23
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 51 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 52 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
 **Round 48 is the first detailed pass on the merged 47** ([round-48.md](rounds/round-48.md),

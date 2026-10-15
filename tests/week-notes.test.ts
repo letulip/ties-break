@@ -52,8 +52,10 @@ import {
   weekNoteFor,
 } from '../src/engine/diary'
 import {
+  DEFAULT_PROFILE,
   WEEK_PLAN_PRESETS,
   type BondBand,
+  type CoachFeel,
   type ConditionBand,
   type DiaryFacts,
   type DiaryLifeStage,
@@ -68,6 +70,12 @@ import { BODY_REGIONS, bodyGroupOf, bodyPartOf, type BodyGroup } from '../src/en
 import { BIRTHDAY_BANDS, giftNoun, PARTNER_NAME_POOL } from '../src/engine/world'
 // R51 №13: the package catalogue, so the narrowing's id and the controls are read off the data and not retyped.
 import { vacation } from '../src/engine/economy/vacation'
+// ⭐ R52 F3 – the real-career arm: a played, coached career, the stint's ledger, and the constants the period is read off.
+import { createHash } from 'node:crypto'
+import { COACH_FEEL } from '../src/engine/chemistry'
+import { createWorld, hireCoach, toSnapshot } from '../src/engine/world'
+import { coachSinceWeek } from '../src/engine/world/coachStint'
+import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
 
@@ -356,6 +364,17 @@ function* sweepStages(): Generator<DiaryFacts> {
     // every sweep already carries it – which is what makes «one week only» checkable.
     ...VOICES.map((temperament) => ({ forkAftermath: 'with' as const, temperament })),
     ...VOICES.map((temperament) => ({ forkAftermath: 'against' as const, temperament })),
+    // ⭐ R52 F3 – HER FEEL FOR THE COACH, ONE SHAPE PER STEP THAT HAS A VOICE, for R2-18's reason once more: `homeWeek`
+    // holds `coachFeelRead` absent on every fixture of every sweep, so the ten lines (licensed on it) would be licensed in
+    // NONE of them and every guard in this file – the honesty pin, the scrap budget, the third person, the short dash –
+    // would pass over them without looking. The five run at all four stages (which is what catches a house line reaching a
+    // flat of her own, `HOLDS.domestic`) and cross every calendar of this sweep through `plainTraining` (which is what
+    // catches one reaching a holiday, a journey, a knock or a layoff).
+    ...(['unsure', 'seems-good', 'seems-off', 'good', 'off'] as const).map((coachFeelRead) => ({ coachFeelRead })),
+    // ⭐ R52 J1 – THE CHECKPOINT THE BOND SHUT, ONE SHAPE PER BAND, for the same reason once more: `homeWeek` holds `coachTalkShut` absent on every fixture, so the four silence lines would be licensed in NONE of them and
+    // every guard in this file would pass over them without looking. The band rides WITH the fact (`bondBand` is the independent second spelling `HOLDS.coachTalkShut` checks it against), at all four stages
+    // (which catches a house line reaching a flat of her own) and across every calendar, knock and injury of this sweep (which catches one reaching a layoff).
+    ...(['strained', 'cold'] as const).map((coachTalkShut) => ({ coachTalkShut, bondBand: coachTalkShut })),
   ]
   for (const lifeStage of STAGES) {
     const schoolOver = lifeStage !== 'school'
@@ -539,6 +558,13 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   // caught by reading.
   bodyGroup: (f, value) => f.injured !== null && bodyGroupOf(f.injured.kind) === value,
   birthday: (f) => f.birthdayAge !== null,
+  // ⭐ R52 F3 – the step her feel read, re-derived off the FACT and not off `heardAtTable` in weekNotes.ts that produced
+  // the line: a second spelling, so a licence and its claim cannot be wrong together. VALUED, and `too-early` fails by
+  // name – no line may claim it, and a table that only knew five values would wave a sixth through.
+  coachFeelRead: (f, value) => f.coachFeelRead !== undefined && f.coachFeelRead === value && value !== 'too-early',
+  // ⭐ R52 J1 – the band that shut the checkpoint, re-derived off the FACT and off the diary's own `bondBand` rather than off `silentAtTable` in weekNotes.ts that produced the line: a second spelling, and a third
+  // (the bond band the fact was derived from) that must agree with it. VALUED, and only the two shut bands pass: a line may not claim `steady`, where she does confide.
+  coachTalkShut: (f, value) => f.coachTalkShut !== undefined && f.coachTalkShut === value && f.bondBand === value && (value === 'strained' || value === 'cold'),
   // ⭐ v72 – the three claims her own voice carries, each re-derived off the facts and NOT off the
   // predicate in weekNotes.ts that produced the line. Same method as every entry above: a second
   // spelling, so a licence and its claim cannot be wrong together.
@@ -1970,5 +1996,323 @@ describe('R51 №13 — a staycation week is not a journey', () => {
       expect(s, `"${t}" -> the long dash`).not.toContain('—')
       expect(s, `"${t}" -> an exclamation mark`).not.toContain('!')
     }
+  })
+})
+
+// =================================================================================================
+// R52 F3 (14.10) – HER FEEL FOR THE COACH REACHES THE WEEK NOTE
+// =================================================================================================
+//
+// THE OWNER: «изредка строка в дневнике голосом родителя». What this holds, in the order the change was built:
+//   1. THE TABLE.   Ten lines, two for each step that has a voice, as data in THIS file; `too-early` has none.
+//   2. THE LICENCE. A line is licensed on its own step's fact, on an ordinary training week, at a roof stage – and on no
+//                   other week of any kind, no other step's fact, no leaked `too-early`, and no fact at all.
+//   3. THE DRAW.    Each step draws its own two lines (both of them) and never another step's.
+//   4. THE FACT.    On played, coached careers the fact is present on EXACTLY the weeks the leaf says – the first of a
+//                   period, a week she has trained with this coach, a feel with a voice – carries the tile's step, and is
+//                   ABSENT (not null) otherwise; an uncoached career never has the key; the week of a hire never has it,
+//                   not even for a coach hired back whose gauge already speaks; a snapshot draws nothing from MAIN.
+//   5. THE WORDS.   The rest of the pool is byte-identical, and the ten Russian rows are present.
+//   6. THE BOND.    (J1c, 14.10) Five of the ten quote her and are licensed only while the bond is not `cold` (who-she-is §5b: tier 0 is
+//                   absent at cold); the other five, and every other band, are licensed as they were.
+describe('R52 F3 — her feel for the coach reaches the week note', () => {
+  type Step = Exclude<CoachFeel, 'too-early'>
+  const STEPS: Step[] = ['unsure', 'seems-good', 'seems-off', 'good', 'off']
+  /** The ten lines as DATA, copied here and not read back from the source: an oracle that moves with the string it checks
+   *  is a pin that cannot fail (CLAUDE.md invariant 4). */
+  const LINES: Record<Step, readonly [string, string]> = {
+    unsure: ['Asked how practice went, she shrugged: "Still working it out."', 'Practice was "different", she said. Not better, not worse. Different.'],
+    'seems-good': ["She came home with one of the coach's drills and showed it to us twice.", '"It is starting to make sense," she said about practice. That was new.'],
+    'seems-off': ['"Fine," she said about practice, and changed the subject.', 'She tried the new drill in the hall, stopped halfway. "It is fine."'],
+    good: ['Practice came up three times at dinner. All of it good.', 'She quoted the coach at dinner. Twice.'],
+    off: ['She does not talk about practice any more.', 'Practice came and went without a word at dinner.'],
+  }
+  const ALL: string[] = STEPS.flatMap((s) => [...LINES[s]])
+  const ROOF_STAGES: DiaryLifeStage[] = ['school', 'after-school']
+  const stageOf = (lifeStage: DiaryLifeStage): Partial<DiaryFacts> => ({
+    lifeStage,
+    schoolOver: lifeStage !== 'school',
+    ageYears: lifeStage === 'school' ? 15 : 24,
+  })
+  /** Every text of the ten the pool LICENSES for a week, before any draw. */
+  const feelTexts = (f: DiaryFacts): string[] =>
+    WEEK_NOTES.filter((n) => n.license(f)).map((n) => render(n, f)).filter((t) => ALL.includes(t))
+  /** The weeks that are NOT an ordinary training week – each takes the note off, because a line about practice needs one. */
+  const NOT_PLAIN: [string, Partial<DiaryFacts>][] = [
+    ['a tournament', { playedTournament: true }],
+    ['a journey', { travelled: true }],
+    ['a friendly', { playedPractice: true }],
+    ['an exam week', { examsWeek: true }],
+    ['the off-season', { offSeasonWeek: true }],
+    ['a holiday', { vacationWeek: true }],
+    ['a knock, rested', { knockChoice: 'rest', knockPart: 'ankle' }],
+    ['a knock, pushed through', { knockChoice: 'push', knockPart: 'ankle' }],
+    ['a layoff', { injured: INJURIES.find((i) => i !== null) ?? null }],
+  ]
+
+  it('1 – the table: ten lines, two per step with a voice, once each, claims valued, and none for `too-early`', () => {
+    const carriers = WEEK_NOTES.filter((n) => n.claims.coachFeelRead !== undefined)
+    expect(carriers, 'exactly the ten').toHaveLength(10)
+    for (const step of STEPS) {
+      expect(carriers.filter((n) => n.claims.coachFeelRead === step).map((n) => n.text), step).toEqual([...LINES[step]])
+    }
+    expect(carriers.map((n) => n.claims.coachFeelRead as string), 'no line claims `too-early`').not.toContain('too-early')
+    const statics = WEEK_NOTES.map((n) => n.text).filter((t): t is string => typeof t === 'string')
+    for (const t of ALL) expect(statics.filter((x) => x === t), `"${t}" must be in the pool exactly once`).toHaveLength(1)
+    for (const n of carriers) expect(n.claims.domestic, `"${n.text}" watches her at the table: a house line`).toBe(true)
+  })
+
+  it('2 – licensed ONLY with its step present, on an ordinary training week, at a roof stage – and on nothing else', () => {
+    for (const stage of STAGES) {
+      const roof = ROOF_STAGES.includes(stage)
+      for (const step of [undefined, ...STEPS]) {
+        const f = homeWeek({ ...stageOf(stage), ...(step === undefined ? {} : { coachFeelRead: step }) })
+        const expected = step !== undefined && roof ? [...LINES[step]] : []
+        expect(feelTexts(f), `${stage} / ${step ?? 'no fact'}`).toEqual(expected)
+        for (const [what, shape] of NOT_PLAIN) {
+          if (stage !== 'school' && shape.examsWeek) continue // the engine cannot produce this week
+          expect(feelTexts({ ...f, ...shape }), `${stage} / ${step ?? 'no fact'} / ${what}`).toEqual([])
+        }
+      }
+    }
+    expect(feelTexts(homeWeek({ coachFeelRead: 'too-early' as never })), 'a leaked `too-early` hints at nothing').toEqual([])
+  })
+
+  /** Every one of the ten that the pool actually DRAWS for a week shape: 40 careers x 60 weeks. */
+  function drawnFeel(over: Partial<DiaryFacts>): Set<string> {
+    const out = new Set<string>()
+    for (let s = 0; s < 40; s++) {
+      for (let week = 1; week <= 60; week++) {
+        const t = weekNoteFor(homeWeek({ week, ...over }), `r52-f3-career-${s}`)
+        if (t !== null && ALL.includes(t)) out.add(t)
+      }
+    }
+    return out
+  }
+
+  it('3 – each step draws its own two lines, both of them, and never another step\'s; with no fact none is ever drawn', () => {
+    for (const step of STEPS) expect([...drawnFeel({ coachFeelRead: step })].sort(), step).toEqual([...LINES[step]].sort())
+    expect(drawnFeel({}).size, 'a week with no fact in it').toBe(0)
+  })
+
+  // ⭐ R52 J1c (14.10) – THE BOND. Who-she-is §5b: tier 0, her quoted line inside the parent's week story, is «absent at cold»; the owner's ruling of 14.10 (round 52, his answers on the close №1): at a strained or cold
+  // bond she does not confide. FIVE of the ten put her words in quotation marks and take the bond clause (`herWordsQuotable`); the other five are the parent's own observation and do not. Both tables are DATA in this
+  // file, copied and never read back from the source: what is licensed at `close`, `steady` and `strained` is the LINES table above, unmoved, and what is licensed at `cold` is spelled out here.
+  const BONDS_F3 = ['close', 'steady', 'strained', 'cold'] as const
+  /** What is still licensed at `cold`, per step: the lines with no word of hers in them. `unsure` and `seems-off` have none – both lines of each pair quote her. */
+  const AT_COLD: Record<Step, readonly string[]> = {
+    unsure: [],
+    'seems-good': [LINES['seems-good'][0]],
+    'seems-off': [],
+    good: [...LINES.good],
+    off: [...LINES.off],
+  }
+
+  it('2b – THE BOND: at close, steady and strained the ten are licensed exactly as before; at cold only the five with none of her words in them are', () => {
+    for (const step of STEPS) {
+      // the oracle's own split IS the quotation mark: a line that quotes her is a line this table leaves out
+      expect([...AT_COLD[step]], `${step}: the frozen cold table is the unquoted lines`).toEqual(LINES[step].filter((t) => !t.includes('"')))
+    }
+    expect(STEPS.flatMap((s) => [...AT_COLD[s]]), 'three steps still speak at cold, five lines in all').toHaveLength(5)
+    for (const stage of STAGES) {
+      const roof = ROOF_STAGES.includes(stage)
+      for (const step of STEPS) {
+        for (const bondBand of BONDS_F3) {
+          const texts = feelTexts(homeWeek({ ...stageOf(stage), bondBand, coachFeelRead: step }))
+          const expected = !roof ? [] : bondBand === 'cold' ? AT_COLD[step] : LINES[step]
+          expect(texts, `${stage} / ${step} / ${bondBand}`).toEqual([...expected])
+          if (bondBand === 'cold') for (const t of texts) expect(t, `${stage} / ${step}: a quotation mark at a cold bond`).not.toContain('"')
+        }
+      }
+    }
+  })
+
+  it('3d – and the DRAW at cold: a quoted line is never printed, the unquoted ones still are, and a step with none leaves the week to the ordinary pool', () => {
+    for (const step of STEPS) {
+      const drawn = drawnFeel({ coachFeelRead: step, bondBand: 'cold' })
+      expect([...drawn].sort(), `cold / ${step}`).toEqual([...AT_COLD[step]].sort())
+    }
+    // ...a step with no unquoted line is not a silenced week: the coin and the pool are the ordinary ones
+    for (const step of ['unsure', 'seems-off'] as const) {
+      let spoke = 0
+      for (let s = 0; s < 40; s++) {
+        for (let week = 1; week <= 60; week++) {
+          if (weekNoteFor(homeWeek({ week, bondBand: 'cold', coachFeelRead: step }), `r52-j1c-cold-${s}`) !== null) spoke++
+        }
+      }
+      expect(spoke, `cold / ${step}: the ordinary pool still speaks`).toBeGreaterThan(0)
+    }
+  })
+
+  it('3b – and the claim is REACHED, per line, through the honesty pin\'s sweep (HOLDS.coachFeelRead is not decoration)', () => {
+    const carriers = WEEK_NOTES.filter((n) => n.claims.coachFeelRead !== undefined)
+    const reached = carriers.map(() => 0)
+    for (const f of sweepAll()) {
+      if (f.coachFeelRead === undefined) continue
+      carriers.forEach((note, i) => {
+        if (!note.license(f)) return
+        reached[i]++
+        expect(HOLDS.coachFeelRead(f, note.claims.coachFeelRead), `"${note.text}" licensed on a fact that is not its claim`).toBe(true)
+      })
+    }
+    carriers.forEach((note, i) => expect(reached[i], `"${note.text}" is licensed in no fixture – the pin proves nothing about it`).toBeGreaterThan(0))
+  })
+
+  it('3c – THE LEAD: on a week her feel is heard the ten take the note whenever the coin lets the week speak, and nothing else of the pool does', () => {
+    for (const step of STEPS) {
+      let weeks = 0
+      let spoke = 0
+      for (let s = 0; s < 40; s++) {
+        for (let week = 1; week <= 60; week++) {
+          const t = weekNoteFor(homeWeek({ week, coachFeelRead: step }), `r52-f3-lead-${s}`)
+          weeks++
+          if (t === null) continue
+          spoke++
+          expect((LINES[step] as readonly string[]).includes(t), `${step}: "${t}" is a pool line on a heard week`).toBe(true)
+        }
+      }
+      // the coin is WEEK_NOTE_CHANCE and the lead adds nothing to it: the share that speaks is the coin's own share
+      expect(Math.abs(spoke / weeks - WEEK_NOTE_CHANCE), `${step}: ${spoke} of ${weeks} weeks spoke`).toBeLessThan(0.04)
+    }
+    // ...and a week that is NOT heard draws from the whole pool as it always did: ordinary lines, none of the ten
+    const plain = new Set<string>()
+    for (let s = 0; s < 40; s++) for (let week = 1; week <= 60; week++) {
+      const t = weekNoteFor(homeWeek({ week }), `r52-f3-lead-${s}`)
+      if (t !== null) plain.add(t)
+    }
+    expect(plain.size, 'an ordinary week still draws from the pool').toBeGreaterThanOrEqual(2)
+    expect([...plain].filter((t) => ALL.includes(t)), 'and none of the ten, with no fact in the week').toEqual([])
+  })
+
+  /** One played career, handed week by week to `visit` as the diary and the tile see it. */
+  function walk(presetIdx: number, index: number, weeks: number, visit: (world: ReturnType<typeof createWorld>, snap: ReturnType<typeof toSnapshot>) => void): void {
+    const policy = POLICIES[0]!
+    const { world, rng } = openCareer(PRESETS[presetIdx]!, index, policy)
+    for (let w = 0; w < weeks; w++) {
+      visit(world, toSnapshot(world))
+      stepCareerWeek(world, rng, policy)
+    }
+  }
+
+  // ⚠⚠ THE TWO PER-TEST BUDGETS OF 4a AND 4b (240 s, 120 s) ARE GONE 14.10 (ROUND 52 F5 – the closing check's catch; `tests/sim-serialisation.test.ts`: birpc's window is 60 s, and a budget above it
+  // only turns a readable timeout into an opaque `Timeout calling "onTaskUpdate"` stall). MEASURED SOLO 14.10 (unit project, `--reporter=verbose`, 1-min load 3.1): 4a 10.32 s – six careers x 130
+  // weeks, 780 snapshots, `coachedWeeks` asserted at exactly 2 x 3 x 130 – and 4b 0.97 s. At T5.3's strictest factor on record (x3.1, the two-core runner) 4a is ~32 s, 1.9x under the window, so
+  // NOTHING WAS CUT AND NOTHING PROMOTED and the project default applies. If 4a ever needs margin the cheap knob is the careers per preset (`idx < 3`), not a bigger number.
+  it('4a – on played, coached careers the fact is present on EXACTLY the first week of a period she has trained, carries the tile\'s step, and is absent otherwise; the note drawn is always that step\'s', () => {
+    let coachedWeeks = 0
+    let reads = 0
+    let notesDrawn = 0
+    const stepsSeen = new Set<string>()
+    const reachedFromReal = new Set<string>()
+    for (const preset of [2, 5]) {
+      for (let idx = 0; idx < 3; idx++) {
+        walk(preset, idx, 130, (world, snap) => {
+          const f = snap.diary.facts
+          const where = `preset ${preset}/${idx} w${world.week}`
+          expect(world.coachId, `${where}: this preset starts with a coach`).not.toBeNull()
+          coachedWeeks++
+          const together = world.week - coachSinceWeek(world)
+          const tile = snap.coachFeel
+          const due = together > 0 && together % COACH_FEEL.periodWeeks === 0 && tile !== undefined && tile !== 'too-early'
+          expect(f.coachFeelRead, `${where} (${together} weeks together, tile ${tile})`).toBe(due ? tile : undefined)
+          if (!due) expect('coachFeelRead' in f, `${where}: the key is ABSENT, not undefined-valued`).toBe(false)
+          const t = snap.diary.weekNote
+          if (t !== null && ALL.includes(t)) {
+            notesDrawn++
+            expect(f.coachFeelRead !== undefined && (LINES[f.coachFeelRead] as readonly string[]).includes(t), `${where}: "${t}" is not the line of step ${f.coachFeelRead}`).toBe(true)
+          }
+          if (!due) return
+          reads++
+          stepsSeen.add(tile as string)
+          // the REAL facts of a REAL week, drawn under 60 other careers' seeds: whatever is drawn of the ten is this step's
+          if (feelTexts(f).length === 0) return
+          for (let k = 0; k < 60; k++) {
+            const drawn = weekNoteFor(f, `${world.seed}:alt${k}`)
+            if (drawn === null || !ALL.includes(drawn)) continue
+            expect((LINES[f.coachFeelRead as Step] as readonly string[]).includes(drawn), `${where}: alt ${k} drew "${drawn}" for step ${f.coachFeelRead}`).toBe(true)
+            reachedFromReal.add(drawn)
+          }
+        })
+      }
+    }
+    // the denominators: an arm that walked nothing, or reached nothing, would pass over everything above
+    expect(coachedWeeks, 'the arm walked coached weeks').toBe(2 * 3 * 130)
+    expect(reads, 'and reached weeks the fact is present on').toBeGreaterThan(20)
+    expect(stepsSeen.size, 'with more than one step among them').toBeGreaterThanOrEqual(2)
+    expect(reachedFromReal.size, 'and the real facts drew lines of the ten under other seeds').toBeGreaterThanOrEqual(2)
+    expect(notesDrawn, 'the notes drawn on the careers\' own seeds are counted, not required').toBeGreaterThanOrEqual(0)
+  })
+
+  it('4b – an uncoached career never has the key, on any of its weeks', () => {
+    let weeks = 0
+    walk(0, 0, 80, (world, snap) => {
+      expect(world.coachId, 'the self-coached preset has nobody employed').toBeNull()
+      expect('coachFeelRead' in snap.diary.facts, `w${world.week}`).toBe(false)
+      weeks++
+    })
+    expect(weeks).toBe(80)
+  })
+
+  it('4c – the week of a hire never carries the fact – not even for a coach hired back whose gauge already speaks – and the fourth and eighth weeks do', () => {
+    for (const [chem, expected] of [[10, 'good'], [-10, 'off']] as const) {
+      const world = createWorld(`r52-f3-rehire${chem}`, { ...DEFAULT_PROFILE, coachTier: 'middle' })
+      world.week = 60
+      const back = toSnapshot(world).coachMarket.find((r) => !r.current && r.lockedPoints === null)?.id
+      if (back === undefined) throw new Error('no hireable stranger on this board')
+      // the pair survives leaving and coming back (spec §7); a level of ±10 is past the clamp, so the tile speaks from the first week
+      world.coachPairs[back] = { chem, phase: 0, standing: 0 }
+      hireCoach(world, back)
+      for (let k = 0; k <= 2 * COACH_FEEL.periodWeeks; k++) {
+        world.week = 60 + k
+        const snap = toSnapshot(world)
+        expect(snap.coachFeel, `chem ${chem}, week ${k} of the new stint: the tile speaks (F1b)`).toBe(expected)
+        const due = k > 0 && k % COACH_FEEL.periodWeeks === 0
+        expect(snap.diary.facts.coachFeelRead, `chem ${chem}, week ${k} of the new stint`).toBe(due ? expected : undefined)
+      }
+    }
+  })
+
+  it('4d – ZERO MAIN draws: building the snapshot, the diary facts included, leaves the persisted MAIN position where it was', () => {
+    const { world } = openCareer(PRESETS[2]!, 0, POLICIES[0]!)
+    world.week = 64
+    const at = JSON.stringify(world.rngMain)
+    for (let i = 0; i < 5; i++) toSnapshot(world)
+    expect(JSON.stringify(world.rngMain), 'the diary facts drew nothing from MAIN').toBe(at)
+  })
+
+  it('5 ENGLISH – every OTHER shipped line is byte-identical: the pool minus the ten still hashes to its value before this change', () => {
+    const statics = WEEK_NOTES.map((n) => n.text).filter((t): t is string => typeof t === 'string')
+    // ⚠ RE-AIMED 14.10 (R52 J1): four lines joined the pool – the checkpoint the bond shut (claim `coachTalkShut`). The count and the hash below are of the REST of the pool and do not move: the four are taken out of `rest` by
+    // claim, the way the ten are taken out by text, and their words are pinned as data in tests/r52-checkpoint-silence.test.ts.
+    const SILENCE = WEEK_NOTES.filter((n) => n.claims.coachTalkShut !== undefined).map((n) => n.text)
+    const rest = statics.filter((t) => !ALL.includes(t) && !SILENCE.includes(t))
+    expect(rest, 'the shipped static lines').toHaveLength(301)
+    expect(WEEK_NOTES.length - statics.length, 'and the template lines').toBe(26)
+    // ⚠ CAPTURED FROM THE PRISTINE TREE (HEAD 19d6c40f, weekNotes.ts clean) BEFORE the ten were added. A red here means an
+    // existing line's English moved: that is the owner's to ask for (CLAUDE.md invariant 4) – re-capture only if he did.
+    expect(createHash('sha1').update(rest.join('\n')).digest('hex').slice(0, 16)).toBe('4385c6f9b5d9048f')
+  })
+
+  it('5 RUSSIAN – the ten rows are present: Cyrillic, inside the scrap, the short dash only, the coach named only as a noun', () => {
+    const ru = JSON.parse(read('../src/i18n/ru.json')) as Record<string, unknown>
+    const naming: string[] = []
+    for (const t of ALL) {
+      const r = ru[t]
+      expect(typeof r, `"${t}" has no Russian row`).toBe('string')
+      const s = r as string
+      expect(s, `"${t}" -> a row with no Russian in it`).toMatch(/[А-Яа-яЁё]/)
+      expect(s.length, `"${t}" -> "${s}" is over the 80-character scrap`).toBeLessThanOrEqual(80)
+      expect(s, `"${t}" -> the long dash`).not.toContain('—')
+      expect(s, `"${t}" -> an exclamation mark`).not.toContain('!')
+      expect(s, `"${t}" -> «всё плохо» is nobody's line`).not.toMatch(/всё плохо/i)
+      if (/тренер/i.test(s)) naming.push(s)
+    }
+    // ⚠ RE-AIMED 15.10 (r52 review sheet): the two rows are his own wording now (RU09D-CFW-03 and -08, edited and approved
+    // by him). The claim is unchanged – the same two rows, and only they, name the coach, and as a noun («с тренером»,
+    // «слова тренера»): no verb or pronoun gives the coach a sex (R15-7).
+    expect(naming, 'R15-7: the coach appears in exactly the two rows that name one, as a noun').toEqual([
+      'Дома она дважды показала нам упражнение, которое делала с тренером.',
+      'За ужином она дважды повторила слова тренера.',
+    ])
   })
 })

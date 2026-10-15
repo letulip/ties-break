@@ -52,6 +52,16 @@
 //                                (0 pairs with |chem| >= 3 under their own bar). ⚠ If even exceeds 70% at
 //                                week 52 the thresholds step to +-2 and BOTH measurements are reported.
 //                                Run: npm run bench:chemistry -- --hunch
+//   B14 · her feel for the     ROUND 52 F1 (14.10), predicted BEFORE the run (the full table is docs/specs/the-chemistry-2026-09.md
+//         coach                §17.2): on B13's 1200 pairs and walk, week 13 is unsure 44-56% (target 30-60%) with a lean either way
+//                                in about a quarter of pairs; confident (good / off) steps are rare at week 13 and the commonest at week 52
+//                                (good 17-22%, off 35-42%) because they ride the level; a week-13 lean points the right way at week 52 for
+//                                most pairs (seems-good: +3 or more at 55-72%, seems-off: -3 or less at 78-92%); doubt errors (a hedged step
+//                                whose sign is opposite to the week-52 level) 6-12% combined, three times likelier on the warm side than the
+//                                cold one because the corridor is steeper below the drift; flicker in the first coached year median 1
+//                                (0-2), p90 3-6; confident-wrong exactly 0. TARGETS: unsure share at week 13 in 30-60%, hedged-wrong
+//                                <= 15%, flicker median <= 4 a year, confident-wrong 0. ONE knob may move once if a target misses.
+//                                Run: npm run bench:chemistry -- --feel
 //
 // ⚠ WHAT THIS BENCH CANNOT MEASURE, said out loud rather than quietly skipped. §1a is explicit that
 // the table's PRINCIPLE cannot be validated – «two intense people burn out» is a claim about human
@@ -81,13 +91,13 @@ import {
   type Temperament,
 } from '../src/engine/world'
 import { buildCoachRoster, HIREABLE_TIERS, styleFitBetween } from '../src/engine/coach'
-import { CHEMISTRY_HUNCH_COLD_AT, CHEMISTRY_HUNCH_WARM_AT, chemistryHunch } from '../src/engine/chemistry'
+import { CHEMISTRY_HUNCH_COLD_AT, CHEMISTRY_HUNCH_WARM_AT, COACH_FEEL, COACH_FEEL_STEPS, chemistryHunch, chemistryReading, coachFeelOf } from '../src/engine/chemistry'
 import { availabilityStatus, closeTournament, enterEvent, skipTournament, tickWeek } from '../src/engine/world'
 import { SKILL_KEYS } from '../src/engine/development'
 import { rngFromSeed } from '../src/engine/rng'
 import { spiritBandOf } from '../src/engine/spirit'
 import { drainKnock } from './_knocks'
-import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground, type PlayStyle } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, type CoachFeel, type CoachTier, type FamilyBackground, type PlayStyle } from '../src/shared/protocol'
 // T5.12 · F-04, 27.09: the local `mean` was `(xs.length || 1)`, which is econ-bench's rule spelled
 // differently – empty is 0 either way. See `tools/_stats.ts` for the reference behaviour.
 import { mean } from './_stats'
@@ -105,6 +115,7 @@ const PAIRS = argOf('pairs', 4000)
 const WALK_YEARS = argOf('walkyears', 400)
 const ACTUATE = args.includes('--actuate')
 const HUNCH = args.includes('--hunch')
+const FEEL = args.includes('--feel')
 
 const f1 = (x: number) => x.toFixed(1)
 const f2 = (x: number) => x.toFixed(2)
@@ -469,6 +480,156 @@ function b13(): void {
   console.log(`  structural: pairs that lean while the ring is still unreadable: ${leansUnreadable} (must be 0)`)
 }
 
+// =================================================================================================
+// B14 · HER FEEL FOR THE COACH – round 52 F1 (14.10): the six steps over a stint, against what the gauge later shows
+// =================================================================================================
+//
+// The owner wanted her to hint «ок / норм / не ок» about the coach so the parent has something to decide on when the
+// chemistry gauge is not growing, or not visibly. The design (spec §17.1) is a score of the pair's TREND and its LEVEL
+// with a small monthly doubt, and these are the five questions it has to answer on numbers:
+//   (a) the SHARE of each step at stint week 6 / 13 / 26 / 52 – a hint that is «unsure» nine times in ten is decoration,
+//       one that is never unsure is a second gauge;
+//   (b) PREDICTIVE POWER – of the pairs on a step at week 13 and 26, where does the LEVEL stand at week 52 (>= +3, between,
+//       <= -3, the same lines the gauge and the hunch use)? A hint that points at nothing is noise;
+//   (c) DOUBT ERRORS – a hedged step (seems-good / seems-off) whose SIGN is opposite to the week-52 level. Doubt is allowed;
+//       too much of it teaches the parent to ignore her;
+//   (d) FLICKER – how often the step changes for one pair, per coached year (weeks 6-52, and then years two and three);
+//   (e) CONFIDENT-WRONG – a `good` / `off` step while the gauge's OWN function (`chemistryReading`, the per-pair bar) is
+//       null or of the opposite sign. Zero by construction; a bench that did not count it could not say so.
+//
+// ⚠ THE SAME 1200 PAIRS AS B13 (seed `chem-hunch-<i>`, the real `accrueChemistry`, the stated week stream, the world's own
+// temperament), so B13 and B14 read one population. The walk is three coached years; each pair is walked ONCE and every
+// reading below is taken off that one series – a ruler moving and nothing else.
+// ⚠ THE STINT STARTS AT WEEK 1 WITH A FRESH PAIR: stint week w is the pair after w accruals and `weeksTogether = w`, which is
+// what the engine hands the primitive after w ticks of a fresh hire.
+const FEEL_MARKS = [6, 13, 26, 52]
+const FEEL_YEARS = 3
+function b14(): void {
+  const pairs = argOf('feelpairs', 1200)
+  const horizon = FEEL_YEARS * 52
+  console.log(`\nB14 · HER FEEL FOR THE COACH – ${pairs} pairs (B13's), the step at stint weeks ${FEEL_MARKS.join(' / ')}, walked ${horizon} weeks`)
+  const f = COACH_FEEL
+  console.log(`  knobs: too-early under ${f.tooEarlyWeeks} wks · level = chem/${f.levelScale} · level weight up to ${f.levelWeightMax} over ${f.levelWeightWeeks} wks · doubt +-${f.jitter} per ${f.periodWeeks} wks · lean at +-${f.leanAt} · confident past +-${CHEMISTRY_HUNCH_WARM_AT} (the hunch line)`)
+  type Level = 'pos' | 'mid' | 'neg'
+  const levelOf = (chem: number): Level => (chem >= CHEMISTRY_HUNCH_WARM_AT ? 'pos' : chem <= CHEMISTRY_HUNCH_COLD_AT ? 'neg' : 'mid')
+  const steps: CoachFeel[][] = []
+  const chems: number[][] = []
+  let confident = 0
+  let confidentWrong = 0
+  for (let i = 0; i < pairs; i++) {
+    const seed = `chem-hunch-${i}`
+    const world = createWorld(seed, {
+      ...DEFAULT_PROFILE,
+      background: BACKGROUNDS[i % BACKGROUNDS.length],
+      playStyle: STYLES[i % STYLES.length],
+    })
+    const roster = buildCoachRoster(seed, 14)
+    const coach = roster[i % roster.length]
+    const a = affinityFor(seed, coach.id, world.temperament, coach.manner)
+    let pair = freshCoachPair()
+    const rowSteps: CoachFeel[] = []
+    const rowChem: number[] = []
+    for (let w = 1; w <= horizon; w++) {
+      pair = accrueChemistry(pair, a, seed, coach.id, w, readWeek(w))
+      const step = coachFeelOf(pair, a, w, seed, coach.id)
+      rowSteps.push(step)
+      rowChem.push(pair.chem)
+      if (step === 'good' || step === 'off') {
+        confident += 1
+        // THE GAUGE'S OWN FUNCTION, per-pair bar included – not a restated threshold.
+        const shown = chemistryReading(pair, seed, coach.id)
+        if (shown === null || (step === 'good') !== shown > 0) confidentWrong += 1
+      }
+    }
+    steps.push(rowSteps)
+    chems.push(rowChem)
+  }
+  const at = (row: number[] | CoachFeel[], week: number) => row[week - 1]
+
+  // (a) the shares
+  console.log('  (a) step shares')
+  for (const w of FEEL_MARKS) {
+    const t = Object.fromEntries(COACH_FEEL_STEPS.map((s) => [s, 0])) as Record<CoachFeel, number>
+    for (const row of steps) t[at(row, w) as CoachFeel] += 1
+    console.log(`    wk ${padL(String(w), 2)}: ` + COACH_FEEL_STEPS.map((s) => `${s} ${padL(pctOf(t[s] / pairs), 6)}`).join('  '))
+  }
+  const tooEarlyAt5 = steps.filter((row) => at(row, 5) === 'too-early').length / pairs
+  console.log(`    (week 5 is too-early for ${pctOf(tooEarlyAt5)} of pairs – must be 100.0%)`)
+
+  // (b) predictive power: the level at week 52, by the step at week 13 / 26
+  console.log('  (b) predictive power – the LEVEL at week 52 of the pairs on each step earlier (>= +3 / between / <= -3), and the pairs on it')
+  for (const m of [13, 26]) {
+    const by = new Map<CoachFeel, Record<Level, number>>()
+    for (let i = 0; i < pairs; i++) {
+      const step = at(steps[i], m) as CoachFeel
+      const row = by.get(step) ?? { pos: 0, mid: 0, neg: 0 }
+      row[levelOf(at(chems[i], 52) as number)] += 1
+      by.set(step, row)
+    }
+    const all = { pos: 0, mid: 0, neg: 0 }
+    for (const i of chems.keys()) all[levelOf(at(chems[i], 52) as number)] += 1
+    console.log(`    from wk ${padL(String(m), 2)}:`)
+    for (const s of COACH_FEEL_STEPS) {
+      const r = by.get(s)
+      if (r === undefined) continue
+      const n = r.pos + r.mid + r.neg
+      console.log(`      ${pad(s, 10)} n ${padL(String(n), 4)}   wk52 level  >=+3 ${padL(pctOf(r.pos / n), 6)}  between ${padL(pctOf(r.mid / n), 6)}  <=-3 ${padL(pctOf(r.neg / n), 6)}`)
+    }
+    console.log(`      ${pad('(everyone)', 10)} n ${padL(String(pairs), 4)}   wk52 level  >=+3 ${padL(pctOf(all.pos / pairs), 6)}  between ${padL(pctOf(all.mid / pairs), 6)}  <=-3 ${padL(pctOf(all.neg / pairs), 6)}`)
+  }
+
+  // (c) doubt errors
+  console.log('  (c) doubt errors – a hedged step whose SIGN is opposite to the level at week 52 (level 0 is neither)')
+  const wrongShare: Record<number, number> = {}
+  for (const m of [13, 26]) {
+    let goodN = 0
+    let goodWrong = 0
+    let offN = 0
+    let offWrong = 0
+    for (let i = 0; i < pairs; i++) {
+      const step = at(steps[i], m) as CoachFeel
+      const end = at(chems[i], 52) as number
+      if (step === 'seems-good') {
+        goodN += 1
+        if (end < 0) goodWrong += 1
+      } else if (step === 'seems-off') {
+        offN += 1
+        if (end > 0) offWrong += 1
+      }
+    }
+    const n = goodN + offN
+    wrongShare[m] = n === 0 ? 0 : (goodWrong + offWrong) / n
+    console.log(`    from wk ${padL(String(m), 2)}: seems-good wrong ${goodWrong}/${goodN} = ${pctOf(goodN === 0 ? 0 : goodWrong / goodN)}   seems-off wrong ${offWrong}/${offN} = ${pctOf(offN === 0 ? 0 : offWrong / offN)}   combined ${goodWrong + offWrong}/${n} = ${pctOf(wrongShare[m])}`)
+  }
+
+  // (d) flicker
+  const changesIn = (row: CoachFeel[], from: number, to: number): number => {
+    let c = 0
+    for (let w = from; w <= to; w++) if (at(row, w) !== at(row, w - 1)) c += 1
+    return c
+  }
+  console.log('  (d) flicker – step changes per pair per coached year')
+  const year1 = steps.map((row) => (changesIn(row, 7, 52) * 52) / 46).sort((x, y) => x - y)
+  const year23 = steps.map((row) => (changesIn(row, 53, horizon) * 52) / (horizon - 52)).sort((x, y) => x - y)
+  const flickerRow = (label: string, xs: number[]): void => {
+    console.log(`    ${pad(label, 22)} median ${f1(quantile(xs, 0.5))}  p90 ${f1(quantile(xs, 0.9))}  mean ${f1(mean(xs))}  max ${f1(xs[xs.length - 1])}   pairs that never change ${pctOf(xs.filter((x) => x === 0).length / pairs)}`)
+  }
+  flickerRow('year 1 (weeks 6-52)', year1)
+  flickerRow(`years 2-${FEEL_YEARS}`, year23)
+
+  // (e) confident-wrong
+  console.log(`  (e) confident steps read: ${confident} (pair-weeks)   of which the gauge disagreed or was silent: ${confidentWrong}  (must be 0)`)
+
+  // the verdicts against the four targets
+  const unsure13 = steps.filter((row) => at(row, 13) === 'unsure').length / pairs
+  const verdict = (ok: boolean, text: string): void => console.log(`  ${ok ? '✓' : '⚠'} ${text}`)
+  console.log('  TARGETS')
+  verdict(unsure13 >= 0.3 && unsure13 <= 0.6, `unsure at week 13: ${pctOf(unsure13)} (target 30-60%)`)
+  verdict(Math.max(wrongShare[13], wrongShare[26]) <= 0.15, `hedged-wrong: ${pctOf(wrongShare[13])} from week 13, ${pctOf(wrongShare[26])} from week 26 (target <= 15%)`)
+  verdict(quantile(year1, 0.5) <= 4, `flicker median in year 1: ${f1(quantile(year1, 0.5))} a year (target <= 4)`)
+  verdict(confident > 0 && confidentWrong === 0, `confident-wrong: ${confidentWrong} of ${confident} (target 0, with a non-empty denominator)`)
+}
+
 /** B11 – the structural balance check. Not a truth claim: a broken-game check. */
 function b11(): void {
   console.log('\nB11 · THE BALANCE CHECK – structural, not statistical')
@@ -805,6 +966,10 @@ function run(): void {
     b13()
     return
   }
+  if (FEEL) {
+    b14()
+    return
+  }
   b11()
   const r = b10()
   console.log('\nB10 · THE LOOKUP TEST – variance of realised affinity, WITHIN a cell against BETWEEN cells')
@@ -819,6 +984,7 @@ function run(): void {
   b7()
   b12()
   b13()
+  b14()
   b0()
   careerArm()
 }

@@ -97,6 +97,7 @@ import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
 // ⭐ ROUND 51 №8 – the one reader of «the parent asked her coach why» (see `coachReadingOpened` below).
 import { coachRealViewedSince } from './lifeBeat/smallTalk'
+import { COACH_CHANGE_KEY, coachSinceWeek } from './coachStint'
 // ⭐ RU-23 (11.10) – THE ROOM AND DECLINE NOTES ARE CopyRefs NOW (class (b): assembled at snapshot time off the decline read, never stored), and the English the screens always showed is the ref
 // rendered under the source locale – `knock.ts`' own precedent – so a string and its translation cannot drift. The branches, the thresholds and the words are untouched; nothing here draws.
 import { cp, isCopyRef, renderCopyRef, SOURCE_LOCALE, type CopyRef } from '../../shared/i18n'
@@ -228,30 +229,8 @@ export function hireCoach(world: WorldState, coachId: string | null): void {
   settleCoachDeal(world)
 }
 
-/** THE TAG ON A COACH-CHANGE EVENT, and the only thing that identifies one. `milestoneKey` already
- *  exists on every event (it is what makes a milestone fire once), it is never pruned when the event
- *  is `keep`, and it needs no schema bump - the same trick the academy's offers use
- *  (`academy-in-<week>`). The week is in the key, so two hires can never collide.
- *
- *  A career migrated from a save written before this tag existed simply has no tagged events, and
- *  `coachSinceWeek` falls back to week 0 - "they have been together as long as anyone can remember",
- *  which is the right answer for a ledger with no record of a change. */
-export const COACH_CHANGE_KEY = 'coach-since-'
-
-/** WHEN THE CURRENT COACHING ARRANGEMENT BEGAN - the radar's "weeks together", derived rather than
- *  stored (docs/specs/skills-radar.md §2: no schema bump, no migration, no golden save).
- *
- *  Week 0 for a career that has never changed coach, and the week of the last hire or release
- *  otherwise. BOTH arms count: a new coach has to learn her, and so - as far as the ladder is
- *  concerned - does the parent who takes the court back, because what the rung buys is an eye, and
- *  the eye left with him. */
-export function coachSinceWeek(world: WorldState): number {
-  let since = 0
-  for (const e of world.events) {
-    if (e.milestoneKey?.startsWith(COACH_CHANGE_KEY) && e.week > since) since = e.week
-  }
-  return since
-}
+// ⭐ ROUND 52 F1 – `COACH_CHANGE_KEY` and `coachSinceWeek` MOVED to `./coachStint` (a leaf the life-beat hub can reach; see
+// that file's header). Imported above; every reader below is unchanged.
 
 /** ⭐⭐⭐ ROUND 51 №8 (14.10) – HAS THE PARENT OPENED THE READING OF HER COACH'S CHEMISTRY? Yes exactly
  *  when, in the stint that is running now, they answered her «is my coach actually good» (small talk

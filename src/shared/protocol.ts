@@ -285,6 +285,7 @@ export type {
 
 // --- snapshot ------------------------------------------------------------------------------------
 export type {
+  CoachFeel,
   HandoverBaseBand,
   HouseholdWeekly,
   Snapshot,

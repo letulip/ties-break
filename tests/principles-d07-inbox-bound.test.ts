@@ -305,8 +305,15 @@ describe('D-07 – the snapshot carries this week, and the world keeps the histo
     // fixture removed from the manifest cannot silently shrink what this sweeps without saying so.
     expect(names.length, 'the fixture manifest was not read – this case would prove nothing').toBe(13)
 
+    // OPTIONAL VIEW KEYS – present on SOME careers by design, so neither counted nor compared as part of the set (the dated note at the count below says why).
+    const OPTIONAL_VIEW_KEYS: readonly string[] = ['coachFeel']
     const keysByCareer: Record<string, string[]> = {}
-    for (const name of names) keysByCareer[name] = Object.keys(toSnapshot(await career(name)))
+    const wireByCareer: Record<string, string[]> = {}
+    for (const name of names) {
+      const wire = Object.keys(toSnapshot(await career(name)))
+      wireByCareer[name] = wire
+      keysByCareer[name] = wire.filter((k) => !OPTIONAL_VIEW_KEYS.includes(k))
+    }
     expect(Object.keys(keysByCareer).length, 'every career in the manifest was read').toBe(names.length)
 
     const reference = keysByCareer[names[0]]
@@ -319,6 +326,11 @@ describe('D-07 – the snapshot carries this week, and the world keeps the histo
     // derived off `legacy.savingsSliceCents`), and the committed corpus holds no such career – so 119 stays the count of the keys EVERY career carries and the sameness half below stays true. Measured
     // before it was made conditional: an always-present key with no value broke this file's per-key size census (`JSON.stringify(undefined)`), and a `null` moves every L3-7 digest. A dynasty career
     // added to the manifest would make the sameness half red on purpose – that is the day to decide whether the field joins the count.
+    // r52 F1 / F1b (14.10): `coachFeel` IS NOT COUNTED EITHER – but unlike `openingFundsCents` the committed corpus DOES carry it: it is present on every career with a coach on the payroll and ABSENT (not
+    // null) on one without, so the wire stays honest about «nobody employed». Counting it as the 120th key turned the sameness half red on the coachless careers (F1 measured that before this was written), and
+    // an always-present `null` would move every L3-7 digest for the reason given above. So the keys here are COUNTED AND COMPARED WITHOUT the optional view keys (`OPTIONAL_VIEW_KEYS`, one list), and the one
+    // thing still asked of an optional key is below the sameness loop: where a career carries it, it sits in the SAME place of the wire – order is what every hash of a snapshot sees. 119 stays the count of
+    // the keys EVERY career carries. The next optional view key joins that list WITH a dated line here, so the list cannot grow unread.
     expect(reference.length, 'D-P8: the wire`s top-level key count').toBe(119)
     for (const key of ['offers', 'offerOpen', 'newestLetterId'] as const) {
       expect(reference, `the wire must carry \`${key}\` – the count is about these three`).toContain(key)
@@ -328,6 +340,11 @@ describe('D-07 – the snapshot carries this week, and the world keeps the histo
     // 32 moved world hashes from a re-spread literal.
     for (const name of names) {
       expect(keysByCareer[name], `${name}: the wire has one shape, in one order`).toEqual(reference)
+    }
+    // ...and an OPTIONAL view key, where a career carries it, sits at ONE index of the full wire – the order half of the pin, kept for the keys the count leaves out.
+    for (const key of OPTIONAL_VIEW_KEYS) {
+      const places = new Set(names.map((n) => wireByCareer[n].indexOf(key)).filter((i) => i >= 0))
+      expect(places.size, `${key}: where a career carries it, it sits in one place of the wire (indexes seen: ${[...places].join(', ')})`).toBeLessThanOrEqual(1)
     }
   })
 })

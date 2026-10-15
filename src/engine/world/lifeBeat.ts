@@ -637,7 +637,9 @@ import { MET_DRY, MET_HEADING, MET_HEADING_HEADLINE, MET_HER_LINE, MET_MENTION, 
 // → docs/notes/life-beats/hub.md#lifebeatts-3c--small-talk--the-copy-moved
 import { COACH_REAL_HUNCH, COACH_REAL_SITUATION_ID, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_CARD, SMALL_TALK_FRAME_REGISTER, SMALL_TALK_HEADING, SMALL_TALK_LINE, SMALL_TALK_SUBJECTS, smallTalkSituationIdOf, smallTalkSubjectFor } from './lifeBeat/smallTalkCopy'
 import type { LegacySmallTalkSubject, SmallTalkSubject } from './lifeBeat/smallTalkCopy'
-import { chemistryHunch, type ChemistryHunch } from '../chemistry' // ⭐ ROUND 51 №8: her hunch about the coach is a band of the pair's chemistry
+import { feelHunch, type ChemistryHunch } from '../chemistry' // ⭐ ROUND 51 №8: her hunch about the coach is a band; ROUND 52 F1 (14.10): the band is read off HOW SHE FEELS (below), not off the raw level
+import { COACH_FEEL_STINT_FACTS, coachFeel, coachFeelStintFacts } from './coachFeel'
+import type { CoachFeel } from '../../shared/protocol'
 export { LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_SUBJECTS, smallTalkSubjectFor }
 export type { LegacySmallTalkSubject, SmallTalkSubject }
 
@@ -674,7 +676,7 @@ export const SMALL_TALK_STANCE_ID: Record<SmallTalkStance, string> = {
  *
  *  ⚠ THE ROSTER IS A UNION AND THE PREDICATES ARE A TOTAL RECORD, so a new claim cannot be added
  *  without somebody writing the read that makes it true. */
-export const SMALL_TALK_FACTS = ['played-recently', 'march-entry-open', 'coach-employed', 'beat-her-conqueror', 'clear-next-week'] as const
+export const SMALL_TALK_FACTS = ['played-recently', 'march-entry-open', 'coach-employed', 'beat-her-conqueror', 'clear-next-week', 'coach-feel-warm', 'coach-feel-unsure', 'coach-feel-cold', ...COACH_FEEL_STINT_FACTS] as const
 export type SmallTalkFact = (typeof SMALL_TALK_FACTS)[number]
 
 /** How far back «today» may reach when she recounts a match. ⚠ TWO AND NOT ONE, because the row is
@@ -718,6 +720,24 @@ export function nextWeekIsClear(world: WorldState): boolean {
   return ahead.length > 0 && !ahead.some((e) => world.entries.includes(e.id))
 }
 
+/** ⭐⭐⭐ ROUND 52 F4 (14.10) – HER FEEL FOR THE COACH, AS THE GATES OF R67–R69: one SIDE of the `coachFeel` scale per fact, the steps spelled in the table below.
+ *
+ *  The owner: «я хочу сделать систему, что ребенок может намекать, что ей ок, норм или вообще не ок с этим тренером…» and, on how sure she may sound,
+ *  «не "всё плохо" а "я пока не очень поняла" или "вроде нормально, но"». The plate (F2) and the week notes (F3) already say it; this is the third channel, a
+ *  conversation in her own voice, and a conversation can only be about what is true – so each situation waits on the side of the scale it is about.
+ *
+ *  ⚠⚠ THEY READ `coachFeel(world)` AND NOTHING ELSE, the primitive the plate and the notes read (the parity law). A gate that re-derived a band from the chemistry
+ *  level would be a second answer to «how does she feel about her coach», and the two would part company the first time her doubt (the step's own noise) disagreed
+ *  with the level. `too-early` is in none of the three sets ON PURPOSE: six weeks in, there is nothing to say yet.
+ *  ⚠ `!inCollege(world)` is the C-07 clause (`march-entry-open`'s, below) for its reason: the coach does not work in college weeks (`coachWorksThisWeek`), so a girl in
+ *  a dorm has no practice to be unsure of. The three rows leave the college stage out of their lists too; this makes the FACT true to itself, not only the list.
+ *  ⚠ `coachFeel` is `null` with nobody employed and `null` is in no set. PURE AND ZERO-DRAW: its noise is its own purpose-scoped sub-stream, never MAIN. `feelOnce` is `reachableSituations`'s ONE read of it per pass (R52 F5). */
+function coachFeelIs(world: WorldState, feelOnce: () => CoachFeel | null, ...steps: CoachFeel[]): boolean {
+  if (inCollege(world)) return false
+  const feel = feelOnce()
+  return feel !== null && steps.includes(feel)
+}
+
 /** ⭐⭐⭐ §8d.5's FIVE READS, AND EVERY ONE OF THEM IS PURE AND ZERO-DRAW. They are asked BEFORE
  *  the situation is drawn (`reachableSituations`), never after, so a false fact removes the
  *  situation from the pool instead of being papered over in the copy.
@@ -730,7 +750,7 @@ export function nextWeekIsClear(world: WorldState): boolean {
  *  ⚠ SMALL_TALK_FACT: `tests/principles-c07-march-entry.test.ts`
  *  → docs/notes/life-beats/hub.md#small_talk_fact--8d5s-five-reads-and-every-one-of-them-is-pure
  */
-const SMALL_TALK_FACT: Record<SmallTalkFact, (world: WorldState) => boolean> = {
+const SMALL_TALK_FACT: Record<SmallTalkFact, (world: WorldState, feelOnce: () => CoachFeel | null) => boolean> = {
   'played-recently': (world) =>
     kidMatchRows(world).some((r) => r.week > world.week - SMALL_TALK_FACT_WEEKS && r.week <= world.week),
   'march-entry-open': (world) =>
@@ -759,6 +779,12 @@ const SMALL_TALK_FACT: Record<SmallTalkFact, (world: WorldState) => boolean> = {
     })
   },
   'clear-next-week': nextWeekIsClear,
+  // ⭐ ROUND 52 F4 – R67, R68, R69: the three sides of her feel for the coach (the block above `SMALL_TALK_FACT`).
+  'coach-feel-warm': (world, feelOnce) => coachFeelIs(world, feelOnce, 'seems-good', 'good'),
+  'coach-feel-unsure': (world, feelOnce) => coachFeelIs(world, feelOnce, 'unsure'),
+  'coach-feel-cold': (world, feelOnce) => coachFeelIs(world, feelOnce, 'seems-off', 'off'),
+  // ⭐ ROUND 52 H2 – R70–R75: the same three sides at half a year and at a year together. Their windows and sides live in the leaf (`coachFeel.ts`), which cannot import the hub; this hands it the one college question.
+  ...coachFeelStintFacts(inCollege),
 }
 
 /** One branch of one exchange: what the PARENT may say, and what she says back to exactly that.
@@ -968,9 +994,13 @@ export function reachableSituations(world: WorldState, voice: Temperament, stage
   // gate is unchanged in strength: a voice nobody wrote for a situation still cannot reach it. What
   // changed is that a situation can now be written for more than one, which is the corpus's §2 and
   // the whole reason a `fiery` girl no longer has one conversation in her life.
+  // ⭐ ROUND 52 F5 (14.10) – HER FEEL IS READ ONCE A PASS, AND ONLY WHEN A ROW ASKS: the three coach-feel facts each re-derived `coachFeel` (nine sub-stream keys on a hit).
+  // `null` (nobody employed) is a value that was READ, not a read still to do.
+  let feel: CoachFeel | null | undefined
+  const feelOnce = (): CoachFeel | null => (feel === undefined ? (feel = coachFeel(world)) : feel)
   return SMALL_TALK_SITUATIONS.filter(
     (s) =>
-      s.voices[voice] !== undefined && s.stages.includes(stage) && (s.fact === null || SMALL_TALK_FACT[s.fact](world)),
+      s.voices[voice] !== undefined && s.stages.includes(stage) && (s.fact === null || SMALL_TALK_FACT[s.fact](world, feelOnce)),
   )
 }
 
@@ -2425,8 +2455,13 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
   const heard: HeardRead | null = row.heard === true ? { voice, wants } : null
   // ⭐⭐⭐ ROUND 42 #15 – EVERY ANSWER THAT EARNS A SECOND LINE OF HERS, in one list. The fork still
   // has exactly the one it always had; tier 1 has three since the small-talk exchange.
-  // ⭐ ROUND 51 №8 – and the pair's band for her hunch (only small talk takes one): `null` when nobody is employed, `'even'` for a coach with no row on the books yet. Pure, no draw.
-  const hunch = row.kind === 'small-talk' && world.coachId !== null ? chemistryHunch(world.coachPairs?.[world.coachId]?.chem) : null
+  // ⭐ ROUND 51 №8 – and the pair's band for her hunch (only small talk takes one): `null` when nobody is employed, `'even'` for a coach she has not known six weeks. Pure, no draw.
+  // ⚠⚠ ROUND 52 F1 (14.10) – RE-POINTED AT HOW SHE FEELS, NOT AT THE RAW LEVEL. Round 51 read `chemistryHunch(pair.chem)`, which could say nothing until the level was
+  // past +-3; the owner's wish was her hint for the case «химия не растет или незаметно», so the hunch now follows the one reading of her feel (`coachFeel`) the coach card's
+  // tile and the week notes read too – good and seems-good lean warm, off and seems-off cold, unsure and too-early even – and a hedged hunch is allowed to lean on a
+  // level the gauge cannot show yet. One question, one answer: the line and the tile cannot disagree.
+  const feel = row.kind === 'small-talk' ? coachFeel(world) : null
+  const hunch = feel === null ? null : feelHunch(feel)
   const followUps = lifeBeatFollowUps(row.kind, row.detail, voice, band, hunch)
   // ⭐⭐ ROUND 42 #24 – THE FRAME'S REGISTER IS THE SUBJECT'S, NOT THE WEEK'S, ON TIER 1 AND NOWHERE
   // ELSE. Spec §2 cut the one-to-one between the Mood register and the subject («mood sets the

@@ -182,12 +182,14 @@ describe('the ledger arithmetic and the report', () => {
 
 describe('the inventory – every component under src/components is mounted, contained in a mounted surface, or named as a gap', () => {
   const COMPONENTS = (readdirSync('src/components', { recursive: true }) as string[]).filter((f) => f.endsWith('.vue')).map((f) => f.replace(/^.*\//, '').replace(/\.vue$/, '')).sort()
-  /** What the four registries import is what they mount: the import line is the declaration, so there is no second list to keep in sync. */
-  const MOUNTED = new Set(
-    ['screens', 'cards', 'overlays', 'takeovers'].flatMap((area) =>
-      Array.from(readFileSync(`tests/component/i18n-l4-2-xx-carpet-${area}.test.ts`, 'utf8').matchAll(/src\/components\/(?:[a-z]+\/)?([A-Za-z]+)\.vue'/g), (m) => m[1]!),
-    ),
-  )
+  /** The registries, one file per area (`i18n-l4-2-xx-carpet-<area>.test.ts`). `screens` is two files since the cut of 14.10 – see the pin at the foot of this block. */
+  const AREAS = ['screens', 'screens-b', 'cards', 'overlays', 'takeovers']
+  const registry = (area: string): string => readFileSync(`tests/component/i18n-l4-2-xx-carpet-${area}.test.ts`, 'utf8')
+  /** What the registries import is what they mount: the import line is the declaration, so there is no second list to keep in sync. */
+  const MOUNTED = new Set(AREAS.flatMap((area) => Array.from(registry(area).matchAll(/src\/components\/(?:[a-z]+\/)?([A-Za-z]+)\.vue'/g), (m) => m[1]!)))
+  /** The surface ids a registry declares – the first argument of its surface constructors, or an `id:` literal: the call site is the declaration here too. */
+  const surfaceIds = (area: string): string[] =>
+    Array.from(registry(area).matchAll(/(?:screen|money|more|card|blocking|ending|takeover|inbox|shell|posed|sceneSurface)\(\s*'([^']+)'|id: '([^']+)'/g), (m) => m[1] ?? m[2]!)
 
   it('the three sets partition the directory: nothing unaccounted for, nothing in two places, nothing named that does not exist', () => {
     const contained = Object.keys(CONTAINED)
@@ -200,11 +202,20 @@ describe('the inventory – every component under src/components is mounted, con
 
   it('every gap has a reason, and every containment names a surface the registries define', () => {
     for (const [name, why] of Object.entries(NOT_MOUNTED)) expect(why.length, `${name}: no reason`).toBeGreaterThan(30)
-    const ids = new Set(
-      ['screens', 'cards', 'overlays', 'takeovers'].flatMap((area) =>
-        Array.from(readFileSync(`tests/component/i18n-l4-2-xx-carpet-${area}.test.ts`, 'utf8').matchAll(/(?:screen|money|more|card|blocking|ending|takeover|inbox|shell|posed|sceneSurface)\(\s*'([^']+)'|id: '([^']+)'/g), (m) => m[1] ?? m[2]!),
-      ),
-    )
+    const ids = new Set(AREAS.flatMap(surfaceIds))
     for (const [name, surface] of Object.entries(CONTAINED)) expect(ids.has(surface) || surface.startsWith('PrologueCard:'), `${name}: «${surface}» is no surface of the registries`).toBe(true)
+  })
+
+  /** ⭐ THE CUT OF 14.10 (r52, I1): `screens` was one file of 18 surfaces and is two – the radar law, after the CI trace's `Timeout calling "onTaskUpdate"` (69 s under contention, 29.4 s solo).
+   *  A cut is where a surface is lost without a sound: the first arm of `carpet` reads only the ledger, and the partition above sees COMPONENTS, so a dropped `MoneyScreen: Bills` leaves MoneyScreen
+   *  mounted by its sibling tabs and nothing goes red. So the halves are held to the list the one file held, BY ID and both ways – a surface lost, a surface named in both. Adding or removing a
+   *  screen surface on purpose means editing this list in the same commit. */
+  const SCREENS_AT_THE_CUT = [
+    'HomeScreen', 'ThisWeekScreen', 'CalendarScreen', 'SeasonScreen', 'KidScreen', 'CoachMarketScreen (coaches)', 'CoachMarketScreen (her week)',
+    'MoneyScreen: Spending', 'MoneyScreen: Bills', 'MoneyScreen: History', 'MoneyScreen: Shop', 'StatsScreen', 'TrophiesScreen', 'AlbumScreen', 'AlbumScreen: layout C',
+    'MoreScreen: Play', 'MoreScreen: Saves', 'MoreScreen: About',
+  ]
+  it('the screens area is two files and the halves together hold exactly the surfaces the one file held – none lost, none in both', () => {
+    expect([...surfaceIds('screens'), ...surfaceIds('screens-b')].sort()).toEqual([...SCREENS_AT_THE_CUT].sort())
   })
 })

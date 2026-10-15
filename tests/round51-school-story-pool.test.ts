@@ -199,7 +199,9 @@ describe('round 51 №17 A – the school years have stories to draw', () => {
     // ⚠ RE-AIMED 14.10 (r51 continuation, builder E1): «the last four» became «the four before the last three» when R57–R59 (observations, tests/round51-school-observation-pool.test.ts) were appended after them; the order of what was there did not move.
     // ⚠ RE-AIMED AGAIN 14.10 (r51 continuation, builder E2): «the four before the last three» became «the four before the last six» when R60–R62 (tests/round51-school-curiosity-goodnews-pool.test.ts) were appended after the observations; the order of what was there did not move.
     // ⚠ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E3): «the four before the last six» became «the four before the last ten» when R63–R66 (tests/round51-school-worry-decision-pool.test.ts) were appended after R60–R62; the order of what was there did not move.
-    expect(SMALL_TALK_SITUATIONS.slice(-14, -10).map((s) => s.id), 'appended last: a pool of a different length reads a different position, but the order of what was there does not move').toEqual([...NEW_STORIES])
+    // ⚠ RE-AIMED A FIFTH TIME 14.10 (r52, builder F4): «the last ten» became «the last thirteen» when R67–R69 (tests/r52-coach-feel-talk.test.ts) were appended after R66; the order of what was there did not move.
+    // ⚠ RE-AIMED A SIXTH TIME 14.10 (r52, builder H2): «the last thirteen» became «the last nineteen» when R70–R75 (tests/r52-coach-feel-talk.test.ts) were appended after R69; the order of what was there did not move.
+    expect(SMALL_TALK_SITUATIONS.slice(-23, -19).map((s) => s.id), 'appended last: a pool of a different length reads a different position, but the order of what was there does not move').toEqual([...NEW_STORIES])
     for (const id of NEW_STORIES) {
       const s = SMALL_TALK_SITUATIONS.find((r) => r.id === id)!
       expect(s.subject, `${id}: subject`).toBe('story')
@@ -235,7 +237,12 @@ describe('round 51 №17 B – the shipped draw hands her a different story', ()
     // ⚠ ANTI-VACUITY FIRST: a share of an empty set is a share of nothing. 120 careers x 12 years
     // of weekly rolls hold well over a thousand school conversations on this recipe.
     expect(all.length, 'school-stage conversations walked').toBeGreaterThan(1000)
-    expect(stories.length, 'and the story subject was actually drawn in them').toBeGreaterThan(250)
+    // ⚠ RE-AIMED 14.10 (round 52 close, architect): the floor was 250 and H3's stint checkpoints
+    // (dac4e94e) took it to 241 – a due coach talk counts toward the season's tally of four, so a
+    // close-bond season that holds one leaves the lottery a slot fewer. The arm is an ANTI-VACUITY
+    // floor, not a measurement: 200 stories is still a sample the two shares below are read from
+    // with a standard error under 3.5 points.
+    expect(stories.length, 'and the story subject was actually drawn in them').toBeGreaterThan(200)
     const four = count(stories, 'story:court-four')
     const shareOfStories = four / stories.length
     const shareOfAll = four / all.length

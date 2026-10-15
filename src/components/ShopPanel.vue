@@ -652,8 +652,26 @@ const screenTab = computed(() => props.screenTab)
    tightening of the pills inside its six-segment row and has one user.
    ================================================================================================= */
 
+/* ⭐⭐ 15.10 – THE SIX FIT ONE ROW ON LINUX AS WELL AS ON A MAC. PR #176's CI (the e2e job, Ubuntu runner) failed ONE test of 147, on both
+   tries – `e2e/responsive.spec.ts:41` «at 375 px the app does not scroll sideways, and the season strip stays short», at :151 «his six
+   segments are one row at 375 px, not two» – Expected 1, Received 2 – while the same suite was 147/147 on a Mac.
+   WHY: round 52 №2 (8eabc1e9, 14.10) put `font-family: inherit` on every button. These six had been drawn in the browser's own face and are
+   Manrope now, which is wider; and Linux Chromium sets Manrope on whole-pixel advances where a Mac keeps the fraction, so the same six words
+   run a few pixels wider there. At 9px a side the row was short by 3px on Linux and had 3.67px to spare on a Mac – a margin that a font
+   change could (and did) turn over.
+   MEASURED, real Chromium at 375px (the row's content box is 333px: 343 – 2 x 4 padding – 2 x 1 border; the pills' natural widths plus the
+   2px gaps; the WORST of the six «active» states, because the active pill is bold and so the widest – Invest is the state the spec reads):
+                       padding-inline 9px (before)          7.5px (now)
+     Linux (Ubuntu)    -5px worst, -3px with Invest open    +13px worst, +15px with Invest open
+     macOS             +3.25px worst, +3.67px with Invest   +21.25px worst, +21.67px with Invest
+   One pixel of padding-inline is 12px of row (six pills, two sides). 8px was measured too and left 7px in the worst state on Linux, under the
+   8px this row is meant to keep; 7.5px leaves 13.
+   ⚠ THE SIZE STAYS 12px AND THE FAMILY STAYS THE APP'S. The owner's ruling (14.10, round 52 №2) is that every button speaks the app's font,
+   so the fix is the padding, never a `font-family` on these pills. The Russian row never fit one line at 375px on either platform (about
+   443px against 333px) and still does not – the wrap is its net. What the padding moves is only where that wrap falls: the first row
+   takes the fourth word now (3 + 3 before, 4 + 2 now), the same on Linux and on a Mac. */
 .shelf-tabs :deep(.tab-pill) {
-  padding-inline: 9px;
+  padding-inline: 7.5px;
   font-size: 12px;
 }
 

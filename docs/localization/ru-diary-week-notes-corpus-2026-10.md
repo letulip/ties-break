@@ -677,3 +677,42 @@ Three new rows, printed only on a staycation week, and two old rows that no long
 | RU09D-STW-01 | `A week at home with her friends. The kitchen was never empty.` | `Неделя дома с подружками. Кухня не пустовала.` | `APPROVED` |
 | RU09D-STW-02 | `No court this week. Her friends were in and out, and the fridge paid for it.` | `Неделя без корта. Подружки то и дело заходили, а холодильник поплатился.` | `APPROVED` |
 | RU09D-STW-03 | `Home all week. Louder at dinner, happier too.` | `Всю неделю дома. За ужином громче – и веселее.` | `APPROVED` |
+
+## ⚙ 14.10 agent-authored (бланкет) – r52 F3, how she feels about the coach: ten week-note lines, as whole keys
+
+⚙ 14.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. The owner's wish (r52, 14.10): «я хочу сделать систему, что ребенок может намекать, что ей ок, норм или вообще не ок с этим тренером, чтобы у игрока была какая-то обратная связь от ребенка для принятия решения» – and the channel he chose: «изредка строка в дневнике голосом родителя: "весь ужин рассказывала про тренировку" / "про тренировки – нормально, и всё" / "про тренировки молчит". Чистый намёк.» And on how sure she is: «не "всё плохо" а "я пока не очень поняла" или "вроде нормально, но"… она еще не уверена, а просто сомневается».
+
+Ten new rows, two for each of the five steps of her feel that have a voice (`too-early` has none). Both languages in one change.
+
+- **Printed rarely, and only at the table.** A row is shown on the first week of a new period of weeks with the coach (every fourth week), on an ordinary training week, and only while she lives at home – the two roof stages – like every other line that watches her at dinner or in the hall. Never on the week of the hire, never while her feel is still «too early», never on a holiday, an exam week, a journey or a layoff. Five of the ten quote her – `RU09D-CFW-01`, `-02`, `-04`, `-05` and `-06` – and are NOT shown at a cold bond (R52 J1c, 14.10: who-she-is §5b has no line of hers quoted at cold; the licence only, no row moved); the other five are the parent's own observation, with no word of hers in it, and are shown at any bond.
+- **The doubt stays doubt.** The two `unsure` rows say only that she has not decided («ещё разбираюсь», «другой»); the two `seems-…` rows lean and stop short; only the two confident steps speak plainly, and even the worse of them is silence at the table, not a verdict – «всё плохо» is in no row.
+- **The coach is never gendered** (R15-7): «тренера» appears as a noun in two rows, and no row has a pronoun, a verb or an adjective that names the coach's sex.
+- **The English has no contractions**, because the pool has none: the drafts «It's» and «doesn't» are spelled out to match their neighbours. The Russian is not affected.
+- **The short dash only**, no «!», every row inside the 80-character scrap.
+
+| id | English | Russian | Status |
+| --- | --- | --- | --- |
+| RU09D-CFW-01 | `Asked how practice went, she shrugged: "Still working it out."` | `На вопрос, как прошла тренировка, пожала плечами: «Ещё разбираюсь».` | `APPROVED` |
+| RU09D-CFW-02 | `Practice was "different", she said. Not better, not worse. Different.` | `Тренировка была «другой», сказала она. Не лучше, не хуже – просто другой.` | `APPROVED` |
+| RU09D-CFW-03 | `She came home with one of the coach's drills and showed it to us twice.` | `Дома она дважды показала нам упражнение, которое делала с тренером.` | `APPROVED` |
+| RU09D-CFW-04 | `"It is starting to make sense," she said about practice. That was new.` | `«Начинает складываться», – сказала она о тренировке. Раньше такого не было.` | `APPROVED` |
+| RU09D-CFW-05 | `"Fine," she said about practice, and changed the subject.` | `«Нормально», – сказала она о тренировке и сменила тему.` | `APPROVED` |
+| RU09D-CFW-06 | `She tried the new drill in the hall, stopped halfway. "It is fine."` | `Попробовала новое упражнение в прихожей, бросила на полпути. «Всё нормально».` | `DRAFT` |
+| RU09D-CFW-07 | `Practice came up three times at dinner. All of it good.` | `За ужином она трижды вспомнила тренировку. И каждый раз – что-то хорошее.` | `APPROVED` |
+| RU09D-CFW-08 | `She quoted the coach at dinner. Twice.` | `За ужином она дважды повторила слова тренера.` | `APPROVED` |
+| RU09D-CFW-09 | `She does not talk about practice any more.` | `О тренировках она больше не рассказывает.` | `APPROVED` |
+| RU09D-CFW-10 | `Practice came and went without a word at dinner.` | `Тренировка прошла, а за ужином о ней ни слова.` | `APPROVED` |
+
+⚙ 14.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. R52 J1, the owner's ruling on the close (14.10, №1, «давай по рекомендациям»): at a strained or cold bond she does not confide at a stint checkpoint either – and the silence shows. Four more week-note lines, two for each band, in the parent's voice. Both languages in one change.
+
+- **Printed on one week per checkpoint.** One week of a stint checkpoint's four-week window (the checkpoints are twelve, thirty-two and fifty-six weeks with the coach) whose talk the bond shut: the first on which the line can be heard – at the table (the two roof stages), on a week she did not travel and was not laid off. ⚠ Widened 14.10 by J1b: J1 printed on the window's first week alone, and a trip or a tournament took the note from more than half of the shut checkpoints. It leads the week, and the one-in-three coin does not silence it.
+- **At the cold bond she has no words in the line** – the parent sees the shut door and nothing of hers is quoted (who-she-is §5b: at the flat pool «losing her voice is the point»). Of the strained pair one row keeps the flat pool's «Нормально» and nothing after it.
+- **The coach is never gendered** (R15-7): «тренере» is a noun in all four rows, and no verb or adjective names the coach's sex. The parent's own gender is not named either: «мы» and impersonal forms only.
+- **The English has no contractions.** The short dash only, no «!», every row inside the 80-character scrap.
+
+| id | English | Russian | Status |
+| --- | --- | --- | --- |
+| RU09D-CFW-11 | `Asked about the coach, she said: "Fine." Nothing after it.` | `На вопрос о тренере она ответила: «Нормально». И больше ни слова.` | `APPROVED` |
+| RU09D-CFW-12 | `She did not mention the coach once. We did not know how to ask.` | `О тренере она не обмолвилась ни разу. Мы не знали, как спросить.` | `APPROVED` |
+| RU09D-CFW-13 | `The coach was not mentioned. She had closed up, and we left it alone.` | `О тренере никто не заговорил. Она молчала, и мы не стали спрашивать.` | `APPROVED` |
+| RU09D-CFW-14 | `Dinner was quiet. Whatever she thinks of the coach, she kept it to herself.` | `Ужин прошёл тихо. Что она думает о тренере, осталось при ней.` | `APPROVED` |

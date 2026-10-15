@@ -235,7 +235,9 @@ describe('§2 her line – the ref renders to the line over every reachable tupl
     // ⭐ RE-AIMED AGAIN 14.10 (r51 continuation, builder E1): 5008 → 5248 (+240 = the three observations' two stages (school, after-school) x 4 voices x 10; ten is the row's own frame or none plus the presence's nine).
     // ⭐ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E2): 5248 → 5448 (+200 = the two curiosities' two stages (school, after-school) x 4 voices x 10, plus the good news' one stage (school) x 4 voices x 10; ten is the row's own frame or none plus the presence's nine).
     // ⭐ RE-AIMED A FOURTH TIME 14.10 (r51 continuation, builder E3): 5448 → 5728 (+280 = the film worry's one stage (school) x 4 voices x 10, plus the other three rows' two stages (school, after-school) x 4 voices x 10 each; ten is the row's own frame or none plus the presence's nine).
-    expect(walked['small-talk'], 'small talk: 65 situations x their voices x their stages x (the row\'s own frame or none + the presence\'s nine) + the three legacy subjects x 4 voices x 4 stages').toBe(5728)
+    // ⭐ RE-AIMED A FIFTH TIME 14.10 (r52, builder F4): 5728 → 6088 (+360 = three rows x their three stages (school, after-school, independent) x 4 voices x 10; ten is the row's own frame or none plus the presence's nine).
+    // ⭐ RE-AIMED A SIXTH TIME 14.10 (r52, builder H2): 6088 → 6808 (+720 = six rows x their three stages (school, after-school, independent) x 4 voices x 10; ten is the row's own frame or none plus the presence's nine).
+    expect(walked['small-talk'], 'small talk: 74 situations x their voices x their stages x (the row\'s own frame or none + the presence\'s nine) + the three legacy subjects x 4 voices x 4 stages').toBe(6808)
     expect(walked['fork-opinion']).toBe(3 * 4 * 3 * 4 * 3)
   })
 
@@ -298,7 +300,7 @@ describe('§3 the headings – every one any axis can produce is a catalog key (
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // §4 – her replies
 // ---------------------------------------------------------------------------------------------------------------------------------------------
-describe('§4 her replies – each follow-up paragraph has its seat, over the 65 situations and the fork\'s continuation', () => {
+describe('§4 her replies – each follow-up paragraph has its seat, over the 74 situations and the fork\'s continuation', () => {
   it('small talk: every situation x voice x stance carries a ref per paragraph that renders to it (the shared second beat included)', () => {
     let paragraphs = 0
     let shared = 0
@@ -325,7 +327,9 @@ describe('§4 her replies – each follow-up paragraph has its seat, over the 65
     // ⭐ RE-AIMED AGAIN 14.10 (r51 continuation, builder E1): 660 → 696 replies (+36 = three observations x 4 voices x 3 stances); the 20 shared second beats are untouched, an observation has none.
     // ⭐ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E2): 696 → 732 replies (+36 = three more rows x 4 voices x 3 stances); the 20 shared second beats are untouched, a curiosity and a good news have none.
     // ⭐ RE-AIMED A FOURTH TIME 14.10 (r51 continuation, builder E3): 732 → 780 replies (+48 = four more rows x 4 voices x 3 stances); the 20 shared second beats are untouched, a worry and a decision have none.
-    expect(paragraphs, '780 replies + the 20 shared second beats across the three stances of their columns').toBe(780 + 20 * 3)
+    // ⭐ RE-AIMED A FIFTH TIME 14.10 (r52, builder F4): 780 → 816 replies (+36 = three more rows x 4 voices x 3 stances); the 20 shared second beats are untouched, a good news, an observation and a worry have none.
+    // ⭐ RE-AIMED A SIXTH TIME 14.10 (r52, builder H2): 816 → 888 replies (+72 = six more rows x 4 voices x 3 stances); the 20 shared second beats are untouched, a good news, an observation, a worry and a decision have none.
+    expect(paragraphs, '888 replies + the 20 shared second beats across the three stances of their columns').toBe(888 + 20 * 3)
     // ⭐ RE-AIMED 14.10 (r51 №17): 4 x 3 = 12 → 20 x 3 = 60 (court-four's four columns plus the four new stories' sixteen).
     expect(shared, 'the twenty `story` columns, three stances each').toBe(60)
   })
@@ -436,7 +440,7 @@ describe('§5b the announcement\'s PROMPT, through the real assembly – the poo
 /** Corpus strings the CATALOG does not carry, by family. The whole corpus file is a census copy home, so this is 0 – and it can only fall. */
 const OUTSIDE_CATALOG = { openers: 0, labels: 0, replies: 0, shared: 0 } as const
 
-describe('§6 the 65-situation corpus', () => {
+describe('§6 the 74-situation corpus', () => {
   const openers = new Set<string>()
   const labels = new Set<string>()
   const replies = new Set<string>()
@@ -455,17 +459,19 @@ describe('§6 the 65-situation corpus', () => {
       }
     }
 
-  it('is 65 situations in 260 voice columns: 260 openers, 780 replies, 20 shared second beats (the corpus header\'s own numbers)', () => {
+  it('is 74 situations in 296 voice columns: 296 openers, 888 replies, 20 shared second beats (the corpus header\'s own numbers)', () => {
     // ⭐ RE-AIMED 14.10 (r51 №17): 51/204/612/4/145 → 55/220/660/20/157 – four school-years stories, twelve new distinct labels.
     // ⭐ RE-AIMED AGAIN 14.10 (r51 continuation, builder E1): 55/220/660/20/157 → 58/232/696/20/166 – three school-years observations, nine new distinct labels, no second beat.
     // ⭐ RE-AIMED A THIRD TIME 14.10 (r51 continuation, builder E2): 58/232/696/20/166 → 61/244/732/20/175 – two school-years curiosities and a good news, nine new distinct labels, no second beat.
     // ⭐ RE-AIMED A FOURTH TIME 14.10 (r51 continuation, builder E3): 61/244/732/20/175 → 65/260/780/20/187 – two school-years worries and two decisions, twelve new distinct labels, no second beat.
-    expect(SMALL_TALK_SITUATIONS.length).toBe(65)
-    expect(columns).toBe(260)
-    expect(openers.size).toBe(260)
-    expect(replies.size).toBe(780)
+    // ⭐ RE-AIMED A FIFTH TIME 14.10 (r52, builder F4): 65/260/780/20/187 → 68/272/816/20/196 – a good news, an observation and a worry behind a coach-feel fact, nine new distinct labels, no second beat.
+    // ⭐ RE-AIMED A SIXTH TIME 14.10 (r52, builder H2): 68/272/816/20/196 → 74/296/888/20/214 – six stint situations (R70–R75) behind a coach-feel fact and a window of weeks together, eighteen new distinct labels, no second beat.
+    expect(SMALL_TALK_SITUATIONS.length).toBe(74)
+    expect(columns).toBe(296)
+    expect(openers.size).toBe(296)
+    expect(replies.size).toBe(888)
     expect(shared.size).toBe(20)
-    expect(labels.size, 'distinct stance labels').toBe(187)
+    expect(labels.size, 'distinct stance labels').toBe(214)
   })
 
   it('every opener, label, reply and shared beat is a catalog key and seatable (OUTSIDE_CATALOG for the corpus: 0)', () => {
@@ -563,7 +569,16 @@ describe('§7 every sentence a sink\'s seat can hold is a key of the frozen v92 
 // content – builder D's hunch line (D's own control: switching it off at the source alone turned
 // '5/0' green, 913777ed) and E1–E3's ten school rows (pool 55→65). Not a MAIN draw: every builder's
 // arm compared rngMain. Was '38f6336d' / 'e5d188d9'.
-const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': '41e7bb05', '0/1': 'ac91e65e' }
+// ⚠ RE-STAMPED 14.10 (round 52 close, architect): '5/0' moved with F4's gated coach-feel rows (the
+// coached career reaches a true feel fact on a small-talk week; F4's control arm at its parent was
+// green). Checking '0/1' AFTER stamping '5/0' – the first-red-stops blind spot is now part of the
+// harvest procedure. Was '41e7bb05'.
+// ⚠ RE-STAMPED AGAIN 14.10 (round 52 continuation close): '5/0' moved with H2's stint rows and H3's
+// checkpoints (the coached career raises a due coach talk at 12/32/56). Was '1692c8b6'.
+// ⚠ RE-STAMPED 15.10 (round 52, his review-sheet answers, architect): '5/0' moved with J6 (4cc2349c) – the
+// half-year checkpoint 32 → 28 and the windows [24,32) / [48,64) move the coached career's coach talks. '0/1'
+// checked AFTER the stamp. Was '445a8b73'.
+const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': '96df51c9', '0/1': 'ac91e65e' }
 /** and the bench's MAIN stream, three draws on from the last week of each career, from the same pre-wave runs – the wave draws nothing, and the next draws prove the position is the pre-wave one */
 const PRE_WAVE_NEXT3: Record<string, number[]> = {
   '5/0': [0.18923983839340508, 0.10872006509453058, 0.37577401218004525],

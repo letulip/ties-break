@@ -32,6 +32,21 @@
 //   sub-stream. No snapshot leaf moved: no bench career holds a pending `coach-real` prompt or an
 //   answered `view` row in its current stint, so builder D's hunch and opened reading are
 //   invisible here. Zero row, text or next-draw digests on either platform.
+// ⚠ REFRESHED 14.10 (round 52 close, both platforms, identical diffs): 6 NEW leaves + 14 changed –
+//   attributed by a CONTROL capture at builder F2's tip, not by exclusion: F1 adds the optional
+//   `snapshotFields.coachFeel` leaf on the 6 coached careers (0/1 is self-coached) and moves their 6
+//   `snapshot` aggregates; F3's coach-feel week notes move `snapshotFields.diary` on 4 careers;
+//   F4's gated coach-feel rows move `world` + `worldFields.lifeLog` on 5/0 and 5/1. Zero row, text
+//   or next-draw digests; captures: L37_CAPTURE here, podman linux/amd64 node:22, npm ci inside.
+// ⚠ REFRESHED AGAIN 14.10 (round 52 continuation close, both platforms, identical diffs): exactly 12
+//   leaves – the `world` + `worldFields.lifeLog` pair of the 6 coached careers – attributed by a
+//   CONTROL capture at builder H1's tip (the tile font: 0 leaves): H2's stint rows and H3's
+//   checkpoints raise a due coach talk at weeks together 12/32/56. Zero row, text or draw digests.
+// ⚠ REFRESHED 15.10 (round 52, his review-sheet answers, both platforms, identical diffs): exactly 12
+//   leaves – the `world` + `worldFields.lifeLog` pair of the 6 coached careers – attributed by a CONTROL
+//   capture at J6's parent a4db32f6 (equal to the stored fixture, 0 leaves): J6 moves the half-year
+//   checkpoint 32 → 28 and bounds the windows to [24,32) / [48,64), so the coach talks land on other
+//   weeks. Zero row, text or draw digests; captures: L37_CAPTURE here, podman linux/amd64 node:22.
 //
 // ⚠⚠ TWO PLATFORM FAMILIES, BOTH TRUE (10.10, the day-long hunt). The PR runner (ubuntu/x64,
 // node 22) produces snapshot digests no darwin/arm64 machine can – measured to the last cell: a

@@ -1,7 +1,7 @@
 // r51 №7 (13.10) – WHAT THE HIRED COACH SAYS ABOUT A TRIP: ONE SET OF POSES FOR TWO SUITES.
 //
 // The unit suite (tests/i18n-coach-caution.test.ts) asks the ENGINE which ref each of his eight sentences is; the component suite
-// (tests/component/i18n-r51-b4-coach-caution.test.ts) mounts the real screens over the same worlds and reads what they print under Russian. Two questions
+// (tests/component/i18n-r51-b4-coach-caution.test.ts and tests/component/i18n-r51-b4-coach-caution-poses.test.ts, one file until 14.10) mounts the real screens over the same worlds and reads what they print under Russian. Two questions
 // about one fixture, so the fixture is written once – the discipline `r41EntryWarning.ts` set for the entry confirm.
 //
 // ⚠ THE POSES ARE `tests/ladder-floor.test.ts`'S OWN, COPIED, NOT INVENTED: that file's `proWorld` / `injectEvent` and the seeds of its coach-as-scheduler block

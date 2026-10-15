@@ -15,7 +15,7 @@
 //   §6 played careers                 – every converted line carries a ref that renders to it; and THE PICK-STABILITY DIGEST (the strings of two 150-week careers, captured on the
 //                                       pre-wave tree 054a73a2, byte for byte – a changed sub-stream key, draw count or pool order moves it)
 //   §7 the pick keys                  – the sub-stream seed keys of the class-(b) files, as a list: this wave adds NONE
-//   §8 the week-note corpus           – the 327 authored cells, counted by structure: static / function, every one with its key
+//   §8 the week-note corpus           – the 341 authored cells, counted by structure: static / function, every one with its key
 import { describe, expect, it } from 'vitest'
 import ts from 'typescript'
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -472,7 +472,11 @@ describe('§6 played careers', () => {
   // vacation week-note pool changed length, so the purpose-scoped weeknote sub-stream reads a
   // different position on holiday weeks (career 1: exactly 7 weekNote fields, all holiday weeks,
   // per B11's field diff). Not a MAIN draw. Was 0xaea42fda.
-  const PRE_WAVE_DIGEST = 0xd961a15a
+  // ⚠ RE-STAMPED 14.10 (round 52 close, architect): moved with builder F3's coach-feel week notes
+  // (74cabe86) – only the coached career 5/0 can reach them (F3's test 4b pins 0/1 as self-coached);
+  // F3 measured the same value (0xf7a88407) before the close, so attribution is direct. Not a MAIN
+  // draw (the weeknote sub-stream is purpose-scoped). Was 0xd961a15a.
+  const PRE_WAVE_DIGEST = 0xf7a88407
   // played once, on first use, INSIDE a test – a ref that drifts from its text must fail a test by name, not take the whole file down at collection
   let played: Array<ReturnType<typeof play>> | null = null
   // careers 5/0 and 0/1 are the DIGEST's pair (captured on the pre-wave tree); 5/1 is a third, played for the families the first two never reach – the coach travels with her only there
@@ -531,13 +535,15 @@ describe('§7 the pick keys', () => {
 })
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
-// §8 – the week-note corpus: 327 authored cells (docs/localization/ru-diary-week-notes-corpus-2026-10.md: 148 core + 44 special + 135 explicit –
+// §8 – the week-note corpus: 341 authored cells (docs/localization/ru-diary-week-notes-corpus-2026-10.md: 148 core + 44 special + 149 explicit –
 // the 132 of the 07.10 inventory and R51 №13's three staycation rows, which the doc carries in its dated section at the tail)
 // ---------------------------------------------------------------------------------------------------------------------------------------------
-describe('§8 the 327 cells', () => {
+// ⚠ RE-AIMED 14.10 (R52 J1): FOUR LINES JOINED THE POOL – the checkpoint the bond shut (claim `coachTalkShut`, RU09D-CFW-11..14 in the localization document). Explicit rows 145 -> 149, static cells 311 -> 315,
+// week notes 337 -> 341; the 26 function cells and every other pool are unchanged. The numbers are the corpus's, moved by the change that moved the corpus, and no pin was loosened to let them through.
+describe('§8 the 341 cells', () => {
   const leaves = (o: unknown): unknown[] => (typeof o === 'object' && o !== null ? Object.values(o as Record<string, unknown>).flatMap(leaves) : [o])
 
-  it('counted by structure: the voice matrix 128, exams 4, birthdays 8, off-season 8 (148), the special states 28 + 4 + 4 + 8 (44), and 135 explicit rows', () => {
+  it('counted by structure: the voice matrix 128, exams 4, birthdays 8, off-season 8 (148), the special states 28 + 4 + 4 + 8 (44), and 149 explicit rows', () => {
     expect(leaves(VOICE_LINES)).toHaveLength(128)
     expect(leaves(EXAM_LINES)).toHaveLength(4)
     expect(leaves(BIRTHDAY_LINES)).toHaveLength(8)
@@ -546,20 +552,20 @@ describe('§8 the 327 cells', () => {
     expect(leaves(BEREAVED_WORDS)).toHaveLength(4)
     expect(leaves(DIVORCED_WORDS)).toHaveLength(4)
     expect(leaves(FORK_AFTERMATH_WORDS)).toHaveLength(8)
-    expect(WEEK_NOTES.length - (148 + 44), 'explicit rows').toBe(135)
-    expect(WEEK_NOTES.length).toBe(327)
+    expect(WEEK_NOTES.length - (148 + 44), 'explicit rows').toBe(149)
+    expect(WEEK_NOTES.length).toBe(341)
   })
 
-  it('CONVERSION COVERAGE: 327 of 327 – 301 static cells (the seat `{ k: text }`) and 26 function cells (a ref of their own), none left unconverted, none forced', () => {
+  it('CONVERSION COVERAGE: 341 of 341 – 315 static cells (the seat `{ k: text }`) and 26 function cells (a ref of their own), none left unconverted, none forced', () => {
     const fn = WEEK_NOTES.filter((n) => typeof n.text === 'function')
     const st = WEEK_NOTES.filter((n) => typeof n.text === 'string')
-    expect([st.length, fn.length]).toEqual([301, 26])
+    expect([st.length, fn.length]).toEqual([315, 26])
     expect(fn.every((n) => typeof n.ref === 'function')).toBe(true)
     expect(st.every((n) => n.ref === undefined), 'a static cell carries no ref: its key is itself').toBe(true)
-    expect(new Set(st.map((n) => n.text)).size, 'the 301 static strings are distinct (a duplicate would be one key for two cells)').toBe(301)
+    expect(new Set(st.map((n) => n.text)).size, 'the 315 static strings are distinct (a duplicate would be one key for two cells)').toBe(315)
   })
 
-  it('the pool shapes the pick walks are unchanged: 105 photo / condition cells, 73 travel scraps, 5 coach lines, 327 week notes', () => {
-    expect([DIARY_POOL.length, TRAVEL_NOTES.length, COACH_TRIP_NOTES.length, WEEK_NOTES.length]).toEqual([105, 73, 5, 327])
+  it('the pool shapes the pick walks are unchanged: 105 photo / condition cells, 73 travel scraps, 5 coach lines, 341 week notes', () => {
+    expect([DIARY_POOL.length, TRAVEL_NOTES.length, COACH_TRIP_NOTES.length, WEEK_NOTES.length]).toEqual([105, 73, 5, 341])
   })
 })

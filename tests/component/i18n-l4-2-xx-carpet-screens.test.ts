@@ -1,10 +1,16 @@
-// THE `xx` CARPET, AREA 1 – the eleven screens (wave L4-2, spec §6). Home, This week, Calendar, Season, Kid, Coach Market (both landings),
-// the four Family-budget tabs, Stats, Trophies, the Album, and the three More tabs – each mounted on the REAL career the L2 net for
-// that screen poses, in English and under `xx`, through the shared instrument (`xxCarpet.ts`). Registry only: the sweep, the ledger
-// and the report are the harness's.
+// THE `xx` CARPET, AREA 1 – FIRST HALF (wave L4-2, spec §6): Home, This week, Season, the four Family-budget tabs and the
+// three More tabs, each mounted on the REAL career the L2 net for that screen poses, in English and under `xx`, through the shared instrument (`xxCarpet.ts`). Registry only: the
+// sweep, the ledger and the report are the harness's. The other half – the kid, the Calendar, the Coach Market, Stats, Trophies and the Album – is `i18n-l4-2-xx-carpet-screens-b.test.ts`, area `screens-b`.
+//
+// ⚠ CUT IN TWO ON 14.10 (r52, I1), UNDER THE RADAR LAW (11.08: a file on the wall is cut, never given a late-ack classifier). The CI component job runs `npm run test:component`
+// plainly on a 2-core runner, and the owner's trace of that day had all 323 files and 3891 tests PASSED and still exited non-zero on one unhandled error, `[vitest-worker]: Timeout
+// calling "onTaskUpdate"` – birpc's 60 s window. This screens carpet was the longest component file of the project: 69 s in that run, under the whole suite's contention, against
+// 29.4 s solo – so contention reached it first, and it was never a regression of the round. The halves are cut by COST, not by theme (`CoachMarketScreen (coaches)` alone is
+// 4.5 s solo, which is why the cheaper Kid, Calendar and records ride with it in the other file). A surface's ledger rows (`xxFindings.ts`, `ruRawFindings.ts`) are keyed by AREA and
+// move with it: a row left under `screens` for a surface of `screens-b` fails the carpet's first arm, «ledger rows with no surface». Neither ledger held a row for either half
+// when it was cut, and the instrument pins the union of the two halves by id.
 import { vi } from 'vitest'
 import { flushPromises, type VueWrapper } from '@vue/test-utils'
-import type { Component } from 'vue'
 import '../../src/style.css'
 
 vi.mock('../../src/audio/sfx', () => ({
@@ -22,30 +28,13 @@ vi.mock('../../src/worker/client', async (importOriginal) => {
 
 import HomeScreen from '../../src/components/screens/HomeScreen.vue'
 import ThisWeekScreen from '../../src/components/screens/ThisWeekScreen.vue'
-import CalendarScreen from '../../src/components/screens/CalendarScreen.vue'
 import SeasonScreen from '../../src/components/screens/SeasonScreen.vue'
-import KidScreen from '../../src/components/screens/KidScreen.vue'
-import CoachMarketScreen from '../../src/components/screens/CoachMarketScreen.vue'
 import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
-import StatsScreen from '../../src/components/screens/StatsScreen.vue'
-import TrophiesScreen from '../../src/components/screens/TrophiesScreen.vue'
-import AlbumScreen from '../../src/components/screens/AlbumScreen.vue'
 import type { Snapshot } from '../../src/shared/protocol'
-import { bookOf } from './albumFixture'
-import { carpet, posed, type Extra, type Surface } from './xxCarpet'
-import { coached, golden, mountMore, ranked, selfCoached, shopSnap } from './xxPoses'
+import { carpet, screen, type Surface } from './xxCarpet'
+import { coached, mountMore, ranked, shopSnap } from './xxPoses'
 
 Element.prototype.scrollIntoView = function () {}
-
-/** A screen on a snapshot – the harness's `posed`, kind fixed. */
-const screen = (id: string, swept: string, comp: Component, snap: () => Snapshot, props: Record<string, unknown> = {}, after?: (w: VueWrapper) => Promise<void>, extra: Extra = {}): Surface =>
-  posed(id, 'screen', swept, comp, snap, props, after, extra)
-
-// ⭐ RU-23 (11.10): THE COACH MARKET'S OWN PROSE IS NO LONGER AN ALLOWANCE. It was – `coachBlurb` and `coachProfileNote` were engine words the surface printed unwrapped, so the carpet listed them as the
-// engine's. They are catalog keys now (the seat `engine.text`), read through `engineText`, so under `xx` they are bracketed like any wrapped line and a raw print of one is a leak again.
-const BOOK = bookOf(3)
-/** The same three sheets with a layout-C opener: the tag card and the tagged page the plain book never draws. */
-const BOOK_C = bookOf(3, { layout: 'C' })
 
 /** The Family-budget screen on one of its four tabs (Spending, Bills, History, Shop), picked by position – the label is bracketed under xx. */
 const money = (id: string, tab: number, snap: () => Snapshot): Surface =>
@@ -60,19 +49,11 @@ const more = (id: string, tab: 0 | 1 | 2): Surface => ({ id, kind: 'screen', swe
 const SURFACES: readonly Surface[] = [
   screen('HomeScreen', 'L2-3', HomeScreen, ranked, { props: { recapFresh: true } }),
   screen('ThisWeekScreen', 'L2-3', ThisWeekScreen, coached),
-  screen('CalendarScreen', 'L2-3', CalendarScreen, coached),
   screen('SeasonScreen', 'L2-4', SeasonScreen, coached),
-  screen('KidScreen', 'L2-5', KidScreen, selfCoached),
-  screen('CoachMarketScreen (coaches)', 'L2-5', CoachMarketScreen, coached),
-  screen('CoachMarketScreen (her week)', 'L2-5', CoachMarketScreen, selfCoached),
   money('MoneyScreen: Spending', 0, coached),
   money('MoneyScreen: Bills', 1, coached),
   money('MoneyScreen: History', 2, coached),
   money('MoneyScreen: Shop', 3, shopSnap),
-  screen('StatsScreen', 'L2-7', StatsScreen, golden),
-  screen('TrophiesScreen', 'L2-7', TrophiesScreen, golden),
-  screen('AlbumScreen', 'L2-7', AlbumScreen, golden, { props: { book: BOOK } }, undefined, { engine: () => [BOOK] }),
-  screen('AlbumScreen: layout C', 'L2-7', AlbumScreen, golden, { props: { book: BOOK_C } }, undefined, { engine: () => [BOOK_C] }),
   more('MoreScreen: Play', 0),
   more('MoreScreen: Saves', 1),
   more('MoreScreen: About', 2),
