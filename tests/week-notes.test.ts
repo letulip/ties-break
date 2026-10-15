@@ -2307,9 +2307,12 @@ describe('R52 F3 — her feel for the coach reaches the week note', () => {
       expect(s, `"${t}" -> «всё плохо» is nobody's line`).not.toMatch(/всё плохо/i)
       if (/тренер/i.test(s)) naming.push(s)
     }
+    // ⚠ RE-AIMED 15.10 (r52 review sheet): the two rows are his own wording now (RU09D-CFW-03 and -08, edited and approved
+    // by him). The claim is unchanged – the same two rows, and only they, name the coach, and as a noun («с тренером»,
+    // «слова тренера»): no verb or pronoun gives the coach a sex (R15-7).
     expect(naming, 'R15-7: the coach appears in exactly the two rows that name one, as a noun').toEqual([
-      'Пришла домой с одним из упражнений тренера и дважды показала его нам.',
-      'За ужином она цитировала тренера. Дважды.',
+      'Дома она дважды показала нам упражнение, которое делала с тренером.',
+      'За ужином она дважды повторила слова тренера.',
     ])
   })
 })

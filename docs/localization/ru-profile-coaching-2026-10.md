@@ -1564,10 +1564,10 @@ The Coach tile on the daughter's screen gains a third line, **only while a coach
 
 | id | English | Russian | Status |
 | --- | --- | --- | --- |
-| RU23-CFL-01 | `Still getting acquainted` | `Ещё знакомятся` | `DRAFT` |
-| RU23-CFL-02 | `"Can't tell yet"` | `«Пока не поняла»` | `DRAFT` |
-| RU23-CFL-03 | `"Seems to be working"` | `«Вроде получается»` | `DRAFT` |
-| RU23-CFL-04 | `"Seems fine, but…"` | `«Вроде нормально, но…»` | `DRAFT` |
-| RU23-CFL-05 | `Clicking well` | `Ладят` | `DRAFT` |
-| RU23-CFL-06 | `Not clicking` | `Не ладят` | `DRAFT` |
-| RU23-CFL-07 | `Coach – {feel} – open the Coach Market` | `Тренер – {feel} – открыть рынок тренеров` | `DRAFT` |
+| RU23-CFL-01 | `Still getting acquainted` | `Ещё знакомятся` | `APPROVED` |
+| RU23-CFL-02 | `"Can't tell yet"` | `«Пока не поняла»` | `APPROVED` |
+| RU23-CFL-03 | `"Seems to be working"` | `«Кажется, ладим»` | `APPROVED` |
+| RU23-CFL-04 | `"Seems fine, but…"` | `«Вроде нормально, но…»` | `APPROVED` |
+| RU23-CFL-05 | `Clicking well` | `Ладят` | `APPROVED` |
+| RU23-CFL-06 | `Not clicking` | `Не ладят` | `APPROVED` |
+| RU23-CFL-07 | `Coach – {feel} – open the Coach Market` | `Тренер – {feel} – открыть рынок тренеров` | `APPROVED` |

@@ -692,16 +692,16 @@ Ten new rows, two for each of the five steps of her feel that have a voice (`too
 
 | id | English | Russian | Status |
 | --- | --- | --- | --- |
-| RU09D-CFW-01 | `Asked how practice went, she shrugged: "Still working it out."` | `На вопрос, как прошла тренировка, пожала плечами: «Ещё разбираюсь».` | `DRAFT` |
-| RU09D-CFW-02 | `Practice was "different", she said. Not better, not worse. Different.` | `Тренировка была «другой», сказала она. Не лучше и не хуже. Другой.` | `DRAFT` |
-| RU09D-CFW-03 | `She came home with one of the coach's drills and showed it to us twice.` | `Пришла домой с одним из упражнений тренера и дважды показала его нам.` | `DRAFT` |
-| RU09D-CFW-04 | `"It is starting to make sense," she said about practice. That was new.` | `«Начинает складываться», – сказала она о тренировке. Раньше такого не было.` | `DRAFT` |
-| RU09D-CFW-05 | `"Fine," she said about practice, and changed the subject.` | `«Нормально», – сказала она о тренировке и перевела разговор.` | `DRAFT` |
+| RU09D-CFW-01 | `Asked how practice went, she shrugged: "Still working it out."` | `На вопрос, как прошла тренировка, пожала плечами: «Ещё разбираюсь».` | `APPROVED` |
+| RU09D-CFW-02 | `Practice was "different", she said. Not better, not worse. Different.` | `Тренировка была «другой», сказала она. Не лучше, не хуже – просто другой.` | `APPROVED` |
+| RU09D-CFW-03 | `She came home with one of the coach's drills and showed it to us twice.` | `Дома она дважды показала нам упражнение, которое делала с тренером.` | `APPROVED` |
+| RU09D-CFW-04 | `"It is starting to make sense," she said about practice. That was new.` | `«Начинает складываться», – сказала она о тренировке. Раньше такого не было.` | `APPROVED` |
+| RU09D-CFW-05 | `"Fine," she said about practice, and changed the subject.` | `«Нормально», – сказала она о тренировке и сменила тему.` | `APPROVED` |
 | RU09D-CFW-06 | `She tried the new drill in the hall, stopped halfway. "It is fine."` | `Попробовала новое упражнение в прихожей, бросила на полпути. «Всё нормально».` | `DRAFT` |
-| RU09D-CFW-07 | `Practice came up three times at dinner. All of it good.` | `За ужином трижды заговорили о тренировке. И всё – хорошее.` | `DRAFT` |
-| RU09D-CFW-08 | `She quoted the coach at dinner. Twice.` | `За ужином она цитировала тренера. Дважды.` | `DRAFT` |
-| RU09D-CFW-09 | `She does not talk about practice any more.` | `О тренировках она больше не рассказывает.` | `DRAFT` |
-| RU09D-CFW-10 | `Practice came and went without a word at dinner.` | `Тренировка прошла, а за ужином о ней ни слова.` | `DRAFT` |
+| RU09D-CFW-07 | `Practice came up three times at dinner. All of it good.` | `За ужином она трижды вспомнила тренировку. И каждый раз – что-то хорошее.` | `APPROVED` |
+| RU09D-CFW-08 | `She quoted the coach at dinner. Twice.` | `За ужином она дважды повторила слова тренера.` | `APPROVED` |
+| RU09D-CFW-09 | `She does not talk about practice any more.` | `О тренировках она больше не рассказывает.` | `APPROVED` |
+| RU09D-CFW-10 | `Practice came and went without a word at dinner.` | `Тренировка прошла, а за ужином о ней ни слова.` | `APPROVED` |
 
 ⚙ 14.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. R52 J1, the owner's ruling on the close (14.10, №1, «давай по рекомендациям»): at a strained or cold bond she does not confide at a stint checkpoint either – and the silence shows. Four more week-note lines, two for each band, in the parent's voice. Both languages in one change.
 
@@ -712,7 +712,7 @@ Ten new rows, two for each of the five steps of her feel that have a voice (`too
 
 | id | English | Russian | Status |
 | --- | --- | --- | --- |
-| RU09D-CFW-11 | `Asked about the coach, she said: "Fine." Nothing after it.` | `На вопрос о тренере она ответила: «Нормально». И больше ни слова.` | `DRAFT` |
-| RU09D-CFW-12 | `She did not mention the coach once. We did not know how to ask.` | `О тренере она не обмолвилась ни разу. Мы не знали, как спросить.` | `DRAFT` |
-| RU09D-CFW-13 | `The coach was not mentioned. She had closed up, and we left it alone.` | `О тренере никто не заговаривал. Она замкнулась, и мы не лезли.` | `DRAFT` |
-| RU09D-CFW-14 | `Dinner was quiet. Whatever she thinks of the coach, she kept it to herself.` | `Ужин прошёл тихо. Что она думает о тренере, осталось при ней.` | `DRAFT` |
+| RU09D-CFW-11 | `Asked about the coach, she said: "Fine." Nothing after it.` | `На вопрос о тренере она ответила: «Нормально». И больше ни слова.` | `APPROVED` |
+| RU09D-CFW-12 | `She did not mention the coach once. We did not know how to ask.` | `О тренере она не обмолвилась ни разу. Мы не знали, как спросить.` | `APPROVED` |
+| RU09D-CFW-13 | `The coach was not mentioned. She had closed up, and we left it alone.` | `О тренере никто не заговорил. Она молчала, и мы не стали спрашивать.` | `APPROVED` |
+| RU09D-CFW-14 | `Dinner was quiet. Whatever she thinks of the coach, she kept it to herself.` | `Ужин прошёл тихо. Что она думает о тренере, осталось при ней.` | `APPROVED` |
