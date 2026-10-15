@@ -13,6 +13,8 @@
 //   THE NET (always on, a few seconds): on a device that has never run the game – the language choice, the prologue's first card and two
 //   onboarding steps – and on Home, every visible button's first face is an app face (Manrope, Sora or Caveat). MUTATION-VERIFIED: with the
 //   `font-family: inherit` line out of the global `button` rule it is red on all of them, and restored it is green.
+//   THE NET'S SECOND PART (15.10, review sheet №4): at 320x568 and 375x667, in English and Russian, no Coach Market row is more than 30 px taller
+//   than the same row drawn in the browser's own face – the density block in style.css, held (see the block after the first describe).
 //   THE CENSUS (BUTTON_CENSUS=1): the same walk over every pre-career screen and the eleven stations of `stations.ts`, in English and
 //   Russian, at 375x667 and 320x568 (Chromium's mobile emulation, as the r51 sweep has it), after `document.fonts.ready`. It records per
 //   visible button the first face, whether the label overflows its box (`scrollWidth > clientWidth + 1`) and its number of text lines, and
@@ -311,6 +313,87 @@ test.describe('round 52 №2 – every button speaks the app’s font', () => {
     await bootHome(page, careerAt, 'en')
     expectAppFaces('Home', await readButtons(page))
   })
+})
+
+// =================================================================================================
+// THE NET, SECOND PART – THE COACH MARKET'S ROWS KEEP THEIR HEIGHT (ROUND 52, HIS REVIEW SHEET №4, 15.10) – ALWAYS ON
+// =================================================================================================
+// THE RULING (docs/decisions.md, «15.10.2026 – ROUND 52, HIS REVIEW SHEET» №4): «Manrope оставить. При 320 px прибавка до пяти строк / 90 px
+// для повторяющихся карточек рынка слишком заметна: отдельно укоротить подписи или слегка пересобрать плотность строк, не возвращая
+// системный шрифт.» The density half is the `@media (max-width: 500px)` block after `.cm-action.is-locked` in style.css; no caption was
+// shortened and no `font-family` was set, so this net holds the one thing the block promises: a row is not much taller than it was.
+//
+// THE BUDGET IS A RELATION, NOT A NUMBER. A coach row may be at most ROW_BUDGET_PX taller than THE SAME ROW as it was before this round's two
+// changes: drawn in the browser's own face (the global `font-family: inherit` of 14.10 not applied) AND at the density the rows had before the
+// narrow block in style.css (BEFORE_ARM restates it: the row's gap 10 and padding-right 12, the card's row gap 4, the paragraphs at 1.35, the
+// figures inheriting the body's). Both arms are measured on the page itself, in the same browser, so the baseline is the platform's own and a
+// copy edit that lengthens a blurb moves both arms together. ⚠ A first draft of this net compared against the browser's face ALONE and was
+// red on the fixed tree: the density block applies to that arm too, so it measured the font's effect at the new density (+65 px) and not the
+// owner's question, how tall the rows are against the ones he was used to. ⚠ THE ARM IS A SNAPSHOT of those pre-15.10 values: change them in
+// style.css on purpose and this arm is the thing to update. `revert` rolls the family back to the user-agent value, which is exactly the tree
+// before the global rule. It was checked, not assumed: this arm reproduces J2's saved before-census row for row, on a Mac AND in CI's Linux
+// image (320x568 EN: 285, 285, 301, 301, 432, 271, 287, 271, 271, 287, 271, 271, 353, 323, 353, 339), and logs its heights as ROW_BASELINE.
+//
+// MEASURED 15.10, the worst of the 16 rows (px over the browser-face height / lines), Mac Chromium | CI's Linux image:
+//   320x568 EN  baseline 271–432 px   no rule +75 / +4 | +75 / +4  → with it +11 / +1 | +14 / +1
+//   320x568 RU  baseline 285–655 px   no rule +90 / +5 | +90 / +5  → with it  +6 / +1 |  +6 / +1
+//   375x667 EN  baseline 216–281 px   no rule +41 / +2 | +41 / +2  → with it +10 / +1 | +10 / +1
+//   375x667 RU  baseline 230–392 px   no rule +40 / +2 | +27 / +1  → with it  −4 / ≤0 |  +6 / +1
+// MUTATION-VERIFIED (15.10, a Mac): with the block's media query switched off (`max-width: 0px`) all four tests are red – the worst row +75 px
+// (EN 320), +90 (RU 320), +41 (EN 375), +40 (RU 375) – and restored they are green. In CI's image the same relation on the tree without the
+// block reads rows over 30 px: 16 of 16 (EN 320), 16 (RU 320), 1 (EN 375) and 0 (RU 375, the one case that only a Mac reddens). The net holds the
+// 30 px half of the target and does not assert lines; the +1 line half was measured with the same arms (the worst row is +1 line at both sizes).
+const ROW_BUDGET_PX = 30
+const PARAGRAPHS = ['.cm-blurb', '.cm-profile', '.cm-plaque', '.cm-decline', '.cm-load', '.cm-travel-edge'].map((c) => `.cm-row .cm-body ${c}`).join(', ')
+const BEFORE_ARM = [
+  'button.cm-row { font-family: revert !important; }',
+  '.cm-row { gap: 10px !important; padding-right: 12px !important; }',
+  '.cm-row .cm-body { gap: 4px !important; }',
+  `${PARAGRAPHS} { line-height: 1.35 !important; }`,
+  '.cm-row .cm-body .cm-uplift { line-height: unset !important; }',
+].join('\n')
+
+interface RowHeight {
+  name: string
+  h: number
+}
+
+function rowHeights(page: Page): Promise<RowHeight[]> {
+  return page.evaluate((): RowHeight[] =>
+    Array.from(document.querySelectorAll<HTMLElement>('.cm-row'))
+      .filter((r) => r.offsetHeight > 0)
+      .map((r) => ({ name: r.querySelector('.cm-name')?.textContent?.trim() ?? '', h: r.offsetHeight })),
+  )
+}
+
+test.describe('round 52 №4 – the coach market’s rows are not much taller than the browser’s own face made them', () => {
+  for (const size of PHONES) {
+    test.describe(`${size.width}x${size.height}`, () => {
+      test.use({ viewport: size, isMobile: true, hasTouch: true })
+      for (const locale of ['en', 'ru'] as const) {
+        test(`${locale}: every coach row is within ${ROW_BUDGET_PX} px of its browser-face height`, async ({ page, careerAt }) => {
+          await bootHome(page, careerAt, locale)
+          await press(page.getByRole('button', { name: nameOf('Coach note – open the Coach Market') }))
+          await expect(heading(page, 'Coach Market', 2), 'the walk did not arrive at the Coach Market').toBeVisible({ timeout: 5_000 })
+          await settle(page)
+          const drawn = await rowHeights(page)
+          const browserFace = await page.addStyleTag({ content: BEFORE_ARM })
+          await settle(page)
+          const baseline = await rowHeights(page)
+          await browserFace.evaluate((el) => (el as Element).remove())
+          expect(drawn.length, 'no coach row was counted, so nothing was measured').toBeGreaterThan(0)
+          expect(drawn.map((r) => r.name), 'the two arms must be the same rows').toEqual(baseline.map((r) => r.name))
+          const rows = drawn.map((r, i) => ({ row: r.name, drawn: r.h, browserFace: baseline[i]?.h ?? 0, over: r.h - (baseline[i]?.h ?? 0) }))
+          console.log(`ROW_BASELINE ${locale} ${size.width}x${size.height} | ${baseline.map((r) => r.h).join(',')}`)
+          console.log(`ROW_BUDGET ${locale} ${size.width}x${size.height} | ${rows.length} rows, worst +${Math.max(...rows.map((r) => r.over))} px of ${ROW_BUDGET_PX}`)
+          expect(
+            rows.filter((r) => r.over > ROW_BUDGET_PX),
+            `${locale} ${size.width}x${size.height}: coach rows more than ${ROW_BUDGET_PX} px taller than the browser's own face drew them`,
+          ).toEqual([])
+        })
+      }
+    })
+  }
 })
 
 // =================================================================================================
