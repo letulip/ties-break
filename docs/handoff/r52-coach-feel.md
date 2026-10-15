@@ -64,11 +64,22 @@ green files, and «а еще вот такое там нашел в трейсе
   read them with `ArtifactData list`, apply to the docs/localization tables, flip
   DRAFT → APPROVED, both languages in one commit.
 
+## His review sheet (15.10) – transferred and answered
+- `4d22dd00` – his 56 rewrites verbatim into the three tables (round-trip 192/192); 190 rows
+  `APPROVED` at once, R71's six «полгода» rows after his timing answer.
+- J4 `a4db32f6` – the Coach Market rows denser at ≤ 500 px (his «Manrope оставить… пересобрать
+  плотность строк»): worst row at 320 px +75 → +11/+14 px EN, +90 → +6 RU over the old height.
+- J6 `4cc2349c` – his «Точку на 28-ю нед.» and «Окно 48–63 нед.»: the half-year checkpoint 28, the
+  windows [24,32) and [48,64); «год» no longer raised after week 64 (12 → 0 in played careers).
+  The silence note's reach in posed stints 88.9 → 77.8 % (the new window is more often all away).
+- The eighth digest harvest (coach-travel 50, s1 9, l3-5 '5/0', twin 12 leaves on both platforms).
+
 ## Open (the owner's)
-- His pass over the review sheet (strings, the font screenshots, the three decisions there:
-  F3's cold quotes, the silence note, the Coach Market row height, the Russian shelf row 4 + 2).
-- Resolved by his 14.10 ruling: the bond gate at a checkpoint stays (the silence now shows); the
-  onboarding cards' font (the global rule fixed every button); the recency veto stays.
+- RU09D-CFW-06: his edit is 84 characters, the diary scrap's MUST is 80 – he asked what it affects
+  (answered: at 19 px an 80-character note is two lines on the recap card's paper scrap, longer runs
+  to a third; nothing is cut). The row is `DRAFT` with the old text until he chooses; his edit is in
+  the sheet's db (`reviews/RU09D-CFW-06`).
+- The Russian shop shelf row wraps 4 + 2 at 375 px (was 3 + 3) – he will look in the app.
 
 ## Gates
 J3 CHAIN at `778c0abb` (clean worktree, npm ci, verdicts from files): check `R52M_CHECK_EXIT=0`

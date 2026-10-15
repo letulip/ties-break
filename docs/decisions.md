@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 173 dated entries, newest 2026-10-15. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 174 dated entries, newest 2026-10-15. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -40,7 +40,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 30 | [ROUND 52, HIS REVIEW SHEET (his marks live in the sheet's db; counts and ids in the round ledger)](#15102026--round-52-his-review-sheet-his-marks-live-in-the-sheets-db-counts-and-ids-in-the-round-ledger) | 2026-10-15 |
+| process-and-git | 31 | [ROUND 52, HIS TIMING ANSWERS (his two review-sheet questions)](#15102026--round-52-his-timing-answers-his-two-review-sheet-questions) | 2026-10-15 |
 | product-and-scope | 8 | [LOCALIZATION: THE NINE QUESTIONS RULED, PLUS THREE ORDERS – THE STACK LANDS WITH THE INTAKE](#07102026--localization-the-nine-questions-ruled-plus-three-orders--the-stack-lands-with-the-intake) | 2026-10-07 |
 | ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
@@ -6169,3 +6169,11 @@ byte-identity proven, and the coach market was the last product screen to leave 
 5. **His two questions are about the windows, not the words** – «полгода» (R71) is reachable from
    week 24 to 43 and its checkpoint is week 32; «год» (R73–R75) has no upper bound. Open with the
    architect's proposals, as is the Russian shelf row (4 + 2), which he left unmarked.
+
+## 15.10.2026 – ROUND 52, HIS TIMING ANSWERS (his two review-sheet questions)
+
+1. **«Полгода» means half a year** – «Точку на 28-ю нед.»: the half-year coach-talk checkpoint
+   moves from week 32 to week 28 (6.4 months together) and the half-year rows' window narrows to
+   weeks 24–31; R71's six «полгода» rows are approved with it.
+2. **«Год» means the first year** – «Окно 48–63 нед.»: the year rows (R73–R75) get an upper bound,
+   so ordinary small talk cannot raise them after ~15 months; the week-56 checkpoint stays.
