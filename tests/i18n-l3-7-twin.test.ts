@@ -42,6 +42,11 @@
 //   leaves – the `world` + `worldFields.lifeLog` pair of the 6 coached careers – attributed by a
 //   CONTROL capture at builder H1's tip (the tile font: 0 leaves): H2's stint rows and H3's
 //   checkpoints raise a due coach talk at weeks together 12/32/56. Zero row, text or draw digests.
+// ⚠ REFRESHED 15.10 (round 52, his review-sheet answers, both platforms, identical diffs): exactly 12
+//   leaves – the `world` + `worldFields.lifeLog` pair of the 6 coached careers – attributed by a CONTROL
+//   capture at J6's parent a4db32f6 (equal to the stored fixture, 0 leaves): J6 moves the half-year
+//   checkpoint 32 → 28 and bounds the windows to [24,32) / [48,64), so the coach talks land on other
+//   weeks. Zero row, text or draw digests; captures: L37_CAPTURE here, podman linux/amd64 node:22.
 //
 // ⚠⚠ TWO PLATFORM FAMILIES, BOTH TRUE (10.10, the day-long hunt). The PR runner (ubuntu/x64,
 // node 22) produces snapshot digests no darwin/arm64 machine can – measured to the last cell: a
