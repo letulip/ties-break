@@ -3033,6 +3033,8 @@ Counts, final tree: school observation 430, curiosity 393, decision 390, story 2
 
 ## Addendum 14.10 (round 52, builder H2) – six stint situations: she brings up the coach again at half a year and at a year together, and which of the three depends on how she feels about it
 
+**Superseded in part, 15.10 (J6).** The owner narrowed the two windows below on his review of R71 and R73 to R75: half a year is now weeks together 24 to 31 (not 24 to 43) and a year is weeks 48 to 63 (not 48 and later). The tables and the paragraph «Why those weeks» below are the record of 14.10; the current numbers are in «Addendum, round 52 J6 (15.10)», at the end of the H3 section.
+
 **The owner, 14.10:** «на тему смол-тока – нам это важно и критично как раз знать не один раз в 19 лет, а в первые год-два сотрудничества, чтобы понять это "тот" тренер или лучше поменять». Earlier the same day, on how sure she may sound: «не "всё плохо" а "я пока не очень поняла" или "вроде нормально, но"… она еще не уверена, а просто сомневается».
 
 **What this is.** The first three coach-feel situations (R67–R69) are her first impression, heard in the weeks after the six that count as too early. The owner wants her voice on the coach during the first year or two of a stint, not once in a career. This addendum adds the other two checkpoints of the design in `docs/rounds/round-52.md` (weeks together 12, 32 and 56): three situations for **half a year** (R70–R72) and three for **a year together** (R73–R75), each behind one side of the same feel (`coachFeel`) and now also behind the stint's age. The mechanism that brings them up at the checkpoint weeks is a separate item; until it lands, they come up in ordinary small talk, whenever their fact is true.
@@ -3283,6 +3285,8 @@ Counts, final tree: school observation 430, curiosity 393, decision 390, story 2
 
 ## Addendum 14.10 (round 52, builder H3) – the stint checkpoints: her talk about the coach arrives on its own at weeks 12, 32 and 56 of a stint
 
+**Superseded in part, 15.10 (J6).** The half-year checkpoint moved from week 32 to week 28 on his review of R71, so the checkpoints are now 12, 28 and 56, and the half-year window ends at 32. The numbers in this addendum (the rules table, the sides at week 32, the measurements and the pin table) are the record of 14.10; see «Addendum, round 52 J6 (15.10)» below.
+
 **The owner, 14.10:** «на тему смол-тока – нам это важно и критично как раз знать не один раз в 19 лет, а в первые год-два сотрудничества, чтобы понять это "тот" тренер или лучше поменять. Давай что-то на эту тему решим.»
 
 **What this is.** R67–R75 are nine situations about the coach, and until now they came up in ordinary small talk, on the lottery: H2 measured 0.063 of them a coached year (16 conversations in 252 coached years), and the half-year rows did not drop once in 36 careers. This addendum adds the mechanism the design in `docs/rounds/round-52.md` asks for. At **12, 32 and 56 weeks together** (about three months, seven and thirteen) the roll asks first whether a checkpoint is due, and if one is, she brings up the coach on that week and does not wait for the die. The weeks are `COACH_TALK_CHECKPOINTS` in `src/engine/world/coachFeel.ts`; the due-check and the raise are `coachTalkCheckpointDue` and `raiseCoachCheckpointTalk` in `src/engine/world/lifeBeat/smallTalk.ts`, called on the first line of `rollSmallTalk`. No string changed (the rows exist) and nothing is persisted (no schema move).
@@ -3449,6 +3453,71 @@ A shut checkpoint is still rare in a played career (0.024 a coached year), and t
 **Proved by mutation, each restored byte for byte (`shasum` before = after):** dropping clause (c), the earlier-weeks check, turns four tests red (J1's once-per-checkpoint arm and three of F: the fact on every later free week); dropping clause (b), the week itself, turns three red (the fact on the away weeks); widening the window's bound by one week in `coachTalkCheckpointAt` turns the travel-pattern arm red (the window with four away weeks prints on its fifth).
 
 ---
+
+### Addendum, round 52 J6 (15.10) – the half-year talk moves to week 28, and the windows close: half a year [24, 32), a year [48, 64)
+
+**The owner, 15.10**, two questions on his review sheet and his two answers.
+
+- On R71: «реплика говорит «полгода», но окно факта открыто с 24-й по 43-ю неделю, а обязательная точка — 32-я (почти восемь месяцев).» His answer: **«Точку на 28-ю нед.»**
+- On R73–R75: ««год» доступен с 48-й недели без верхней границы. Может ли R73–R75 выпасть в обычном small talk спустя два-три года с тем же тренером?» His answer: **«Окно 48–63 нед.»**
+
+**What changed.** Three numbers and one table key, all in the code that decides *when*; no string changed in either language, nothing is persisted, and nothing draws from the main stream.
+
+| where | before | after |
+| --- | --- | --- |
+| `COACH_TALK_CHECKPOINTS` (`world/coachFeel.ts`) | 12, 32, 56 | 12, **28**, 56 |
+| the half-year row of `COACH_TALK_CHECKPOINT_ROWS` (`world/lifeBeat/smallTalk.ts`) | keyed 32 | keyed **28** |
+| `COACH_TALK_HALF_YEAR_UNTIL_WEEK` (the half-year window closes) | 44 | **32** |
+| `COACH_TALK_YEAR_UNTIL_WEEK` (the year window closes) | no ceiling | **64** |
+
+The two opening weeks (24 and 48) stay. A half-year line can now be told only on weeks together 24 to 31, and the checkpoint takes the last four of them (28 to 31), so ordinary small talk has four weeks (24 to 27) in which it could say «half a year» on its own. A year line can be told only on weeks 48 to 63: the checkpoint at 56 takes weeks 56 to 59, and ordinary small talk has weeks 48 to 55 and 60 to 63. Past week 63 of a stint no «half a year» and no «a year» line is true, so a girl two or three years into the same coach hears neither. Every edge (24, 28, 32, 48, 56, 64) is a multiple of four, the length of a feel period, so each one still falls on a week her feel was just re-read. Week 28 is six and a half months, which is why he could call the line «полгода» and not be contradicted by the calendar.
+
+**Prediction, written before the run (J6, 15.10).** Same cohort and harness as H3 (`tests/r52-coach-talk-checkpoints.test.ts` section H, `R52_H3_REPORT=1 R52_H3_SCALE=big`: 7 presets that start with a coach, 6 careers each, 312 weeks, both parent arms; and the wide run for the sides, `R52_H3_CAREERS=24 R52_H3_WEEKS=70 R52_H3_ARMS=answers R52_H3_NOOFF=1`), measured against H3's own figures above. One new count, rows of the six stint situations per coached year split into the checkpoint's own weeks and everything else (`tests/r52-coach-talk-windows.test.ts`, `R52_J6_REPORT=1`), run on the parent commit and on this one.
+
+| what is measured | H3, 14.10 | predicted now | reasoning |
+| --- | --- | --- | --- |
+| stints past 60 weeks that got all three talks (steady or close bond in every window) | 100% scale (40 of 40), 98.1% wide (152 of 155) | **scale 100%, wide 98 to 100%** (152 to 155 of 155) | H3's three misses were all the recency veto. The half-year one was a lottery row at week 25, ahead of the old checkpoint; with the checkpoint at 28 the lottery has four weeks before it instead of eight, so that cause can only get rarer. The other two (a row at week 7, before checkpoint 12) are untouched |
+| coach talks per coached year, first two years of a stint, checkpoints live | 1.575 (answers), 1.563 (ignores) | **1.52 to 1.56** | three checkpoint talks in two years is 1.5; the rest was the lottery, and the stint rows' lottery weeks in those two years drop from 68 to 16 |
+| the same with the checkpoints emptied (the lottery alone) | 0.180 and 0.168 | **0.10 to 0.14** | the first-impression rows (R67 to R69) are untouched; the stint rows lose about two thirds of their weeks in the first two years (76 to 24) |
+| sides at the half-year checkpoint, now at week 28 | week 32: warm 30.5%, unsure 38.9%, cold 30.5% (51 / 65 / 51 of 167) | **warm 27 to 34%, unsure 38 to 46%, cold 24 to 32%** | the bench B14 says the cold share rises and the unsure share falls with the stint, so week 28 sits about two points earlier on that slope than 32. At 167 talks a share has a standard error near four points, so the move will not be told apart from noise |
+| ordinary small talk's R70 to R72 rows per coached year | not counted; about 16 lottery weeks per stint | **before 0.004 to 0.008 (1 to 2 rows in 252 coached years), after 0.000 to 0.004 (0 to 1)** | exposure falls from 16 weeks to 4 per stint, a quarter; at H2's rates (about 0.001 to 0.002 a week) that is one row or none |
+| ordinary small talk's R73 to R75 rows per coached year | not counted; H2 saw 16 stint rows in 252 coached years, about 14 of them these | **before 0.05 to 0.10 (12 to 26 rows), after 0.000 to 0.008 (0 to 2)** | exposure falls from about 250 weeks per stint to 12, a twentieth |
+| rows outside their windows | none could be (the old windows) | **exactly 0**: no R70 to R72 row outside weeks together [24, 32), no R73 to R75 row outside [48, 64), the half-year talk always inside [28, 32) | a hard property, not a rate |
+| the silence J1 and J1b print for a checkpoint the bond shut | 88.9% of 144 shut checkpoints printed (128), 23 of 24 at week 32 | **still 85 to 92% in all, on the first free week of [28, 32)** | the rule did not change; the weeks the window sits on did, so the share at the half-year checkpoint may move by a window or two |
+| MAIN draws | identical with and without the mechanism | **identical** | nothing here touches the main stream; the frozen capture (41550 draws, hash `e6b0c709`) must not move |
+
+The pins that hash a played coached career (the coach-travel files, `succession-s1-start-year`, PICK-STABILITY in `i18n-l3-5-life-beats`, the `i18n-l3-7-twin` leaves) are expected to go red again, because the half-year talk lands four weeks earlier and the stint rows come up far less often; the story-pool sample floor may too. None is re-stamped here.
+
+**Measured (J6, 15.10).** Two arms of the same harness: this tree, and a worktree at the parent commit `a4db32f6`, which is the change reverted in full (checkpoints 12, 32, 56, the half-year window to 44, the year window without a ceiling). The parent arm reproduces H3's 14.10 figures to the digit (40 of 40 and 152 of 155; 1.575 and 1.563; 0.180 and 0.168; 51 / 65 / 51 at week 32), so the two arms differ in this change and in nothing else. Denominators: the scale run is 42 stints (7 presets, 6 careers each, 312 weeks: 252 coached years, 83.2 of them in the first two years of a stint, 126 checkpoint windows of which 124 had a steady or close week); the wide run is 168 stints of 70 weeks (504 windows, 491 with an eligible week). Commands: the H3 harness as above, `R52_J6_REPORT=1 R52_J6_SCALE=big npx vitest run --project unit tests/r52-coach-talk-windows.test.ts -t "lottery rows"` (the parent arm with `R52_J6_BEFORE=1`, which counts against the 14.10 windows), and `R52_J1_REPORT=1 npx vitest run --project unit tests/r52-checkpoint-silence.test.ts -t "J1 E"`.
+
+| what is measured | predicted | measured, parent then J6 |
+| --- | --- | --- |
+| stints past 60 weeks with all three talks, among those with a steady or close week in every window | scale 100%, wide 98 to 100% | **scale 40 of 40 (100%) then 40 of 40; wide 152 of 155 (98.1%) then 152 of 155.** Over all 42 stints it is 40 (95.2%) both times, the other two being a shut bond. The three wide-run misses are the same three recency vetoes: the half-year one is the lottery's row at week 25, which the narrower window still allows (weeks 24 to 27), so that cause did not get rarer in this cohort, against the prediction's reasoning; the figure stayed inside the range |
+| coach talks per coached year, first two years, checkpoints live | 1.52 to 1.56 | **1.575 then 1.539** (answers); ignores 1.563 then 1.539 |
+| the same with the checkpoints emptied (the lottery alone) | 0.10 to 0.14 | **0.180 then 0.084** (answers); ignores 0.168 then 0.084. Below the range: the stint rows were 0.096 of the 0.180, and none was drawn in the 83.2 coached years after the change, so what is left is R67 to R69 alone |
+| sides at the half-year checkpoint (wide run, 167 talks; the checkpoint was at 32, now at 28) | warm 27 to 34%, unsure 38 to 46%, cold 24 to 32% | **warm 51 / unsure 65 / cold 51 (30.5 / 38.9 / 30.5) then 52 / 64 / 51 (31.1 / 38.3 / 30.5).** One talk moved between sides, well inside the noise. Scale run: 9 / 23 / 10 then 11 / 21 / 10 |
+| R70 to R72 ordinary rows per coached year (252 coached years) | before 0.004 to 0.008 (1 to 2 rows), after 0.000 to 0.004 (0 or 1) | **with the checkpoints live 0 then 0; the lottery alone 1 (0.004) then 0** |
+| R73 to R75 ordinary rows per coached year | before 0.05 to 0.10 (12 to 26 rows), after 0.000 to 0.008 (0 to 2) | **live 12 (0.048) then 0; the lottery alone 15 (0.060) then 0.** All twelve were past week 64: four on weeks 72 to 95, eight on week 120 or later, the last on weeks 268 to 271, a stint of five years. That is the «a year» line he asked about |
+| rows outside their windows | exactly 0 | **0 of 82 stint rows with the checkpoints live** (42 half-year rows, all on weeks 28 to 31, and 40 year rows, all on weeks 56 to 59) and 0 of 0 with them emptied. The reachability sweep agrees: a half-year row is in the pool on exactly weeks 24 to 31 and a year row on exactly weeks 48 to 63, in a founding stint and in one re-hired at week 100, on all three sides at each edge |
+| windows deferred (not predicted) | | answers 1 of 124, at +2 weeks, then the same; ignores 15 of 124 (12.1%) then 12 of 124 (9.7%: 2 at +1, 10 at +2) |
+| the silence J1 and J1b print, bond posed shut for 60 weeks (144 shut checkpoints) | still 85 to 92% in all, on the first free week of [28, 32) | **MISSED: 128 of 144 (88.9%) then 112 of 144 (77.8%).** The first-impression and year checkpoints are as J1b measured them (21 of 24 and 20 of 24); the half-year one is **15 of 24 (62.5%) at 28 against 23 of 24 (95.8%) at 32**. In 8 of the 24 posed windows all four weeks 28 to 31 are away weeks in the bench calendar (travel alone in 5, an injury among the weeks in 3), against 1 of 24 at 32. That is where the new window falls in a calendar, and not the rule: the suite is green and the note still prints on the first free week of every window that has one. In played careers nothing moved: 3 shut windows, 2 notes, 0.016 a coached year, as J1b counted |
+| MAIN draws | identical | **identical** in the H3 harness (both parent arms), and the frozen capture (41550 draws, hash `e6b0c709`) did not move |
+
+**Proved by mutation, each restored byte for byte (`shasum` before = after: `coachFeel.ts` 6aabb427fb01f896, `smallTalk.ts` 7a5da2560628fdfa).** The checkpoint put back at 32 (the array and the rows key) turns 29 tests red of 91 in four files (the new file 2, the checkpoint file 19, the silence file 8, the feel-talk file 0). The half-year window put back at 44 turns 8 red of 72 (the new file 3, the feel-talk file 5, the checkpoint file 0). The year window put back to no ceiling turns 10 red of 72 (the new file 4, among them the played careers; the feel-talk file 6, among them the 24-year walk). The half-year window's close is invisible to the checkpoint file and to the played gate cohort; the reachability sweep in the new file is what holds it.
+
+**What it costs the pins.** The pins that were pinned to 32, to [24, 44) or to an open year are re-aimed with dated notes naming his rulings: the checkpoint file (the design table, the rows key, the edge table, the re-hire case), the feel-talk file (both windows, the grid weeks and its edges, the numbers case, the re-hire case, the parity poses, the long-stint roll) and the silence file (its checkpoint list and two cases). The digest family, run on this tree and on the parent (34 files, 505 tests): **green on the parent, 36 tests red on this tree in 7 files**, so every one is red because of this change and of nothing earlier.
+
+| file | red on this tree | red on the parent |
+| --- | --- | --- |
+| `coach-travel-edge-recent-schemas` | 10 of 10 | 0 |
+| `coach-travel-edge-late-schemas` | 8 of 8 | 0 |
+| `coach-travel-edge-prior-schemas` | 3 of 6 | 0 |
+| `coach-travel-edge` | 3 of 5 | 0 |
+| `succession-s1-start-year` | 9 of 24 | 0 |
+| `i18n-l3-7-twin` | 2 of 6 | 0 |
+| `i18n-l3-5-life-beats` (PICK-STABILITY) | 1 of 35 | 0 |
+
+The story-pool sample floor in `round51-school-story-pool` stays green. The other 27 files stay green, among them `tests/condition.test.ts`, `wave3-small-talk`, `import-cycles`, `principles-a03`, `principles-a06`, `principles-b08`, `principles-t514`, `pin-hygiene` and `world-symbol`. None of the seven is re-stamped here; the architect harvests them once at the close.
 
 ## P3.7 The corpus at 43, and the whole document at 51 – counted by script, not claimed
 

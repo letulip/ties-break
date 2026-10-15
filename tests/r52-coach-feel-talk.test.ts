@@ -629,8 +629,8 @@ describe('round 52 F4 I – every new English line has its Russian in ru.json', 
 // =================================================================================================
 // The owner, 14.10: «на тему смол-тока – нам это важно и критично как раз знать не один раз в 19 лет, а в первые год-два сотрудничества, чтобы понять это "тот" тренер или лучше поменять».
 // Six more situations about the coach – half a year ×3 (R70 good-news, R71 observation, R72 worry) and a year together ×3 (R73 good-news, R74 and R75 decisions) – each behind ONE SIDE of her feel
-// AND the stint's age. The sides are R67–R69's; the windows are in weeks together: half a year [24, 44), a year [48, ∞). The facts live in the leaf `world/coachFeel.ts` (`coachFeelStintFacts`), which the
-// hub spreads into `SMALL_TALK_FACT` handing it `inCollege`. THE MECHANISM THAT RAISES THEM AT THE CHECKPOINT WEEKS (12 / 32 / 56) IS THE NEXT ITEM'S: until it lands they come up in ordinary small talk.
+// AND the stint's age. The sides are R67–R69's; the windows are in weeks together: half a year [24, 44), a year [48, ∞) (⚠ J6, 15.10: now [24, 32) and [48, 64) – the note below the ledger). The facts live in the leaf `world/coachFeel.ts` (`coachFeelStintFacts`), which the
+// hub spreads into `SMALL_TALK_FACT` handing it `inCollege`. THE MECHANISM THAT RAISES THEM AT THE CHECKPOINT WEEKS (12 / 32 / 56 at the time, 12 / 28 / 56 since J6) IS THE NEXT ITEM'S: until it lands they come up in ordinary small talk.
 //
 //   J  each fact is true for exactly its side AND its window: a grid that reaches all six steps and crosses every window edge on every side, the stint counted from the LAST hire, nobody employed, college;
 //   K  the stage × voice grid: the row is in the pool at school / after-school / independent and at no other, in all four voices, and only with its fact true;
@@ -653,6 +653,11 @@ describe('round 52 F4 I – every new English line has its Russian in ru.json', 
 //   succession-s1-start-year 3, PICK-STABILITY in i18n-l3-5-life-beats 1 (career 5/0). NOT re-stamped here – the architect re-stamps them once, on the final tree.
 // -------------------------------------------------------------------------------------------------
 
+// ⚠⚠ RE-AIMED BY J6 (15.10) – THE OWNER'S TWO RULINGS ON THIS SECTION'S WINDOWS. On R71: «реплика говорит «полгода», но окно факта открыто с 24-й по 43-ю неделю, а обязательная точка — 32-я (почти
+// восемь месяцев).» – «Точку на 28-ю нед.» (the half-year checkpoint is 28 now, the window [24, 32)). On R73–R75: ««год» доступен с 48-й недели без верхней границы. Может ли R73–R75 выпасть в обычном small talk
+// спустя два-три года с тем же тренером?» – «Окно 48–63 нед.» (the year window is [48, 64) now). Everything below that poses an edge moved with them: HALF_WINDOW and YEAR_WINDOW, the grid's weeks (the edges are
+// 23|24, 31|32, 47|48 and 63|64 now), the numbers case, the re-hire case (a founding stint three years old reads NEITHER window), the parity poses, the long-stint roll. The ledger above is H2's record of 14.10 and keeps
+// the old numbers. J6's own arms – the half window back at 44, the year window back to no ceiling, the checkpoint back at 32 – are in the ledger of tests/r52-coach-talk-windows.test.ts.
 const STINT_ROWS = [
   'half-a-year-and-it-fits',
   'half-a-year-and-still-unsure',
@@ -666,8 +671,9 @@ type Side = 'warm' | 'unsure' | 'cold'
 const SIDES: readonly Side[] = ['warm', 'unsure', 'cold']
 const SIDE_STEPS: Record<Side, readonly CoachFeel[]> = { warm: ['seems-good', 'good'], unsure: ['unsure'], cold: ['seems-off', 'off'] }
 /** ⚠ THE WINDOWS ARE THE DESIGN'S OWN NUMBERS, WRITTEN OUT ON PURPOSE: a test that read the constants back would pass for any value. [from, until) in weeks together. */
-const HALF_WINDOW: readonly [number, number] = [24, 44]
-const YEAR_WINDOW: readonly [number, number] = [48, Number.POSITIVE_INFINITY]
+// ⚠ J6 (15.10): BOTH CLOSE NOW – «Точку на 28-ю нед.» (the half-year window ends at 32) and «Окно 48–63 нед.» (the year window ends at 64); they were [24, 44) and [48, no end).
+const HALF_WINDOW: readonly [number, number] = [24, 32]
+const YEAR_WINDOW: readonly [number, number] = [48, 64]
 const STINT: Record<StintId, { fact: string; subject: string; side: Side; window: readonly [number, number] }> = {
   'half-a-year-and-it-fits': { fact: 'coach-feel-warm-half', subject: 'good-news', side: 'warm', window: HALF_WINDOW },
   'half-a-year-and-still-unsure': { fact: 'coach-feel-unsure-half', subject: 'observation', side: 'unsure', window: HALF_WINDOW },
@@ -681,8 +687,8 @@ const FIRST_IMPRESSION_OF = (id: StintId): RowId => ROWS[SIDES.indexOf(STINT[id]
 const inWindow = (id: StintId, weeksTogether: number): boolean => weeksTogether >= STINT[id].window[0] && weeksTogether < STINT[id].window[1]
 const stintTrue = (id: StintId, weeksTogether: number, step: CoachFeel): boolean => inWindow(id, weeksTogether) && SIDE_STEPS[STINT[id].side].includes(step)
 const hasRow = (world: WorldState, id: string, voice: Temperament, stage: DiaryLifeStage): boolean => reachableSituations(world, voice, stage).some((s) => s.id === id)
-/** Weeks the grid poses: both sides of every window edge (23|24, 43|44, 47|48), the checkpoints (32, 56) and the early weeks. 100 is the furthest F4's grid trusts the roster for. */
-const STINT_WEEKS = [3, 8, 14, 23, 24, 30, 32, 43, 44, 47, 48, 56, 60, 100]
+/** Weeks the grid poses: both sides of every window edge (23|24, 31|32, 47|48, 63|64), the checkpoints (28, 56) and the early weeks. 100 is the furthest F4's grid trusts the roster for – and since J6 (15.10) it is a week at which no stint row exists. */
+const STINT_WEEKS = [3, 8, 14, 23, 24, 28, 31, 32, 47, 48, 56, 60, 63, 64, 100]
 
 function stintSweep(voice: Temperament, visit: (world: WorldState, step: CoachFeel, weeksTogether: number, where: string) => void): void {
   for (const seed of SEEDS) {
@@ -724,12 +730,12 @@ describe('round 52 H2 J – each stint fact is true for exactly its side AND its
     expect(new Set(SMALL_TALK_FACTS).size, 'no name twice in the roster').toBe(SMALL_TALK_FACTS.length)
   })
 
-  it('⭐⭐ the windows are the design\'s numbers: 24 / 44 / 48, no ceiling on the year, every edge a feel-period boundary, the checkpoints (32 and 56) inside and the halves never overlapping', () => {
-    expect([COACH_TALK_HALF_YEAR_FROM_WEEK, COACH_TALK_HALF_YEAR_UNTIL_WEEK, COACH_TALK_YEAR_FROM_WEEK]).toEqual([24, 44, 48])
-    expect(COACH_TALK_YEAR_UNTIL_WEEK, 'the year is a floor').toBe(Number.POSITIVE_INFINITY)
-    for (const w of [24, 32, 44, 48, 56]) expect(w % COACH_FEEL.periodWeeks, `week ${w} is a feel-period boundary (her doubt is redrawn there)`).toBe(0)
-    expect(32 >= COACH_TALK_HALF_YEAR_FROM_WEEK && 32 < COACH_TALK_HALF_YEAR_UNTIL_WEEK, 'the half-year checkpoint is inside its window').toBe(true)
-    expect(56 >= COACH_TALK_YEAR_FROM_WEEK && 56 < COACH_TALK_YEAR_UNTIL_WEEK, 'the year checkpoint is inside its window').toBe(true)
+  it('⭐⭐ the windows are the design\'s numbers: 24 / 32 / 48 / 64 (J6, 15.10 – they were 24 / 44 / 48 and no ceiling), every edge a feel-period boundary, the checkpoints (28 and 56) inside with their whole four weeks, and the halves never overlapping', () => {
+    expect([COACH_TALK_HALF_YEAR_FROM_WEEK, COACH_TALK_HALF_YEAR_UNTIL_WEEK, COACH_TALK_YEAR_FROM_WEEK, COACH_TALK_YEAR_UNTIL_WEEK]).toEqual([24, 32, 48, 64])
+    expect(Number.isFinite(COACH_TALK_YEAR_UNTIL_WEEK), 'the year is no longer a floor: a stint three years old hears no «a year» line').toBe(true)
+    for (const w of [24, 28, 32, 48, 56, 64]) expect(w % COACH_FEEL.periodWeeks, `week ${w} is a feel-period boundary (her doubt is redrawn there)`).toBe(0)
+    expect(28 >= COACH_TALK_HALF_YEAR_FROM_WEEK && 28 + COACH_FEEL.periodWeeks <= COACH_TALK_HALF_YEAR_UNTIL_WEEK, 'the half-year checkpoint and its four weeks are inside its window').toBe(true)
+    expect(56 >= COACH_TALK_YEAR_FROM_WEEK && 56 + COACH_FEEL.periodWeeks <= COACH_TALK_YEAR_UNTIL_WEEK, 'the year checkpoint and its four weeks are inside its window').toBe(true)
     expect(COACH_TALK_HALF_YEAR_UNTIL_WEEK <= COACH_TALK_YEAR_FROM_WEEK, '«months» and «a year» are never both true').toBe(true)
   })
 
@@ -755,10 +761,10 @@ describe('round 52 H2 J – each stint fact is true for exactly its side AND its
       expect(yes.get(id) ?? 0, `${id}: true somewhere`).toBeGreaterThan(0)
       expect(no.get(id) ?? 0, `${id}: false somewhere`).toBeGreaterThan(0)
     }
-    for (const w of [23, 24, 43, 44, 47, 48]) expect([...(sidesAt.get(w) ?? [])].sort(), `week ${w}: all three sides were posed on the edge`).toEqual(['cold', 'unsure', 'warm'])
+    for (const w of [23, 24, 31, 32, 47, 48, 63, 64]) expect([...(sidesAt.get(w) ?? [])].sort(), `week ${w}: all three sides were posed on the edge`).toEqual(['cold', 'unsure', 'warm'])
   })
 
-  it('⭐⭐ the stint is counted from the LAST hire: let go and hired back at week 100, week 124 is twenty-four weeks together (a half-year row) and week 148 is forty-eight (a year row) – and the founding stint reads the other way', () => {
+  it('⭐⭐ the stint is counted from the LAST hire: let go and hired back at week 100, week 124 is twenty-four weeks together (a half-year row) and week 148 is forty-eight (a year row) – and the founding stint, three years old by then, reads neither (J6, 15.10)', () => {
     const rehired = coachedWorld('r52-h2-hire', 'sunny')
     const coach = rehired.coachId as string
     rehired.week = 100
@@ -767,8 +773,9 @@ describe('round 52 H2 J – each stint fact is true for exactly its side AND its
     expect(rehired.coachId, 'hired back').toBe(coach)
     expect(coachSinceWeek(rehired), 'the stint restarted at the hire').toBe(100)
     const founding = coachedWorld('r52-h2-hire', 'sunny')
-    const tally = { halfOnRehired: 0, yearOnRehired: 0, yearOnFounding: 0, halfOnFounding: 0 }
-    for (const week of [123, 124, 130, 143, 144, 147, 148, 160]) {
+    const tally = { halfOnRehired: 0, yearOnRehired: 0, yearOnFounding: 0, halfOnFounding: 0, yearOnFoundingUnder1410: 0 }
+    // J6 (15.10): 131|132 and 163|164 are the new edges of the re-hired stint (31|32 weeks together, 63|64)
+    for (const week of [123, 124, 130, 131, 132, 143, 144, 147, 148, 160, 163, 164]) {
       for (const chem of LEVELS) {
         const stepR = pose(rehired, week, chem)
         const stepF = pose(founding, week, chem)
@@ -777,12 +784,14 @@ describe('round 52 H2 J – each stint fact is true for exactly its side AND its
           expect(hasRow(founding, id, 'sunny', 'school'), `founding, week ${week} chem ${chem} -> ${stepF}: ${id} (${week} weeks together)`).toBe(stintTrue(id, week, stepF))
           if (stintTrue(id, week - 100, stepR)) tally[STINT[id].window === HALF_WINDOW ? 'halfOnRehired' : 'yearOnRehired']++
           if (stintTrue(id, week, stepF)) tally[STINT[id].window === HALF_WINDOW ? 'halfOnFounding' : 'yearOnFounding']++
+          if (STINT[id].window === YEAR_WINDOW && week >= 48 && SIDE_STEPS[STINT[id].side].includes(stepF)) tally.yearOnFoundingUnder1410++
         }
       }
     }
     expect(tally.halfOnRehired, 'a re-hired stint meets half-year rows').toBeGreaterThan(0)
     expect(tally.yearOnRehired, 'and year rows once forty-eight weeks old').toBeGreaterThan(0)
-    expect(tally.yearOnFounding, 'the founding stint is a year old throughout').toBeGreaterThan(0)
+    expect(tally.yearOnFoundingUnder1410, 'anti-vacuity: under the 14.10 window (a year was a floor) the founding stint WOULD have met year rows on these weeks').toBeGreaterThan(0)
+    expect(tally.yearOnFounding, 'J6 (15.10): the founding stint is past week 64 on all of them – the year window has closed, and it meets no year row').toBe(0)
     expect(tally.halfOnFounding, 'and never in a half-year window again').toBe(0)
   })
 
@@ -818,8 +827,9 @@ describe('round 52 H2 L – the six agree with `coachFeel`, with the tile, and w
     let checked = 0
     const steps = new Set<CoachFeel>()
     for (const [seed, week, chem] of [
-      ['r52-f4-a', 24, 6], ['r52-f4-a', 43, -6], ['r52-f4-b', 44, 12], ['r52-f4-b', 48, 0], ['r52-f4-c', 30, -12], ['r52-f4-c', 100, 6],
-      ['r52-f4-d', 56, -2], ['r52-f4-d', 32, 0], ['r52-f4-e', 47, 12], ['r52-f4-e', 60, -12], ['r52-f4-a', 23, 0], ['r52-f4-b', 14, -6],
+      ['r52-f4-a', 24, 6], ['r52-f4-a', 31, -6], ['r52-f4-b', 32, 12], ['r52-f4-b', 48, 0], ['r52-f4-c', 30, -12], ['r52-f4-c', 100, 6],
+      ['r52-f4-d', 56, -2], ['r52-f4-d', 28, 0], ['r52-f4-e', 47, 12], ['r52-f4-e', 60, -12], ['r52-f4-a', 23, 0], ['r52-f4-b', 14, -6],
+      ['r52-f4-c', 63, 6], ['r52-f4-d', 64, -12],
     ] as const) {
       const world = coachedWorld(seed, 'sunny')
       const step = pose(world, week, chem)
@@ -830,8 +840,8 @@ describe('round 52 H2 L – the six agree with `coachFeel`, with the tile, and w
       steps.add(step)
       checked++
     }
-    expect(checked).toBe(12)
-    expect(steps.size, 'the twelve poses read more than one step, or parity is a claim about one').toBeGreaterThanOrEqual(3)
+    expect(checked).toBe(14)
+    expect(steps.size, 'the fourteen poses read more than one step, or parity is a claim about one').toBeGreaterThanOrEqual(3)
   })
 
   it('⭐⭐ the two spellings of the sides agree: inside its window a stint row is reachable exactly when R67–R69\'s row for the same side is – over the whole grid', () => {
@@ -883,7 +893,7 @@ describe('round 52 H2 M – the shipped roll hands her a stint row only inside i
         for (let n = 0; n < 120 && !found; n++) {
           const world = coachedWorld(`r52-h2-roll-${id}-${n}`, 'sunny')
           world.bond = bondFor('close')
-          const weeks = STINT[id].window[1] === Number.POSITIVE_INFINITY ? [48, 130] : [24, 43]
+          const weeks = [STINT[id].window[0], STINT[id].window[1] - 1] // J6 (15.10): both windows close now, so the walk is the window itself
           for (let w = weeks[0]!; w <= weeks[1]! && !found; w++) {
             const step = pose(world, w, CHEM_OF[STINT[id].side])
             const before = lifeLogOf(world).length
@@ -914,7 +924,7 @@ describe('round 52 H2 M – the shipped roll hands her a stint row only inside i
     }
   })
 
-  it('⭐⭐ over a long stint, on each side, the roll raises a half-year row only on weeks 24 to 43 and a year row only from week 48 – and raises some of each', () => {
+  it('⭐⭐ over a long stint, on each side, the roll raises a half-year row only on weeks 24 to 31 and a year row only on weeks 48 to 63 (J6, 15.10 – was 24 to 43, and from 48 with no end) – and raises some of each', () => {
     const tally = { half: 0, year: 0 }
     withOnlyStintRows(() => {
       for (const side of SIDES) {

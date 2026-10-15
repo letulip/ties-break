@@ -97,12 +97,13 @@ export function smallTalkEligible(world: WorldState): boolean {
 }
 
 /** ⭐⭐⭐ ROUND 52 H3 (14.10) – THE THREE ROWS OF EACH STINT CHECKPOINT, warm / unsure / cold, by the checkpoint's week (`COACH_TALK_CHECKPOINTS`, world/coachFeel.ts):
- *  12 is her first impression (R67–R69), 32 half a year (R70–R72), 56 a year together (R73–R75). IDS AND NOTHING ELSE – which of the three she says is not decided here:
+ *  12 is her first impression (R67–R69), 28 half a year (R70–R72), 56 a year together (R73–R75). ⚠ R52 J6 (15.10): THE HALF-YEAR KEY WAS 32 AND IS 28 – the table is keyed by the checkpoint's
+ *  week, so it moved with `COACH_TALK_CHECKPOINTS` (his ruling on R71, quoted at the constant: «Точку на 28-ю нед.»). IDS AND NOTHING ELSE – which of the three she says is not decided here:
  *  `reachableSituations` already holds the one spelling of her side (her real `coachFeel`), of the stint's window, of college and of her voice, and the pick below asks IT, so there
  *  is no second table of sides to drift from the facts. `tests/r52-coach-talk-checkpoints.test.ts` pins each id to its row and its fact. */
 export const COACH_TALK_CHECKPOINT_ROWS: Readonly<Record<number, readonly string[]>> = {
   12: ['the-thing-that-makes-sense', 'practice-feels-different', 'the-thing-she-cannot-name'],
-  32: ['half-a-year-and-it-fits', 'half-a-year-and-still-unsure', 'months-in-and-still-waiting'],
+  28: ['half-a-year-and-it-fits', 'half-a-year-and-still-unsure', 'months-in-and-still-waiting'],
   56: ['a-year-and-she-would-not-swap', 'a-year-and-she-still-does-not-know', 'a-year-in-we-need-to-talk'],
 }
 

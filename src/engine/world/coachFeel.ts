@@ -97,16 +97,25 @@ export function coachFeelRead(world: WorldState, feel: CoachFeel | null): Exclud
 // point is that nothing it imports reaches back. Passing the question in keeps ONE spelling of «is she at college this week».
 
 /** Weeks together at which the half-year talks open: six feel periods (`COACH_FEEL.periodWeeks` is 4), half a year rounded DOWN to a period boundary, where her
- *  feel has just been redrawn. The design's checkpoints are weeks 12 / 32 / 56 (first impression, half a year, a year); 32 sits eight weeks inside. */
+ *  feel has just been redrawn. The design's checkpoints are weeks 12 / 28 / 56 (first impression, half a year, a year); 28 sits four weeks inside, the last four of the window. */
 export const COACH_TALK_HALF_YEAR_FROM_WEEK = 24
-/** …and closes: eleven periods, twelve weeks AFTER the half-year checkpoint, so a checkpoint week taken by another beat can try again and still be true. It is
- *  four weeks before the year window opens: «months» and «a year» are never both true, and no line says one while the stint is the other. */
-export const COACH_TALK_HALF_YEAR_UNTIL_WEEK = 44
+/** …and closes at week 32: eight periods, which is also where the half-year checkpoint's own four weeks [28, 32) end.
+ *
+ *  ⚠ R52 J6 (15.10) – THE OWNER'S RULING ON R71, and why this is no longer 44. His question: «реплика говорит «полгода», но окно факта открыто с 24-й по 43-ю неделю, а
+ *  обязательная точка — 32-я (почти восемь месяцев).» His answer: «Точку на 28-ю нед.» The window was [24, 44) – twelve weeks AFTER the old checkpoint, room for a retry – so
+ *  ordinary small talk could say «half a year» as late as week 43, ten months in. It is [24, 32) now: the checkpoint (28) is the window's last four weeks, ordinary small talk
+ *  has weeks 24 to 27 before it, and from week 32 no «half a year» line is true. It is sixteen weeks before the year window opens: «months» and «a year» are never both true. */
+export const COACH_TALK_HALF_YEAR_UNTIL_WEEK = 32
 /** Weeks together at which the year talks open: twelve periods, a year rounded DOWN to a period; the year checkpoint (56) sits eight weeks inside. */
 export const COACH_TALK_YEAR_FROM_WEEK = 48
-/** ⚠ NO CEILING, AS BRIEFED: «a year» is a floor and the stint does not get younger. It makes «a year in» loose in a stint of three years; if the owner wants it
- *  tighter this is the one constant (the facts read it, the spec's addendum names it). */
-export const COACH_TALK_YEAR_UNTIL_WEEK = Number.POSITIVE_INFINITY
+/** …and closes at week 64: sixteen periods, so the window is [48, 64) – the checkpoint's own four weeks [56, 60) in the middle, ordinary small talk on weeks 48 to 55 and 60 to 63.
+ *
+ *  ⚠ R52 J6 (15.10) – THE OWNER'S RULING ON R73–R75, and why this is no longer infinity. This used to be «NO CEILING, AS BRIEFED: «a year» is a floor and the stint does not get
+ *  younger», and the note beside it said that if the owner wanted it tighter this was the one constant. He did. His question: ««год» доступен с 48-й недели без верхней границы.
+ *  Может ли R73–R75 выпасть в обычном small talk спустя два-три года с тем же тренером?» It could – every week of a stint of three years. His answer: «Окно 48–63 нед.»
+ *  So «a year in» is said in a stint's second year and not after it; a girl who has had the same coach for three years hears neither «half a year» nor «a year». The facts read
+ *  this constant, so the lottery, the pool and the checkpoint stay in agreement without a second spelling. */
+export const COACH_TALK_YEAR_UNTIL_WEEK = 64
 
 /** The three SIDES of the scale, spelled as the hub spells them for R67–R69 (`coach-feel-warm / -unsure / -cold`). ⚠ Two spellings of one thing: the parity test
  *  in `tests/r52-coach-feel-talk.test.ts` (section L) holds them together, inside the windows, over a grid that reaches every step. `too-early` is in none. */
@@ -162,14 +171,18 @@ export function coachFeelStintFacts(refuse: (world: WorldState) => boolean): Rec
 // beside the windows they have to sit inside.
 
 /** ⭐⭐⭐ THE WEEKS TOGETHER AT WHICH SHE BRINGS UP THE COACH WITHOUT WAITING FOR THE LOTTERY: 12 (about three months – her first impression, once the six «too early»
- *  weeks are well behind), 32 (about seven months, eight weeks inside the half-year window [24, 44)) and 56 (about thirteen months, eight weeks inside the year window [48, ∞)).
+ *  weeks are well behind), 28 (about six and a half months, the last four weeks of the half-year window [24, 32)) and 56 (about thirteen months, eight weeks inside the year window [48, 64)).
+ *
+ *  ⚠ R52 J6 (15.10) – THE HALF-YEAR CHECKPOINT MOVED FROM 32 TO 28, the owner's ruling. His question on R71: «реплика говорит «полгода», но окно факта открыто с 24-й по 43-ю неделю,
+ *  а обязательная точка — 32-я (почти восемь месяцев).» His answer: «Точку на 28-ю нед.» 28 is seven feel periods (7 x 4), so it is still a week her feel was just re-read, and
+ *  its window [28, 32) ends exactly where the half-year window does. The year checkpoint stays at 56.
  *
  *  ⚠ EVERY ONE A MULTIPLE OF `COACH_FEEL.periodWeeks` (4): her doubt is redrawn on a period boundary (`coachFeelScore`'s `floor(weeksTogether / periodWeeks)`), so the week
  *  a checkpoint opens is a week her feel was JUST re-read – she talks about the coach on the freshest reading she has. A checkpoint that fell mid-period would speak
  *  from a feel up to three weeks old. `tests/r52-coach-talk-checkpoints.test.ts` pins the multiples and the two containments.
  *
  *  ⚠ NOT A TABLE OF CHANCES: a checkpoint is a week the talk is DUE, not a week it may drop. The owner's complaint was exactly «раз в 19 лет». */
-export const COACH_TALK_CHECKPOINTS: readonly number[] = [12, 32, 56]
+export const COACH_TALK_CHECKPOINTS: readonly number[] = [12, 28, 56]
 
 /** WHICH CHECKPOINT'S WINDOW THIS STINT AGE IS INSIDE, or `null`. A window is ONE FEEL PERIOD long: [cp, cp + `COACH_FEEL.periodWeeks`) – four tries for a week another beat
  *  did not take, and ⚠ AFTER IT THE CHECKPOINT IS SKIPPED FOR GOOD: «a year in» said at week 60 is no longer on time, her feel has been re-read since, and the next

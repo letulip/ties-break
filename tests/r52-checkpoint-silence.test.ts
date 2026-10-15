@@ -42,7 +42,8 @@ const REPORT = process.env.R52_J1_REPORT === '1'
 type Shut = 'strained' | 'cold'
 const SHUT: readonly Shut[] = ['strained', 'cold']
 const OPEN: readonly BondBand[] = ['steady', 'close']
-const CHECKPOINTS: readonly number[] = [12, 32, 56]
+// ⚠ J6 (15.10): the half-year checkpoint is 28 (it was 32) – the owner's ruling on R71, «Точку на 28-ю нед.»; first impression (12) and a year (56) stay.
+const CHECKPOINTS: readonly number[] = [12, 28, 56]
 /** J1b – `heardAt` for the BARE worlds of A and B, where nothing is away and every week is a table: «the line can be heard» everywhere, so the first free week of a window is its first week (J1's rule, as a special case). Section F poses the away weeks through the real snapshot. */
 const FREE = (): boolean => true
 
@@ -101,7 +102,7 @@ describe('R52 J1 A – the fact: present on exactly one week of a shut checkpoin
   })
 
   it('⭐⭐ absent when the checkpoint was spoken (and present for a row from before the window – the control), before week 12, and with nobody employed', () => {
-    const cp = 32
+    const cp = 28 // J6 (15.10): the half-year checkpoint, was 32
     const ids = COACH_TALK_CHECKPOINT_ROWS[cp] ?? []
     const detail = `observation:${ids[0]}`
     expect(smallTalkSituationIdOf(detail), 'the fixture detail is read as the checkpoint\'s own situation').toBe(ids[0])
@@ -344,7 +345,7 @@ function posedStint(preset: number, career: number, band: Shut, weeks: number, s
   const policy = POLICIES[0]!
   const { world, rng } = openCareer(PRESETS[preset]!, career, policy)
   if (world.coachId === null) throw new Error(`preset ${preset} is supposed to start with a coach`)
-  // ⚠ A STINT THAT BEGAN AT `since`, not always at week 0: a stint from week 0 puts every checkpoint on the SAME three calendar weeks (12, 32, 56) of every career, and the bench calendar is the same in all of them, so a tournament
+  // ⚠ A STINT THAT BEGAN AT `since`, not always at week 0: a stint from week 0 puts every checkpoint on the SAME three calendar weeks (12, 28, 56 since J6, 15.10; 32 before) of every career, and the bench calendar is the same in all of them, so a tournament
   // week there is a tournament week in all 24 (the first measurement, all from week 0, read 72% travel for exactly that reason). The bench career walks `since` weeks as it is, then the same coach is let go and hired back (H3's fixture).
   if (since > 0) {
     for (let i = 0; i < since; i++) {
@@ -601,7 +602,7 @@ describe('R52 J1b F – the fact waits for the first week the line can be heard,
   })
 
   it('⭐⭐ a checkpoint spoken inside the window clears it – nothing is printed after the row, and the same window not spoken (the control) prints on its first free week', () => {
-    const cp = 32
+    const cp = 28 // J6 (15.10): the half-year checkpoint, was 32
     const ids = COACH_TALK_CHECKPOINT_ROWS[cp] ?? []
     const detail = `observation:${ids[0]}`
     for (const band of SHUT) {

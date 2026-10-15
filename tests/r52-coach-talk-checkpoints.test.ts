@@ -1,12 +1,17 @@
-// ROUND 52 H3 (14.10) – THE STINT CHECKPOINTS: HER TALK ABOUT THE COACH ARRIVES ON ITS OWN AT WEEKS 12 / 32 / 56 OF A COACHING STINT.
+// ROUND 52 H3 (14.10) – THE STINT CHECKPOINTS: HER TALK ABOUT THE COACH ARRIVES ON ITS OWN AT WEEKS 12 / 28 / 56 OF A COACHING STINT.
+//
+// ⚠⚠ RE-AIMED BY J6 (15.10) – THE HALF-YEAR CHECKPOINT IS 28 AND NO LONGER 32: the owner's ruling on R71. His question: «реплика говорит «полгода», но окно факта открыто с 24-й по 43-ю неделю,
+// а обязательная точка — 32-я (почти восемь месяцев).» His answer: «Точку на 28-ю нед.» (His second ruling, «Окно 48–63 нед.» for R73–R75, is tests/r52-coach-talk-windows.test.ts's.) What moved here:
+// DESIGN_CHECKPOINTS and the TALK table's key, A's containment and edge table, the re-hire case (40 + 28). The M1–M20 ledger below is H3's record of 14.10 and keeps ITS numbers (M1 «checkpoint 32 -> 30»
+// was a mutation of the old week); J6's three arms – the checkpoint back at 32, the half window back at 44, the year window back to no ceiling – are in the ledger of the new file's header.
 //
 // The owner, 14.10: «на тему смол-тока – нам это важно и критично как раз знать не один раз в 19 лет, а в первые год-два сотрудничества, чтобы понять это "тот" тренер или лучше поменять».
 // F4 wrote R67–R69 (first impression) and H2 R70–R75 (half a year, a year together) as ORDINARY small talk, so a stint met them on a lottery (the H2 measurement: R70/R71 did not drop once in 36
-// careers). H3 is the mechanism: on a week whose weeks-together `w` is in [cp, cp + 4) for cp in 12 / 32 / 56 and whose talk has not been said in THIS stint, `rollSmallTalk` raises the checkpoint's row
+// careers). H3 is the mechanism: on a week whose weeks-together `w` is in [cp, cp + 4) for cp in 12 / 28 / 56 (32 until J6, 15.10) and whose talk has not been said in THIS stint, `rollSmallTalk` raises the checkpoint's row
 // BEFORE it asks the lottery (src/engine/world/lifeBeat/smallTalk.ts `raiseCoachCheckpointTalk`; the weeks and the window test are in the leaf src/engine/world/coachFeel.ts).
 //
 // ⚠⚠ WHAT THIS FILE CHECKS, AND AGAINST WHAT
-//   A  THE NUMBERS ARE THE DESIGN'S, WRITTEN OUT HERE (a test that read the constants back passes for any value): 12 / 32 / 56, each a multiple of the feel period, 32 and 56 inside their H2 windows, the window
+//   A  THE NUMBERS ARE THE DESIGN'S, WRITTEN OUT HERE (a test that read the constants back passes for any value): 12 / 28 / 56, each a multiple of the feel period, 28 and 56 inside their windows (J6, 15.10: half a year [24, 32), a year [48, 64)), the window
 //      one period long; and each checkpoint's three row ids are the corpus's own rows with the facts of their side and window;
 //   B  each checkpoint raises the right row for each side, in all four voices, on the week it opens; the window's edges (the week before, the week it closes) are silent;
 //   C  DEFERRAL AND SKIP: a week another beat holds, she tries again the next (a live card, a pending beat); four held weeks and the checkpoint is skipped for good;
@@ -113,7 +118,8 @@ const BIG = process.env.R52_H3_SCALE === 'big'
 // -------------------------------------------------------------------------------------------------
 // THE DESIGN'S OWN NUMBERS AND ROWS, WRITTEN OUT
 // -------------------------------------------------------------------------------------------------
-const DESIGN_CHECKPOINTS = [12, 32, 56] as const
+// ⚠ J6 (15.10): the half-year checkpoint is 28 (it was 32) – the owner's ruling on R71, «Точку на 28-ю нед.»; first impression (12) and a year (56) stay.
+const DESIGN_CHECKPOINTS = [12, 28, 56] as const
 type Cp = (typeof DESIGN_CHECKPOINTS)[number]
 /** One feel period, written out: a checkpoint's window is [cp, cp + 4). */
 const WINDOW = 4
@@ -127,7 +133,7 @@ const TALK: Record<Cp, Record<Side, { id: string; subject: string; fact: string 
     unsure: { id: 'practice-feels-different', subject: 'observation', fact: 'coach-feel-unsure' },
     cold: { id: 'the-thing-she-cannot-name', subject: 'worry', fact: 'coach-feel-cold' },
   },
-  32: {
+  28: {
     warm: { id: 'half-a-year-and-it-fits', subject: 'good-news', fact: 'coach-feel-warm-half' },
     unsure: { id: 'half-a-year-and-still-unsure', subject: 'observation', fact: 'coach-feel-unsure-half' },
     cold: { id: 'months-in-and-still-waiting', subject: 'worry', fact: 'coach-feel-cold-half' },
@@ -226,13 +232,13 @@ const BLOCKING_KIND = (Object.keys(LIFE_BEAT_BLOCKING) as (keyof typeof LIFE_BEA
 // A. THE NUMBERS
 // =================================================================================================
 describe('round 52 H3 A – the checkpoints are the design\'s numbers and the rows are the corpus\'s', () => {
-  it('⭐ 12 / 32 / 56, each a multiple of the feel period, 32 and 56 inside their H2 windows, the window one period long', () => {
+  it('⭐ 12 / 28 / 56, each a multiple of the feel period, 28 and 56 inside their windows (J6, 15.10: half a year [24, 32), a year [48, 64)), the window one period long', () => {
     expect([...COACH_TALK_CHECKPOINTS], 'the owner-approved design numbers').toEqual([...DESIGN_CHECKPOINTS])
     expect(COACH_FEEL.periodWeeks, 'the period the design counts in').toBe(WINDOW)
     for (const cp of COACH_TALK_CHECKPOINTS) expect(cp % COACH_FEEL.periodWeeks, `${cp} is a multiple of the feel period (her feel was just re-read)`).toBe(0)
-    expect(COACH_TALK_HALF_YEAR_FROM_WEEK <= 32 && 32 + WINDOW <= COACH_TALK_HALF_YEAR_UNTIL_WEEK, '32 and its whole window sit inside the half-year window').toBe(true)
+    expect(COACH_TALK_HALF_YEAR_FROM_WEEK <= 28 && 28 + WINDOW <= COACH_TALK_HALF_YEAR_UNTIL_WEEK, '28 and its whole window sit inside the half-year window').toBe(true)
     expect(COACH_TALK_YEAR_FROM_WEEK <= 56 && 56 + WINDOW <= COACH_TALK_YEAR_UNTIL_WEEK, '56 and its whole window sit inside the year window').toBe(true)
-    const edges: [number, number | null][] = [[0, null], [11, null], [12, 12], [15, 12], [16, null], [31, null], [32, 32], [35, 32], [36, null], [55, null], [56, 56], [59, 56], [60, null], [1000, null]]
+    const edges: [number, number | null][] = [[0, null], [11, null], [12, 12], [15, 12], [16, null], [27, null], [28, 28], [31, 28], [32, null], [35, null], [36, null], [55, null], [56, 56], [59, 56], [60, null], [1000, null]]
     for (const [together, want] of edges) expect(coachTalkCheckpointAt(together), `weeks together ${together}`).toBe(want)
   })
 
@@ -432,8 +438,8 @@ describe('round 52 H3 D – once per checkpoint per stint', () => {
     expect(cpOfDetail(again!.detail)).toBe(12)
     expect(again!.week).toBe(52)
     again!.answer = 'more'
-    const half = rollWeek(world, 40 + 32, 12)
-    expect(half === null ? null : cpOfDetail(half.detail), 'and half a year into it').toBe(32)
+    const half = rollWeek(world, 40 + 28, 12)
+    expect(half === null ? null : cpOfDetail(half.detail), 'and half a year into it (J6, 15.10: week 28, was 32)').toBe(28)
   })
 
   it('⭐ nobody employed: no talk, whatever the week – and the same world with the coach back speaks (the control)', () => {
