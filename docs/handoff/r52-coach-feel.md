@@ -54,19 +54,28 @@ green files, and «а еще вот такое там нашел в трейсе
 - J2 `8eabc1e9` – `font-family: inherit` in the global `button` rule: 214 of 239 buttons off the
   app's face → 0 (real-Chromium census), no new overflow; Coach Market rows grow 1–2 lines at 375.
 - `51626646` – the close's two tails (spec headings read as corpus rows; the seats pins).
+- J3 `778c0abb` (15.10, his CI trace «у нас упал е2е») – the shop shelf's six segments wrapped on
+  Linux after the font change (Mac +3.7 px to spare, Linux −3 px): pill padding 9 → 7.5 px, Linux
+  +15 px now. The pull-request skill learned that CI runs the whole e2e on Linux (step 2b).
 - The review sheet (private to the owner): https://claude.ai/artifact/L8h5ExH3AwJ363MGwwHHk3 –
-  all 192 DRAFT rows, the font before/after, three decisions. His marks live in the artifact's db,
+  all 192 DRAFT rows, the font before/after, four decisions. His marks live in the artifact's db,
   collection `reviews`, one document per row id ({ok?, ru?, note?} or {choice, note?} for the
-  decisions); read them with `ArtifactData list`, apply to the docs/localization tables, flip
+  decisions: `decision-f3-cold`, `decision-silence`, `decision-font-rows`, `decision-shelf-ru`);
+  read them with `ArtifactData list`, apply to the docs/localization tables, flip
   DRAFT → APPROVED, both languages in one commit.
 
 ## Open (the owner's)
 - His pass over the review sheet (strings, the font screenshots, the three decisions there:
-  F3's cold quotes, the silence note, the Coach Market row height).
+  F3's cold quotes, the silence note, the Coach Market row height, the Russian shelf row 4 + 2).
 - Resolved by his 14.10 ruling: the bond gate at a checkpoint stays (the silence now shows); the
   onboarding cards' font (the global rule fixed every button); the recency veto stays.
 
 ## Gates
+J3 CHAIN at `778c0abb` (clean worktree, npm ci, verdicts from files): check `R52M_CHECK_EXIT=0`
+(unit 467 s, component 325/325, build), e2e on the Mac `R52M_E2E_EXIT=0` (147), the whole e2e in
+CI's Linux image `R52N_LINUX_E2E_EXIT=0` (147), frozen capture 51/51, schema untouched, build line
+`778c0ab`. sim, lqa:ru and the container twin carried from `ee1fb385` (only a spec heading, three
+test files and a CSS padding above it).
 RECOMMENDATIONS CHAIN (every verdict from its own file in the session scratchpad, mtime fresher than
 the run): check `R52L_CHECK_EXIT=0` at `e88b07a3` (clean worktree, npm ci; unit 393 s with one
 accepted bulk-pool late ack, component 325/325, build; the first two closing runs caught three

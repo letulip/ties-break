@@ -56,11 +56,19 @@ a box it has not proven with a command in this session.
 
    ⭐ **This is a CONDITION OF PUSHING, not a nicety** – his words are «условие отправки кода на
    сервер». A branch whose e2e is red does not go up, and the sentence «ветка готова» may not follow
-   a run that was skipped. ⚠ The PR gate on CI stays smoke-only by the repo's own recorded cost
-   lesson – this runs LOCALLY, which is where the 22 seconds are.
+   a run that was skipped.
 
    ⚠ Read the exit code from the FILE. This suite finishes fast enough that a wrapper's "exit code 0"
    arrives before the run does – that notification lied four times in one session.
+
+   ⚠⚠ **AND THE PR'S CI RUNS THE WHOLE SUITE ON LINUX** (15.10, r52 J3 – this note used to say the CI
+   gate was smoke-only; `ci.yml` runs `npm run test:e2e` unfiltered on Ubuntu). Linux Chromium sets
+   glyphs on whole-pixel advances where a Mac keeps the fraction: the shop shelf's six segments had
+   3.7 px to spare on the Mac and were 3 px short on the runner, so a green local suite went red on the
+   PR. **A change that moves text metrics – a font, a size, a padding, a letter-spacing – also runs
+   the suite in CI's own image before the push**: `mcr.microsoft.com/playwright:v<the repo's
+   @playwright/test>-noble` under podman, the repo copied in read-only, `npm ci`, `CI=1 npm run
+   test:e2e`, the exit code into a file (the full command: `docs/rounds/round-52.md`, the J3 record).
 
 3. **The diff, read before described.** `git log --oneline main..HEAD` and
    `git diff --stat main...HEAD`. The What-section is written from what actually changed, not from
