@@ -124,16 +124,16 @@ describe('§1 the walker folds `+` between plain literals into ONE key – and l
 // =================================================================================================
 // the number of DISTINCT keys each seat reaches – every figure is one an earlier wave's net counts on its own (the provider is not asked to confirm itself)
 const SEAT_KEYS: Record<string, number> = {
-  'lifeBeat.optionLabel': 248, //   34 LIFE_BEAT_OPTIONS labels (L2-9b) + 187 distinct stance labels over 65 situations x 4 voices (L3-5 §6; ⚠ RE-AIMED 14.10 r51 №17: +12, r51 continuation E1: +9, E2: +9, E3: +12, r52 F4: +9, H2: +18)
+  'lifeBeat.optionLabel': 250, //   34 LIFE_BEAT_OPTIONS labels (L2-9b) + 187 distinct stance labels over 65 situations x 4 voices (L3-5 §6; ⚠ RE-AIMED 14.10 r51 №17: +12, r51 continuation E1: +9, E2: +9, E3: +12, r52 F4: +9, H2: +18; ⚠ RE-AIMED 22.10 r53 M9 (N2): +2 – the name question's two answers, `Ask what his name is` and the pressing one)
   'lifeBeat.replyDone': 2, //       `Let her finish` and `Proceed` – the two shipped words (invariant 4)
   'lifeBeat.promptConfirm': 1, //   `Proceed`
   'lifeMoment.confirm': 1, //       LIFE_MOMENT_CONFIRM
   'fridge.note': 115, //            7 pools: 50 + 27 + 8 + 6 + 8 + 8 + 8 (L3-5 §10)
   'birthday.gifts': 159, //         the gift catalogue (L3-4): labels, notes, repeat notes, asks, the means alternates
-  'diary.pool': 95, //              95 static cells (L3-4 §2)
+  'diary.pool': 97, //              95 static cells (L3-4 §2) // ⚠ RE-AIMED 22.10 r53 (N2): +2 – M10's two weather photo captions («Thirty degrees on court…» and «Rain at the courts today…», diary/pool.ts)
   'diary.debut': 4, //              the four opening-week lines
   'diary.weekNotes': 315, //        315 static cells of the 341-cell corpus (L3-4 §8; +3 R51 №13; +10 R52 F3; ⚠ RE-AIMED 14.10 r52 J1: +4, the checkpoint-silence lines)
-  'diary.travel': 78, //            the travel notes + the coach's five
+  'diary.travel': 80, //            the travel notes + the coach's five // ⚠ RE-AIMED 22.10 r53 (N2): +2 – M10's two travel scraps licensed on the day's weather (heat, rain; diary/travelNotes.ts)
   'smallTalk.corpus': 1204, //      260 openers + 780 replies + 20 shared second beats (L3-5 §6; ⚠ RE-AIMED 14.10 r51 №17: +80, r51 continuation E1: +48, E2: +48, E3: +64, r52 F4: +48, H2: +96)
   'smallTalk.frames': 18, //        9 per presence
   'album.corpus': 664, //           648 cells + 16 arc cells (L3-6 §11) – ⚠ RE-STAMPED 12.10 r49 №7 (+180) and r50 №1 (+12: the pregnancy occasion A38)
@@ -146,7 +146,7 @@ const SEAT_KEYS: Record<string, number> = {
   // ⭐ 11.10 (RU-22, the display boundary) – the seventh dynamic `t()` call, and the coach's two remarks on her form:
   'form.eye': 2, //                 `coachFormNote`'s two returned literals (a `return '…'` no census rule reads), stored as `c: { k: eye }` – the keys exist the day the seat does
   // ⭐ RE-AIMED 13.10 (r51 №2): 291 -> 301 – the Specialists tab's engine sentences beyond the years: the three locked lines (`MASSEUR_/PSYCHOLOGIST_/SPARRING_LOCKED_DETAIL`), the masseur's four room notes (read off `masseurRoomNote` by posing a world) and the three refusals a hired psychologist's year's-work note can show (the season, the joint decline, the not-ready one).
-  'engine.text': 301, //            `engineText(english)` in words.ts: every `label`/`blurb`/`note` of ECONOMY (the shop, the kit, the vacations, the ads, the staff rungs, the hitting partner's three notes), the radar's note pool + its training read (MOVE_POOL 45 + FOG_POOL 5, read off the source) + its five axis labels, the kid tiles' friend lines, the psychologist's four years, the three college places ⭐ RU-23 (11.10): + the coach market's own prose, 251 -> 291 – the sixteen bios, the four load notes, the profile's four labels and four arguments (cut at the dash by the engine's own splitter), the plaque's eleven and the travel line, read off the real functions.
+  'engine.text': 307, //            `engineText(english)` in words.ts: every `label`/`blurb`/`note` of ECONOMY (the shop, the kit, the vacations, the ads, the staff rungs, the hitting partner's three notes), the radar's note pool + its training read (MOVE_POOL 45 + FOG_POOL 5, read off the source) + its five axis labels, the kid tiles' friend lines, the psychologist's four years, the three college places ⭐ RU-23 (11.10): + the coach market's own prose, 251 -> 291 – the sixteen bios, the four load notes, the profile's four labels and four arguments (cut at the dash by the engine's own splitter), the plaque's eleven and the travel line, read off the real functions. // ⚠ RE-AIMED 22.10 r53 (N2): +6 – M8's six pedigree lines of the coach market (the same six i18n-coach-market.test.ts §5 counts, 40 → 46)
   'coach.room': 12, //              ⭐ RU-23 (11.10): the four labels and the four arguments of the long note's reads, the short of Home's plate that is not a label (the other three are their labels: one key each), the three rungs of the below-best ladder – `{ k: text }` refs, read off `ROOM_BANDS` and `BELOW_BEST_LADDER`
 }
 
@@ -325,7 +325,8 @@ describe('§2 the declared seats – every dynamic key set the code asks for is 
     // ⭐ RE-AIMED A FIFTH TIME 14.10 (r52, builder F4): reach +57 (three coach-feel situations – 12 openers and 36 replies on the corpus seat, 9 labels on the option-label seat).
     // ⭐ RE-AIMED A SIXTH TIME 14.10 (r52, builder H2): reach +114 (six stint situations – 24 openers and 72 replies on the corpus seat, 18 labels on the option-label seat).
     // ⭐ RE-AIMED A SEVENTH TIME 14.10 (r52, builder J1): 3257 → 3261 (+4 `diary.weekNotes` keys: the checkpoint the bond shut, two lines for strained and two for cold).
-    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 3261 catalog keys/)
+    // ⭐ RE-AIMED AN EIGHTH TIME 22.10 (r53, builder N2): 3261 → 3273 (+12: the name question's two answers on the option-label seat, M8's six pedigree lines on engine.text, M10's two weather photo captions on diary.pool and two weather travel scraps on diary.travel).
+    expect(green.lines.join('\n')).toMatch(/seats {5}20 declared \(tools\/i18n-seats\.ts\) reach 3273 catalog keys/)
   })
 })
 

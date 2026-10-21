@@ -146,3 +146,4 @@ initiated that decision.
 | R53-NAME-25 road 3, home | `His name is {0} – she said it over dinner, as if we had always known.` | `Его зовут {0} – она сказала это за ужином, будто мы всегда знали.` |
 | R53-NAME-26 road 3, college | `She called from college and told us his name: {0}.` | `Позвонила из колледжа и назвала его имя: {0}.` |
 | R53-NAME-27 road 4, press | `In the stands – {0}, her boyfriend.` | `На трибуне – {0}, её молодой человек.` |
+| R53-NAME-28 the name hole (catalog seat `nameRef`) | `partner\|{0}` | `{0}` |

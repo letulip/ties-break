@@ -106,6 +106,12 @@ export const HOLE_TABLE: Readonly<Record<WordClass, readonly HoleRow[]>> = {
     ['{0} ({1}, {2}): {3} – {4} (+{5} pts) – she retired hurt', 1],
     ['{0} at the {1}. {2}, {3} degrees.', 2],
     ['{0} at the {1}. {2}.', 2],
+    ['🏆 {0} won the {1} ({2}) despite the rain.', 2],
+    ['🏆 {0} won the {1} ({2}) in a strong wind.', 2],
+    ['🏆 {0} won the {1} ({2}) in exhausting heat.', 2],
+    ['🏆 {0} won the {1} ({2}) – thanks to the rain, on the fresher legs.', 2],
+    ['🏆 {0} won the {1} ({2}) – the last one standing in the heat.', 2],
+    ['🏆 {0} won the {1} ({2}) – the wind had its say, and she had the last word.', 2],
     ['🏆 {0} won the {1} ({2}).', 2],
   ],
   tier: [

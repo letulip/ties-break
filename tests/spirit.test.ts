@@ -1333,7 +1333,7 @@ describe('the fence this step is judged by', () => {
     // a week that holds both, and the drafted depths say which should – −30/−46 against the
     // postpartum −28.8/−45. The shipped order is the plan's own –
     // docs/plans/life-wave-11-builder-2026-09.md §T5. Still an exact list, still no wildcard.
-    expect(code.slice(i + 1, j), 'only the private life\'s fifteen weekly calls separate them').toEqual([
+    expect(code.slice(i + 1, j), 'only the private life\'s seventeen weekly calls separate them').toEqual([
       'rollEnds(world)',
       'rollArrival(world)',
       'rollWedding(world)',
@@ -1346,6 +1346,9 @@ describe('the fence this step is judged by', () => {
       'rollBereavement(world)',
       'rollLeak(world)',
       'deliverKnownPartner(world)',
+      // ⚠ 22.10 r53 M9 (N2): the name question's two weekly calls, +2 (15 → 17) – `nameAtMet` (the name she gave at the met card lands) and `rollPartnerName` (road 3, the per-period roll that she says it herself). Both sit after `deliverKnownPartner`, whose delivery they name, and before `deliverOwnKey`; neither writes `spiritShock`, so the slot law above is untouched.
+      'nameAtMet(world)',
+      'rollPartnerName(world, inCollege(world))',
       'deliverOwnKey(world)',
       'rollSpouseView(world)',
       'rollSmallTalk(world)',

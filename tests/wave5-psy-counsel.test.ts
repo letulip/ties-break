@@ -650,11 +650,12 @@ describe('wave 5 T8 E – one `info` row, no life row, no glyph forced', () => {
     // sweep reads a literal that may hold one `{ … }` inside it. The sites are the same eight (the wave adds no row), and an unstamped site still reddens the second assertion alone.
     const sites = [...code.matchAll(/\{(?:[^{}]|\{[^{}]*\})*type:\s*'life'(?:[^{}]|\{[^{}]*\})*\}/g)].map((m) => m[0])
     // (8 -> 9, the same re-aim: the one-level reading also sees the spirit feed's exposure row, whose `...(firstOfSeason ? { keep: true } : {})` hid it from the old pattern – it stamps `lifeKind: 'exposure'`)
-    expect(sites.length, 'the sweep really found the life-row write sites').toBe(9)
+    // (9 -> 11, 22.10 r53 M9 via N2: `partnerName.ts`'s two kept `lifeKind: 'met'` rows – road 3 (she says his name) and road 4 (the press names him); each stamps a kind, the second assertion below still holds)
+    expect(sites.length, 'the sweep really found the life-row write sites').toBe(11)
     const spotlight = sites.filter((s) => s.includes('LEAK_EVENT['))
     expect(spotlight, '⚠ the leak row is still one of them – D3 stamped it, it did not remove it').toHaveLength(1)
     expect(sites.filter((s) => /lifeKind:\s*'/.test(s)), '⚠⚠ and after D3 every one of them stamps a kind')
-      .toHaveLength(9)
+      .toHaveLength(11) // ⚠ 22.10 r53 M9 (N2): 9 → 11 with the sites above – both new rows stamp `lifeKind: 'met'`
   })
 })
 

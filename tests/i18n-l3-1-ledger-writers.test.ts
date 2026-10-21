@@ -176,6 +176,12 @@ const NEW_KEYS: readonly string[] = [
   'She trains as planned, and for the next three weeks the odds are against us.',
 ]
 
+/** ⚠ 22.10 r53 M9 (N2): SENTENCES A DYNAMIC SEAT HOLDS THAT NO OLD SAVE CAN HOLD AND NO `cp` SITE SPELLS – the two feed lines of the name question (`ANSWER_EVENT.met.ask` / `.insist` in the hub: «We asked what his name is» / «We pressed her for his name»). They are STORED rows, born in R53 №2, so the frozen table has no entry; they cannot sit in NEW_KEYS (that list demands a `cp` call site). ⚠ DRAFT under the owner's pass. */
+const SEAT_NEW_KEYS: readonly string[] = [
+  'There is someone in her life. We asked what his name is.',
+  'There is someone in her life. We pressed her for his name.',
+]
+
 /** Pieces a writer joins with `joinCopy` – never a sentence on their own, never emitted alone. §5 renders every assembled sentence against the table. */
 const FRAGMENTS: readonly string[] = [
   ' (+{0} banked – a ranking needs {1} events with points, or {2})', // tournamentClose.ts – the summary's clause when she is not yet ranked
@@ -378,12 +384,14 @@ function carries(o: ts.ObjectLiteralExpression, name: string): boolean {
   return o.properties.some(
     (p) =>
       (ts.isPropertyAssignment(p) && p.name.getText() === name) ||
+      // ⚠ 22.10 r53 N2 (M9, R53 №2): the partner-name leaf's two sinks hand their ref on as `, c })` – a SHORTHAND property, which this reader did not see, so two converted sinks read as bare
+      (ts.isShorthandPropertyAssignment(p) && p.name.text === name) ||
       (ts.isSpreadAssignment(p) && new RegExp(`(?:\\b${name}:|[{,]\\s*${name}\\s*[,}])`).test(p.expression.getText())),
   )
 }
 
 /** the engine's sinks: `addEvent(world, { … })` and `fireMilestone(world, key, text, c?)` calls. `bare` = the ones that still write `text` alone, per file; `converted` = the ones that
- *  write `c` beside it. (The definitions are declarations, not calls; the engine writes no event any other way – the L3-0 sweep found 141 and this counts the same 141.) */
+ *  write `c` beside it. (The definitions are declarations, not calls; the engine writes no event any other way – the L3-0 sweep found 141 and this counts the same 141 – 143 since 22.10, r53 M9's two new sinks.) */
 function sinks(): { bare: Record<string, number>; converted: number } {
   const bare: Record<string, number> = {}
   let converted = 0
@@ -479,6 +487,7 @@ const DYNAMIC_SEATS: Record<string, number> = {
   // the pause, the birth, the loss) hold a pool's pick or a named constant, every one a key of the frozen table – §1b below walks the pools. The PROMPT's seats (class b: her line, the heading, the
   // reply paragraph, the card – the string a pool cell holds IS its key) are proven by tests/i18n-l3-5-life-beats.test.ts §2..§4, which renders every reachable tuple against the English.
   'src/engine/world/lifeBeat.ts': 9, // lifeBeatSaidRef 3 (a pool cell, and the frame and the opener of small talk's `{0} {1}`), the fork's listen reply, headingC, cardC (prompt); the answer row, the two kept news rows (sinks)
+  'src/engine/world/lifeBeat/partnerNameCopy.ts': 1, // ⚠ 22.10 r53 M9 (N2): `nameRef` – `{ k: `partner|${name}` }`, the pool word of the tile (localized DATA, `partner|<Name>` rows); the six sentences are `cp` keys
   'src/engine/world/lifeBeat/ended.ts': 2, // the divorce row and the ended-now row (the divorce milestone is a `cp`)
   'src/engine/world/lifeBeat/leak.ts': 1, // the press leak row
   'src/engine/world/lifeBeat/ownKey.ts': 1, // the key row
@@ -549,7 +558,7 @@ describe('§1b the dynamic seats', () => {
     for (const cell of Object.values(LIFE_LOSS_HER_LINE)) if (cell !== null) sentences.push(cell.told, cell.untold)
     // spirit.ts (L3-3): the three constants the feed rows are written from
     sentences.push(EXPOSURE_ROW, PUBLIC_LIFE_RECEIPT, RECOVERY_RECEIPT)
-    const missing = [...new Set(sentences)].filter((x) => !TABLE.has(x) && !NEW_KEYS.includes(x))
+    const missing = [...new Set(sentences)].filter((x) => !TABLE.has(x) && !NEW_KEYS.includes(x) && !SEAT_NEW_KEYS.includes(x))
     expect(missing, 'a sentence a dynamic seat can hold that no old save can hold – a reworded pool line is a NEW sentence: list it in NEW_KEYS with the reason').toEqual([])
   })
 })
@@ -702,6 +711,7 @@ const TEXT_ONLY: Record<string, number> = {
   // ⭐ L3-7 (10.10) CONVERTED THE LAST 16 – THE LAYER CLOSES, 141 OF 141: college.ts 4 (the call-up milestone, the league milestone, the Nations Cup and College League match rows), tick.ts 2 (the college epilogue, twice),
   // injury.ts 3 (the rehab receipt, the recovery, the injury row), knock.ts 4 (the arrival, the coach's doubt, the coach's call, the family's decision), phaseHerWeek.ts 3 (the walkover, the withdrawal, the doctor's warning).
   // Nothing is left on `text` alone: a NEW text-only writer is a failure of this test and must be converted or argued here.
+  // ⚠ 22.10 r53 M9 (N2): +2 SINKS, BOTH CONVERTED AT BIRTH – `partnerName.ts` `rollPartnerName` and `pressNamesPartner` write `text` AND `c` (`, c })`, shorthand). The books reopen at 143 of 143, none bare.
 }
 
 describe('§3 the writers still on `text` alone', () => {
@@ -709,12 +719,12 @@ describe('§3 the writers still on `text` alone', () => {
     expect(sinks().bare, 'a count moved: a wave converted a sink (lower the number) or a NEW text-only writer appeared (decide it: convert it, or list it with the wave that owns it)').toEqual(TEXT_ONLY)
   })
 
-  it('the books close: 141 sinks (the L3-0 sweep\'s count), 141 of them converted (L3-1: 78, L3-3: 26, L3-4: 1, L3-5: 12, L3-6: 8, L3-7: 16), none left', () => {
+  it('the books close: 143 sinks (the L3-0 sweep\'s 141, plus r53 M9\'s two), 143 of them converted (L3-1: 78, L3-3: 26, L3-4: 1, L3-5: 12, L3-6: 8, L3-7: 16, r53 M9: 2), none left', () => {
     const { bare, converted } = sinks()
     const left = Object.values(bare).reduce((a, b) => a + b, 0)
     expect(left, 'sinks still on `text` alone').toBe(0)
-    expect(converted, 'sinks that write `c`').toBe(141)
-    expect(converted + left, 'every sink there is').toBe(141)
+    expect(converted, 'sinks that write `c`').toBe(143)
+    expect(converted + left, 'every sink there is').toBe(143)
   })
 
   it('no money row is left on `text` alone: every sink that writes `amountCents` writes `c`', () => {
@@ -750,7 +760,8 @@ describe('§4 a played career', () => {
         if (!e.c) continue
         withC++
         if (renderCopyRef(e.c, EN) !== e.text) bad.push(`render ${JSON.stringify(renderCopyRef(e.c, EN))} !== text ${JSON.stringify(e.text)}`)
-        if (!TABLE.has(e.c.k)) foreign.add(e.c.k)
+        // ⚠ 22.10 r53 N2: §4 reads NEW_KEYS too (it read the table alone – M11's six champion weather tails, new sentences of a new fact, were red here while §1 admitted them): ONE list, both sections
+        if (!TABLE.has(e.c.k) && !NEW_KEYS.includes(e.c.k)) foreign.add(e.c.k)
         // JSON-safe by construction: nothing a save would lose
         expect(JSON.parse(JSON.stringify(e.c)), e.text).toEqual(e.c)
       }

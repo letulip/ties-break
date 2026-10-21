@@ -100,6 +100,8 @@ const LIFE_BEAT_KEYS: readonly string[] = [
   '${world.seed}:life:leak:story:${episode.id}:${world.week}',
   '${world.seed}:life:wedding:${world.week}',
   '${seed}:life:partner-name:${episodeId}',
+  // ⚠ 22.10 r53 M9 (N2): +1 – road 3 of the name question, `drawNameThisPeriod` in `lifeBeat/partnerName.ts` (the leaf): the ONE per-period roll that she says it herself. A new purpose-scoped sub-stream (invariant 2), so it sits in its own namespace `partnername`, not under `life`.
+  '${seed}:partnername:${episodeId}:${period}',
   '${world.seed}:life:spouse-view:${world.week}',
   // ⚠ B-07's first unpinned key – the hidden conception window, drawn once and persisted.
   '${seed}:life:window:${conceivedWeek}',
@@ -137,7 +139,7 @@ const INVENTORY: readonly [string, readonly string[]][] = [
 /** The namespaces the three modules are allowed to draw on – the prefix half the seven sibling pins
  *  carry, kept as well as the set equality because it says WHY a new key is suspicious rather than
  *  only that it is new. */
-const NAMESPACES = /^\$\{(?:world\.|view\.)?seed\}:(life|smalltalk|psy|album|collegeoffer|callup|rubbers|collegeleague):/
+const NAMESPACES = /^\$\{(?:world\.|view\.)?seed\}:(life|smalltalk|psy|album|collegeoffer|callup|rubbers|collegeleague|partnername):/
 
 describe('B-07 – the life layer\'s sub-stream keys are an exact, closed inventory', () => {
   for (const [module, expected] of INVENTORY) {
@@ -185,11 +187,11 @@ describe('B-07 – the life layer\'s sub-stream keys are an exact, closed invent
     }
   })
 
-  it('the three modules together draw on 26 keys – the number one place, here', () => {
+  it('the three modules together draw on 27 keys – the number one place, here', () => {
     // ⚠ NOT IN PROSE (wave 9's finding: a count in a document survives a full gate because no test
     // reads it). The per-module sets above are the real pin; this is the one line a reader can check
     // against a `git grep -c rngFromSeed`.
-    expect(INVENTORY.reduce((n, [, keys]) => n + keys.length, 0)).toBe(26)
-    expect(INVENTORY.flatMap(([module]) => keysOf(module))).toHaveLength(26)
+    expect(INVENTORY.reduce((n, [, keys]) => n + keys.length, 0)).toBe(27) // ⚠ 22.10 r53 M9 (N2): 26 → 27, the name question's per-period roll (`partnername` namespace)
+    expect(INVENTORY.flatMap(([module]) => keysOf(module))).toHaveLength(27)
   })
 })

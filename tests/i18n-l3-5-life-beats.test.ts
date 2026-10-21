@@ -153,7 +153,8 @@ describe('§1 the key law – the life files\' cp keys are a list, and only the 
   })
 
   it('the list is the nine span sentences and the join – and every one is in the English catalog and WIRED', () => {
-    expect(LIFE_CLASS_B_KEYS.length).toBe(10)
+    // ⚠ 22.10 r53 M9 (N2): 10 → 33 – the name question's 23 `cp` sentences of `partnerNameCopy.ts` (every one a NEW sentence of a new beat, no old save holds one), regenerated with L35_WRITE_KEYS=1. The nine span sentences and the join are unmoved.
+    expect(LIFE_CLASS_B_KEYS.length).toBe(33)
     expect(LIFE_CLASS_B_KEYS.filter((k) => k.startsWith('They have been together for ')).length).toBe(9)
     expect(LIFE_CLASS_B_KEYS).toContain('{0} {1}')
     const missing = LIFE_CLASS_B_KEYS.filter((k) => CATALOG.keys[k]?.wrapped !== true)
@@ -527,8 +528,8 @@ describe('§7 every sentence a sink\'s seat can hold is a key of the frozen v92 
   for (const s of Object.values(LEAK_EVENT)) sentences.add(s)
   for (const cell of Object.values(LOSS_HER_LINE)) if (cell !== null) for (const s of [cell.told, cell.untold]) sentences.add(s)
 
-  it('the pools were found (the sweep is not blind): 28 answer lines, the kept rows, the leak\'s two, the key, the pause, the birth, the loss lines', () => {
-    expect(literalsOf('src/engine/world/lifeBeat.ts', 'ANSWER_EVENT').filter((s) => s.includes(' ')).length).toBe(28)
+  it('the pools were found (the sweep is not blind): 30 answer lines, the kept rows, the leak\'s two, the key, the pause, the birth, the loss lines', () => {
+    expect(literalsOf('src/engine/world/lifeBeat.ts', 'ANSWER_EVENT').filter((s) => s.includes(' ')).length).toBe(30) // ⚠ 22.10 r53 M9 (N2): 28 → 30 – the name question's two feed rows, `met.ask` / `met.insist`
     expect(sentences.size).toBeGreaterThan(50)
   })
 
@@ -542,7 +543,9 @@ describe('§7 every sentence a sink\'s seat can hold is a key of the frozen v92 
   })
 
   it('every one is a key of the frozen v92 table (a stored row migrated from an old save lands on the SAME key)', () => {
-    expect([...sentences].filter((s) => !TABLE.has(s))).toEqual([])
+    // ⚠ 22.10 r53 M9 (N2): the two NEW stored feed rows of R53 №2 (the name question) are not the v92 table's – no old save can hold them. Named here, not loosened (⚠ DRAFT under the owner's pass).
+    const BORN_R53 = ['There is someone in her life. We asked what his name is.', 'There is someone in her life. We pressed her for his name.']
+    expect([...sentences].filter((s) => !TABLE.has(s) && !BORN_R53.includes(s))).toEqual([])
   })
 
   it('every one is a key of the English catalog (the three constants moved into their copy leaves so the census reads them) and seatable', () => {

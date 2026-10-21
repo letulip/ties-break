@@ -50,6 +50,16 @@ import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-ben
 
 const EN = { locale: SOURCE_LOCALE }
 const TABLE = new Set(allTemplateKeys())
+// ⚠ 22.10 r53 N2 (M11, weather stage 2): the champion row's six weather tails – new whole sentences for a new fact (the day touched the match), no old save holds one. The same six
+// i18n-l3-1-ledger-writers.test.ts lists in NEW_KEYS (the static key law); this played-career walk admits them by name, it does not loosen the table check for anything else.
+const WEATHER_TAILS = new Set([
+  '🏆 {0} won the {1} ({2}) in exhausting heat.',
+  '🏆 {0} won the {1} ({2}) – the last one standing in the heat.',
+  '🏆 {0} won the {1} ({2}) despite the rain.',
+  '🏆 {0} won the {1} ({2}) – thanks to the rain, on the fresher legs.',
+  '🏆 {0} won the {1} ({2}) in a strong wind.',
+  '🏆 {0} won the {1} ({2}) – the wind had its say, and she had the last word.',
+])
 
 interface Row extends WorldEvent {
   c?: CopyRef
@@ -79,7 +89,7 @@ describe('§1 played careers – every row that carries c renders to its text', 
       for (const e of rows) {
         if (!e.c) continue
         if (renderCopyRef(e.c, EN) !== e.text) bad.push(`${JSON.stringify(renderCopyRef(e.c, EN))} !== ${JSON.stringify(e.text)}`)
-        if (!TABLE.has(e.c.k)) bad.push(`key outside the table: ${e.c.k}`)
+        if (!TABLE.has(e.c.k) && !WEATHER_TAILS.has(e.c.k)) bad.push(`key outside the table: ${e.c.k}`)
         expect(JSON.parse(JSON.stringify(e.c)), e.text).toEqual(e.c)
       }
       expect(bad).toEqual([])
