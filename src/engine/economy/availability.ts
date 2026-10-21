@@ -151,12 +151,16 @@ export const availability = {
      *  от самой травмы и ее сложности/продолжительности сделать более динамично?»). Within a severity
      *  a row weighs `severityWeight x factor(weeksOut)`: `durationFactorLo` at `durationFloorWeeks`
      *  or less, `durationFactorHi` at `durationCeilWeeks` or more, linear between – a twelve-week
-     *  layoff leaves more than twice the fragility a fortnight does (1.4 / 0.6 = 2.33; 7 weeks is exactly 1).
+     *  layoff leaves twice the fragility a fortnight does (2.0 / 1.0; 7 weeks is 1.5).
+     *  ⚠ RE-CENTRED 21.10 (L5b): the first cut ran 0.6 -> 1.4 and the bench measured the real mix of
+     *  layoffs at 72% <= 2 weeks, so the mean factor was 0.671 – total fragility fell by a third, which
+     *  the owner did not ask for («динамично», not «меньше»). 1.0 anchors at the fortnight, where most
+     *  of the mass is, so the common case is today's level and only the long layoffs rise.
      *  `weeksOut` is the weeks she was ACTUALLY out. Cap, half-life and bumps are untouched. */
     durationFloorWeeks: 2,
     durationCeilWeeks: 12,
-    durationFactorLo: 0.6,
-    durationFactorHi: 1.4,
+    durationFactorLo: 1.0,
+    durationFactorHi: 2.0,
     halfLifeWeeks: 52,
     loadCap: 1,
     /** HOW MUCH MORE LIKELY, at full load – `injuryTau *= 1 + tauBump x load`. «Немного» is his
