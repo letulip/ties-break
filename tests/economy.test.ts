@@ -32,6 +32,7 @@ import { sponsorNeedMet, sponsorStandingOf } from '../src/engine/world/sponsors'
 import { rngFromSeed } from '../src/engine/rng'
 import { COACH_TIERS, coachWeeklyBandCents, corridorAppliesAt, facilityRateCents, weeklyBillSplit } from '../src/engine/coach'
 import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground } from '../src/shared/protocol'
+import { plainEliteInChair } from './economyCalibration'
 
 /** The first week of the season a kit deal signed in the first off-season actually COVERS.
  *  `coveredSeasonStart(49)` – the letter is for the season ahead, not the fortnight it arrives in.
@@ -547,6 +548,12 @@ describe('the coaching bill is priced in the family\'s own market (the wealth co
   // still passed, which is the failure mode worth naming: the ordering survives any partition.
   function weekOneCoaching(seed: string, background: FamilyBackground, coachTier: CoachTier): number {
     const world = createWorld(seed, { ...DEFAULT_PROFILE, background, coachTier })
+    // ⚠ RE-AIMED 22.10 (r53, N3 – the close; M8 0e1c36a7): 'coach-market''s opening elite coach drew a famous past
+    // (+50% of his labour, round 53 №2), so the elite bill read $2,279.99 against the rung's own $2,160 envelope – the
+    // premium measured, not the rung. The envelope is the RUNG's claim, so the fixture sits a plain elite in the chair
+    // (`plainEliteInChair`, the calibration's own helper); «alike above the cut» is untouched – the pedigree is a fact
+    // of the seed, so all three markets get the same man either way.
+    plainEliteInChair(world)
     const rng = rngFromSeed(world.seed)
     tickWeek(world, rng)
     const rows = world.events.filter(

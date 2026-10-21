@@ -594,7 +594,12 @@ describe('the coach has an opinion about WHICH event, and it is only ever advice
     // was, by RUNNING the preconditions below: 3 of 41 candidate seeds ('coach-owner-card' and '-2' … '-41') hold every one of them – j30 behind her,
     // national open and NOT behind her, the book open, four silences – and the first is taken. The professional arm below ('coach-owner-card-pro')
     // still holds on 41 of 41 candidates, so it is untouched.
-    const world = createWorld('coach-owner-card-12')
+    // ⚠⚠ 22.10 (r53, N3 – the close) – RE-AIMED AGAIN THE SAME WAY, 'coach-owner-card-12' -> 'coach-owner-card-39'. Bisected over round 53's
+    // step commits: held through M10, broke at M11 (weather stage 2, ee160ce6 – the match reads the day), which moves the results of every
+    // ticked week and so the cohort table she is judged against; at seventeen '-12' now has `national` behind her. Re-found by running the
+    // preconditions below over 'coach-owner-card' and '-2' … '-60': 3 of 60 hold every one ('-39', '-42', '-51') and the first is taken.
+    // The claim and its age are unchanged; only the seed that carries the knife-edge moved.
+    const world = createWorld('coach-owner-card-39')
     const rng = resumeMain(world.rngMain)
     while (kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay) < 17) tickWeek(world, rng)
     world.condition = 100

@@ -606,7 +606,12 @@ describe('D · as played – careers walked through the public commands, nothing
     // careers above latches a #1 any more, and the claim is that at least one page has to be printed. Hunted over presets 0–8 x indices 0–6, 340 weeks, with this case's own walker (63 careers): exactly ONE
     // latches a #1 at all – p6/i3, the JUNIOR table, in week 171 – and 62 latch nothing, the world table included. So the walked set carries the junior page and two careers that touch neither; the world-table
     // page has no walked witness on this grid any more and is exercised by this file's posed cases (the latch tests above).
-    const careers = [walk(2, 3, 340), walk(1, 3, 340), walk(6, 3, 340)]
+    // ⚠⚠ 22.10 (r53, N3 – the close) – WEATHER STAGE 2 RE-TIMED THE WALKS; FIXTURE RE-AIMED, CLAIM UNCHANGED: the third career moves p6/i3 -> p4/i3.
+    // Bisected over round 53's step commits: green through M10, red at M11 (ee160ce6 – the match reads the day). Not the coach's rank letters
+    // and not money: p6/i3 is solvent and keeps its coach to week 340, it simply no longer latches a #1. Re-hunted on the same grid with this
+    // case's own walker (presets 0–8 x indices 0–6, 340 weeks, 63 careers): THREE latch a #1, all on the JUNIOR table – p4/i3 (week 171),
+    // p5/i3 (179), p7/i3 (166) – and the first is taken. The world-table page still has no walked witness and stays with the posed cases.
+    const careers = [walk(2, 3, 340), walk(1, 3, 340), walk(4, 3, 340)]
     let expectedTotal = 0
     for (const world of careers) expectedTotal += expectBookNamesItsLatches(world).live
     expect(expectedTotal, 'the walk produced at least one #1 page – otherwise this case proves nothing').toBeGreaterThan(0)
