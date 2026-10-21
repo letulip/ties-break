@@ -257,6 +257,8 @@ import { rungOf, storeyOf, remainingIn, type PreviewEvent, type Rung, type Store
 // are the same code on the same English as before (the pick keys – `variant`, `rotor` – and the budgets are untouched; `tests/i18n-l3-7-twin.test.ts` holds the pre-wave digests).
 import { cp, type CopyRef } from '../shared/i18n'
 import { line, joinLines, type Line } from './lines'
+import type { HeadToHead } from '../shared/protocol/competition'
+import { rivalryInLines } from './rivalry'
 
 export type BeatKind =
   | 'open'
@@ -970,6 +972,15 @@ const BOOTH_LINEAGE_COLLEGE: readonly ((who: string) => Line)[] = [
  *  and would be the smaller claim winning – which is the same honesty rule that split TITLED from
  *  KNOWN in the first place, applied to a third case rather than re-argued. ⚠ AND THE LAST ARM IS
  *  UNCHANGED: `collegeTitles === 0` with no pro cabinet is KNOWN, exactly as it shipped. */
+/** ⭐ ROUND 53 · STEP 6 – THE BOOTH MAY REMARK ON WHAT THESE TWO HAVE ALREADY PLAYED, and which side of the
+ *  net is hers. `record` is the engine's count (`PendingView.headToHead`); what each remark may claim is
+ *  `viz/rivalry.ts`'s predicates. ⚠ OPTIONAL AND DEFAULTED TO null ON `lineage`'s OWN PRECEDENT: every
+ *  caller that passes nothing gets exactly the log this function returned before it existed. */
+export interface CommentaryRivalry {
+  side: Side
+  record: HeadToHead
+}
+
 export function boothLineageLines(ctx: CommentaryLineage): readonly ((who: string) => Line)[] {
   if (ctx.proTitles > 0) return BOOTH_LINEAGE_TITLED
   if (ctx.collegeTitles > 0) return BOOTH_LINEAGE_COLLEGE
@@ -1581,6 +1592,9 @@ export function buildCommentary(
    *  passes nothing gets exactly the log this function returned before it existed, and the ladder only
    *  ever adds. See THE LINE, IN THE BOOTH. */
   lineage: CommentaryLineage | null = null,
+  /** ⭐ ROUND 53 · STEP 6 – the head-to-head, for at most ONE remark at a changeover. ⚠ OPTIONAL AND
+   *  DEFAULTED TO null on `lineage`'s precedent, verbatim. See THE RECORD, IN THE BOOTH. */
+  rivalry: CommentaryRivalry | null = null,
 ): Beat[] {
   const points = match.points
   if (points.length === 0) return []
@@ -2137,6 +2151,32 @@ export function buildCommentary(
       const lines = boothLineageLines(lineage)
       push(next, 'booth', LEAD.booth, lines[variant(next, lines.length)](names[lineage.side]), undefined, false)
       break
+    }
+  }
+
+  // --- ⭐ ROUND 53 · STEP 6 – THE RECORD, IN THE BOOTH ---------------------------------------------
+  //
+  // At most ONE remark per match, at a changeover the tennis left alone, on the declining-rather-than-
+  // losing rule of the two booth beats above, and read AFTER them so it yields to both (`taken` is
+  // re-read): three off-court beats in one match is the noise the channel's «one row per week» law
+  // refuses. The remark is chosen among the lines whose PREDICATE holds of the record (`viz/rivalry.ts`),
+  // by the same bare `variant` hash everything else here uses – no draw, here or anywhere in this file.
+  // A record no line fits (a single win, a first meeting that went the long way round) says nothing,
+  // which is the honest outcome. The pre-match line is the preview's (`buildPreview`), not this log's.
+  if (rivalry) {
+    const fits = rivalryInLines(rivalry.record)
+    if (fits.length > 0) {
+      const taken = new Set(cands.map((c) => c.pointIndex))
+      for (const g of s.games) {
+        if (g.setEnd) continue
+        if ((g.gamesAfter[0] + g.gamesAfter[1]) % 2 !== 1) continue
+        const next = g.last + 1
+        if (next > lastIndex) continue
+        if (taken.has(next)) continue
+        const said = fits[variant(next, fits.length)].say(names[rivalry.side], names[rivalry.side === 0 ? 1 : 0], rivalry.record)
+        push(next, 'booth', LEAD.booth, said, undefined, false)
+        break
+      }
     }
   }
 

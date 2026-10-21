@@ -1218,6 +1218,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
       :coach-travelled="pending?.coachTravelled ?? false"
       :booth-private-life="pending?.boothPrivateLife ?? null"
       :booth-lineage="pending?.boothLineage ?? null"
+      :head-to-head="pending?.headToHead ?? null"
       :mode="replayAdvances ? 'live' : 'replay'"
       :proceed-label="t('To the result')"
       @finish="endReplay"

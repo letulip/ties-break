@@ -58,6 +58,8 @@ import type { MatchPlayer, Side, Surface, Tour } from '../engine/match/types'
 // optional part is a whole sentence per form. `tests/i18n-l3-7-twin.test.ts` holds the pre-wave tree's digest of every line of the grid.
 import { cp, type CopyRef } from '../shared/i18n'
 import { line, type Line } from './lines'
+import type { HeadToHead } from '../shared/protocol/competition'
+import { rivalryPreLine } from './rivalry'
 
 /** The four storeys of the ladder, low to high. */
 export type Storey = 1 | 2 | 3 | 4
@@ -176,6 +178,9 @@ export interface PreviewInput {
   event: PreviewEvent | null
   /** the day's temperature in C, or null when the caller has none */
   temperatureC: number | null
+  /** ⭐ ROUND 53 · STEP 6 – what the two have already played (`PendingView.headToHead`). OPTIONAL AND
+   *  ABSENT FOR EVERY CALLER THAT HAS NONE, so their preview is byte-identical to the one they had. */
+  headToHead?: HeadToHead | null
 }
 
 export interface PreviewLine {
@@ -373,6 +378,14 @@ const ENTRIES: readonly Entry[] = [
       if (rank !== null) return line(cp`Across the net: ${oppName}, ranked #${rank}.`)
       return line(cp`Across the net: ${oppName}.`)
     },
+  },
+  {
+    // ⭐ ROUND 53 · STEP 6 – ONE LINE, OR NONE: the first record-line `viz/rivalry.ts` says is true of
+    // the head-to-head. Storey 1 because a girl she has played before is the same girl at every rung,
+    // and the ladder stays monotone (a line every storey has cannot break the rule). No fact, no row.
+    key: 'rivalry',
+    from: 1,
+    say: ({ her, oppName, input }) => rivalryPreLine(firstName(her.name), oppName, input.headToHead)?.line ?? null,
   },
   {
     key: 'officials',

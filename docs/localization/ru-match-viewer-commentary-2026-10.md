@@ -1024,6 +1024,20 @@ RU-08 §11–§13, the ladder of four storeys. Ranks print as `№{n}`, the degr
 | `Slow and high, and the ball will bite.` | `Медленно и высоко – мяч будет цепляться за покрытие.` – ⚙ 11.10 RU-08 §13 называет «Грунт» в строке, хотя сам пишет, что заметки о покрытии его не повторяют; здесь покрытие не названо |
 | `It will stay low and skid through, so the points will be short.` | `Мяч пойдёт низко и проскользит; розыгрыши будут короткими.` |
 
+### 26.13 Rivals: the record between the two
+
+Round 53 step 6. Names stay in the nominative (generated names cannot be declined); the counts are whole ICU plurals over a number hole. The extractor folds the her/opponent variants of one shape into one key (`{3}` and `{2}` below are whichever girl the sentence is about), so seven keys carry the nine lines. All `DRAFT`.
+
+| English | Russian |
+| --- | --- |
+| `{0} and {1} have met {2} times, and {3} has won every one.` | `{0} и {1} встречались {2, plural, one {{2} раз} few {{2} раза} many {{2} раз} other {{2} раза}} – и каждый раз выигрывала {3}.` |
+| `This is the third time in a year that {0} and {1} have met.` | `{0} и {1} встречаются в третий раз за год.` |
+| `{0} and {1} have played before, and {2} won the last one.` | `{0} и {1} уже играли: в прошлый раз выиграла {2}.` |
+| `The last time {0} and {1} met, it went to three sets.` | `{0} и {1} встречались и раньше – тот матч продлился три сета.` |
+| `The last time {0} and {1} met, it was settled in straight sets.` | `{0} и {1} встречались и раньше – тот матч закончился в двух сетах.` |
+| `Coming in, the head-to-head reads {0} {1}, {2} {3}.` | `Личные встречи до этого матча: {0} – {1}, {2} – {3}.` |
+| `{0} and {1} have already met {2} times in the past year.` | `{0} и {1} уже встречались за последний год {2, plural, one {{2} раз} few {{2} раза} many {{2} раз} other {{2} раза}}.` |
+
 ## ⚙ 11.10 agent-authored (бланкет) – the match controls and the score readout
 
 ⚙ 11.10 agent-authored under the blanket ruling; his live edit follows.

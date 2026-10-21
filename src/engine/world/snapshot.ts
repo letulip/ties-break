@@ -141,6 +141,7 @@ import { shopView, reachableFundsCents } from './shop'
 // ledger cannot disagree about whether the split is running.
 import { merchWeeklyIncomeCents } from './business'
 import { copyByTrack, copyTrophyLedger, emptySeasonRecord, seasonWrapDue } from './milestones'
+import { headToHead } from './headToHead'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
 // ⭐⭐ B-03 (26.09): `adPortfolioView` is the Money shelf's rows, derived beside the letter writer
@@ -1208,6 +1209,9 @@ export function pendingView(world: WorldState): PendingView | undefined {
       ? (ranks.get(id) ?? null)
       : null
 
+  const oppShort = formatShortName((p.players[oppId] ?? fallbackPlayer(oppId)).name)
+  const h2h = headToHead(world, oppShort, p.eventId)
+
   return {
     eventId: p.eventId,
     tier: event.tier,
@@ -1247,8 +1251,10 @@ export function pendingView(world: WorldState): PendingView | undefined {
     // pairing this field's docstring pins: `ladder` non-null, note null, in one literal.
     ladderNote: null,
     kidRank: kidLadderRankFolded(world, track),
+    // ⭐ ROUND 53 · STEP 6 – absent when they have never met (see `PendingView.headToHead`)
+    ...(h2h ? { headToHead: h2h } : {}),
     opponent: {
-      name: formatShortName((p.players[oppId] ?? fallbackPlayer(oppId)).name),
+      name: oppShort,
       nation: oppNation,
       rank: oppRankIn(oppId),
       // HOW OLD SHE IS (the owner: «и в турнирах перед матчем тоже можно показывать»), off the FROZEN
