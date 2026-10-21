@@ -602,6 +602,9 @@ interface TierGroup {
   rows: Row[]
   loCents: number
   hiCents: number
+  /** The rung's medical-team sentence, the ENGINE's (`coachLoadNote(tier)`), read off the group's first
+   *  row – every row of a tier carries the same one, so this is no second spelling. */
+  loadNote: string
 }
 const groups = computed<TierGroup[]>(() =>
   HIREABLE_TIERS.map((tier) => {
@@ -618,6 +621,7 @@ const groups = computed<TierGroup[]>(() =>
       rows: sorted,
       loCents: prices.length ? Math.min(...prices) : 0,
       hiCents: prices.length ? Math.max(...prices) : 0,
+      loadNote: sorted.length ? sorted[0].loadNote : '',
     }
   }).filter((g) => g.rows.length > 0),
 )
@@ -1297,6 +1301,14 @@ function scrollToTier(tier: CoachTier): void {
         <span class="tier-count">{{ t('{0} coaches', [g.rows.length]) }}</span>
         <span class="tier-range">{{ t('{0}-{1} /wk', [formatCents(g.loCents), formatCents(g.hiCents)]) }}</span>
       </p>
+      <!-- ⚠ R53 L1 (21.10) – THE MEDICAL-TEAM SENTENCE LIVES HERE, ONCE PER TIER, NOT ON EVERY CARD. The
+           owner: the same last phrase on each card of a group «шумит» – four repeats on cards that are
+           already over-full – so it is lifted out and set as a block of text under the tier's title.
+           The reasoning it was first put on the card for (round `load slice`: the money buys a better
+           medical team and takes decisions off you, and nothing on screen said so) still holds – the
+           tier is what that sentence is about, and it is the engine's own `coachLoadNote(tier)`,
+           word for word. -->
+      <p v-if="g.loadNote" class="tier-note">{{ engineText(g.loadNote) }}</p>
 
       <!-- The portrait is FULL-BLEED down the left edge, sized by height, masked into the card -
            the same treatment `.coach-card` uses on Home and for the same reason (A2c/d): a strip
@@ -1412,13 +1424,8 @@ function scrollToTier(tier: CoachTier): void {
                read on her, not a fact about anybody for hire. Empty until her own decline starts,
                which is the same data-level guarantee Home's short plate inherits. -->
           <span v-if="r.current && declineNote" class="cm-decline">{{ declineNote }}</span>
-          <!-- WHAT HE DOES ABOUT HER BODY (load slice). The card used to make exactly one claim - the
-               development uplift - so the two differences that wave introduced (how good his medical
-               team is, and how much of the deciding he takes off you) were spent money with nothing on
-               screen to explain it. Prose, not a second number: the measured spread is a few injury
-               weeks over four years and printing a figure would promise precision the run cannot back.
-               Below the uplift, quieter than it, because the uplift is still the card's headline. -->
-          <span class="cm-load">{{ engineText(r.loadNote) }}</span>
+          <!-- WHAT HE DOES ABOUT HER BODY (load slice) used to close the card here; R53 L1 moved the sentence
+               to the tier block above (`.tier-note`) – see the note there. -->
         </span>
         <!-- ⭐⭐⭐ ROUND 42 #42 - THE WEEK'S COST, THEN THE WAY IN. The price line has carried what
              the rung costs since the market shipped; what changed is the line under it. It used to
