@@ -116,6 +116,15 @@ const RECUR = ECONOMY.availability.recurrence as unknown as {
   partTilt: number
   halfLifeWeeks: number
   loadCap: number
+  durationFloorWeeks: number
+  durationCeilWeeks: number
+  durationFactorLo: number
+  durationFactorHi: number
+}
+// ⭐ ROUND 53 L5 – the control arm for the duration factor: both ends 1 is the pre-21.10 weight.
+if (flag('flatDuration')) {
+  RECUR.durationFactorLo = 1
+  RECUR.durationFactorHi = 1
 }
 if (flag('noRecurrence')) {
   RECUR.tauBump = 0
@@ -506,6 +515,46 @@ console.log('\n  2b. CLUSTERING (round 30 #27 – the texture columns, read agai
       pct(seasonCounts.filter((n) => n >= 2).length, seasonCounts.length) +
       `   (the other half of the same story)`,
   )
+}
+
+// --- 2c. DURATION – round 53 L5 (owner, 21.10) -----------------------------------------------------
+// The memory a layoff leaves now scales with how long she was out. Read against `--flatDuration`.
+// ⚠ `weeksOut` here is the clinic's dealt number (the bench runs without a masseur), which is the
+// number the engine's own row carries whenever `weeksSaved` is 0.
+console.log('\n  2c. DURATION (round 53 L5 – read against --flatDuration)')
+{
+  const dur = (w: number) => {
+    const t = Math.min(1, Math.max(0, (w - RECUR.durationFloorWeeks) / (RECUR.durationCeilWeeks - RECUR.durationFloorWeeks)))
+    return RECUR.durationFactorLo + (RECUR.durationFactorHi - RECUR.durationFactorLo) * t
+  }
+  const wt = RECUR as unknown as { severityWeight: Record<InjurySeverity, number> }
+  const buckets: Array<[string, (w: number) => boolean]> = [
+    ['<= 2w', (w) => w <= 2],
+    ['3-6w', (w) => w >= 3 && w <= 6],
+    ['7-11w', (w) => w >= 7 && w <= 11],
+    ['>= 12w', (w) => w >= 12],
+  ]
+  console.log(`     onsets ${onsets.length} · mean duration factor over the mix ${f(mean(onsets.map((o) => dur(o.weeksOut))), 3)} · mean weeksOut ${f(mean(onsets.map((o) => o.weeksOut)), 1)}`)
+  console.log('     bucket    share of onsets   mean sev weight   mean memory weight   followed by ANY onset <=52w after return   ...SAME part')
+  const WIN = 52
+  for (const [label, test] of buckets) {
+    const sel: Array<{ o: Onset; next: Onset[] }> = []
+    for (const c of careers) {
+      const ordered = [...c.onsets].sort((a, b) => a.week - b.week)
+      ordered.forEach((o, i) => {
+        if (!test(o.weeksOut)) return
+        const back = o.week + o.weeksOut
+        sel.push({ o, next: ordered.slice(i + 1).filter((n) => n.week > back && n.week <= back + WIN) })
+      })
+    }
+    const sev = sel.map((x) => (wt.severityWeight as Record<string, number>)[x.o.severity] ?? 0)
+    console.log(
+      `     ${label.padEnd(8)}  ${pct(sel.length, onsets.length).padStart(14)}   ${f(mean(sev), 3).padStart(15)}   ` +
+        `${f(mean(sel.map((x, i) => sev[i] * dur(x.o.weeksOut))), 3).padStart(18)}   ` +
+        `${pct(sel.filter((x) => x.next.length > 0).length, sel.length).padStart(40)}   ` +
+        `${pct(sel.filter((x) => x.o.part !== null && x.next.some((n) => n.part === x.o.part)).length, sel.length)}  (n=${sel.length})`,
+    )
+  }
 }
 
 // --- 3. the tail --------------------------------------------------------------------------------------

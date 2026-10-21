@@ -147,6 +147,16 @@ export const availability = {
     /** Weight one recovered layoff contributes at zero decay, by what it was. A niggle is a fact
      *  about a week; a tear is a fact about a body, and the ladder says so. */
     severityWeight: { minor: 0.4, moderate: 0.7, major: 1, severe: 1 } as Record<InjurySeverity, number>,
+    /** ⭐ DURATION SCALES THE WEIGHT (owner, 21.10: «может быть не жестко 30% а как-то в зависимости
+     *  от самой травмы и ее сложности/продолжительности сделать более динамично?»). Within a severity
+     *  a row weighs `severityWeight x factor(weeksOut)`: `durationFactorLo` at `durationFloorWeeks`
+     *  or less, `durationFactorHi` at `durationCeilWeeks` or more, linear between – a twelve-week
+     *  layoff leaves more than twice the fragility a fortnight does (1.4 / 0.6 = 2.33; 7 weeks is exactly 1).
+     *  `weeksOut` is the weeks she was ACTUALLY out. Cap, half-life and bumps are untouched. */
+    durationFloorWeeks: 2,
+    durationCeilWeeks: 12,
+    durationFactorLo: 0.6,
+    durationFactorHi: 1.4,
     halfLifeWeeks: 52,
     loadCap: 1,
     /** HOW MUCH MORE LIKELY, at full load – `injuryTau *= 1 + tauBump x load`. «Немного» is his
