@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 174 dated entries, newest 2026-10-15. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 175 dated entries, newest 2026-10-21. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -40,7 +40,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 31 | [ROUND 52, HIS TIMING ANSWERS (his two review-sheet questions)](#15102026--round-52-his-timing-answers-his-two-review-sheet-questions) | 2026-10-15 |
+| process-and-git | 32 | [ROUND 53, HIS ANSWERS ON THE SPECS (verbatim in the round ledger)](#21102026--round-53-his-answers-on-the-specs-verbatim-in-the-round-ledger) | 2026-10-21 |
 | product-and-scope | 8 | [LOCALIZATION: THE NINE QUESTIONS RULED, PLUS THREE ORDERS – THE STACK LANDS WITH THE INTAKE](#07102026--localization-the-nine-questions-ruled-plus-three-orders--the-stack-lands-with-the-intake) | 2026-10-07 |
 | ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
@@ -6177,3 +6177,29 @@ byte-identity proven, and the coach market was the last product screen to leave 
    weeks 24–31; R71's six «полгода» rows are approved with it.
 2. **«Год» means the first year** – «Окно 48–63 нед.»: the year rows (R73–R75) get an upper bound,
    so ordinary small talk cannot raise them after ~15 months; the week-56 checkpoint stays.
+
+## 21.10.2026 – ROUND 53, HIS ANSWERS ON THE SPECS (verbatim in the round ledger)
+
+1. **A round is discussed before it is built** – «Мы сначала делаем спеку и обсуждаем каждый
+   пункт. Я не говорил ничего строить». Spec, his word per item, then dispatch; builders no lower
+   than sonnet («Исполнители не ниже sonnet»).
+2. **The coach's pay ladder** – three bands: «до 51 места без изменений», elite from the first day
+   «2к+ за неделю (2–3к вполне может быть ок)», «50–11 тренер с письмом повышает цену и в таблице
+   все тренеры тоже должны подорожать», «1–10 еще дороже, но механизм остается», «10% с призовых…
+   остаются» (10% title / 5% final); refusal of the band letter → the coach leaves at season end,
+   and the whole market reprices. Famous names: «обмен может быть как раз разный, у кого-то
+   химия, у кого-то бонус или спонсоры» – and sparring access («спарринги может и да»).
+3. **Relationships on her page from the first known partner** – «можно сразу показывать уже
+   что-то про отношения»; college with nobody keeps «Курс N из 4»; the name comes through the
+   micro-dialogs by trust and openness («если отношения хорошие – то она расскажет, или
+   "продавить"»), by the papers at the top tournaments, by phone from college; pressing costs
+   −2 bond (the architect's number on his «как сам считаешь»).
+4. **Weather in two stages, the third not now** – «спеку на 1 и 2 этапы»; rain never pauses the
+   game («мы же не будем игру останавливать») – a commentator's line and «+1 кондиции»; indoor
+   courts to the backlog («давай без него пока что»).
+5. **The honest injury week** – the withdraw caution «будет очень наглядно»; letting the masseur
+   go withdraws the entries in the gap – «я бы снял автоматически "доктор не пустил"».
+6. **Cheap backlog items ride along** – «добавим что недорого»; fragility after an injury «в
+   зависимости от самой травмы и ее сложности/продолжительности».
+7. **The medical-team sentence off the coach cards** – «вынесем и поставим… как некий
+   разделитель тиров просто блоком текста прямо под названием тира».
