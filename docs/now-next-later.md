@@ -190,8 +190,9 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   held a predicate the engine did not*. The instrument exists (round 28 #8's paired mount test) and
   needs naming as a convention and applying to the known sites.
   ([the-quality-rig.md](backlog/the-quality-rig.md) row 13.)
-- **Round 16 #20, keeping the screen awake during a match** – no `wakeLock` reference exists in
-  `src/`. ⚠ Its neighbour, **#8 kit wear on holiday, SHIPPED in round 29 #20** after four askings.
+- **Round 16 #20, keeping the screen awake during a match** – ⚙ SHIPPED, and this line was stale
+  (re-verified 21.10, round 53 step 3): `useScreenWake(playing)` in `MatchViewer.vue:266` over
+  `composables/screenWake.ts` (`navigator.wakeLock`). ⚠ Its neighbour, **#8 kit wear on holiday, SHIPPED in round 29 #20** after four askings.
   ([round-16.md](rounds/round-16.md).)
 - **Round 8 #1, the in-tournament player card** – untouched since 25.07 and the oldest open item in
   the folder. ([rounds/README.md](rounds/README.md), the round-8 row.)
