@@ -62,7 +62,10 @@ describe('v83 – the latch and the name seat arrive on every episode row', () =
       // literal ends `…, latchedWeek, partnerName`, and the walk `??=`s them in that same order –
       // so a migrated row and a born row serialise identically and two careers with the same
       // history cannot hash apart (the v77 order pin's own argument, one version on).
-      expect(Object.keys(row).slice(-2), `row ${i}: the two arrive last, in the literal's order`).toEqual(['latchedWeek', 'partnerName'])
+      // ⚠ RE-AIMED 21.10 BY r53 M9 (v95 `nameKnownWeek`; re-aim by M9b), NOT WEAKENED: v95 appends one more key AFTER these two, so the LAST
+      // two are now `partnerName, nameKnownWeek`; v83's pair is asserted as the three-from-the-end window. The order claim – a migrated row
+      // and a born row serialise identically – is unchanged (the born literal ends `…, latchedWeek, partnerName, nameKnownWeek`).
+      expect(Object.keys(row).slice(-3), `row ${i}: the two arrive last, in the literal's order, with v95's key after them`).toEqual(['latchedWeek', 'partnerName', 'nameKnownWeek'])
     }
   })
 

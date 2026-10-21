@@ -1450,7 +1450,8 @@ const RECIPES: Recipe[] = [
         if (married.latchedWeek !== probe.week - 1) {
           return `the wedding landed on week ${married.latchedWeek}, not on the ${ECONOMY.wedding.weeksAfterEngagement}th press (${probe.week - 1})`
         }
-        // ⚠ AND SHE HAS A NAME, written ONCE at the engagement by `partnerNameFor` (T1's law). It is
+        // ⚠ AND SHE HAS A NAME – drawn at the row's birth since v95 (r53 M9; was: written once at the engagement) and made KNOWN at the
+        // engagement (`nameKnownWeek`, asserted in tests/e2e-fixtures.test.ts). Re-worded by M9b; the check below is unchanged. It is
         // asserted here rather than in the spec because NO SURFACE SPEAKS IT at W1–W2 – whether one
         // ever does is the owner's wording question (T7) – so the browser cannot see it and this is
         // the layer that can.

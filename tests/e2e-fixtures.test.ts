@@ -618,8 +618,7 @@ describe('e2e fixtures: each is the state its name promises', () => {
   // save's own position, then the product's own `tickWeek`, which is what the worker runs behind the
   // week button (the serializer rule in tools/e2e-fixtures.ts' header).
   //
-  // ⚠ AND IT OWNS THE ONE ASSERTION THE BROWSER CANNOT MAKE. `partnerName` is written once, at the
-  // engagement, and NO SURFACE SPEAKS IT at W1–W2 – «whether a surface speaks the husband's name is
+  // ⚠ AND IT OWNS THE ONE ASSERTION THE BROWSER CANNOT MAKE. `partnerName` is persisted once (drawn at the row's birth since v95 – r53 M9; the engagement makes it KNOWN), and NO SURFACE SPEAKS IT at W1–W2 – «whether a surface speaks the husband's name is
   // T7's wording question, not a default» (world/lifeBeat.ts). A spec can only see what is drawn, so
   // the second half of the v83 schema move is asserted here, on the decoded world, or nowhere.
   // ===============================================================================================
@@ -651,7 +650,12 @@ describe('e2e fixtures: each is the state its name promises', () => {
         "row's own age in weeks, never from new state",
     ).toBeGreaterThanOrEqual(ECONOMY.wedding.minEpisodeWeeks)
     expect(live!.latchedWeek, 'and nobody is married yet').toBeNull()
-    expect(live!.partnerName, 'nor named – the name is written AT the engagement, never before it').toBeNull()
+    // ⚠ RE-AIMED 21.10 BY r53 M9 (the partner's name – v95; re-aim by M9b), NOT WEAKENED: «nor named – the name is written AT the engagement,
+    // never before it» was the v83 design. It is now drawn at the ROW'S BIRTH and the parent learns it by `nameKnownWeek` (spec
+    // partner-name-disclosure §3), so the fixture's row is NAMED from the start; whether the parent has heard it yet is `nameKnownWeek`'s
+    // business, and the engagement (asserted below) is the road that always makes it known.
+    expect(live!.partnerName, 'named from the row\'s birth – the name exists before the engagement (v95)').not.toBeNull()
+    const nameAtBirth = live!.partnerName
 
     // ⭐⭐⭐ ONE TICK – the browser's first press – AND SHE SAYS IT.
     tickWeek(world, resumeMain(world.rngMain))
@@ -670,7 +674,10 @@ describe('e2e fixtures: each is the state its name promises', () => {
     // the result is PERSISTED rather than re-derived at read, so a later pool edit can never rename a
     // husband an old career already has (T1's own law). This is the browser's blind spot, covered.
     const named = loveEpisodesOf(world).find((e) => e.id === live!.id)!
-    expect(named.partnerName, 'the engagement wrote no name onto the episode').not.toBeNull()
+    // ⚠ RE-AIMED 21.10 BY r53 M9 (re-aim by M9b): the engagement no longer WRITES the name – it makes the name KNOWN (`nameKnownWeek` set, by
+    // the one writer `learnPartnerName`) and leaves the persisted name exactly the one the row was born with.
+    expect(named.partnerName, 'the engagement renamed the partner – the name is the one drawn at the row\'s birth').toBe(nameAtBirth)
+    expect(named.nameKnownWeek, 'and the engagement made the name KNOWN to the parent (v95 `nameKnownWeek`)').not.toBeNull()
     expect(named.latchedWeek, 'and the latch is still eight weeks away').toBeNull()
 
     // ⭐⭐⭐ AND EIGHT ORDINARY PRESSES LATER, THE WEDDING. The answer is the one the recipe pressed

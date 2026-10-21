@@ -673,7 +673,8 @@ describe('save migrations', () => {
     // ⚠ AND AGAIN AT v92 (06.10, SUCCESSION S1 – the calendar's start year): one more bump, and this pin follows the live number as it always has.
     // ⚠ AND AGAIN AT v93 (09.10, the localization rig L3-0 – `WorldEvent.c`): one more bump; its step only attaches a ref beside a row's text and cannot touch the v63 -> v65 walk this case is about.
     // ⚠ AND AGAIN AT v94 (12.10, round 49 №8 – the wedding-milestone net): one more bump; its step only backfills a wedding milestone beside a latched episode and cannot touch the v63 -> v65 walk this case is about.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 94 – past the colliding 64, through 65').toBe(94)
+    // ⚠ AND AGAIN AT v95 (21.10, r53 M9 – the partner's name: `nameKnownWeek`), re-aimed by M9b: one more bump; its step only writes one key per love row (`??=`, draws nothing) and cannot touch the v63 -> v65 walk this case is about.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 95 – past the colliding 64, through 65').toBe(95)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

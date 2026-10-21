@@ -323,17 +323,21 @@ describe('wave 3 T6 B – the bond band decides the register, never the existenc
 // C. THE ANSWER SET – ⭐⭐ PER KIND, AND THE FORK'S THREE ARE NOT OFFERED HERE
 // =================================================================================================
 describe('wave 3 T6 C – a `met` answer set is not a fork-opinion answer set', () => {
-  it('⭐⭐ the card offers the `met` four and none of the fork\'s three', () => {
+  it('⭐⭐ the card offers the `met` six (the four reactions + the two name answers) and none of the fork\'s three', () => {
     const world = aboutToBeTold('t6-options', 900, 'close')
     world.week = 900
     deliverKnownPartner(world)
     const prompt = buildLifeBeatPrompt(world)!
     expect(prompt.kind, 'the card knows which beat it is').toBe('met')
-    expect(prompt.options.map((o) => o.id), 'the four reactions, in the engine\'s order').toEqual(MET_OPTIONS.map((o) => o.id))
+    // ⚠ RE-AIMED 21.10 BY r53 M9 (the partner's name; re-aim by M9b), NOT WEAKENED: the “there is someone” card gained two answers –
+    // «Ask what his name is» and «Insist: we want to know» (spec partner-name-disclosure §3) – so the set is SIX, in the engine's order.
+    // The claim (the card's answers are the `met` table's, none the fork's) is unchanged; the table itself is the oracle.
+    expect(prompt.options.map((o) => o.id), 'the six answers, in the engine\'s order').toEqual(MET_OPTIONS.map((o) => o.id))
+    expect(MET_OPTIONS.map((o) => o.id).slice(-2), 'and the last two are the name answers').toEqual(['ask', 'insist'])
     for (const forkId of LIFE_BEAT_OPTIONS['fork-opinion'].map((o) => o.id)) {
       expect(prompt.options.some((o) => o.id === forkId), `${forkId} belongs to the other beat`).toBe(false)
     }
-    expect(new Set(prompt.options.map((o) => o.label)).size, 'four different sentences').toBe(4)
+    expect(new Set(prompt.options.map((o) => o.label)).size, 'six different sentences').toBe(6)
   })
 
   it('⚠⚠ no listen detour on a `met` card – its options are reactions, not «say nothing and let her talk»', () => {
@@ -342,7 +346,10 @@ describe('wave 3 T6 C – a `met` answer set is not a fork-opinion answer set', 
     deliverKnownPartner(world)
     // ⚠ RE-AIMED BY ROUND 42 #15/#24: one nullable entry became a list, so «no detour» is «no
     // entries». The claim is untouched.
-    expect(buildLifeBeatPrompt(world)!.followUps, '⚠ no listen detour').toEqual([])
+    // ⚠ RE-AIMED 21.10 BY r53 M9 (re-aim by M9b), NOT WEAKENED: the two NAME answers carry HER reply (`followUps` entries for `ask` and
+    // `insist`, spec §3) – an answer's own reaction, not a «say nothing and let her talk» detour. «No listen detour» is therefore
+    // «no followUp for any of the four reactions»: the only entries are those two ids.
+    expect(buildLifeBeatPrompt(world)!.followUps.map((f) => f.optionId), '⚠ no listen detour – only the two name answers reply').toEqual(['ask', 'insist'])
     expect(lifeBeatListenFollowUp('met', 'p:1', 'sunny', 'close'), 'and the assembler says so directly').toBeNull()
     // The control: the fork's own beat DOES carry one at the same band, so the null above is about
     // this kind and not about the band or a broken fixture.
@@ -372,7 +379,9 @@ describe('wave 3 T6 C – a `met` answer set is not a fork-opinion answer set', 
     }
     // ⚠⚠ THE TABLE ITSELF AS LITERALS, which the loop above deliberately cannot do: it reads
     // `option.bond`, so it moves WITH a retune. These four are the brief §4's ruled row.
-    expect(MET_OPTIONS.map((o) => o.bond), 'warm / wary / intrusive / silent, as ruled').toEqual([2, 0, -3, -1])
+    // ⚠ RE-AIMED 21.10 BY r53 M9 (re-aim by M9b), NOT WEAKENED: the table is six rows now – the ruled four, then `ask` 0 and `insist` −2 (spec
+    // §3 road 2: half the worst big-beat answer). The four constants below are untouched.
+    expect(MET_OPTIONS.map((o) => o.bond), 'warm / wary / intrusive / silent, then ask / insist, as ruled').toEqual([2, 0, -3, -1, 0, -2])
     expect(
       [ECONOMY.bond.delta.metWarm, ECONOMY.bond.delta.metWary, ECONOMY.bond.delta.metIntrusive, ECONOMY.bond.delta.metSilent],
       'and the constants they are wired from',
@@ -384,7 +393,9 @@ describe('wave 3 T6 C – a `met` answer set is not a fork-opinion answer set', 
     // boyfriend -> husband»), so a label that said «him» would put on screen a fact the world does
     // not hold. The wave-3 brief's own draft of the intrusive label says «him»; this pin is why the
     // shipped draft does not, and the wording is the owner's to settle either way.
-    for (const option of MET_OPTIONS) {
+    // ⚠ RE-AIMED 21.10 BY r53 M9 (re-aim by M9b): the PARTNER may be «he/him» by the spec (§3 – the owner's own lines: «Ask what his name is»), so the two
+    // NAME answers are exempt BY ID. The four reactions keep the rule whole. (The COACH rule, R15-7, is a different pin and untouched.)
+    for (const option of MET_OPTIONS.filter((o) => o.id !== 'ask' && o.id !== 'insist')) {
       expect(option.label, `${option.id} names no gender`).not.toMatch(/\b(him|his|her boyfriend|girlfriend|he|she)\b/i)
     }
   })

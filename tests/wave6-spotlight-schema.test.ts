@@ -230,7 +230,8 @@ describe('wave 6 T1 A – v77, the three-part move', () => {
     // is untouched – every v77 sentinel survives whole – and the v83 step's own `??=` sentinels are
     // asserted where they belong, in tests/wave7-wedding-schema.test.ts.
     expect(out.loveEpisodes, 'and so is every field of every row').toEqual(
-      kept.loveEpisodes.map((row) => ({ ...row, latchedWeek: null, partnerName: null })),
+      // ⚠ RE-AIMED 21.10 BY r53 M9 (v95; re-aim by M9b): a third per-row key, `nameKnownWeek: null`, arrives at the head. Claim untouched.
+      kept.loveEpisodes.map((row) => ({ ...row, latchedWeek: null, partnerName: null, nameKnownWeek: null })),
     )
   })
 
@@ -318,7 +319,8 @@ describe('wave 6 T1 B – the walk over `loveEpisodes`, on a payload built for i
     // the only line that moved, the same probe career, the same two episode rows. The claim is
     // unchanged: every fixture BELOW v83 still runs the per-row walks zero times.
     // ⚠ RE-AIMED 12.10 BY v94 (round 49 №8 – the wedding-milestone net): one more migrated head of the same v83 probe – its episode row rides into v94.json exactly as it rode into v84–v93.
-    expect(carrying, 'exactly the wave-7 probe and its migrated heads hold an attachment, and no older golden ever has').toEqual(['v83.json', 'v84.json', 'v85.json', 'v86.json', 'v87.json', 'v88.json', 'v89.json', 'v90.json', 'v91.json', 'v92.json', 'v93.json', 'v94.json'])
+    // ⚠ RE-AIMED 21.10 BY v95 (r53 M9 – the partner's name; re-aim by M9b): one more migrated head of the same v83 probe – its two episode rows ride into v95.json exactly as they rode into v84–v94.
+    expect(carrying, 'exactly the wave-7 probe and its migrated heads hold an attachment, and no older golden ever has').toEqual(['v83.json', 'v84.json', 'v85.json', 'v86.json', 'v87.json', 'v88.json', 'v89.json', 'v90.json', 'v91.json', 'v92.json', 'v93.json', 'v94.json', 'v95.json'])
   })
 
   it('⭐⭐⭐ back-fills all four fields on EVERY row – a live one and an ended one, in one payload', () => {
@@ -384,8 +386,9 @@ describe('wave 6 T1 B – the walk over `loveEpisodes`, on a payload built for i
     // `latchedWeek` and `partnerName` (both null) after v77's four. «Exactly its own fields and
     // nothing else» is still the claim – the list is just two versions long now, and a seventh
     // field arriving is still a red line here.
-    expect(Object.keys(after).filter((k) => !(k in row)).sort(), 'exactly six fields arrive, and they are these six')
-      .toEqual([...V77_ROW_FIELDS, 'latchedWeek', 'partnerName'].sort())
+    expect(Object.keys(after).filter((k) => !(k in row)).sort(), 'exactly seven fields arrive, and they are these seven')
+      .toEqual([...V77_ROW_FIELDS, 'latchedWeek', 'partnerName', 'nameKnownWeek'].sort())
+    // ⚠ RE-AIMED AGAIN 21.10 BY v95 (r53 M9; re-aim by M9b): the list is one longer – `nameKnownWeek` arrives seventh. «Exactly its own fields and nothing else» holds; the title's «six» is now seven fields.
     for (const key of Object.keys(row)) {
       expect(JSON.stringify(after[key]), `${key} survives the step untouched`).toBe(JSON.stringify(row[key]))
     }
@@ -397,8 +400,10 @@ describe('wave 6 T1 B – the walk over `loveEpisodes`, on a payload built for i
     // ⚠ RE-AIMED AT v83 FOR THE SAME SERIALISATION-PARITY REASON: the v82 -> v83 walk `??=`s
     // `latchedWeek` then `partnerName`, in `rollArrival`'s own literal order, so a migrated row and
     // a born row still serialise identically – which is what the order pin below now also proves.
-    expect(Object.keys(after), 'the six v74 fields first, then v77\'s four, then v83\'s two')
-      .toEqual(['id', 'sinceWeek', 'endedWeek', 'knownWeek', 'wants', 'partnerId', ...V77_ROW_FIELDS, 'latchedWeek', 'partnerName'])
+    // ⚠ RE-AIMED AGAIN AT v95 (21.10, r53 M9 – re-aim by M9b), NOT WEAKENED: the v94 -> v95 walk `??=`s `nameKnownWeek` LAST, after v83's two,
+    // matching `rollArrival`'s literal (`…, latchedWeek, partnerName, nameKnownWeek`), so the parity claim above holds one version on.
+    expect(Object.keys(after), 'the six v74 fields first, then v77\'s four, then v83\'s two, then v95\'s one')
+      .toEqual(['id', 'sinceWeek', 'endedWeek', 'knownWeek', 'wants', 'partnerId', ...V77_ROW_FIELDS, 'latchedWeek', 'partnerName', 'nameKnownWeek'])
   })
 
   it('⚠ an empty list and an absent list are both handled, and neither throws', () => {
