@@ -62,6 +62,9 @@ const TABLE = new Set(allTemplateKeys())
  *  requirement keys are the SAME spellings `composables/letterCopy.ts` gives the season notice's stored phrases (`All {0} {1}` / `All {0} {1}s` / `{0} of the {1} {2}s`), so the popup
  *  and the letter are one translation. */
 const NEW_KEYS: readonly string[] = [
+  // ⚠ 21.10 r53 step 2 (L2): the masseur-release withdrawal row – a new sentence for a new event; no old
+  // save can hold it (nothing withdrew on a release before), the table's row is R53's own.
+  'Doctor said no: {0} – {1}',
   // ⚠ 10.10 (the strong-repeat trim, owner «берём все четыре»): the four door receipts lost the
   // clause their blurb now tells – new spellings for new careers; old saves keep the old arms.
   '{0} weeks below zero',
@@ -615,7 +618,8 @@ describe('§2 text / c pairs', () => {
     // + 4 (L3-4, part 2): the travel scrap's two fallback sentences and its static pick, and the coach's pick (`weekNoteLine` returns `{ text, c: { k: text } }` by SHORTHAND – not a pair here)
     // + 12 (L3-5): the life beats' twelve sinks – the answer row, the two kept news rows, the ended-now row, the divorce row and its milestone, the leak, the key, the pause, the birth milestone, the loss, the wedding day
     // + 8 (L3-6): the endings' eight sinks – the latch row, the school row, the offer row, the return row, the leaving voice, the college place, turning professional, «one more year»
-    expect(all.length, 'pairs of text + c in src/engine').toBe(170)
+    // + 1 (r53 step 2, 21.10): the masseur-release withdrawal row (`releaseEntry`'s feedLine)
+    expect(all.length, 'pairs of text + c in src/engine').toBe(171)
   })
 
   it('every pair expands to the SAME sentences – each branch, each inlined ternary, the same holes in the same order – or is announced', () => {

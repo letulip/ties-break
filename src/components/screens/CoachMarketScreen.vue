@@ -1302,7 +1302,7 @@ function scrollToTier(tier: CoachTier): void {
         <span class="tier-range">{{ t('{0}-{1} /wk', [formatCents(g.loCents), formatCents(g.hiCents)]) }}</span>
       </p>
       <!-- ⚠ R53 L1 (21.10) – THE MEDICAL-TEAM SENTENCE LIVES HERE, ONCE PER TIER, NOT ON EVERY CARD. The
-           owner: the same last phrase on each card of a group «шумит» – four repeats on cards that are
+           owner: the same last phrase on each card of a group is noise (his word, in the ledger) – four repeats on cards that are
            already over-full – so it is lifted out and set as a block of text under the tier's title.
            The reasoning it was first put on the card for (round `load slice`: the money buys a better
            medical team and takes decisions off you, and nothing on screen said so) still holds – the
