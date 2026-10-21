@@ -12,10 +12,12 @@ import type {
   Side,
   Surface,
   Tour,
+  MatchWeather,
 } from './types'
 import { createScore, awardPoint, contextOf, decidingClose, formatScore } from './scoring'
 import { basePServe, calibratedPServe, modifiedPServe, retireDurability, retireHazard, type Streak } from './point'
 import { pMatchBo3 } from './closedForm'
+import { heatFatigueFactor } from './weather'
 import { rngFromSeed } from '../rng'
 
 // Junior events run under WTA-average scoring (the project is WTA-first). Fixed so
@@ -52,8 +54,10 @@ export const JUNIOR_TOUR: Tour = 'wta'
  * so the fallback is unreachable from the four recorders and reachable only from a screen handed a
  * row that cannot be replayed at all – exactly what those screens did before.
  */
-export function recordedMatchOptions(rec: { surface: Surface; seed?: string }): MatchOptions {
-  return { surface: rec.surface, tour: JUNIOR_TOUR, seed: rec.seed ?? '' }
+export function recordedMatchOptions(rec: { surface: Surface; seed?: string; weather?: MatchWeather }): MatchOptions {
+  // ⭐ r53 step 11 – the day rides on the record (`MatchRecord.weather`, absent on a calm match and
+  // on every match played before stage 2), so a re-watch replays the day it was played on.
+  return { surface: rec.surface, tour: JUNIOR_TOUR, seed: rec.seed ?? '', ...(rec.weather ? { weather: rec.weather } : {}) }
 }
 
 // Closed-form match win probability. No RNG, no per-point modifiers – the world "fast sim" path
@@ -175,6 +179,8 @@ export function simulateMatch(a: MatchPlayer, b: MatchPlayer, opts: MatchOptions
   let retired: { side: Side; pointNumber: number } | null = null
   // Base serve-win prob per server; constant across the match (skills/surface only).
   const baseServe: [number, number] = [basePServe(a, b, opts), basePServe(b, a, opts)]
+  // ⭐ r53 step 11 – the day's fatigue multiplier, read once; 1 without weather. Zero draws.
+  const heat = heatFatigueFactor(opts.weather?.temperatureC)
   const momentumOn = opts.momentum !== false
 
   const stats: [SideMatchStats, SideMatchStats] = [emptyStats(), emptyStats()]
@@ -235,7 +241,7 @@ export function simulateMatch(a: MatchPlayer, b: MatchPlayer, opts: MatchOptions
       streakObj.length = streakLen
       streakArg = streakObj
     }
-    const p = modifiedPServe(baseServe[server], players[server], players[receiver], ctx, streakArg)
+    const p = modifiedPServe(baseServe[server], players[server], players[receiver], ctx, streakArg, heat)
 
     const serverWins = rng() < p
     const winner: Side = serverWins ? server : receiver
@@ -288,8 +294,8 @@ export function simulateMatch(a: MatchPlayer, b: MatchPlayer, opts: MatchOptions
     // Skipped once the match is already decided – you cannot retire from a match you have just won,
     // and without this guard a hazard that fires on match point would steal a completed result.
     if (score.winner === null) {
-      retH[0] += retireHazard(pointNumber, players[0].stamina, retD[0])
-      retH[1] += retireHazard(pointNumber, players[1].stamina, retD[1])
+      retH[0] += retireHazard(pointNumber, players[0].stamina, retD[0], heat)
+      retH[1] += retireHazard(pointNumber, players[1].stamina, retD[1], heat)
       // Side 0 is asked first purely so the tie is TOTAL rather than order-of-evaluation-dependent.
       // Both firing on the same point needs two independent uniforms to be passed by two sums that
       // differ by the stamina ratio, on the same point, and has never been observed.

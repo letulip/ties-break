@@ -287,6 +287,9 @@ const RAIN_NOTES: Record<'possible' | 'falling', readonly Line[]> = {
   ],
 }
 
+/** ⭐ r53 step 11 – the held start, one line, DRAFT. */
+const RAIN_DELAY_NOTE: Line = line(cp`The start was held for an hour while the rain came through – the forecast for the match has not changed.`)
+
 /** The number said the way a person says it, never as a decimal. Rounded at the template boundary,
  *  which is the shipped bug the research found in a real product (live-text-adult-tour.md §2.3). */
 function pct(x: number): string {
@@ -442,6 +445,13 @@ const ENTRIES: readonly Entry[] = [
     },
   },
   {
+    // ⭐ r53 step 11 (weather stage 2, spec §4) – THE PAUSE IS PLAYED BY THE BOOTH, NOT BY THE MATCH:
+    // the start was held, the forecast above it did not move (owner, 21.10). Falling rain only. DRAFT.
+    key: 'rainDelay',
+    from: 1,
+    say: ({ input }) => (input.weather?.rain === 'falling' ? RAIN_DELAY_NOTE : null),
+  },
+  {
     key: 'opponent',
     from: 1,
     say: ({ storey, oppName, opp, input }) => {
@@ -550,7 +560,12 @@ export function buildPreview(input: PreviewInput): PreviewLine[] {
   const opp = input.heroSide === 0 ? input.b : input.a
   // Her chance, from the closed form that resolves every AI-vs-AI match. Seed is irrelevant to it
   // (`fastMatchProbability` plays no points) and is passed empty for exactly that reason.
-  const pOfA = fastMatchProbability(input.a, input.b, { surface: input.surface, tour: input.tour, seed: '' })
+  // ⭐ r53 step 11 – and the day, so this is the number the match is played under (weather stage 2).
+  const day =
+    input.weather && input.temperatureC != null
+      ? { weather: { temperatureC: input.temperatureC, wind: input.weather.wind, rain: input.weather.rain } }
+      : {}
+  const pOfA = fastMatchProbability(input.a, input.b, { surface: input.surface, tour: input.tour, seed: '', ...day })
   const ctx: Ctx = {
     storey,
     input,

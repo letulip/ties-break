@@ -195,6 +195,9 @@ describe('§3 completeness – the keys the grid reaches', () => {
  *    cannot be reached today and can tomorrow does not fall back to English; they cost a translator twelve rows, and the editorial doc already spells the hero-loses family (RU-08 §16.3).
  *  · ONE IS REACHABLE AND SIMPLY RARE: an ace into the body at a deciding point (20% of serves go there, and an ace is the clause of a break, a hold or a set in about one beat in sixty) – §3's second test finds it. */
 const UNREACHED: string[] = [
+  // r53 step 11: the rain's two booth remarks – reached only with `rainFalling`, which the grid does not pass.
+  "The rain is back – the players have gone under cover and the court is being covered.",
+  "The court is drying out, and they are back out – the rest will not have hurt either of them.",
   'She loses the point with a double fault.',
   'She loses the point with a long groundstroke.',
   'She loses the point with a long return.',

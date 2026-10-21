@@ -475,7 +475,10 @@ describe('the weather is decoration, and stays decoration', () => {
     // same three sites also assemble `weather` through `eventWeather` – the same three, by exact text.
     expect(world).toContain('temperatureC: eventTemperature(world.seed, { id: `college-w${reveal.week}`, surface, week: reveal.week })')
     expect(world).toContain('temperatureC: eventTemperature(world.seed, { id: `nations-w${reveal.week}`, surface, week: reveal.week })')
-    expect(world.match(/eventWeather\(/g) ?? [], 'world.ts reads the weather somewhere new').toHaveLength(3)
+    // ⭐ r53 step 11 (weather stage 2): three more reads, each one the match reading its day – the kid's
+    // tournament (phaseHerWeek), the tournaments she is not at (phaseAiWeek) and the champion row's tail
+    // (tournamentClose). Six, by decision; a seventh still goes red.
+    expect(world.match(/eventWeather\(/g) ?? [], 'world.ts reads the weather somewhere new').toHaveLength(6)
   })
 })
 

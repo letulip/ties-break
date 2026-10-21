@@ -62,6 +62,14 @@ const TABLE = new Set(allTemplateKeys())
  *  requirement keys are the SAME spellings `composables/letterCopy.ts` gives the season notice's stored phrases (`All {0} {1}` / `All {0} {1}s` / `{0} of the {1} {2}s`), so the popup
  *  and the letter are one translation. */
 const NEW_KEYS: readonly string[] = [
+  // ⚠ 22.10 r53 step 11 (weather stage 2): the champion row's weather tail – six new whole sentences for a
+  // new fact (the day touched the match); no old save can hold them, nothing had a weather tail before.
+  '🏆 {0} won the {1} ({2}) in exhausting heat.',
+  '🏆 {0} won the {1} ({2}) – the last one standing in the heat.',
+  '🏆 {0} won the {1} ({2}) despite the rain.',
+  '🏆 {0} won the {1} ({2}) – thanks to the rain, on the fresher legs.',
+  '🏆 {0} won the {1} ({2}) in a strong wind.',
+  '🏆 {0} won the {1} ({2}) – the wind had its say, and she had the last word.',
   // ⚠ 21.10 r53 step 2 (L2): the masseur-release withdrawal row – a new sentence for a new event; no old
   // save can hold it (nothing withdrew on a release before), the table's row is R53's own.
   'Doctor said no: {0} – {1}',
@@ -551,6 +559,8 @@ describe('§1b the dynamic seats', () => {
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 /** Sites where `c` is not the same set of sentences as `text` by SYNTAX – the reason, and the check that stands in. Keyed `file::the first 48 characters of the text expression`. */
 const NOT_ISOMORPHIC: Record<string, string> = {
+  'src/engine/world/tournamentClose.ts::champText':
+    'r53 step 11: the champion row is the shipped sentence OR one of six weather-tail sentences, and `champText` is the English of the SAME ref `c` carries (`englishOf(dayRef)`) – the test file r53-weather-stage2 renders the tails.',
   'src/engine/world/entries.ts::line': 'the release line is a `let` assigned in an exhaustive switch (three reasons) – §5 releases an entry for each reason and renders the new rows.',
   'src/engine/world/phaseFinance.ts::facility.text':
     '`facilityFlavor` now returns the sentence and its ref from ONE call (the pick is made once) – §4 plays careers, where the facility row is written every week, and renders it.',

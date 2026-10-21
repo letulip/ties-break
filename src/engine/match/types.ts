@@ -85,6 +85,14 @@ export interface MatchPlayer {
   condition?: number
 }
 
+/** ⭐ r53 step 11 – the day a match is played on, as the match reads it (a structural subset of
+ *  `EventWeather`, so the season layer's value is passed as it is). See `match/weather.ts`. */
+export interface MatchWeather {
+  temperatureC: number
+  wind: 'none' | 'fresh' | 'strong'
+  rain: 'none' | 'possible' | 'falling'
+}
+
 export interface MatchOptions {
   surface: Surface
   tour: Tour
@@ -107,6 +115,9 @@ export interface MatchOptions {
    *
    *  ⚠ OMITTED IS NOT "BOTH FRESH". It is "no opinion", and it falls through to the players. */
   condition?: [number, number]
+  /** ⭐ r53 step 11 – the day, read by the closed form and the point loop alike (`match/weather.ts`).
+   *  Omitted = the calm, mild day every match was played on before stage 2: byte-identical. */
+  weather?: MatchWeather
 }
 
 /** Raw point counters of the current game or tiebreak (deuce = margin rule, not a state). */

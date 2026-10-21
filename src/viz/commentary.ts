@@ -1567,6 +1567,12 @@ interface Candidate extends Beat {
  *   log, which is byte-identical to what this function returned before the occasion existed. The
  *   ladder only ever adds.
  */
+/** ⭐ r53 step 11 – the rain's two remarks, in the order a held match has them. DRAFT. */
+const RAIN_IN_PLAY: readonly [Line, Line] = [
+  line(cp`The rain is back – the players have gone under cover and the court is being covered.`),
+  line(cp`The court is drying out, and they are back out – the rest will not have hurt either of them.`),
+]
+
 export function buildCommentary(
   match: AnnotatedMatch,
   playerA: string,
@@ -1595,6 +1601,9 @@ export function buildCommentary(
   /** ⭐ ROUND 53 · STEP 6 – the head-to-head, for at most ONE remark at a changeover. ⚠ OPTIONAL AND
    *  DEFAULTED TO null on `lineage`'s precedent, verbatim. See THE RECORD, IN THE BOOTH. */
   rivalry: CommentaryRivalry | null = null,
+  /** ⭐ r53 step 11 (weather stage 2) – rain was FALLING on this match's day. ⚠ OPTIONAL AND
+   *  DEFAULTED TO false on `rivalry`'s precedent, verbatim. See THE RAIN, IN THE BOOTH. */
+  rainFalling = false,
 ): Beat[] {
   const points = match.points
   if (points.length === 0) return []
@@ -2178,6 +2187,33 @@ export function buildCommentary(
         break
       }
     }
+  }
+
+  // --- ⭐ r53 step 11 – THE RAIN, IN THE BOOTH ----------------------------------------------------
+  //
+  // The owner (21.10): «"дождь: пауза" – просто в форме комментария, мы же не будем игру
+  // останавливать… Можно обыграть комментатором, как было в фильмах». The match is NOT paused – the
+  // point loop never hears of this – so the pause lives in two remarks at changeovers the tennis and
+  // the three beats above left alone (`taken` re-read, the declining-rather-than-losing rule): the
+  // first free one in the first half of the match, and the first free one after it in the second
+  // half. A match too short or too full for a second says one, which is honest. No draw. DRAFT.
+  if (rainFalling) {
+    const halves: [number, number][] = [
+      [0, Math.floor(lastIndex / 2)],
+      [Math.floor(lastIndex / 2) + 1, lastIndex],
+    ]
+    halves.forEach(([lo, hi], i) => {
+      const taken = new Set(cands.map((c) => c.pointIndex))
+      for (const g of s.games) {
+        if (g.setEnd) continue
+        if ((g.gamesAfter[0] + g.gamesAfter[1]) % 2 !== 1) continue
+        const next = g.last + 1
+        if (next < lo || next > hi || next > lastIndex) continue
+        if (taken.has(next)) continue
+        push(next, 'booth', LEAD.booth, RAIN_IN_PLAY[i], undefined, false)
+        break
+      }
+    })
   }
 
   // --- resolve: one beat per point, biggest wins; then chronological -------------------------

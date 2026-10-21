@@ -3,6 +3,7 @@
 // caller draws against the returned p.
 
 import type { Side, Tour, Surface, MatchPlayer, MatchOptions, PointContext } from './types'
+import { heatFatigueFactor, weatherPServe } from './weather'
 import { LEGACY_SNAPSHOT_AGE, serveSpeedBase } from './serveSpeed'
 
 export const TOUR_AVG_P: Record<Tour, number> = { atp: 0.63, wta: 0.57 }
@@ -129,7 +130,11 @@ export function basePServe(server: MatchPlayer, receiver: MatchPlayer, opts: Mat
     (server.groundstrokes - receiver.groundstrokes) * RALLY_K +
     paceAdvantage(server, receiver) * PACE_K +
     SURFACE_SERVE_BONUS[opts.surface]
-  return clamp(p, BASE_CLAMP)
+  // ⭐ r53 step 11 – WIND, AND RAIN ON CLAY, enter HERE and nowhere else, so the loop (which starts
+  // every point from this number) and the closed form (which adds `nerveAndLegs` to it) read one day.
+  // Exactly `p` when `opts.weather` is absent or calm – see `match/weather.ts`.
+  const level = TOUR_AVG_P[opts.tour] + SURFACE_SERVE_BONUS[opts.surface]
+  return clamp(weatherPServe(p, level, opts.weather, opts.surface), BASE_CLAMP)
 }
 
 /** The server's age-driven pace edge over the receiver, in km/h. Exactly 0 inside one age band, and
@@ -238,9 +243,12 @@ const STAMINA_K = 7.0e-5
  *  ⚠ IT IS THE CLOSED FORM'S TERM AND THE LOOP MUST NEVER READ IT. See the block above: the loop
  *  already spends these two attributes per point, and paying for them twice is measurably worse than
  *  not paying for them at all. */
-export function nerveAndLegs(server: MatchPlayer, receiver: MatchPlayer): number {
+export function nerveAndLegs(server: MatchPlayer, receiver: MatchPlayer, heat = 1): number {
+  // ⭐ r53 step 11 – `heat` is `heatFatigueFactor` of the day, the SAME multiplier the loop puts on
+  // `fatigueTerm`. The legs term is this form's mirror of that fatigue, and the loop's fatigue gap
+  // between two players is linear in the multiplier, so the mirror scales by it too. Nerve does not.
   return (
-    (server.composure - receiver.composure) * COMPOSURE_K + (server.stamina - receiver.stamina) * STAMINA_K
+    (server.composure - receiver.composure) * COMPOSURE_K + (server.stamina - receiver.stamina) * STAMINA_K * heat
   )
 }
 
@@ -269,7 +277,10 @@ export function nerveAndLegs(server: MatchPlayer, receiver: MatchPlayer): number
  *  #34 the same line read 0.36 pp against the same floor; the re-fit gave back 0.04 pp of it, which
  *  is the cost of describing a term that now acts on 18.5% of points rather than 11.2%.) */
 export function calibratedPServe(server: MatchPlayer, receiver: MatchPlayer, opts: MatchOptions): number {
-  return clamp(basePServe(server, receiver, opts) + nerveAndLegs(server, receiver), BASE_CLAMP)
+  return clamp(
+    basePServe(server, receiver, opts) + nerveAndLegs(server, receiver, heatFatigueFactor(opts.weather?.temperatureC)),
+    BASE_CLAMP,
+  )
 }
 
 // Per-point term (already min-capped at FATIGUE_CAP) for one player's stamina.
@@ -352,8 +363,10 @@ export function retireDurability(condition: number): number {
  *
  *  ⚠ ZERO DRAWS. This is arithmetic; the single uniform per side is drawn by `simulateMatch` off a
  *  sub-stream private to the match seed, so adding this moved no existing sequence anywhere. */
-export function retireHazard(pointNumber: number, stamina: number, durability = 1): number {
-  return RETIRE_K * spentness(pointNumber, stamina) * durability
+export function retireHazard(pointNumber: number, stamina: number, durability = 1, heat = 1): number {
+  // ⭐ r53 step 11 – `heat` (`heatFatigueFactor`, default exactly 1): the day's fatigue is the
+  // fatigue this hazard reads, so a hot day spends her faster on the scoreboard AND towards stopping.
+  return RETIRE_K * spentness(pointNumber, stamina) * heat * durability
 }
 
 /** The multiplier that turns "how spent she is" into "how likely she is to stop".
@@ -447,6 +460,8 @@ export function modifiedPServe(
   receiver: MatchPlayer,
   ctx: PointContext,
   streak: Streak | null,
+  /** ⭐ r53 step 11 – `heatFatigueFactor` of the day, on BOTH players' fatigue; default exactly 1. */
+  heat = 1,
 ): number {
   let p = base
 
@@ -469,8 +484,8 @@ export function modifiedPServe(
 
   // 3. Fatigue: past FATIGUE_START the server tires (subtract) while a tired returner helps (add).
   if (ctx.pointNumber > FATIGUE_START) {
-    p -= fatigueTerm(ctx.pointNumber, server.stamina)
-    p += fatigueTerm(ctx.pointNumber, receiver.stamina)
+    p -= fatigueTerm(ctx.pointNumber, server.stamina) * heat
+    p += fatigueTerm(ctx.pointNumber, receiver.stamina) * heat
   }
 
   // 4. Final clamp.

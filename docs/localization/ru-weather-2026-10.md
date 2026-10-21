@@ -57,3 +57,21 @@ last-reviewed: 2026-10-21
 | `Rain at the courts. The bag came home damp, and so did the rest of us.` | `На кортах шёл дождь. Сумка вернулась домой сырой, как и все мы.` |
 | `Thirty degrees on court, and she asked for another ice towel.` | `Тридцать градусов на корте, и она попросила ещё одно ледяное полотенце.` |
 | `Rain at the courts today, and a wet umbrella in every photo.` | `Сегодня на кортах дождь, и на каждой фотографии мокрый зонт.` |
+
+## 5. Этап 2 – матч читает погоду (M11, 22.10, спека §4)
+
+Все строки `DRAFT`. Пауза из-за дождя – только в словах комментатора: матч не останавливается, прогноз
+перед ним не меняется. Хвост к строке победителя турнира – по две строки на признак (дождь идёт, 30° и
+выше, сильный ветер), выбор – четвёртый бросок дня, без новых бросков.
+
+| English | Russian |
+| --- | --- |
+| `The start was held for an hour while the rain came through – the forecast for the match has not changed.` | `Начало задержали на час, пока шёл дождь – расклад на матч от этого не изменился.` |
+| `The rain is back – the players have gone under cover and the court is being covered.` | `Снова дождь – спортсменки ушли под крышу, корт накрывают.` |
+| `The court is drying out, and they are back out – the rest will not have hurt either of them.` | `Корт подсыхает, они снова выходят – отдых не повредил ни одной.` |
+| `🏆 {0} won the {1} ({2}) in exhausting heat.` | `🏆 Победа на турнире «{1}» ({2}) в изнуряющую жару: {0}.` |
+| `🏆 {0} won the {1} ({2}) – the last one standing in the heat.` | `🏆 Победа на турнире «{1}» ({2}): {0} – последней устояла в жару.` |
+| `🏆 {0} won the {1} ({2}) despite the rain.` | `🏆 Победа на турнире «{1}» ({2}) несмотря на дождь: {0}.` |
+| `🏆 {0} won the {1} ({2}) – thanks to the rain, on the fresher legs.` | `🏆 Победа на турнире «{1}» ({2}): {0} – спасибо дождю, на более свежих ногах.` |
+| `🏆 {0} won the {1} ({2}) in a strong wind.` | `🏆 Победа на турнире «{1}» ({2}) при сильном ветре: {0}.` |
+| `🏆 {0} won the {1} ({2}) – the wind had its say, and she had the last word.` | `🏆 Победа на турнире «{1}» ({2}): {0} – ветер сказал своё, последнее слово осталось за ней.` |

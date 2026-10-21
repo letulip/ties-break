@@ -826,7 +826,9 @@ export function previewEvent(
   return {
     drawMade,
     firstMatchChance: opp
-      ? fastMatchProbability(kid, opp, { surface: event.surface, tour: JUNIOR_TOUR, seed: '' })
+      ? // ⭐ r53 step 11 – the day enters the card's number the way it enters the match, so the
+        // forecast he reads before the match stays the one the match is played under.
+        fastMatchProbability(kid, opp, { surface: event.surface, tour: JUNIOR_TOUR, seed: '', weather: eventWeather(world.seed, event) })
       : null,
     // Same (player, surface, tour) the chance above is computed from - one source, two readings, so
     // the card can never quote a rating that disagrees with the ring beside it.

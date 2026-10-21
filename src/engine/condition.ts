@@ -133,8 +133,16 @@ function ladderFor(tier: TierId): number[] {
  *  records IN ORDER - the reduce index IS the match-within-run index the ladder wants. A 5-match
  *  National run of epics = 30 per-match + 6 ladder (variant C) = 36. A walkover or a skipped event
  *  never reaches finalize, so it has no records and costs nothing, ladder included. */
-export function tournamentRunStrain(tier: TierId, matches: { score?: string }[]): number {
-  return matches.reduce((sum, m, i) => sum + matchDrain(tier, m.score) + runFatigueExtra(i, tier), 0)
+export function tournamentRunStrain(tier: TierId, matches: { score?: string; weather?: { rain: string } }[]): number {
+  return matches.reduce((sum, m, i) => sum + matchDrain(tier, m.score) + runFatigueExtra(i, tier) - rainRest(m.weather), 0)
+}
+
+/** ⭐ r53 step 11 – THE RAIN'S PRICE IS REST (owner, 21.10: «спортсмены ушли на отдых» and «+1
+ *  кондиции»). A match the rain held up costs her condition one point less – `falling` only; a
+ *  `possible` day held nobody up. Zero draws; `matchDrain` is at least 3, so the toll stays positive. */
+export const RAIN_REST = 1
+export function rainRest(weather: { rain: string } | undefined): number {
+  return weather?.rain === 'falling' ? RAIN_REST : 0
 }
 
 /** R9-19 (coupling ON, owner curve): NO strength penalty while she is fresh enough

@@ -100,6 +100,7 @@ import { bankCoachResidual, resolveCoachBandAsk, resolveCoachRaise } from './coa
 // facts, no new edge in the graph.
 import { exposureEventsOf, newsStandingOf } from './spotlight'
 import { chargeCoachTravel, chargeMasseurTravel, chargeSparringTravel, chargeTravel, coachTravelFareFor } from './sponsors'
+import { eventWeather } from '../season/preview'
 
 // Compute the kid's full shadow tournament: same event-scoped RNG, same entrant selection, same
 // bracket. Emits NO events and awards NO points – that is deferred to reveal/finalize. Snapshots
@@ -235,6 +236,8 @@ function computeShadowTournament(
     kidRng,
     kidSeedIndexIn(field, seedRanking, KID_ID),
     promised,
+    // ⭐ r53 step 11 – the day the Season card and the plate already print (one tournament, one day).
+    eventWeather(world.seed, event),
   )
   // ⚠ THE ROSTER, NOT THE FIELD, and the difference is one player: a promised girl put back into the
   // draw is not in `field`, and `field.find` would hand her to `fallbackPlayer` – a placeholder name

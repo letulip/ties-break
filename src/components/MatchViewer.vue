@@ -878,7 +878,9 @@ const commentary = computed(() =>
     // replay is silent by construction, because nobody's mother is the family's there.
     props.boothLineage && kidSide.value !== null ? { ...props.boothLineage, side: kidSide.value } : null,
     // ⭐ ROUND 53 · STEP 6 – the head-to-head, same guard: a rival's replay is silent by construction.
-    props.headToHead && kidSide.value !== null ? { record: props.headToHead, side: kidSide.value } : null),
+    props.headToHead && kidSide.value !== null ? { record: props.headToHead, side: kidSide.value } : null,
+    // ⭐ r53 step 11 – the rain's pause, played by the booth (weather stage 2).
+    props.weather?.rain === 'falling'),
 )
 const modeCommentary = computed(() =>
   viewMode.value === 'key' ? commentary.value.filter((b) => b.keyMoment) : commentary.value,
