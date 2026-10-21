@@ -111,8 +111,18 @@ describe('the byte-identity of a career that does not travel', () => {
     // the slot-1 letter was never raised. The A1 junior ad letter (`043d49e1`) lands earlier in the
     // bisect with the witness still intact, and 8/1 receives no `ad` letter on any of the four trees.
     // The full sweep, the eight-career engine A/B and the naming rule are over `PRE_R28B`.
-    const high = windowRuleWitness(6, 1) // 25k middle · HIGH coach · PLAYER policy
-    const mid152 = high.kitLetters.find((o) => o.id === 'kit-152')
+    // ⚠⚠ RE-AIMED 22.10.2026 (round 53 close, N4), NOT WEAKENED: **THE WITNESS LOST ITS LETTER A SECOND TIME – ARM 2 FIRED FOR REAL AGAIN.**
+    // `windowRuleWitness(6, 1)` walks into the close holding only `kit-47` (slot 0): M7 (47487a7c) re-priced the elite coach and gated the
+    // sparring, M9 (9ff885d0) gave the partner a name, and the rungs that wrote inside 6/1's winter stopped writing – the same mechanism as
+    // the 12.09 bisect above (`windowLadder(standing)` read fresh every week), moved by a different commit. A sweep of all nine careers x both
+    // policies on the closing tree (one probe, `windowRuleWitness` per cell): kit-152 (slot 1, deadline 156 by the letter / 155 by the window,
+    // OPEN at the horizon) is held by 2/0, 3/1, 4/1, 5/1 and 7/1. **5/1 is taken – the SAME career the second half of this case already
+    // walks (`middle`, which also holds the expired kit-100)** – so the kit-152 facts and the «two rules produce DIFFERENT careers» negative
+    // are now read off 5/1, the same letter and the same two deadlines. 6/1 keeps its identity pin (`highPlayer`): it no longer witnesses the
+    // RULE, it says «this career did not move», exactly the status the three grinders already have below. No digest was re-stamped.
+    const high = windowRuleWitness(6, 1) // 25k middle · HIGH coach · PLAYER policy – an identity cell since 22.10
+    const witness = windowRuleWitness(5, 1) // 25k middle · middle coach · PLAYER policy – holds kit-152 (open) AND kit-100 (expired)
+    const mid152 = witness.kitLetters.find((o) => o.id === 'kit-152')
     expect(mid152?.week, 'the witness letter exists and landed MID-window (slot 1, not the opening week)').toBe(152)
     expect(mid152?.slot, '...which is the whole reason the two rules can disagree about it').toBe(1)
     expect(mid152?.deadlineWeek, 'THE LETTER RULE, which is what the engine writes since the ruling').toBe(156)
@@ -120,14 +130,14 @@ describe('the byte-identity of a career that does not travel', () => {
     expect(mid152?.state, '...so under the letter rule it is still OPEN at the horizon instead of expired').toBe('open')
     // ...and only NOW is the negative worth asserting, because the two lines above prove its target
     // exists. A case whose two arms cannot differ is the failure this whole re-aim is about.
-    expect(high.underTheWindowRule, 'the two rules produce DIFFERENT careers here').not.toBe(high.live)
+    expect(witness.underTheWindowRule, 'the two rules produce DIFFERENT careers here').not.toBe(witness.live)
     expect(high.underTheWindowRule, '25k · high coach · player - the pre-ruling career').toBe(PRE_R28B.highPlayer)
 
     // ⭐ AND THE OTHER BRANCH OF THE RECONSTRUCTION, which is a letter that had ALREADY lapsed by the
     // horizon: moving its deadline moves the week it lapsed WITH it, and rewriting one without the
     // other reconstructs a world the engine never wrote. That was a real defect in the helper until
     // this pass, invisible while every frozen career's letters sat on the opening week.
-    const middle = windowRuleWitness(5, 1) // 25k middle · middle coach · PLAYER policy
+    const middle = witness // 25k middle · middle coach · PLAYER policy (walked once above)
     const mid100 = middle.kitLetters.find((o) => o.id === 'kit-100')
     expect(mid100?.slot, 'the expired witness landed mid-window too').toBe(1)
     expect(mid100?.state, '...and unlike kit-152 it is already gone by the horizon').toBe('expired')

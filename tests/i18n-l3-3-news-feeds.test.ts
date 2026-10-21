@@ -230,8 +230,11 @@ describe('§3 the season wrap-up – twelve whole sentences', () => {
   it('the real writer on a played world: the ref renders to the text for an unmoved, a risen and a fallen start rank, and for none', () => {
     const outcomes = new Set<string>()
     // 8k self-coached · player: its SECOND season is played on the international (ITF) table – the one track the movement arrow is written for
+    // ⚠ RE-AIMED 22.10 (r53 close, N4): with M11's weather the career at index 0 sits #1 on the National table by week 101, so a start rank of 1 / 99999 / 60
+    // never moved the arrow and only ONE sentence came out. A sweep of indices 0–9 (4 start ranks each, same preset and policy): 2, 3, 4, 6 and 7 print all
+    // three, the rest print one. Index 2 – the first – is walked; the claim is unchanged.
     for (const startRank of [null, 1, 99999, 60] as const) {
-      const { world, rng } = openCareer(PRESETS[0]!, 0, POLICIES[1]!)
+      const { world, rng } = openCareer(PRESETS[0]!, 2, POLICIES[1]!)
       while (world.week < 52 || world.week % 52 !== 48) stepCareerWeek(world, rng, POLICIES[1]!)
       world.seasonStartRank = startRank
       stepCareerWeek(world, rng, POLICIES[1]!)
