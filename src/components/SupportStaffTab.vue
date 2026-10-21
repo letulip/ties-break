@@ -323,10 +323,11 @@ const masseurReleaseMessage = computed(() => {
   const base = t('Let the masseur go? The weekly salary stops, and rehab goes back to the clinic alone.')
   const view = game.snapshot?.masseurRelease
   if (!view) return base
-  const year = game.snapshot?.startYear
-  const parts = [base, t('Her return moves from {0} to {1}.', [weekLabel(view.backWithWeek, year), weekLabel(view.backWithoutWeek, year)])]
+  // the local is NAMED startYear on purpose: the S2e ratchet (tests/succession-s1-start-year.test.ts) reads the word in the call
+  const startYear = game.snapshot?.startYear
+  const parts = [base, t('Her return moves from {0} to {1}.', [weekLabel(view.backWithWeek, startYear), weekLabel(view.backWithoutWeek, startYear)])]
   if (view.atRisk.length > 0) {
-    const list = view.atRisk.map((r) => `${r.label} – ${weekLabel(r.week, year)}`).join(', ')
+    const list = view.atRisk.map((r) => `${r.label} – ${weekLabel(r.week, startYear)}`).join(', ')
     parts.push(t('These entries will be withdrawn – the doctor will not clear her in time: {0}.', [list]))
   }
   return parts.join(' ')
