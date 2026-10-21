@@ -93,7 +93,7 @@ import { readingColor } from '../../composables/readingColor'
 // Calendar so the two surfaces cannot call the same tournament two different things.
 import { enterActionName } from '../../composables/eventName'
 import { TIER_SHORT } from '../../composables/weekAhead'
-import { layoffHoldsWeek, layoffNoteFor } from '../../composables/weekDays'
+import { layoffClinicReturnWeek, layoffHoldsWeek, layoffNoteFor, layoffReturnWeek } from '../../composables/weekDays'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
 import { WEEKS_IN_SEASON, seasonYear, weekNumberLabel } from '../../shared/dates'
 import { seasonWeekRange, weekLabel } from '../../i18n/dates'
@@ -1128,13 +1128,28 @@ function askEnter(e: UpcomingEvent): void {
     onConfirm: () => game.enterEvent(e.id),
   }
 }
+/** ⭐⭐ ROUND 53 №4 (owner, 21.10: «я снимаю заявки, а за неделю до турнира она здорова, и подать заявку
+ *  уже поздно») – WHAT THE WITHDRAW CONFIRM SAYS WHEN SHE IS HURT BUT BACK IN TIME. The return week is
+ *  `layoffReturnWeek` (the engine's `expectedWeeks` when the masseur shortens it); the deadline is the
+ *  event's own `deadlineWeek`. No arithmetic here, no second predicate. Empty when she is fit, or when
+ *  she is out past the event (then withdrawing is simply right). DRAFT wording. */
+function withdrawInjuryNote(e: UpcomingEvent): string {
+  const s = game.snapshot
+  const back = s ? layoffReturnWeek(s) : null
+  if (!s || back === null || back > e.week) return ''
+  const params = { back: weekLabel(back, startYear.value), deadline: weekLabel(e.deadlineWeek, startYear.value) }
+  return layoffClinicReturnWeek(s) !== null
+    ? t('With the masseur she is expected back by {back}, in time for this event. Entries close at the end of {deadline}.', params)
+    : t('She is expected back by {back}, in time for this event. Entries close at the end of {deadline}.', params)
+}
 function askWithdraw(e: UpcomingEvent): void {
+  const injuryNote = withdrawInjuryNote(e)
   pendingConfirm.value = {
     message: t('Withdraw from {event} ({week})? Entry fee {fee} will be refunded.', {
       event: e.label,
       week: weekLabel(e.week, startYear.value),
       fee: formatCents(e.entryFeeCents),
-    }),
+    }) + (injuryNote ? ` ${injuryNote}` : ''),
     confirmLabel: t('Withdraw'),
     onConfirm: () => game.withdrawEvent(e.id),
   }

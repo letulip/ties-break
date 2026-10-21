@@ -190,29 +190,29 @@ describe('round 46 #16 – the week the button plays is previewed with the rule 
     expect(disagreements).toEqual([])
   }, 60_000)
 
-  it('⚠ SCOPE FENCE – only the played week is previewed from the replay; the look-ahead keeps the clinic\'s countdown (round 34)', () => {
+  it('⭐ R53 №4 – the look-ahead reads the honest window too: the weeks between his return and the clinic\'s are free', () => {
     // Daily rung, six weeks left: the clinic window is [10, 16); his replay clears her at the top of
-    // week 13. Week 12 is out on BOTH readings, week 14 is out on the clinic's and not on his – and
-    // the look-ahead still draws it as the clinic's, because the countdown on screen is not rewritten
-    // and the entry gate / planner read the same window. Widening this is an owner call, not a parity
-    // read: see the ledger entry under round 46 #16.
+    // week 13. Week 12 is out on BOTH readings; 13 and 14 are out only on the clinic's. Round 46 fenced
+    // the look-ahead to the clinic's countdown; the owner (21.10) planned by it and lost entries.
     const world = hurtWorld({ weeksRemaining: 6, totalWeeks: 9, rehabWeekAtTick: 3, sessions: 7, tier: 'national' })
     const snap = toSnapshot(world)
     expect(snap.injury?.expectedWeeks, 'the replay says back at 13: three weeks, not six').toBe(3)
     const rows = lookAheadFor(snap)
     expect(rows[0]?.week, 'the look-ahead starts the week AFTER the grid – it is forecast territory').toBe(PLAY_WEEK + 1)
     expect(rows.find((r) => r.week === 12)?.injured, 'out on both readings').toBe(true)
-    expect(rows.find((r) => r.week === 14)?.injured, 'the clinic\'s window, unchanged').toBe(true)
+    expect(rows.find((r) => r.week === 13)?.injured, 'back at the top of 13 with the masseur').toBe(false)
+    expect(rows.find((r) => r.week === 14)?.injured, 'free on the honest reading, not the clinic\'s').toBe(false)
   })
 
-  it('⭐ `layoffHoldsWeek` – the played week reads the replay, every other week the clinic\'s window (what the grid and the Season chips share)', () => {
+  it('⭐ `layoffHoldsWeek` – every week reads the replay (what the grid, the look-ahead and the Season chips share)', () => {
     const owner = toSnapshot(hurtWorld({ weeksRemaining: 2, totalWeeks: 6, rehabWeekAtTick: 3, sessions: 7, tier: 'wta500' }))
     expect(layoffHoldsWeek(owner, PLAY_WEEK - 1), 'today: she is laid up now').toBe(true)
     expect(layoffHoldsWeek(owner, PLAY_WEEK), 'the played week: the tick clears her, the clinic said out').toBe(false)
     const longer = toSnapshot(hurtWorld({ weeksRemaining: 6, totalWeeks: 9, rehabWeekAtTick: 3, sessions: 7, tier: 'national' }))
     expect(layoffHoldsWeek(longer, PLAY_WEEK), 'out on both readings').toBe(true)
-    // The mutation arm: widen the replay to every week and this reads `14 < 10 + 3` = false.
-    expect(layoffHoldsWeek(longer, 14), 'a later week keeps the clinic\'s window – the replay is NOT widened to it').toBe(true)
+    // R53 №4: the replay is widened to every week – `14 < 10 + 3` is false, and week 12 is still out.
+    expect(layoffHoldsWeek(longer, 12), 'out on both readings').toBe(true)
+    expect(layoffHoldsWeek(longer, 14), 'a later week reads the replay too').toBe(false)
     const nobody = toSnapshot(hurtWorld({ weeksRemaining: 2, totalWeeks: 6, rehabWeekAtTick: 3, sessions: null, tier: 'national' }))
     expect(nobody.injury?.expectedWeeks, 'no masseur, no replay on the wire').toBeUndefined()
     expect(layoffHoldsWeek(nobody, PLAY_WEEK), 'the clinic\'s number is already the truth').toBe(true)
@@ -349,21 +349,27 @@ describe('⭐⭐ round 46 R1 – the gate, the planner and the injury report tel
     }
   })
 
-  it('⚠ SCOPE FENCE – week + 2 and later stay on the clinic\'s window on the gate, the planner and the sheet (forecast rows, round 34)', () => {
+  it('⭐ R53 №4 – week + 2 and later read the honest window on the gate, the planner and the sheet', () => {
     // Daily rung, six weeks left: the clinic window is [10, 16); his replay clears her at the top of 13.
-    // Week 11 is out on both readings; 13, 14 and 15 are out on the clinic's and NOT on his – and the
-    // gate, the planner and the sheet keep the clinic's word for them. Widening the replay to every week
-    // reads `14 < 10 + 3` = false and turns these three green→red.
+    // Week 11 and 12 are out on both readings; 13, 14 and 15 are out on the clinic's and NOT on his –
+    // the gate, the planner and the sheet all say free now (the onset sweep has always read it so).
     const world = hurtWorld({ weeksRemaining: 6, totalWeeks: 9, rehabWeekAtTick: 3, sessions: 7, tier: 'national' })
     const snap = toSnapshot(world)
     expect(snap.injury?.expectedWeeks, 'the replay says back at 13: three weeks, not six').toBe(3)
     expect(layoffCoveringAsPlayed(world, PLAY_WEEK), 'the played week: out on both readings').not.toBeNull()
-    for (const week of [12, 13, 14, 15]) {
+    for (const week of [12]) {
       const status = availabilityStatus(world, { tier: 'national', week })
       expect(status.level === 'blocked' && status.reason === 'injured', `gate, week ${week}`).toBe(true)
       expect(() => assertPlannable(world, week, 'practice'), `planner, week ${week}`).toThrow(/^Injured/)
       expect(layoffBlock({ currentWeek: snap.week, injury: snap.injury ?? null, week }), `sheet, week ${week}`).not.toBeNull()
-      expect(layoffCoveringAsPlayed(world, week), `twin, week ${week}`).toBe(layoffCovering(world, week))
+    }
+    for (const week of [13, 14, 15]) {
+      const status = availabilityStatus(world, { tier: 'national', week })
+      expect(status.level === 'blocked' && status.reason === 'injured', `gate, week ${week}`).toBe(false)
+      expect(() => assertPlannable(world, week, 'practice'), `planner, week ${week}`).not.toThrow(/^Injured/)
+      expect(layoffBlock({ currentWeek: snap.week, injury: snap.injury ?? null, week }), `sheet, week ${week}`).toBeNull()
+      expect(layoffCoveringAsPlayed(world, week), `twin, week ${week}`).toBeNull()
+      expect(layoffCovering(world, week), `the clinic\'s window is still its own`).not.toBeNull()
     }
     expect(layoffCoveringAsPlayed(world, 16), 'past the clinic\'s window nothing is held').toBeNull()
   })

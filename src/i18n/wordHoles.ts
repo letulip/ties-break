@@ -402,6 +402,8 @@ export const HOLE_TABLE: Readonly<Record<WordClass, readonly HoleRow[]>> = {
     ['Two things at once – {0}', 0],
     ['Move the shoot to {0}', 0],
     ['Injured – back {0}', 0],
+    ['Injured – back {0} with the masseur ({1} without)', 0],
+    ['Injured – back {0} with the masseur ({1} without)', 1],
     // the tournament summary family – the week sits at {2} in all of them (`tournamentSummaryRef`)
     ['{0} ({1}, {2}): {3} – {4} (+{5} pts)', 2],
     ['{0} ({1}, {2}): {3} – {4} (+{5} pts) (+{6} banked – a ranking needs {7} events with points, or {8})', 2],

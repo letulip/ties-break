@@ -93,7 +93,7 @@ describe('and every site reads them from that one home', () => {
 
   it('the one home is the only place in src/ the words are written', () => {
     const home = readFileSync(new URL('../src/composables/weekDays.ts', import.meta.url), 'utf8')
-    // Once in the function, and the docblock above it deliberately does not repeat it.
-    expect(home.split(THE_WORDS).length - 1).toBe(1)
+    // Twice, both in the function: the bare sentence and (R53 №4) the one that says the masseur is why.
+    expect(home.split(THE_WORDS).length - 1).toBe(2)
   })
 })

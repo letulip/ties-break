@@ -678,3 +678,12 @@ English (`weekLabel`) and reads through the display boundary's `week` class
 | id | English | Russian |
 | --- | --- | --- |
 | R49N2-HOM-01 | `Injured – back {0}` | `Травма – вернётся {0}` |
+
+## ⚙ 21.10 agent-authored (R53 №4) – the injury note says the masseur is why – ⚠ ⚠ DRAFT под правку владельца
+
+Владелец: «Если это как-то от массажиста зависит – надо так и написать, иначе штрафные очки на ровном месте.»
+Когда массажист сокращает срок, плашка и календарь называют обе недели.
+
+| id | English | Russian |
+| --- | --- | --- |
+| R53-INJ-01 | `Injured – back {0} with the masseur ({1} without)` | `Травма – вернётся {0} с массажистом ({1} без него)` |

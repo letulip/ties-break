@@ -800,3 +800,13 @@ records RU-07 and worker-event history RU-11.
 | RU21-SEA-123 | `{tier} – she is past this level, and it is still hers to enter: next one {when}. The stronger rung on a week takes the card.` | `Уровень «{tier}» ею пройден, но заявляться на него можно: ближайший турнир – {when}. Если на неделе несколько уровней, в карточку попадает более сильный.` |
 | RU21-SEA-124 | `{tier} – she is past this level.` | `Уровень «{tier}» ею пройден.` |
 | RU21-SEA-125 | `{tier} – the tour's age rule allows {limit} pro entries at {age} and she has used all {used}. Not locked: a fresh allowance arrives on her next birthday, and the junior and national events stay open.` | `Уровень «{tier}»: по возрастному правилу тура в {age, plural, one {{age} год} few {{age} года} many {{age} лет} other {{age} года}} ей доступно не больше {limit, plural, one {{limit} профессиональной заявки} few {{limit} профессиональных заявок} many {{limit} профессиональных заявок} other {{limit} профессиональной заявки}}, и использовано уже {used}. Он не закрыт: новый лимит появится в её следующий день рождения, а юниорские и национальные турниры остаются открытыми.` |
+
+## ⚙ 21.10 agent-authored (R53 №4) – the withdraw confirm says she is back in time – ⚠ ⚠ DRAFT под правку владельца
+
+Владелец: «я снимаю заявки, а за неделю до турнира она здорова, и подать заявку уже поздно». Фраза
+добавляется к подтверждению снятия, только если она травмирована и по честному сроку успевает.
+
+| id | English | Russian |
+| --- | --- | --- |
+| R53-INJ-02 | `With the masseur she is expected back by {back}, in time for this event. Entries close at the end of {deadline}.` | `С массажистом она вернётся к {back} – как раз к этому турниру. Заявки закрываются в конце {deadline}.` |
+| R53-INJ-03 | `She is expected back by {back}, in time for this event. Entries close at the end of {deadline}.` | `Она вернётся к {back} – как раз к этому турниру. Заявки закрываются в конце {deadline}.` |

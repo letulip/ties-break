@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "count": 6623,
+  "count": 6626,
   "keys": {
     " (+{0} banked – a ranking needs {1} events with points, or {2})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["points"],["RANKABLE_MIN.tournaments"],["RANKABLE_MIN.points"]],"wrapped":true},
     " (does not improve best {0})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["bestN"]],"wrapped":true},
@@ -2536,6 +2536,7 @@
     "India": {"home":["src/composables/countries.ts"],"area":["scripts"],"wrapped":true},
     "Injured": {"home":["src/components/PlanWeekSheet.vue","src/engine/world/bookings.ts"],"area":["ledger","screens"],"wrapped":true},
     "Injured – back {0}": {"home":["src/composables/weekDays.ts"],"area":["scripts"],"wrapped":true},
+    "Injured – back {0} with the masseur ({1} without)": {"home":["src/composables/weekDays.ts"],"area":["scripts"],"wrapped":true},
     "Injured – rest up": {"home":["src/components/screens/SeasonScreen.vue"],"area":["scripts"],"wrapped":true},
     "Injured – walkover": {"home":["src/composables/weekAhead.ts"],"area":["scripts"],"wrapped":true},
     "Injury": {"home":["src/components/InjuryStopDialog.vue"],"area":["screens"],"wrapped":true},
@@ -3885,6 +3886,7 @@
     "She is entering again. We put her straight back in the big ones.": {"home":["src/engine/world/lifeBeat.ts"],"area":["lifebeat"]},
     "She is entering again. We start with the small draws and build from there.": {"home":["src/engine/world/lifeBeat.ts"],"area":["lifebeat"]},
     "She is entering nothing more before the birth. What she is already in, she will play.": {"home":["src/engine/world/lifeBeat/pregnancyCopy.ts"],"area":["lifebeat"]},
+    "She is expected back by {back}, in time for this event. Entries close at the end of {deadline}.": {"home":["src/components/screens/SeasonScreen.vue"],"area":["scripts"],"wrapped":true},
     "She is expected on court that week.": {"home":["src/components/OfferLetter.vue"],"area":["letters"],"wrapped":true},
     "She is expecting a child. Nobody in this house was told first.": {"home":["src/engine/world/lifeBeat/pregnancyCopy.ts"],"area":["lifebeat"]},
     "She is expecting a child. We said it was too early.": {"home":["src/engine/world/lifeBeat.ts"],"area":["lifebeat"]},
@@ -5563,6 +5565,7 @@
     "Win the {event}": {"home":["src/composables/nextGoal.ts"],"area":["scripts"],"wrapped":true},
     "Winner": {"home":["src/components/NextTournamentPanel.vue","src/i18n/words.ts"],"area":["engine","screens"],"wrapped":true},
     "Winners": {"home":["src/composables/matchStatTable.ts"],"area":["scripts"],"wrapped":true},
+    "With the masseur she is expected back by {back}, in time for this event. Entries close at the end of {deadline}.": {"home":["src/components/screens/SeasonScreen.vue"],"area":["scripts"],"wrapped":true},
     "With the masseur – more like {0} wk, back around {1}.": {"home":["src/components/InjuryStopDialog.vue"],"area":["screens"],"wrapped":true},
     "With the masseur – more like {0} wks, back around {1}.": {"home":["src/components/InjuryStopDialog.vue"],"area":["screens"],"wrapped":true},
     "With them since {0}.": {"home":["src/components/screens/MoneyScreen.vue"],"area":["screens"],"wrapped":true},

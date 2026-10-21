@@ -87,13 +87,17 @@ describe('⭐⭐ round 46 R1 – the planner sheet\'s Practice lock tells the ti
     w.unmount()
   })
 
-  it('⚠ SCOPE FENCE – a forecast week keeps the clinic\'s lock though the replay would clear her a week earlier', () => {
+  it('⭐ R53 №4 – a forecast week reads the replay too: week 14 is bookable, week 12 (out on both readings) stays locked', () => {
     // Daily rung, six weeks left: the clinic window is [10, 16), his replay clears her at the top of 13.
-    // Week 14 is out on the clinic's reading and NOT on his – and it stays locked: it is a FORECAST (the
-    // parent can still fire him), and widening the replay to it would read `14 < 10 + 3` = false.
+    // Round 46 fenced week 14 to the clinic's lock; the owner (21.10) planned by that calendar and lost
+    // entries, so the sheet reads the honest window for every week now.
     const world = injuredWorld({ weeksRemaining: 6, totalWeeks: 9, rehabWeekAtTick: 3, sessions: 7 })
     expect(toSnapshot(world).injury?.expectedWeeks, 'the replay says back at 13').toBe(3)
-    const w = mountSheet(world, 14)
+    const open = mountSheet(world, 14)
+    expect(bookControl(open)!.text()).not.toContain('Injured')
+    expect(bookControl(open)!.attributes('disabled')).toBeUndefined()
+    open.unmount()
+    const w = mountSheet(world, 12)
     const book = bookControl(w)
     expect(book!.text()).toContain('Injured')
     expect(book!.attributes('disabled')).toBeDefined()
