@@ -152,8 +152,8 @@ describe('§2 the seats – every static string is a valid key, and the number t
   })
 
   it('the pool holds 105 cells: 95 static, 6 with a hole, 4 deliberate silences', () => {
-    expect(DIARY_POOL.length).toBe(105)
-    expect(poolStatics().length).toBe(95)
+    expect(DIARY_POOL.length).toBe(107) // r53 step 10: +2 photo captions (heat, rain)
+    expect(poolStatics().length).toBe(97)
     expect(DIARY_POOL.filter((p) => typeof p.text === 'function').length).toBe(6)
     expect(DIARY_POOL.filter((p) => p.text === null).length).toBe(4)
   })
@@ -566,6 +566,6 @@ describe('§8 the 341 cells', () => {
   })
 
   it('the pool shapes the pick walks are unchanged: 105 photo / condition cells, 73 travel scraps, 5 coach lines, 341 week notes', () => {
-    expect([DIARY_POOL.length, TRAVEL_NOTES.length, COACH_TRIP_NOTES.length, WEEK_NOTES.length]).toEqual([105, 73, 5, 341])
+    expect([DIARY_POOL.length, TRAVEL_NOTES.length, COACH_TRIP_NOTES.length, WEEK_NOTES.length]).toEqual([107, 75, 5, 341]) // r53 step 10: +2 photo captions, +2 travel scraps (heat, rain)
   })
 })

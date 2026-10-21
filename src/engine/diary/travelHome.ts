@@ -8,6 +8,7 @@
 // ⚠ RNG: the scene and sleep rolls draw on PURPOSE-SCOPED sub-streams keyed on (seed, week), never
 // MAIN - the same discipline the rest of the engine uses, so the frozen capture cannot notice this
 // file.
+import { tournamentWeatherIn } from './weatherFacts'
 import { TIERS } from '../season/calendar'
 import type { TierId } from '../season/types'
 import { rngFromSeed } from '../rng'
@@ -255,6 +256,9 @@ export interface TravelHomeFacts {
   lostFinal: boolean
   /** champion or runner-up: the owner's «дошла до финала» */
   reachedFinal: boolean
+  /** ⭐ r53 step 10 – the trip's tournament was played in 30° or more / in falling rain (`weatherFacts.ts`) */
+  heatDay?: boolean
+  rainDay?: boolean
   /** how many matches she won on the trip */
   matchesWon: number
   /** one match, and she lost it */
@@ -533,6 +537,7 @@ export function travelHomeFactsFor(args: {
     lostFinal,
     reachedFinal,
     matchesWon,
+    ...tournamentWeatherIn(args.events, args.week, args.seed),
     // Read off the MATCHES rather than off `finishIdx === log2(drawSize)`: one played, none won is
     // the same fact without needing the draw size, and it survives a summary that never arrived.
     firstRound: matches.length === 1 && matchesWon === 0,

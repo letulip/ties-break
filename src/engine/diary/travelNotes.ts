@@ -136,6 +136,19 @@ export interface TravelNote {
 
 
 export const TRAVEL_NOTES: readonly TravelNote[] = [
+  // --- THE WEATHER SHE PLAYED IN (r53 step 10, spec weather-2026-10 §3.3) – DRAFT, EN + RU in one commit.
+  // Licensed on the day's own weather (`weatherFacts.ts`: 30° and over / falling rain), re-derived
+  // from the event, so the note says what the plate on the match header said.
+  {
+    text: 'It was baking out there. The whole bag smelled of sun cream on the way home.',
+    claims: {},
+    license: (t) => ordinary(t) && t.heatDay === true,
+  },
+  {
+    text: 'Rain at the courts. The bag came home damp, and so did the rest of us.',
+    claims: {},
+    license: (t) => ordinary(t) && t.rainDay === true,
+  },
   // --- HER BIRTHDAY, WHEN THE JOURNEY OWNS THE SCRAP ----------------------------------------------
   {
     text: 'Her birthday, somewhere between the draw and home. Cake tomorrow.',

@@ -55,7 +55,7 @@ import { pregnancyFaceAt } from '../../shared/avatarEmotion'
 import { COLLEGE_LEAGUE, COLLEGE_LEAGUE_ROUNDS, wonTheLeague } from '../collegeLeague'
 import { NATIONAL_TEAM, NATIONS_CUP_AWARDS_NOTHING, callUpOpponent, nationFinishLabel } from '../nationalTeam'
 import { axisReadings, buildRadar, buildTrainingRead } from '../radar'
-import { previewEvent, eventCrowd, eventTemperature, firstRoundDraw, ratedField, DRAW_LEAD_WEEKS } from '../season/preview'
+import { previewEvent, eventCrowd, eventTemperature, eventWeather, firstRoundDraw, ratedField, DRAW_LEAD_WEEKS } from '../season/preview'
 import { FRESH_KIT } from '../equipment'
 import type { EventPreview, RatedEntrant } from '../season/preview'
 import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, isCountingResult, windowFromWeek, windowSlots, windowedBestSum } from '../season/ranking'
@@ -1222,6 +1222,7 @@ export function pendingView(world: WorldState): PendingView | undefined {
     // The weather plate on the live match. Same function the Season card quotes, so one tournament
     // has one day. VIEW ASSEMBLY ONLY - see the grep guard in tests/preview.test.ts.
     temperatureC: eventTemperature(world.seed, event),
+    weather: eventWeather(world.seed, event),
     roundLabel: stageLabel(current.round, tier.drawSize),
     // ⭐ ROUND-21 #2: «Присутствие в потоке ... точно надо (если едет)». Asked ONCE, in the engine,
     // and carried - the same answer the running commentary and the week's story are given.
@@ -1337,7 +1338,8 @@ function collegeLeaguePendingView(world: WorldState): PendingView | undefined {
     // by accident.
     drawSize: COLLEGE_LEAGUE.drawSize,
     surface,
-    temperatureC: eventTemperature(world.seed, { id: `college-w${reveal.week}`, surface }),
+    temperatureC: eventTemperature(world.seed, { id: `college-w${reveal.week}`, surface, week: reveal.week }),
+    weather: eventWeather(world.seed, { id: `college-w${reveal.week}`, surface, week: reveal.week }),
     roundLabel: stageLabel(current.round, drawSize),
     // She is at a university and the family is not paying a coach – `collegeCoachFactor` is the
     // programme's staff, not a man on a fare. Nobody travelled with her, and the card says nothing.
@@ -1467,7 +1469,8 @@ function callUpPendingView(world: WorldState): PendingView | undefined {
     tier: null,
     drawSize: null,
     surface,
-    temperatureC: eventTemperature(world.seed, { id: `nations-w${reveal.week}`, surface }),
+    temperatureC: eventTemperature(world.seed, { id: `nations-w${reveal.week}`, surface, week: reveal.week }),
+    weather: eventWeather(world.seed, { id: `nations-w${reveal.week}`, surface, week: reveal.week }),
     roundLabel: `Rubber ${current.round + 1} of ${matches.length}`,
     // She is at a university and the family is not paying a coach, and this week she is not even the
     // university's – she is her federation's. Nobody travelled with her, and the card says nothing.

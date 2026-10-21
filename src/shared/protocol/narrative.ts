@@ -1146,6 +1146,9 @@ export interface DiaryFacts {
   /** this week's drains, read off the week's own events/state */
   travelled: boolean
   playedTournament: boolean
+  /** ⭐ r53 step 10 – the tournament she played this week was in 30° or more / under falling rain (`diary/weatherFacts.ts`, re-derived from the event's own day). OPTIONAL: a hand-built view means «no», and a licence that reads it says nothing. */
+  heatDay?: boolean
+  rainDay?: boolean
   playedPractice: boolean
   examsWeek: boolean
   /** ROUND-18 #9: is she past her last school year? `DiaryWorldView` has carried this since W4-SCHOOL

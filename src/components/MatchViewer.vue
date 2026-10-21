@@ -40,6 +40,7 @@ import MatchControls from './MatchControls.vue'
 import Card from './ui/Card.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import WeatherPlate from './ui/WeatherPlate.vue'
+import type { EventWeather } from '../engine/season/preview'
 
 const props = withDefaults(
   defineProps<{
@@ -102,6 +103,8 @@ const props = withDefaults(
      *  PracticeFlow and the Season sandbox have no tournament day behind the match, so no plate is
      *  the truth there rather than a gap. */
     temperatureC?: number | null
+    /** ⭐ r53 step 10 – `PendingView.weather`: wind, rain and the fourth draw. Optional; absent = the plate and the note it always had. */
+    weather?: EventWeather | null
     /** THE PRE-MATCH PREVIEW'S TOURNAMENT CONTEXT (round 16, owner's own ask) - the tier and the
      *  round, which together decide BOTH how much the intro says (the ladder of voices, four
      *  storeys - see viz/preview.ts) and what winning this match is worth in points.
@@ -992,6 +995,7 @@ const previewRows = computed<LogRow[]>(() =>
     oppRank: heroSide.value === 0 ? props.rankB : props.rankA,
     event: props.previewEvent,
     temperatureC: props.temperatureC,
+    weather: props.weather ?? null,
     headToHead: props.headToHead,
   }).map((line) => ({ key: `p-${line.key}`, kind: 'intro', rail: '', lead: null, text: line.text, textC: line.c, score: '' })),
 )
@@ -1225,7 +1229,7 @@ watch(finished, (isFinished) => {
           <!-- The export puts this bottom-right ON the court as a two-line chip; the owner asked for
                one line and off the surface, so it is a single row up here. Same plate the Season
                card draws, so the same fact looks like the same fact. -->
-          <WeatherPlate v-if="temperatureC != null" class="mv-weather" :temperature-c="temperatureC" :size="13" />
+          <WeatherPlate v-if="temperatureC != null" class="mv-weather" :temperature-c="temperatureC" :wind="weather?.wind" :rain="weather?.rain" :size="13" />
         </div>
 
         <!-- ===== THE BOTTOM RUN-OFF BAND: SPEED · SCORE · SPEED =============================

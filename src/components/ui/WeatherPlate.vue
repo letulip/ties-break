@@ -21,7 +21,16 @@
 // `docs/decisions.md` §14 files the lot as Phase 3/4 backlog). So no wind figure is drawn. The
 // SHAPE is what leaves room for it: this is a horizontal row of readings, and wind joins it as a
 // second item beside the temperature without the line changing shape.
-withDefaults(
+// ⭐ ROUND 53 · STEP 10 (weather stage 1) – THE SECOND AND THIRD ITEM THIS PLATE WAS BUILT FOR.
+// Wind and rain join the temperature as glyph + word, only when the day has them (`none` prints
+// nothing, so a calm dry day looks exactly as it did). Both come from `EventWeather`
+// (engine/season/preview.ts) as the engine drew them; the words are display readers over the enum.
+// A fact on a plate and nothing more: no part of the match reads either.
+import { computed } from 'vue'
+import { t } from '../../i18n'
+import type { RainState, WindLevel } from '../../engine/season/preview'
+
+const props = withDefaults(
   defineProps<{
     /** degrees Celsius, from EventPreview.temperatureC – never re-derived at a call site */
     temperatureC: number
@@ -29,9 +38,15 @@ withDefaults(
     size?: number
     /** on a photograph, where the export puts the scrim shadow under every reading. */
     onArt?: boolean
+    /** from EventWeather; absent for a caller with none, and then the plate is the one it was */
+    wind?: WindLevel
+    rain?: RainState
   }>(),
-  { size: 17, onArt: false },
+  { size: 17, onArt: false, wind: 'none', rain: 'none' },
 )
+
+const windWord = computed(() => (props.wind === 'strong' ? t('Strong wind') : props.wind === 'fresh' ? t('Fresh wind') : ''))
+const rainWord = computed(() => (props.rain === 'falling' ? t('Rain') : props.rain === 'possible' ? t('Rain possible') : ''))
 </script>
 
 <template>
@@ -57,6 +72,18 @@ withDefaults(
       <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"></path>
     </svg>
     <span>{{ temperatureC }}&deg;</span>
+    <span v-if="windWord" class="tb-weather-extra tb-weather-wind">
+      <svg class="tb-weather-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"></path>
+      </svg>
+      {{ windWord }}
+    </span>
+    <span v-if="rainWord" class="tb-weather-extra tb-weather-rain">
+      <svg class="tb-weather-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <path d="M7 14a4 4 0 0 1 .6-7.9A5 5 0 0 1 17 7a3.5 3.5 0 0 1 0 7H7zM8 17.5l-1 2.5M12 17.5l-1 2.5M16 17.5l-1 2.5"></path>
+      </svg>
+      {{ rainWord }}
+    </span>
   </span>
 </template>
 
@@ -78,6 +105,21 @@ withDefaults(
 
 .tb-weather.on-art {
   text-shadow: var(--shadow-text-on-art);
+}
+
+.tb-weather-extra {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 0.92em;
+}
+
+.tb-weather-glyph {
+  width: var(--tb-weather-glyph);
+  height: var(--tb-weather-glyph);
+  flex: none;
+  opacity: 0.85;
 }
 
 .tb-weather-sun {

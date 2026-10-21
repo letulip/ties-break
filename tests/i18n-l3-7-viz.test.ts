@@ -170,6 +170,18 @@ let PREVIEW_REFS = new Set<string>()
 describe('§3 completeness – the keys the grid reaches', () => {
   it('every key of the three files is reached by the commentary grid, the preview grid or the lead table – bar the named few', () => {
     const reached = new Set<string>([...GRID_REACHED, ...PREVIEW_REACHED])
+    // ⭐ r53 step 10 (weather stage 1): the day's wind, rain and fourth draw are inputs the shared grid (whose 10,210 digests are the pre-wave tree's) does not carry – widening that grid would move
+    // a pin that is green at the control, so the 18 weather lines are reached by their own small arm here instead: every band x eight picks x both winds x both rains.
+    const base = previewInputs()[0].input
+    for (const temperatureC of [10, 16, 21, 26, 33]) {
+      for (const linePick of [0.04, 0.2, 0.37, 0.5, 0.62, 0.79, 0.9, 0.97]) {
+        for (const wind of ['fresh', 'strong'] as const) {
+          for (const rain of ['possible', 'falling'] as const) {
+            for (const l of buildPreview({ ...base, temperatureC, weather: { wind, rain, linePick } })) if (l.c) reached.add(l.c.k)
+          }
+        }
+      }
+    }
     const unreached = SCANNED.filter((k) => !reached.has(k))
     // the keys no seeded match, rung or packet of the grid can say – each with the reason it is still a key:
     //   the 21+ count forms and set ordinals beyond the fifth are digits, not keys; `and a place in the round of {0}` needs a round of 128 or 64 whose label a played match reaches (it is in the grid: opener rows of the big draws)

@@ -11,8 +11,8 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-291 TRACKED TypeScript files: **72 live**, **219 archival**
-(of which **113 frozen** out of `check:tools` and **106 still swept**).
+292 TRACKED TypeScript files: **72 live**, **220 archival**
+(of which **113 frozen** out of `check:tools` and **107 still swept**).
 
 ## Why the split exists
 
@@ -140,8 +140,8 @@ compiling reddens a pull request instead of rotting.
 - `r42-kid-share-ramp.ts` · `r42-personality-read.ts` · `r42-sparring-price.ts` · `r42-team-budget-cap.ts`
 - `real-vs-bench.ts` · `runway-probe.ts` · `sale-probe.ts` · `school-bench.ts`
 - `seed-vs-model.ts` · `sponsor-cadence.ts` · `sponsor-ladder-reach.ts` · `sponsor-silence-probe.ts`
-- `summer-bench.ts` · `top50-season-probe.ts` · `wall-l1-bench.ts` · `week-story-trace.ts`
-- `what-money-buys.ts` · `winrate-read.ts`
+- `summer-bench.ts` · `top50-season-probe.ts` · `wall-l1-bench.ts` · `weather-bench.ts`
+- `week-story-trace.ts` · `what-money-buys.ts` · `winrate-read.ts`
 
 ## Archival – frozen at their blob id
 

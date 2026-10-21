@@ -7,7 +7,7 @@
 // name below under the historical public path. Nothing here imports that barrel back.
 
 import type { Surface } from '../../engine/match/types'
-import type { EventPreview } from '../../engine/season/preview'
+import type { EventPreview, EventWeather } from '../../engine/season/preview'
 import type { LadderTrack, TierId } from '../../engine/season/types'
 import type { WorldMatch } from './events'
 // ⚠ ONE-WAY, LIKE `./events` ABOVE: `protocol/narrative.ts` imports nothing from this file, so the
@@ -420,6 +420,8 @@ export interface PendingView {
    *  out of it and its preview is unreachable. That is why this rides on the pending view instead
    *  of the viewer re-deriving it – two call sites computing one number is how they drift. */
   temperatureC: number
+  /** ⭐ r53 step 10 – the same day with wind and rain (`eventWeather`), carried for `temperatureC`'s own reason. A fact, not an input: nothing in the match reads it at stage 1. */
+  weather: EventWeather
   /** stage of the round currently being presented, e.g. "Round of 16", "Final" */
   roundLabel: string
   /** ⭐ ROUND-21 #2 – DID THE COACH COME? The owner, third ask: «Присутствие в потоке и трансляции

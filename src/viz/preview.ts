@@ -49,6 +49,7 @@
 
 import { fastMatchProbability } from '../engine/match/engine'
 import { TIERS } from '../engine/season/calendar'
+import { weatherLinePicks, type RainState, type WindLevel } from '../engine/season/preview'
 import { tierFromEventId } from '../engine/diary/facts'
 import { stageLabel } from '../engine/world/labels'
 import type { TierId } from '../engine/season/types'
@@ -178,6 +179,10 @@ export interface PreviewInput {
   event: PreviewEvent | null
   /** the day's temperature in C, or null when the caller has none */
   temperatureC: number | null
+  /** ⭐ ROUND 53 · STEP 10 – wind, rain and the fourth draw (`PendingView.weather`). OPTIONAL AND ABSENT
+   *  FOR EVERY CALLER THAT HAS NONE: their note is the single line it always was (pick 0, no wind or
+   *  rain line), byte-identical. */
+  weather?: { wind: WindLevel; rain: RainState; linePick: number } | null
   /** ⭐ ROUND 53 · STEP 6 – what the two have already played (`PendingView.headToHead`). OPTIONAL AND
    *  ABSENT FOR EVERY CALLER THAT HAS NONE, so their preview is byte-identical to the one they had. */
   headToHead?: HeadToHead | null
@@ -225,12 +230,61 @@ const SURFACE_NOTE: Record<Surface, Line> = {
  * ⚠ AND IT IS RNG-FREE, like every other line in this file. It is a lookup on a number the day
  * already has.
  */
-function conditionsNote(c: number): Line {
-  if (c <= 14) return line(cp`Cold enough that the ball will not fly, and cold hands on the racket all afternoon.`)
-  if (c <= 18) return line(cp`Cool, and it will take a while for either of them to feel the ball.`)
-  if (c <= 24) return line(cp`A comfortable day for it, and no excuses in the air.`)
-  if (c <= 27) return line(cp`Warm work out there, and the towel comes out between points.`)
-  return line(cp`Hot, and everybody is sweating before the end of the first game.`)
+export function conditionsNote(c: number, pick: number = 0): Line {
+  if (c <= 14) return COLD_NOTES[pick] ?? COLD_NOTES[0]
+  if (c <= 18) return COOL_NOTES[pick] ?? COOL_NOTES[0]
+  if (c <= 24) return COMFORT_NOTES[pick] ?? COMFORT_NOTES[0]
+  if (c <= 27) return WARM_NOTES[pick] ?? WARM_NOTES[0]
+  return HOT_NOTES[pick] ?? HOT_NOTES[0]
+}
+
+// ⭐ ROUND 53 · STEP 10 (weather stage 1, spec §3.3) – THREE LINES PER BAND, the shipped one first.
+// Index 0 is what every caller without a weather draw still gets; the pick is the event's FOURTH
+// draw on its own sub-stream, carried in as a number, so this file stays RNG-free. All DRAFT.
+const COLD_NOTES: readonly Line[] = [
+  line(cp`Cold enough that the ball will not fly, and cold hands on the racket all afternoon.`),
+  line(cp`Breath in the air and jackets on the benches, and the ball sits down dead off the strings.`),
+  line(cp`A raw, cold day: nobody will be loose early, and the ball will feel like a stone.`),
+]
+const COOL_NOTES: readonly Line[] = [
+  line(cp`Cool, and it will take a while for either of them to feel the ball.`),
+  line(cp`A cool afternoon, and the first few games will be about finding the ball.`),
+  line(cp`Jackets until the warm-up ends, and the court plays a touch slower than it looks.`),
+]
+const COMFORT_NOTES: readonly Line[] = [
+  line(cp`A comfortable day for it, and no excuses in the air.`),
+  line(cp`Mild and settled, a day when the tennis itself has to decide it.`),
+  line(cp`Fine weather for it, and the ball will come off the strings as expected.`),
+]
+const WARM_NOTES: readonly Line[] = [
+  line(cp`Warm work out there, and the towel comes out between points.`),
+  line(cp`Warm, and the shade behind the baseline is the best seat in the place.`),
+  line(cp`Sun on the court, and the water bottles are in use by the first change of ends.`),
+]
+const HOT_NOTES: readonly Line[] = [
+  line(cp`Hot, and everybody is sweating before the end of the first game.`),
+  line(cp`Heat shimmering off the court, and long rallies will cost more than they pay.`),
+  line(cp`A scorcher: ice towels at every change of ends, and legs matter today.`),
+]
+const WIND_NOTES: Record<'fresh' | 'strong', readonly Line[]> = {
+  fresh: [
+    line(cp`A fresh breeze across the court, enough to make the toss awkward.`),
+    line(cp`The flags are standing out on their poles, and the ball will drift a little.`),
+  ],
+  strong: [
+    line(cp`A strong wind down the court, and every toss is a gamble.`),
+    line(cp`The wind is gusting hard, and neither of them will trust the ball in the air.`),
+  ],
+}
+const RAIN_NOTES: Record<'possible' | 'falling', readonly Line[]> = {
+  possible: [
+    line(cp`Dark cloud on the horizon, and the umpire keeps looking at the sky.`),
+    line(cp`It might rain, and the covers are standing ready at the edge of the court.`),
+  ],
+  falling: [
+    line(cp`Rain is coming down, and the covers are only just off the court.`),
+    line(cp`A steady drizzle over the court, and the ball is damp from the first point.`),
+  ],
 }
 
 /** The number said the way a person says it, never as a decimal. Rounded at the template boundary,
@@ -363,7 +417,29 @@ const ENTRIES: readonly Entry[] = [
     // `buildCommentary` would need an input the determinism pin exists to keep out.
     key: 'conditions',
     from: 1,
-    say: ({ input }) => (input.temperatureC === null ? null : conditionsNote(Math.round(input.temperatureC))),
+    say: ({ input }) =>
+      input.temperatureC === null
+        ? null
+        : conditionsNote(Math.round(input.temperatureC), input.weather ? weatherLinePicks(input.weather.linePick).temp : 0),
+  },
+  {
+    // ⭐ ROUND 53 · STEP 10 – wind and rain as their own lines, only when the day HAS them (none says nothing).
+    key: 'wind',
+    from: 1,
+    say: ({ input }) => {
+      const w = input.weather
+      if (!w || w.wind === 'none') return null
+      return WIND_NOTES[w.wind][weatherLinePicks(w.linePick).wind] ?? null
+    },
+  },
+  {
+    key: 'rain',
+    from: 1,
+    say: ({ input }) => {
+      const w = input.weather
+      if (!w || w.rain === 'none') return null
+      return RAIN_NOTES[w.rain][weatherLinePicks(w.linePick).rain] ?? null
+    },
   },
   {
     key: 'opponent',

@@ -1214,6 +1214,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
       :rank-b="viewerRankB"
       :final-match="isFinalRound"
       :temperature-c="pending?.temperatureC ?? null"
+      :weather="pending?.weather ?? null"
       :preview-event="viewerPreviewEvent"
       :coach-travelled="pending?.coachTravelled ?? false"
       :booth-private-life="pending?.boothPrivateLife ?? null"

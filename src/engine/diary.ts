@@ -85,6 +85,7 @@ import { capitalise, short } from './diary/words'
 import type { DiaryWorldView } from './diary/facts'
 import { weekAwayOf } from './diary/weekAway'
 import type { WeekAwayArgs } from './diary/weekAway'
+import { tournamentWeatherIn } from './diary/weatherFacts'
 import { travelHomeSceneFor, TRAVEL_SLEEP_CHANCE_EMPTY, TRAVEL_SLEEP_CHANCE_FRESH, travelSleepChance, TRAVEL_FINAL_SLEEP_CHANCE_EMPTY, TRAVEL_FINAL_SLEEP_CHANCE_FRESH, travelFinalSleepChance, travelHomeMoodFor, travelHomeFactsFor } from './diary/travelHome'
 export { travelHomeSceneFor, TRAVEL_SLEEP_CHANCE_EMPTY, TRAVEL_SLEEP_CHANCE_FRESH, travelSleepChance, TRAVEL_FINAL_SLEEP_CHANCE_EMPTY, TRAVEL_FINAL_SLEEP_CHANCE_FRESH, travelFinalSleepChance, travelHomeMoodFor, travelHomeFactsFor }
 export type { TravelHomeFacts } from './diary/travelHome'
@@ -270,6 +271,8 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     injured: view.injury,
     travelled: away.travelled,
     playedTournament: away.playedTournament,
+    // ⭐ r53 step 10: the day she played in, re-derived from the event's own id (diary/weatherFacts.ts).
+    ...tournamentWeatherIn(away.thisWeek, view.week, view.seed),
     playedPractice: away.playedPractice,
     // W4-SCHOOL: `schoolOver` comes off the view rather than being re-derived here – the diary is
     // a reporter and this module owns no calendar arithmetic of its own.

@@ -470,8 +470,12 @@ describe('the weather is decoration, and stays decoration', () => {
     // still goes red, and a third that was not this one goes red on its own line.
     expect(world.match(/eventTemperature\(/g) ?? [], 'world.ts uses the weather somewhere new').toHaveLength(3)
     expect(world).toContain('temperatureC: eventTemperature(world.seed, event)')
-    expect(world).toContain('temperatureC: eventTemperature(world.seed, { id: `college-w${reveal.week}`, surface })')
-    expect(world).toContain('temperatureC: eventTemperature(world.seed, { id: `nations-w${reveal.week}`, surface })')
+    // ⭐ r53 step 10: the climate is seasonal, so the two rungless fixtures hand over their WEEK too
+    // (the event's own `week` is what `eventTemperature(world.seed, event)` already carries), and the
+    // same three sites also assemble `weather` through `eventWeather` – the same three, by exact text.
+    expect(world).toContain('temperatureC: eventTemperature(world.seed, { id: `college-w${reveal.week}`, surface, week: reveal.week })')
+    expect(world).toContain('temperatureC: eventTemperature(world.seed, { id: `nations-w${reveal.week}`, surface, week: reveal.week })')
+    expect(world.match(/eventWeather\(/g) ?? [], 'world.ts reads the weather somewhere new').toHaveLength(3)
   })
 })
 

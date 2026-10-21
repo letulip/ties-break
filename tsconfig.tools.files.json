@@ -180,6 +180,7 @@
     "tools/top50-season-probe.ts",
     "tools/two-doors-bench.ts",
     "tools/wall-l1-bench.ts",
+    "tools/weather-bench.ts",
     "tools/wedding-bench.ts",
     "tools/week-story-trace.ts",
     "tools/weight-bench.ts",

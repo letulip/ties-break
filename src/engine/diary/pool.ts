@@ -646,6 +646,20 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
   { surface: 'photo', text: null, claims: { affect: 'neutral', quietWeek: true }, license: (f) => quiet(f) && f.emotion === 'norm' },
   { surface: 'photo', text: null, claims: { affect: 'neutral', quietWeek: true }, license: (f) => quiet(f) && f.emotion === 'norm' },
 
+  // ⭐ r53 step 10 (weather stage 1) – the day she played in, on the photo's caption. DRAFT, EN + RU in one commit.
+  {
+    surface: 'photo',
+    text: 'Thirty degrees on court, and she asked for another ice towel.',
+    claims: { affect: 'neutral', tournament: true },
+    license: (f) => f.playedTournament && f.heatDay === true,
+  },
+  {
+    surface: 'photo',
+    text: 'Rain at the courts today, and a wet umbrella in every photo.',
+    claims: { affect: 'neutral', tournament: true },
+    license: (f) => f.playedTournament && f.rainDay === true,
+  },
+
   // --- condition note (D1): WHY the bar reads the way it does ----------------------------------
   {
     surface: 'condition',
