@@ -77,6 +77,8 @@ import { entryBandTrack, eventActionable, feedContext, feedShows, pointsLockNote
 // `upcoming` to – so the feed cannot draw a row the snapshot has no event for, and the note cannot
 // promise a window the feed does not cover.
 import { UPCOMING_WEEKS } from '../../engine/world/constants'
+// R53 L3 (E-P02): the family-week headline asks the engine's own tired verdict, not its own `<`.
+import { practiceTired } from '../../engine/world/planner'
 // THE UPCOMING-EVENT CARD'S OWN PARTS, shared with the Calendar's marker card: the photograph, the
 // court's verdict for her build, the scholarship's share, and how an odds ring is NAMED. Its colour
 // is no longer one of them – that ramp is drawn on five surfaces, not two, so it lives a line below.
@@ -861,6 +863,22 @@ const supplyLine = computed<{ total: number; weeks: number; parts: string[] } | 
   return { total, weeks: supply.weeksLeft, parts }
 })
 
+// R53 L3 (round 15 #3): THE PER-CARD HALF OF THE PLANNING COUNTER. The owner's old complaint was
+// that the professional events stop appearing on the feed with no sentence why; the header says how
+// much is left across the rungs and this says it on the card, for THAT card's rung. The number is
+// the header's own field (`seasonSupply.rows[tier].open`), never a second count. `open` includes
+// this very card when the engine counts it (an entry made, or the list still open and the gate not
+// blocked), so the card's own place comes off – «more» means «besides this one». Null (line hidden)
+// for a junior card, an absent row, or nothing besides this card.
+function moreInTier(ev: UpcomingEvent): number | null {
+  if (TIERS[ev.tier].track !== 'wta') return null
+  const row = game.snapshot?.seasonSupply?.rows.find((r) => r.tier === ev.tier)
+  if (!row) return null
+  const countedHere = ev.entered || (!entriesClosed(ev) && ev.eligible)
+  const more = row.open - (countedHere ? 1 : 0)
+  return more > 0 ? more : null
+}
+
 /** ⭐⭐ ROUND-21 #2b – HOW MANY OF THAT COUNT THE FEED BELOW ACTUALLY DRAWS.
  *
  *  THE OWNER'S REPORT, and it is two sentences about one screen: there are lots of them on the
@@ -1317,7 +1335,7 @@ const showRescue = computed(
 /** The offer now reaches MILDLY tired weeks too (band widened to 80), and "she is worn out" is a
  *  lie at condition 78 – the headline follows the depth of the hole. */
 const rescueTitle = computed(() =>
-  condition.value < ECONOMY.practice.cautionCondition
+  practiceTired(condition.value)
     ? t('She is worn out – maybe a family week?')
     : t('She could use a week off – maybe a family week?'),
 )
@@ -1724,6 +1742,9 @@ function closeExhibition(): void {
                    player just sees a smaller number and no reason for it. -->
               <p v-if="academyCoverPct > 0" class="event-money-sub">{{ t('academy covers {0}%', [academyCoverPct]) }}</p>
             </div>
+            <!-- R53 L3 (round 15 #3): how many more of THIS rung the season still holds, off the same
+                 `seasonSupply` row the header reads. Professional cards only; absent when none are left. -->
+            <p v-if="moreInTier(ev) !== null" class="event-more">{{ t('{n} more {tier} this season', { n: moreInTier(ev), tier: TIER_SHORT[ev.tier] }) }}</p>
 
             <div class="controls">
               <!-- The entry fee reads as a FIGURE, in white, on the same row as the deadline chips
@@ -2922,6 +2943,14 @@ section.bare .event-cards {
 /* The line under the travel figure. v21 gave it its job back: the figure is already net of the
    academy's share, and this says so. It sits ON the venue painting like the figure above it, so it
    carries the same shadow – `--ink-soft` alone disappears over a bright court. */
+.event-more {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  text-shadow: var(--shadow-text-on-art);
+}
+
 .event-money-sub {
   margin: 4px 0 0;
   font-size: 12.5px;

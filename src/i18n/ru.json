@@ -6556,6 +6556,7 @@
   "{note}, {label}, {dates} – open this tournament": "{note}, {label}, {dates} – открыть турнир",
   "{n} levels hidden ({from} to {to}) – tap to show the whole ladder": "Скрыто: {n, plural, one {{n} уровень} few {{n} уровня} many {{n} уровней} other {{n} уровня}}, от {from} до {to}. Нажмите, чтобы показать всю лестницу.",
   "{n} match weeks in a row": "{n, plural, one {{n} неделя} few {{n} недели} many {{n} недель} other {{n} недели}} подряд с матчами",
+  "{n} more {tier} this season": "ещё {n} {tier} в этом сезоне",
   "{n} of 7 days training": "Тренировки: {n} из 7 дней",
   "{n} weeks passed. Everything they raised is below.": "{n, plural, one {Прошла {n} неделя} few {Прошли {n} недели} many {Прошло {n} недель} other {Прошло {n} недели}}. Всё, что произошло за это время, – ниже.",
   "{points} {unit} in one season": "{points} {unit} за один сезон",

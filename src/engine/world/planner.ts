@@ -286,6 +286,13 @@ export interface PracticeCaution {
   /** player-facing warning copy (short dash), absent when clear */
   detail?: string
 }
+/** THE «TIRED» LIMB OF THE GUARDRAIL, IN ONE SPELLING (R53 L3, 21.10; review E-P02). `practiceCaution`
+ *  pushes 'tired' by this and the Season screen's family-week offer picks its headline by it, so
+ *  «worn out» and «could use a week off» can never disagree with the practice chip about where
+ *  tired starts. Pure: condition in, verdict out. */
+export function practiceTired(condition: number): boolean {
+  return condition < ECONOMY.practice.cautionCondition
+}
 export function practiceCaution(input: {
   condition: number
   practiceWeeks: readonly number[]
@@ -295,7 +302,7 @@ export function practiceCaution(input: {
   const reasons: Array<'tired' | 'streak'> = []
   // The booking under consideration closes the run, so it is the (unbroken run before it + 1)-th.
   const streakWeeks = consecutivePracticeWeeks(input.practiceWeeks, input.week) + 1
-  if (input.condition < p.cautionCondition) reasons.push('tired')
+  if (practiceTired(input.condition)) reasons.push('tired')
   const strainedStreak = streakWeeks >= p.cautionStreak && input.condition < p.cautionStreakCondition
   if (strainedStreak || streakWeeks >= p.cautionStreakAlways) reasons.push('streak')
   if (reasons.length === 0) return { level: 'ok', reasons, streakWeeks }
