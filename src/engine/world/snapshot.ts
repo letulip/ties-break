@@ -130,6 +130,7 @@ import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
 import { coachBilling, coachDeclineNoteRef, coachEdgeView, coachEntryLineRef, coachLadderNoteRef, coachMarket, coachNoteText, coachRoomNoteRef, coachRoomShortRef, coachTravelsWithHer, handoverBaseBand, handoverRoomBand, lastWinterIn } from './coachMarket'
+import { masseurReleaseConsequences } from './masseurRelease'
 import { masseurRehabWeeksAhead, masseurRoomNote, masseurRungOf, masseurSessionCents, masseurUnlocked, masseurWeeklyCents } from './masseur'
 // ⭐⭐⭐ v80, WAVE F2 – the third seat's two derivations, from the leaf that owns them.
 import { sparringRungWeeklyCents, sparringStoodDown, sparringUnlocked, sparringWeeklyCents } from './sparring'
@@ -2024,6 +2025,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     masseurSalaryCents: masseurWeeklyCents(world),
     masseurPerSessionCents: masseurSessionCents(world),
     masseurNote: masseurRoomNote(world),
+    // ⭐ ROUND 53 STEP 2 – absent unless releasing him would change the return week (see masseurRelease.ts).
+    ...(() => {
+      const release = masseurReleaseConsequences(world)
+      return release !== null ? { masseurRelease: release } : {}
+    })(),
     masseurSessionsPerWeek: masseurRungOf(world).sessions,
     masseurTravels: world.masseurTravels ?? false,
     ...(() => {

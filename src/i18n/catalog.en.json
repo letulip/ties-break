@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "count": 6626,
+  "count": 6629,
   "keys": {
     " (+{0} banked – a ranking needs {1} events with points, or {2})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["points"],["RANKABLE_MIN.tournaments"],["RANKABLE_MIN.points"]],"wrapped":true},
     " (does not improve best {0})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["bestN"]],"wrapped":true},
@@ -1988,6 +1988,7 @@
     "Do not forget your keys again.": {"home":["src/composables/fridgeNote.ts"],"area":["scripts"],"wrapped":true,"seat":["fridge.note"]},
     "Do not touch the cake. It is for Sunday.": {"home":["src/composables/fridgeNote.ts"],"area":["scripts"],"wrapped":true,"seat":["fridge.note"]},
     "Do the shopping list on the pad, not on your hand.": {"home":["src/composables/fridgeNote.ts"],"area":["scripts"],"wrapped":true,"seat":["fridge.note"]},
+    "Doctor said no: {0} – {1}": {"home":["src/engine/world/masseurRelease.ts"],"area":["engine","ledger"],"ph":[["row.label"],["when"]],"wrapped":true},
     "Doctor's warning – she is cleared for the {0}, but only just. A warning is all it is; nobody can forbid it.": {"home":["src/engine/world/phaseHerWeek.ts"],"area":["engine","ledger"],"ph":[["TIERS[enteredThisWeek.tier].label"]],"wrapped":true},
     "Done": {"home":["src/components/PracticeFlow.vue"],"area":["screens"],"wrapped":true},
     "Double faults": {"home":["src/composables/matchStatTable.ts"],"area":["scripts"],"wrapped":true},
@@ -2401,6 +2402,7 @@
     "Her relationship ended. We offered to help put it right.": {"home":["src/engine/world/lifeBeat.ts"],"area":["lifebeat"]},
     "Her relationship ended. We said they were never worth it.": {"home":["src/engine/world/lifeBeat.ts"],"area":["lifebeat"]},
     "Her replies arrived the next morning.": {"home":["src/engine/diary/pool.ts"],"area":["diary"],"wrapped":true,"seat":["diary.pool"]},
+    "Her return moves from {0} to {1}.": {"home":["src/components/SupportStaffTab.vue"],"area":["scripts"],"wrapped":true},
     "Her serve is her weapon – we build the rest around it.": {"home":["src/engine/radar.ts"],"area":["ledger"],"wrapped":true,"seat":["engine.text"]},
     "Her skills: serve, return, composure, stamina and groundstrokes. The dashed contour is where she started, the solid one is where she is today, and the haze around them is how far she could go.": {"home":["src/components/screens/KidScreen.vue"],"area":["screens"],"wrapped":true},
     "Her sponsor keeps this line fresh, but the season's allowance is gone – this one is the family's to buy until next season.": {"home":["src/components/screens/MoneyScreen.vue"],"area":["screens"],"wrapped":true},
@@ -5203,6 +5205,7 @@
     "There was someone in her life, and it is already over. Nobody was told at the time.": {"home":["src/engine/world/lifeBeat/endedCopy.ts"],"area":["lifebeat"]},
     "There was someone, it is already over, and she does not want to be on her own with it": {"home":["src/engine/world/lifeBeat/endedCopy.ts"],"area":["lifebeat"]},
     "There was someone, it is already over, and she wants the room to herself": {"home":["src/engine/world/lifeBeat/endedCopy.ts"],"area":["lifebeat"]},
+    "These entries will be withdrawn – the doctor will not clear her in time: {0}.": {"home":["src/components/SupportStaffTab.vue"],"area":["scripts"],"wrapped":true},
     "They came back and did it again.": {"home":["src/engine/world/albumCorpus.ts"],"area":["album"],"wrapped":true,"seat":["album.corpus"]},
     "They changed the colour.": {"home":["src/engine/world/albumCorpus.ts"],"area":["album"],"wrapped":true,"seat":["album.corpus"]},
     "They have been together for 1 month.": {"home":["src/engine/world/lifeBeat/weddingCopy.ts"],"area":["lifebeat"],"wrapped":true},

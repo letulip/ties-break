@@ -20,7 +20,7 @@ import type { PsyFocus } from '../../engine/world/state'
 import type { CollegeOffer, CollegeState, EndingView, RetirementOffer } from './career'
 import type { ArrivalPreview, EntryCapUsage, LossStreak, PendingView, SeasonHistoryEntry, SeasonSummary, SeasonSupply, TierOpenMap, TierRefusal, TierTrophies, UpcomingEvent } from './competition'
 import type { CareerMoney, CareerTotals, DebtView, FinanceWeekPoint, FinanceWindow, StopReason, WorldEvent } from './events'
-import type { InjuryReport, InjuryView, Knock, KnockPrompt } from './health'
+import type { InjuryReport, InjuryView, Knock, KnockPrompt, MasseurReleaseView } from './health'
 import type { CountingResult, LadderViews, StandingRow } from './ladder'
 import type { BirthdayPrompt, DiarySnapshot, KidLife, LifeBeatPrompt, Milestone, RadarAxis, SoftBeatInvite, TrainingRead } from './narrative'
 import type { AdPortfolioRow, CoachMarketRow, KitDealView, KitLineView, Offer, ShootClashPrompt, ShopView, SnapshotAcademy, TourBriefing } from './offers'
@@ -271,6 +271,9 @@ export interface Snapshot {
    *  hands did lately – the rehab he is working, the layoff that ended early, the quiet weeks –
    *  quoting no figure, '' when nobody is hired. See `masseurRoomNote`. */
   masseurNote: string
+  /** ⭐ ROUND 53 STEP 2 – what letting the masseur go would do to the running layoff and which entries it
+   *  would withdraw. ABSENT unless a masseur is hired, she is injured and his cadence saves weeks. */
+  masseurRelease?: MasseurReleaseView
   /** ⭐⭐⭐ v80, WAVE F2 – is the THIRD salaried seat on the payroll (the hitting partner). The
    *  masseur's flag two seats over, and the same stand-down pair behind it – suspends (does not
    *  cancel) at college and on booked family weeks – PLUS one the other two do not have: a partner

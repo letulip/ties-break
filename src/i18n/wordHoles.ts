@@ -384,6 +384,7 @@ export const HOLE_TABLE: Readonly<Record<WordClass, readonly HoleRow[]>> = {
     ['Entered {0} – {1} ({2})', 1],
     ['Withdrew from {0} – {1}', 1],
     ['Taken out of {0} – {1}, she is not fit for that week.', 1],
+    ['Doctor said no: {0} – {1}', 1],
     ['Released from {0} – {1}, she is taking the scholarship.', 1],
     ['Cancelled {0} – {1}, entry fee forfeited.', 1],
     ['Court rental refunded – {0}', 0],

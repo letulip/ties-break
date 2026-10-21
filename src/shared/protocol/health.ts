@@ -78,6 +78,19 @@ export interface InjuryView extends SnapshotInjury {
   expectedWeeks?: number
 }
 
+/** ⭐ ROUND 53 STEP 2 – WHAT LETTING THE MASSEUR GO WOULD DO TO THE LAYOFF THAT IS RUNNING, as the confirm
+ *  prints it. DERIVED per snapshot (`masseurReleaseConsequences`) and persisted nowhere. ABSENT, not
+ *  null, when there is nothing to say – no injury, no masseur, or a cadence that saves nothing – on
+ *  `InjuryView.expectedWeeks`'s own rule, so the confirm keeps its old sentence byte for byte.
+ *  `atRisk` is the entries the release would withdraw («Doctor said no»); empty when the gap holds none. */
+export interface MasseurReleaseView {
+  /** The week she is back with him on the payroll (`week + expectedWeeks`). */
+  backWithWeek: number
+  /** ...and without him (`week + weeksRemaining`, the clinic's). */
+  backWithoutWeek: number
+  atRisk: Array<{ id: string; label: string; week: number }>
+}
+
 // --- ⭐ R2-02: the injury report, as facts ------------------------------------
 // WHY THIS TYPE EXISTS. `InjuryStopDialog` recovered four domain facts by reading the news feed's
 // ENGLISH – `startsWith(RELEASE_LINE_PREFIX.injury)` for the cancelled entries and a raw

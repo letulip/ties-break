@@ -98,6 +98,7 @@ export type {
   InjurySeverity,
   SnapshotInjury,
   InjuryView,
+  MasseurReleaseView,
   InjuryCircumstanceKind,
   InjuryEntryRow,
   InjuryReport,

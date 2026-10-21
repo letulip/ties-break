@@ -54,6 +54,7 @@ import {
   guardNotEnded,
   type WorldState,
 } from '../engine/world'
+import { releaseMasseur } from '../engine/world/masseurRelease'
 // ⭐⭐ T6.2 · D-07 – `assembleInbox` is imported from the module that OWNS it rather than through the
 // `engine/world` barrel. The barrel re-exports the engine's HISTORICAL public API – hundreds of files
 // import from it and none of their names may move (CLAUDE.md) – and a symbol born after A-03 freezes
@@ -547,7 +548,12 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // v59, the travelling team step 1. Re-validated engine-side like every command: the pro-career
       // gate and the college freeze both refuse inside `hireMasseur` (guardNotEnded first), so a
       // stale screen cannot put a masseur on a junior's – or a student's – payroll.
-      return mutate(msg.id, msg.baseRevision, (world) => hireMasseur(world, msg.hire))
+      return mutate(msg.id, msg.baseRevision, (world) => {
+        // Round 53 step 2: the fire direction also withdraws the entries the honest return week was
+        // keeping (`releaseMasseur`); hiring is the plain command.
+        if (msg.hire) hireMasseur(world, true)
+        else releaseMasseur(world)
+      })
     }
     case 'setMasseurSessions': {
       // v59 step 2, the dial. `setMasseurSessions` refuses a rung the market does not sell and
