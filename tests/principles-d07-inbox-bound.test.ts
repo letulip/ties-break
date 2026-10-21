@@ -296,7 +296,9 @@ describe('D-07 – the snapshot carries this week, and the world keeps the histo
   // band's feed) and `devLifeBoost` (the ×8 dev switch's state echoed back to the More screen). All
   // three are derived per snapshot and persisted nowhere; nothing reordered or removed.
   // -----------------------------------------------------------------------------------------------
-  it('⭐ D-P8 – 119 top-level keys, the same set in the same order on every committed career', async () => {
+  // ⚠ RE-AIMED 22.10 (round 53, M7 47487a7c): 119 -> 120 – the one new always-present key `sparringTopRungOffered`
+  // (the hitting-partner dial's top rung is gated on the coach's week now, and the dial reads the engine's verdict).
+  it('⭐ D-P8 – 120 top-level keys, the same set in the same order on every committed career', async () => {
     const manifest = JSON.parse(readFileSync(resolve(CAREERS, 'manifest.json'), 'utf8')) as {
       fixtures: { name: string }[]
     }
@@ -332,7 +334,7 @@ describe('D-07 – the snapshot carries this week, and the world keeps the histo
     // thing still asked of an optional key is below the sameness loop: where a career carries it, it sits in the SAME place of the wire – order is what every hash of a snapshot sees. 119 stays the count of
     // the keys EVERY career carries. The next optional view key joins that list WITH a dated line here, so the list cannot grow unread.
     // r53 step 2 (21.10): `masseurRelease` IS NOT COUNTED EITHER – the confirm's consequences, present only while a hired masseur is shortening a running layoff and ABSENT otherwise (`InjuryView.expectedWeeks`'s rule); it joins `OPTIONAL_VIEW_KEYS` with this dated line. 119 stays the count of the keys EVERY career carries.
-    expect(reference.length, 'D-P8: the wire`s top-level key count').toBe(119)
+    expect(reference.length, 'D-P8: the wire`s top-level key count').toBe(120)
     for (const key of ['offers', 'offerOpen', 'newestLetterId'] as const) {
       expect(reference, `the wire must carry \`${key}\` – the count is about these three`).toContain(key)
     }

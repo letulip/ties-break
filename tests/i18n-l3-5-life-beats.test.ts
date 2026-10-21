@@ -581,7 +581,11 @@ describe('§7 every sentence a sink\'s seat can hold is a key of the frozen v92 
 // ⚠ RE-STAMPED 15.10 (round 52, his review-sheet answers, architect): '5/0' moved with J6 (4cc2349c) – the
 // half-year checkpoint 32 → 28 and the windows [24,32) / [48,64) move the coached career's coach talks. '0/1'
 // checked AFTER the stamp. Was '445a8b73'.
-const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': '96df51c9', '0/1': 'ac91e65e' }
+// ⚠ RE-STAMPED 22.10 (round 53 close, architect): '5/0' moved with the round's whole shape of a coached career (M7's
+// prices and letters, M8's pedigree, M9's partner name at the row's birth, M10/M11's weather moving results). '0/1'
+// checked AFTER the stamp – and it MOVED too this time (the self-coached career's results shift under the weather, M11,
+// and its love row is named at birth, M9): 'ac91e65e' → '9e652d63'. Was '96df51c9' / 'ac91e65e'.
+const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': 'fd8ea9f6', '0/1': '9e652d63' }
 /** and the bench's MAIN stream, three draws on from the last week of each career, from the same pre-wave runs – the wave draws nothing, and the next draws prove the position is the pre-wave one */
 const PRE_WAVE_NEXT3: Record<string, number[]> = {
   '5/0': [0.18923983839340508, 0.10872006509453058, 0.37577401218004525],
@@ -667,7 +671,9 @@ describe('§9 the pick keys – the sub-streams the life files draw on (this wav
   })
 })
 /** the digest of the sorted `rngFromSeed(...)` argument texts of every life file, computed by this very scan on the PRE-WAVE tree (0b60a1b3): the new tree must give the same */
-const PICK_KEYS_DIGEST = 'feef4fb8'
+// ⚠ RE-STAMPED 22.10 (round 53 close, architect): the pick-keys list gained M9's partner-name keys and the weather
+// lines' keys (M10/M11) – 21 keys now. Was 'feef4fb8'.
+const PICK_KEYS_DIGEST = 'e86f369f'
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // §10 – the fridge notes

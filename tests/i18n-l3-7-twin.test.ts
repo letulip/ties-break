@@ -47,6 +47,11 @@
 //   capture at J6's parent a4db32f6 (equal to the stored fixture, 0 leaves): J6 moves the half-year
 //   checkpoint 32 → 28 and bounds the windows to [24,32) / [48,64), so the coach talks land on other
 //   weeks. Zero row, text or draw digests; captures: L37_CAPTURE here, podman linux/amd64 node:22.
+// ⚠ REFRESHED 22.10 (round 53 close, both platforms): 544 changed leaves + 8 new – NOT a sub-stream shift this time
+//   but the round's whole shape: M7 re-priced the coach and gated the hitting partner, M8 gave a quarter of elite coaches a
+//   pedigree, M9 named the partner at the row's birth (`nameKnownWeek` on every love row, v95), M10/M11 made the weather
+//   a fact of the event and of the match – so results, ranks, money and rows differ on every career. Attributed by a
+//   CONTROL capture at `main` (equal to the stored fixture: 0 leaves). Row, text and draw digests moved too (results).
 //
 // ⚠⚠ TWO PLATFORM FAMILIES, BOTH TRUE (10.10, the day-long hunt). The PR runner (ubuntu/x64,
 // node 22) produces snapshot digests no darwin/arm64 machine can – measured to the last cell: a
