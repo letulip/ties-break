@@ -79,12 +79,14 @@ beforeEach(() => setActivePinia(createPinia()))
 describe('round 42 #19 – her rank re-prices her coach', () => {
   it('⭐⭐ a top-ten player, a top-hundred player and an unranked one pay three different retainers', () => {
     const unranked = proCareer('r42-19-unranked')
-    const hundred = atRank(proCareer('r42-19-hundred'), 60)
+    // ⭐ RE-AIMED 21.10 (round 53 №1, docs/specs/coach-pay-ladder-2026-10.md §3.3): the bands are ×1.5 at #11–50 and ×2.5 at
+    // #1–10 now, and #51–100 is ×1 – so the «top-hundred» fixture stands at #30 and the factors read 1.5 / 2.5.
+    const hundred = atRank(proCareer('r42-19-hundred'), 30)
     const ten = atRank(proCareer('r42-19-ten'), 5)
 
     expect(coachRetainerBandOf(unranked), 'no counting W result is the identity').toBe(1)
-    expect(coachRetainerBandOf(hundred)).toBe(2)
-    expect(coachRetainerBandOf(ten)).toBe(4.5)
+    expect(coachRetainerBandOf(hundred)).toBe(1.5)
+    expect(coachRetainerBandOf(ten)).toBe(2.5)
 
     // ⚠ THE FIGURES ARE REBUILT FROM THE FUNCTIONS THAT BILL THEM, never read back off the snapshot
     // the component reads – the round-42 house rule for a money assertion.
@@ -120,8 +122,8 @@ describe('round 42 #19 – her rank re-prices her coach', () => {
     //
     // ⚠ AND THE BAND ITSELF IS UNTOUCHED – it is read, it is right, and it is what an ask may climb
     // to. A wave that deleted `coachRetainerBand` would still go red on the three reads above.
-    expect(quote(ten, 4.5)).toBeGreaterThan(quote(ten, 2))
-    expect(quote(ten, 2)).toBeGreaterThan(quote(ten, 1))
+    expect(quote(ten, 2.5)).toBeGreaterThan(quote(ten, 1.5))
+    expect(quote(ten, 1.5)).toBeGreaterThan(quote(ten, 1))
   })
 
   it('⭐ the band multiplies HIS LABOUR and not the hall – the coach line is exactly 4.5x', () => {
@@ -159,7 +161,8 @@ describe('round 42 #19 – her rank re-prices her coach', () => {
       const atOne = coachLabourCents(hi, age, tier, coachRetainerBand(null))
       const atTen = coachLabourCents(hi, age, tier, coachRetainerBand(5))
       expect(atOne, `${tier}: his labour is a real number to multiply`).toBeGreaterThan(0)
-      expect(atTen / atOne, `${tier}: the band multiplies his LABOUR, exactly 4.5x`).toBeCloseTo(4.5, 3)
+      // ⭐ 21.10 (round 53 №1): 4.5x → 2.5x, the top band's new factor; the claim (labour, never the hall) is unchanged.
+      expect(atTen / atOne, `${tier}: the band multiplies his LABOUR, exactly 2.5x`).toBeCloseTo(2.5, 3)
       expect(
         bandedRateCents(hi, age, tier, coachRetainerBand(5)) - atTen,
         `${tier}: …and the hall is charged at the same price whatever she is ranked`,
@@ -239,7 +242,8 @@ describe('round 42 #19 – the raise cannot reach the mid game', () => {
     for (const tier of ['budget', 'middle', 'high', 'elite'] as const) {
       const [, hi] = coachRateBandCents(tier, 19)
       expect(bandedRateCents(hi, 19, tier, coachRetainerBand(5))).toBeGreaterThan(hi)
-      expect(bandedRateCents(hi, 19, tier, coachRetainerBand(60))).toBeGreaterThan(hi)
+      // ⭐ 21.10 (round 53 №1): the middle band is #11–50 now, so the mirror reads it at #30 (#60 is outside the table).
+      expect(bandedRateCents(hi, 19, tier, coachRetainerBand(30))).toBeGreaterThan(hi)
     }
   })
 

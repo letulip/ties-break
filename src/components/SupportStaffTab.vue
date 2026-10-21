@@ -635,7 +635,8 @@ const sparring = computed<StaffMember>(() => ({
     // which he ruled unsuitable for a control: a label must say what the control CHANGES.
     label: t('Hitting partner – experience level'),
     active: sparringRung.value,
-    rungs: SPARRING_RUNGS.map((r, i) => ({
+    // ⭐ ROUND 53 №1 – the top rung is shown only while the market offers it (a coach whose week carries it).
+    rungs: SPARRING_RUNGS.slice(0, (game.snapshot?.sparringTopRungOffered ?? true) ? 3 : 2).map((r, i) => ({
       value: i,
       label: r.label,
       priceLabel: formatCents(sparringRungPrices.value[i] ?? 0),

@@ -62,7 +62,7 @@ import { weekLabel } from '../i18n/dates'
 import { weekRange } from '../i18n/dates'
 // ⭐⭐ T4.2 · E-07 – `isOfferLive` rides this same import: the engine's own «is this letter still a
 // decision», which the foot's two controls are gated on. See the `live` computed for what it replaced.
-import { adCampaignCutShort, apparelBondCost, dealUntilWeek, isOfferLive, sponsorTierOfBrand, staffAskPer } from '../engine/offers'
+import { adCampaignCutShort, apparelBondCost, coachBandAskOf, dealUntilWeek, isOfferLive, sponsorTierOfBrand, staffAskPer } from '../engine/offers'
 // ⭐⭐ L3-2 – the two stored English phrases a letter carries (`trade`, `requirements`) and the raise request's unit word, localized at the reader.
 import { requirementLine, staffAskPerPhrase, tradeClause } from '../composables/letterCopy'
 // ⭐⭐⭐ THE BUYER'S LETTER (the secondary market, S5): the memory window the stale notice quotes is the ENGINE's constant, imported rather than
@@ -313,6 +313,15 @@ const staffAskPerWord = computed(() => staffAskPerPhrase(staffAskPer(staffTerms.
 const staffAskLead = computed(() => {
   const ask = staffAsk.value
   if (!ask) return ''
+  // ⭐ ROUND 53 №1 – THE BAND LETTER (`coachBandAskOf`): the same paper, written because she entered a band rather
+  // than because a year passed. DRAFT copy, EN and RU together (docs/localization/ru-letters-2026-10.md).
+  const band = coachBandAskOf(props.offer)
+  if (band) {
+    const args = [formatCents(ask.fromCents), formatCents(ask.toCents), staffAskPerWord.value]
+    return band.band >= 2.5
+      ? t('She is in the top ten now, and coaching a top-ten player is priced higher: my rate would go from {0} to {1} {2}. If we cannot agree, I will see the season out and then step aside.', args)
+      : t('She is in the top fifty now, and coaching a top-fifty player is priced higher: my rate would go from {0} to {1} {2}. If we cannot agree, I will see the season out and then step aside.', args)
+  }
   return t('I have now worked a full year with her, so I am asking for a raise: my rate would go from {0} to {1} {2}.', [formatCents(ask.fromCents), formatCents(ask.toCents), staffAskPerWord.value])
 })
 /** What the foot says once the window is shut – one sentence per way a request can end. */
@@ -320,6 +329,11 @@ const staffAskSettled = computed(() => {
   const ask = staffAsk.value
   if (!ask) return ''
   if (props.offer.state === 'signed') return t('Accepted – the rate is {0} {1}.', [formatCents(ask.toCents), staffAskPerWord.value])
+  // ⭐ ROUND 53 №1 – a band letter that is not signed ends the arrangement at the season's end. DRAFT copy.
+  if (coachBandAskOf(props.offer)) {
+    if (props.offer.state === 'refused') return t('Declined – the rate stays at {0} {1} until the season ends, and then the coach leaves.', [formatCents(ask.fromCents), staffAskPerWord.value])
+    return t('Lapsed – the rate stays at {0} {1} until the season ends, and then the coach leaves.', [formatCents(ask.fromCents), staffAskPerWord.value])
+  }
   if (props.offer.state === 'refused') return t('Declined – the rate stays at {0} {1}.', [formatCents(ask.fromCents), staffAskPerWord.value])
   return t('Lapsed – the rate stays at {0} {1}.', [formatCents(ask.fromCents), staffAskPerWord.value])
 })

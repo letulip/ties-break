@@ -68,16 +68,19 @@ import { ECONOMY } from '../src/engine/economy'
 // пусть и небольшим, т.е. его рост должен обгонять инфляцию.» A KEY IS ADDED ON EACH OF THE FOUR HOUSE RUNGS AND NO VALUE MOVES: shop.catalogue[6..9].entryIndexBps = 200 (the +2 %/yr entry-price index, beside each
 // rung's `annualRateBps: 300`), read by `assetEntryPriceCents`. The tell of an ADDED key, as on 30.09 S2: bytes AND key paths move – 29,707 → 29,787 chars (+80, four × `,"entryIndexBps":200`), sha e2acf0a0… → 714bcb87…;
 // 1,923 → 1,927 paths (+4), sha d32bf1f8… → 301bbd43…; the 44 top-level blocks did not. Taken on 96dda9fa plus the round-46 B14 commit.
-const PIN_JSON_SHA256 = '726cb87f37ad4353cf98242e6b2880c9ba702386a5d2c3a96ee114fe19aa9f63'
-const PIN_JSON_CHARS = 29_875
-const PIN_PATHS_SHA256 = '71ce2123a828e206fa42719e2b3f8133c9100fdb4d92340759b662c2efcefd3b'
-const PIN_PATH_COUNT = 1_931
+const PIN_JSON_SHA256 = 'e023198f222e2ac48aebde0e4cc6b59e7c60f984cde3cc19d69f20c4cee1cb8f'
+const PIN_JSON_CHARS = 29_900
+const PIN_PATHS_SHA256 = '194a351e4bf00259691b4cebcd40846b82c70da9a616a8a995c962578613379b'
+const PIN_PATH_COUNT = 1_932
 const PIN_TOP_LEVEL_KEYS = 44
 // RE-PINNED AN EIGHTH TIME 21.10, ROUND 53 L5 – THE OWNER'S FRAGILITY-BY-DURATION RULING (docs/specs/injury-honest-week-2026-10.md §6): FOUR KEYS ARE ADDED to
 // availability.recurrence and no value moves – durationFloorWeeks 2, durationCeilWeeks 12, durationFactorLo 0.6, durationFactorHi 1.4. 29,787 → 29,879 chars, 1,927 → 1,931 paths;
 // the 44 top-level blocks did not. Taken on 7df20c6b plus the round-53 L5 commit.
 // RE-PINNED A NINTH TIME 21.10, ROUND 53 L5b – THE SAME FOUR KEYS RE-CENTRED, no key moves (paths pin untouched): durationFactorLo 0.6 → 1.0, durationFactorHi 1.4 → 2.0
 // (the measured mix is 72% <= 2 weeks, so 0.6 anchored total fragility a third low). 29,879 → 29,875 chars. Taken on 0adfd532 plus the round-53 L5b commit.
+// RE-PINNED A TENTH TIME 21.10, ROUND 53 M7 – THE COACH PAY LADDER (docs/specs/coach-pay-ladder-2026-10.md §3.1–§3.3): the elite hourly row
+// 120–300 → 300–650, `retainerBandByRank` ×4.5@10 / ×2@100 → ×2.5@10 / ×1.5@50, and ONE ADDED key `sparring.topRungCoachShare: 0.6` – so bytes
+// AND paths move: 29,875 → 29,900 chars, 1,931 → 1,932 paths (sha 71ce2123… → 194a351e…), the 44 top-level blocks did not. Taken on 2c9848fe plus the M7 commit.
 
 const sha = (s: string): string => createHash('sha256').update(s).digest('hex')
 

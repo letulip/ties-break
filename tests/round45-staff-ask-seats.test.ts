@@ -314,8 +314,11 @@ describe.each(KITS)('round 45 #3 – the $seat asks, on the masseur`s pattern', 
     const world = seatAt(kit, 100, ANNIVERSARY)
     kit.resolve(world)
     acceptOffer(world, asksOf(world)[0].id)
-    kit.setRung(world, 2)
-    expect(kit.weekly(world)).toBe(rateAfter(kit.opening[2], 1))
+    // ⭐ ROUND 53 №1 (21.10) – re-aimed from rung 2 to rung 0: the hitting partner's top rung is offered only beside a
+    // coach whose week carries it (docs/specs/coach-pay-ladder-2026-10.md §3.2), and this seat has none. The claim –
+    // the raise follows the seat across a rung switch – is the same on any rung the market sells.
+    kit.setRung(world, 0)
+    expect(kit.weekly(world)).toBe(rateAfter(kit.opening[0], 1))
   })
 
   it('⭐⭐⭐ THE SNAPSHOT CARRIES WHAT THE BILL USES – the headline and every rung, before and after a raise', () => {

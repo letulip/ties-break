@@ -133,7 +133,7 @@ import { coachBilling, coachDeclineNoteRef, coachEdgeView, coachEntryLineRef, co
 import { masseurReleaseConsequences } from './masseurRelease'
 import { masseurRehabWeeksAhead, masseurRoomNote, masseurRungOf, masseurSessionCents, masseurUnlocked, masseurWeeklyCents } from './masseur'
 // ⭐⭐⭐ v80, WAVE F2 – the third seat's two derivations, from the leaf that owns them.
-import { sparringRungWeeklyCents, sparringStoodDown, sparringUnlocked, sparringWeeklyCents } from './sparring'
+import { sparringRungIndexOf, sparringRungWeeklyCents, sparringStoodDown, sparringTopRungCents, sparringUnlocked, sparringWeeklyCents } from './sparring'
 import { psychologistRungWeeklyCents, psychologistUnlocked, psychologistWeeklyCents, psychologistFocusOpen, psychologistFocusDetailOf } from './psychologist'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView, reachableFundsCents } from './shop'
@@ -2073,7 +2073,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     sparringSalaryCents: sparringWeeklyCents(world),
     // ⭐⭐⭐ ROUND 45 #3 – what each rung costs THIS career, off the same derivation the bill uses.
     sparringRungSalaryCents: sparringRungWeeklyCents(world),
-    sparringRung: world.sparringRung ?? ECONOMY.sparring.defaultRung,
+    sparringTopRungOffered: sparringTopRungCents(world) !== null,
+    // ⭐ ROUND 53 №1 – the rung he is actually on: a top rung the market stopped offering bills as the middle one.
+    sparringRung: sparringRungIndexOf(world),
     sparringTravels: world.sparringTravels ?? false,
     ...(() => {
       const asIf: WorldState = { ...world, sparringHired: true, sparringTravels: true }

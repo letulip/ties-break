@@ -38,6 +38,7 @@
 // once as `playedThisWeek` and threads it), which is the dependency inversion `accrueSpirit`'s
 // `psychologistWorks` argument established.
 import { staffFeeCents, writeStaffRaise } from './staffRaise'
+import { hiredCoachWeeklyCents } from './coachDeal'
 import { ECONOMY } from '../economy'
 import { addEvent } from './ledger'
 import { guardNotEnded } from './constants'
@@ -119,8 +120,38 @@ export function hireSparring(world: WorldState, hire: boolean): void {
  *  back to the default rung rather than to a crash – `masseurRungOf`'s identity-element discipline.
  *  Pure read, zero draws. */
 export function sparringRungOf(world: WorldState) {
+  return ECONOMY.sparring.rungs[sparringRungIndexOf(world)]
+}
+
+/** ⭐ ROUND 53 №1 – THE RUNG HE IS ACTUALLY ON, as an index. The recorded dial, except that a top rung the
+ *  market no longer offers (`sparringTopRungCents` is null – the coach left, or his week cannot carry it)
+ *  works and bills as the middle rung. DERIVED, never written: the dial keeps what the family chose, so the
+ *  top rung comes back by itself the week a coach can carry it again. Zero draws. */
+export function sparringRungIndexOf(world: WorldState): 0 | 1 | 2 {
   const rungs = ECONOMY.sparring.rungs
-  return rungs[world.sparringRung ?? ECONOMY.sparring.defaultRung] ?? rungs[ECONOMY.sparring.defaultRung]
+  const chosen = world.sparringRung ?? ECONOMY.sparring.defaultRung
+  const index = rungs[chosen] ? chosen : ECONOMY.sparring.defaultRung
+  if (index === 2 && sparringTopRungCents(world) === null) return 1
+  return index as 0 | 1 | 2
+}
+
+/** ⭐⭐ ROUND 53 №1 – WHAT THE TOP RUNG COSTS A WEEK, OR NULL WHEN IT IS NOT OFFERED (docs/specs/coach-pay-ladder
+ *  -2026-10.md §3.2; the owner: «никак не ниже спарринг партнера»). THE ONE FUNCTION the till
+ *  (`sparringWeeklyCents`) and the dial (`sparringRungWeeklyCents`) read.
+ *
+ *  Its fee – raise letters included (`staffFeeCents`) – capped at `topRungCoachShare` (60%) of the hired
+ *  coach's week at the current plan (`hiredCoachWeeklyCents`, the quote's own figure). ⚠ NOT OFFERED with
+ *  no coach, and NOT OFFERED when that cap falls below the middle rung's own fee: a cap alone would sell a
+ *  top-100 partner beside a $300-a-week coach for $180, under the college hitter – so a coach too cheap to
+ *  carry the top rung hides it rather than discounting it. ⭐ The $500 / $900 rungs never read this.
+ *  Zero draws. */
+export function sparringTopRungCents(world: WorldState): number | null {
+  const coachWeek = hiredCoachWeeklyCents(world)
+  if (coachWeek === null) return null
+  const rungs = ECONOMY.sparring.rungs
+  const cap = Math.round(coachWeek * ECONOMY.sparring.topRungCoachShare)
+  if (cap < staffFeeCents(world.offers, 'sparring', rungs[1].weeklyCents)) return null
+  return Math.min(staffFeeCents(world.offers, 'sparring', rungs[2].weeklyCents), cap)
 }
 
 /** THE DIAL. Three rungs off the market catalogue; the engine re-validates the index, so a stale
@@ -132,6 +163,8 @@ export function setSparringRung(world: WorldState, rung: number): void {
   guardNotEnded(world)
   const chosen = ECONOMY.sparring.rungs[rung]
   if (!chosen) throw new Error('No such hitting partner – the market offers three.')
+  // ⭐ ROUND 53 №1 – a top rung the market does not offer this week is refused the same way (the dial hides it).
+  if (rung === 2 && sparringTopRungCents(world) === null) throw new Error('No such hitting partner – the market offers three.')
   if ((world.sparringRung ?? ECONOMY.sparring.defaultRung) === rung) return
   world.sparringRung = rung as 0 | 1 | 2
   if (world.sparringHired ?? false) {
@@ -255,7 +288,8 @@ export function sparringWeeklyCents(world: WorldState): number {
   // ⭐⭐⭐ ROUND 45 #3 – THE RUNG'S CATALOGUE PRICE IS THE OPENING PRICE; each yearly raise request the
   // family SIGNED drifts it (`staffFeeCents`, the chain of signed papers). A career with no signed request pays exactly the
   // catalogue price – which is every career that predates the letters.
-  return staffFeeCents(world.offers, 'sparring', sparringRungOf(world).weeklyCents)
+  // ⭐ ROUND 53 №1 – the rung he is actually on, read off the dial's own row so the top rung's cap is billed.
+  return sparringRungWeeklyCents(world)[sparringRungIndexOf(world)]
 }
 
 /** ⭐⭐⭐ ROUND 45 #3 – WHAT EACH OF THE THREE RUNGS COSTS A WEEK **THIS CAREER**, index = rung: the
@@ -263,7 +297,12 @@ export function sparringWeeklyCents(world: WorldState): number {
  *  and the flat catalogue would quote a price the ledger no longer takes. The row for the rung he is
  *  on IS `sparringWeeklyCents`. Pure, zero draws. */
 export function sparringRungWeeklyCents(world: WorldState): number[] {
-  return ECONOMY.sparring.rungs.map((r) => staffFeeCents(world.offers, 'sparring', r.weeklyCents))
+  // ⭐ ROUND 53 №1 – the top rung through its one function; when it is not offered the row keeps its own fee,
+  // which nothing bills (`sparringRungIndexOf` falls back) and the dial does not show (`sparringTopRungOffered`).
+  const top = sparringTopRungCents(world)
+  return ECONOMY.sparring.rungs.map((r, i) =>
+    i === 2 && top !== null ? top : staffFeeCents(world.offers, 'sparring', r.weeklyCents),
+  )
 }
 
 /** ⭐⭐⭐ ROUND 45 #3 – THE ANNIVERSARY WRITES HIS REQUEST (`writeStaffRaise`, the masseur's own letter

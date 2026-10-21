@@ -26,4 +26,9 @@ export const sparring = {
   /** The middle rung, and the masseur's own `defaultSessions` doctrine: MEANINGLESS UNTIL HIRED,
    *  which is why v78 could back-fill it on a career that never hires the seat. */
   defaultRung: 1,
+  /** ⭐ ROUND 53 №1 (21.10, docs/specs/coach-pay-ladder-2026-10.md §3.2) – THE TOP RUNG MAY NOT COST MORE THAN
+   *  THIS SHARE OF THE HIRED COACH'S WEEK (the owner: «никак не ниже спарринг партнера»). Without a coach, or
+   *  with one whose week leaves less room than the middle rung's own fee, the top rung is not offered
+   *  (`sparringTopRungCents`, world/sparring.ts – the one function the till and the dial read). */
+  topRungCoachShare: 0.6,
 } as const

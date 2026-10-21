@@ -305,6 +305,9 @@ export interface Snapshot {
    *  so the row for the rung he is on is the headline above and both are the ledger's row. A screen that
    *  re-derived the drift would be the parity class. */
   sparringRungSalaryCents: number[]
+  /** ⭐ ROUND 53 №1 – IS THE TOP RUNG ON THE MARKET THIS WEEK (`sparringTopRungCents` is not null): a hired coach
+   *  whose week carries it at 60% (docs/specs/coach-pay-ladder-2026-10.md §3.2). The dial shows two rungs when false. */
+  sparringTopRungOffered: boolean
   /** ⭐ THE ROSTER DIAL – which of the three hits with her: an INDEX into `ECONOMY.sparring.rungs`
    *  (0 a college hitter · 1 a journeyman pro · 2 a top-100 partner), the psychologist's kind of dial
    *  and not the masseur's count. */

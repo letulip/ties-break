@@ -43,7 +43,12 @@ export const coach = {
     budget: [[24_00, 36_00], [28_00, 42_00], [32_00, 48_00]],
     middle: [[40_00, 60_00], [48_00, 72_00], [52_00, 78_00]],
     high: [[64_00, 96_00], [80_00, 120_00], [96_00, 144_00]],
-    elite: [[120_00, 180_00], [160_00, 240_00], [200_00, 300_00]],
+    // ⭐ ROUND 53 №1 (21.10, docs/specs/coach-pay-ladder-2026-10.md §3.1) – THE ELITE ROW ONLY. The owner:
+    // «чтобы элитный тренер действительно элитно стоил и никак не ниже спарринг партнера … 2–3к вполне
+    // может быть ок», and on the junior band «ок» to $1500–2000. At the balanced plan (5 sessions) these
+    // give $1500–2000 / $2000–3000 / $2250–3250 a week; the 29.07 midpoints above stay as the record of
+    // where the row started. Budget, middle and high are untouched.
+    elite: [[300_00, 400_00], [400_00, 600_00], [450_00, 650_00]],
   } as Record<CoachTier, [number, number][]>,
 
   // ⭐⭐⭐ ROUND 42 #19 – THE RETAINER FOLLOWS HER RANK. Proposals; the predicted-vs-measured table
@@ -58,11 +63,16 @@ export const coach = {
   // ⚠ coach.retainerBandByRank: READ TOP-DOWN, FIRST MATCH WINS, so the rows stay ordered tightest-first.
   // → docs/notes/economy/coach.md#coachretainerbandbyrank
   retainerBandByRank: [
-    // #1-10. Research: $150-250k/yr. At the elite rung this lands his labour at $172k (17-22) /
-    // $225k (23+) a year, which brackets the research's own midpoint.
-    { atOrBetter: 10, factor: 4.5 },
-    // #11-100. Research: ≈$90k/yr. Lands at $76.5k (17-22) / $100k (23+) - the band around it.
-    { atOrBetter: 100, factor: 2.0 },
+    // ⭐ ROUND 53 №1 (21.10, docs/specs/coach-pay-ladder-2026-10.md §3.3) – THREE BANDS AND A LETTER. The
+    // owner: «до 51 места без изменений … 50–11 тренер с письмом повышает цену и в таблице все тренеры
+    // тоже должны подорожать соответственно, 1–10 еще дороже, но механизм остается». So the silent ×2 at
+    // #11–100 (round 42 #19) is gone: #51 and below is ×1, #11–50 is ×1.5, #1–10 is ×2.5 of the base.
+    // ⚠ THE BAND IS THE ONE SHE HAS ENTERED, not her live rank (`coachEnteredBand`, world/coachDeal.ts):
+    // leaving it does not lower the price. The hired man's own fee moves only through his letter.
+    // Round 42's figures (×4.5 / ×2.0, research $150–250k and ≈$90k a year) are superseded, not deleted:
+    // the research stands, the elite base under it rose in the same round (§3.1).
+    { atOrBetter: 10, factor: 2.5 },
+    { atOrBetter: 50, factor: 1.5 },
   ] as { atOrBetter: number; factor: number }[],
 
   // ⭐⭐⭐ ROUND 42 #51 / ROUND 44 – THE ANNUAL ASK. docs/specs/the-coachs-raise-2026-09.md. – THE

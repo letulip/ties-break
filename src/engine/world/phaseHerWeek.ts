@@ -87,7 +87,7 @@ import { resolveSparring, resolveSparringRaise } from './sparring'
 // measured the same way the two above were: `world/coachMarket.ts` imports no phase at all
 // (`coachWorksThisWeek` deliberately lives in `phaseFinance.ts`, with the bill that is its first
 // reader), so this import closes no runtime loop.
-import { bankCoachResidual, resolveCoachRaise } from './coachMarket'
+import { bankCoachResidual, resolveCoachBandAsk, resolveCoachRaise } from './coachMarket'
 // ⚠ ONE-WAY ARROW, AND MEASURED: `world/spotlight.ts` imports `../economy`, `../season/calendar`,
 // `./constants`, `./fame` and `./loveEpisodes` – never a phase and never `../spirit` – so this
 // import closes no runtime loop, the same shape `./lifeBeat` above already has. It is the VALUE side
@@ -1117,6 +1117,9 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
   // fee) or `declineOffer` / a lapse (which leave it). The automatic rise and its feed row are retired – see
   // the supersession note on `resolveCoachRaise`. The week's bill below is therefore still at the old rate.
   resolveCoachRaise(world)
+  // ⭐ ROUND 53 №1 – AND THE BAND LETTER, in the same slot: the week she stands in a band his contract was
+  // not struck in, he writes once (`resolveCoachBandAsk`). Zero draws.
+  resolveCoachBandAsk(world)
   // ⭐ ...AND THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1
   // сеанс массажа по возвращении»): when he was NOT flown to her last tournament, the first
   // non-played week after it gets one extra session's worth of recovery, receipt included.

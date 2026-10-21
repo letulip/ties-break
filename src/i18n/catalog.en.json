@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "count": 6637,
+  "count": 6641,
   "keys": {
     " (+{0} banked – a ranking needs {1} events with points, or {2})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["points"],["RANKABLE_MIN.tournaments"],["RANKABLE_MIN.points"]],"wrapped":true},
     " (does not improve best {0})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["bestN"]],"wrapped":true},
@@ -1962,6 +1962,7 @@
     "Decided before the bag was open.": {"home":["src/engine/world/albumCorpus.ts"],"area":["album"],"wrapped":true,"seat":["album.corpus"]},
     "Decided weekly, she said.": {"home":["src/engine/world/albumCorpus.ts"],"area":["album"],"wrapped":true,"seat":["album.corpus"]},
     "Decline": {"home":["src/components/OfferLetter.vue"],"area":["letters"],"wrapped":true},
+    "Declined – the rate stays at {0} {1} until the season ends, and then the coach leaves.": {"home":["src/components/OfferLetter.vue"],"area":["letters"],"wrapped":true},
     "Declined – the rate stays at {0} {1}.": {"home":["src/components/OfferLetter.vue"],"area":["letters"],"wrapped":true},
     "Deep breath. Read the question twice.": {"home":["src/composables/fridgeNote.ts"],"area":["scripts"],"wrapped":true,"seat":["fridge.note"]},
     "Deep week, fresh legs – the table work on tour kept the run from eating her.": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine","ledger"],"wrapped":true},
@@ -2631,6 +2632,7 @@
     "Key points only": {"home":["src/components/MatchControls.vue","src/composables/matchDefaults.ts"],"area":["scripts"],"wrapped":true},
     "Kit bag is packed. Trainers by the door.": {"home":["src/composables/fridgeNote.ts"],"area":["scripts"],"wrapped":true,"seat":["fridge.note"]},
     "Language": {"home":["src/components/screens/MoreScreen.vue"],"area":["screens"],"wrapped":true},
+    "Lapsed – the rate stays at {0} {1} until the season ends, and then the coach leaves.": {"home":["src/components/OfferLetter.vue"],"area":["letters"],"wrapped":true},
     "Lapsed – the rate stays at {0} {1}.": {"home":["src/components/OfferLetter.vue"],"area":["letters"],"wrapped":true},
     "Last 12 weeks": {"home":["src/components/screens/HomeScreen.vue","src/components/screens/MoneyScreen.vue"],"area":["screens","scripts"],"wrapped":true},
     "Last bell. From Monday the mornings are hers.": {"home":["src/engine/world/milestones.ts"],"area":["engine"],"wrapped":true},
@@ -3900,6 +3902,8 @@
     "She is furnishing a life we do not live in, and it starts with somewhere to eat.": {"home":["src/engine/world/birthday.ts"],"area":["engine"],"wrapped":true,"seat":["birthday.gifts"]},
     "She is getting married. The news reached this house second-hand.": {"home":["src/engine/world/lifeBeat/weddingCopy.ts"],"area":["lifebeat"]},
     "She is hurt, so this week bills rehab:": {"home":["src/components/screens/MoneyScreen.vue"],"area":["screens"],"wrapped":true},
+    "She is in the top fifty now, and coaching a top-fifty player is priced higher: my rate would go from {0} to {1} {2}. If we cannot agree, I will see the season out and then step aside.": {"home":["src/components/OfferLetter.vue"],"area":["letters"],"wrapped":true},
+    "She is in the top ten now, and coaching a top-ten player is priced higher: my rate would go from {0} to {1} {2}. If we cannot agree, I will see the season out and then step aside.": {"home":["src/components/OfferLetter.vue"],"area":["letters"],"wrapped":true},
     "She is in {0}'s kit for next season.": {"home":["src/engine/world/sponsors.ts"],"area":["engine"],"ph":[["terms.brand"]],"wrapped":true},
     "She is in. Withdrawing lives on the Season tab.": {"home":["src/components/screens/CalendarScreen.vue"],"area":["screens"],"wrapped":true},
     "She is lighter this week, and we did nothing to deserve the credit.": {"home":["src/engine/diary/weekNotes.ts"],"area":["diary"],"wrapped":true,"seat":["diary.weekNotes"]},

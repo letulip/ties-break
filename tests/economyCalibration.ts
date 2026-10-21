@@ -230,9 +230,16 @@ export const BANDS: Record<FamilyBackground, [number, number]> = {
   // ⚠ MEASURED (+2,970.05), NOT CHOSEN – see the resolution block above. Same ±1,750 half-width the
   // working band carries, so it is a characterisation with the same tightness, not a widened net,
   // and the sign is back where round 7 put it.
-  wealthy: [1_200, 4_700],
+  // ⭐ RE-AIMED 21.10 (round 53 №1, M7 – docs/specs/coach-pay-ladder-2026-10.md §3.1): the elite shelf is $300–400 an
+  // hour at 12–16 on his word («2–3к вполне может быть ок», «ок» to $1500–2000 for the junior band), so the wealthy
+  // family's elite year burns **+$55,212.86** measured (was +$2,970.05). Same ±1,750 half-width around the new mean.
+  // «Premium everything must hurt» is now a fact about the price, not a fine balance.
+  wealthy: [53_450, 56_950],
 }
 
 /** Per-seed tolerance around each band. The corridor roll moves the coaching line every week, so a
  *  single season lands further from the batch mean than it did with a corridor-free bill. */
-export const SEED_SLACK: Record<FamilyBackground, number> = { working: 2_500, middle: 3_500, wealthy: 8_000 }
+// ⭐ 21.10 (round 53 M7): wealthy 8,000 → 13,000 – the elite shelf is $300–400 an hour now, so one seed's coach can sit
+// $100/h × 5 sessions × 52 = $26k a year from another's; half that is the per-seed reach (measured low seed +$44,200
+// against the +$55,213 mean). Derived from the rate band's own width, not widened until green.
+export const SEED_SLACK: Record<FamilyBackground, number> = { working: 2_500, middle: 3_500, wealthy: 13_000 }

@@ -1858,6 +1858,24 @@ export function staffAskId(seat: StaffSeat, year: number): string {
   return `staff-ask-${seat}-${year}`
 }
 
+// ⭐ ROUND 53 №1 – THE COACH'S BAND LETTER (world/coachDeal.ts `coachEnteredBand`, world/coachMarket.ts
+// `resolveCoachBandAsk`). Here, beside `staffAskId`, so the letter on screen can tell the two coach papers apart.
+/** THE ID OF A BAND LETTER – one per man per band, whatever happens to it. Keyed on the COACH and the band
+ *  (×10, so 1.5 → 15), never on a week or a season: the letter comes once, at the first entry, and a
+ *  re-entry after a fall, a re-hire of the same man after he left, or a reload all find the same row. */
+export const COACH_BAND_ASK_PREFIX = 'staff-band-coach-'
+export function coachBandAskId(coachId: string, band: number): string {
+  return `${COACH_BAND_ASK_PREFIX}${Math.round(band * 10)}-${coachId}`
+}
+
+/** THE BAND LETTER'S TWO FACTS, read off its id – or null for every other paper (the anniversary ask
+ *  included). Pure. */
+export function coachBandAskOf(offer: Offer): { band: number; coachId: string } | null {
+  if (offer.kind !== 'staff' || !offer.id.startsWith(COACH_BAND_ASK_PREFIX)) return null
+  const m = /^staff-band-coach-(\d+)-(.+)$/.exec(offer.id)
+  return m ? { band: Number(m[1]) / 10, coachId: m[2] } : null
+}
+
 /** Every raise request a seat has written, whatever became of it. */
 export function staffAsks(offers: Offer[], seat: StaffSeat): Offer[] {
   return offers.filter((o) => {
@@ -1892,8 +1910,10 @@ export function raiseStaffAsk(
   week: number,
   year: number,
   terms: StaffLetterTerms & { ask: NonNullable<StaffLetterTerms['ask']> },
+  // ⭐ ROUND 53 №1 – the coach's BAND letter is this same paper under its own id (`coachBandAskId`,
+  // world/coachDeal.ts: one per man per band), so it shares the window, the two doors and the never-pruned rule.
+  id: string = staffAskId(terms.seat, year),
 ): Offer {
-  const id = staffAskId(terms.seat, year)
   const existing = offers.find((o) => o.id === id)
   if (existing) return existing
   const offer: Offer = {
