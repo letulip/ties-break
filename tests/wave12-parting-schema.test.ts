@@ -207,7 +207,14 @@ describe('wave 12 T1 B – a marriage that ended BEFORE the wave keeps every wor
     const bare = (k: string, v: unknown): string =>
       JSON.stringify(k === 'events' && Array.isArray(v) ? v.map(({ c: _c, ...row }: Record<string, unknown>) => row) : v)
     const moved = Object.keys(before).filter((k) => bare(k, before[k]) !== bare(k, after[k]))
-    expect(moved).toEqual(['schemaVersion'])
+    // ⚠ RE-AIMED 22.10 BY v95 (r53 M9 – `nameKnownWeek` on every love-episode row): the head's step appends that one key to the crafted episode, so `loveEpisodes`
+    // joins `moved` – and the claim «a marriage that ended before the wave keeps every word» is held by the second half: stripped of that key the rows are byte-identical,
+    // and the key itself is the episode's `latchedWeek` (a latched, named episode – the step's first arm).
+    expect(moved).toEqual(['schemaVersion', 'loveEpisodes'])
+    const rowsBefore = before.loveEpisodes as Record<string, unknown>[]
+    const rowsAfter = after.loveEpisodes as Record<string, unknown>[]
+    expect(rowsAfter.map(({ nameKnownWeek: _n, ...row }) => row), 'every other byte of every episode row survives').toEqual(rowsBefore)
+    expect(rowsAfter.map((r) => r.nameKnownWeek), 'the key is the latch week').toEqual(rowsBefore.map((r) => r.latchedWeek))
     // ⚠ RE-AIMED 24.09 AT v89 (the college scene, T4), NOT WEAKENED: the claim is «the whole payload
     // survives and the version is the only difference», and the version is the LADDER'S HEAD rather
     // than 88 now. ⭐ The `moved` line above is untouched and is the half that matters – v89 appends

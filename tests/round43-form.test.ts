@@ -365,7 +365,8 @@ describe('§6 the schema move – v80', () => {
     // form half below did not.
     // ⚠ AND AGAIN AT v93 (09.10, the localization rig L3-0): the head moved, the form half below did not.
     // ⚠ AND AGAIN AT v94 (12.10, round 49 №8 – the wedding-milestone net): the head moved, the form half below did not.
-    expect(SAVE_SCHEMA_VERSION).toBe(94)
+    // ⚠ AND AGAIN AT v95 (22.10, r53 M9 – `nameKnownWeek` on the love-episode rows): the head moved, the form half below did not.
+    expect(SAVE_SCHEMA_VERSION).toBe(95)
     expect(createWorld('form-schema', DEFAULT_PROFILE).form).toBe(0)
   })
 

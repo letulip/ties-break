@@ -293,7 +293,11 @@ describe('S2 · schema v90 – the migration writes nothing (spec §2i)', () => 
     // ⚠ RE-AIMED AGAIN AT v93 (09.10, the localization rig L3-0): the head's step attaches a ref BESIDE each recognised row's text, so the migrated rows are compared
     // without `c` – the recipe is otherwise unchanged.
     const migrated89 = migrateSave(read(89)) as unknown as { events: Record<string, unknown>[] }
-    expect({ ...migrated89, events: migrated89.events.map(({ c: _c, ...row }) => row) }, 'the recipe every fixture since v25 uses').toEqual({ ...(read(90) as object), schemaVersion: SAVE_SCHEMA_VERSION, startYear: 2031 })
+    // ⚠ RE-AIMED AGAIN AT v95 (22.10, r53 M9 – `nameKnownWeek` on every love-episode row): the head's step appends that one key to each episode;
+    // v90.json's two episodes were never named (`partnerName: null`, `latchedWeek: null`), so it is `null` on both – the expectation names it beside the moved head number.
+    const v90 = read(90) as unknown as { loveEpisodes: Record<string, unknown>[] }
+    expect(v90.loveEpisodes.every((e) => e.partnerName === null && e.latchedWeek === null), 'the fixture\'s episodes were never named').toBe(true)
+    expect({ ...migrated89, events: migrated89.events.map(({ c: _c, ...row }) => row) }, 'the recipe every fixture since v25 uses').toEqual({ ...(read(90) as object), schemaVersion: SAVE_SCHEMA_VERSION, startYear: 2031, loveEpisodes: v90.loveEpisodes.map((e) => ({ ...e, nameKnownWeek: null })) })
   })
 
   it('a v89 save loads with BOTH fields absent and nothing invented on any row', () => {

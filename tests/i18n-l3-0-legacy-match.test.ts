@@ -163,9 +163,12 @@ describe('E · the v92 -> v93 golden', () => {
     // at v94 – and the v94 step writes NOTHING on this fixture (its one episode was never latched), so the output is
     // v93.json plus the version number alone. The claim this case was born for is unchanged: the v93 fixture is the real
     // v92 -> v93 conversion, byte for byte.
-    expect(SAVE_SCHEMA_VERSION).toBe(94)
+    // ⚠ AND AGAIN AT v95 (22.10, r53 M9 – `nameKnownWeek` on every love-episode row): the head moved to 95, and the v95 step writes
+    // `nameKnownWeek: null` on this fixture's two never-named episodes (`partnerName: null`, `latchedWeek: null`) and nothing else, so the
+    // output is v93.json plus the version number plus that one key per episode. The v93 claim is unchanged.
+    expect(SAVE_SCHEMA_VERSION).toBe(95)
     expect(v93.schemaVersion).toBe(93)
-    expect(migrateSave(structuredClone(v92))).toEqual({ ...v93, schemaVersion: 94 })
+    expect(migrateSave(structuredClone(v92))).toEqual({ ...v93, schemaVersion: 95, loveEpisodes: v93.loveEpisodes.map((e) => ({ ...e, nameKnownWeek: null })) })
   })
   it('converts EVERY row of the 403-row v92 corpus, and each converted row renders back to its stored text in English', () => {
     const migrated = migrateSave(structuredClone(v92)) as WorldState
@@ -183,6 +186,8 @@ describe('E · the v92 -> v93 golden', () => {
       const copy = structuredClone(w) as Record<string, unknown> & { events: Row[] }
       delete copy.schemaVersion
       for (const e of copy.events) delete e.c
+      // ⚠ RE-AIMED 22.10 BY v95 (r53 M9): the head's step appends `nameKnownWeek` to each love-episode row – the one key besides `c` and the version that the v92 save lacks; the rest of every row is still compared byte for byte.
+      for (const ep of (copy as { loveEpisodes?: Record<string, unknown>[] }).loveEpisodes ?? []) delete ep.nameKnownWeek
       return copy
     }
     expect(JSON.stringify(strip(migrated))).toBe(JSON.stringify(strip(v92)))
@@ -191,7 +196,8 @@ describe('E · the v92 -> v93 golden', () => {
     const once = migrateSave(structuredClone(v92))
     expect(migrateSave(structuredClone(once))).toEqual(once)
     // ⚠ RE-AIMED 12.10 BY v94 (round 49 №8): migrating the v93 fixture now takes the version-only v94 step (its one episode was never latched), so «once» lands one number higher and nothing else moves.
-    expect(migrateSave(structuredClone(v93))).toEqual({ ...v93, schemaVersion: 94 })
+    // ⚠ RE-AIMED 22.10 BY v95 (r53 M9): and now the v95 step, which adds `nameKnownWeek: null` to the fixture's two never-named episodes – one key per episode, nothing else moves.
+    expect(migrateSave(structuredClone(v93))).toEqual({ ...v93, schemaVersion: 95, loveEpisodes: v93.loveEpisodes.map((e) => ({ ...e, nameKnownWeek: null })) })
   })
   it('draws nothing: rngMain is the input\'s, and neither the matcher nor the step imports a dice or a clock', () => {
     const migrated = migrateSave(structuredClone(v92))

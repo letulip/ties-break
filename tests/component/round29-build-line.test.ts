@@ -227,7 +227,8 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // move. 91 was moved by that item, never by this line's, and the cell is re-stamped in the schema's own commit as the note below asks.
     // ⚠ AND AGAIN AT v93 (09.10, the localization rig L3-0 – the sentence as data, `WorldEvent.c`): 92 was moved by SUCCESSION S1, never by this line's, and the cell is re-stamped in the schema's own commit as the note below asks.
     // ⚠ AND AGAIN AT v94 (12.10, round 49 №8 – the wedding-milestone net): 93 was moved by the localization rig, 94 by №8's backfill – never by this line's item, and the cell is re-stamped in the schema's own commit as the note below asks.
-    expect(SAVE_SCHEMA_VERSION).toBe(94)
+    // ⚠ AND AGAIN AT v95 (22.10, r53 M9 – `nameKnownWeek` on the love-episode rows): 94 was moved by №8's backfill, 95 by M9 – never by this line's item, and the cell is re-stamped in the schema's own commit as the note above asks.
+    expect(SAVE_SCHEMA_VERSION).toBe(95)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

@@ -37,10 +37,15 @@ describe('the 150-week twin – a played career migrated as a v92 save', () => {
 
       const asV92 = structuredClone(played)
       asV92.schemaVersion = 92
+      // ⚠ RE-AIMED 22.10 BY v95 (r53 M9 – `nameKnownWeek` on every love-episode row): a real v92 save has no such key, but this twin is an engine-born v95 world with the version
+      // number turned back – so its rows carry a `null` (named, name not yet disclosed) that the v95 step's `??=` would back-fill as if it were absent. The twin is made honest
+      // by dropping the key from the rows, and the comparison below leaves that one key out of both sides.
+      for (const ep of (asV92 as unknown as { loveEpisodes?: Record<string, unknown>[] }).loveEpisodes ?? []) delete ep.nameKnownWeek
       const migrated = migrateSave(structuredClone(asV92) as never) as unknown as Played
 
       // ⚠ RE-AIMED 12.10 BY v94 (round 49 №8 – the wedding-milestone net): the head moved; the v94 step writes nothing on an engine-born career (its weddings already carry their milestones), so everything below this line is the same claim it was at 93.
-      expect(migrated.schemaVersion).toBe(94)
+      // ⚠ AND AGAIN AT v95 (22.10, r53 M9 – `nameKnownWeek`): the head moved; the v95 step is `??=` per episode and an engine-born career's episodes already carry the key, so it writes nothing here either.
+      expect(migrated.schemaVersion).toBe(95)
       expect(migrated.rngMain, 'the step draws nothing').toEqual(played.rngMain)
       let converted = 0
       migrated.events.forEach((e, i) => {
@@ -57,6 +62,7 @@ describe('the 150-week twin – a played career migrated as a v92 save', () => {
         const copy = structuredClone(w)
         copy.schemaVersion = 0
         for (const e of copy.events) delete e.c
+        for (const ep of (copy as unknown as { loveEpisodes?: Record<string, unknown>[] }).loveEpisodes ?? []) delete ep.nameKnownWeek
         return JSON.stringify(copy)
       }
       expect(strip(migrated), 'nothing but the version and `c` moved').toBe(strip(played))
