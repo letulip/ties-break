@@ -6696,7 +6696,7 @@
     "🏆 {0} won the {1} ({2}) – thanks to the rain, on the fresher legs.": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["name"],["tier"],["surface"]],"wrapped":true},
     "🏆 {0} won the {1} ({2}) – the last one standing in the heat.": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["name"],["tier"],["surface"]],"wrapped":true},
     "🏆 {0} won the {1} ({2}) – the wind had its say, and she had the last word.": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["name"],["tier"],["surface"]],"wrapped":true},
-    "🏆 {0} won the {1} ({2}).": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine","ledger"],"ph":[["formatShortName(champName)"],["tier.label"],["event.surface"]],"wrapped":true},
+    "🏆 {0} won the {1} ({2}).": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["formatShortName(champName)"],["tier.label"],["event.surface"]],"wrapped":true},
     "🏆 {0} won the {1}, at {2} – a first season on tour.": {"home":["src/engine/world/phaseAiWeek.ts"],"area":["engine"],"ph":[["name"],["label"],["clause.age"]],"wrapped":true},
     "🏆 {0} won the {1}, at {2} – in a last season on tour.": {"home":["src/engine/world/phaseAiWeek.ts"],"area":["engine"],"ph":[["name"],["label"],["clause.age"]],"wrapped":true},
     "🏆 {0} won the {1}, at {2}.": {"home":["src/engine/world/phaseAiWeek.ts"],"area":["engine"],"ph":[["name"],["label"],["clause.age"]],"wrapped":true},
