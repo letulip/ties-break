@@ -56,8 +56,12 @@ spec question answered, then «делай всё по шагам по списк
   captions for weather (the corpus generator – a follow-up).
 
 ## Gates
-See the ledger's closure section for the chain at the final commit (every verdict from its own
-file in the session scratchpad, `r53g-*.log`).
+FINAL CHAIN at `40c8ce2c` (clean worktree, npm ci, every verdict from its own file, `r53h-*.log`):
+check `R53H_CHECK_EXIT=0` (unit 468 s with one accepted bulk-pool late ack, component 332/332,
+build), sim `R53H_SIM_EXIT=0` (13/402 s), e2e on the Mac `R53H_E2E_EXIT=0` (151) and in CI's Linux
+image `R53H_LINUX_E2E_EXIT=0` (151); lqa:ru `R53G_LQA_EXIT=0` and the container twin
+`R53G_CONTAINER_EXIT=0` (6/6) at `b2314309` (only tests, e2e fixtures and one scroll box above it);
+frozen capture 51/51 standalone; build line `40c8ce2`. Schema v94 → v95, all four parts.
 
 ## Process notes
 - Ninth digest harvest: 137/137 coach-travel cells moved (the round changed what a coached career
