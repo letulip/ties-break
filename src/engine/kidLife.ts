@@ -457,15 +457,21 @@ export function collegeNote(view: KidLifeWorldView): string {
  *  ⚠ THE PARENT'S ATTACHMENT, NEVER THE WORLD'S (`toSnapshot` feeds `knownPartner`): a girl who has not told him
  *  reads `it seems` – exactly right, because he may simply not know – and an ended one reads the same. No
  *  `together` fact is not a gap; it is the line.
- *  ⚠ NO NAME ON THE TILE (the paragraph carried one): a name and a span do not fit a `nowrap` line, and his own
- *  shape is `Together for {span}`.
+ *  ⚠ R53 №2 (21.10): THE NAME IS ON THE TILE NOW, once the engagement has given him one – inside the LEAD (`Engaged: Anton`), because the lead is the line with room; the note stays the span.
+ *  The 06.10 reading («a name and a span do not fit a `nowrap` line») was true of ONE line carrying both; two lines carry one each.
  *  ⚠ THE SPAN COUNTS FROM THE DAY THEY GOT TOGETHER IN EVERY STATE (`relationshipDurationWeeks`, the wedding
  *  card's own count), so engaged and married say `together` before it: `Married` over a bare `1y 6m` would read as
  *  a marriage that old. The compact span is what lets that word stand on a 16-character line.
  *
  *  Pure: the view's facts. Zero draws, nothing persisted. */
 export function relationshipsTileOpen(view: KidLifeWorldView): boolean {
-  return stageLabelOf(view) === STAGE_LABEL.after && view.ageYears >= GROWN_UP_AGE_YEARS
+  // ⚠ R53 №2 (21.10) – TWO WAYS IN, AND NEITHER IS AN AGE. (a) The parent KNOWS of someone (`together`): the cell is her relationship in ANY stage, so a girl
+  // at school who has told him reads her relationship and not her grade – the owner's «плашка „после школы" … отражение статуса отношений», and his «снова школа была»
+  // after a pair that began before the last bell. (b) Nobody known and she is out of school and not studying: the «no relationship» line, in the first week of it.
+  // The 22 gate that stood here (`GROWN_UP_AGE_YEARS`, R46) kept the `On her own` line off the cell for the 19-21 rungs `Tennis full-time` / `The last bell`; he asked that
+  // the cell SAY there is nobody, so the gate is gone from this predicate and stays the ladder's own boundary (`afterSchoolTile`, the diary's voice split).
+  // While she is at school with nobody known the cell is the school's, unchanged.
+  return view.together != null || stageLabelOf(view) === STAGE_LABEL.after
 }
 
 /** ⚠ ⚠ DRAFT (R46-S39) – the cell's heading once it is her relationships; his «Отношения». */
@@ -478,8 +484,13 @@ export function relationshipsTile(view: KidLifeWorldView): KidLife['relationship
   const together = view.together
   if (!together) return { label: RELATIONSHIPS_LABEL, lead: 'On her own', note: 'it seems' }
   const span = togetherSpanShort(together.weeks)
-  if (together.married) return { label: RELATIONSHIPS_LABEL, lead: 'Married', note: `together ${span}` }
-  if (together.engaged) return { label: RELATIONSHIPS_LABEL, lead: 'Engaged', note: `together ${span}` }
+  // ⚠ ⚠ DRAFT (R53 №2, 21.10) – THE NAME, once the engine holds one (`LoveEpisode.partnerName`, written once at the engagement, so it exists from the engagement on and never
+  // before). The lead carries status AND name on one line ≤ TILE_LINE_MAX (the longest pool name is seven letters: `Engaged: Gabriel` is exactly 16) and the note stays `together <span>`.
+  // A colon and not `to`: `Engaged to Gabriel` is 18, and the Russian side needs no declension for a nominative after a colon. With no name the three leads are exactly as they were.
+  const name = together.name ?? null
+  if (together.married) return { label: RELATIONSHIPS_LABEL, lead: name === null ? 'Married' : `Married: ${name}`, note: `together ${span}` }
+  if (together.engaged) return { label: RELATIONSHIPS_LABEL, lead: name === null ? 'Engaged' : `Engaged: ${name}`, note: `together ${span}` }
+  if (name !== null) return { label: RELATIONSHIPS_LABEL, lead: `Dating: ${name}`, note: `together ${span}` }
   return { label: RELATIONSHIPS_LABEL, lead: 'Together for', note: span }
 }
 
@@ -1012,6 +1023,10 @@ export interface KidLifeTogetherView {
   /** the wedding is announced and has not landed – `upcomingWeddingWeek(world) !== null`, the calendar's own
    *  question, so the cell and the calendar's mark cannot disagree about whether she is engaged */
   engaged: boolean
+  /** ⭐ R53 №2 (21.10) – HIS NAME, AS THE PARENT HAS BEEN TOLD IT: `LoveEpisode.partnerName`, which the engagement writes once and nothing before it does, so null until then (and on every
+   *  migrated row). ⚠ OPTIONAL AND ABSENT MEANS NULL, like `together` itself, so a hand-built view needs no edit; `toSnapshot` always passes it. The 06.10 note that retired the field – «a fact
+   *  nobody reads is the one that goes stale» – is answered by the cell reading it now. Still no id, no week of anything, no `wants`: the fog law keeps its other three. */
+  name?: string | null
 }
 
 /** Her four years, as the personal page is allowed to see them (round 23 #6b). */
@@ -1035,7 +1050,9 @@ export function buildKidLife(view: KidLifeWorldView): KidLife {
     personality: personalityLine(view.composure, view.temperament),
     school: lifeStageTile(view),
     schoolLabel: stageLabelOf(view),
-    schoolWhy: schoolCutOffNote(view),
+    // ⚠ R53 №2 (21.10) – THE SENTENCE EXPLAINS THE SCHOOL CELL, SO IT GOES WHEN THE CELL IS HERS: a girl at school whose partner the parent knows of reads her relationship on that cell, and
+    // «School – …» under a grid with no School cell in it would be a line about a tile that is not there. Same predicate as the field (`relationshipsTile`), so the two cannot disagree.
+    schoolWhy: relationshipsTile(view) === null ? schoolCutOffNote(view) : '',
     collegeNote: collegeNote(view),
     // ⭐⭐ ROUND 46 MORNING #3 – the School cell's last rung: who she is with, as the cell's own two lines. Null until
     // she is out of school and 22, so the screen prints `school` exactly as before.

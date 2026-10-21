@@ -1468,7 +1468,7 @@ export interface KidLife {
    *  ⚠ THE PARENT'S ATTACHMENT AND NEVER THE WORLD'S: the engine asks `knownPartner`, so a girl who has not told him
    *  reads «it seems» – he may simply not know – and an ended one reads the same.
    *  ⚠ TWO `nowrap` LINES, each held to `TILE_LINE_MAX` by a test, because this IS the School cell's own pair; the
-   *  span is `togetherSpanShort`, and no name rides on it (it will not fit).
+   *  span is `togetherSpanShort`; R53 №2: his name rides in the LEAD once the engagement has given him one (`Engaged: Anton`).
    *  ⚠ DERIVED AT SNAPSHOT TIME, persisted nowhere (no schema move, no draw). */
   relationships: KidLifeRelationshipsTile | null
   /** ⭐⭐ ROUND-23 #18 – HER OWN BANK BALANCE and the share that fills it, or '' before eighteen.

@@ -123,29 +123,19 @@ describe('§1 Russian – the tiles', () => {
     b.w.unmount()
   })
 
-  it('the rungs after school: «Последний звонок / Школа окончена» (the school, not a course), then «Только теннис», then «Взрослая»', async () => {
+  // ⚠ RE-AIMED 21.10 (R53 №2): the three rungs after school (`The last bell`, `Tennis full-time`, `Grown up`) are still the ENGINE's ladder (`life.school`) but the screen no longer prints them –
+  // out of school the cell is her relationships (nobody known: «Сейчас одна / похоже»; the Russian of the ladder's own strings is held by tests/i18n-kid-tiles.test.ts, which reads them by shape).
+  it('the rungs after school are the engine\'s ladder still, and the cell prints her relationships: «Отношения / Сейчас одна / похоже» at every one', async () => {
     await ru()
-    const bell = mountKid({ week: 270, ageYears: 18 })
-    // the last-bell tile exists in the first twelve months out; a career that is still at school at this week prints a grade instead – find the week the engine itself moves the tile
-    bell.w.unmount()
-    document.body.innerHTML = ''
-    let found: string[] | null = null
-    for (const week of [255, 262, 270, 280, 290, 300, 310]) {
-      const m = mountKid({ week, ageYears: 18 })
-      if (m.life.school.lead === 'The last bell') found = tile(m.w, 'После школы')
+    const rungs: Array<[number, number, string]> = [[400, 19, 'Tennis full-time'], [700, 23, 'Grown up']]
+    for (const [week, ageYears, lead] of rungs) {
+      const m = mountKid({ week, ageYears })
+      expect(m.life.school.lead, `week ${week}: the ladder`).toBe(lead)
+      expect(tile(m.w, 'Отношения'), `week ${week}: the cell`).toEqual(['Сейчас одна', 'похоже'])
+      expect(m.w.findAll('.kid-tile-label').map((l) => l.text()), `week ${week}: no cell is headed «После школы»`).not.toContain('После школы')
       m.w.unmount()
       document.body.innerHTML = ''
-      if (found) break
     }
-    expect(found, 'the engine reached «The last bell» somewhere in the first year out').toEqual(['Последний звонок', 'Школа окончена'])
-    const full = mountKid({ week: 400, ageYears: 19 })
-    expect(tile(full.w, 'После школы')).toEqual(['Только теннис', 'Больше никаких уроков'])
-    full.w.unmount()
-    document.body.innerHTML = ''
-    const grown = mountKid({ week: 700, ageYears: 23 })
-    // from twenty-two the cell is her relationships (a named leftover, §3): the grown-up rung is what the ladder says, but the cell shows the next one
-    expect(grown.life.school.lead).toBe('Grown up')
-    grown.w.unmount()
   })
 
   it('the graduate and the one who left: a degree of four years, and a course cut short with its plural', async () => {

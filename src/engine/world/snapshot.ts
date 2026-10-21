@@ -2475,7 +2475,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
         if (partner === null || weeks === null) return null
         // ⚠ `engaged` is the calendar's own question (`upcomingWeddingWeek`): the same answered 'engaged' row, read
         // forward – so the cell and the calendar's wedding mark cannot disagree about whether she is engaged.
-        return { weeks, married: latchedEpisode(world) !== null, engaged: upcomingWeddingWeek(world) !== null }
+        return { weeks, married: latchedEpisode(world) !== null, engaged: upcomingWeddingWeek(world) !== null, name: partner.partnerName ?? null }
       })(),
     }),
     // THE SKILLS RADAR. Derived here and nowhere else, off `seed:read:*` / `seed:ceil:*` sub-streams
