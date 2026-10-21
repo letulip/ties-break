@@ -740,6 +740,14 @@ export interface LoveEpisode {
    *  This field is also the moment `partnerId` has been waiting for since v74: the identity of the
    *  ROW (`id`) and the identity of the PERSON stop being the same thing here. */
   partnerName: string | null
+  /** ⭐⭐ v95 (R53 №2, 21.10 – docs/specs/partner-name-disclosure-2026-10.md) – THE WEEK THE PARENT HEARD HIS NAME,
+   *  or null while he has not. `partnerName` is drawn when the row is born (§3.1) and is NOT the parent's to
+   *  see until this is set; the relationships tile reads the name only through it (the fog). Its one writer is
+   *  `learnPartnerName` (`world/lifeBeat/partnerName.ts`), reached by four roads – her card at close, the
+   *  parent asking or insisting, her own later word, the papers – and by the engagement, which always names.
+   *  ⚠ OPTIONAL IN THE TYPE AND ABSENT MEANS NULL, for the hand-built rows in tests and benches; every save
+   *  carries it from v95 (the migration writes it on every row, `rollArrival` on every new one). */
+  nameKnownWeek?: number | null
 }
 
 /** ⭐⭐⭐ v77 – WHAT THE BOOTH TOUCHED, AS THE UI IS EVER ALLOWED TO SEE IT (the spotlight, wave 6's

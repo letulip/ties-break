@@ -328,6 +328,7 @@ function attachment(world: CareerWorld, over: Partial<LoveEpisode> = {}): LoveEp
     airedEndedWeek: null,
     latchedWeek: null,
     partnerName: null,
+    nameKnownWeek: 0, // R53 №2 (v95): the parent has heard whatever name the arm gives – the fog gate is `tests/r53-partner-name.test.ts`'s
     ...over,
   }
 }

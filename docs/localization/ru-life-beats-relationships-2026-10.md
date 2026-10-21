@@ -111,3 +111,38 @@ infer the spouse's gender, a legal filing date, blame, or a permanent end to all
 `Мы расходимся` is a statement of separation, not a claim that the divorce is legally final;
 the kept row follows the engine's marriage-ended event. Fiery `Всё решено` does not invent who
 initiated that decision.
+
+## 7. His name – `partnerNameCopy.ts`, R53 №2 (21.10) – ⚠ ⚠ DRAFT под правку владельца
+
+Спека: `docs/specs/partner-name-disclosure-2026-10.md`. `{0}` – всегда имя (пул `partner|…`, именительный
+падеж, без склонения – поэтому имя везде стоит после двоеточия, тире или в начале реплики). Родитель – «мы».
+
+(The two answer labels, R53-NAME-01/02, sit in the choice-label table, `ru-life-beats-actions-2026-10.md`.)
+
+| id | English source | Russian draft |
+| --- | --- | --- |
+| R53-NAME-03 `met.ask` feed | `There is someone in her life. We asked what his name is.` | `В её жизни кое-кто появился. Мы спросили, как его зовут.` |
+| R53-NAME-04 `met.insist` feed | `There is someone in her life. We pressed her for his name.` | `В её жизни кое-кто появился. Мы настояли, чтобы она назвала его имя.` |
+| R53-NAME-05 sunny close | `"His name is {0}. You'll like him."` | `«Его зовут {0}. Он вам понравится».` |
+| R53-NAME-06 fiery close | `"His name is {0}. Be nice to him."` | `«Его зовут {0}. Будьте с ним повежливее».` |
+| R53-NAME-07 quiet close | `"He's called {0}."` | `«Его зовут {0}».` |
+| R53-NAME-08 deep close | `"His name is {0}. I'll tell you more when I know more myself."` | `«Его зовут {0}. Расскажу больше, когда сама буду знать больше».` |
+| R53-NAME-09 sunny ask | `"It's {0}," she said, and smiled at her plate.` | `«{0}», – сказала она и улыбнулась в тарелку.` |
+| R53-NAME-10 fiery ask | `"{0}. Happy now?"` | `«{0}. Теперь довольны?»` |
+| R53-NAME-11 quiet ask | `A pause, then: "{0}."` | `Пауза, потом: «{0}».` |
+| R53-NAME-12 deep ask | `"{0}," she said, as if testing how it sounded out loud.` | `«{0}», – сказала она, будто проверяя, как это звучит вслух.` |
+| R53-NAME-13 sunny later | `"Later. I'll tell you later, promise."` | `«Потом. Расскажу потом, обещаю».` |
+| R53-NAME-14 fiery later | `"Later. Not now."` | `«Потом. Не сейчас».` |
+| R53-NAME-15 quiet later | `"Later."` | `«Потом».` |
+| R53-NAME-16 deep later | `"When it is something, I'll tell you. Later."` | `«Когда будет что рассказывать, расскажу. Потом».` |
+| R53-NAME-17 sunny insist | `"Fine – {0}. You didn't have to push."` | `«Ладно – {0}. Можно было и не давить».` |
+| R53-NAME-18 fiery insist | `"{0}. There. Was that worth it?"` | `«{0}. Всё. Оно того стоило?»` |
+| R53-NAME-19 quiet insist | `"…{0}." She did not look up.` | `«…{0}». Она не подняла глаз.` |
+| R53-NAME-20 deep insist | `"{0}. I would have told you. Just not like this."` | `«{0}. Я бы и сама сказала. Только не так».` |
+| R53-NAME-21 sunny refused | `"No. Not like this."` | `«Нет. Не так».` |
+| R53-NAME-22 fiery refused | `"No. You don't get to make me."` | `«Нет. Заставить меня не получится».` |
+| R53-NAME-23 quiet refused | `She said nothing at all, and went to her room.` | `Она ничего не ответила и ушла к себе.` |
+| R53-NAME-24 deep refused | `"Pushing is exactly why I don't tell you things."` | `«Вот поэтому я вам ничего и не рассказываю».` |
+| R53-NAME-25 road 3, home | `His name is {0} – she said it over dinner, as if we had always known.` | `Его зовут {0} – она сказала это за ужином, будто мы всегда знали.` |
+| R53-NAME-26 road 3, college | `She called from college and told us his name: {0}.` | `Позвонила из колледжа и назвала его имя: {0}.` |
+| R53-NAME-27 road 4, press | `In the stands – {0}, her boyfriend.` | `На трибуне – {0}, её молодой человек.` |

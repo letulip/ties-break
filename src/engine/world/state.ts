@@ -354,7 +354,9 @@ import type { AcademySupport } from '../academy'
 // v94 – THE WEDDING-MILESTONE NET (round 49 №8, 12.10, «всё ещё не вижу свадебной фото в альбоме»): NO new key – the step backfills a `type: 'wedding'` milestone from `episode.latchedWeek` + `episode.id` wherever a married row has none.
 // ⚠⚠ v94: THE BACKFILL IS EXACT – `landWedding` writes the latch and the milestone in adjacent lines (one commit, v83), so the latch IS the wedding week; engine-born saves are the identity, the net is for saves outside that guarantee.
 // ⚠ v94: ZERO DRAWS – pure state; the frozen MAIN capture (41550 / e6b0c709) is untouched by construction. A played career gains no key, so the frozen careers re-stamp for the version number alone (the v88/v90/v91 shape).
-export const SAVE_SCHEMA_VERSION = 94
+// v95 – HIS NAME, AND WHEN THE PARENT HEARD IT (R53 №2, 21.10, docs/specs/partner-name-disclosure-2026-10.md): `loveEpisodes[].nameKnownWeek: number | null`. The migration writes `latchedWeek` on a married row, the engagement's week on an engaged one (both were named at the engagement), null on every other; `partnerName` is untouched (an old dating row draws its name on the same v83 key the day a road reaches it).
+// ⚠ v95: ZERO MAIN DRAWS – the name keeps its v83 sub-stream (`seed:life:partner-name:<id>`), now drawn at the row's birth; road 3 has its own (`seed:partnername:<id>:<period>`). The frozen capture (41550 / e6b0c709) is untouched.
+export const SAVE_SCHEMA_VERSION = 95
 
 
 

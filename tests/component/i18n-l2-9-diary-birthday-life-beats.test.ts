@@ -437,7 +437,7 @@ describe('L2-9b completeness – the three dynamic seats are wired, and every st
   it('every LIFE_BEAT_OPTIONS label, every small-talk stance label, the Proceed and the reply button is a catalog key (the arm that keeps `callStats.dynamic` honest)', () => {
     const r = reachable()
     console.log(`[L2-9b dynamic] ${r.options} LIFE_BEAT_OPTIONS labels + ${r.stances} small-talk stance labels = ${r.labels.length} distinct answers; buttons: ${JSON.stringify(r.buttons)}`)
-    expect(r.options, 'the walk is not vacuous: 13 kinds, 34 distinct labels').toBe(34)
+    expect(r.options, 'the walk is not vacuous: 13 kinds, 36 distinct labels (R53 №2 added `met`\'s ask / insist)').toBe(36)
     expect(r.stances, 'and 145 distinct stance labels across 51 situations x 4 voices').toBeGreaterThan(100)
     expect(withoutKey(r.labels), 'an answer the dialog would render in English forever').toEqual([])
     expect(withoutKey(r.buttons)).toEqual([])

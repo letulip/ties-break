@@ -23,6 +23,8 @@ infinitives, not gendered past tense. All lines remain `DRAFT` pending owner rea
 | `met.wary` | `Ask the coach to watch her schedule` | `Попросить тренера присмотреть за её расписанием` |
 | `met.meet` | `Say we want to meet them, now` | `Попросить познакомить нас – прямо сейчас` |
 | `met.silent` | `Say nothing about it` | `Ничего об этом не говорить` |
+| `met.ask` (R53 №2, ⚠ DRAFT) | `Ask what his name is` | `Спросить, как его зовут` |
+| `met.insist` (R53 №2, ⚠ DRAFT) | `Insist: we want to know` | `Настоять: мы хотим знать` |
 | `small-talk.more` | `Ask her to say more` | `Попросить рассказать подробнее` · `APPROVED` 10.10 |
 | `small-talk.view` | `Tell her what we think` | `Сказать, что мы думаем` · `APPROVED` 10.10 |
 | `small-talk.easy` | `Tell her it can keep` | `Сказать, что можно не спешить` · `APPROVED` 10.10 |

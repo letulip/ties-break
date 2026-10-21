@@ -2487,9 +2487,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
         const partner = knownPartner(world, world.week)
         const weeks = relationshipDurationWeeks(world, partner)
         if (partner === null || weeks === null) return null
+        // ⭐ R53 №2 (v95) – THE NAME ONLY ONCE THE PARENT HAS HEARD IT (`nameKnownWeek`): since §3.1 the row holds it from birth, so the fog is this read.
         // ⚠ `engaged` is the calendar's own question (`upcomingWeddingWeek`): the same answered 'engaged' row, read
         // forward – so the cell and the calendar's wedding mark cannot disagree about whether she is engaged.
-        return { weeks, married: latchedEpisode(world) !== null, engaged: upcomingWeddingWeek(world) !== null, name: partner.partnerName ?? null }
+        return { weeks, married: latchedEpisode(world) !== null, engaged: upcomingWeddingWeek(world) !== null, name: partner.nameKnownWeek !== undefined && partner.nameKnownWeek !== null ? partner.partnerName ?? null : null }
       })(),
     }),
     // THE SKILLS RADAR. Derived here and nowhere else, off `seed:read:*` / `seed:ceil:*` sub-streams

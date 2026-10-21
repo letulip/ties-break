@@ -1023,8 +1023,8 @@ export interface KidLifeTogetherView {
   /** the wedding is announced and has not landed – `upcomingWeddingWeek(world) !== null`, the calendar's own
    *  question, so the cell and the calendar's mark cannot disagree about whether she is engaged */
   engaged: boolean
-  /** ⭐ R53 №2 (21.10) – HIS NAME, AS THE PARENT HAS BEEN TOLD IT: `LoveEpisode.partnerName`, which the engagement writes once and nothing before it does, so null until then (and on every
-   *  migrated row). ⚠ OPTIONAL AND ABSENT MEANS NULL, like `together` itself, so a hand-built view needs no edit; `toSnapshot` always passes it. The 06.10 note that retired the field – «a fact
+  /** ⭐ R53 №2 (21.10) – HIS NAME, AS THE PARENT HAS BEEN TOLD IT: `LoveEpisode.partnerName` once `nameKnownWeek` is set (v95, R53 №2 – the row holds the name from birth,
+   *  so the snapshot passes it only after one of the spec's roads, or the engagement, has told him); null until then. ⚠ OPTIONAL AND ABSENT MEANS NULL, like `together` itself, so a hand-built view needs no edit; `toSnapshot` always passes it. The 06.10 note that retired the field – «a fact
    *  nobody reads is the one that goes stale» – is answered by the cell reading it now. Still no id, no week of anything, no `wants`: the fog law keeps its other three. */
   name?: string | null
 }

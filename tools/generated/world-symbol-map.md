@@ -8,7 +8,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-539 exported names across 69 owning modules.
+539 exported names across 70 owning modules.
 
 ## Areas
 
@@ -46,7 +46,6 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/spirit.ts` | THE PRIVATE LIFE'S TWO NUMBERS, AND WHO SHE IS – one weekly rule, no draws, no strings | 5 |
 | `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 5 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 5 |
-| `src/engine/world/lifeBeat/wedding.ts` | A-06 / T6.10 – `world/lifeBeat.ts` §11 MOVED HERE VERBATIM, span for span, comments and all | 5 |
 | `src/engine/world/means.ts` | WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet | 5 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 5 |
 | `src/engine/world/shootClash.ts` | ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT | 5 |
@@ -66,6 +65,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/lifeBeat/ended.ts` | A-06 / T6.10 – `world/lifeBeat.ts` §8 MOVED HERE VERBATIM, span for span, comments and all | 3 |
 | `src/engine/world/lifeBeat/ownKey.ts` | A-06 / T6.10 – `world/lifeBeat.ts` §13 MOVED HERE VERBATIM, span for span, comments and all | 3 |
 | `src/engine/world/lifeBeat/smallTalkCopy.ts` | A-06 / T6.8 – `world/lifeBeat.ts` §3c MOVED HERE VERBATIM, span for span, comments and all | 3 |
+| `src/engine/world/lifeBeat/wedding.ts` | A-06 / T6.10 – `world/lifeBeat.ts` §11 MOVED HERE VERBATIM, span for span, comments and all | 3 |
 | `src/engine/world/summer.ts` | THE SUMMER TRAINING BLOCK - nine weeks with no school in them, and what the engine does about it | 3 |
 | `src/engine/world/album.ts` | THE ALBUM: seven polaroids, and the rule printed on every one of them | 2 |
 | `src/engine/world/albumBook.ts` | THE ALBUM BOOK: the career's whole story, assembled on demand (docs/specs/the-album-2026-09.md) | 2 |
@@ -74,6 +74,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/labels.ts` | FINISH AND STAGE LABELS: how far she got, said the way a draw sheet says it | 2 |
 | `src/engine/world/lifeBeat/booth.ts` | A-06 / T6.8 – `world/lifeBeat.ts` §10 MOVED HERE VERBATIM, span for span, comments and all | 2 |
 | `src/engine/world/lifeBeat/endedCopy.ts` | A-06 / T6.8 – `world/lifeBeat.ts` §3e MOVED HERE VERBATIM, span for span, comments and all | 2 |
+| `src/engine/world/lifeBeat/partnerName.ts` | ⭐ R53 №2 (21.10) – HIS NAME, AND THE WEEK THE PARENT HEARS IT | 2 |
 | `src/engine/world/matchNews.ts` | MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the streak the Home card reads off them | 2 |
 | `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 2 |
 | `src/engine/world/bookings.ts` | THE BOOKINGS, read side: what the family has put in the diary for a given week | 1 |
@@ -678,16 +679,6 @@ THE ENTRY COMMANDS: putting her in a draw, and taking her back out.
 - `releaseEntry` – `src/engine/world/entries.ts`
 - `withdrawEvent` – `src/engine/world/entries.ts`
 
-### `src/engine/world/lifeBeat/wedding.ts`
-
-A-06 / T6.10 – `world/lifeBeat.ts` §11 MOVED HERE VERBATIM, span for span, comments and all.
-
-- `landWedding` – `src/engine/world/lifeBeat/wedding.ts`
-- `PARTNER_NAME_POOL` – `src/engine/world/lifeBeat/wedding.ts`
-- `partnerNameFor` – `src/engine/world/lifeBeat/wedding.ts`
-- `rollWedding` – `src/engine/world/lifeBeat/wedding.ts`
-- `weddingEligible` – `src/engine/world/lifeBeat/wedding.ts`
-
 ### `src/engine/world/means.ts`
 
 WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet.
@@ -857,6 +848,14 @@ A-06 / T6.8 – `world/lifeBeat.ts` §3c MOVED HERE VERBATIM, span for span, com
 - `SMALL_TALK_SUBJECTS` – `src/engine/world/lifeBeat/smallTalkCopy.ts`
 - `smallTalkSubjectFor` – `src/engine/world/lifeBeat/smallTalkCopy.ts`
 
+### `src/engine/world/lifeBeat/wedding.ts`
+
+A-06 / T6.10 – `world/lifeBeat.ts` §11 MOVED HERE VERBATIM, span for span, comments and all.
+
+- `landWedding` – `src/engine/world/lifeBeat/wedding.ts`
+- `rollWedding` – `src/engine/world/lifeBeat/wedding.ts`
+- `weddingEligible` – `src/engine/world/lifeBeat/wedding.ts`
+
 ### `src/engine/world/summer.ts`
 
 THE SUMMER TRAINING BLOCK - nine weeks with no school in them, and what the engine does about it.
@@ -913,6 +912,13 @@ A-06 / T6.8 – `world/lifeBeat.ts` §3e MOVED HERE VERBATIM, span for span, com
 
 - `ENDS_READS` – `src/engine/world/lifeBeat/endedCopy.ts`
 - `ENDS_REGISTERS` – `src/engine/world/lifeBeat/endedCopy.ts`
+
+### `src/engine/world/lifeBeat/partnerName.ts`
+
+⭐ R53 №2 (21.10) – HIS NAME, AND THE WEEK THE PARENT HEARS IT.
+
+- `PARTNER_NAME_POOL` – `src/engine/world/lifeBeat/partnerName.ts`
+- `partnerNameFor` – `src/engine/world/lifeBeat/partnerName.ts`
 
 ### `src/engine/world/matchNews.ts`
 
