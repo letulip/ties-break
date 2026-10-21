@@ -226,7 +226,10 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   small engine primitive (`practiceTired(condition)`) in `world/planner.ts`, four lines plus a case. W4
   did not authorise a new primitive for a P3 row.
   ([05-ui.md](review-principles-2026-09-26/05-ui.md), E-P02.)
-- **Three findings wait on one missing utility: this app has no screen-reader-only class.** E-P11,
+- ⚙ **SHIPPED (T6.4 + W4, re-verified 21.10, round 53 step 4) – this line was stale:** `.sr-only` is in
+  `src/style.css`, E-P11/E-P12 carry `aria-describedby` to hidden spans, E-P13 to the visible pills
+  (`tests/component/a11y-sweep.test.ts`). The old text, kept for the record: three findings wait on one
+  missing utility: this app has no screen-reader-only class. E-P11,
   E-P12 and E-P13 all propose routing `title` text into `aria-describedby`, which must point at an
   ELEMENT – so each needs a visually-hidden span, and a grep for `sr-only`, `visually-hidden` or
   `clip: rect` over `src/` returns **nothing**. ⚠ It is not new copy: those sentences already exist in
