@@ -38,7 +38,7 @@
 // once as `playedThisWeek` and threads it), which is the dependency inversion `accrueSpirit`'s
 // `psychologistWorks` argument established.
 import { staffFeeCents, writeStaffRaise } from './staffRaise'
-import { hiredCoachWeeklyCents } from './coachDeal'
+import { hiredCoachWeeklyCents, pedigreeTradeInChair } from './coachDeal'
 import { ECONOMY } from '../economy'
 import { addEvent } from './ledger'
 import { guardNotEnded } from './constants'
@@ -146,6 +146,10 @@ export function sparringRungIndexOf(world: WorldState): 0 | 1 | 2 {
  *  carry the top rung hides it rather than discounting it. ⭐ The $500 / $900 rungs never read this.
  *  Zero draws. */
 export function sparringTopRungCents(world: WorldState): number | null {
+  // ⭐ ROUND 53 №2 (spec §3.4) – A FAMOUS NAME WITH THE SPARRING TRADE OPENS THE TOP RUNG AT THE MIDDLE RUNG'S
+  // PRICE while he is in the chair: «спарринги может и да». Before the cap, which exists to stop a CHEAP
+  // coach selling a dear partner – this price is the middle rung's own, so it can never undercut the college hitter.
+  if (pedigreeTradeInChair(world, 'sparring')) return staffFeeCents(world.offers, 'sparring', ECONOMY.sparring.rungs[1].weeklyCents)
   const coachWeek = hiredCoachWeeklyCents(world)
   if (coachWeek === null) return null
   const rungs = ECONOMY.sparring.rungs

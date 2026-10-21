@@ -19,6 +19,8 @@ import { SKILL_KEYS } from '../development'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import type { Offer, StaffLetterTerms } from '../../shared/protocol'
 import { coachBandAskOf } from '../offers'
+import { COACH_PEDIGREE, coachPedigree, type CoachPedigree, type PedigreeTrade } from '../coachPedigree'
+import { ECONOMY } from '../economy'
 import { coachById, coachLabourCents, coachRetainerBand, coachWeeklyCents, facilityRateCents, type Coach } from '../coach'
 import { ageAtWeek } from './age'
 import { kidLadderRank } from './ladder'
@@ -70,7 +72,26 @@ export function coachEnteredBand(world: WorldState): number {
  *  ceiling his own fee is clamped at. Moved here from `coachMarket.ts` (which re-exports it under its old
  *  name) so the sparring cap can read the coach's week without closing an import cycle. Zero draws. */
 export function marketLabourCentsFor(world: WorldState, coach: Coach): number {
-  return coachLabourCents(coach.rateCents, ageAtWeek(world.week), coach.tier, coachEnteredBand(world))
+  const labour = coachLabourCents(coach.rateCents, ageAtWeek(world.week), coach.tier, coachEnteredBand(world))
+  // ⭐ ROUND 53 №2 – A FAMOUS NAME'S LABOUR IS +50% ON TOP OF THE LADDER (spec §3.4). THE ONE PLACE, and on the
+  // labour only: the court is the club's rent and is not his to inflate. Zero draws (a sub-stream re-derived).
+  return coachPedigree(world.seed, coach.id, coach.tier) ? Math.round(labour * COACH_PEDIGREE.labourFactor) : labour
+}
+
+/** ⭐ ROUND 53 №2 – THE PEDIGREE OF THE MAN IN THE CHAIR, or null: nobody hired, a non-elite, or no past.
+ *  «In the chair» is `world.coachId` read at the seam – nothing persisted, so a release ends every trade the
+ *  same week. The tier comes off the roster slot of his portrait id (the id IS the slot), so this reads no roster
+ *  build. Zero draws on any stream but his own sub-stream. */
+export function pedigreeInChair(world: WorldState): CoachPedigree | null {
+  const id = world.coachId
+  if (!id) return null
+  const slot = ECONOMY.coach.roster.find((r) => r.portrait === id)
+  return slot ? coachPedigree(world.seed, id, slot.tier) : null
+}
+
+/** the chair's trade, if it is `trade` */
+export function pedigreeTradeInChair(world: WorldState, trade: PedigreeTrade): boolean {
+  return pedigreeInChair(world)?.trade === trade
 }
 
 /** THE HOURLY RATE THE TILL BILLS for the man she has: court at today's price plus the agreed labour,

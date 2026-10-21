@@ -18,6 +18,7 @@ import type { Coach, StyleFit } from '../coach'
 // `bandedRateCents`' own complement and `coachAskFraction` is the owner's corridor; both live in
 // `engine/coach.ts` with the rest of the price model, and this file is their world-reading half.
 import { coachAskFraction } from '../coach'
+import { coachPedigree, type PedigreeKind, type PedigreeTrade } from '../coachPedigree'
 // ⚠ THE ONE MONEY FORMATTER, across the same boundary `masseur.ts`, `shop.ts` and `sponsors.ts`
 // already cross: `shared/money` is a pure function of cents and reaches for nothing in the UI, so
 // invariant 1 is untouched. A hand-rolled `$` here would print `$1234` where the game prints
@@ -1427,6 +1428,10 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // card says «travelling with her» and not «doubled».
       edgeTravelPct: travels ? coachEdgeCorridorPp(coach.tier, true) : null,
       loadNote: coachLoadNote(coach.tier),
+      // ⭐ ROUND 53 №2 – THE PAST AND THE TRADE, two lines, only for an elite name that has one (spec §3.4). A fact of
+      // the seed (`coachPedigree`, its own sub-stream), so the card prints the same on every visit and a release or a
+      // hire changes nothing here. Both lines are DRAFT copy, EN and RU together; neither names the coach's sex.
+      ...pedigreeCardLines(world.seed, coach),
       // ⭐⭐⭐ ROUND 44 – AND THE RELATIONSHIP CROSSES THE WIRE AT LAST (spec §8b). Read STRAIGHT off
       // the persisted pair with no second arithmetic: `chemistryReading` decides both what the number
       // is and whether there is one, so the gauge on the card and the factor in `growWeek` are the
@@ -3311,4 +3316,23 @@ export function coachLadderNoteRef(world: WorldState, event: SeasonEvent, coachT
   const weeks = ahead.week - event.week
   const when = weeks === 1 ? cp`when|next week` : cp`when|in ${weeks} weeks`
   return cp`Your coach would save her for the ${TIERS[ahead.tier].label} ${when}.`
+}
+
+/** ⭐ ROUND 53 №2 – WHAT A FAMOUS NAME'S CARD SAYS (spec §3.4): the past in one line, the trade in another. Names and
+ *  titles stay fictional – «a World Tour title» is the game's own tournament family, never a real event. No pronoun
+ *  for the coach (R15-7). DRAFT copy (invariant 4). `{}` – no field at all – for everyone else, so a plain card is
+ *  byte-identical to the card that shipped. */
+export const PEDIGREE_PAST_LINE: Record<PedigreeKind, string> = {
+  'slam-winner': 'Won a World Tour title as a player',
+  'former-no1': 'A former world number one',
+}
+export const PEDIGREE_TRADE_LINE: Record<PedigreeTrade, string> = {
+  chemistry: 'Her chemistry grows faster with a coach like this',
+  ceiling: 'Her ceiling sits a little higher with a coach like this',
+  sponsors: 'Sponsors call more often while this name is in her corner',
+  sparring: "Top hitting partners come at the middle rung's price",
+}
+export function pedigreeCardLines(seed: string, coach: Coach): { pedigree?: { past: string; trade: string } } {
+  const p = coachPedigree(seed, coach.id, coach.tier)
+  return p ? { pedigree: { past: PEDIGREE_PAST_LINE[p.kind], trade: PEDIGREE_TRADE_LINE[p.trade] } } : {}
 }

@@ -18,6 +18,7 @@
 //
 // ⚠ MUTATION-VERIFIED – ⚠ COUNTS READ OFF THE RUNS AND NOT PREDICTED, each mutation applied alone
 // and reverted (see the round-42 handoff for the transcript).
+import { COACH_PEDIGREE, coachPedigree } from '../../src/engine/coachPedigree'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 // ⚠ A RUNNER-SIZED CEILING – round 26 #16's rule for every mounted case over ~1s.
 vi.setConfig({ testTimeout: 30_000 })
@@ -93,7 +94,13 @@ describe('round 42 #19 – her rank re-prices her coach', () => {
     const quote = (w: WorldState, band: number): number => {
       const age = ageAtWeek(w.week)
       const coach = coachById(w.seed, age, w.coachId)!
-      return coachWeeklyCents(bandedRateCents(coach.rateCents, age, tierOf(coach), band), w.plan, w.profile.background, tierOf(coach))
+      // ⭐ ROUND 53 №2 (M8) – THE FIXTURE'S ELITE COACH MAY HAVE A PAST: a famous name's labour is +50% on the ladder
+      // (spec §3.4, `marketLabourCentsFor`), so the quote adds the same premium the till does. A plain coach adds nothing.
+      const ladder = bandedRateCents(coach.rateCents, age, tierOf(coach), band)
+      const premium = coachPedigree(w.seed, coach.id, tierOf(coach))
+        ? Math.round(coachLabourCents(coach.rateCents, age, tierOf(coach), band) * (COACH_PEDIGREE.labourFactor - 1))
+        : 0
+      return coachWeeklyCents(ladder + premium, w.plan, w.profile.background, tierOf(coach))
     }
     // ⭐⭐⭐ RE-AIMED AT v82 (round 42 #51, ruled 17.09), AND IT IS THE ONE RE-AIM IN THIS FILE THAT
     // CHANGES WHAT IS CLAIMED RATHER THAN WHERE IT IS READ. This arm used to assert that the man ON

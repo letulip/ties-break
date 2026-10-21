@@ -1566,6 +1566,10 @@ export interface CoachMarketRow {
    *  row (a fixture, an older worker's snapshot) must still type-check and read as «never worked».
    *  DERIVED AT SNAPSHOT TIME like `chemistry` – no save field, no schema move, zero draws. */
   chemistryKnown?: boolean
+  /** ⭐ ROUND 53 №2 – A FAMOUS NAME'S TWO CARD LINES (docs/specs/coach-pay-ladder-2026-10.md §3.4): his past and what he
+   *  gives back, both engine sentences read through `engineText`. ABSENT for every coach without a past – a plain card
+   *  is the card that shipped. A fact of the seed, derived at snapshot time: no save key, no schema move. */
+  pedigree?: { past: string; trade: string }
 }
 
 /** Her academy scholarship as the UI needs it (schema v21). The engine keeps the level; the screens

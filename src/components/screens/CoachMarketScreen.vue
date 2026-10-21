@@ -1366,6 +1366,9 @@ function scrollToTier(tier: CoachTier): void {
                read before argument. It takes the load note's own treatment rather than a louder one -
                the uplift is still the card's headline and a description must not compete with it. -->
           <span v-if="coachBlurb(r.id)" class="cm-blurb">{{ engineText(coachBlurb(r.id)) }}</span>
+          <!-- ⭐ ROUND 53 №2 – A FAMOUS NAME'S PAST AND TRADE, two quiet lines under the bio (spec §3.4); absent for a plain coach. -->
+          <span v-if="r.pedigree" class="cm-pedigree-past">{{ engineText(r.pedigree.past) }}</span>
+          <span v-if="r.pedigree" class="cm-pedigree-trade">{{ engineText(r.pedigree.trade) }}</span>
           <!-- WHAT THE RUNG IS WORTH TO HER, computed from her own headroom. Its own line, because
                it is the number the owner asked for and it must never be the thing that truncates.
 
@@ -1562,10 +1565,15 @@ function scrollToTier(tier: CoachTier): void {
      gap above itself to separate the body note from the FIGURES, and this line sits directly under
      the meta row where `.cm-body`'s own 4px gap is already the separation. -->
 <style scoped>
-.cm-blurb {
+.cm-blurb,
+.cm-pedigree-past,
+.cm-pedigree-trade {
   font-size: 10.5px;
   line-height: 1.35;
   color: var(--muted);
+}
+.cm-pedigree-past {
+  font-weight: 600;
 }
 /* ⭐⭐ WAVE 5 T12 – THE PROFILE TAKES `.cm-load`'s TREATMENT, to the value, for `.cm-blurb`'s own
    reason one rule up: it is quiet prose under the figures and it must not argue with the uplift,
