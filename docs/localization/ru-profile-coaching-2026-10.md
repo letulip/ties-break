@@ -1574,13 +1574,15 @@ The Coach tile on the daughter's screen gains a third line, **only while a coach
 
 ## ⚙ 21.10 agent-authored (бланкет) – r53 M8: a famous name's card, two lines
 
+⚖ 22.10 владелец (лист вычитки r53): ряды этого раздела `APPROVED`, его правки перенесены.
+
 ⚙ 21.10 agent-authored under the blanket ruling; every row is `DRAFT` and his live edit follows. Source: `PEDIGREE_PAST_LINE` / `PEDIGREE_TRADE_LINE` in `src/engine/world/coachMarket.ts`, printed under the bio on an elite coach's card that has a past (`CoachMarketRow.pedigree`, spec `coach-pay-ladder-2026-10.md` §3.4). Tournament names are the game's own fictional family. **No sex for the coach, no pronoun (R15-7):** the past is a noun phrase (`Титул … в игровой карьере`, `первая ракетка` as an office, not a person), the trade speaks of «таким тренером» and of her. `взаимопонимание` is the game's word for chemistry (`Chemistry` → `Взаимопонимание`).
 
 | id | English | Russian | Status |
 | --- | --- | --- | --- |
-| RU23-PED-01 | `Won a World Tour title as a player` | `Титул World Tour в игровой карьере` | `DRAFT` |
-| RU23-PED-02 | `A former world number one` | `В прошлом – первая ракетка мира` | `DRAFT` |
-| RU23-PED-03 | `Her chemistry grows faster with a coach like this` | `С таким тренером взаимопонимание с ней растёт быстрее` | `DRAFT` |
-| RU23-PED-04 | `Her ceiling sits a little higher with a coach like this` | `С таким тренером её потолок чуть выше` | `DRAFT` |
-| RU23-PED-05 | `Sponsors call more often while this name is in her corner` | `Спонсоры звонят чаще, пока это имя рядом с ней` | `DRAFT` |
-| RU23-PED-06 | `Top hitting partners come at the middle rung's price` | `Лучшие спарринг-партнёры – по цене средней ступени` | `DRAFT` |
+| RU23-PED-01 | `Won a World Tour title as a player` | `Титул World Tour в игровой карьере` | `APPROVED` |
+| RU23-PED-02 | `A former world number one` | `В прошлом – первая ракетка мира` | `APPROVED` |
+| RU23-PED-03 | `Her chemistry grows faster with a coach like this` | `Она быстрее находит общий язык с таким тренером` | `APPROVED` |
+| RU23-PED-04 | `Her ceiling sits a little higher with a coach like this` | `С таким тренером у неё чуть больше возможностей для роста` | `APPROVED` |
+| RU23-PED-05 | `Sponsors call more often while this name is in her corner` | `Спонсоры обращаются чаще, пока такой тренер в её штабе` | `APPROVED` |
+| RU23-PED-06 | `Top hitting partners come at the middle rung's price` | `Лучшие спарринг-партнёры – по цене средней ступени` | `APPROVED` |

@@ -1028,6 +1028,8 @@ RU-08 §11–§13, the ladder of four storeys. Ranks print as `№{n}`, the degr
 
 Round 53 step 6. Names stay in the nominative (generated names cannot be declined); the counts are whole ICU plurals over a number hole. The extractor folds the her/opponent variants of one shape into one key (`{3}` and `{2}` below are whichever girl the sentence is about), so seven keys carry the nine lines. All `DRAFT`.
 
+⚖ 22.10 владелец (лист вычитки r53): ряды этого раздела `APPROVED`, его правки перенесены.
+
 | English | Russian |
 | --- | --- |
 | `{0} and {1} have met {2} times, and {3} has won every one.` | `{0} и {1} встречались {2, plural, one {{2} раз} few {{2} раза} many {{2} раз} other {{2} раза}} – и каждый раз выигрывала {3}.` |

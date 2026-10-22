@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 175 dated entries, newest 2026-10-21. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 176 dated entries, newest 2026-10-22. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -40,7 +40,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 32 | [ROUND 53, HIS ANSWERS ON THE SPECS (verbatim in the round ledger)](#21102026--round-53-his-answers-on-the-specs-verbatim-in-the-round-ledger) | 2026-10-21 |
+| process-and-git | 33 | [ROUND 53, HIS REVIEW SHEET (his marks live in the sheet's db; counts and ids in the round ledger)](#22102026--round-53-his-review-sheet-his-marks-live-in-the-sheets-db-counts-and-ids-in-the-round-ledger) | 2026-10-22 |
 | product-and-scope | 8 | [LOCALIZATION: THE NINE QUESTIONS RULED, PLUS THREE ORDERS – THE STACK LANDS WITH THE INTAKE](#07102026--localization-the-nine-questions-ruled-plus-three-orders--the-stack-lands-with-the-intake) | 2026-10-07 |
 | ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
@@ -6203,3 +6203,28 @@ byte-identity proven, and the coach market was the last product screen to leave 
    зависимости от самой травмы и ее сложности/продолжительности».
 7. **The medical-team sentence off the coach cards** – «вынесем и поставим… как некий
    разделитель тиров просто блоком текста прямо под названием тира».
+
+## 22.10.2026 – ROUND 53, HIS REVIEW SHEET (his marks live in the sheet's db; counts and ids in the round ledger)
+
+1. **The round's strings are his** – 117 rows reviewed: 59 approved as drafted, 27 rewritten by him
+   and transferred verbatim (11 weather lines, 10 name-road answers, the three honest-week notes,
+   three pedigree-card lines); the commentary's seven and the letters' four approved as drafted.
+   Three English sources moved at his ask – the ask / insist answers are reused at home and on the
+   phone, so «smiled at her plate», «did not look up» and «went to her room» became channel-neutral
+   («Нужна синхронная правка EN-источника и RU»). The 31 display-word rows he «restored» were the
+   sheet's own defect (the extractor split on the escaped pipe) – the table was right, nothing
+   transferred, the extractor rule recorded. Every r53 section is `APPROVED`.
+2. **Elite plus a famous name breaking a wealthy family** – «это ок, игрок решает кого и когда
+   нанимать»; with the rider: «показывайте полную стоимость сезона и отдельно объясняйте премию
+   выше потолка ступени» – open, a UI item.
+3. **Weather-driven bankruptcies at the edge are a release stop signal** – «раннее банкротство
+   working/self-coached и middle/middle считаю стоп-сигналом для релиза, а не желательной
+   сложностью. Нужен A/B на одинаковых сидах и разбор разницы по заявкам/поездкам/физио/призовым;
+   смена пресета в тесте не чинит баланс» – the A/B is in the round ledger under the same date.
+4. **Heat is not strengthened for the spec's sake** – «Жару не стоит усиливать до 4–6 п.п. только
+   ради прогноза спеки: сначала решить, должна ли она так менять исход, либо поправить обещание» –
+   open, with the architect's options.
+5. **The press road at a cold bond** – «Имя из прессы при cold выглядит слишком частым обходом
+   семейной тайны – рассмотрел бы более высокий порог известности» – open, one constant.
+6. **Fragility and a fourth weather line** – «проверять по повторным травмам и реальным повторам
+   текста» before either moves.

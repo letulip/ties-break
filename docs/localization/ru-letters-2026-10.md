@@ -383,6 +383,8 @@ One line per requirement in the season briefing – the tour letter's list and t
 
 ## R. The coach's band letter (round 53 №1, 21.10 – DRAFT)
 
+⚖ 22.10 владелец (лист вычитки r53): ряды этого раздела `APPROVED`, его правки перенесены.
+
 Source: `src/components/OfferLetter.vue` (`staffAskLead`, `staffAskSettled`), spec `docs/specs/coach-pay-ladder-2026-10.md` §3.3. The writer is ungendered (law 2): first person present and future only.
 
 | id | English | Russian |

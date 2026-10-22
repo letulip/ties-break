@@ -803,10 +803,12 @@ records RU-07 and worker-event history RU-11.
 
 ## ⚙ 21.10 agent-authored (R53 №4) – the withdraw confirm says she is back in time – ⚠ ⚠ DRAFT под правку владельца
 
+⚖ 22.10 владелец (лист вычитки r53): ряды этого раздела `APPROVED`, его правки перенесены.
+
 Владелец: «я снимаю заявки, а за неделю до турнира она здорова, и подать заявку уже поздно». Фраза
 добавляется к подтверждению снятия, только если она травмирована и по честному сроку успевает.
 
 | id | English | Russian |
 | --- | --- | --- |
-| R53-INJ-02 | `With the masseur she is expected back by {back}, in time for this event. Entries close at the end of {deadline}.` | `С массажистом она вернётся к {back} – как раз к этому турниру. Заявки закрываются в конце {deadline}.` |
-| R53-INJ-03 | `She is expected back by {back}, in time for this event. Entries close at the end of {deadline}.` | `Она вернётся к {back} – как раз к этому турниру. Заявки закрываются в конце {deadline}.` |
+| R53-INJ-02 | `With the masseur she is expected back by {back}, in time for this event. Entries close at the end of {deadline}.` | `С массажистом её ждут на корте к {back} – вовремя для этого турнира. Заявки закрываются в конце {deadline}.` |
+| R53-INJ-03 | `She is expected back by {back}, in time for this event. Entries close at the end of {deadline}.` | `Её ждут на корте к {back} – вовремя для этого турнира. Заявки закрываются в конце {deadline}.` |

@@ -36,7 +36,7 @@ export const MET_NAMES_HIM: Record<Temperament, Named> = {
 /** Road 1 at steady – her answer to «Ask what his name is». */
 export const ASK_NAMED: Record<Temperament, Named> = {
   // ⚠ DRAFT
-  sunny: (n) => cp`"It's ${n}," she said, and smiled at her plate.`,
+  sunny: (n) => cp`"It's ${n}," she said, and laughed.`,
   // ⚠ DRAFT
   fiery: (n) => cp`"${n}. Happy now?"`,
   // ⚠ DRAFT
@@ -64,7 +64,7 @@ export const INSIST_NAMED: Record<Temperament, Named> = {
   // ⚠ DRAFT
   fiery: (n) => cp`"${n}. There. Was that worth it?"`,
   // ⚠ DRAFT
-  quiet: (n) => cp`"…${n}." She did not look up.`,
+  quiet: (n) => cp`"…${n}." She added nothing more.`,
   // ⚠ DRAFT
   deep: (n) => cp`"${n}. I would have told you. Just not like this."`,
 }
@@ -76,7 +76,7 @@ export const INSIST_REFUSED: Record<Temperament, CopyRef> = {
   // ⚠ DRAFT
   fiery: cp`"No. You don't get to make me."`,
   // ⚠ DRAFT
-  quiet: cp`She said nothing at all, and went to her room.`,
+  quiet: cp`She said nothing at all, and the conversation ended there.`,
   // ⚠ DRAFT
   deep: cp`"Pushing is exactly why I don't tell you things."`,
 }
