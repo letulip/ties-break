@@ -367,7 +367,15 @@ export function bankCoachResidual(world: WorldState, residuals: readonly number[
   if (residuals.length === 0) return
   const deal = world.coachDeal
   if (!deal || deal.coachId !== world.coachId) return
-  deal.residualSince += residuals.reduce((a, b) => a + b, 0)
+  // ⚠⚠ 23.10 – QUANTISED TO A MILLIONTH, FOR THE PLATFORM LAW. Each residual is `won − p` with `p` from
+  // the closed form's `Math.pow`, and V8's transcendentals differ by a last ulp between arm64 and x64
+  // builds (tests/i18n-l3-7-twin.test.ts, «TWO PLATFORM FAMILIES»). Summed raw into a PERSISTED field,
+  // one ulp (9e-16 at week 36 of the frozen 25k · middle · grinder career, the only leaf that differed)
+  // walks into the save, the next week's maths and finally a different point – the CI runner's
+  // coach-travel hashes went red on 22.10 with every Mac green. A millionth is a thousand times finer
+  // than anything `residualPart` (÷ form.max, clamped to 1) can show, and both families now bank the
+  // same number. Zero draws, nothing read differently by anyone.
+  deal.residualSince = Math.round((deal.residualSince + residuals.reduce((a, b) => a + b, 0)) * 1e6) / 1e6
 }
 
 /** ⭐⭐⭐ THE PROGRESS SCORE, `[0, 1]` – his own «общая оценка прогресса», and the four components are
