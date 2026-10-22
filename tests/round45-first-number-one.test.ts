@@ -611,7 +611,12 @@ describe('D · as played – careers walked through the public commands, nothing
     // and not money: p6/i3 is solvent and keeps its coach to week 340, it simply no longer latches a #1. Re-hunted on the same grid with this
     // case's own walker (presets 0–8 x indices 0–6, 340 weeks, 63 careers): THREE latch a #1, all on the JUNIOR table – p4/i3 (week 171),
     // p5/i3 (179), p7/i3 (166) – and the first is taken. The world-table page still has no walked witness and stays with the posed cases.
-    const careers = [walk(2, 3, 340), walk(1, 3, 340), walk(4, 3, 340)]
+    // ⚠⚠ 22.10 W1 (heat V1, r53 N8) – SHE TIRES EARLIER ON A HOT DAY, WHICH RE-TIMED THE WALKS AGAIN; FIXTURE RE-AIMED, CLAIM UNCHANGED: the third
+    // career moves p4/i3 -> p2/i0. Green at 3164c1ef (the parent of cee42f0c), red after it with zero MAIN draws moved – the hot matches' results
+    // changed, not the dice. Re-hunted on the same grid with this case's own walker (presets 0–8 x indices 0–6, 340 weeks, 63 careers): TWO latch
+    // a #1, both on the JUNIOR table – p2/i0 (week 263) and p7/i4 (week 172) – and none of N3's three; the first in grid order is taken. The
+    // world-table page still has no walked witness and stays with the posed cases.
+    const careers = [walk(2, 3, 340), walk(1, 3, 340), walk(2, 0, 340)]
     let expectedTotal = 0
     for (const world of careers) expectedTotal += expectBookNamesItsLatches(world).live
     expect(expectedTotal, 'the walk produced at least one #1 page – otherwise this case proves nothing').toBeGreaterThan(0)

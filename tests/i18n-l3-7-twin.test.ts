@@ -52,6 +52,15 @@
 //   pedigree, M9 named the partner at the row's birth (`nameKnownWeek` on every love row, v95), M10/M11 made the weather
 //   a fact of the event and of the match – so results, ranks, money and rows differ on every career. Attributed by a
 //   CONTROL capture at `main` (equal to the stored fixture: 0 leaves). Row, text and draw digests moved too (results).
+// ⚠ REFRESHED 22.10 (r53 N8, W1's tails, both platforms): 478 changed leaves, 0 new, 0 gone – attributed by a CONTROL capture at
+//   59decdcd (compare GREEN there, and its capture byte-equal to the stored darwin fixture: 0 leaves), then one capture per tip:
+//   023e2cad (the press road at top-100) 0 leaves; 3263fd32 (W2, the famous card's star and rate line) 8 – the `snapshot` +
+//   `snapshotFields.coachMarket` pair of the 4 careers whose market lists a pedigree coach (`labourPct` on the wire row); 3164c1ef
+//   (W3, the booth's weather remarks) 0 – the remarks are spoken, never stored, as designed; cee42f0c (W1, heat V1) 476 – she tires
+//   earlier on a hot day, so results, ranks, money and rows move on all 7 careers (6 of them overlap W2's 8); f82433cc 0. Linux:
+//   the stored linux fixture to the new linux capture is the same 478-leaf family set; darwin vs linux on the new tree is 23
+//   leaves, the coach-price transcendentals class documented below (coachMarket / coachDeal / upcoming). Captures: L37_CAPTURE
+//   on this Mac; podman --platform linux/amd64 node:22, npm ci inside.
 //
 // ⚠⚠ TWO PLATFORM FAMILIES, BOTH TRUE (10.10, the day-long hunt). The PR runner (ubuntu/x64,
 // node 22) produces snapshot digests no darwin/arm64 machine can – measured to the last cell: a

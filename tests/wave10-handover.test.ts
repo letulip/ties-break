@@ -296,7 +296,12 @@ describe('wave 10 T1 B – the band a career really hands over', () => {
     // for the highest ladder REACHED, and on a career that never touched the WTA table that is the
     // junior one – so a junior number walked into `motherWasKnown`, whose bar is a WTA rank (D1).
     // This cell ends in its second season, junior shelves only, and is the defect's own shape.
-    const { world, weeks } = walkToEnding(2, 0, 0)
+    // ⚠ 22.10 W1 (heat V1, r53 N8) – THE HOT MATCHES RE-TIMED THE WALK; FIXTURE RE-AIMED, CLAIM UNCHANGED: seed 0 -> 1. (2,0,0)
+    // no longer ends inside 200 weeks (it walks to week 834 – a professional career, not this case's shape); green at 3164c1ef,
+    // the parent of cee42f0c. Re-hunted with the plain walker, preset 2 seeds 0–9 first: (2,0,1) is the first that ends inside
+    // 200 weeks with junior titles, no pro title and no WTA rank – week 78, four junior titles. Eight of preset 2's ten seeds
+    // have that shape now (seeds 0 and 6 do not).
+    const { world, weeks } = walkToEnding(2, 0, 1)
     expect(world.ending, `the walk has to reach an ending (${weeks} weeks)`).not.toBe(null)
     expect(weeks, 'ended while the story was still a junior one').toBeLessThan(200)
     const block = dynastyHandoverOf(world)
