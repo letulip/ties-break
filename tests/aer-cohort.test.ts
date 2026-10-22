@@ -71,7 +71,10 @@ function cohortSeasons(seed: number, weeks: number): { rows: Season[]; kid: Seas
 }
 
 describe('P2 item 4 — the cohort is already inside the age-eligibility rule', () => {
-  const { rows, kid, kidLedger } = cohortSeasons(0, 3 * WEEKS_PER_YEAR)
+  // ⚠ RE-AIMED 22.10 (r53 W1, heat variant V1 – she tires EARLIER in heat, fatigue onset 120 / heat): seed 0 (and 1) now walk three years in which the kid enters no W draw – the
+  // «for scale» line read 0. Seeds 0–5 measured on the W1 tree: 2 → 18 ledger entries, 3 → 6, 4 → 22, 5 → 16; the cohort
+  // side (35–43 player-seasons, somebody in a W draw) holds on all six. Seed 2 – the first that plays – is walked.
+  const { rows, kid, kidLedger } = cohortSeasons(2, 3 * WEEKS_PER_YEAR)
 
   it('is not vacuous: cohort players really do play professional tennis', () => {
     expect(rows.length, 'player-seasons measured').toBeGreaterThan(20)

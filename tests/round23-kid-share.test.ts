@@ -298,7 +298,11 @@ describe('#18 – the transfer, on a career that is really played', () => {
     // 104 – two years, the file's own `WEEKS_PER_YEAR * 2` idiom – sits in the middle of that run rather than at its edge, which is what
     // stops the next balance change re-breaking this test a fourth time. She is paid real cheques on it ($1,265 of her own money on a
     // $12,650 gross, 2,206 results on each arm). The claim, the guards and the seed are untouched.
-    const HORIZON = WEEKS_PER_YEAR * 2
+    // ⚠ RE-AIMED 22.10 (r53 W1, heat variant V1 – she tires EARLIER in heat, fatigue onset 120 / heat): her first cheque now lands between weeks 108 and 112, so at 104 she is
+    // paid nothing and the same one line goes red. Scanned on the W1 tree the same way (seed 1, both arms, every fourth horizon
+    // 80..160): 80–108 -> nothing paid yet ✗; 112 · 116 … 156 · 160 -> the same results on both arms AND she is paid, all 13.
+    // 136 sits in the middle of that run ($2,255 of her own money). The claim, the guards and the seed are untouched.
+    const HORIZON = 136
     const on = walk(1, HORIZON)
     const off = walk(1, HORIZON, true)
 
