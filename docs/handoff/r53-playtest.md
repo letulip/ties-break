@@ -39,18 +39,28 @@ spec question answered, then «делай всё по шагам по списк
 - Already there, the backlog lines were stale: wakeLock during a match, the screen-reader class.
 
 ## Balance findings for his eye (the sheet's «Вопросы» block has the full list)
-- Elite at $2–3k/wk plus a famous name breaks a wealthy family in ~2 years of junior play; with
-  the weather moving results, careers that lived on the edge (8k self-coached, 25k middle) now go
-  bankrupt in the bench – N3 bisected each to its step and re-picked the fixtures; none is a
-  defect in src, all are tuning questions.
-- Heat moves a result by ~1 pp, not the spec's 4–6 (the fatigue term is small); the weather tail
-  is on the champion row only; stage-2 effects do not reach college/planner/prologue matches.
+- Elite at $2–3k/wk plus a famous name breaks a wealthy family in ~2 years of junior play – his
+  22.10 word: «это ок, игрок решает кого и когда нанимать», with a rider to show the season's full
+  cost and explain the premium above the band (open, UI).
+- The weather A/B on identical seeds (22.10, the round ledger): the weather does not create
+  bankruptcies, it reshuffles them (±1–2 seeds of 10, both directions); the bankruptcy share per
+  cell was set by family money × coach tier before M11 (middle·middle 7/10, high 10/10, elite
+  10/10 in BOTH arms). Where a seed flips, the mechanism is depth – she wins more, travels and
+  enters more, and the junior sink pays no prize. His stop signal stands, aimed at the coach price
+  against the wallet, not at the match day.
+- Heat moves a result by ~1 pp, not the spec's 4–6 (the fatigue term is small); four variants are
+  measured in the round ledger (earlier onset +2.9 pp, stronger factor +2.1 pp with retirements
+  ×2.1, a whole-match term that reaches the spec's number at K ≈ 0.04) – his decision, not built;
+  the weather tail is on the champion row only; stage-2 effects do not reach college/planner/prologue matches.
 - The silence note's reach fell to 77.8 % with the week-28 checkpoint (r52) – unchanged here.
 
 ## Open (the owner's)
-- The review sheet: https://claude.ai/artifact/8dEogGA9YbaiUPX53YpMDm – 117 DRAFT rows across ten
-  tables and the night's questions; his marks in the artifact's db (`reviews`), read back with
-  `ArtifactData list` and applied as r52's were.
+- The review sheet is applied (22.10, `59decdcd`): 27 of his rewrites transferred, every r53
+  section `APPROVED`, three English sources made channel-neutral at his ask; the 31 display-word
+  rows were the sheet extractor's escaped-pipe defect (table untouched). Still his: the press road
+  at a cold bond («рассмотрел бы более высокий порог известности» – `newsRankNoticed` 200 /
+  `newsRankKnown` 100 / `stageTierMin` wta500, one constant), the heat variant, the coach price
+  against the wallet.
 - Every balance question above; the heat strength; her own result-row weather tail (48 RU
   sentences); the grass conditions line share (19 % vs the 15 % target – a fourth line?); album
   captions for weather (the corpus generator – a follow-up).
