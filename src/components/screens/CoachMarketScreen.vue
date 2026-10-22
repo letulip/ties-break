@@ -671,7 +671,10 @@ function rowLabel(r: Row): string {
   const chem = r.chemistry === null ? '' : t(', chemistry {0}%', [chemSpoken(r.chemistry)])
   const base = t('{0}, {1} tier, {2}, {3} a week{4} – {5}', [r.name, COACH_TIER_WORD[r.tier], FIT_LABEL[r.fitNow], formatCents(r.weeklyCents), chem, state])
   // ⭐ ROUND 53 W2 – the famous name's past is heard too (the star itself is aria-hidden); no new string, the engine's own line
-  return r.pedigree ? `${base}. ${engineText(r.pedigree.past)}` : base
+  // ⚠ 22.10 (W2's tail): the past line goes FIRST, not last – the label's ending «… a week – hire» is a
+  // contract (`e2e/elite-gate.spec.ts` reads the price and the call to action off the END of the name),
+  // and the W2 suffix broke it on every famous row. The listener hears the past, then the usual row.
+  return r.pedigree ? `${engineText(r.pedigree.past)}. ${base}` : base
 }
 
 // =================================================================================================

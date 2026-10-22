@@ -59,7 +59,9 @@ function eliteCards(w: VueWrapper) {
   // the tier block is sorted by fit and price, so the cards are found by NAME and not by position
   const cards = w.get('#coach-tier-elite').findAll('.cm-row')
   expect(cards.length).toBeGreaterThanOrEqual(2)
-  const famous = cards.find((c) => (c.attributes('aria-label') ?? '').startsWith(famousName))
+  // ⚠ 22.10 (W2's tail): the past line now LEADS the label (the row's «… a week – hire» ending is
+  // e2e/elite-gate's contract), so the famous card is found by the name INSIDE its label, not at its start.
+  const famous = cards.find((c) => (c.attributes('aria-label') ?? '').includes(famousName))
   expect(famous, `the card of ${famousName}`).toBeTruthy()
   const plain = cards.find((c) => c !== famous)!
   return { famous: famous!, plain }
@@ -125,6 +127,7 @@ describe('R53 M8b – the famous-name card', () => {
     expect(plain.find('.cm-pedigree-rate').exists()).toBe(false)
     // (c) the row's spoken name carries the past line, a plain row's does not
     expect(famous.attributes('aria-label')).toContain(PAST)
+    expect(famous.attributes('aria-label')!.startsWith(PAST), 'the past leads, the row follows (the «– hire» ending is a contract)').toBe(true)
     expect(plain.attributes('aria-label') ?? '').not.toContain(PAST)
     w.unmount()
   })
