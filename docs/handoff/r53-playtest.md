@@ -37,6 +37,13 @@ spec question answered, then «делай всё по шагам по списк
   sentence sits once under each tier title (L1); fragility after an injury scales with its length
   (L5/L5b, mean factor ≈ 1.1, prevalence unchanged).
 - Already there, the backlog lines were stale: wakeLock during a match, the screen-reader class.
+- The 22.10 build-out, his third word («все в эту же волну делаем»): heat makes her tire EARLIER
+  (the fatigue onset divides by the day's factor – 75 points at 38°; +2.0 / +2.9 pp to the fitter
+  at 34° / 38°, retirements untouched so the 2.73 % anchor holds by construction; the closed form's
+  legs factor fitted, slope 3.4) – W1; the famous coach's card carries a star over the portrait and
+  «Rate +50 % for the name» from the engine constant – W2; the booth talks about the weather with
+  variety: heat (3 lines), fresh and strong wind (3 each), clouds and «held off» when rain is
+  possible, a heavy first line when it falls – 13 DRAFT lines on the review sheet – W3.
 
 ## Balance findings for his eye (the sheet's «Вопросы» block has the full list)
 - Elite at $2–3k/wk plus a famous name breaks a wealthy family in ~2 years of junior play – his
@@ -58,18 +65,26 @@ spec question answered, then «делай всё по шагам по списк
 - The silence note's reach fell to 77.8 % with the week-28 checkpoint (r52) – unchanged here.
 
 ## Open (the owner's)
+- The review sheet's addendum: 13 booth lines (W3) are DRAFT at the same link.
 - The review sheet is applied (22.10, `59decdcd`): 27 of his rewrites transferred, every r53
   section `APPROVED`, three English sources made channel-neutral at his ask; the 31 display-word
   rows were the sheet extractor's escaped-pipe defect (table untouched). Still his: the press road
   at a cold bond («рассмотрел бы более высокий порог известности» – `newsRankNoticed` 200 /
-  `newsRankKnown` 100 / `stageTierMin` wta500, one constant), the heat variant, the coach price
-  against the wallet.
+  `newsRankKnown` 100 / `stageTierMin` wta500, one constant), the press share's real lever (`publicWeek` or a chance per event – the
+  bar did nothing, measured), the coach price against the wallet.
 - Every balance question above; the heat strength; her own result-row weather tail (48 RU
   sentences); the grass conditions line share (19 % vs the 15 % target – a fourth line?); album
   captions for weather (the corpus generator – a follow-up).
 
 ## Gates
-FINAL CHAIN at `40c8ce2c` (clean worktree, npm ci, every verdict from its own file, `r53h-*.log`):
+BUILD-OUT CHAIN at `ef1f5aaf` (22.10 evening; clean worktree, npm ci, every verdict from its own
+file, `r53i-*.log`): check `R53I_CHECK_EXIT=0` (engine purity ok, component 332 files / 3929), sim
+`R53I_SIM_EXIT=0`, e2e on the Mac `R53I_E2E2_EXIT=0` (151; the first run's one red was W2's label
+tail, fixed in `ef1f5aaf`), e2e in CI's Linux image `R53I_LINUX_E2E5_EXIT=0` (151 – after raising
+the podman VM to 4 GB: two concurrent vite builds were OOM-killed four times in 1.9 GB), lqa:ru
+`R53I_LQA_EXIT=0`, the container twin `R53I_TWIN_EXIT=0` (6/6); build line `ef1f5aa`.
+
+EARLIER FINAL CHAIN at `40c8ce2c` (clean worktree, npm ci, every verdict from its own file, `r53h-*.log`):
 check `R53H_CHECK_EXIT=0` (unit 468 s with one accepted bulk-pool late ack, component 332/332,
 build), sim `R53H_SIM_EXIT=0` (13/402 s), e2e on the Mac `R53H_E2E_EXIT=0` (151) and in CI's Linux
 image `R53H_LINUX_E2E_EXIT=0` (151); lqa:ru `R53G_LQA_EXIT=0` and the container twin

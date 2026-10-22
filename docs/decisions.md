@@ -6237,3 +6237,11 @@ byte-identity proven, and the coach market was the last product screen to leave 
 9. **A famous coach's card gets a marker** – «можно там какой-то маркер здвездочкой сделать…
    в левом нижнем углу карточки поверх фото… и написать какой бонус дает надо на карточке тоже»;
    the strings are proposed DRAFT in the coach-pay-ladder spec §3.4.1 and wait for his word.
+10. **The build-out rides in the same wave** (his third message, 22.10) – «жара и ветер реплик не
+    имеют – для этого тоже надо добавить несколько вариантов комментариев, чтобы не однообразно
+    было, и для дождя тоже разные, дождь может ожидаться, быть сильным, слабым, долгим, коротким,
+    может просто быть облачно… жару делаем под калибровку 2.73 % на снятие, реши какой вариант
+    лучше, строки карточки ок, строй… все в эту же волну делаем». Built as W1 (heat: the onset
+    divides by the day's factor, the hazard untouched), W2 (the card's star and rate line, the two
+    strings APPROVED by «строки карточки ок»), W3 (13 booth lines, DRAFT). Weather icons: none to
+    upload – the plate draws them inline (`WeatherPlate.vue`); his own SVGs are welcome.
