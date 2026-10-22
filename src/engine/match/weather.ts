@@ -6,8 +6,9 @@
 // term the model already had, read by the closed form AND the point loop from this one file, so
 // the card's number and the match that is played describe the same day.
 //
-//   · heat  – `fatigueTerm`'s output × `heatFatigueFactor` (both players, loop and closed form,
-//             and the retirement hazard, which reads the same fatigue);
+//   · heat  – fatigue starts EARLIER and runs steeper by `heatFatigueFactor` (both players, the
+//             loop through `heatFatigueTerm`, the closed form through its fitted `heatLegsFactor`
+//             since r53 W1), and the retirement hazard × the factor on the unchanged fatigue;
 //   · wind  – first serve down (a loss to every server) and unforced errors up (the matchup
 //             diluted towards the level of the day), symmetric by construction;
 //   · rain  – `falling` on clay only: the heavy ball, the same two levers, smaller. On hard and

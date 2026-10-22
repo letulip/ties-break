@@ -64,17 +64,19 @@ const BIRTHS: Record<string, [number, number] | null> = { default: null, dec31: 
  *  ⚠ RE-STAMPED 22.10 (round 53 close, architect): all nine `hN` moved – the round re-priced the coach (M7), gave
  *  elite coaches a pedigree (M8), named the partner at the row's birth with a `nameKnownWeek` key on every love row
  *  (M9, v95) and made the weather a fact of the event and the match (M10/M11: results move). Every `rngN` green –
- *  each of the nine failed only at `hN`. */
+ *  each of the nine failed only at `hN`.
+ *  ⚠ RE-STAMPED 22.10 (r53 W1, heat variant V1 – she tires EARLIER in heat, fatigue onset 120 / heat): all nine `hN` moved – a hot match past point 75 plays differently, so the
+ *  walked careers' results move. Every `rngN` green – each of the nine failed only at `hN`. */
 const BASELINE: Record<string, { rng0: string; h0: string; rngN: string; hN: string }> = {
-  's1-alpha|default': { rng0: '-1306492581:0', h0: '1662620015bc23c9', rngN: '-1625113431:87894', hN: '1e47fca855f3b2db' },
-  's1-alpha|dec31': { rng0: '-1306492581:0', h0: 'e3c0dbdc02dfe2c4', rngN: '-1625113431:87894', hN: '883472890ca72aef' },
-  's1-alpha|jan6': { rng0: '-1306492581:0', h0: 'baccabf4e3897d71', rngN: '-1625113431:87894', hN: 'c2aecaef5b0f30f7' },
-  's1-beta|default': { rng0: '2140152401:0', h0: '2376db693585cb49', rngN: '-73975459:87900', hN: 'ea28bd95b9c84c4e' },
-  's1-beta|dec31': { rng0: '2140152401:0', h0: 'a2dd35eb5fdb72f9', rngN: '-73975459:87900', hN: '312f746878b666b4' },
-  's1-beta|jan6': { rng0: '2140152401:0', h0: '954e24dc6bc505f9', rngN: '-73975459:87900', hN: 'c5a2a66e5471837d' },
-  's1-gamma|default': { rng0: '-2119545102:0', h0: '5f847e633dd4e992', rngN: '1792860147:87901', hN: '0a2cfa2c3e670a86' },
-  's1-gamma|dec31': { rng0: '-2119545102:0', h0: 'ab3e8951a687d2e4', rngN: '1792860147:87901', hN: 'c8a03ea4a4c5795e' },
-  's1-gamma|jan6': { rng0: '-2119545102:0', h0: 'ae71ca27f9886772', rngN: '1792860147:87901', hN: '9a04ed852d0e3310' },
+  's1-alpha|default': { rng0: '-1306492581:0', h0: '1662620015bc23c9', rngN: '-1625113431:87894', hN: 'a105acd5fba35084' },
+  's1-alpha|dec31': { rng0: '-1306492581:0', h0: 'e3c0dbdc02dfe2c4', rngN: '-1625113431:87894', hN: 'fc5b365677599757' },
+  's1-alpha|jan6': { rng0: '-1306492581:0', h0: 'baccabf4e3897d71', rngN: '-1625113431:87894', hN: 'fdb747a85ac9d0fc' },
+  's1-beta|default': { rng0: '2140152401:0', h0: '2376db693585cb49', rngN: '-73975459:87900', hN: '0eaf0e62babe78fe' },
+  's1-beta|dec31': { rng0: '2140152401:0', h0: 'a2dd35eb5fdb72f9', rngN: '-73975459:87900', hN: 'd8f73e6e429d2e50' },
+  's1-beta|jan6': { rng0: '2140152401:0', h0: '954e24dc6bc505f9', rngN: '-73975459:87900', hN: '673c7a8f8ce31881' },
+  's1-gamma|default': { rng0: '-2119545102:0', h0: '5f847e633dd4e992', rngN: '1792860147:87901', hN: 'c4a3551f3ecce170' },
+  's1-gamma|dec31': { rng0: '-2119545102:0', h0: 'ab3e8951a687d2e4', rngN: '1792860147:87901', hN: '91eb93dc501a5fdb' },
+  's1-gamma|jan6': { rng0: '-2119545102:0', h0: 'ae71ca27f9886772', rngN: '1792860147:87901', hN: 'd07b840961abf7cb' },
 }
 
 function digest(world: unknown): string {

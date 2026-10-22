@@ -651,7 +651,10 @@ describe('§8 a career played to a natural ending off the bench', () => {
     // travel bill is $43,099 against M10's $15,633 (her results moved and the bench enters what she earns), no new
     // charge on the till. The claim is about the ask's rows, so the cell is one that still lives to be asked:
     // 25k · middle · budget coach, seed 0 – an injury ending at week 1062, six asks on the way (measured 22.10).
-    const { world, rng } = openCareer(PRESETS[4]!, 0, policy)
+    // ⚠ RE-PICKED seed 0 -> seed 7 of the same cell 22.10 (r53 W1, heat variant V1 – she tires EARLIER in heat, fatigue onset 120 / heat): seed 0 now ends on an injury at week 463
+    // with NO ask on the way (seeds 1 and 3 are asked but reach no ending in 1500 weeks; 2, 4, 6 go bankrupt, 5 is injured
+    // at 177). Seed 7 is an injury ending at week 1243 with eight asks on the way (measured 22.10). Same cell, same policy.
+    const { world, rng } = openCareer(PRESETS[4]!, 7, policy)
     let w = 0
     const seen: Row[] = []
     const take = (): void => {

@@ -478,7 +478,9 @@ describe('§6 played careers', () => {
   // draw (the weeknote sub-stream is purpose-scoped). Was 0xd961a15a.
   // ⚠ RE-STAMPED 22.10 (round 53 close, architect): moved with M10's weather captions and scraps (heat and rain
   // in the pools), M11's changed match results (different weeks, different lines) and M9's named partner. Was 0xf7a88407.
-  const PRE_WAVE_DIGEST = 0x99144eb6
+  // ⚠ RE-STAMPED 22.10 (r53 W1, heat variant V1 – she tires EARLIER in heat, fatigue onset 120 / heat): a hot match past point 75 plays differently, so the careers' results – and the
+  // weeks and lines the diary picks from them – move. No pick key, pool or draw count changed. Was 0x99144eb6.
+  const PRE_WAVE_DIGEST = 0xaf182516
   // played once, on first use, INSIDE a test – a ref that drifts from its text must fail a test by name, not take the whole file down at collection
   let played: Array<ReturnType<typeof play>> | null = null
   // careers 5/0 and 0/1 are the DIGEST's pair (captured on the pre-wave tree); 5/1 is a third, played for the families the first two never reach – the coach travels with her only there

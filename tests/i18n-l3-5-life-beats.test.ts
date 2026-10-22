@@ -544,7 +544,7 @@ describe('§7 every sentence a sink\'s seat can hold is a key of the frozen v92 
 
   it('every one is a key of the frozen v92 table (a stored row migrated from an old save lands on the SAME key)', () => {
     // ⚠ 22.10 r53 M9 (N2): the two NEW stored feed rows of R53 №2 (the name question) are not the v92 table's – no old save can hold them. Named here, not loosened (⚠ DRAFT under the owner's pass).
-    const BORN_R53 = ['There is someone in her life. We asked what his name is.', 'There is someone in her life. We pressed her for his name.']
+    // (BORN_R53 is hoisted to module scope since 22.10 r53 W1 – the §8 answer-row test names the same two rows.)
     expect([...sentences].filter((s) => !TABLE.has(s) && !BORN_R53.includes(s))).toEqual([])
   })
 
@@ -585,7 +585,14 @@ describe('§7 every sentence a sink\'s seat can hold is a key of the frozen v92 
 // prices and letters, M8's pedigree, M9's partner name at the row's birth, M10/M11's weather moving results). '0/1'
 // checked AFTER the stamp – and it MOVED too this time (the self-coached career's results shift under the weather, M11,
 // and its love row is named at birth, M9): 'ac91e65e' → '9e652d63'. Was '96df51c9' / 'ac91e65e'.
-const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': 'fd8ea9f6', '0/1': '9e652d63' }
+// ⚠ RE-STAMPED 22.10 (r53 W1, heat variant V1 – she tires EARLIER in heat, fatigue onset 120 / heat): '5/0' AND '0/1' moved –
+// a hot match past point 75 plays differently, so both boosted careers' results and the beats they license move. No pick key,
+// draw count or pool order changed. Was 'fd8ea9f6' / '9e652d63'.
+const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': 'c31ffdfc', '0/1': '75525f7b' }
+/** ⚠ 22.10 r53 M9 (N2): the two NEW stored feed rows of R53 №2 (the name question) are not the v92 table's – no old save
+ *  can hold them. Named here, not loosened (⚠ DRAFT under the owner's pass). Hoisted 22.10 (r53 W1): with V1's heat the
+ *  played careers now reach the name question too, so the §8 answer-row test names the same two rows. */
+const BORN_R53 = ['There is someone in her life. We asked what his name is.', 'There is someone in her life. We pressed her for his name.']
 /** and the bench's MAIN stream, three draws on from the last week of each career, from the same pre-wave runs – the wave draws nothing, and the next draws prove the position is the pre-wave one */
 const PRE_WAVE_NEXT3: Record<string, number[]> = {
   '5/0': [0.18923983839340508, 0.10872006509453058, 0.37577401218004525],
@@ -630,7 +637,7 @@ describe('§8 played careers', () => {
       for (const r of run.answerRows) {
         expect(r.c, `${r.kind}: ${r.text}`).toBeDefined()
         expect(render(r.c!)).toBe(r.text)
-        expect(TABLE.has(r.c!.k), r.c!.k).toBe(true)
+        expect(TABLE.has(r.c!.k) || BORN_R53.includes(r.c!.k), r.c!.k).toBe(true)
         kinds.add(r.kind)
         rows++
       }

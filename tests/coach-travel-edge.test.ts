@@ -121,7 +121,12 @@ describe('the byte-identity of a career that does not travel', () => {
     // are now read off 5/1, the same letter and the same two deadlines. 6/1 keeps its identity pin (`highPlayer`): it no longer witnesses the
     // RULE, it says «this career did not move», exactly the status the three grinders already have below. No digest was re-stamped.
     const high = windowRuleWitness(6, 1) // 25k middle · HIGH coach · PLAYER policy – an identity cell since 22.10
-    const witness = windowRuleWitness(5, 1) // 25k middle · middle coach · PLAYER policy – holds kit-152 (open) AND kit-100 (expired)
+    // ⚠ RE-AIMED 22.10.2026 (r53 W1, heat variant V1 – she tires EARLIER in heat), NOT WEAKENED: 5/1 kept kit-152 but lost
+    // the expired kit-100 (a hot match past point 75 plays differently and the window's rungs cleared otherwise). The same
+    // one-probe sweep of nine careers x both policies: kit-100 (slot 1, expired, deadline 104 / 103, lapsed 105) is held by 4/1
+    // and 8/1, both of which ALSO hold kit-152 (open, 156 / 155). 4/1 – the first – is the witness for both letters; 5/1 keeps
+    // its identity pin (`middlePlayer`) below, as 6/1 does.
+    const witness = windowRuleWitness(4, 1) // 25k middle · budget coach · PLAYER policy – holds kit-152 (open) AND kit-100 (expired)
     const mid152 = witness.kitLetters.find((o) => o.id === 'kit-152')
     expect(mid152?.week, 'the witness letter exists and landed MID-window (slot 1, not the opening week)').toBe(152)
     expect(mid152?.slot, '...which is the whole reason the two rules can disagree about it').toBe(1)
@@ -137,8 +142,8 @@ describe('the byte-identity of a career that does not travel', () => {
     // horizon: moving its deadline moves the week it lapsed WITH it, and rewriting one without the
     // other reconstructs a world the engine never wrote. That was a real defect in the helper until
     // this pass, invisible while every frozen career's letters sat on the opening week.
-    const middle = witness // 25k middle · middle coach · PLAYER policy (walked once above)
-    const mid100 = middle.kitLetters.find((o) => o.id === 'kit-100')
+    const middle = windowRuleWitness(5, 1) // 25k middle · middle coach · PLAYER policy – an identity cell since 22.10 (W1)
+    const mid100 = witness.kitLetters.find((o) => o.id === 'kit-100')
     expect(mid100?.slot, 'the expired witness landed mid-window too').toBe(1)
     expect(mid100?.state, '...and unlike kit-152 it is already gone by the horizon').toBe('expired')
     expect(mid100?.deadlineWeek, 'the LETTER rule gave it until 104...').toBe(104)

@@ -21,7 +21,7 @@ vi.mock('../src/engine/rng', async (importOriginal) => {
 
 import type { MatchPlayer, MatchWeather } from '../src/engine/match/types'
 import { HEAT_MAX_FACTOR, heatFatigueFactor, playedWeather, weatherLevers } from '../src/engine/match/weather'
-import { basePServe, calibratedPServe, fatigueTerm, modifiedPServe, nerveAndLegs, retireHazard } from '../src/engine/match/point'
+import { basePServe, calibratedPServe, fatigueTerm, heatFatigueTerm, heatLegsFactor, modifiedPServe, nerveAndLegs, retireHazard } from '../src/engine/match/point'
 import { fastMatchProbability, recordedMatchOptions, simulateMatch } from '../src/engine/match/engine'
 import { createScore, contextOf } from '../src/engine/match/scoring'
 import { annotateMatch } from '../src/engine/match/rally'
@@ -44,20 +44,69 @@ describe('heat – heatFatigueFactor', () => {
     expect(heatFatigueFactor(32.5)).toBeCloseTo(1.3, 12)
     expect(heatFatigueFactor(28) - heatFatigueFactor(27)).toBeCloseTo(heatFatigueFactor(30) - heatFatigueFactor(29), 12)
   })
-  it('multiplies BOTH players\' fatigue in the loop – equal legs cancel, unequal legs pay 0.6x more at 38°', () => {
+  // ⚠ RE-AIMED 22.10 (r53 W1, variant V1 – the owner's «жару делаем под калибровку 2.73 % на снятие,
+  // реши какой вариант лучше», the architect's choice). Step 11 pinned «the loop multiplies fatigue by
+  // the factor, the closed form's legs by the same factor». V1 makes her tire EARLIER instead – onset
+  // 120 / heat, cap × heat – so the loop's shift is no longer 0.6 × the gap and the closed form scales
+  // its legs by a FITTED `heatLegsFactor`. The pins now hold the RELATIONS (heat 1 is byte-identical,
+  // the onset, the cap, the even pair, the mirror's shape, the untouched hazard), never the fitted
+  // slope's value: that is the bench's to move (spec weather-2026-10 §4, «⚖ 22.10»).
+  it('heat 1 is fatigueTerm exactly – every match without weather is byte-identical', () => {
+    for (let n = 0; n <= 400; n += 7)
+      for (const st of [0, 13, 30, 40, 55, 70, 87, 100]) {
+        expect(heatFatigueTerm(n, st, 1)).toBe(fatigueTerm(n, st))
+        expect(heatLegsFactor(1)).toBe(1)
+      }
     const ctx = { ...contextOf(createScore(0), 200), pointNumber: 200 }
-    const even = [P({ id: 'a', stamina: 40 }), P({ id: 'b', stamina: 40 })] as const
-    expect(modifiedPServe(0.6, even[0], even[1], ctx, null, 1.6)).toBeCloseTo(modifiedPServe(0.6, even[0], even[1], ctx, null, 1), 12)
     const fit = P({ id: 'f', stamina: 80 })
     const tired = P({ id: 't', stamina: 30 })
-    const shift = modifiedPServe(0.6, fit, tired, ctx, null, 1.6) - modifiedPServe(0.6, fit, tired, ctx, null, 1)
-    expect(shift).toBeCloseTo(0.6 * (fatigueTerm(200, tired.stamina) - fatigueTerm(200, fit.stamina)), 12)
-    expect(retireHazard(200, 30, 1, 1.6)).toBeCloseTo(1.6 * retireHazard(200, 30, 1), 12)
+    expect(modifiedPServe(0.6, fit, tired, ctx, null, 1)).toBe(modifiedPServe(0.6, fit, tired, ctx, null))
+    expect(nerveAndLegs(fit, tired, 1)).toBe(nerveAndLegs(fit, tired))
   })
-  it('the closed form mirrors it: the legs term scales by the same factor, the nerve term does not', () => {
+  it('at 38° she tires EARLIER – the onset is 75 points, not 120, and the cap is 0.048', () => {
+    const h = heatFatigueFactor(38)
+    const st = 30
+    const at = (n: number) => {
+      const ctx = { ...contextOf(createScore(0), n), pointNumber: n }
+      return modifiedPServe(0.6, P({ id: 's', stamina: st }), P({ id: 'r', stamina: 100 }), ctx, null, h)
+    }
+    // the receiver at stamina 100 carries no fatigue, so any drop below 0.6 is the server's own
+    for (const n of [1, 40, 74, 75]) expect(at(n)).toBe(0.6)
+    for (const n of [76, 90, 110, 120]) {
+      expect(at(n)).toBeLessThan(0.6)
+      expect(0.6 - at(n)).toBeCloseTo(heatFatigueTerm(n, st, h), 12)
+    }
+    expect(heatFatigueTerm(76, st, h)).toBeCloseTo(1 * 0.0003 * 1.6 * 0.7, 12)
+    expect(heatFatigueTerm(10_000, st, h)).toBeCloseTo(0.048, 12)
+    expect(heatFatigueTerm(10_000, st, 1)).toBe(0.03)
+    // a mild day keeps the old onset: point 120 none, 121 some
+    expect(heatFatigueTerm(120, st, 1)).toBe(0)
+    expect(heatFatigueTerm(121, st, 1)).toBeGreaterThan(0)
+  })
+  it('equal legs still cancel at any heat; unequal legs pay more the hotter it is; the hazard is untouched', () => {
+    const ctx = { ...contextOf(createScore(0), 200), pointNumber: 200 }
+    for (const h of [1, 1.2, heatFatigueFactor(34), 1.6]) {
+      const even = [P({ id: 'a', stamina: 40 }), P({ id: 'b', stamina: 40 })] as const
+      expect(modifiedPServe(0.6, even[0], even[1], ctx, null, h)).toBe(modifiedPServe(0.6, even[0], even[1], ctx, null, 1))
+    }
+    const fit = P({ id: 'f', stamina: 80 })
+    const tired = P({ id: 't', stamina: 30 })
+    const shift = (h: number) => modifiedPServe(0.6, fit, tired, ctx, null, h) - modifiedPServe(0.6, fit, tired, ctx, null, 1)
+    expect(shift(1.6)).toBeCloseTo(heatFatigueTerm(200, 30, 1.6) - heatFatigueTerm(200, 80, 1.6) - (fatigueTerm(200, 30) - fatigueTerm(200, 80)), 12)
+    expect(shift(1.6)).toBeGreaterThan(shift(heatFatigueFactor(34)))
+    expect(shift(heatFatigueFactor(34))).toBeGreaterThan(0)
+    // ⚠ the retirement anchor (2.73 %, RETIRE_K) stands by construction: the hazard reads the
+    // UNCHANGED fatigue × heat, exactly as in step 11 – V1 moved the score, not the stopping.
+    expect(retireHazard(200, 30, 1, 1.6)).toBeCloseTo(1.6 * retireHazard(200, 30, 1), 12)
+    expect(retireHazard(100, 30, 1, 1.6)).toBe(0)
+  })
+  it('the closed form mirrors it: the legs term scales by the fitted heatLegsFactor, the nerve term does not', () => {
     const fit = P({ id: 'f', stamina: 80 })
     const tired = P({ id: 't', stamina: 40 })
-    expect(nerveAndLegs(fit, tired, 1.6)).toBeCloseTo(1.6 * nerveAndLegs(fit, tired), 12)
+    expect(nerveAndLegs(fit, tired, 1.6)).toBeCloseTo(heatLegsFactor(1.6) * nerveAndLegs(fit, tired), 12)
+    // the mirror reads the loop's earlier onset as MORE than the bare factor – that is why it is fitted
+    expect(heatLegsFactor(1.6)).toBeGreaterThan(1.6)
+    expect(heatLegsFactor(heatFatigueFactor(38))).toBeGreaterThan(heatLegsFactor(heatFatigueFactor(34)))
     const legs38 = calibratedPServe(fit, tired, opts(day(38))) - basePServe(fit, tired, opts(day(38)))
     expect(legs38).toBeCloseTo(nerveAndLegs(fit, tired, 1.6), 12)
     const nerve = P({ id: 'n', composure: 80 })

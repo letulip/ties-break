@@ -1434,7 +1434,7 @@ function runs(points: readonly AnnotatedPoint[]): Run[] {
  *
  *   * momentum needs a running streak of >= 3 points (point.ts, MOMENTUM_MIN_STREAK);
  *   * the big-point penalty needs `ctx.breakPoint`;
- *   * fatigue needs `ctx.pointNumber > FATIGUE_START` (120).
+ *   * fatigue needs `ctx.pointNumber > FATIGUE_START / heat` (120; 75 on a 38° day since r53 W1).
  *
  * The final clamp cannot bite either: it is [0.3, 0.9] and the base is already clamped to
  * [0.42, 0.82]. So the FIRST point of the match is always clean by construction (no prior points, no

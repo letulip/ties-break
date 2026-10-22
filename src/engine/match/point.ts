@@ -230,6 +230,27 @@ const COMPOSURE_K = 2.2e-4
  *  be re-fitted with them – the bench is one command and it prints both constants. */
 const STAMINA_K = 7.0e-5
 
+/** How much faster the closed form's legs term grows with the day's heat, per unit of
+ *  `heatFatigueFactor` above 1 – read through `heatLegsFactor`.
+ *
+ *  ⚠⚠ CALIBRATED, NOT CHOSEN – the same standing as `STAMINA_K` above, and for the same reason: it is
+ *  the closed form's fitted image of what the point loop does on a hot day, not a design knob. Since
+ *  r53 W1 (22.10) heat makes her tire EARLIER in the loop (`heatFatigueTerm`: onset 120 / heat, cap
+ *  × heat), so the loop's fatigue gap is no longer linear in the factor – the gap starts sooner AND
+ *  grows faster – and a mirror that scales by the bare factor (as step 11's did) under-reads it by
+ *  about three times. Fitted on `tools/weather-bench.ts` (20,000 paired matches per cell, stamina
+ *  70 v 50, hard): predicted ≈ 3.4 from the architect's V1 run, and the first run at 3.4 left
+ *  residuals of 0.11 pp at 34° and 0.00 pp at 38° (tolerance ±0.3) – docs/specs/weather-2026-10.md
+ *  §4, the heat bullet's «⚖ 22.10». Re-fit when `FATIGUE_*`, `HEAT_*` or `RETIRE_K` move – the
+ *  bench prints the loop, the closed form and their residual at 34° and 38° on one line each. */
+const HEAT_LEGS_SLOPE = 3.4
+
+/** The closed form's multiplier on its legs term for a day whose fatigue factor is `heat`: exactly 1
+ *  at heat 1 (`1 + k × 0`), so every match without weather reads the identical closed form. */
+export function heatLegsFactor(heat: number): number {
+  return 1 + HEAT_LEGS_SLOPE * (heat - 1)
+}
+
 /** ⭐⭐ WHAT THE POINT LOOP SPENDS AND `basePServe` CANNOT SEE – composure and stamina, as one term,
  *  in `basePServe`'s own units.
  *
@@ -244,11 +265,13 @@ const STAMINA_K = 7.0e-5
  *  already spends these two attributes per point, and paying for them twice is measurably worse than
  *  not paying for them at all. */
 export function nerveAndLegs(server: MatchPlayer, receiver: MatchPlayer, heat = 1): number {
-  // ⭐ r53 step 11 – `heat` is `heatFatigueFactor` of the day, the SAME multiplier the loop puts on
-  // `fatigueTerm`. The legs term is this form's mirror of that fatigue, and the loop's fatigue gap
-  // between two players is linear in the multiplier, so the mirror scales by it too. Nerve does not.
+  // ⭐ r53 step 11 – `heat` is `heatFatigueFactor` of the day, the SAME number the loop reads.
+  // ⚠ r53 W1 (22.10): the loop no longer multiplies fatigue by it – it starts fatigue EARLIER
+  // (`heatFatigueTerm`), which is not linear in the factor, so the mirror scales the legs term by the
+  // FITTED `heatLegsFactor(heat)` rather than by `heat`. Exactly 1 at heat 1. Nerve does not move.
   return (
-    (server.composure - receiver.composure) * COMPOSURE_K + (server.stamina - receiver.stamina) * STAMINA_K * heat
+    (server.composure - receiver.composure) * COMPOSURE_K +
+    (server.stamina - receiver.stamina) * STAMINA_K * heatLegsFactor(heat)
   )
 }
 
@@ -289,6 +312,22 @@ export function calibratedPServe(server: MatchPlayer, receiver: MatchPlayer, opt
 // than a convenience. See `retireHazard` directly below.
 export function fatigueTerm(pointNumber: number, stamina: number): number {
   return Math.min(FATIGUE_CAP, (pointNumber - FATIGUE_START) * FATIGUE_RATE * (1 - stamina / 100))
+}
+
+/** ⭐ r53 W1 (22.10) – THE LOOP'S FATIGUE ON A HOT DAY: she tires EARLIER. The onset is
+ *  `FATIGUE_START / heat` (120 → 75 points at 38°), the slope and the cap are × heat as they already
+ *  were. The owner: «жару делаем под калибровку 2.73 % на снятие, реши какой вариант лучше» – and of
+ *  the four variants measured on `tools/weather-bench.ts` (spec weather-2026-10 §4, «⚖ 22.10») this one keeps
+ *  heat a FATIGUE effect (a late-match effect, as in life) and leaves `spentness` / `retireHazard`
+ *  untouched, so the 2.73 % retirement anchor (`RETIRE_K`) holds by construction rather than by a
+ *  re-fit, and retirements in heat stay ×1.47 instead of doubling.
+ *
+ *  ⚠ EXACTLY `fatigueTerm(pointNumber, stamina)` WHEN `heat === 1`: `FATIGUE_START / 1`,
+ *  `FATIGUE_CAP * 1` and `x * 1` are exact in IEEE arithmetic and the operations run in
+ *  `fatigueTerm`'s own order, so every match without weather – every existing capture – is
+ *  byte-identical. Like `fatigueTerm` it may go negative before the onset; the caller gates. */
+export function heatFatigueTerm(pointNumber: number, stamina: number, heat: number): number {
+  return Math.min(FATIGUE_CAP * heat, (pointNumber - FATIGUE_START / heat) * FATIGUE_RATE * heat * (1 - stamina / 100))
 }
 
 /** How much she is spent, per point, as a NON-NEGATIVE number – `fatigueTerm` clamped at zero.
@@ -482,10 +521,12 @@ export function modifiedPServe(
     p -= ((receiver.composure - server.composure) / 100) * PRESSURE_NERVE_MAX
   }
 
-  // 3. Fatigue: past FATIGUE_START the server tires (subtract) while a tired returner helps (add).
-  if (ctx.pointNumber > FATIGUE_START) {
-    p -= fatigueTerm(ctx.pointNumber, server.stamina) * heat
-    p += fatigueTerm(ctx.pointNumber, receiver.stamina) * heat
+  // 3. Fatigue: past the onset the server tires (subtract) while a tired returner helps (add).
+  // ⭐ r53 W1 – the onset is FATIGUE_START / heat (75 at 38°), see `heatFatigueTerm`; at heat 1 it
+  // is FATIGUE_START exactly and the term is `fatigueTerm` exactly.
+  if (ctx.pointNumber > FATIGUE_START / heat) {
+    p -= heatFatigueTerm(ctx.pointNumber, server.stamina, heat)
+    p += heatFatigueTerm(ctx.pointNumber, receiver.stamina, heat)
   }
 
   // 4. Final clamp.
