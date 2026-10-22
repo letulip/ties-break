@@ -195,7 +195,21 @@ describe('§3 completeness – the keys the grid reaches', () => {
  *    cannot be reached today and can tomorrow does not fall back to English; they cost a translator twelve rows, and the editorial doc already spells the hero-loses family (RU-08 §16.3).
  *  · ONE IS REACHABLE AND SIMPLY RARE: an ace into the body at a deciding point (20% of serves go there, and an ace is the clause of a break, a hold or a set in about one beat in sixty) – §3's second test finds it. */
 const UNREACHED: string[] = [
-  // r53 step 11: the rain's two booth remarks – reached only with `rainFalling`, which the grid does not pass.
+  // r53 step 11: the rain's two booth remarks – reached only with a weather, which the grid does not pass.
+  // r53 W3: the booth's heat, wind and rain-to-come remarks and the heavy rain line – reached only with a weather, which the grid does not pass.
+  "Long rallies are costing more than they should in this heat – the towels at the changeover are not for show.",
+  "The ice at the changeover is going fast, and there is no shade left on this court at all.",
+  "The heat is in the legs now: every long exchange takes something that does not come back by the next game.",
+  "A fresh breeze across the court – a couple of ball tosses have gone astray already.",
+  "They change ends, and the breeze changes sides with them – the ball drifts a little on every shot.",
+  "The breeze has picked up, and that last lob hung in the air longer than it should have.",
+  "A strong wind on this court – every serve begins with a toss that is a gamble, and more than one has gone up twice.",
+  "Changing ends does not help – the wind is just as strong from the other side, and every serve starts with a fight over the toss.",
+  "That lob went up and the wind would not let it come down where it was meant to – a hard day for touch.",
+  "The clouds are gathering over the court, and the covers are waiting at the side – nobody is sure how long it will stay dry.",
+  "It has gone dark at one end of the sky, and the groundstaff are standing by the covers at the side of the court.",
+  "So far the rain has held off – the covers are still folded at the side of the court.",
+  "The rain has come down hard – a proper stop: the players are off and the court is being covered in a hurry.",
   "The rain is back – the players have gone under cover and the court is being covered.",
   "The court is drying out, and they are back out – the rest will not have hurt either of them.",
   'She loses the point with a double fault.',

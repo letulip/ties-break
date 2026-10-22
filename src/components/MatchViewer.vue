@@ -879,8 +879,9 @@ const commentary = computed(() =>
     props.boothLineage && kidSide.value !== null ? { ...props.boothLineage, side: kidSide.value } : null,
     // ⭐ ROUND 53 · STEP 6 – the head-to-head, same guard: a rival's replay is silent by construction.
     props.headToHead && kidSide.value !== null ? { record: props.headToHead, side: kidSide.value } : null,
-    // ⭐ r53 step 11 – the rain's pause, played by the booth (weather stage 2).
-    props.weather?.rain === 'falling'),
+    // ⭐ r53 step 11 – the rain's pause, played by the booth (weather stage 2); W3 hands it the whole day
+    // (temperature, wind, rain and the fourth draw `linePick`, which `EventWeather` already carries).
+    props.weather ? { temperatureC: props.weather.temperatureC, wind: props.weather.wind, rain: props.weather.rain, linePick: props.weather.linePick } : null),
 )
 const modeCommentary = computed(() =>
   viewMode.value === 'key' ? commentary.value.filter((b) => b.keyMoment) : commentary.value,

@@ -104,7 +104,31 @@ describe('§3.2 the four draws, in order, on the one sub-stream', () => {
       expect([0, 1]).toContain(p.wind)
       expect([0, 1]).toContain(p.rain)
     }
-    expect(weatherLinePicks(0.9999999)).toEqual({ temp: 2, wind: 1, rain: 1 })
+    expect(weatherLinePicks(0.9999999)).toMatchObject({ temp: 2, wind: 1, rain: 1, heatRemark: 2, windRemark: 2, rainRemark: 1 })
+  })
+  it('W3: the first three picks are byte-identical to the shipped formula; the booth picks are in range', () => {
+    // the shipped arithmetic, inline – the mutation net for «nothing existing moved»
+    const old = (x: number) => {
+      const a = x * 3
+      const temp = Math.min(2, Math.floor(a))
+      const b = (a - temp) * 2
+      const wind = Math.min(1, Math.floor(b))
+      const rain = Math.min(1, Math.floor((b - wind) * 2))
+      return { temp, wind, rain }
+    }
+    const seen = { heat: new Set<number>(), wind: new Set<number>(), rain: new Set<number>() }
+    for (let i = 0; i <= 1000; i++) {
+      const x = i / 1001
+      const p = weatherLinePicks(x)
+      expect({ temp: p.temp, wind: p.wind, rain: p.rain }, `x=${x}`).toEqual(old(x))
+      expect([0, 1, 2]).toContain(p.heatRemark)
+      expect([0, 1, 2]).toContain(p.windRemark)
+      expect([0, 1]).toContain(p.rainRemark)
+      seen.heat.add(p.heatRemark)
+      seen.wind.add(p.windRemark)
+      seen.rain.add(p.rainRemark)
+    }
+    expect([seen.heat.size, seen.wind.size, seen.rain.size]).toEqual([3, 3, 2])
   })
 })
 

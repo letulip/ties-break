@@ -79,3 +79,23 @@ last-reviewed: 2026-10-21
 | `🏆 {0} won the {1} ({2}) – thanks to the rain, on the fresher legs.` | `🏆 Победа на турнире «{1}» ({2}): дождь дал {0} передышку, и она оказалась свежее.` |
 | `🏆 {0} won the {1} ({2}) in a strong wind.` | `🏆 Победа на турнире «{1}» ({2}) при сильном ветре: {0}.` |
 | `🏆 {0} won the {1} ({2}) – the wind had its say, and she had the last word.` | `🏆 Победа на турнире «{1}» ({2}): {0} – ветер сказал своё, последнее слово осталось за ней.` |
+
+### 5.1 Реплики будки о погоде (W3, 22.10) – DRAFT
+
+Ещё реплики комментатора про погоду (спека §4; владелец 22.10: «жара и ветер реплик не имеют… дождь может ожидаться, быть сильным, слабым, долгим, коротким, может просто быть облачно»). Вариант выбирает четвёртый бросок дня, новых бросков нет. Первые три – жара (30° и выше, во второй половине матча), следом ветерок и сильный ветер (в первой), потом дождь впереди и «так и не начался», последняя – сильный дождь вместо первой строки паузы.
+
+| English | Russian |
+| --- | --- |
+| `Long rallies are costing more than they should in this heat – the towels at the changeover are not for show.` | `В такую жару длинные розыгрыши обходятся дороже обычного – полотенца на смене сторон не для вида.` |
+| `The ice at the changeover is going fast, and there is no shade left on this court at all.` | `Лёд на смене сторон тает быстро, а тени на этом корте не осталось совсем.` |
+| `The heat is in the legs now: every long exchange takes something that does not come back by the next game.` | `Жара теперь в ногах: каждый долгий обмен отнимает то, что не вернуть к следующему гейму.` |
+| `A fresh breeze across the court – a couple of ball tosses have gone astray already.` | `Над кортом свежий ветерок – пара подбросов мяча уже ушла не туда.` |
+| `They change ends, and the breeze changes sides with them – the ball drifts a little on every shot.` | `Они меняются сторонами, и ветерок меняется вместе с ними – мяч в воздухе чуть сносит на каждом ударе.` |
+| `The breeze has picked up, and that last lob hung in the air longer than it should have.` | `Ветерок окреп, и последняя свеча повисла в воздухе дольше, чем следовало.` |
+| `A strong wind on this court – every serve begins with a toss that is a gamble, and more than one has gone up twice.` | `Сильный ветер на корте – подброс на каждой подаче как ставка, и не один мяч пришлось подбрасывать дважды.` |
+| `Changing ends does not help – the wind is just as strong from the other side, and every serve starts with a fight over the toss.` | `Смена сторон не спасает – с другой стороны ветер ничуть не слабее, и каждая подача начинается с борьбы за подброс.` |
+| `That lob went up and the wind would not let it come down where it was meant to – a hard day for touch.` | `Свеча ушла вверх, а ветер не дал ей опуститься, где было задумано, – тяжёлый день для тонкой игры.` |
+| `The clouds are gathering over the court, and the covers are waiting at the side – nobody is sure how long it will stay dry.` | `Над кортом собираются тучи, у края площадки ждут чехлы – никто не уверен, сколько ещё продержится сухо.` |
+| `It has gone dark at one end of the sky, and the groundstaff are standing by the covers at the side of the court.` | `С одной стороны неба потемнело, и сотрудники корта стоят наготове у чехлов на краю площадки.` |
+| `So far the rain has held off – the covers are still folded at the side of the court.` | `Пока дождь так и не начался – чехлы по-прежнему сложены у края корта.` |
+| `The rain has come down hard – a proper stop: the players are off and the court is being covered in a hurry.` | `Дождь хлынул всерьёз – настоящая остановка: спортсменки ушли с корта, его спешно накрывают.` |

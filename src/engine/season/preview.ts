@@ -536,14 +536,31 @@ export function eventWeather(seed: string, event: { id: string; surface: Surface
 }
 
 /** The fourth draw split into the three picks a note needs: which of 3 temperature lines, which of 2
- *  wind lines, which of 2 rain lines. Pure arithmetic on a number already drawn – no RNG here. */
-export function weatherLinePicks(linePick: number): { temp: number; wind: number; rain: number } {
+ *  wind lines, which of 2 rain lines. Pure arithmetic on a number already drawn – no RNG here.
+ *  ⭐ r53 W3 appends three more picks off the SAME remainder, for the booth: which of 3 heat remarks,
+ *  which of 3 wind remarks, which of 2 rain remarks. ⚠ The first three are untouched – appending
+ *  digits below the existing ones moves nothing above them (`tests/r53-weather-stage1.test.ts`). */
+export function weatherLinePicks(linePick: number): {
+  temp: number
+  wind: number
+  rain: number
+  heatRemark: number
+  windRemark: number
+  rainRemark: number
+} {
   const a = linePick * 3
   const temp = Math.min(2, Math.floor(a))
   const b = (a - temp) * 2
   const wind = Math.min(1, Math.floor(b))
-  const rain = Math.min(1, Math.floor((b - wind) * 2))
-  return { temp, wind, rain }
+  const c = (b - wind) * 2
+  const rain = Math.min(1, Math.floor(c))
+  const d = (c - rain) * 3
+  const heatRemark = Math.min(2, Math.floor(d))
+  const e = (d - heatRemark) * 3
+  const windRemark = Math.min(2, Math.floor(e))
+  const f = (e - windRemark) * 2
+  const rainRemark = Math.min(1, Math.floor(f))
+  return { temp, wind, rain, heatRemark, windRemark, rainRemark }
 }
 
 export function eventTemperature(seed: string, event: { id: string; surface: Surface; week: number }): number {

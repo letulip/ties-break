@@ -259,6 +259,7 @@ import { cp, type CopyRef } from '../shared/i18n'
 import { line, joinLines, type Line } from './lines'
 import type { HeadToHead } from '../shared/protocol/competition'
 import { rivalryInLines } from './rivalry'
+import { weatherLinePicks } from '../engine/season/preview'
 
 export type BeatKind =
   | 'open'
@@ -1573,6 +1574,41 @@ const RAIN_IN_PLAY: readonly [Line, Line] = [
   line(cp`The court is drying out, and they are back out – the rest will not have hurt either of them.`),
 ]
 
+/** ⭐ r53 W3 (owner, 22.10: «жара и ветер реплик не имеют… дождь может ожидаться, быть сильным, слабым,
+ *  долгим, коротким, может просто быть облачно») – the booth's other weather remarks. Each pool is
+ *  indexed by a pick split off the day's fourth draw (`weatherLinePicks`), so a variant is chosen by
+ *  the day, never by a new draw. DRAFT. */
+const HEAT_IN_PLAY: readonly [Line, Line, Line] = [
+  line(cp`Long rallies are costing more than they should in this heat – the towels at the changeover are not for show.`),
+  line(cp`The ice at the changeover is going fast, and there is no shade left on this court at all.`),
+  line(cp`The heat is in the legs now: every long exchange takes something that does not come back by the next game.`),
+]
+const WIND_FRESH_IN_PLAY: readonly [Line, Line, Line] = [
+  line(cp`A fresh breeze across the court – a couple of ball tosses have gone astray already.`),
+  line(cp`They change ends, and the breeze changes sides with them – the ball drifts a little on every shot.`),
+  line(cp`The breeze has picked up, and that last lob hung in the air longer than it should have.`),
+]
+const WIND_STRONG_IN_PLAY: readonly [Line, Line, Line] = [
+  line(cp`A strong wind on this court – every serve begins with a toss that is a gamble, and more than one has gone up twice.`),
+  line(cp`Changing ends does not help – the wind is just as strong from the other side, and every serve starts with a fight over the toss.`),
+  line(cp`That lob went up and the wind would not let it come down where it was meant to – a hard day for touch.`),
+]
+const RAIN_POSSIBLE_IN_PLAY: readonly [Line, Line] = [
+  line(cp`The clouds are gathering over the court, and the covers are waiting at the side – nobody is sure how long it will stay dry.`),
+  line(cp`It has gone dark at one end of the sky, and the groundstaff are standing by the covers at the side of the court.`),
+]
+const RAIN_HELD_OFF_IN_PLAY: Line = line(cp`So far the rain has held off – the covers are still folded at the side of the court.`)
+/** The heavy first remark of a falling day; the light one is `RAIN_IN_PLAY[0]`, which stays as approved. */
+const RAIN_HEAVY_IN_PLAY: Line = line(cp`The rain has come down hard – a proper stop: the players are off and the court is being covered in a hurry.`)
+
+/** ⭐ r53 W3 – the weather the booth is given; `linePick` is the event's fourth draw, absent = every pick is 0. */
+export interface CommentaryWeather {
+  temperatureC: number
+  wind: 'none' | 'fresh' | 'strong'
+  rain: 'none' | 'possible' | 'falling'
+  linePick?: number
+}
+
 export function buildCommentary(
   match: AnnotatedMatch,
   playerA: string,
@@ -1601,9 +1637,11 @@ export function buildCommentary(
   /** ⭐ ROUND 53 · STEP 6 – the head-to-head, for at most ONE remark at a changeover. ⚠ OPTIONAL AND
    *  DEFAULTED TO null on `lineage`'s precedent, verbatim. See THE RECORD, IN THE BOOTH. */
   rivalry: CommentaryRivalry | null = null,
-  /** ⭐ r53 step 11 (weather stage 2) – rain was FALLING on this match's day. ⚠ OPTIONAL AND
-   *  DEFAULTED TO false on `rivalry`'s precedent, verbatim. See THE RAIN, IN THE BOOTH. */
-  rainFalling = false,
+  /** ⭐ r53 step 11 (weather stage 2) – the weather of this match's day: rain falling plays the pause,
+   *  and (W3) heat, wind and rain-to-come each get a remark. ⚠ OPTIONAL AND DEFAULTED TO null on
+   *  `rivalry`'s precedent, verbatim – it replaced a `rainFalling = false` flag in the same position,
+   *  so null is the old `false` and `{ rain: 'falling' }` the old `true`. See THE RAIN, IN THE BOOTH. */
+  weather: CommentaryWeather | null = null,
 ): Beat[] {
   const points = match.points
   if (points.length === 0) return []
@@ -2197,23 +2235,54 @@ export function buildCommentary(
   // the three beats above left alone (`taken` re-read, the declining-rather-than-losing rule): the
   // first free one in the first half of the match, and the first free one after it in the second
   // half. A match too short or too full for a second says one, which is honest. No draw. DRAFT.
-  if (rainFalling) {
-    const halves: [number, number][] = [
-      [0, Math.floor(lastIndex / 2)],
-      [Math.floor(lastIndex / 2) + 1, lastIndex],
-    ]
+  const picks = weatherLinePicks(weather?.linePick ?? 0)
+  const halves: [number, number][] = [
+    [0, Math.floor(lastIndex / 2)],
+    [Math.floor(lastIndex / 2) + 1, lastIndex],
+  ]
+  /** The first odd-game changeover in [lo, hi] that no beat holds yet (`taken` re-read on every call,
+   *  so a later remark never lands on an earlier one), or -1. */
+  const firstFreeChangeover = (lo: number, hi: number): number => {
+    const taken = new Set(cands.map((c) => c.pointIndex))
+    for (const g of s.games) {
+      if (g.setEnd) continue
+      if ((g.gamesAfter[0] + g.gamesAfter[1]) % 2 !== 1) continue
+      const next = g.last + 1
+      if (next < lo || next > hi || next > lastIndex) continue
+      if (taken.has(next)) continue
+      return next
+    }
+    return -1
+  }
+  const say = (at: number, said: Line): void => {
+    if (at >= 0) push(at, 'booth', LEAD.booth, said, undefined, false)
+  }
+  if (weather?.rain === 'falling') {
+    // the first remark is light (`RAIN_IN_PLAY[0]`) or heavy by the day's pick; the second is the
+    // court drying out, which only a match long enough to have a second half says
     halves.forEach(([lo, hi], i) => {
-      const taken = new Set(cands.map((c) => c.pointIndex))
-      for (const g of s.games) {
-        if (g.setEnd) continue
-        if ((g.gamesAfter[0] + g.gamesAfter[1]) % 2 !== 1) continue
-        const next = g.last + 1
-        if (next < lo || next > hi || next > lastIndex) continue
-        if (taken.has(next)) continue
-        push(next, 'booth', LEAD.booth, RAIN_IN_PLAY[i], undefined, false)
-        break
-      }
+      say(firstFreeChangeover(lo, hi), i === 0 && picks.rainRemark === 1 ? RAIN_HEAVY_IN_PLAY : RAIN_IN_PLAY[i])
     })
+  }
+
+  // --- ⭐ r53 W3 – THE REST OF THE WEATHER, IN THE BOOTH ------------------------------------------
+  //
+  // The owner (22.10): heat and wind had no remarks and the rain had two. ONE remark each, at a free
+  // changeover (the rain, placed first, wins a contested one; then the wind; then the heat – the
+  // order of the calls below, each reading `taken` afresh). The rain still to come speaks in the
+  // first half and, if the match runs on and stays dry, once more in the second; the wind in the
+  // first; the heat late. The variant is the day's pick (`weatherLinePicks`), the same number the
+  // preview's notes use, so the booth never has a draw of its own. DRAFT.
+  if (weather?.rain === 'possible') {
+    say(firstFreeChangeover(halves[0][0], halves[0][1]), RAIN_POSSIBLE_IN_PLAY[picks.rainRemark])
+    say(firstFreeChangeover(halves[1][0], halves[1][1]), RAIN_HELD_OFF_IN_PLAY)
+  }
+  if (weather && weather.wind !== 'none') {
+    const pool = weather.wind === 'strong' ? WIND_STRONG_IN_PLAY : WIND_FRESH_IN_PLAY
+    say(firstFreeChangeover(halves[0][0], halves[0][1]), pool[picks.windRemark])
+  }
+  if (weather && weather.temperatureC >= 30) {
+    say(firstFreeChangeover(halves[1][0], halves[1][1]), HEAT_IN_PLAY[picks.heatRemark])
   }
 
   // --- resolve: one beat per point, biggest wins; then chronological -------------------------
