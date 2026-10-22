@@ -669,7 +669,9 @@ function rowLabel(r: Row): string {
   // ⚠ ONLY WHEN THERE IS A READING. A stranger's card says nothing rather than «chemistry unknown»,
   // because a name should not grow a clause that is true of most of the list.
   const chem = r.chemistry === null ? '' : t(', chemistry {0}%', [chemSpoken(r.chemistry)])
-  return t('{0}, {1} tier, {2}, {3} a week{4} – {5}', [r.name, COACH_TIER_WORD[r.tier], FIT_LABEL[r.fitNow], formatCents(r.weeklyCents), chem, state])
+  const base = t('{0}, {1} tier, {2}, {3} a week{4} – {5}', [r.name, COACH_TIER_WORD[r.tier], FIT_LABEL[r.fitNow], formatCents(r.weeklyCents), chem, state])
+  // ⭐ ROUND 53 W2 – the famous name's past is heard too (the star itself is aria-hidden); no new string, the engine's own line
+  return r.pedigree ? `${base}. ${engineText(r.pedigree.past)}` : base
 }
 
 // =================================================================================================
@@ -1348,7 +1350,9 @@ function scrollToTier(tier: CoachTier): void {
       >
         <!-- `alt=""` now that the row carries its own label: the portrait's only text was the name,
              which the label already says, and Home's coach card decorates the same way. -->
-        <span class="cm-art portrait-strip"><img :src="coachPortraitUrl(r.id)" alt="" loading="lazy" /></span>
+        <span class="cm-art portrait-strip"
+          ><img :src="coachPortraitUrl(r.id)" alt="" loading="lazy" /><!-- ⭐ ROUND 53 W2 (22.10) – the famous name's star, bottom-left over the photo (his ask, spec coach-pay-ladder §3.4.1) --><span v-if="r.pedigree" class="cm-pedigree-star" aria-hidden="true"
+            ><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" focusable="false"><path d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96L12 2.5z" /></svg></span></span>
         <span class="cm-body">
           <span class="cm-name">{{ r.name }}</span>
           <span class="cm-meta">
@@ -1369,6 +1373,7 @@ function scrollToTier(tier: CoachTier): void {
           <!-- ⭐ ROUND 53 №2 – A FAMOUS NAME'S PAST AND TRADE, two quiet lines under the bio (spec §3.4); absent for a plain coach. -->
           <span v-if="r.pedigree" class="cm-pedigree-past">{{ engineText(r.pedigree.past) }}</span>
           <span v-if="r.pedigree" class="cm-pedigree-trade">{{ engineText(r.pedigree.trade) }}</span>
+          <span v-if="r.pedigree" class="cm-pedigree-rate">{{ t('Rate +{0} % for the name', [r.pedigree.labourPct]) }}</span>
           <!-- WHAT THE RUNG IS WORTH TO HER, computed from her own headroom. Its own line, because
                it is the number the owner asked for and it must never be the thing that truncates.
 
@@ -1567,13 +1572,28 @@ function scrollToTier(tier: CoachTier): void {
 <style scoped>
 .cm-blurb,
 .cm-pedigree-past,
-.cm-pedigree-trade {
+.cm-pedigree-trade,
+.cm-pedigree-rate {
   font-size: 10.5px;
   line-height: 1.35;
   color: var(--muted);
 }
 .cm-pedigree-past {
   font-weight: 600;
+}
+/* the famous name's star: a dark scrim disc so it reads over any photo, bottom-left of the portrait */
+.cm-pedigree-star {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  color: #f5c542;
 }
 /* ⭐⭐ WAVE 5 T12 – THE PROFILE TAKES `.cm-load`'s TREATMENT, to the value, for `.cm-blurb`'s own
    reason one rule up: it is quiet prose under the figures and it must not argue with the uplift,

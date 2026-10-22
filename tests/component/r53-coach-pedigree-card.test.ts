@@ -17,6 +17,7 @@ import '../../src/style.css'
 import CoachMarketScreen from '../../src/components/screens/CoachMarketScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, toSnapshot } from '../../src/engine/world'
+import { COACH_PEDIGREE } from '../../src/engine/coachPedigree'
 import { PEDIGREE_PAST_LINE, PEDIGREE_TRADE_LINE } from '../../src/engine/world/coachMarket'
 import { DEFAULT_PROFILE } from '../../src/shared/protocol'
 import { installCatalog, resetI18nForTests, setLocale } from '../../src/i18n'
@@ -29,6 +30,8 @@ const RU = JSON.parse(readFileSync('src/i18n/ru.json', 'utf8')) as Record<string
 
 const PAST = PEDIGREE_PAST_LINE['former-no1']
 const TRADE = PEDIGREE_TRADE_LINE.sponsors
+// the +50 % is read off the engine's constant, so a changed constant moves the card's text with it
+const LABOUR_PCT = Math.round((COACH_PEDIGREE.labourFactor - 1) * 100)
 
 let famousName = ''
 
@@ -39,7 +42,7 @@ async function market(vp: Viewport): Promise<VueWrapper> {
   const elite = snap.coachMarket.filter((r) => r.tier === 'elite')
   expect(elite.length, 'the fixture needs two elite rows').toBeGreaterThanOrEqual(2)
   for (const r of snap.coachMarket) delete r.pedigree
-  elite[0].pedigree = { past: PAST, trade: TRADE }
+  elite[0].pedigree = { past: PAST, trade: TRADE, labourPct: LABOUR_PCT }
   famousName = elite[0].name
   useGameStore().snapshot = snap
   const w = mount(CoachMarketScreen, SHELL) as VueWrapper
@@ -106,6 +109,37 @@ describe('R53 M8b – the famous-name card', () => {
     w.unmount()
   })
 
+  it('W2 – the star sits on the famous card only, the rate line prints the engine constant, the label carries the past', async () => {
+    await setLocale('en')
+    const w = await market(PHONE)
+    const { famous, plain } = eliteCards(w)
+    // (a) the marker: one star on the whole market, inside the famous card's portrait, hidden from assistive tech
+    expect(famous.find('.cm-art .cm-pedigree-star svg').exists()).toBe(true)
+    expect(famous.get('.cm-pedigree-star').attributes('aria-hidden')).toBe('true')
+    expect(plain.find('.cm-art svg').exists()).toBe(false)
+    expect(plain.find('.cm-pedigree-star').exists()).toBe(false)
+    expect(w.findAll('.cm-pedigree-star').length).toBe(1)
+    // (b) the rate line carries the number the constant yields
+    expect(famous.get('.cm-pedigree-rate').text()).toContain(String(Math.round((COACH_PEDIGREE.labourFactor - 1) * 100)))
+    expect(famous.get('.cm-pedigree-rate').text()).toBe(`Rate +${LABOUR_PCT} % for the name`)
+    expect(plain.find('.cm-pedigree-rate').exists()).toBe(false)
+    // (c) the row's spoken name carries the past line, a plain row's does not
+    expect(famous.attributes('aria-label')).toContain(PAST)
+    expect(plain.attributes('aria-label') ?? '').not.toContain(PAST)
+    w.unmount()
+  })
+
+  it('W2 – under ru the rate line is the catalog row with the number in its hole', async () => {
+    resetI18nForTests(null)
+    installCatalog('ru', RU)
+    await setLocale('ru')
+    const w = await market(PHONE)
+    const { famous } = eliteCards(w)
+    expect(RU['Rate +{0} % for the name'], 'RU row exists').toBeTruthy()
+    expect(famous.get('.cm-pedigree-rate').text()).toBe(RU['Rate +{0} % for the name'].replace('{0}', String(LABOUR_PCT)))
+    w.unmount()
+  })
+
   for (const vp of [PHONE, NARROW_PHONE]) {
     for (const lang of ['en', 'ru'] as const) {
       it(`fits at ${vp.width}x${vp.height} (${lang}): both lines wrap inside the card and the hire row stays on the phone`, async () => {
@@ -122,7 +156,7 @@ describe('R53 M8b – the famous-name card', () => {
         expect(rowRoom, 'the card has room').toBeGreaterThan(0)
         expect(rowRoom, 'the card is inside the phone').toBeLessThanOrEqual(vp.width)
         expect(famous.text().length).toBeGreaterThan(0)
-        for (const sel of ['.cm-pedigree-past', '.cm-pedigree-trade']) {
+        for (const sel of ['.cm-pedigree-past', '.cm-pedigree-trade', '.cm-pedigree-rate']) {
           const el = famous.get(sel).element
           const room = availableWidth(el, vp)
           expect(room, `${sel} room`).toBeGreaterThan(0)

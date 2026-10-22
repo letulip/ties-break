@@ -18,7 +18,7 @@ import type { Coach, StyleFit } from '../coach'
 // `bandedRateCents`' own complement and `coachAskFraction` is the owner's corridor; both live in
 // `engine/coach.ts` with the rest of the price model, and this file is their world-reading half.
 import { coachAskFraction } from '../coach'
-import { coachPedigree, type PedigreeKind, type PedigreeTrade } from '../coachPedigree'
+import { COACH_PEDIGREE, coachPedigree, type PedigreeKind, type PedigreeTrade } from '../coachPedigree'
 // ⚠ THE ONE MONEY FORMATTER, across the same boundary `masseur.ts`, `shop.ts` and `sponsors.ts`
 // already cross: `shared/money` is a pure function of cents and reaches for nothing in the UI, so
 // invariant 1 is untouched. A hand-rolled `$` here would print `$1234` where the game prints
@@ -3332,7 +3332,10 @@ export const PEDIGREE_TRADE_LINE: Record<PedigreeTrade, string> = {
   sponsors: 'Sponsors call more often while this name is in her corner',
   sparring: "Top hitting partners come at the middle rung's price",
 }
-export function pedigreeCardLines(seed: string, coach: Coach): { pedigree?: { past: string; trade: string } } {
+export function pedigreeCardLines(seed: string, coach: Coach): { pedigree?: { past: string; trade: string; labourPct: number } } {
   const p = coachPedigree(seed, coach.id, coach.tier)
-  return p ? { pedigree: { past: PEDIGREE_PAST_LINE[p.kind], trade: PEDIGREE_TRADE_LINE[p.trade] } } : {}
+  // labourPct is the card's rate line (owner 22.10): the +50 % read off the constant, never typed in a template
+  return p
+    ? { pedigree: { past: PEDIGREE_PAST_LINE[p.kind], trade: PEDIGREE_TRADE_LINE[p.trade], labourPct: Math.round((COACH_PEDIGREE.labourFactor - 1) * 100) } }
+    : {}
 }

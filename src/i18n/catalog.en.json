@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "count": 6710,
+  "count": 6711,
   "keys": {
     " (+{0} banked – a ranking needs {1} events with points, or {2})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["points"],["RANKABLE_MIN.tournaments"],["RANKABLE_MIN.points"]],"wrapped":true},
     " (does not improve best {0})": {"home":["src/engine/world/tournamentClose.ts"],"area":["engine"],"ph":[["bestN"]],"wrapped":true},
@@ -3287,6 +3287,7 @@
     "Random last name": {"home":["src/components/OnboardingWizard.vue","src/components/PrologueCard.vue"],"area":["screens"],"wrapped":true},
     "Rank": {"home":["src/components/CollegeYearCard.vue"],"area":["screens"],"wrapped":true},
     "Ranking": {"home":["src/components/SeasonSummaryDialog.vue"],"area":["screens"],"wrapped":true},
+    "Rate +{0} % for the name": {"home":["src/components/screens/CoachMarketScreen.vue"],"area":["screens"],"wrapped":true},
     "Reach the {round} at the {event}": {"home":["src/composables/nextGoal.ts"],"area":["scripts"],"wrapped":true},
     "Reach {required} {unit}": {"home":["src/composables/tierState.ts"],"area":["scripts"],"wrapped":true},
     "Reading down the list, most of these names are above her.": {"home":["src/components/screens/SeasonScreen.vue"],"area":["scripts"],"wrapped":true},

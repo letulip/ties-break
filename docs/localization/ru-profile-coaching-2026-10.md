@@ -1586,3 +1586,6 @@ The Coach tile on the daughter's screen gains a third line, **only while a coach
 | RU23-PED-04 | `Her ceiling sits a little higher with a coach like this` | `С таким тренером у неё чуть больше возможностей для роста` | `APPROVED` |
 | RU23-PED-05 | `Sponsors call more often while this name is in her corner` | `Спонсоры обращаются чаще, пока такой тренер в её штабе` | `APPROVED` |
 | RU23-PED-06 | `Top hitting partners come at the middle rung's price` | `Лучшие спарринг-партнёры – по цене средней ступени` | `APPROVED` |
+| RU23-PED-07 | `Rate +{0} % for the name` | `Ставка +{0} % за имя` | `APPROVED` |
+
+⚖ 22.10 владелец: «строки карточки ок» – RU23-PED-07 `APPROVED`
