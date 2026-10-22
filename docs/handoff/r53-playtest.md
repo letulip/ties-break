@@ -46,8 +46,11 @@ spec question answered, then «делай всё по шагам по списк
   bankruptcies, it reshuffles them (±1–2 seeds of 10, both directions); the bankruptcy share per
   cell was set by family money × coach tier before M11 (middle·middle 7/10, high 10/10, elite
   10/10 in BOTH arms). Where a seed flips, the mechanism is depth – she wins more, travels and
-  enters more, and the junior sink pays no prize. His stop signal stands, aimed at the coach price
-  against the wallet, not at the match day.
+  enters more, and the junior sink pays no prize. Re-measured at his ask on the «player» policy
+  (reserve 8 weeks, rest floor 80): bankruptcies 0 of 90 in A and 1 of 90 in B – the stop signal
+  was the no-reserve «grinder» policy's artefact, not the coach ladder's and not the weather's.
+  Her win rate by the event's weather, A → B over 91k matches: all 65.7 → 65.2 %, heat 30°+
+  66.0 → 64.3 %, strong wind 67.0 → 65.2 %, rain 66.2 → 66.2 %; retirements in heat ×1.5.
 - Heat moves a result by ~1 pp, not the spec's 4–6 (the fatigue term is small); four variants are
   measured in the round ledger (earlier onset +2.9 pp, stronger factor +2.1 pp with retirements
   ×2.1, a whole-match term that reaches the spec's number at K ≈ 0.04) – his decision, not built;

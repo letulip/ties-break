@@ -101,7 +101,12 @@ export function airBoothMention(world: WorldState, tier: TierId): void {
  *  news names him («на высших, когда она уже звезда, так наверняка будут знать»), at any band. A sibling of
  *  `airBoothMention` and not a line inside it: the booth writes its stamp and nothing else, and this is a news ROW. */
 export function pressNamesPartnerAt(world: WorldState, tier: TierId): void {
-  if (!atOrAboveStageBar(tier) || newsStandingOf(world) === 'quiet') return
+  // ⚖ 22.10 the owner, on the sheet's 17.8 % of names arriving by the papers: «Имя из прессы при
+  // cold выглядит слишком частым обходом семейной тайны – рассмотрел бы более высокий порог
+  // известности» → «поднять порог до "known" (#100) – мне кажется да, про 200 нигде особо не
+  // говорят». So this road alone reads the `known` standing (top-100), not `noticed` (top-200);
+  // the booth's other readers keep their own bars. Measured in the partner-name spec §4.3.
+  if (!atOrAboveStageBar(tier) || newsStandingOf(world) !== 'known') return
   const ep = activeEpisode(world)
   if (ep === null || ep.publicWeek === null || ep.publicWeek > world.week) return
   pressNamesPartner(world, ep)

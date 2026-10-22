@@ -4,7 +4,8 @@
 import { readFileSync } from 'node:fs'
 import { describe, it, expect, vi } from 'vitest'
 // The press road's standing gate, held open: the booth's licence is `newsStandingOf`'s, and a probe world at 20 has no rank.
-vi.mock('../src/engine/world/spotlight', async (orig) => ({ ...(await orig<typeof import('../src/engine/world/spotlight')>()), newsStandingOf: () => 'known' }))
+const STANDING = vi.hoisted(() => ({ value: 'known' as 'quiet' | 'noticed' | 'known' }))
+vi.mock('../src/engine/world/spotlight', async (orig) => ({ ...(await orig<typeof import('../src/engine/world/spotlight')>()), newsStandingOf: () => STANDING.value }))
 import {
   answerLifeBeat,
   arrivalEligible,
@@ -202,6 +203,22 @@ describe('road 4 – the press, from `publicWeek`, at the booth\'s tiers', () =>
     press()
     expect(ep.nameKnownWeek).toBe(world.week)
     expect(world.events.at(-1)!.text).toBe('In the stands – Matteo, her boyfriend.')
+  })
+
+  it('at a `noticed` standing (top-200) the papers do not name him – his 22.10 bar is `known` (top-100)', () => {
+    const top = TIER_LADDER[TIER_LADDER.length - 1]
+    const { world, ep } = metCard('r53-press-noticed', 'cold')
+    ep.publicWeek = world.week
+    STANDING.value = 'noticed'
+    try {
+      pressNamesPartnerAt(world, top)
+      expect(ep.nameKnownWeek, 'noticed is below the bar').toBeNull()
+      STANDING.value = 'known'
+      pressNamesPartnerAt(world, top)
+      expect(ep.nameKnownWeek, 'known names him').toBe(world.week)
+    } finally {
+      STANDING.value = 'known'
+    }
   })
 
   it('below the booth\'s stage bar the papers do not know him', () => {

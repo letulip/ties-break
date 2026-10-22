@@ -6228,3 +6228,12 @@ byte-identity proven, and the coach market was the last product screen to leave 
    семейной тайны – рассмотрел бы более высокий порог известности» – open, one constant.
 6. **Fragility and a fourth weather line** – «проверять по повторным травмам и реальным повторам
    текста» before either moves.
+7. **The weather A/B is re-measured on a sensible policy** (his second message, 22.10) –
+   «обязательно надо померить, сделай пожалуйста»; the player policy's result is in the round
+   ledger: 0–1 bankruptcies of 90, the grinder arm's stop signal was its own.
+8. **The press road reads the `known` standing** – «поднять порог до "known" (#100) – мне кажется
+   да, про 200 нигде особо не говорят кажется»; built as one line in `booth.ts`, measured null in
+   every band (the partner-name spec §6.2), kept as his word.
+9. **A famous coach's card gets a marker** – «можно там какой-то маркер здвездочкой сделать…
+   в левом нижнем углу карточки поверх фото… и написать какой бонус дает надо на карточке тоже»;
+   the strings are proposed DRAFT in the coach-pay-ladder spec §3.4.1 and wait for his word.
