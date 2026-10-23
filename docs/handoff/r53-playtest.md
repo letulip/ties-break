@@ -77,6 +77,13 @@ spec question answered, then «делай всё по шагам по списк
   captions for weather (the corpus generator – a follow-up).
 
 ## Gates
+PLATFORM-FIX CHAIN at `e40b64a2` (23.10 morning, after the CI runner's red; clean worktree, npm ci,
+every verdict from its own file, `r53k-*.log`): check `R53K_CHECK_EXIT=0` (engine purity ok,
+component 332 / 3929), sim `R53K_SIM_EXIT=0`, e2e on the Mac `R53K_E2E_EXIT=0` (151), e2e in CI's
+Linux image `R53K_LINUX_E2E_EXIT=0` (151), lqa:ru `R53K_LQA_EXIT=0`, and in a linux/amd64 node:22
+container the l3-7 twin plus the three coach-travel files that were red on CI `R53K_TWIN_EXIT=0`
+(4 files / 29). The red's cause and fix: the ledger's «CI красный на раннере» and N9.
+
 BUILD-OUT CHAIN at `ef1f5aaf` (22.10 evening; clean worktree, npm ci, every verdict from its own
 file, `r53i-*.log`): check `R53I_CHECK_EXIT=0` (engine purity ok, component 332 files / 3929), sim
 `R53I_SIM_EXIT=0`, e2e on the Mac `R53I_E2E2_EXIT=0` (151; the first run's one red was W2's label
@@ -95,5 +102,10 @@ frozen capture 51/51 standalone; build line `40c8ce2`. Schema v94 → v95, all f
 - Ninth digest harvest: 137/137 coach-travel cells moved (the round changed what a coached career
   is), s1's nine `hN` (every `rngN` green), l3-5 both tags (the second moved too this time), the
   diary PICK, the l3-7 twin on both platforms (control at `main` = the stored fixture).
+- The CI runner's red (23.10): one persisted float (`coachDeal.residualSince`, summed from the
+  closed form's `Math.pow`) drifted one ulp between arm64 and the x64 runner and walked into the
+  save – red on Linux since M7, invisible until the PR opened (`ci.yml` runs on `pull_request`).
+  Quantised at its writer; 28 frozen hashes re-stamped; the twin's darwin↔linux leaves 23 → 17.
+  Reproduce any runner-only red in `podman --platform linux/amd64 node:22` (the VM is 4 GB now).
 - Three stale backlog lines caught by the builders' reproductions; two real i18n gaps closed by N2
   (`surface` holes, the `partner|{0}` row); one S2e alias blindness (`year` vs `startYear`).
