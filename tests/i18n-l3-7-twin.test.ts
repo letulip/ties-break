@@ -61,6 +61,14 @@
 //   the stored linux fixture to the new linux capture is the same 478-leaf family set; darwin vs linux on the new tree is 23
 //   leaves, the coach-price transcendentals class documented below (coachMarket / coachDeal / upcoming). Captures: L37_CAPTURE
 //   on this Mac; podman --platform linux/amd64 node:22, npm ci inside.
+// ⚠ REFRESHED 23.10 (r53 N9, the banked coach residual quantised to a millionth – world/coachMarket.ts `bankCoachResidual`,
+//   both platforms): 8 changed leaves, 0 new, 0 gone – the `world` + `worldFields.coachDeal` pair of the 4 coached careers
+//   (5/0, 8/0, 6/1, 5/1); rows, text, snapshot and draw digests unmoved. Attributed by a CONTROL capture at 7005f355 (HEAD
+//   without the fix) on each platform, byte-equal to its stored fixture (0 leaves), then the fix alone: the same 8 leaves on
+//   darwin and on linux. ⭐ THE PLATFORM GAP SHRANK: darwin vs linux was 23 leaves at the control and is 17 now – the six
+//   WORLD-side leaves (`world` + `worldFields.coachDeal` of 5/0, 6/1, 5/1) are gone, so the persisted world is now the same on
+//   both families; what remains is snapshot-side only (`snapshotFields.coachMarket` / `upcoming` – the quotes, never saved).
+//   Captures: L37_CAPTURE on this Mac; podman --platform linux/amd64 node:22, npm ci inside, --testTimeout=900000.
 //
 // ⚠⚠ TWO PLATFORM FAMILIES, BOTH TRUE (10.10, the day-long hunt). The PR runner (ubuntu/x64,
 // node 22) produces snapshot digests no darwin/arm64 machine can – measured to the last cell: a
