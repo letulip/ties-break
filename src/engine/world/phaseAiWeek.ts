@@ -50,6 +50,7 @@ import { settleMandatoryQuota } from './mandatory'
 import { resolveEndings } from './endings'
 import { housekeep, recomputeRankAndMilestones } from './bookkeeping'
 import { cp, type CopyRef } from '../../shared/i18n'
+import { eventWeather } from '../season/preview'
 
 // The canonical AI-only bracket for one event. Runs on its OWN EVENT-SCOPED stream
 // `seed:aitour:<event.id>` – the exact mirror of the kid's `seed:kidtour:<event.id>` – covering
@@ -304,7 +305,8 @@ function runAiTournament(
   fatigue: Map<string, number>,
 ): void {
   const field = rivalField(entrants, event, fatigue)
-  const result = runTournament(event, field, null, world.seed, aiRng)
+  // ⭐ r53 step 11 – the same day for a tournament she is not at: the closed form reads it too.
+  const result = runTournament(event, field, null, world.seed, aiRng, undefined, undefined, eventWeather(world.seed, event))
   const pts = TIERS[event.tier].points
   for (const [playerId, finish] of Object.entries(result.finishes)) {
     // ⚠ THE LEDGER IS FOR LIVE PLAYERS, AND THIS LINE IS THE WHOLE OF THAT RULE (W3-FIELD3). A

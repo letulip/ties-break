@@ -106,22 +106,29 @@ describe('§1 growing – the room note, the bios, the load notes and the profil
     w.unmount()
   })
 
-  it('⭐ every card: the bio, the load note and the profile are Russian, the profile\'s bold label is the Russian label and band + tail is the sentence', async () => {
+  // ⚠ RE-AIMED, R53 L1 (21.10): the load note is no longer ON the card (the owner: «шумит» – four repeats); it is the
+  // tier block's one sentence under the title, `.tier-note`. The claim is unchanged – Russian, no Latin, one per rung –
+  // and is now asserted on the block; tests/component/r53-tier-note.test.ts holds the placement.
+  it('⭐ every card: the bio and the profile are Russian (and each tier block\'s load note), the profile\'s bold label is the Russian label and band + tail is the sentence', async () => {
     await ru()
     const { w, snap } = await market(young())
     const cards = w.findAll('.cm-row')
     expect(cards.length, 'the market lists the whole roster').toBe(ECONOMY.coach.roster.length)
     const loads = new Set<string>()
     for (const card of cards) {
-      for (const sel of ['.cm-blurb', '.cm-load', '.cm-profile']) {
+      for (const sel of ['.cm-blurb', '.cm-profile']) {
         const el = card.get(sel)
         expect(el.text(), `${sel} of ${card.get('.cm-name').text()}`).toMatch(CYRILLIC)
         expect(el.text(), `${sel} of ${card.get('.cm-name').text()}`).not.toMatch(LATIN)
       }
-      loads.add(card.get('.cm-load').text())
       const band = card.get('.cm-profile-band').text()
       expect(flat(card.get('.cm-profile').text()), 'band + tail is the sentence shown').toMatch(new RegExp(`^${band} – `))
       expect(['Выше уровня', 'Темп уровня', 'Ниже уровня', 'Медленнее ваших тренировок']).toContain(band)
+    }
+    for (const note of w.findAll('.tier-note')) {
+      expect(note.text()).toMatch(CYRILLIC)
+      expect(note.text()).not.toMatch(LATIN)
+      loads.add(note.text())
     }
     expect(loads.size, 'one load note per rung').toBe(HIREABLE_TIERS.length)
     // the sixteen bios are the owner's RU-05 §16.2 sentences, woken by the seat: pinned here against the catalogue, by portrait
@@ -223,7 +230,9 @@ describe('§4 English – the control: the same mounts read the snapshot\'s own 
     for (const r of g.snap.coachMarket) {
       const card = g.w.findAll('.cm-row').find((c) => c.get('.cm-name').text() === r.name)!
       expect(card.get('.cm-blurb').text()).toBe(coachBlurb(r.id))
-      expect(card.get('.cm-load').text()).toBe(coachLoadNote(r.tier))
+      // ⚠ R53 L1 (21.10): the sentence moved off the card to the tier block – asserted there, and the card prints none.
+      expect(card.find('.cm-load').exists()).toBe(false)
+      expect(g.w.get(`#coach-tier-${r.tier} .tier-note`).text()).toBe(coachLoadNote(r.tier))
       const note = coachProfileNote(r.tier, r.fit)
       expect(card.get('.cm-profile-band').text() + card.get('.cm-profile').text().slice(card.get('.cm-profile-band').text().length)).toBe(note)
       expect(card.get('.cm-profile-band').text()).toBe(coachRoomBand(note))

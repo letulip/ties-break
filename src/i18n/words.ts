@@ -353,6 +353,38 @@ export function createWordReaders(t: Translate, tables: WordTables = { holes: HO
     'On her own': () => t('tile|On her own'),
     'it seems': () => t('tile|it seems'),
   })
+  // ⭐ R53 №2 (21.10) – HIS NAME on the relationships tile (`Engaged: Anton`): the 28 of `PARTNER_NAME_POOL`, localized DATA like the friends' sixteen (nominative only – the tile's colon form
+  // needs no declension). Not `lex`: a name is not an engine word for the carpet's vocabulary to hunt.
+  const partner = lexicon({
+    Anton: () => t('partner|Anton'),
+    Bruno: () => t('partner|Bruno'),
+    Casper: () => t('partner|Casper'),
+    Daniel: () => t('partner|Daniel'),
+    Elias: () => t('partner|Elias'),
+    Felix: () => t('partner|Felix'),
+    Gabriel: () => t('partner|Gabriel'),
+    Henrik: () => t('partner|Henrik'),
+    Ivo: () => t('partner|Ivo'),
+    Jonas: () => t('partner|Jonas'),
+    Karel: () => t('partner|Karel'),
+    Lukas: () => t('partner|Lukas'),
+    Matteo: () => t('partner|Matteo'),
+    Niko: () => t('partner|Niko'),
+    Oskar: () => t('partner|Oskar'),
+    Pavel: () => t('partner|Pavel'),
+    Rafael: () => t('partner|Rafael'),
+    Samuel: () => t('partner|Samuel'),
+    Tomas: () => t('partner|Tomas'),
+    Viktor: () => t('partner|Viktor'),
+    Willem: () => t('partner|Willem'),
+    Xavier: () => t('partner|Xavier'),
+    Yann: () => t('partner|Yann'),
+    Zeno: () => t('partner|Zeno'),
+    Andrei: () => t('partner|Andrei'),
+    Marco: () => t('partner|Marco'),
+    Ruben: () => t('partner|Ruben'),
+    Stefan: () => t('partner|Stefan'),
+  })
   const spanRu = (english: string): string => {
     if (english === '<1m') return t('span|<1m')
     const m = /^(?:(\d+)y)?(?: ?(\d+)m)?$/.exec(english)
@@ -366,6 +398,13 @@ export function createWordReaders(t: Translate, tables: WordTables = { holes: HO
     const rel = relLead(english)
     if (rel !== english) return rel
     if (/^(?:<1m|\d+y(?: \d+m)?|\d+m)$/.test(english)) return spanRu(english)
+    // R53 №2 – `Married: Anton` / `Engaged: Anton` / `Dating: Anton`: the status word re-read as a key with the name as its hole; an unknown name comes back as written.
+    const rel2 = /^(Married|Engaged|Dating): (\S+)$/.exec(english)
+    if (rel2) {
+      const who = partner(rel2[2] as string)
+      if (who === rel2[2]) return english
+      return rel2[1] === 'Married' ? t('tile|Married: {0}', [who]) : rel2[1] === 'Engaged' ? t('tile|Engaged: {0}', [who]) : t('tile|Dating: {0}', [who])
+    }
     let tog = /^together (.+)$/.exec(english)
     if (tog) return t('tile|together {0}', [spanRu(tog[1] as string)])
     let m = /^(\S+) and (\S+)$/.exec(english)

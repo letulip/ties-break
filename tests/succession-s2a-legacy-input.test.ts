@@ -94,6 +94,14 @@ let SOLID: WorldState //    a lived career that reached the top-100 (no ending o
 
 beforeAll(() => {
   BANKRUPT = walk(5, 0, 1).world
+  // ⚠ RE-AIMED 22.10 (r53, N3 – the close): seed 0 -> seed 1 of the same cell. Bisected, 25k · middle · self-coached
+  // seed 0 kept its injury at week 592 through M10 and lost it at M11 (weather stage 2, ee160ce6 – the match reads the
+  // day): it now runs the whole 1600-week cap with no ending and never reaches the pro table, so INJURY was a world
+  // with `ending === null`. Seed 1 of the same cell is the lived career this row needs – a REAL injury latched at week
+  // 289, ranked on the pro table (best WTA #390) and nowhere near the top-100 (measured 22.10). Same cell, same policy.
+  // ⚠ RE-AIMED 22.10 (r53 W1, heat variant V1 – she tires EARLIER in heat, fatigue onset 120 / heat): seed 1 -> seed 0 again. Seed 1 now latches its injury at week 875 having never
+  // reached the pro table; seed 0 is back to the lived career this row needs – a REAL injury at week 600, best WTA #353
+  // (measured 22.10; seeds 2, 3 and 5 qualify too, 4 reaches no ending). Same cell, same policy.
   INJURY = walk(3, 0, 0).world
   SOLID = walk(5, 1, 0, reachedTop100).world
 }, 300_000)

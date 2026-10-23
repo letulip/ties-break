@@ -23,6 +23,8 @@ infinitives, not gendered past tense. All lines remain `DRAFT` pending owner rea
 | `met.wary` | `Ask the coach to watch her schedule` | `Попросить тренера присмотреть за её расписанием` |
 | `met.meet` | `Say we want to meet them, now` | `Попросить познакомить нас – прямо сейчас` |
 | `met.silent` | `Say nothing about it` | `Ничего об этом не говорить` |
+| `met.ask` (R53 №2, APPROVED 22.10) | `Ask what his name is` | `Спросить, как его зовут` |
+| `met.insist` (R53 №2, APPROVED 22.10) | `Insist: we want to know` | `Настоять: мы хотим знать` |
 | `small-talk.more` | `Ask her to say more` | `Попросить рассказать подробнее` · `APPROVED` 10.10 |
 | `small-talk.view` | `Tell her what we think` | `Сказать, что мы думаем` · `APPROVED` 10.10 |
 | `small-talk.easy` | `Tell her it can keep` | `Сказать, что можно не спешить` · `APPROVED` 10.10 |
@@ -52,6 +54,8 @@ infinitives, not gendered past tense. All lines remain `DRAFT` pending owner rea
 | `bereavement.come` | `Say you will come` | `Сказать, что мы приедем` |
 | `return-plan.small-first` | `Small events first – the big draws when she is ready` | `Сначала небольшие турниры, к крупным вернуться, когда она будет готова` |
 | `return-plan.straight-back` | `Straight into the big draws` | `Сразу заявляться на крупные турниры` |
+
+⚖ 22.10 владелец (лист вычитки r53): ряды `met.ask` / `met.insist` `APPROVED`, его правки перенесены.
 
 The same `GIVE_HER_ROOM` translation is reused in both rows, not rewritten separately. The
 small-talk trio remains bond-neutral; the Russian options cannot hint at a "correct" response.

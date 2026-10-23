@@ -213,7 +213,14 @@ export const INJURY_RELEASE_SUFFIX = ', she is not fit for that week.'
  *  The default is `'parent'`, and every byte of that arm is unchanged - same feed text, same letter
  *  terms, same ids. Only a caller that is NOT the parent has to say so, which is the shape that
  *  makes the next engine-side release impossible to add silently. */
-export function releaseEntry(world: WorldState, eventId: string, releasedBy: EntryReleaseReason = 'parent'): void {
+export function releaseEntry(
+  world: WorldState,
+  eventId: string,
+  releasedBy: EntryReleaseReason = 'parent',
+  // Round 53 step 2: a caller that has its own sentence for the feed row (the masseur's release –
+  // «Doctor said no: …») supplies it here; every other caller leaves it out and the row is byte-identical.
+  feedLine?: { text: string; c: CopyRef },
+): void {
   if (!world.entries.includes(eventId)) throw new Error('Not entered in this event')
   const event = eventById(world, eventId)
   if (!event) throw new Error('Unknown event')
@@ -323,6 +330,10 @@ export function releaseEntry(world: WorldState, eventId: string, releasedBy: Ent
       line = `${RELEASE_LINE_PREFIX.college}${label} – ${weekLabel(event.week, world.startYear)}, she is taking the scholarship.`
       lineC = cp`Released from ${label} – ${weekLabel(event.week, world.startYear)}, she is taking the scholarship.`
       break
+  }
+  if (feedLine) {
+    line = feedLine.text
+    lineC = feedLine.c
   }
   addEvent(world, { week: world.week, type: 'entry', text: line, c: lineC, entryRef })
 }

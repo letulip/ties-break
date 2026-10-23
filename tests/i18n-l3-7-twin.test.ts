@@ -47,6 +47,28 @@
 //   capture at J6's parent a4db32f6 (equal to the stored fixture, 0 leaves): J6 moves the half-year
 //   checkpoint 32 → 28 and bounds the windows to [24,32) / [48,64), so the coach talks land on other
 //   weeks. Zero row, text or draw digests; captures: L37_CAPTURE here, podman linux/amd64 node:22.
+// ⚠ REFRESHED 22.10 (round 53 close, both platforms): 544 changed leaves + 8 new – NOT a sub-stream shift this time
+//   but the round's whole shape: M7 re-priced the coach and gated the hitting partner, M8 gave a quarter of elite coaches a
+//   pedigree, M9 named the partner at the row's birth (`nameKnownWeek` on every love row, v95), M10/M11 made the weather
+//   a fact of the event and of the match – so results, ranks, money and rows differ on every career. Attributed by a
+//   CONTROL capture at `main` (equal to the stored fixture: 0 leaves). Row, text and draw digests moved too (results).
+// ⚠ REFRESHED 22.10 (r53 N8, W1's tails, both platforms): 478 changed leaves, 0 new, 0 gone – attributed by a CONTROL capture at
+//   59decdcd (compare GREEN there, and its capture byte-equal to the stored darwin fixture: 0 leaves), then one capture per tip:
+//   023e2cad (the press road at top-100) 0 leaves; 3263fd32 (W2, the famous card's star and rate line) 8 – the `snapshot` +
+//   `snapshotFields.coachMarket` pair of the 4 careers whose market lists a pedigree coach (`labourPct` on the wire row); 3164c1ef
+//   (W3, the booth's weather remarks) 0 – the remarks are spoken, never stored, as designed; cee42f0c (W1, heat V1) 476 – she tires
+//   earlier on a hot day, so results, ranks, money and rows move on all 7 careers (6 of them overlap W2's 8); f82433cc 0. Linux:
+//   the stored linux fixture to the new linux capture is the same 478-leaf family set; darwin vs linux on the new tree is 23
+//   leaves, the coach-price transcendentals class documented below (coachMarket / coachDeal / upcoming). Captures: L37_CAPTURE
+//   on this Mac; podman --platform linux/amd64 node:22, npm ci inside.
+// ⚠ REFRESHED 23.10 (r53 N9, the banked coach residual quantised to a millionth – world/coachMarket.ts `bankCoachResidual`,
+//   both platforms): 8 changed leaves, 0 new, 0 gone – the `world` + `worldFields.coachDeal` pair of the 4 coached careers
+//   (5/0, 8/0, 6/1, 5/1); rows, text, snapshot and draw digests unmoved. Attributed by a CONTROL capture at 7005f355 (HEAD
+//   without the fix) on each platform, byte-equal to its stored fixture (0 leaves), then the fix alone: the same 8 leaves on
+//   darwin and on linux. ⭐ THE PLATFORM GAP SHRANK: darwin vs linux was 23 leaves at the control and is 17 now – the six
+//   WORLD-side leaves (`world` + `worldFields.coachDeal` of 5/0, 6/1, 5/1) are gone, so the persisted world is now the same on
+//   both families; what remains is snapshot-side only (`snapshotFields.coachMarket` / `upcoming` – the quotes, never saved).
+//   Captures: L37_CAPTURE on this Mac; podman --platform linux/amd64 node:22, npm ci inside, --testTimeout=900000.
 //
 // ⚠⚠ TWO PLATFORM FAMILIES, BOTH TRUE (10.10, the day-long hunt). The PR runner (ubuntu/x64,
 // node 22) produces snapshot digests no darwin/arm64 machine can – measured to the last cell: a

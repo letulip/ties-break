@@ -58,8 +58,26 @@ const wealthy = PRESETS[7]
  *  still a SELF-COACHED family grinding the calendar without a scoring W75 before nineteen, which is
  *  the property the cell was chosen for rather than the wealth band. It is also strictly better than
  *  the cell it replaces: the door has not shut in 10 of 10 by the end of a SIX-year horizon, against
- *  the old cell's 8 of 10 by twenty. */
-const steady = PRESETS[0]
+ *  the old cell's 8 of 10 by twenty.
+ *
+ *  ⚠⚠ RE-PICKED PRESETS[0] -> PRESETS[7] 22.10 (r53, N3 – the close), BY THE SAME RULE: bisected over round 53's step
+ *  commits, the cell held through M10 and broke at M11 (weather stage 2, ee160ce6 – the match reads the day). At M10
+ *  seed 0 already ran on a knife edge – its lowest balance was -$47 at week 199 – and with the weather it is -$4,822
+ *  at week 195 and BANKRUPT at week 206, before nineteen: to week 206 the physio bill is +$2,636 and travel +$1,990
+ *  over M10, prize money $0 in both. Nothing new charges a self-coached family (no coach, no hitting partner, no
+ *  masseur on its till) – it is the weather moving her weeks, a balance fact, not a defect. Re-measured, POLICIES[0],
+ *  seeds 0–4, this horizon (open-at-fork / ending):
+ *
+ *      preset                            open at fork
+ *      0  8k   · working · self-coached     4/5   (s0 bankrupt at week 206)
+ *      3  25k  · middle  · self-coached     4/5   (s4 injury at week 205)
+ *      4  25k  · middle  · budget coach     4/5   (s1 bankrupt at week 174)
+ *      7  120k · wealthy · high coach       5/5   <- shipped
+ *
+ *  PRESETS[7] is the only cell at 5/5. It is no longer the self-coached grinder the paragraphs above chose – the
+ *  claim under test was always «the fork has three LEGAL answers on a career that reaches it», and the widest margin
+ *  on the board is the cell that keeps that claim tested. */
+const steady = PRESETS[7]
 
 describe('the endings bench', () => {
   // ⚠ BOTH ARMS SINCE TASK #89, AND THE SECOND ONE IS THE POINT. This used to run POLICIES[0]

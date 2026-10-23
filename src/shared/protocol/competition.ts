@@ -7,7 +7,7 @@
 // name below under the historical public path. Nothing here imports that barrel back.
 
 import type { Surface } from '../../engine/match/types'
-import type { EventPreview } from '../../engine/season/preview'
+import type { EventPreview, EventWeather } from '../../engine/season/preview'
 import type { LadderTrack, TierId } from '../../engine/season/types'
 import type { WorldMatch } from './events'
 // ⚠ ONE-WAY, LIKE `./events` ABOVE: `protocol/narrative.ts` imports nothing from this file, so the
@@ -360,6 +360,23 @@ export interface FullBracketMatch {
   score?: string
 }
 
+/** ⭐ ROUND 53 · STEP 6 – THE RECORD BETWEEN HER AND ONE OPPONENT, «as far as the feed remembers»
+ *  (`world.events` is count-capped – see `engine/world/headToHead.ts`). Counts only; the booth and the
+ *  preview decide what is worth saying. Every line they print is checked against these numbers. */
+export interface HeadToHead {
+  /** matches already played against her, ≥ 1 (the type is only ever carried when there were some) */
+  meetings: number
+  wins: number
+  losses: number
+  /** the week of the latest meeting */
+  lastWeek: number
+  lastWon: boolean
+  /** sets in the latest meeting's scoreline, or null when it ended in a retirement (a partial score) */
+  lastSets: number | null
+  /** meetings inside the last 52 weeks */
+  recent: number
+}
+
 /** The live view of an in-progress tournament reveal. Present on the snapshot only while
  *  `world.pendingTournament` is set; drives the full-screen TournamentFlow overlay. Lean:
  *  enough for the pre-match card, the post-match card, the bracket strip and the finale. */
@@ -403,6 +420,8 @@ export interface PendingView {
    *  out of it and its preview is unreachable. That is why this rides on the pending view instead
    *  of the viewer re-deriving it – two call sites computing one number is how they drift. */
   temperatureC: number
+  /** ⭐ r53 step 10 – the same day with wind and rain (`eventWeather`), carried for `temperatureC`'s own reason. A fact, not an input: nothing in the match reads it at stage 1. */
+  weather: EventWeather
   /** stage of the round currently being presented, e.g. "Round of 16", "Final" */
   roundLabel: string
   /** ⭐ ROUND-21 #2 – DID THE COACH COME? The owner, third ask: «Присутствие в потоке и трансляции
@@ -457,6 +476,11 @@ export interface PendingView {
    *  already exists. It is here because the copy forks on it a third time, in the KNOWN register and
    *  never the pro-cabinet one: a student title is not a WTA title. */
   boothLineage: { proTitles: number; collegeTitles: number; slams: number } | null
+  /** ⭐ ROUND 53 · STEP 6 – what she and the girl on deck have already played, for the preview line and
+   *  the booth's one remark. ⚠ OPTIONAL AND ABSENT (never `null`) WHEN THEY HAVE NEVER MET, which is
+   *  most matches and every College League and Nations Cup view: an always-present key would move
+   *  every digest of a snapshot, and absent is exactly what a replay of an old match must mean. */
+  headToHead?: HeadToHead
   /** WHICH TABLE THIS TOURNAMENT IS PLAYED ON – `TIERS[tier].track`, carried rather than re-derived.
    *
    *  ⚠ THE BUG THIS CLOSES (31.07, fix/ladder-separation). The owner, after a National: «по итогам

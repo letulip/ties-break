@@ -56,7 +56,7 @@ import {
 // import is gone from here because the arithmetic is, not because the rule changed.
 // ⚠ NO CYCLE: `coachMarket.ts` does not import this module (`coachWorksThisWeek` lives HERE, with
 // the bill that is its first reader – see this file's own note at the top), so the edge is one-way.
-import { coachRateCents, settleCoachDeal } from './coachMarket'
+import { coachRateCents, resolveCoachBandDeparture, settleCoachDeal } from './coachMarket'
 import { activeKitDeal, lifetimeKitHouse } from '../offers'
 import { GEAR_CATEGORY_LINE } from '../equipment'
 import { schoolIsOver } from '../kidLife'
@@ -969,6 +969,11 @@ export function weeklyFinance(world: WorldState, rng: Rng): void {
   //     (reputation). Income before costs, beside the parents' line it is the same kind of thing
   //     as. ZERO DRAWS on any stream – see resolveBusinessIncome.
   resolveBusinessIncome(world)
+
+  // 0-ter. ⭐ ROUND 53 №1 – a coach whose band letter was refused or lapsed in an earlier season leaves now,
+  //     before the new season's first bill (`resolveCoachBandDeparture`). ZERO DRAWS; `resolveBaseCosts`'
+  //     jitter below is drawn with or without a coach, so MAIN's count cannot see the departure.
+  resolveCoachBandDeparture(world)
 
   // 1. base costs (main stream, plan-independent draw count)
   resolveBaseCosts(world, rng)

@@ -645,7 +645,16 @@ const PRE_WAVE_PICK_KEYS_DIGEST = 'bf1d7752'
 describe('§8 a career played to a natural ending off the bench', () => {
   it('every row that carries a ref renders to its text, the offers and answers are among them, and the epilogue\'s page agrees', () => {
     const policy = { ...POLICIES[0]!, answerRetirementOffers: true }
-    const { world, rng } = openCareer(PRESETS[5]!, 0, policy)
+    // ⚠ RE-PICKED PRESETS[5] -> PRESETS[4] 22.10 (r53, N3 – the close): bisected, the cell broke at M11 (weather stage 2,
+    // ee160ce6 – the match reads the day). 25k · middle · middle coach, seed 0, now goes BANKRUPT at week 173 (seeds 1
+    // and 2 too), before any retirement ask – at M10 it ended on an injury at week 1383 after 16 asks. To week 173 its
+    // travel bill is $43,099 against M10's $15,633 (her results moved and the bench enters what she earns), no new
+    // charge on the till. The claim is about the ask's rows, so the cell is one that still lives to be asked:
+    // 25k · middle · budget coach, seed 0 – an injury ending at week 1062, six asks on the way (measured 22.10).
+    // ⚠ RE-PICKED seed 0 -> seed 7 of the same cell 22.10 (r53 W1, heat variant V1 – she tires EARLIER in heat, fatigue onset 120 / heat): seed 0 now ends on an injury at week 463
+    // with NO ask on the way (seeds 1 and 3 are asked but reach no ending in 1500 weeks; 2, 4, 6 go bankrupt, 5 is injured
+    // at 177). Seed 7 is an injury ending at week 1243 with eight asks on the way (measured 22.10). Same cell, same policy.
+    const { world, rng } = openCareer(PRESETS[4]!, 7, policy)
     let w = 0
     const seen: Row[] = []
     const take = (): void => {

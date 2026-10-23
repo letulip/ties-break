@@ -282,18 +282,25 @@ describe('wave 3 T3 B – an ineligible week takes ZERO draws', () => {
     expect(loveEpisodesOf(world), 'and it really was a miss').toEqual([])
   })
 
-  it('⭐⭐ an ARRIVAL takes exactly three, one per key – the split-key law made a count', () => {
+  it('⭐⭐ an ARRIVAL takes exactly four, one per key – the split-key law made a count', () => {
     const world = careerAt('zero-draw-hit', 0, 'fiery')
     const week = firstHit(world)
     world.week = week
     world.loveEpisodes = []
     rngKeys.length = 0
+    const mainBefore = world.rngMain.n
     rollArrival(world)
     expect(lifeKeys()).toEqual([
       `${world.seed}:life:arrival:${week}`,
       `${world.seed}:life:partner:${week}:wants`,
       `${world.seed}:life:partner:${week}:lag`,
+      `${world.seed}:life:partner-name:p:${week}`,
     ])
+    // ⚠ RE-AIMED 21.10 BY r53 M9 (re-aim by M9b), NOT WEAKENED: the partner's name is now drawn at the row's BIRTH, so an arrival
+    // takes a FOURTH draw – `partnerNameFor`, on `seed:life:partner-name:<episodeId>` (spec partner-name-disclosure §3). The claim
+    // is unchanged: one draw per key and NO OTHER `:life:` key; the count moved 3 -> 4 because the name key was added, not loosened.
+    // The MAIN stream is untouched – every key above is a purpose-scoped sub-stream and the recorder saw no bare-seed key.
+    expect(world.rngMain.n, 'MAIN: the arrival took ZERO draws from the persisted MAIN stream').toBe(mainBefore)
     // ⚠ AND NO OTHER `:life:` KEY EXISTS ON THIS TREE. `seed:life:smalltalk:*` is T8's and
     // `seed:life:ends:*` is WAVE 4's; neither may be created early (brief §3).
     //
@@ -447,8 +454,14 @@ describe('wave 3 T3 C – the weekly hazard', () => {
       airedMetWeek: null,
       airedEndedWeek: null,
       latchedWeek: null,
-      partnerName: null,
+      partnerName: row.partnerName,
+      nameKnownWeek: null,
     })
+    // ⚠ RE-AIMED AT THE v95 SHAPE (21.10, r53 M9 – the partner's name; re-aim by M9b), NOT WEAKENED: the name is drawn at the row's BIRTH
+    // now (`partnerNameFor`, on `seed:life:partner-name:<id>`), so `partnerName` is a non-empty string at birth, not null – and v95
+    // appends `nameKnownWeek` (null: the parent has heard nothing yet). The name's presence is asserted just below; the claim «nothing
+    // else invented» stays a TOTAL `toEqual` over the row.
+    expect(typeof row.partnerName === 'string' && row.partnerName.length > 0, 'the row is born WITH a name (v95)').toBe(true)
     // ⚠ WAVE 3 NEVER WRITES AN ENDING, and the row carries no name and no gender – the schema must
     // not hardwire boyfriend->husband (T1's own note on the type).
     expect(row.endedWeek).toBeNull()
@@ -467,6 +480,9 @@ describe('wave 3 T3 C – the weekly hazard', () => {
     // v82 -> v83 migration back-fills on every historical row, so a fresh row and a migrated one
     // stay the same shape – and «no name at birth» keeps the sentence two comments up true: a row is
     // born nameless, and only an engagement names him.
+    // ⚠ RE-AIMED AGAIN AT v95 (21.10, r53 M9 – re-aim by M9b): the sentence «a row is born nameless, and only an engagement names him»
+    // is NO LONGER TRUE – the name is drawn at the row's birth and the parent learns it later, by `nameKnownWeek` (spec
+    // partner-name-disclosure §3). The key set gains `nameKnownWeek`; it is still a TOTAL sorted list.
     expect(Object.keys(row).sort()).toEqual([
       'airedEndedWeek',
       'airedMetWeek',
@@ -474,6 +490,7 @@ describe('wave 3 T3 C – the weekly hazard', () => {
       'id',
       'knownWeek',
       'latchedWeek',
+      'nameKnownWeek',
       'partnerId',
       'partnerName',
       'publicWeek',

@@ -137,6 +137,9 @@ function* scenarios(stage: DiaryLifeStage, age: number): Generator<DiaryFacts> {
   yield { ...b(), ...trip, resultFresh: true, emotion: 'serious' }
   yield { ...b(), ...trip, resultFresh: true, emotion: 'sad' }
   yield { ...b(), ...trip, resultFresh: true, emotion: 'angry' }
+  // ⚠ 22.10 r53 step 10 (N2): the day she played in – the two weather captions license on `heatDay` / `rainDay` of a played tournament, which no scenario above set, so the non-vacuity arm could not see them alive
+  yield { ...b(), ...trip, resultFresh: true, emotion: 'serious', heatDay: true }
+  yield { ...b(), ...trip, resultFresh: true, emotion: 'serious', rainDay: true }
   yield { ...b(), injured: { kind: 'ankle soreness', weeksRemaining: 3, totalWeeks: 3 }, emotion: 'rehab' }
   yield { ...b(), injured: { kind: 'ankle soreness', weeksRemaining: 2, totalWeeks: 3 }, emotion: 'rehab' }
   yield { ...b(), emotion: 'tired', condition: 35, conditionBand: 'worn' }
@@ -191,6 +194,9 @@ const HOME_LINE_GATES: Record<string, Gate> = {
   'photo :: The trophy appeared in a photo before she did.': { stages: AWAY },
   // --- photo: runner-up ---
   'photo :: Second place. The medal stayed in her bag.': { stages: 'any' },
+  // ⚠ 22.10 r53 step 10 (N2): the two weather captions of a PLAYED tournament – nothing in either names a place, a person or an age (a court, a towel, a wet umbrella), so `any`, the same decision as the other captions that only talk about the match.
+  'photo :: Thirty degrees on court, and she asked for another ice towel.': { stages: 'any' },
+  'photo :: Rain at the courts today, and a wet umbrella in every photo.': { stages: 'any' },
   'photo :: A final. She knows what that is worth.': { stages: 'any' },
   'photo :: Runner-up. She pushed the final all the way.': { stages: 'any' },
   'photo :: Lost the final, and walked off with her head up.': { stages: 'any' },

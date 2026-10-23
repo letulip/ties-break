@@ -321,3 +321,43 @@ The week recap prints one line a week for a coached career: where the coach has 
 | RU22-MOOD-02 | `mood\|Bright` | `Светлая` |
 | RU22-MOOD-03 | `mood\|Dimmed` | `Притихла` |
 | RU22-MOOD-04 | `mood\|Heavy` | `Мрачная` – ⚖ 14.10 слово владельца («Heavy пусть будет Мрачная»), `APPROVED`; было «Тяжело на душе» |
+
+## Плитка отношений – имя партнёра, R53 №2 (21.10) – ⚠ ⚠ DRAFT под правку владельца
+
+⚖ 22.10 владелец (лист вычитки r53): ряды этого раздела `APPROVED`, его правки перенесены.
+
+Владелец: «плашка … может быть отображением статуса отношений и их продолжительности. Если она не говорит имя, то потом в какой-то момент сказать». Имя появляется с помолвкой (`LoveEpisode.partnerName`); строка плитки – статус и имя через двоеточие (именительный, без склонения), вторая строка – срок как раньше.
+
+| id | English | Russian |
+| --- | --- | --- |
+| R53-REL-01 | `tile\|Married: {0}` | `В браке: {0}` |
+| R53-REL-02 | `tile\|Engaged: {0}` | `Помолвлена: {0}` |
+| R53-REL-03 | `tile\|Dating: {0}` | `Встречается: {0}` |
+| R53-REL-N01 | `partner\|Anton` | `Антон` |
+| R53-REL-N02 | `partner\|Bruno` | `Бруно` |
+| R53-REL-N03 | `partner\|Casper` | `Каспер` |
+| R53-REL-N04 | `partner\|Daniel` | `Даниэль` |
+| R53-REL-N05 | `partner\|Elias` | `Элиас` |
+| R53-REL-N06 | `partner\|Felix` | `Феликс` |
+| R53-REL-N07 | `partner\|Gabriel` | `Габриэль` |
+| R53-REL-N08 | `partner\|Henrik` | `Хенрик` |
+| R53-REL-N09 | `partner\|Ivo` | `Иво` |
+| R53-REL-N10 | `partner\|Jonas` | `Йонас` |
+| R53-REL-N11 | `partner\|Karel` | `Карел` |
+| R53-REL-N12 | `partner\|Lukas` | `Лукас` |
+| R53-REL-N13 | `partner\|Matteo` | `Маттео` |
+| R53-REL-N14 | `partner\|Niko` | `Нико` |
+| R53-REL-N15 | `partner\|Oskar` | `Оскар` |
+| R53-REL-N16 | `partner\|Pavel` | `Павел` |
+| R53-REL-N17 | `partner\|Rafael` | `Рафаэль` |
+| R53-REL-N18 | `partner\|Samuel` | `Сэмюэл` |
+| R53-REL-N19 | `partner\|Tomas` | `Томас` |
+| R53-REL-N20 | `partner\|Viktor` | `Виктор` |
+| R53-REL-N21 | `partner\|Willem` | `Виллем` |
+| R53-REL-N22 | `partner\|Xavier` | `Ксавье` |
+| R53-REL-N23 | `partner\|Yann` | `Ян` |
+| R53-REL-N24 | `partner\|Zeno` | `Зено` |
+| R53-REL-N25 | `partner\|Andrei` | `Андрей` |
+| R53-REL-N26 | `partner\|Marco` | `Марко` |
+| R53-REL-N27 | `partner\|Ruben` | `Рубен` |
+| R53-REL-N28 | `partner\|Stefan` | `Стефан` |

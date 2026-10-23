@@ -494,6 +494,10 @@ describe('coachLoadViewOf', () => {
     // The spec's §8 claim, end to end: the same girl in the same week, read by five different coaches.
     const conf = COACH_TIERS.map((tier) => {
       const world = createWorld('view-fog', { ...DEFAULT_PROFILE, coachTier: tier })
+      // ⭐ ROUND 53 №1 (21.10) – the elite rung costs $1500–2000 a week at this age now (docs/specs/coach-pay-ladder-2026-10.md
+      // §3.1), which a default family cannot carry for two years – «задумано». The read is about the coach, not the bank, so
+      // the elite arm is funded rather than let go bankrupt mid-walk.
+      if (tier === 'elite') world.fundsCents += 1_000_000_00
       const rng = rngFromSeed(world.seed)
       for (let i = 0; i < 104; i++) {
         tickWeek(world, rng)

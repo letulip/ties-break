@@ -210,7 +210,12 @@ describe('wave 3 T1 B – v74, the three-part move', () => {
     // handed over is a deep copy.
     const kept = [episode(300, 320), episode(340, null)]
     const lived = { ...v73(), schemaVersion: 73, loveEpisodes: JSON.parse(JSON.stringify(kept)) }
-    expect(migrateSave(lived).loveEpisodes, 'an attachment already on the record is kept whole').toEqual(kept)
+    // ⚠ RE-AIMED 21.10 BY r53 M9 (v95 `nameKnownWeek`; re-aim by M9b), NOT WEAKENED: the ladder's head now holds one more per-row step, so a
+    // kept row walked to the head also gains `nameKnownWeek: null` (a nameless dating row – nobody has been told). The claim – every field
+    // the record already had survives whole – is unchanged; the new key's own sentinels live in tests/r53-partner-name.test.ts.
+    expect(migrateSave(lived).loveEpisodes, 'an attachment already on the record is kept whole').toEqual(
+      kept.map((row) => ({ ...row, nameKnownWeek: null })),
+    )
   })
 
   it('⚠ takes NOTHING from any stream – the persisted MAIN position is byte-identical', () => {

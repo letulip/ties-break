@@ -78,7 +78,9 @@ describe('round 45 #3 – the dial quotes the SNAPSHOT`s per-rung prices', () =>
   beforeEach(() => setActivePinia(createPinia()))
 
   it('⭐⭐⭐ after a granted raise the dial shows the engine`s drifted prices, not the catalogue`s opening ones', async () => {
-    const snap = raisedSnapshot()
+    // ⭐ ROUND 53 №1 (21.10): the top rung is on the dial only beside a coach whose week carries it (docs/specs/coach-pay-ladder-2026-10.md §3.2,
+    // `sparringTopRungOffered`); this fixture has none, so the snapshot is told it is offered – the claim here is about the prices the dial prints.
+    const snap = { ...raisedSnapshot(), sparringTopRungOffered: true }
     // The premise, so a green here means something: the raise really moved every rung.
     expect(snap.psychologistRungSalaryCents).not.toEqual(OPENING_PSY)
     expect(snap.sparringRungSalaryCents).not.toEqual(OPENING_SPA)
@@ -94,6 +96,7 @@ describe('round 45 #3 – the dial quotes the SNAPSHOT`s per-rung prices', () =>
   it('⭐⭐ a DOCTORED snapshot moves the dial – the card prints what it is handed, it neither reads the catalogue nor re-derives the drift', async () => {
     const doctored: Snapshot = {
       ...raisedSnapshot(),
+      sparringTopRungOffered: true, // round 53 №1 – see the first arm
       psychologistRungSalaryCents: [111_00, 222_00, 333_00],
       sparringRungSalaryCents: [444_00, 555_00, 666_00],
     }
@@ -106,7 +109,8 @@ describe('round 45 #3 – the dial quotes the SNAPSHOT`s per-rung prices', () =>
   it('a career with no signed request still quotes the catalogue (the card of every existing save is unchanged)', async () => {
     const world = createWorld('r45-card-fresh', DEFAULT_PROFILE)
     world.bestFinishByTier.w15 = 0
-    const wrapper = await mountCard(toSnapshot(world))
+    // ⭐ round 53 №1 – no coach here, so the market sells two rungs and the dial prints two; the claim (the catalogue, untouched) holds on both.
+    const wrapper = await mountCard({ ...toSnapshot(world), sparringTopRungOffered: true })
     expect(dialPrices(wrapper, PSY)).toEqual(OPENING_PSY.map((c) => `${formatCents(c)}/wk`))
     expect(dialPrices(wrapper, SPA)).toEqual(OPENING_SPA.map((c) => `${formatCents(c)}/wk`))
     wrapper.unmount()

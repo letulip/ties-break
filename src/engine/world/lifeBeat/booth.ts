@@ -4,6 +4,8 @@
 // → docs/notes/life-beats/booth.md#boothts-header
 import { ECONOMY } from '../../economy'
 import { loveEpisodesOf } from '../loveEpisodes'
+import { pressNamesPartner } from './partnerName'
+import { activeEpisode } from '../loveEpisodes'
 import { atOrAboveStageBar, boothPrivateLifeAt, newsStandingOf } from '../spotlight'
 import type { LoveEpisode } from '../../../shared/protocol/narrative'
 import type { TierId } from '../../season/types'
@@ -92,4 +94,20 @@ export function airBoothMention(world: WorldState, tier: TierId): void {
   // is T3's (`EXPOSURE_ROW`, raised inside the spirit pass on the tick that prices this event), and
   // §3c's legibility law is «one row per week, not per event – the feed is not a ledger». A second
   // row here would print the same week twice, in two voices, one tick apart.
+}
+
+/** ⭐ R53 №2 (21.10) – ROAD 4, THE PRESS (docs/specs/partner-name-disclosure-2026-10.md §3.2(4)): on the booth's own
+ *  licence – the tier at or above the stage bar, a standing that is news – and from `publicWeek` on, the post-match
+ *  news names him («на высших, когда она уже звезда, так наверняка будут знать»), at any band. A sibling of
+ *  `airBoothMention` and not a line inside it: the booth writes its stamp and nothing else, and this is a news ROW. */
+export function pressNamesPartnerAt(world: WorldState, tier: TierId): void {
+  // ⚖ 22.10 the owner, on the sheet's 17.8 % of names arriving by the papers: «Имя из прессы при
+  // cold выглядит слишком частым обходом семейной тайны – рассмотрел бы более высокий порог
+  // известности» → «поднять порог до "known" (#100) – мне кажется да, про 200 нигде особо не
+  // говорят». So this road alone reads the `known` standing (top-100), not `noticed` (top-200);
+  // the booth's other readers keep their own bars. Measured in the partner-name spec §4.3.
+  if (!atOrAboveStageBar(tier) || newsStandingOf(world) !== 'known') return
+  const ep = activeEpisode(world)
+  if (ep === null || ep.publicWeek === null || ep.publicWeek > world.week) return
+  pressNamesPartner(world, ep)
 }

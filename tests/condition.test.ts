@@ -503,10 +503,11 @@ const REF = {
 // byte and are asserted BEFORE this constant is read. #34 adds NO draw to any stream - it changes
 // what a drawn point is worth, never how many are drawn - which is why the hash could not move
 // and did not, and why planner.test.ts's input-independence halves still pass unchanged.
-  // ⚠ RE-PINNED 02.10 (ROUND 45 #1, the owner's 1-2-3 tariff): kidRank 90 -> 89 – a VALUE moving and NO DRAW. The capture itself – count 41550, hash e6b0c709, head and tail – is asserted BEFORE this constant is read and reproduces byte for byte,
+  // ⚠ RE-PINNED 02.10 (ROUND 45 #1, the owner's 1-2-3 tariff): kidRank 90 -> 89 – a VALUE moving and NO DRAW. The capture itself – count 41550, hash e6b0c709, head and tail – is asserted BEFORE this constant is read and reproduces byte for byte, – and ⚠ RE-PINNED AGAIN 22.10 (r53 step 11, weather stage 2): kidRank 89 -> 88 – a VALUE moving and NO DRAW: the match reads the day now (heat on both players' fatigue, wind on the serve), so a frozen career's results shift; the capture's count and hash did not move.
   // and tools/frozen-key-diff.ts shows rngMain identical on all three canonical careers. tierMatchFatigue is shared with the rivals, so a cheaper tariff gives a fresher kid AND a fresher
   // cohort, and the 52-week year ends one place higher; nothing was added to or removed from any stream. (planner.test.ts and injuries.test.ts carry the same companion value.)
-  kidRank: 89,
+  // ⚠ RE-PINNED 22.10 (r53 W1, heat variant V1 – she tires EARLIER in heat, onset 120 / heat): kidRank 88 -> 87, a VALUE moving and NO DRAW – a hot match past point 75 now plays differently, so a frozen career's results shift; count 41550 and hash e6b0c709 are asserted above and did not move.
+  kidRank: 87,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

@@ -146,7 +146,9 @@ describe('the hitting partner`s card on screen T', () => {
 
   it('§4 – ⭐ the roster dial: three rungs, prices off the catalogue, ACTIVE off the snapshot', async () => {
     const { pro } = snapshots()
-    const doctored = { ...pro, sparringRung: 2 }
+    // ⭐ ROUND 53 №1 (21.10): the top rung is on the dial only beside a coach whose week carries it (docs/specs/coach-pay-ladder-2026-10.md §3.2,
+    // `sparringTopRungOffered`); this fixture has none, so the snapshot is told it is offered – the claim here is about the prices the dial prints.
+    const doctored = { ...pro, sparringRung: 2, sparringTopRungOffered: true }
     const wrapper = await mountCard(doctored)
     const dial = wrapper.find(`${SEAT} .staff-dial`)
     expect(dial.exists()).toBe(true)
@@ -290,14 +292,16 @@ describe('the hitting partner`s card on screen T', () => {
     before.unmount()
 
     hireSparring(world, true)
-    setSparringRung(world, 2)
+    // ⭐ ROUND 53 №1 (21.10) – rung 0, not 2: the top rung is not sold without a coach that carries it (§3.2). The claim –
+    // the strip moves by exactly his salary – is the same on any rung the market sells.
+    setSparringRung(world, 0)
     const snapshot = toSnapshot(world)
     const after = await mountCard(snapshot)
     expect(after.find('.budget-household').text(), 'the strip moved when the payroll did').not.toBe(outBefore)
     expect(after.find('.budget-household').text()).toContain(
       `${formatCents(snapshot.coachBilling.household.outgoingCents)} out`,
     )
-    expect(snapshot.sparringSalaryCents).toBe(ECONOMY.sparring.rungs[2].weeklyCents)
+    expect(snapshot.sparringSalaryCents).toBe(ECONOMY.sparring.rungs[0].weeklyCents)
     after.unmount()
   })
 

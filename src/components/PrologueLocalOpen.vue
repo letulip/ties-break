@@ -194,7 +194,7 @@ const sides = computed<{ a: MatchPlayer; b: MatchPlayer } | null>(() => {
 const annotated = computed(() => {
   const two = sides.value
   if (!two) return null
-  return replayMatch({ surface: props.open.event.surface, seed: record.value?.seed, a: two.a, b: two.b })
+  return replayMatch({ surface: props.open.event.surface, seed: record.value?.seed, weather: record.value?.weather, a: two.a, b: two.b })
 })
 
 /** The round, in the draw sheet's own words – the engine's namer, so there is no second idea here of

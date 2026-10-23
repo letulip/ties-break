@@ -339,6 +339,11 @@ function fameBandIndex(fame: number): number {
   return FAME_BANDS.findIndex((b) => fame >= b.from && fame < b.to)
 }
 
+// ⭐ R53 №2 (21.10) – THE NAMES ARM (`--names`): per relationship the parent was told of, the band the week he was told,
+// the week he heard the name and how, and the engagement week. docs/specs/partner-name-disclosure-2026-10.md §4.
+interface NameRow { band: BondBand; knownWeek: number; nameKnownWeek: number | null; engagedWeek: number | null; endedWeek: number | null; via: string }
+const NAMES: NameRow[] = []
+
 function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow {
   // ⚠ THE TEMPERAMENT IS ASSIGNED AND NOT DRAWN, which is what makes the four columns PAIRED:
   // the same 200 seeds are played four times over, so a difference between two columns is who she
@@ -393,7 +398,12 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
    *  The overtake is then a DIFFERENCE observed across the tick rather than a re-spelling of the rule
    *  that produced it. Keyed by episode id, rebuilt each week – at most a handful of rows. */
   const knownBefore = new Map<string, number | null>()
+  const bandAtKnown = new Map<string, BondBand>()
+  // ⭐ R53 №2 – `--names-bond <n>` PINS the bond every week (a bench-only arm: the census never leaves steady by 24,
+  // so the names arm needs the other three bands held to be measured at all).
+  const pinBond = process.argv.includes('--names-bond') ? Number(process.argv[process.argv.indexOf('--names-bond') + 1]) : null
   for (let i = 0; i < opts.weeks; i++) {
+    if (pinBond !== null) world.bond = pinBond
     bondEntering = world.bond
     knownBefore.clear()
     for (const e of loveEpisodesOf(world)) knownBefore.set(e.id, e.knownWeek)
@@ -506,6 +516,9 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
       mine.overtook = before !== undefined && before !== e.knownWeek
       if (before !== undefined && before !== null) mine.knownWeekWithoutLeak = before
     }
+    for (const e of loveEpisodesOf(world)) {
+      if (e.knownWeek !== null && e.knownWeek < world.week && !bandAtKnown.has(e.id)) bandAtKnown.set(e.id, bondBandOf(bondEntering ?? ECONOMY.bond.start))
+    }
 
     // ⚠ THE ENDING IS READ BEFORE ANYTHING IS ANSWERED, and that is what lets this file have no
     // `try`/`catch`: `answerLifeBeat`, `decideKnock`, `chooseGift`, `answerFork` and
@@ -568,6 +581,15 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
     }
     if (beat.kind === 'ended') row.endedCards++
     if (beat.kind === 'met' || beat.kind === 'fork-opinion' || beat.kind === 'ended') row.beatsRaised++
+  }
+  for (const e of loveEpisodesOf(world)) {
+    const band = bandAtKnown.get(e.id)
+    if (band === undefined || e.knownWeek === null) continue
+    const heard = e.nameKnownWeek ?? null
+    const engaged = lifeLogOf(world).find((b) => b.kind === 'engaged' && b.detail === e.id)?.week ?? null
+    const row3 = heard === null ? undefined : world.events.find((ev) => ev.week === heard && ev.type === 'life' && /^(In the stands|His name is|She called from college and told us his name)/.test(ev.text))
+    const via = heard === null ? 'never' : row3 !== undefined ? (row3.text.startsWith('In the stands') ? 'press' : 'later') : heard === engaged ? 'engagement' : heard === e.knownWeek ? 'card' : 'answer'
+    NAMES.push({ band, knownWeek: e.knownWeek, nameKnownWeek: heard, engagedWeek: engaged, endedWeek: e.endedWeek, via })
   }
   return row
 }
@@ -707,6 +729,21 @@ console.log(`    bond shave         : ${(Object.keys(ECONOMY.life.bondShave) as 
 const careers: CareerRow[] = []
 for (const t of TEMPERAMENTS) {
   for (let i = 0; i < CAREERS_PER_TEMPERAMENT; i++) careers.push(walk(`life-${i}`, t, CENSUS))
+}
+if (process.argv.includes('--names')) {
+  console.log('')
+  console.log('  ⭐ R53 №2 – THE NAMES ARM: of relationships the parent was told of, named BEFORE the engagement (or ever, if none), by the band the week he was told')
+  for (const band of ['close', 'steady', 'strained', 'cold'] as BondBand[]) {
+    const rows = NAMES.filter((r) => r.band === band)
+    const before = rows.filter((r) => r.nameKnownWeek !== null && (r.engagedWeek === null || r.nameKnownWeek < r.engagedWeek))
+    const lags = before.map((r) => r.nameKnownWeek! - r.knownWeek)
+    const mean = lags.length === 0 ? NaN : lags.reduce((a, b) => a + b, 0) / lags.length
+    const via = (v: string): number => rows.filter((r) => r.via === v).length
+    console.log(`    ${band.padEnd(9)} n=${String(rows.length).padStart(4)}  before-engagement ${(rows.length ? (100 * before.length) / rows.length : NaN).toFixed(1).padStart(5)}%  mean wks known→name ${mean.toFixed(1).padStart(5)}  via card ${via('card')} · answer ${via('answer')} · later ${via('later')} · press ${via('press')} · engagement ${via('engagement')} · never ${via('never')}`)
+  }
+  const named = NAMES.filter((r) => r.nameKnownWeek !== null)
+  console.log(`    press share of named: ${((100 * named.filter((r) => r.via === 'press').length) / Math.max(1, named.length)).toFixed(1)}%  (${named.length} named of ${NAMES.length})`)
+  process.exit(0)
 }
 const byT = (t: Temperament): CareerRow[] => careers.filter((c) => c.temperament === t)
 const episodesOf = (t: Temperament): EpisodeRow[] => byT(t).flatMap((c) => c.episodes)

@@ -380,3 +380,16 @@ One line per requirement in the season briefing – the tour letter's list and t
 | RU20-Q01 | `All {0} {1}` | `{0, plural, =1 {Единственный турнир {1}} one {Все {0} турнир {1}} few {Все {0} турнира {1}} many {Все {0} турниров {1}} other {Все {0} турнира {1}}}` |
 | RU20-Q02 | `All {0} {1}s` | `Все {0, plural, one {{0} турнир} few {{0} турнира} many {{0} турниров} other {{0} турнира}} {1}` |
 | RU20-Q03 | `{0} of the {1} {2}s` | `{0} из {1, plural, one {{1} турнира} few {{1} турниров} many {{1} турниров} other {{1} турнира}} {2}` |
+
+## R. The coach's band letter (round 53 №1, 21.10 – DRAFT)
+
+⚖ 22.10 владелец (лист вычитки r53): ряды этого раздела `APPROVED`, его правки перенесены.
+
+Source: `src/components/OfferLetter.vue` (`staffAskLead`, `staffAskSettled`), spec `docs/specs/coach-pay-ladder-2026-10.md` §3.3. The writer is ungendered (law 2): first person present and future only.
+
+| id | English | Russian |
+| --- | --- | --- |
+| RU20-R01 | `She is in the top fifty now, and coaching a top-fifty player is priced higher: my rate would go from {0} to {1} {2}. If we cannot agree, I will see the season out and then step aside.` | `Она теперь в топ-50, а работа с игроком топ-50 стоит дороже: моя ставка выросла бы с {0} до {1} {2}. Если не договоримся, я доработаю сезон и уйду.` |
+| RU20-R02 | `She is in the top ten now, and coaching a top-ten player is priced higher: my rate would go from {0} to {1} {2}. If we cannot agree, I will see the season out and then step aside.` | `Она теперь в топ-10, а работа с игроком топ-10 стоит дороже: моя ставка выросла бы с {0} до {1} {2}. Если не договоримся, я доработаю сезон и уйду.` |
+| RU20-R03 | `Declined – the rate stays at {0} {1} until the season ends, and then the coach leaves.` | `В повышении отказано – ставка остаётся {0} {1} до конца сезона, а затем тренер уходит.` |
+| RU20-R04 | `Lapsed – the rate stays at {0} {1} until the season ends, and then the coach leaves.` | `Срок ответа истёк – ставка остаётся {0} {1} до конца сезона, а затем тренер уходит.` |

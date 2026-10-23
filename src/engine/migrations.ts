@@ -3437,6 +3437,31 @@ export function migrateSave(raw: unknown): WorldState {
     v = 94
   }
 
+  // ⭐⭐ v94 -> v95 – HIS NAME, AND WHEN THE PARENT HEARD IT (R53 №2, 21.10; docs/specs/partner-name-disclosure-2026-10.md
+  // §3.1). One key per `loveEpisodes` row, v83's walk and `??=` shape. Until this version the ONLY road to a name was the
+  // engagement, so a row holding `partnerName` is a row whose parent was told it – at the engagement:
+  //   married (`latchedWeek` a number)  -> `latchedWeek` (the spec's own rule; the wedding is a week the name was known);
+  //   engaged, not yet married          -> the week of the episode's `'engaged'` beat (the one raise site that wrote the
+  //                                        name), falling back to `knownWeek`/`sinceWeek` on a crafted row with no beat;
+  //   every other row                   -> null (a dating row's name is drawn later, on the same v83 key, when a road
+  //                                        reaches it – so the name it gets is the one the engagement would have given).
+  // ⚠ The brief's `latchedWeek ?? null` alone would have blanked the tile of an engaged, unmarried daughter («Engaged:
+  // Anton» -> «Engaged») – which is why the second arm exists.
+  // ⚠ IDEMPOTENT AND DRAW-FREE: `??=` per row, literals and reads only; MAIN cannot move (41550 / e6b0c709).
+  if (v === 94) {
+    const log = Array.isArray(save.lifeLog) ? (save.lifeLog as { kind?: unknown; detail?: unknown; week?: unknown }[]) : []
+    for (const episode of Array.isArray(save.loveEpisodes) ? (save.loveEpisodes as Partial<LoveEpisode>[]) : []) {
+      if (!episode || typeof episode !== 'object') continue
+      const engaged = log.find((r) => r && r.kind === 'engaged' && r.detail === episode.id && typeof r.week === 'number')
+      episode.nameKnownWeek ??= typeof episode.latchedWeek === 'number'
+        ? episode.latchedWeek
+        : typeof episode.partnerName === 'string'
+          ? (engaged?.week as number | undefined) ?? episode.knownWeek ?? episode.sinceWeek ?? null
+          : null
+    }
+    v = 95
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

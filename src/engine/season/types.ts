@@ -1,5 +1,5 @@
 // types.ts (verbatim contract; M and N import from here)
-import type { MatchPlayer, Surface } from '../match/types'
+import type { MatchPlayer, MatchWeather, Surface } from '../match/types'
 
 /** The playable ladder. The domestic rungs (`local` → `regional` → `national`) hand over to the
  *  junior international tour (`j30` → `j60` → `j300`); the inert `itf` placeholder was replaced by
@@ -334,6 +334,12 @@ export interface MatchRecord {
    *  retirement (2026 ITF WTT Regs, Women's §XII.C.1.b). `score` is the partial scoreline she
    *  stopped at, so it is short by construction and needs no "ret." marker to be recognised. */
   retiredId?: string
+  /** ⭐ r53 step 11 – THE DAY IT WAS PLAYED ON, when the day touched the match (heat past 27°, any
+   *  wind, rain falling) – `playedWeather`. Absent on a calm match, on every AI-AI row, and on every
+   *  match played before stage 2, which is the truth for all three: an additive optional field on
+   *  `retiredId`'s precedent, so no schema bump. The replay reads it (`recordedMatchOptions`), the
+   *  condition toll reads its rain, the news reads all of it. */
+  weather?: MatchWeather
 }
 export interface TournamentResult {
   eventId: string

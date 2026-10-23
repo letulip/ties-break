@@ -627,6 +627,7 @@ import { PSY_COUNSEL, PSY_HEADING, PSY_REGISTERS } from './lifeBeat/forkPsyCopy'
 // from.
 // → docs/notes/life-beats/hub.md#lifebeatts-3b--met--the-copy-moved
 import { MET_DRY, MET_HEADING, MET_HEADING_HEADLINE, MET_HER_LINE, MET_MENTION, metRegisterOf } from './lifeBeat/metCopy'
+import { ASK_ID, INSIST_ID, PARTNER_NAME, metNameFollowUps, metNameOptions, metNamed, metNamedRef, metUnnamed, nameOnAnswer, partnerNameFor } from './lifeBeat/partnerName' // ⭐ R53 №2 – his name: a leaf, logic and all (docs/specs/partner-name-disclosure-2026-10.md)
 
 // 3c. `'small-talk'` – THE COPY MOVED TO `world/lifeBeat/smallTalkCopy.ts` (A-06 / T6.8,
 // 28.09) – A pure leaf – the dispatcher below and §7's roll are its only readers – so it left
@@ -1369,6 +1370,8 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
     { id: 'wary', label: 'Ask the coach to watch her schedule', bond: ECONOMY.bond.delta.metWary },
     { id: 'meet', label: 'Say we want to meet them, now', bond: ECONOMY.bond.delta.metIntrusive },
     { id: 'silent', label: 'Say nothing about it', bond: ECONOMY.bond.delta.metSilent },
+    { id: ASK_ID, label: 'Ask what his name is', bond: 0 }, // ⚠ DRAFT (R53 №2) – free; at steady or better she says it (`./lifeBeat/partnerName`)
+    { id: INSIST_ID, label: 'Insist: we want to know', bond: PARTNER_NAME.insistBond }, // ⚠ DRAFT (R53 №2) – −2 at every band; the name at all but cold
   ],
   /** ⭐⭐ TIER 1's THREE, AND EVERY ONE OF THEM IS A LITERAL ZERO (v74 T8, ruling V2 – «tier-1
    *  replies move nothing»). §5b asks for «2–3 reply options»; these are three parent moves that…
@@ -1685,6 +1688,7 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
     wary: 'There is someone in her life. We asked her coach to keep an eye on the weeks.',
     meet: 'There is someone in her life. We asked to meet them, and asked this week.',
     silent: 'There is someone in her life. We left it where she put it.',
+    ask: 'There is someone in her life. We asked what his name is.', insist: 'There is someone in her life. We pressed her for his name.', // ⚠ DRAFT (R53 №2)
   },
   // ⚠⚠ NO ROW, AND THE `null` IS THE STATEMENT – see the record's own note above. Tier 1 leaves its
   // trace in `lifeLog` and nowhere else.
@@ -2425,9 +2429,9 @@ export function buildLifeBeatPrompt(world: WorldState): LifeBeatPrompt | null {
  *  and the soft invite) ride it, so the two cards cannot drift apart. */
 function withRefs(world: WorldState, row: LifeBeatRecord, prompt: LifeBeatPrompt): LifeBeatPrompt {
   const weeks = row.kind === 'engaged' ? relationshipDurationWeeks(world, loveEpisodesOf(world).find((e) => e.id === row.detail) ?? null) : null
-  const pool = weeks === null ? prompt.said : prompt.said.slice(0, prompt.said.length - engagedWithTogether('', weeks).length)
+  const pool = weeks === null ? metUnnamed(world, row, voiceOf(world), prompt.said) : prompt.said.slice(0, prompt.said.length - engagedWithTogether('', weeks).length)
   const stage = lifeStageAt(world, row.week)
-  return { ...prompt, headingC: { k: prompt.heading }, saidC: engagedWithTogetherRef(lifeBeatSaidRef(row.kind, row.detail, voiceOf(world), stage, row.frame, pool), weeks) }
+  return { ...prompt, headingC: { k: prompt.heading }, saidC: metNamedRef(world, row, voiceOf(world), engagedWithTogetherRef(lifeBeatSaidRef(row.kind, row.detail, voiceOf(world), stage, row.frame, pool), weeks)) }
 }
 
 /** ⭐⭐ v74 T15 – THE PROMPT FOR **ONE ROW**, and it is the whole of `buildLifeBeatPrompt`'s body
@@ -2462,7 +2466,7 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
   // level the gauge cannot show yet. One question, one answer: the line and the tile cannot disagree.
   const feel = row.kind === 'small-talk' ? coachFeel(world) : null
   const hunch = feel === null ? null : feelHunch(feel)
-  const followUps = lifeBeatFollowUps(row.kind, row.detail, voice, band, hunch)
+  const followUps = [...lifeBeatFollowUps(row.kind, row.detail, voice, band, hunch), ...metNameFollowUps(world, row, voice, CONFIRM_LABEL)]
   // ⭐⭐ ROUND 42 #24 – THE FRAME'S REGISTER IS THE SUBJECT'S, NOT THE WEEK'S, ON TIER 1 AND NOWHERE
   // ELSE. Spec §2 cut the one-to-one between the Mood register and the subject («mood sets the
   // WEIGHTS»), so a bright week can bring a worry and the shipped bright heading would contradict her
@@ -2492,7 +2496,7 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
     // «можно там тоже писать сколько они вместе»). The pool line is untouched; `engagedWithTogether` appends ONE
     // sentence for this kind and returns every other kind's line as it was (`null` weeks). The count is
     // `relationshipDurationWeeks`, the primitive #9's personal page reads too, off the row's own episode.
-    said: engagedWithTogether(lifeBeatSaid(
+    said: metNamed(world, row, voice, engagedWithTogether(lifeBeatSaid(
       row.kind,
       row.detail,
       voice,
@@ -2521,7 +2525,7 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
       // ⭐ ROUND 46 R3 – THE ELEVENTH IS READ OFF THE ROW TOO, the frame's own reason: the spouse's line is stamped
       // at the raise and `undefined` on every older row, which reads as the occasion's first line.
       row.line,
-    ), row.kind === 'engaged' ? relationshipDurationWeeks(world, loveEpisodesOf(world).find((e) => e.id === row.detail) ?? null) : null),
+    ), row.kind === 'engaged' ? relationshipDurationWeeks(world, loveEpisodesOf(world).find((e) => e.id === row.detail) ?? null) : null)),
     // ⚠ THE ROW'S OWN KIND PICKS THE ANSWER SET (v74). A flat list here would have offered a girl's
     // «there is someone» the fork's three buttons, which is the defect the per-kind record exists to
     // make impossible – and `answerLifeBeat` re-validates against THIS same reading.
@@ -2529,12 +2533,12 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
     // STANCES (§8d.1: «a `respond` branch must name the parent's actual opinion»). It is `undefined`
     // for every other kind and for a legacy row, which is the base table – so this line hands back
     // byte-identical options for every card that shipped before this round.
-    options: lifeBeatOptionsFor(
+    options: metNameOptions(world, row, lifeBeatOptionsFor(
       row.kind,
       wants,
       read,
       row.kind === 'small-talk' ? smallTalkLabels(row.detail, voice) : undefined,
-    ).map((o) => ({ id: o.id, label: o.label })),
+    ).map((o) => ({ id: o.id, label: o.label }))),
     followUps,
     // ⭐⭐ ROUND 42 #8 – the confirm control's word, engine-assembled like every other word on the
     // card. One constant, both entrances (the blocking prompt and the soft invite ride this same
@@ -2670,6 +2674,7 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
   rows[target] = { ...rows[target], answer: chosen.id }
   // ⚠ HIS WORDS MOVE `bond` AND NOTHING ELSE (§4a.2's law, and this wave's fence): no spirit delta
   // from any of this, no skill, no condition, no money.
+  nameOnAnswer(world, rows[target], chosen.id) // ⭐ R53 №2 – roads 1–2: the name, read at the band BEFORE the delta below
   applyBondDelta(world, chosen.bond)
   // ⭐⭐⭐ v85 (the pregnancy, wave 8 – T2) – ...AND THE `'expecting'` ANSWER IS THE ONE BEAT IN
   // THIS FILE WHOSE WORD OUTLIVES THE CARD.
@@ -2900,7 +2905,7 @@ export function rollArrival(world: WorldState): void {
     airedMetWeek: null,
     airedEndedWeek: null,
     latchedWeek: null,
-    partnerName: null,
+    partnerName: partnerNameFor(world.seed, id), nameKnownWeek: null, // ⭐ R53 №2 §3.1 – the name exists from the start (v83's key, unchanged); the parent hears it later
   })
 }
 

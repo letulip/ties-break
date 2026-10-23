@@ -17,10 +17,11 @@
 //   * delete the `v-if="life?.collegeNote"` paragraph      -> the college arm goes red.
 //   * delete the `v-if="life?.ownAccount"` paragraph       -> the account arm goes red.
 //   * `ownAccountNote` returns '' always                   -> the account arm goes red, alone.
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
+import { setViewport, PHONE, NARROW_PHONE, DESKTOP } from './fits'
 import KidScreen from '../../src/components/screens/KidScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
@@ -109,14 +110,19 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
     w.unmount()
   })
 
-  it('⭐⭐ PAST THE LAST BELL THE HEADING MOVES WITH HER, and the cell is not a status flag', () => {
-    const w = mountKid(careerAt(300))
+  // ⚠ RE-AIMED 21.10 (R53 №2): this arm printed `After school` / `Tennis full-time` / `No more classes` past the last bell. The owner's ask: the «after school» cell is her relationships from the day
+  // school is over, and says there is nobody when there is nobody – so the ENGINE still ladders her (`life.school`, `schoolLabel`) and the screen prints `life.relationships` in its place.
+  it('⭐⭐ PAST THE LAST BELL THE HEADING MOVES WITH HER – to her relationships (R53 №2) – and the cell is not a status flag', () => {
+    const snap = careerAt(300)
+    expect(snap.life.schoolLabel, 'THE ENGINE\'S LADDER IS UNTOUCHED: it still heads her After school').toBe(STAGE_LABEL.after)
+    expect(snap.life.school, '...and still says Tennis full-time').toEqual({ lead: 'Tennis full-time', note: 'No more classes' })
+    const w = mountKid(snap)
     expect(tileWithLabel(w, STAGE_LABEL.school), 'nothing is headed School any more').toBeUndefined()
-    const cell = tileWithLabel(w, STAGE_LABEL.after)
-    expect(cell, 'it is headed for the stage she is at').toBeTruthy()
+    expect(tileWithLabel(w, STAGE_LABEL.after), 'and the cell is headed for what it says now').toBeUndefined()
+    const cell = tileWithLabel(w, 'Relationships')
+    expect(cell, 'it is headed Relationships').toBeTruthy()
     const lines = cell!.findAll('.kid-tile-line').map((l) => l.text())
-    expect(lines[0]).toBe('Tennis full-time')
-    expect(lines[1]).toBe('No more classes')
+    expect(lines).toEqual([snap.life.relationships!.lead, snap.life.relationships!.note])
     expect(lines.join(' ')).not.toMatch(/finished/i)
     w.unmount()
   })
@@ -322,6 +328,7 @@ function attachment(world: CareerWorld, over: Partial<LoveEpisode> = {}): LoveEp
     airedEndedWeek: null,
     latchedWeek: null,
     partnerName: null,
+    nameKnownWeek: 0, // R53 №2 (v95): the parent has heard whatever name the arm gives – the fog gate is `tests/r53-partner-name.test.ts`'s
     ...over,
   }
 }
@@ -348,23 +355,35 @@ function expectNoSentence(w: ReturnType<typeof mountKid>, snap: Snapshot, why: s
 describe('⭐⭐ ROUND 46 MORNING #3 – her relationships, in the School cell\'s last rung', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('⭐⭐ BEFORE THE LAST RUNG THE CELL IS THE SCHOOL CELL, STRING FOR STRING – with somebody in her life or not', () => {
-    const rungs: Array<[number, string, string[] | null]> = [
-      [120, STAGE_LABEL.school, null],
-      [300, STAGE_LABEL.after, ['Tennis full-time', 'No more classes']],
-    ]
-    for (const [week, label, typed] of rungs) {
-      const world = worldAt(week)
-      for (const snap of [snapshotWith(world, null), snapshotWith(world, attachment(world))]) {
-        expect(snap.life.relationships, `${label}: the engine has handed the cell nothing`).toBeNull()
-        const w = mountKid(snap)
-        const lines = printed(w, label)
-        expect(lines, `${label}: it says what the school ladder says`).toEqual([snap.life.school.lead, snap.life.school.note])
-        if (typed !== null) expect(lines, `${label}: and the words it always had`).toEqual(typed)
-        expect(tileWithLabel(w, 'Relationships'), `${label}: no cell is headed Relationships yet`).toBeUndefined()
-        w.unmount()
-      }
-    }
+  // ⚠ RE-AIMED 21.10 (R53 №2): this arm held «before the last rung the cell is the School cell, with somebody in her life or not». The owner asked for two things the old law forbade: the cell
+  // says there is NOBODY once school is over (any age – the 22 gate is gone from the cell, it stays the ladder's), and a partner the parent KNOWS OF is the cell in any stage, school included.
+  // What stays: AT SCHOOL WITH NOBODY KNOWN the cell is the School cell, string for string.
+  it('⭐⭐ AT SCHOOL WITH NOBODY KNOWN THE CELL IS THE SCHOOL CELL, STRING FOR STRING – and with a partner the parent knows of it is her relationship, in the same week', () => {
+    const world = worldAt(120)
+    const nobody = snapshotWith(world, null)
+    expect(nobody.life.relationships, 'school, nobody: the engine has handed the cell nothing').toBeNull()
+    const w = mountKid(nobody)
+    expect(printed(w, STAGE_LABEL.school)).toEqual([nobody.life.school.lead, nobody.life.school.note])
+    expect(tileWithLabel(w, 'Relationships'), 'and no cell is headed Relationships').toBeUndefined()
+    w.unmount()
+    const told = snapshotWith(world, attachment(world))
+    expect(told.life.school.lead, 'THE FIXTURE: the ladder is still on her grade').toMatch(/ grade$/)
+    const w2 = mountKid(told)
+    expect(printed(w2, 'Relationships'), 'at school with a partner he knows of: the engine\'s own pair').toEqual([told.life.relationships!.lead, told.life.relationships!.note])
+    expect(printed(w2, 'Relationships')[0]).toBe('Together for')
+    expect(tileWithLabel(w2, STAGE_LABEL.school), 'the grade is not on the page: the cell is hers').toBeUndefined()
+    w2.unmount()
+  }, 120_000)
+
+  it('⭐⭐ OUT OF SCHOOL AT ANY AGE THE CELL SAYS THERE IS NOBODY – «Tennis full-time» no longer stands in for it', () => {
+    const world = worldAt(300)
+    const snap = snapshotWith(world, null)
+    expect(snap.life.school.lead, 'THE FIXTURE: the ladder is on its rung before the grown-up one').toBe('Tennis full-time')
+    expect(snap.life.relationships).toEqual({ label: 'Relationships', lead: 'On her own', note: 'it seems' })
+    const w = mountKid(snap)
+    expect(printed(w, 'Relationships')).toEqual(['On her own', 'it seems'])
+    expect(tileWithLabel(w, STAGE_LABEL.after)).toBeUndefined()
+    w.unmount()
   }, 120_000)
 
   it('⭐⭐ A GROWN WOMAN WITH NOBODY THE PARENT KNOWS OF – the cell says so, and says it only as «it seems»', () => {
@@ -464,5 +483,73 @@ describe('⭐⭐ ROUND 46 MORNING #3 – her relationships, in the School cell\'
     }
     // The reason the compact span exists: with the words form the second line is over budget at a year and a half.
     expect(`together ${togetherSpan(78)}`.length, 'the words form would be cut by the cell').toBeGreaterThan(TILE_LINE_MAX)
+  }, 120_000)
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 53 №2 (21.10) – HIS NAME ON THE CELL, and the cell on a phone.
+// ⚠ DRAFT strings (`Engaged: {name}`, `Married: {name}`, `Dating: {name}`) – docs/localization/ru-display-words-2026-10.md, R53-REL-01..03. MUTATIONS (each alone, restored byte for byte):
+//   * `name: partner.partnerName ?? null` in snapshot.ts -> `name: null`   -> the named arms. * the fog gate (`knownPartner`) removed from `together` -> the not-told arm.
+// =================================================================================================
+describe('⭐⭐ ROUND 53 №2 – the partner\'s name on her relationships cell', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+  afterEach(() => setViewport(DESKTOP))
+
+  it('⭐ ENGAGED AND MARRIED PRINT HIS NAME ON THE LEAD (the span stays on the note); BEFORE THE ENGAGEMENT HAS GIVEN HIM ONE NO NAME IS PRINTED', () => {
+    const world = worldAt(GROWN_WEEK)
+    const span = togetherSpanShort(relationshipDurationWeeks(world)!)
+    const unnamed = snapshotWith(world, attachment(world, { partnerName: null }))
+    expect(unnamed.life.relationships!.lead, 'no name yet: the plain form').toBe('Together for')
+    const named = snapshotWith(world, attachment(world, { partnerName: 'Anton' }))
+    expect(named.life.relationships, 'a name on a standing attachment').toEqual({ label: 'Relationships', lead: 'Dating: Anton', note: `together ${span}` })
+    const married = snapshotWith(world, attachment(world, { partnerName: 'Gabriel', latchedWeek: world.week - 10 }))
+    const w = mountKid(married)
+    expect(printed(w, 'Relationships')).toEqual(['Married: Gabriel', `together ${span}`])
+    w.unmount()
+    const bride = worldAt(GROWN_WEEK, 'round23-page-engaged')
+    const row = attachment(bride, { partnerName: 'Anton' })
+    bride.loveEpisodes = [row]
+    raiseLifeBeat(bride, 'engaged', row.id)
+    lifeLogOf(bride).at(-1)!.answer = 'bless'
+    const engaged = toSnapshot(bride)
+    const w2 = mountKid(engaged)
+    expect(printed(w2, 'Relationships')).toEqual(['Engaged: Anton', `together ${span}`])
+    w2.unmount()
+  }, 120_000)
+
+  it('⭐ THE FOG LAW – a name the parent has not been told reaches no line of the page and no key of the wire', () => {
+    const world = worldAt(GROWN_WEEK)
+    const snap = snapshotWith(world, attachment(world, { partnerName: 'Anton', knownWeek: world.week + 4 }))
+    expect(snap.life.relationships).toEqual({ label: 'Relationships', lead: 'On her own', note: 'it seems' })
+    expect(JSON.stringify(snap.life), 'no name anywhere in the life block').not.toContain('Anton')
+    const ended = snapshotWith(world, attachment(world, { partnerName: 'Anton', endedWeek: world.week - 5 }))
+    expect(JSON.stringify(ended.life), 'and none once it has ended').not.toContain('Anton')
+    // …and the wire carries the name and nothing else of the episode
+    const told = snapshotWith(world, attachment(world, { partnerName: 'Anton' }))
+    expect(JSON.stringify(told.life), 'the name and the span, never the episode: no id, no week of anything, no wants').not.toMatch(/sinceWeek|knownWeek|latchedWeek|wants|partnerId|publicWeek/)
+  }, 120_000)
+
+  // THE CELL ON A PHONE. Tile lines WRAP (r51 B14) and the tile has no ceiling, so the claim that can hold is the cascade's, at both widths, for the WIDEST lead the pool can make, plus the
+  // engine's English budget; `setViewport` runs BEFORE the mount (happy-dom caches a media query on the first computed-style read).
+  it('⭐ AT 375x667 AND 320x568 the widest lead (a seven-letter name) wraps rather than clips, and sits inside the budget', () => {
+    const world = worldAt(GROWN_WEEK)
+    const snap = snapshotWith(world, attachment(world, { partnerName: 'Gabriel', latchedWeek: world.week - 10 }))
+    for (const vp of [PHONE, NARROW_PHONE]) {
+      setViewport(vp)
+      useGameStore().snapshot = snap
+      const w = mount(KidScreen, { attachTo: document.body, global: { stubs: { teleport: true } } })
+      const cell = tileWithLabel(w, 'Relationships')!
+      expect(cell, `${vp.width}: the cell is up`).toBeTruthy()
+      const lines = cell.findAll('.kid-tile-line')
+      expect(lines.map((l) => l.text())).toEqual(['Married: Gabriel', `together ${togetherSpanShort(78)}`])
+      for (const l of lines) {
+        expect(l.text().length, `${vp.width}: "${l.text()}"`).toBeLessThanOrEqual(TILE_LINE_MAX)
+        expect(getComputedStyle(l.element).getPropertyValue('white-space'), `${vp.width}: "${l.text()}" may wrap`).toBe('normal')
+        expect(getComputedStyle(l.element).getPropertyValue('text-overflow'), `${vp.width}: and is never cut`).toBe('clip')
+      }
+      w.unmount()
+      document.body.innerHTML = ''
+    }
+    setViewport(DESKTOP)
   }, 120_000)
 })

@@ -51,6 +51,7 @@ import {
   bookVacation,
   practiceCaution,
   tournamentRunStrain,
+  activeLadderOf,
   travelCostFor,
   KID_ID,
   type WorldState,
@@ -525,6 +526,16 @@ export interface WeekFacts {
    *  the cumulative run-fatigue ladder) – 0 on non-play weeks.
    *  Carried so the projection layer can rebuild traces without re-deriving scores. */
   strain: number
+  /** r53 M11 (22.10): how many of the committed run's matches the rain held up (`weather.rain ===
+   *  'falling'`) – each is RAIN_REST condition points back inside `strain`. The independent
+   *  recomputation in tests/fatigue-bench.test.ts needs the FACT, not the engine's helper. 0 on
+   *  every other week. */
+  rainRests: number
+  /** the career phase the week OPENED in – `activeLadderOf === 'wta'`, the one-way door whose far
+   *  side recovers on `proPhaseRecoveryBase` (5) instead of `recoveryBase` (8). Read BEFORE the week
+   *  advances: the door opens at a W-series result's close, after that week's accrual, so the first
+   *  pro-base week is the one AFTER the result. The independent recomputation needs the fact. */
+  proPhase: boolean
   wins: number
   losses: number
   /** an entered event fell on an injured week – fee forfeited, no run. */
@@ -732,6 +743,7 @@ export function stepFatigueWeek(
     seaBookedYears: new Set(),
   },
 ): WeekFacts {
+  const proPhase = activeLadderOf(world) === 'wta'
   let cautionEntries = 0
   let entriesCommitted = 0
   let medicalBlocks = 0
@@ -815,16 +827,18 @@ export function stepFatigueWeek(
   let wins = 0
   let losses = 0
   let strain = 0
+  let rainRests = 0
   const matchScores: string[] = []
   const p = world.pendingTournament
   if (p) {
     played = true
     tierPlayed = world.season.find((e) => e.id === p.eventId)?.tier ?? null
-    const kidMatches: { score?: string }[] = []
+    const kidMatches: { score?: string; weather?: { rain: string } }[] = []
     for (const m of p.result.matches) {
       if (m.aId !== KID_ID && m.bId !== KID_ID) continue
       matchScores.push(m.score ?? '')
-      kidMatches.push({ score: m.score })
+      kidMatches.push({ score: m.score, weather: m.weather })
+      if (m.weather?.rain === 'falling') rainRests++
       if (m.winnerId === KID_ID) wins++
       else losses++
     }
@@ -880,6 +894,8 @@ export function stepFatigueWeek(
     tierPlayed,
     matchScores,
     strain,
+    rainRests,
+    proPhase,
     wins,
     losses,
     walkover,

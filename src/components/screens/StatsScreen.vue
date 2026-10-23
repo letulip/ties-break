@@ -474,7 +474,9 @@ function goToSection(id: string): void {
       <!-- D8: the table answers to a name (docs/specs/e2e-coverage.md §12). It says WHICH table,
            because all three render through this one element and a reader arriving by role has no
            other way to tell which one she landed in. -->
-      <table v-if="standings.length" :aria-label="t('{0} ranking', [fullName])">
+      <!-- R53 N6: the standings table scrolls inside its own box, never the page (the overflow sweep's law). -->
+      <div v-if="standings.length" class="stats-ranking-scroll">
+      <table :aria-label="t('{0} ranking', [fullName])">
         <thead>
           <tr>
             <th>{{ t('#') }}</th>
@@ -503,6 +505,7 @@ function goToSection(id: string): void {
           </template>
         </tbody>
       </table>
+      </div>
       <p class="hint">{{ t('Her rank: {0}', [rankText]) }}</p>
       <p v-if="!ranked" class="hint">{{ emptyNote }}</p>
     </section>
@@ -534,6 +537,16 @@ function goToSection(id: string): void {
 </template>
 
 <style scoped>
+/* R53 N6: at 320px in Russian the points column pushed the PAGE 4px sideways (e2e r51-overflow-sweep). The table may be
+   wider than the phone, but only inside this box – the same rule SeasonHistoryTable's scroller carries. */
+.stats-ranking-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
 /* The no-exchange-rate line sits tight under the tiles it qualifies. Local to this screen: the
    shared `.hint` spacing is tuned for standalone paragraphs, and src/style.css is off limits. */
 .stats-no-exchange {

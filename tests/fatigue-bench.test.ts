@@ -31,7 +31,7 @@ import {
   toCsv,
   type WeekFacts,
 } from '../tools/fatigue-bench'
-import { runFatigueExtra } from '../src/engine/condition'
+import { runFatigueExtra, RAIN_REST } from '../src/engine/condition'
 import { ECONOMY } from '../src/engine/economy'
 import { matchDrain } from '../src/engine/condition'
 import { reconstructRun } from '../src/engine/season/rival'
@@ -171,11 +171,21 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
       }
       // WEEK-TYPE LADDER (season-planner spec §4): tournament week 0 base · PRACTICE week keeps
       // the base but FORFEITS the slider bonus · free/vacation week base + slider.
+      // ⚠ r53 M11 (22.10), THE SECOND TERM THE OWNER-MATH WAS MISSING: the pro-phase base. Since the
+      // owner's 22.08 ruling (variant C) the engine recovers on `proPhaseRecoveryBase` (5) once her
+      // first counting W-series result has opened the never-pruned `activeLadderOf === 'wta'` door,
+      // and on `recoveryBase` (8) before it. This trace always read 8 – harmless while no 104-week
+      // career crossed the door, which held until the weather moved results (M11): a W15 run at
+      // week 88 opened it, and every non-play week after read 3 too high (engine +6, here +9).
+      // The FACT (`proPhase`, read before the week advances) is used, not the engine's
+      // `recoveryBaseFor` – and that helper's age fade is 1 below `declineStart`, which a 104-week
+      // career from the junior era never reaches, so it is not re-derived here.
+      const base = f.proPhase ? ECONOMY.condition.proPhaseRecoveryBase : k.recoveryBase
       let recovery = f.played
         ? k.matchWeekRecoveryBase
         : f.practiced
-          ? k.recoveryBase
-          : k.recoveryBase + bonus
+          ? base
+          : base + bonus
       if (physioActive) recovery += ECONOMY.physio.conditionBonusPerWeek
       const offset = ((f.week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
       const offSeason = offset >= WEEKS_PER_YEAR - OFF_SEASON_WEEKS
@@ -261,6 +271,14 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
         const extra = ladder.length === 0 ? 0 : ladder[Math.min(i, ladder.length - 1)]
         strain += d + k.tierMatchFatigue[f.tierPlayed as TierId] + extra
       })
+      // ⚠ r53 M11 (22.10): THE OWNER-MATH GAINED A TERM. Stage 2 of the weather made a match the rain
+      // held up (`weather.rain === 'falling'`) cost RAIN_REST condition points less – the owner's
+      // «+1 кондиции» for «спортсмены ушли на отдых». The engine's toll subtracts it per match inside
+      // `tournamentRunStrain`; this recomputation used to know nothing of it and diverged on every
+      // rainy tournament week (engine 77, recomputed 80 at week 9). It takes the CONSTANT and the
+      // bench's FACT (`rainRests`, counted off the run's match records), not `rainRest()` – the
+      // doctrine here is to redo the arithmetic without the engine's helpers.
+      strain -= RAIN_REST * f.rainRests
       c = clamp(c - strain)
       out.push(c)
     }

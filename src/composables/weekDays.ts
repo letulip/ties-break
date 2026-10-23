@@ -422,7 +422,28 @@ export function gymDayIndex(sessions: number): number | null {
  *  the layoff window is EXCLUSIVE of it (R10-17, the same off-by-one `layoffCoversWeek` encodes).
  *  Null when she is healthy. */
 export function layoffReturnWeek(snap: Pick<Snapshot, 'week' | 'injury'>): number | null {
-  return snap.injury ? snap.week + snap.injury.weeksRemaining : null
+  const weeks = layoffWeeksOut(snap)
+  return weeks === null ? null : snap.week + weeks
+}
+
+/** ⭐⭐ ROUND 53 №4 (owner, 21.10) – HOW MANY WEEKS SHE IS OUT, WITH THE STAFF SHE HAS. The wire's
+ *  `expectedWeeks` (the engine's `weeksRemaining − masseurRehabWeeksAhead`, the figure the onset
+ *  withdrawal sweep has used since round 34 #21) when it is present, else the clinic's number, which
+ *  is then already the truth. The owner withdrew entries by a calendar that counted the clinic's weeks,
+ *  and the entry list closed on a girl the masseur had cleared. This is the ONE place the screen picks
+ *  between the two numbers; the dialog that announces the injury still prints both. No arithmetic. */
+export function layoffWeeksOut(snap: Pick<Snapshot, 'injury'>): number | null {
+  const injury = snap.injury
+  if (!injury) return null
+  return injury.expectedWeeks ?? injury.weeksRemaining
+}
+
+/** The week she would be back on the CLINIC's count alone – only for the sentence that says why the two
+ *  differ (`layoffNoteFor`). Null when the masseur changes nothing. */
+export function layoffClinicReturnWeek(snap: Pick<Snapshot, 'week' | 'injury'>): number | null {
+  const injury = snap.injury
+  if (!injury || injury.expectedWeeks === undefined || injury.expectedWeeks >= injury.weeksRemaining) return null
+  return snap.week + injury.weeksRemaining
 }
 
 /** ⭐⭐ ROUND 46 #16 – IS SHE LAID UP IN `week`, as the week the button plays will find her.
@@ -440,16 +461,17 @@ export function layoffReturnWeek(snap: Pick<Snapshot, 'week' | 'injury'>): numbe
  *  purpose: the countdown on screen is NOT rewritten (round 34), the entry gate and the planner read
  *  the same window (R10-17), and the look-ahead starts the week AFTER the grid, so those rows are
  *  forecasts by construction – widening them is an owner call (docs/rounds/round-46.md, item 16).
+ *  ⚠⚠ ROUND 53 №4 MADE THAT CALL: the owner lost entries to the clinic's calendar, so every week reads
+ *  the honest figure now (the body below). The paragraph above is the history, not the rule.
  *
  *  Absent `expectedWeeks` (no masseur, a layoff too short for his cadence) means the clinic's number
  *  is already the truth, so this is byte-identical to `layoffCoversWeek` for every such career.
  *  Takes the two facts a Snapshot carries, like `layoffReturnWeek`. Pure, zero draws, no wording. */
 export function layoffHoldsWeek(snap: Pick<Snapshot, 'week' | 'injury'>, week: number): boolean {
-  const injury = snap.injury
-  if (week === snap.week + 1 && injury?.expectedWeeks !== undefined) {
-    return layoffCoversWeek(snap.week, injury.expectedWeeks, week)
-  }
-  return layoffCoversWeek(snap.week, snap.injury?.weeksRemaining, week)
+  // ⭐ ROUND 53 №4: EVERY week reads the honest figure now (round 46 fenced it to the played week; the
+  // owner's «прогнозные ладно ещё» did not survive withdrawing entries by the clinic's calendar). Same
+  // twin as the engine's `layoffCoversWeekAsPlayed` – the parity test holds them together.
+  return layoffCoversWeek(snap.week, layoffWeeksOut(snap), week)
 }
 
 /**
@@ -472,6 +494,12 @@ export function layoffHoldsWeek(snap: Pick<Snapshot, 'week' | 'injury'>, week: n
  */
 export function layoffNoteFor(snap: (Pick<Snapshot, 'week' | 'injury'> & Partial<Pick<Snapshot, 'startYear'>>) | null | undefined): string {
   const back = snap ? layoffReturnWeek(snap) : null
+  // ⭐ ROUND 53 №4: when the masseur is what shortens it, SAY SO (owner: «если это как-то от массажиста
+  // зависит – надо так и написать»). Two weeks, both from the wire's own figures; DRAFT wording.
+  const clinic = snap ? layoffClinicReturnWeek(snap) : null
+  if (snap && back !== null && clinic !== null) {
+    return t('Injured – back {0} with the masseur ({1} without)', [weekLabel(back, snap.startYear), weekLabel(clinic, snap.startYear)])
+  }
   // ⭐ r49 №2 ф2 (12.10): the last whole English sentence of the week surfaces outside `t()` – wrapped. English is
   // byte-identical (the key IS the sentence); the week hole rides the display `weekLabel` and, were an engine-English
   // label ever handed in instead, the `week` hole class (src/i18n/wordHoles.ts) re-spells it the same way.
@@ -1190,7 +1218,7 @@ export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
       dates: weekSpan(w, snap.startYear),
       kind,
       event,
-      injured: layoffCoversWeek(snap.week, snap.injury?.weeksRemaining, w),
+      injured: layoffHoldsWeek(snap, w),
       note,
     })
   }

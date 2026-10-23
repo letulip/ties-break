@@ -105,6 +105,10 @@ import { regionsText } from './identity-capture'
 const FIXTURE_DIR = resolve(process.cwd(), 'tests/fixtures/shop-identity')
 const RECORD_FILE = resolve(FIXTURE_DIR, 'render.json')
 const CAREERS = resolve(process.cwd(), 'e2e/fixtures')
+// ⚠⚠ THE RECORD WAS REGENERATED A THIRD TIME, ON 22.10 (ROUND 53 CLOSE), AND HERE IS THE FINDING IT ASKS FOR: on the
+// `pro-bare` page a sentence, a price or a title on the shelf moved – M7 (47487a7c) gates the hitting partner's top rung on
+// the coach's week and caps it at 60 % of it, so the sparring dial's rows and prices are the engine's new verdict. No other
+// page moved.
 const WRITING = process.env.TB_WRITE_SHOP_IDENTITY === '1'
 // ⚠ RE-RECORDED, L2-6 (08.10): the shop's copy calls `t()` now. The record is a text-node-by-text-node capture, and a paragraph that is only an interpolation
 // (`{{ t('…') }}`) loses the single space at each edge that Vue's condenser kept around the same words as bare text – 34 leaves moved, every one of them a space at the

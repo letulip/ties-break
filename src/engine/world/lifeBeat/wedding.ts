@@ -4,7 +4,8 @@
 // ⚠ wedding: THE COPY IS A SEPARATE MODULE AND THAT IS THE RULE RATHER THAN AN ACCIDENT.
 // ⚠ `seed:life:wedding:<week>` AND `seed:life:partner-name:<episodeId>` LIVE HERE NOW
 // → docs/notes/life-beats/wedding.md#weddingts-header
-import { pickInt, rngFromSeed } from '../../rng'
+import { rngFromSeed } from '../../rng'
+import { learnPartnerName } from './partnerName'
 import { ECONOMY } from '../../economy'
 import { cp } from '../../../shared/i18n'
 import { activeEpisode, loveEpisodesOf } from '../loveEpisodes'
@@ -68,35 +69,16 @@ export function rollWedding(world: WorldState): void {
   // re-derived at read (T1's law on the field): a later pool edit must never rename a husband an
   // old career already has. ⚠ The `??=` is belt on braces for hand-carried worlds: an episode that
   // somehow already holds a name keeps it, exactly as the migration's `??=` would keep it.
-  episode.partnerName ??= partnerNameFor(world.seed, episode.id)
+  // ⭐ R53 №2 – AND THE ENGAGEMENT ALWAYS NAMES HIM: since §3.1 the row holds the name from its creation, so this is
+  // the `??=` for older rows plus `nameKnownWeek` – the week the parent heard it, if no earlier road told him.
+  learnPartnerName(world, episode)
   raiseLifeBeat(world, 'engaged', episode.id)
 }
 
-/** ⚠ ⚠ DRAFT – THE POOL, ≥ 24 FICTIONAL FIRST NAMES AND NOT ONE SURNAME ANYWHERE IN THE WAVE,
- *  so no real person's name is CONSTRUCTIBLE…
- *
- *  ⚠ PARTNER_NAME_POOL: SINGLE TOKENS ONLY – no spaces, no initials – which is what keeps «no surname» a property a test can assert rather…
- *  ⚠ PARTNER_NAME_POOL: APPEND-ONLY once shipped, `SURNAMES`' own law and for the weaker of its two reasons only…
- *  → docs/notes/life-beats/wedding.md#partner_name_pool--draft--the-pool--24-fictional-first-names
- */
-export const PARTNER_NAME_POOL: readonly string[] = [
-  'Anton', 'Bruno', 'Casper', 'Daniel', 'Elias', 'Felix', 'Gabriel', 'Henrik',
-  'Ivo', 'Jonas', 'Karel', 'Lukas', 'Matteo', 'Niko', 'Oskar', 'Pavel',
-  'Rafael', 'Samuel', 'Tomas', 'Viktor', 'Willem', 'Xavier', 'Yann', 'Zeno',
-  'Andrei', 'Marco', 'Ruben', 'Stefan',
-]
-
-/** ⭐⭐⭐ v83 T6's ONE DERIVATION FUNCTION, landed with T3 because the engagement is its one call
- *  site: WHO SHE IS MARRYING, drawn uniformly on `seed:life:partner-name:<episodeId>` – the…
- *
- *  ⚠⚠ partnerNameFor: CALLED EXACTLY ONCE PER EPISODE, AT THE ENGAGEMENT, AND THE RESULT IS PERSISTED (`LoveEpisode.partnerName`)
- *  ⚠ partnerNameFor: `pickInt` over the whole pool – uniform, one draw, `drawPartnerWants`' own shape.
- *  → docs/notes/life-beats/wedding.md#partnernamefor--v83-t6s-one-derivation-function-landed-with-t3
- */
-export function partnerNameFor(seed: string, episodeId: string): string {
-  const r = rngFromSeed(`${seed}:life:partner-name:${episodeId}`)
-  return PARTNER_NAME_POOL[pickInt(r, 0, PARTNER_NAME_POOL.length - 1)]
-}
+// ⭐ R53 №2 (21.10) – THE POOL AND ITS ONE DRAW MOVED TO `./partnerName` VERBATIM (the name now exists from the
+// row's creation, and the hub that creates the row cannot import this module back). Re-exported so every
+// reader of `PARTNER_NAME_POOL` / `partnerNameFor` here keeps its import.
+export { PARTNER_NAME_POOL, partnerNameFor } from './partnerName'
 
 /** ⭐⭐⭐ v83 T3 – THE WEDDING LANDS, and the ONE writer of `latchedWeek`.
  *

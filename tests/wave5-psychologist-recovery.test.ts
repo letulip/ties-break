@@ -900,7 +900,7 @@ describe('wave 5 T4 E – with the seat empty, a walked career is byte-identical
     expect(empty.world.spiritShock, 'the mark came off inside the walk').toBeNull()
   })
 
-  it('⭐⭐⭐ THE ISOLATION – a HIRED seat on the recovery year moves FOUR keys and no others', () => {
+  it('⭐⭐⭐ THE ISOLATION – a HIRED seat on the recovery year moves FIVE keys and no others (four, and form through spirit – 22.10)', () => {
     // ⚠⚠ BOTH ARMS PAY THE SAME SALARY, which is what makes this about the SLOPE rather than about
     // the seat: hired with no year chosen is a legal state (the first pick is free and is still
     // available), so the bill, the funds and the finance ledger are identical on both sides and the
@@ -919,6 +919,14 @@ describe('wave 5 T4 E – with the seat empty, a walked career is byte-identical
     expect(movedKeys(idle.weekly, working.weekly, ['psychologistFocus']), '⭐⭐ the whole footprint of «Back on her feet», named')
       .toEqual([
         'events', // the receipt row
+        // ⚠⚠ 22.10 W1 (heat V1, r53 N8 → the architect) – THE FIFTH KEY WAS ALWAYS IN THE FOOTPRINT AND THE
+        // ROUNDING HID IT. Spirit below its knee scales her match player (`spiritMatchFactor`, world/player.ts),
+        // and the form residual (`formResidualsOf`, world/form.ts) reads that player from the match – so
+        // whenever she plays while the two arms' spirit differs, form differs too, even with the same winners.
+        // Before W1 the walk's window held matches at spirit 43 v 47 and 51 v 55 and form (kept in tenths)
+        // rounded to the same number; W1 re-timed the walk (5 matches in week 121 at 52.3 v 56.3 → 1.7 v 1.6).
+        // Named, not loosened: a consequence of the recovery, and «no others» still holds (probe: n8/psy.ts).
+        'form',
         'nextEventId', // ...and the id it took
         'spirit', // the faster walk home
         'spiritShock', // which comes off sooner, and carries the counter while it is on

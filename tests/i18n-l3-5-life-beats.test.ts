@@ -153,7 +153,8 @@ describe('§1 the key law – the life files\' cp keys are a list, and only the 
   })
 
   it('the list is the nine span sentences and the join – and every one is in the English catalog and WIRED', () => {
-    expect(LIFE_CLASS_B_KEYS.length).toBe(10)
+    // ⚠ 22.10 r53 M9 (N2): 10 → 33 – the name question's 23 `cp` sentences of `partnerNameCopy.ts` (every one a NEW sentence of a new beat, no old save holds one), regenerated with L35_WRITE_KEYS=1. The nine span sentences and the join are unmoved.
+    expect(LIFE_CLASS_B_KEYS.length).toBe(33)
     expect(LIFE_CLASS_B_KEYS.filter((k) => k.startsWith('They have been together for ')).length).toBe(9)
     expect(LIFE_CLASS_B_KEYS).toContain('{0} {1}')
     const missing = LIFE_CLASS_B_KEYS.filter((k) => CATALOG.keys[k]?.wrapped !== true)
@@ -527,8 +528,8 @@ describe('§7 every sentence a sink\'s seat can hold is a key of the frozen v92 
   for (const s of Object.values(LEAK_EVENT)) sentences.add(s)
   for (const cell of Object.values(LOSS_HER_LINE)) if (cell !== null) for (const s of [cell.told, cell.untold]) sentences.add(s)
 
-  it('the pools were found (the sweep is not blind): 28 answer lines, the kept rows, the leak\'s two, the key, the pause, the birth, the loss lines', () => {
-    expect(literalsOf('src/engine/world/lifeBeat.ts', 'ANSWER_EVENT').filter((s) => s.includes(' ')).length).toBe(28)
+  it('the pools were found (the sweep is not blind): 30 answer lines, the kept rows, the leak\'s two, the key, the pause, the birth, the loss lines', () => {
+    expect(literalsOf('src/engine/world/lifeBeat.ts', 'ANSWER_EVENT').filter((s) => s.includes(' ')).length).toBe(30) // ⚠ 22.10 r53 M9 (N2): 28 → 30 – the name question's two feed rows, `met.ask` / `met.insist`
     expect(sentences.size).toBeGreaterThan(50)
   })
 
@@ -542,7 +543,9 @@ describe('§7 every sentence a sink\'s seat can hold is a key of the frozen v92 
   })
 
   it('every one is a key of the frozen v92 table (a stored row migrated from an old save lands on the SAME key)', () => {
-    expect([...sentences].filter((s) => !TABLE.has(s))).toEqual([])
+    // ⚠ 22.10 r53 M9 (N2): the two NEW stored feed rows of R53 №2 (the name question) are not the v92 table's – no old save can hold them. Named here, not loosened (⚠ DRAFT under the owner's pass).
+    // (BORN_R53 is hoisted to module scope since 22.10 r53 W1 – the §8 answer-row test names the same two rows.)
+    expect([...sentences].filter((s) => !TABLE.has(s) && !BORN_R53.includes(s))).toEqual([])
   })
 
   it('every one is a key of the English catalog (the three constants moved into their copy leaves so the census reads them) and seatable', () => {
@@ -578,7 +581,18 @@ describe('§7 every sentence a sink\'s seat can hold is a key of the frozen v92 
 // ⚠ RE-STAMPED 15.10 (round 52, his review-sheet answers, architect): '5/0' moved with J6 (4cc2349c) – the
 // half-year checkpoint 32 → 28 and the windows [24,32) / [48,64) move the coached career's coach talks. '0/1'
 // checked AFTER the stamp. Was '445a8b73'.
-const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': '96df51c9', '0/1': 'ac91e65e' }
+// ⚠ RE-STAMPED 22.10 (round 53 close, architect): '5/0' moved with the round's whole shape of a coached career (M7's
+// prices and letters, M8's pedigree, M9's partner name at the row's birth, M10/M11's weather moving results). '0/1'
+// checked AFTER the stamp – and it MOVED too this time (the self-coached career's results shift under the weather, M11,
+// and its love row is named at birth, M9): 'ac91e65e' → '9e652d63'. Was '96df51c9' / 'ac91e65e'.
+// ⚠ RE-STAMPED 22.10 (r53 W1, heat variant V1 – she tires EARLIER in heat, fatigue onset 120 / heat): '5/0' AND '0/1' moved –
+// a hot match past point 75 plays differently, so both boosted careers' results and the beats they license move. No pick key,
+// draw count or pool order changed. Was 'fd8ea9f6' / '9e652d63'.
+const PRE_WAVE_STRINGS: Record<string, string> = { '5/0': 'c31ffdfc', '0/1': '75525f7b' }
+/** ⚠ 22.10 r53 M9 (N2): the two NEW stored feed rows of R53 №2 (the name question) are not the v92 table's – no old save
+ *  can hold them. Named here, not loosened (⚠ DRAFT under the owner's pass). Hoisted 22.10 (r53 W1): with V1's heat the
+ *  played careers now reach the name question too, so the §8 answer-row test names the same two rows. */
+const BORN_R53 = ['There is someone in her life. We asked what his name is.', 'There is someone in her life. We pressed her for his name.']
 /** and the bench's MAIN stream, three draws on from the last week of each career, from the same pre-wave runs – the wave draws nothing, and the next draws prove the position is the pre-wave one */
 const PRE_WAVE_NEXT3: Record<string, number[]> = {
   '5/0': [0.18923983839340508, 0.10872006509453058, 0.37577401218004525],
@@ -623,7 +637,7 @@ describe('§8 played careers', () => {
       for (const r of run.answerRows) {
         expect(r.c, `${r.kind}: ${r.text}`).toBeDefined()
         expect(render(r.c!)).toBe(r.text)
-        expect(TABLE.has(r.c!.k), r.c!.k).toBe(true)
+        expect(TABLE.has(r.c!.k) || BORN_R53.includes(r.c!.k), r.c!.k).toBe(true)
         kinds.add(r.kind)
         rows++
       }
@@ -664,7 +678,9 @@ describe('§9 the pick keys – the sub-streams the life files draw on (this wav
   })
 })
 /** the digest of the sorted `rngFromSeed(...)` argument texts of every life file, computed by this very scan on the PRE-WAVE tree (0b60a1b3): the new tree must give the same */
-const PICK_KEYS_DIGEST = 'feef4fb8'
+// ⚠ RE-STAMPED 22.10 (round 53 close, architect): the pick-keys list gained M9's partner-name keys and the weather
+// lines' keys (M10/M11) – 21 keys now. Was 'feef4fb8'.
+const PICK_KEYS_DIGEST = 'e86f369f'
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // §10 – the fridge notes

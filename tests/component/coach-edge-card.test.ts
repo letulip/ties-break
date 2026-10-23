@@ -463,7 +463,9 @@ describe('the added lines clear the portrait', () => {
       expect(getComputedStyle(art).overflow, 'and clips the picture at it').toContain('hidden')
       expect(px(getComputedStyle(art).left, '.cm-art left'), 'starting at the column edge').toBe(0)
 
-      for (const sel of ['.cm-uplift-season', '.cm-edge', '.cm-plaque', '.cm-load', '.cm-name']) {
+      // ⚠ RE-AIMED, R53 L1 (21.10): `.cm-load` left the card (it is the tier block's `.tier-note` now), so the
+      // card's last paragraph in this corridor is `.cm-profile` – the same column, the same claim.
+      for (const sel of ['.cm-uplift-season', '.cm-edge', '.cm-plaque', '.cm-profile', '.cm-name']) {
         const air = inkLeft(current[0], sel) - strip
         expect(air, `${sel} clears the portrait by ${air}px at ${width}px`).toBeGreaterThanOrEqual(10)
         expect(air, `${sel} has not walked off into the middle of the card`).toBeLessThanOrEqual(15)
@@ -498,7 +500,7 @@ describe('the added lines clear the portrait', () => {
       await nextTick()
       const revealed = wrapper.findAll('.cm-row').filter((r) => r.classes().includes('current'))[0]
       expect(revealed.find('.cm-plaque').text()).toBe(PLAQUE.s2.upper)
-      for (const sel of ['.cm-uplift-season', '.cm-edge', '.cm-plaque', '.cm-load', '.cm-name']) {
+      for (const sel of ['.cm-uplift-season', '.cm-edge', '.cm-plaque', '.cm-profile', '.cm-name']) {
         expect(inkLeft(revealed, sel) - strip, `${sel} still clears the portrait at ${width}px`).toBe(12)
       }
 

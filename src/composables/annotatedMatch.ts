@@ -19,7 +19,7 @@
 // the whole of C-04: before this they proved the TESTS' spelling reproduced the engine.
 import { recordedMatchOptions, simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
-import type { MatchPlayer, Surface } from '../engine/match/types'
+import type { MatchPlayer, MatchWeather, Surface } from '../engine/match/types'
 import type { AnnotatedMatch } from '../shared/matchViz'
 
 /** Everything a replay needs off a record: the two skill snapshots as they were at match time, the
@@ -29,6 +29,8 @@ import type { AnnotatedMatch } from '../shared/matchViz'
 export interface ReplayableMatch {
   surface: Surface
   seed?: string
+  /** ⭐ r53 step 11 – the day it was played on (`MatchRecord.weather`); absent = calm, as before. */
+  weather?: MatchWeather
   a: MatchPlayer
   b: MatchPlayer
 }

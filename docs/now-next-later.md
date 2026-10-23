@@ -29,7 +29,7 @@ last-reviewed: 2026-09-23
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 52 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 53 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
 **Round 48 is the first detailed pass on the merged 47** ([round-48.md](rounds/round-48.md),
@@ -190,8 +190,9 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   held a predicate the engine did not*. The instrument exists (round 28 #8's paired mount test) and
   needs naming as a convention and applying to the known sites.
   ([the-quality-rig.md](backlog/the-quality-rig.md) row 13.)
-- **Round 16 #20, keeping the screen awake during a match** – no `wakeLock` reference exists in
-  `src/`. ⚠ Its neighbour, **#8 kit wear on holiday, SHIPPED in round 29 #20** after four askings.
+- **Round 16 #20, keeping the screen awake during a match** – ⚙ SHIPPED, and this line was stale
+  (re-verified 21.10, round 53 step 3): `useScreenWake(playing)` in `MatchViewer.vue:266` over
+  `composables/screenWake.ts` (`navigator.wakeLock`). ⚠ Its neighbour, **#8 kit wear on holiday, SHIPPED in round 29 #20** after four askings.
   ([round-16.md](rounds/round-16.md).)
 - **Round 8 #1, the in-tournament player card** – untouched since 25.07 and the oldest open item in
   the folder. ([rounds/README.md](rounds/README.md), the round-8 row.)
@@ -225,7 +226,10 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
   small engine primitive (`practiceTired(condition)`) in `world/planner.ts`, four lines plus a case. W4
   did not authorise a new primitive for a P3 row.
   ([05-ui.md](review-principles-2026-09-26/05-ui.md), E-P02.)
-- **Three findings wait on one missing utility: this app has no screen-reader-only class.** E-P11,
+- ⚙ **SHIPPED (T6.4 + W4, re-verified 21.10, round 53 step 4) – this line was stale:** `.sr-only` is in
+  `src/style.css`, E-P11/E-P12 carry `aria-describedby` to hidden spans, E-P13 to the visible pills
+  (`tests/component/a11y-sweep.test.ts`). The old text, kept for the record: three findings wait on one
+  missing utility: this app has no screen-reader-only class. E-P11,
   E-P12 and E-P13 all propose routing `title` text into `aria-describedby`, which must point at an
   ELEMENT – so each needs a visually-hidden span, and a grep for `sr-only`, `visually-hidden` or
   `clip: rect` over `src/` returns **nothing**. ⚠ It is not new copy: those sentences already exist in

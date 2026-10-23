@@ -60,17 +60,23 @@ const BIRTHS: Record<string, [number, number] | null> = { default: null, dec31: 
  *  due coach talk at weeks together 12/32/56 inside the 110-week walk. Every `rngN` green.
  *  ⚠ RE-STAMPED 15.10 (round 52, his review-sheet answers, architect): all nine `hN` moved with J6 (4cc2349c) – the
  *  half-year checkpoint 32 → 28 and the windows [24,32) / [48,64) («Точку на 28-ю нед.», «Окно 48–63 нед.»), so the
- *  walked careers raise their coach talks on other weeks. Every `rngN` green – each of the nine failed only at `hN`. */
+ *  walked careers raise their coach talks on other weeks. Every `rngN` green – each of the nine failed only at `hN`.
+ *  ⚠ RE-STAMPED 22.10 (round 53 close, architect): all nine `hN` moved – the round re-priced the coach (M7), gave
+ *  elite coaches a pedigree (M8), named the partner at the row's birth with a `nameKnownWeek` key on every love row
+ *  (M9, v95) and made the weather a fact of the event and the match (M10/M11: results move). Every `rngN` green –
+ *  each of the nine failed only at `hN`.
+ *  ⚠ RE-STAMPED 22.10 (r53 W1, heat variant V1 – she tires EARLIER in heat, fatigue onset 120 / heat): all nine `hN` moved – a hot match past point 75 plays differently, so the
+ *  walked careers' results move. Every `rngN` green – each of the nine failed only at `hN`. */
 const BASELINE: Record<string, { rng0: string; h0: string; rngN: string; hN: string }> = {
-  's1-alpha|default': { rng0: '-1306492581:0', h0: '1662620015bc23c9', rngN: '-1625113431:87894', hN: 'cf9af462d81fbd1b' },
-  's1-alpha|dec31': { rng0: '-1306492581:0', h0: 'e3c0dbdc02dfe2c4', rngN: '-1625113431:87894', hN: '346b745d99c82e53' },
-  's1-alpha|jan6': { rng0: '-1306492581:0', h0: 'baccabf4e3897d71', rngN: '-1625113431:87894', hN: 'bd4810a5198b9f1c' },
-  's1-beta|default': { rng0: '2140152401:0', h0: '2376db693585cb49', rngN: '-73975459:87900', hN: 'afe11868de995edd' },
-  's1-beta|dec31': { rng0: '2140152401:0', h0: 'a2dd35eb5fdb72f9', rngN: '-73975459:87900', hN: 'cfc875bf7a0ce3de' },
-  's1-beta|jan6': { rng0: '2140152401:0', h0: '954e24dc6bc505f9', rngN: '-73975459:87900', hN: 'c2f91c6c77506cf2' },
-  's1-gamma|default': { rng0: '-2119545102:0', h0: '5f847e633dd4e992', rngN: '1792860147:87901', hN: 'f50756434ccc0889' },
-  's1-gamma|dec31': { rng0: '-2119545102:0', h0: 'ab3e8951a687d2e4', rngN: '1792860147:87901', hN: 'b1429d28f8c02d2e' },
-  's1-gamma|jan6': { rng0: '-2119545102:0', h0: 'ae71ca27f9886772', rngN: '1792860147:87901', hN: '8355b8e807f76e38' },
+  's1-alpha|default': { rng0: '-1306492581:0', h0: '1662620015bc23c9', rngN: '-1625113431:87894', hN: 'a105acd5fba35084' },
+  's1-alpha|dec31': { rng0: '-1306492581:0', h0: 'e3c0dbdc02dfe2c4', rngN: '-1625113431:87894', hN: 'fc5b365677599757' },
+  's1-alpha|jan6': { rng0: '-1306492581:0', h0: 'baccabf4e3897d71', rngN: '-1625113431:87894', hN: 'fdb747a85ac9d0fc' },
+  's1-beta|default': { rng0: '2140152401:0', h0: '2376db693585cb49', rngN: '-73975459:87900', hN: '0eaf0e62babe78fe' },
+  's1-beta|dec31': { rng0: '2140152401:0', h0: 'a2dd35eb5fdb72f9', rngN: '-73975459:87900', hN: 'd8f73e6e429d2e50' },
+  's1-beta|jan6': { rng0: '2140152401:0', h0: '954e24dc6bc505f9', rngN: '-73975459:87900', hN: '673c7a8f8ce31881' },
+  's1-gamma|default': { rng0: '-2119545102:0', h0: '5f847e633dd4e992', rngN: '1792860147:87901', hN: 'c4a3551f3ecce170' },
+  's1-gamma|dec31': { rng0: '-2119545102:0', h0: 'ab3e8951a687d2e4', rngN: '1792860147:87901', hN: '91eb93dc501a5fdb' },
+  's1-gamma|jan6': { rng0: '-2119545102:0', h0: 'ae71ca27f9886772', rngN: '1792860147:87901', hN: 'd07b840961abf7cb' },
 }
 
 function digest(world: unknown): string {
@@ -248,9 +254,20 @@ describe('S1 · C – the schema move', () => {
     expect('legacy' in fixture).toBe(false)
     // ⚠ RE-AIMED 09.10 BY v93 (the localization rig L3-0): "nothing for the migration to do" was true of the head; the head moved, and the one step left
     // only attaches a ref BESIDE each recognised row's text – so the fixture equals the migrated save minus the version and those refs.
-    const migrated = migrateSave(load('v92.json')) as unknown as { schemaVersion: number; events: Record<string, unknown>[] }
+    // ⚠ RE-AIMED 22.10 (r53 M9, v95): the head's steps now also stamp `nameKnownWeek` on every love row (the partner is named at the row's birth), so the
+    // fixture equals the migrated save minus the version, those refs AND that field – stripped from `loveEpisodes` the way `c` is from `events`.
+    const migrated = migrateSave(load('v92.json')) as unknown as {
+      schemaVersion: number
+      events: Record<string, unknown>[]
+      loveEpisodes?: Record<string, unknown>[]
+    }
     expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
-    expect({ ...migrated, schemaVersion: 92, events: migrated.events.map(({ c: _c, ...row }) => row) }).toEqual(fixture)
+    expect({
+      ...migrated,
+      schemaVersion: 92,
+      events: migrated.events.map(({ c: _c, ...row }) => row),
+      ...(migrated.loveEpisodes ? { loveEpisodes: migrated.loveEpisodes.map(({ nameKnownWeek: _n, ...row }) => row) } : {}),
+    }).toEqual(fixture)
   })
 
   it('creation refuses a year that is not a whole calendar year', () => {

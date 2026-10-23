@@ -508,6 +508,9 @@ export function layoffCoversWeek(
  *  parent can fire him, drop a rung or book a holiday before it comes), and the owner's own word on
  *  those is «прогнозные ладно ещё».
  *
+ *  ⚠⚠ SUPERSEDED IN ITS FENCE BY ROUND 53 №4 (see the body): the replay now holds for EVERY week, because
+ *  the owner planned against the clinic's calendar and lost entries the onset sweep had kept.
+ *
  *  `expectedWeeks` is nullable so a caller can pass `snapshot.injury?.expectedWeeks` straight in: absent
  *  means «no masseur, or a layoff too short for his cadence», where the clinic's number is already
  *  the truth and this is byte-identical to `layoffCoversWeek`. Pure integer comparison, zero RNG. */
@@ -517,18 +520,22 @@ export function layoffCoversWeekAsPlayed(
   expectedWeeks: number | null | undefined,
   week: number,
 ): boolean {
-  const asTheTickPays = week === currentWeek + 1 && expectedWeeks !== null && expectedWeeks !== undefined
-  return layoffCoversWeek(currentWeek, asTheTickPays ? expectedWeeks : weeksRemaining, week)
+  // ⭐⭐ ROUND 53 №4 (owner, 21.10) WIDENS THE FENCE ABOVE TO EVERY WEEK. «Показывает 4 недели, я снимаю
+  // заявки, а за неделю до турнира она здорова, и подать заявку уже поздно.» The onset sweep has read the
+  // honest figure since round 34 #21; the SCREENS and this gate read the clinic's for any week but the
+  // next, so he withdrew by the calendar and the gate refused the re-entry by the same calendar. One
+  // window now, the one the sweep keeps: `expectedWeeks` when the wire carries one, else the clinic's.
+  const honest = expectedWeeks !== null && expectedWeeks !== undefined ? expectedWeeks : weeksRemaining
+  return layoffCoversWeek(currentWeek, honest, week)
 }
 
-/** `layoffCovering`'s twin for the WORLD, the played week read as the tick will find it (see
- *  `layoffCoversWeekAsPlayed`). ⚠ It DELEGATES to `layoffCovering` for every other week, so the clinic's
- *  window still has exactly one spelling and the replay is the single exception to it. The onset
- *  sweep over practices (`rollInjury`, a cancellation and not a label) and the forecast rows stay on
- *  `layoffCovering` itself, on purpose – round 34's asymmetry. Pure state, zero draws. */
+/** `layoffCovering`'s twin for the WORLD, read with the masseur's replay (see `layoffCoversWeekAsPlayed`).
+ *  Since round 53 №4 it holds for EVERY week, not only the played one. The onset sweep over practices
+ *  (`rollInjury`, a cancellation and not a label) stays on `layoffCovering` itself, on purpose.
+ *  Pure state, zero draws. */
 export function layoffCoveringAsPlayed(world: WorldState, week: number): WorldState['injury'] {
   const injury = world.injury
-  if (injury === null || week !== world.week + 1) return layoffCovering(world, week)
+  if (injury === null) return null
   const expectedWeeks = injury.weeksRemaining - masseurRehabWeeksAhead(world)
   return layoffCoversWeekAsPlayed(world.week, injury.weeksRemaining, expectedWeeks, week) ? injury : null
 }

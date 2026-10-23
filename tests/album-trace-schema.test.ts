@@ -99,6 +99,14 @@ describe('v84 §A – the migration back-fills the trace, and only ever with the
     const b = JSON.parse(before) as Record<string, unknown>
     for (const key of Object.keys(b)) {
       if (key === 'schemaVersion') continue
+      if (key === 'loveEpisodes') {
+        // ⚠ RE-AIMED 22.10 BY v95 (r53 M9 – `nameKnownWeek` on every love-episode row): the head's step appends that one key to each episode, so the arm no
+        // longer says «untouched» of the rows – it says the ONLY change is that key (present on every row, and every other byte of every row exact).
+        const rows = out[key] as Record<string, unknown>[]
+        expect(rows.every((r) => 'nameKnownWeek' in r), 'v95 writes nameKnownWeek on every episode').toBe(true)
+        expect(JSON.stringify(rows.map(({ nameKnownWeek: _n, ...row }) => row)), 'loveEpisodes: the ONLY change is the nameKnownWeek key').toBe(JSON.stringify(b[key]))
+        continue
+      }
       expect(bareJson(key, out[key]), `${key} survives the step untouched`).toBe(bareJson(key, b[key]))
     }
   })

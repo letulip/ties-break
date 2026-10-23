@@ -58,6 +58,7 @@ import { housekeep, recomputeRankAndMilestones } from './bookkeeping'
 // erased at compile time, so no runtime edge points from the package back at `world.ts`.
 import type { WorldState } from '../world'
 import { cp, joinCopy, type CopyRef } from '../../shared/i18n'
+import { eventWeather } from '../season/preview'
 
 /** The clause appended to a tournament summary that explains the EFFECTIVE ranking change
  *  (round-5 item 1a). `delta` is the change in the kid's windowed best-N sum caused by the
@@ -115,6 +116,37 @@ export function tournamentSummaryRef(a: {
   if (clause) parts.push(clause)
   if (a.retired) parts.push(cp` – she retired hurt`)
   return joinCopy('', parts)
+}
+
+/** ⭐ r53 step 11 – WHICH WEATHER TAIL A RESULT ROW CARRIES, one at most: rain falling first (it
+ *  held the start), then heat at 30° and over («изнуряющая жара»), then a strong wind. `null` on a day
+ *  with none of the three. Two lines per feature, picked by the day's FOURTH draw (`linePick`, already
+ *  drawn in stage 1) – no draw here. Exported for the net. DRAFT. */
+export type WeatherTail = 'rain' | 'heat' | 'wind'
+export function weatherTailOf(w: { temperatureC: number; wind: string; rain: string }): WeatherTail | null {
+  if (w.rain === 'falling') return 'rain'
+  if (w.temperatureC >= 30) return 'heat'
+  if (w.wind === 'strong') return 'wind'
+  return null
+}
+export function championWeatherRef(
+  name: string,
+  tier: string,
+  surface: string,
+  w: { temperatureC: number; wind: string; rain: string; linePick: number },
+): CopyRef | null {
+  const tail = weatherTailOf(w)
+  if (tail === null) return null
+  const second = w.linePick >= 0.5
+  if (tail === 'rain')
+    return second ? cp`🏆 ${name} won the ${tier} (${surface}) – thanks to the rain, on the fresher legs.` : cp`🏆 ${name} won the ${tier} (${surface}) despite the rain.`
+  if (tail === 'heat')
+    return second ? cp`🏆 ${name} won the ${tier} (${surface}) – the last one standing in the heat.` : cp`🏆 ${name} won the ${tier} (${surface}) in exhausting heat.`
+  return second ? cp`🏆 ${name} won the ${tier} (${surface}) – the wind had its say, and she had the last word.` : cp`🏆 ${name} won the ${tier} (${surface}) in a strong wind.`
+}
+/** The English of an engine ref – its key with the holes filled. Plain `{n}` holes only (`cp`'s). */
+function englishOf(ref: CopyRef): string {
+  return ref.k.replace(/\{(\d+)\}/g, (_hole, n: string) => String(ref.p?.[Number(n)] ?? ''))
 }
 
 // Commit the kid's run: award points, emit the summary + milestones, recompute rank + housekeep.
@@ -636,11 +668,15 @@ function finalizeTournament(world: WorldState): void {
       p.players[championId]?.name ??
       (isFieldProId(championId) ? fieldProsOf(world).find((c) => c.id === championId)?.name : undefined) ??
       championId
+    // ⭐ r53 step 11 – THE DAY GETS A TAIL ON THE RESULT ROW (weather stage 2, spec §4), when the day
+    // had something to say; a calm day keeps the shipped sentence byte for byte.
+    const dayRef = championWeatherRef(formatShortName(champName), tier.label, event.surface, eventWeather(world.seed, event))
+    const champText = dayRef ? englishOf(dayRef) : `🏆 ${formatShortName(champName)} won the ${tier.label} (${event.surface}).`
     addEvent(world, {
       week: world.week,
       type: 'info',
-      text: `🏆 ${formatShortName(champName)} won the ${tier.label} (${event.surface}).`,
-      c: cp`🏆 ${formatShortName(champName)} won the ${tier.label} (${event.surface}).`,
+      text: champText,
+      c: dayRef ?? cp`🏆 ${formatShortName(champName)} won the ${tier.label} (${event.surface}).`,
     })
   }
   if (kidFinish === 0) fireMilestone(world, 'first-title', `🏆 First career title: ${tier.label}!`, cp`🏆 First career title: ${tier.label}!`)

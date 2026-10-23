@@ -48,7 +48,7 @@ import { trainFlavors, restFlavors } from '../src/engine/world/phaseFinance'
 import { gear } from '../src/engine/economy/gear'
 import { COLLEGE_TIER_NAME } from '../src/engine/collegeOffer'
 import { HIREABLE_TIERS } from '../src/engine/coach'
-import { BELOW_BEST_LADDER, ROOM_BANDS, TRAVEL_EDGE_LINE, coachBlurb, coachLoadNote, coachPlaqueLine, coachProfileNote, coachRoomArgument, coachRoomBand } from '../src/engine/world/coachMarket'
+import { BELOW_BEST_LADDER, PEDIGREE_PAST_LINE, PEDIGREE_TRADE_LINE, ROOM_BANDS, TRAVEL_EDGE_LINE, coachBlurb, coachLoadNote, coachPlaqueLine, coachProfileNote, coachRoomArgument, coachRoomBand } from '../src/engine/world/coachMarket'
 import { ECONOMY } from '../src/engine/economy'
 import { RADAR_AXIS_LABEL } from '../src/engine/radar'
 import { readFileSync } from 'node:fs'
@@ -274,6 +274,7 @@ function coachMarketTexts(): string[] {
     for (const seasonsTogether of [1, 2, 3]) out.add(coachPlaqueLine({ placement, week: 200, revealWeek: 100, seasonsTogether }))
   }
   out.add(TRAVEL_EDGE_LINE)
+  for (const line of [...Object.values(PEDIGREE_PAST_LINE), ...Object.values(PEDIGREE_TRADE_LINE)]) out.add(line)
   out.delete('')
   return [...out]
 }

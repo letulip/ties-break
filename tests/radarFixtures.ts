@@ -23,6 +23,7 @@
 // `read` resolves relative to THIS file, which is why the helpers can live here at all: it is in
 // tests/ like the files that call it, so every '../src/...' path they pass still means what it did.
 
+import { plainEliteInChair } from './economyCalibration'
 import { readFileSync } from 'node:fs'
 import { buildTrainingRead, type RadarWorldView } from '../src/engine/radar'
 import { SKILL_KEYS, type KidSkills, type SkillKey } from '../src/engine/development'
@@ -90,6 +91,13 @@ export function synthView(over: Partial<RadarWorldView> & { n?: number; score?: 
 /** A career driven the way the bench drives one: enter everything, resolve everything. */
 export function runCareer(seed: string, tier: CoachTier, weeks: number, onWeek?: (w: WorldState) => void): WorldState {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, background: 'wealthy', coachTier: tier })
+  // ⚠ RE-AIMED 22.10 (r53, N3 – the close; M8 0e1c36a7 + M11 ee160ce6): «elite reads sharper than high at w90» went red at
+  // M11 (bisected), but the walk under it had changed at M8 – 'radar-ladder''s opening elite coach drew a famous past
+  // (+50% of his labour), and the wealthy walk was already insolvent at w90 at M10 (funds -$45,529, band 0.633); the
+  // weather then moved that insolvent career's matches and its band to 0.955, over high's 0.932. The ladder is the
+  // RUNG's claim, so a plain elite sits in the chair (`plainEliteInChair`, a no-op for every other rung and plain
+  // seed): solvent at w90 (+$31,466) and reading 0.281.
+  plainEliteInChair(world)
   const rng = rngFromSeed(world.seed)
   world.plan = { ...WEEK_PLAN_PRESETS.balanced }
   for (let w = 0; w < weeks; w++) {

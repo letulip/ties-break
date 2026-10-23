@@ -90,6 +90,21 @@ const COURT_FOUR_COPY = new Set(
  *  NOTICES, DISCLOSES and RESPONDS, and «not one shared phrase» is explicitly the wrong target). The
  *  sweep counts literals in the source; the set counts strings. */
 const COURT_FOUR_MASCULINE = 10
+// ⚠ 22.10 r53 M9 (N2) – THE SECOND NAMED EXCEPTION: HIS NAME (R53 №2, docs/specs/partner-name-disclosure-2026-10.md). The nine lines below are about her PARTNER – the person she is seeing, whom
+// she names or refuses to name – and the spec lets the parent say «he/him» of him; the COACH is the subject of none of them (`partnerNameCopy.ts`'s header says so in as many words). Exact
+// strings, like the court-four set above, so a tenth masculine sentence is a red that names this block, and an excused COACH line is impossible by construction (a coach line is not in the set).
+const PARTNER_NAME_COPY = new Set([
+  '"His name is ${n}. You\'ll like him."',
+  '"His name is ${n}. Be nice to him."',
+  '"He\'s called ${n}."',
+  '"His name is ${n}. I\'ll tell you more when I know more myself."',
+  'His name is ${n} – she said it over dinner, as if we had always known.',
+  'She called from college and told us his name: ${n}.',
+  'Ask what his name is',
+  'There is someone in her life. We asked what his name is.',
+  'There is someone in her life. We pressed her for his name.',
+])
+const PARTNER_NAME_MASCULINE = 9
 const COURT_FOUR_MASCULINE_DISTINCT = 7
 
 /** Source text → the string the player reads. Only `\'` and its siblings occur in this corpus, and
@@ -202,12 +217,17 @@ describe('R15-7 - no surface guesses a professional\'s gender', () => {
     // stopped at the components would have missed seven of the nine surfaces this item found.
     const offenders: string[] = []
     let excused = 0
+    let partnerExcused = 0
     for (const f of files) {
       for (const s of literals(f.code)) {
         if (!MASCULINE.test(s)) continue
         // ⚠ ROUND 42 #15 – the one named exception; see the block at the head of this file.
         if (COURT_FOUR_COPY.has(decoded(s))) {
           excused++
+          continue
+        }
+        if (PARTNER_NAME_COPY.has(decoded(s))) {
+          partnerExcused++
           continue
         }
         offenders.push(`${f.name}: ${s.slice(0, 90)}`)
@@ -218,6 +238,7 @@ describe('R15-7 - no surface guesses a professional\'s gender', () => {
     // a hole that can widen for free; with it, a new masculine sentence in the story is a red that
     // names the header's own conversation.
     expect(excused, 'the court-four story\'s masculine lines, counted').toBe(COURT_FOUR_MASCULINE)
+    expect(partnerExcused, 'the partner-name lines, counted (⚠ 22.10 r53 M9)').toBe(PARTNER_NAME_MASCULINE)
   })
 
   it('⚠ the exception is not a hole – it is derived from one situation and it really is live', () => {

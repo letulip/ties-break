@@ -79,6 +79,7 @@ import {
   PSY_FOCUS_LINE,
 } from '../engine/world/psychologist'
 import { engineText, t } from '../i18n'
+import { weekLabel } from '../i18n/dates'
 // ⭐⭐⭐ v80, WAVE F2 – the third seat's refusal, from the engine that throws it (the R10-16 doctrine,
 // asked of one more seat). Nothing else of his is imported: his rung catalogue is `ECONOMY.sparring`
 // below, and every live fact is the snapshot's.
@@ -314,6 +315,23 @@ const masseurFareLine = computed(() =>
     ? t('Travels with her: table work between rounds. The deeper the run, the more it buys – a first-round exit buys nothing.')
     : t('Stays home on tournament weeks. One fare saved on every trip.'),
 )
+// ⭐ ROUND 53 STEP 2 (owner, 21.10: «при увольнении написать в попапе последствия этого действия»). The
+// engine decides – `snapshot.masseurRelease` is present only while a masseur's cadence is shortening a
+// running layoff – and this prints it: the two return weeks, and the entries the release will withdraw.
+// ABSENT view = the old message, byte for byte. Weeks go through the display `weekLabel`, never raw.
+const masseurReleaseMessage = computed(() => {
+  const base = t('Let the masseur go? The weekly salary stops, and rehab goes back to the clinic alone.')
+  const view = game.snapshot?.masseurRelease
+  if (!view) return base
+  // the local is NAMED startYear on purpose: the S2e ratchet (tests/succession-s1-start-year.test.ts) reads the word in the call
+  const startYear = game.snapshot?.startYear
+  const parts = [base, t('Her return moves from {0} to {1}.', [weekLabel(view.backWithWeek, startYear), weekLabel(view.backWithoutWeek, startYear)])]
+  if (view.atRisk.length > 0) {
+    const list = view.atRisk.map((r) => `${r.label} – ${weekLabel(r.week, startYear)}`).join(', ')
+    parts.push(t('These entries will be withdrawn – the doctor will not clear her in time: {0}.', [list]))
+  }
+  return parts.join(' ')
+})
 const masseur = computed<StaffMember>(() => ({
   id: 'masseur',
   name: t('Masseur'),
@@ -325,7 +343,7 @@ const masseur = computed<StaffMember>(() => ({
   // Both directions ask, the screen's own doctrine (see the coach's `releasing` next door): a screen
   // that asks before it starts paying somebody and not before it stops is not neutral about the two.
   hireMessage: t('Hire a masseur for {0} a week ({1})? You can end the arrangement any week, like the coach.', [masseurSalary.value, masseurRungLabel.value.toLowerCase()]),
-  releaseMessage: t('Let the masseur go? The weekly salary stops, and rehab goes back to the clinic alone.'),
+  releaseMessage: masseurReleaseMessage.value,
   setHired: (hire: boolean) => game.hireMasseur(hire),
   dial: {
     label: t('Masseur sessions per week'),
@@ -618,7 +636,8 @@ const sparring = computed<StaffMember>(() => ({
     // which he ruled unsuitable for a control: a label must say what the control CHANGES.
     label: t('Hitting partner – experience level'),
     active: sparringRung.value,
-    rungs: SPARRING_RUNGS.map((r, i) => ({
+    // ⭐ ROUND 53 №1 – the top rung is shown only while the market offers it (a coach whose week carries it).
+    rungs: SPARRING_RUNGS.slice(0, (game.snapshot?.sparringTopRungOffered ?? true) ? 3 : 2).map((r, i) => ({
       value: i,
       label: r.label,
       priceLabel: formatCents(sparringRungPrices.value[i] ?? 0),

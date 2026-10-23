@@ -740,6 +740,14 @@ export interface LoveEpisode {
    *  This field is also the moment `partnerId` has been waiting for since v74: the identity of the
    *  ROW (`id`) and the identity of the PERSON stop being the same thing here. */
   partnerName: string | null
+  /** ⭐⭐ v95 (R53 №2, 21.10 – docs/specs/partner-name-disclosure-2026-10.md) – THE WEEK THE PARENT HEARD HIS NAME,
+   *  or null while he has not. `partnerName` is drawn when the row is born (§3.1) and is NOT the parent's to
+   *  see until this is set; the relationships tile reads the name only through it (the fog). Its one writer is
+   *  `learnPartnerName` (`world/lifeBeat/partnerName.ts`), reached by four roads – her card at close, the
+   *  parent asking or insisting, her own later word, the papers – and by the engagement, which always names.
+   *  ⚠ OPTIONAL IN THE TYPE AND ABSENT MEANS NULL, for the hand-built rows in tests and benches; every save
+   *  carries it from v95 (the migration writes it on every row, `rollArrival` on every new one). */
+  nameKnownWeek?: number | null
 }
 
 /** ⭐⭐⭐ v77 – WHAT THE BOOTH TOUCHED, AS THE UI IS EVER ALLOWED TO SEE IT (the spotlight, wave 6's
@@ -1138,6 +1146,9 @@ export interface DiaryFacts {
   /** this week's drains, read off the week's own events/state */
   travelled: boolean
   playedTournament: boolean
+  /** ⭐ r53 step 10 – the tournament she played this week was in 30° or more / under falling rain (`diary/weatherFacts.ts`, re-derived from the event's own day). OPTIONAL: a hand-built view means «no», and a licence that reads it says nothing. */
+  heatDay?: boolean
+  rainDay?: boolean
   playedPractice: boolean
   examsWeek: boolean
   /** ROUND-18 #9: is she past her last school year? `DiaryWorldView` has carried this since W4-SCHOOL
@@ -1468,7 +1479,7 @@ export interface KidLife {
    *  ⚠ THE PARENT'S ATTACHMENT AND NEVER THE WORLD'S: the engine asks `knownPartner`, so a girl who has not told him
    *  reads «it seems» – he may simply not know – and an ended one reads the same.
    *  ⚠ TWO `nowrap` LINES, each held to `TILE_LINE_MAX` by a test, because this IS the School cell's own pair; the
-   *  span is `togetherSpanShort`, and no name rides on it (it will not fit).
+   *  span is `togetherSpanShort`; R53 №2: his name rides in the LEAD once the engagement has given him one (`Engaged: Anton`).
    *  ⚠ DERIVED AT SNAPSHOT TIME, persisted nowhere (no schema move, no draw). */
   relationships: KidLifeRelationshipsTile | null
   /** ⭐⭐ ROUND-23 #18 – HER OWN BANK BALANCE and the share that fills it, or '' before eighteen.

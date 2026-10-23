@@ -362,7 +362,9 @@ describe('⭐⭐⭐ v68 – the pin, which is what the version move is FOR', () 
     // touches a curve, or could. Added 06.10 (SUCCESSION S1).
     // ⚠ AND v94.json IS THE SAME PROBE ONE MORE VERSION UP – `migrateSave(v93.json)`: the wedding-milestone
     // backfill writes `milestones` rows only, and nothing in a milestone touches a curve, or could. Added 12.10 (r49 №8).
-    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json' || file === 'v86.json' || file === 'v87.json' || file === 'v88.json' || file === 'v89.json' || file === 'v90.json' || file === 'v91.json' || file === 'v92.json' || file === 'v93.json' || file === 'v94.json') {
+    // ⚠ AND v95.json IS THE SAME PROBE ONE MORE VERSION UP – `migrateSave(v94.json)`: the name-known-week step writes
+    // `nameKnownWeek` on love-episode rows only, and nothing in an episode touches a curve, or could. Added 22.10 (r53 M9).
+    if (file === 'v83.json' || file === 'v84.json' || file === 'v85.json' || file === 'v86.json' || file === 'v87.json' || file === 'v88.json' || file === 'v89.json' || file === 'v90.json' || file === 'v91.json' || file === 'v92.json' || file === 'v93.json' || file === 'v94.json' || file === 'v95.json') {
       expect(migrated.ageCurve, `${file}: the fork's own resolution, unmoved by the ladder`).toEqual({
         ...resolveAgeCurve(migrated.seed, 'direct'),
         injuryFrom: 0,

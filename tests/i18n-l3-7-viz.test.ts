@@ -170,6 +170,18 @@ let PREVIEW_REFS = new Set<string>()
 describe('§3 completeness – the keys the grid reaches', () => {
   it('every key of the three files is reached by the commentary grid, the preview grid or the lead table – bar the named few', () => {
     const reached = new Set<string>([...GRID_REACHED, ...PREVIEW_REACHED])
+    // ⭐ r53 step 10 (weather stage 1): the day's wind, rain and fourth draw are inputs the shared grid (whose 10,210 digests are the pre-wave tree's) does not carry – widening that grid would move
+    // a pin that is green at the control, so the 18 weather lines are reached by their own small arm here instead: every band x eight picks x both winds x both rains.
+    const base = previewInputs()[0].input
+    for (const temperatureC of [10, 16, 21, 26, 33]) {
+      for (const linePick of [0.04, 0.2, 0.37, 0.5, 0.62, 0.79, 0.9, 0.97]) {
+        for (const wind of ['fresh', 'strong'] as const) {
+          for (const rain of ['possible', 'falling'] as const) {
+            for (const l of buildPreview({ ...base, temperatureC, weather: { wind, rain, linePick } })) if (l.c) reached.add(l.c.k)
+          }
+        }
+      }
+    }
     const unreached = SCANNED.filter((k) => !reached.has(k))
     // the keys no seeded match, rung or packet of the grid can say – each with the reason it is still a key:
     //   the 21+ count forms and set ordinals beyond the fifth are digits, not keys; `and a place in the round of {0}` needs a round of 128 or 64 whose label a played match reaches (it is in the grid: opener rows of the big draws)
@@ -183,6 +195,23 @@ describe('§3 completeness – the keys the grid reaches', () => {
  *    cannot be reached today and can tomorrow does not fall back to English; they cost a translator twelve rows, and the editorial doc already spells the hero-loses family (RU-08 §16.3).
  *  · ONE IS REACHABLE AND SIMPLY RARE: an ace into the body at a deciding point (20% of serves go there, and an ace is the clause of a break, a hold or a set in about one beat in sixty) – §3's second test finds it. */
 const UNREACHED: string[] = [
+  // r53 step 11: the rain's two booth remarks – reached only with a weather, which the grid does not pass.
+  // r53 W3: the booth's heat, wind and rain-to-come remarks and the heavy rain line – reached only with a weather, which the grid does not pass.
+  "Long rallies are costing more than they should in this heat – the towels at the changeover are not for show.",
+  "The ice at the changeover is going fast, and there is no shade left on this court at all.",
+  "The heat is in the legs now: every long exchange takes something that does not come back by the next game.",
+  "A fresh breeze across the court – a couple of ball tosses have gone astray already.",
+  "They change ends, and the breeze changes sides with them – the ball drifts a little on every shot.",
+  "The breeze has picked up, and that last lob hung in the air longer than it should have.",
+  "A strong wind on this court – every serve begins with a toss that is a gamble, and more than one has gone up twice.",
+  "Changing ends does not help – the wind is just as strong from the other side, and every serve starts with a fight over the toss.",
+  "That lob went up and the wind would not let it come down where it was meant to – a hard day for touch.",
+  "The clouds are gathering over the court, and the covers are waiting at the side – nobody is sure how long it will stay dry.",
+  "It has gone dark at one end of the sky, and the groundstaff are standing by the covers at the side of the court.",
+  "So far the rain has held off – the covers are still folded at the side of the court.",
+  "The rain has come down hard – a proper stop: the players are off and the court is being covered in a hurry.",
+  "The rain is back – the players have gone under cover and the court is being covered.",
+  "The court is drying out, and they are back out – the rest will not have hurt either of them.",
   'She loses the point with a double fault.',
   'She loses the point with a long groundstroke.',
   'She loses the point with a long return.',

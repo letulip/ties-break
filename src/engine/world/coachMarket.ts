@@ -17,7 +17,8 @@ import type { Coach, StyleFit } from '../coach'
 // ⭐⭐ v82 – THE TWO PURE HALVES OF THE AGREED FEE (round 42 #51). `coachLabourCents` is
 // `bandedRateCents`' own complement and `coachAskFraction` is the owner's corridor; both live in
 // `engine/coach.ts` with the rest of the price model, and this file is their world-reading half.
-import { coachAskFraction, coachLabourCents } from '../coach'
+import { coachAskFraction } from '../coach'
+import { COACH_PEDIGREE, coachPedigree, type PedigreeKind, type PedigreeTrade } from '../coachPedigree'
 // ⚠ THE ONE MONEY FORMATTER, across the same boundary `masseur.ts`, `shop.ts` and `sponsors.ts`
 // already cross: `shared/money` is a pure function of cents and reaches for nothing in the UI, so
 // invariant 1 is untouched. A hand-rolled `$` here would print `$1234` where the game prints
@@ -51,8 +52,8 @@ import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
 // added once. Type-only, erased at build; the protocol imports nothing back.
 import type { CoachEdgePlacement, CoachMarketRow, CoachTier, HandoverBaseBand, HouseholdWeekly, KitOfferTerms, PlayerProfile, Snapshot } from '../../shared/protocol'
 import { managerCommissionCents, parentIncomeForWeekCents } from '../economy'
-import { activeKitDeal, kitTravelShare, raiseStaffAsk, staffAskId } from '../offers'
-import { restampCoachDeal, skillSum } from './coachDeal'
+import { activeKitDeal, coachBandAskId, coachBandAskOf, kitTravelShare, raiseStaffAsk, staffAskId } from '../offers'
+import { agreedRateCentsFor, coachEnteredBand, marketLabourCentsFor, restampCoachDeal, skillSum } from './coachDeal'
 // ⭐ ROUND-21 #2: the ONE fare definition, read rather than re-derived - see `coachTravelFareFor`,
 // which lives beside it in world/sponsors.ts. sponsors.ts imports nothing from this module, so this
 // runs one way exactly as `../offers` above does.
@@ -299,8 +300,9 @@ export function chemistryReadingFor(world: WorldState, coachId: string): number 
  *  `min(agreed, this)`, so it can never exceed what the shipped till was already charging. The fix
  *  can lower a family's payroll and cannot raise it. Zero draws. */
 export function coachMarketLabourCents(world: WorldState, coach: Coach): number {
-  const age = ageAtWeek(world.week)
-  return coachLabourCents(coach.rateCents, age, coach.tier, coachRetainerBandOf(world))
+  // ⭐ ROUND 53 – the arithmetic lives in `world/coachDeal.ts` (`marketLabourCentsFor`) so the sparring cap
+  // can read the coach's week without an import cycle; this name is the one the rest of the engine knows.
+  return marketLabourCentsFor(world, coach)
 }
 
 /** THE HOURLY RATE THE TILL BILLS AND THE CARD QUOTES for the man she actually has – the court at
@@ -316,12 +318,8 @@ export function coachMarketLabourCents(world: WorldState, coach: Coach): number 
  *  identity whenever the ask has done its clamping properly, and it is the thing that makes the
  *  property above true of the BILL rather than only of the negotiation. Zero draws. */
 export function coachRateCents(world: WorldState, coach: Coach): number {
-  const age = ageAtWeek(world.week)
-  const court = facilityRateCents(age, coach.tier)
-  const market = coachMarketLabourCents(world, coach)
-  const deal = world.coachDeal
-  if (!deal || deal.coachId !== coach.id) return court + market
-  return court + Math.min(deal.labourCents, market)
+  // ⭐ ROUND 53 – one spelling, in the leaf (`agreedRateCentsFor`, world/coachDeal.ts), for the reason above.
+  return agreedRateCentsFor(world, coach)
 }
 
 /** ⭐ THE HANDSHAKE – write down what was agreed, and take the marks the next ask is judged against.
@@ -369,7 +367,15 @@ export function bankCoachResidual(world: WorldState, residuals: readonly number[
   if (residuals.length === 0) return
   const deal = world.coachDeal
   if (!deal || deal.coachId !== world.coachId) return
-  deal.residualSince += residuals.reduce((a, b) => a + b, 0)
+  // ⚠⚠ 23.10 – QUANTISED TO A MILLIONTH, FOR THE PLATFORM LAW. Each residual is `won − p` with `p` from
+  // the closed form's `Math.pow`, and V8's transcendentals differ by a last ulp between arm64 and x64
+  // builds (tests/i18n-l3-7-twin.test.ts, «TWO PLATFORM FAMILIES»). Summed raw into a PERSISTED field,
+  // one ulp (9e-16 at week 36 of the frozen 25k · middle · grinder career, the only leaf that differed)
+  // walks into the save, the next week's maths and finally a different point – the CI runner's
+  // coach-travel hashes went red on 22.10 with every Mac green. A millionth is a thousand times finer
+  // than anything `residualPart` (÷ form.max, clamped to 1) can show, and both families now bank the
+  // same number. Zero draws, nothing read differently by anyone.
+  deal.residualSince = Math.round((deal.residualSince + residuals.reduce((a, b) => a + b, 0)) * 1e6) / 1e6
 }
 
 /** ⭐⭐⭐ THE PROGRESS SCORE, `[0, 1]` – his own «общая оценка прогресса», and the four components are
@@ -544,6 +550,85 @@ export function resolveCoachRaise(world: WorldState): void {
     weeksServed: world.week - deal.agreedWeek,
     ask: { fromCents: before, toCents: before + (next - deal.labourCents) },
   })
+}
+
+/** ⭐⭐⭐ ROUND 53 №1 – THE BAND LETTER (docs/specs/coach-pay-ladder-2026-10.md §3.3; the owner, 21.10: «50–11
+ *  тренер с письмом повышает цену … 1–10 еще дороже, но механизм остается»). The week she STANDS in a band her
+ *  coach's contract was not struck in, he writes once: ×1.5 of his labour on entering #11–50, ×2.5 of his
+ *  ORIGINAL labour on entering #1–10. The anniversary ask's own paper – the same Offer shape, window and two
+ *  doors (`raiseStaffAsk` under `coachBandAskId`) – and the same signature write (`settleCoachRaise`).
+ *
+ *  ⚠ «ORIGINAL» IS HIS LABOUR DIVIDED BY THE BAND HE IS ALREADY PAID AT: the highest band letter this man has
+ *  had SIGNED, else 1. So the #1–10 letter takes a man who signed ×1.5 to ×2.5 of the base (his anniversary
+ *  rises in between travel with it, as they would on any fee), and a man who jumps straight from #60 to the
+ *  top ten writes ONE letter, for ×2.5.
+ *
+ *  ⚠ NOT FOR A MAN HIRED IN THE BAND. His hire price was already the banded market (`coachRetainerBandOf`),
+ *  so the contract's own mark (`markWtaRank`, taken at the handshake) is in the band and nothing is written.
+ *  ⚠ CLAMPED AT THE MARKET, and no room means no letter (the anniversary's own floor): an ask under 5% is not
+ *  an ask. Refusal – or a lapse, since only a signed letter is a signed letter – ends the arrangement at the
+ *  season's end (`resolveCoachBandDeparture`). ⚠ THE LETTER'S WORDS ARE DRAFTS (invariant 4).
+ *
+ *  ZERO DRAWS on any stream. */
+export function resolveCoachBandAsk(world: WorldState): void {
+  const deal = world.coachDeal
+  if (!world.coachId || !deal || deal.coachId !== world.coachId) return
+  const live = coachRetainerBand(kidLadderRank(world, 'wta'))
+  if (live <= 1) return
+  if (coachRetainerBand(deal.markWtaRank) >= live) return
+  let held = 1
+  for (const o of world.offers) {
+    const letter = coachBandAskOf(o)
+    if (!letter || letter.coachId !== deal.coachId) continue
+    if (letter.band >= live) return
+    if (o.state === 'signed') held = Math.max(held, letter.band)
+  }
+  const coach = coachById(world.seed, ageAtWeek(world.week), deal.coachId)
+  if (!coach) return
+  const asked = Math.round((deal.labourCents / held) * live)
+  const next = Math.min(asked, coachMarketLabourCents(world, coach))
+  if (next < Math.ceil(deal.labourCents * (1 + ECONOMY.coach.raise.askFloor))) return
+  const before = coachRateCents(world, coach)
+  const year = seasonIndexOf(world.week)
+  raiseStaffAsk(
+    world.offers,
+    world.week,
+    year,
+    {
+      seat: 'coach',
+      seasonIndex: year,
+      weeksServed: world.week - coachSinceWeek(world),
+      ask: { fromCents: before, toCents: before + (next - deal.labourCents) },
+    },
+    coachBandAskId(deal.coachId, live),
+  )
+}
+
+/** ⭐⭐ ROUND 53 №1 – A REFUSED BAND LETTER ENDS THE ARRANGEMENT AT THE SEASON'S END (the owner, 21.10: «Отказ –
+ *  уходит в конце сезона»). ⚠ THIS IS NEW, AND IT IS ONLY THE BAND LETTER'S: the anniversary ask's refusal
+ *  still moves nothing and nobody leaves (the 17.09 «no third branch» ruling, kept 02.10) – the spec's «as the
+ *  ordinary ask does» was checked and is not how the ordinary ask ends.
+ *
+ *  Derived from the paper alone, no state: on the first week of a LATER season than the one the letter was
+ *  refused or lapsed in, if the man who wrote it is still the man on the payroll and was hired before it,
+ *  he goes – the release command's own path, sentence and ledger row (`hireCoach(world, null)`). A re-hire of
+ *  the same man afterwards is a new contract at the banded market, so his old paper cannot fire him twice.
+ *  Called before the week's bill, so the family does not pay a week of the new season. ZERO DRAWS. */
+export function resolveCoachBandDeparture(world: WorldState): void {
+  if (!world.coachId) return
+  const since = coachSinceWeek(world)
+  const season = seasonIndexOf(world.week)
+  const gone = world.offers.some((o) => {
+    const letter = coachBandAskOf(o)
+    if (!letter || letter.coachId !== world.coachId) return false
+    // ⚠ A LAPSE IS A REFUSAL HERE: an `open` paper past its window has lapsed whether or not a sweep has
+    // re-labelled it `expired` yet, and only a signed letter is a signed letter.
+    const lapsed = o.state === 'expired' || (o.state === 'open' && o.deadlineWeek < world.week)
+    if (o.state !== 'refused' && !lapsed) return false
+    if (o.week < since) return false
+    return seasonIndexOf(o.decidedWeek ?? o.deadlineWeek) < season
+  })
+  if (gone) hireCoach(world, null)
 }
 
 /** EVERY COMPETITIVE MATCH SHE HAS EVER PLAYED, off the two durable ledgers that already count them:
@@ -1066,7 +1151,10 @@ const RETAINERS_A_YEAR = 4
  *  rank is a DECISION the tick made and must not be re-folded underneath it». A bill is such a
  *  decision. Zero draws. */
 export function coachRetainerBandOf(world: WorldState): number {
-  return coachRetainerBand(kidLadderRank(world, 'wta'))
+  // ⭐⭐ ROUND 53 №1 (21.10) – THE BAND SHE HAS ENTERED, NOT HER LIVE RANK: «выход из диапазона цену не
+  // снижает». Still the ONE field the till and the quote read; what feeds it is `coachEnteredBand`
+  // (world/coachDeal.ts), whose docblock names the three facts it is derived from and the one gap.
+  return coachEnteredBand(world)
 }
 
 export function supportPayrollWeeklyCents(world: WorldState): number {
@@ -1348,6 +1436,10 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // card says «travelling with her» and not «doubled».
       edgeTravelPct: travels ? coachEdgeCorridorPp(coach.tier, true) : null,
       loadNote: coachLoadNote(coach.tier),
+      // ⭐ ROUND 53 №2 – THE PAST AND THE TRADE, two lines, only for an elite name that has one (spec §3.4). A fact of
+      // the seed (`coachPedigree`, its own sub-stream), so the card prints the same on every visit and a release or a
+      // hire changes nothing here. Both lines are DRAFT copy, EN and RU together; neither names the coach's sex.
+      ...pedigreeCardLines(world.seed, coach),
       // ⭐⭐⭐ ROUND 44 – AND THE RELATIONSHIP CROSSES THE WIRE AT LAST (spec §8b). Read STRAIGHT off
       // the persisted pair with no second arithmetic: `chemistryReading` decides both what the number
       // is and whether there is one, so the gauge on the card and the factor in `growWeek` are the
@@ -3232,4 +3324,26 @@ export function coachLadderNoteRef(world: WorldState, event: SeasonEvent, coachT
   const weeks = ahead.week - event.week
   const when = weeks === 1 ? cp`when|next week` : cp`when|in ${weeks} weeks`
   return cp`Your coach would save her for the ${TIERS[ahead.tier].label} ${when}.`
+}
+
+/** ⭐ ROUND 53 №2 – WHAT A FAMOUS NAME'S CARD SAYS (spec §3.4): the past in one line, the trade in another. Names and
+ *  titles stay fictional – «a World Tour title» is the game's own tournament family, never a real event. No pronoun
+ *  for the coach (R15-7). DRAFT copy (invariant 4). `{}` – no field at all – for everyone else, so a plain card is
+ *  byte-identical to the card that shipped. */
+export const PEDIGREE_PAST_LINE: Record<PedigreeKind, string> = {
+  'slam-winner': 'Won a World Tour title as a player',
+  'former-no1': 'A former world number one',
+}
+export const PEDIGREE_TRADE_LINE: Record<PedigreeTrade, string> = {
+  chemistry: 'Her chemistry grows faster with a coach like this',
+  ceiling: 'Her ceiling sits a little higher with a coach like this',
+  sponsors: 'Sponsors call more often while this name is in her corner',
+  sparring: "Top hitting partners come at the middle rung's price",
+}
+export function pedigreeCardLines(seed: string, coach: Coach): { pedigree?: { past: string; trade: string; labourPct: number } } {
+  const p = coachPedigree(seed, coach.id, coach.tier)
+  // labourPct is the card's rate line (owner 22.10): the +50 % read off the constant, never typed in a template
+  return p
+    ? { pedigree: { past: PEDIGREE_PAST_LINE[p.kind], trade: PEDIGREE_TRADE_LINE[p.trade], labourPct: Math.round((COACH_PEDIGREE.labourFactor - 1) * 100) } }
+    : {}
 }

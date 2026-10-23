@@ -67,7 +67,7 @@ import { fastMatchProbability } from '../match/engine'
 import { chanceFromRatings, ratingOf } from '../match/rating'
 import type { MatchPlayer, Surface } from '../match/types'
 import { rivalConditions, rivalMatchPlayer } from './rival'
-import { TIERS, isTierAgeOpen } from './calendar'
+import { TIERS, isTierAgeOpen, WEEKS_PER_YEAR } from './calendar'
 import {
   JUNIOR_TOUR,
   buildDraw,
@@ -195,6 +195,8 @@ export interface EventPreview {
   fieldChance: number | null
   /** decorative, deterministic per event; degrees C */
   temperatureC: number
+  /** ⭐ r53 step 10: the same day with wind and rain beside it (`eventWeather`) */
+  weather: EventWeather
   /** decorative, deterministic per event; how many people are there to watch – see eventCrowd */
   crowd: number
 }
@@ -468,20 +470,101 @@ function strengthOf(field: readonly number[], mine: number): FieldStrength {
   return 'even'
 }
 
+/** ⭐ ROUND 53 · STEP 10 (weather stage 1) – the day's weather as a FACT of the event, never an input
+ *  of the match. `docs/specs/weather-2026-10.md` §3. Four draws on ONE sub-stream, in this order:
+ *  temperature, wind, rain, line-pick. The temperature is the FIRST draw and stays the first, so a
+ *  stage that adds readings never shifts the one before it. */
+export type WindLevel = 'none' | 'fresh' | 'strong'
+export type RainState = 'none' | 'possible' | 'falling'
+export interface EventWeather {
+  temperatureC: number
+  wind: WindLevel
+  rain: RainState
+  /** THE FOURTH DRAW, 0..1 – which of a pool's lines the conditions note says. Carried as a number
+   *  so the viz layer (RNG-free by law) picks without drawing; `weatherLinePicks` splits it. */
+  linePick: number
+}
+
+/** Climate band (°C) by the week of the season and the surface – spec §3.1. The season's week 1 is
+ *  January (`shared/dates.ts` `weekMonth`), so the week of the season gives the month without a
+ *  second clock. Winter = weeks 1–8 and 48–52, summer = 22–35, the rest are the shoulders. Grass has
+ *  no winter tournaments; the College League and the Nations Cup can still ask, and a grass winter
+ *  reads the shoulder band rather than inventing a number. */
+export type ClimateSeason = 'winter' | 'shoulder' | 'summer'
+export function climateSeason(week: number): ClimateSeason {
+  const m = ((Math.floor(week) % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+  const w = m + 1 // offset 0 is the season's own week 1 (`world.week % WEEKS_PER_YEAR === 0`)
+  if (w <= 8 || w >= 48) return 'winter'
+  if (w >= 22 && w <= 35) return 'summer'
+  return 'shoulder'
+}
+const CLIMATE: Record<Surface, Record<ClimateSeason, readonly [number, number]>> = {
+  hard: { winter: [8, 18], shoulder: [14, 26], summer: [22, 38] },
+  clay: { winter: [12, 20], shoulder: [15, 27], summer: [24, 34] },
+  grass: { winter: [16, 26], shoulder: [16, 26], summer: [20, 30] },
+}
+export function climateBand(week: number, surface: Surface): readonly [number, number] {
+  return CLIMATE[surface][climateSeason(week)]
+}
+/** Rain odds by surface, spec §3.2: [none, none+possible] cumulative cut-points. */
+const RAIN_CUTS: Record<Surface, readonly [number, number]> = {
+  clay: [0.65, 0.87],
+  hard: [0.8, 0.93],
+  grass: [0.63, 0.86],
+}
+const WIND_CUTS: readonly [number, number] = [0.7, 0.92]
+
 /** Decorative weather. Its own sub-stream so it can never perturb the draw, and keyed on the event
- *  so a tournament's day is the same every time the card is rendered. Bands are loosely seasonal by
- *  surface: clay is the spring/summer swing, grass high summer, hard the shoulders.
+ *  so a tournament's day is the same every time the card is rendered.
  *
  *  ⚠ ROUND 26 #6 – IT TAKES AN ID AND A SURFACE, NOT A `SeasonEvent`, AND THAT IS A WIDENING RATHER
- *  THAN A CHANGE. A `SeasonEvent` still satisfies it, every existing call site is byte-identical and
- *  no number moved; what it buys is that the College League – a fixture with no calendar event and
- *  no rung behind it – gets its day out of the SAME function rather than out of a second copy of
- *  this formula. Two weather functions is how one tournament comes to have two days. */
-export function eventTemperature(seed: string, event: { id: string; surface: Surface }): number {
+ *  THAN A CHANGE. The College League – a fixture with no calendar event and no rung behind it – gets
+ *  its day out of the SAME function rather than out of a second copy of this formula. Two weather
+ *  functions is how one tournament comes to have two days. Since round 53 it also takes the WEEK
+ *  (every caller has one) because the climate is seasonal. */
+export function eventWeather(seed: string, event: { id: string; surface: Surface; week: number }): EventWeather {
   const rng = rngFromSeed(`${seed}:weather:${event.id}`)
-  const [lo, hi] =
-    event.surface === 'grass' ? [19, 29] : event.surface === 'clay' ? [16, 28] : [12, 26]
-  return Math.round(lo + rng() * (hi - lo))
+  const [lo, hi] = climateBand(event.week, event.surface)
+  const temperatureC = Math.round(lo + rng() * (hi - lo))
+  const u2 = rng()
+  const u3 = rng()
+  const linePick = rng()
+  const wind: WindLevel = u2 < WIND_CUTS[0] ? 'none' : u2 < WIND_CUTS[1] ? 'fresh' : 'strong'
+  const cuts = RAIN_CUTS[event.surface]
+  const rain: RainState = u3 < cuts[0] ? 'none' : u3 < cuts[1] ? 'possible' : 'falling'
+  return { temperatureC, wind, rain, linePick }
+}
+
+/** The fourth draw split into the three picks a note needs: which of 3 temperature lines, which of 2
+ *  wind lines, which of 2 rain lines. Pure arithmetic on a number already drawn – no RNG here.
+ *  ⭐ r53 W3 appends three more picks off the SAME remainder, for the booth: which of 3 heat remarks,
+ *  which of 3 wind remarks, which of 2 rain remarks. ⚠ The first three are untouched – appending
+ *  digits below the existing ones moves nothing above them (`tests/r53-weather-stage1.test.ts`). */
+export function weatherLinePicks(linePick: number): {
+  temp: number
+  wind: number
+  rain: number
+  heatRemark: number
+  windRemark: number
+  rainRemark: number
+} {
+  const a = linePick * 3
+  const temp = Math.min(2, Math.floor(a))
+  const b = (a - temp) * 2
+  const wind = Math.min(1, Math.floor(b))
+  const c = (b - wind) * 2
+  const rain = Math.min(1, Math.floor(c))
+  const d = (c - rain) * 3
+  const heatRemark = Math.min(2, Math.floor(d))
+  const e = (d - heatRemark) * 3
+  const windRemark = Math.min(2, Math.floor(e))
+  const f = (e - windRemark) * 2
+  const rainRemark = Math.min(1, Math.floor(f))
+  return { temp, wind, rain, heatRemark, windRemark, rainRemark }
+}
+
+export function eventTemperature(seed: string, event: { id: string; surface: Surface; week: number }): number {
+  return eventWeather(seed, event).temperatureC
 }
 
 // THE CROWD, tier by tier. The corridor the owner asked for, and it is NOT invented here: every
@@ -760,7 +843,9 @@ export function previewEvent(
   return {
     drawMade,
     firstMatchChance: opp
-      ? fastMatchProbability(kid, opp, { surface: event.surface, tour: JUNIOR_TOUR, seed: '' })
+      ? // ⭐ r53 step 11 – the day enters the card's number the way it enters the match, so the
+        // forecast he reads before the match stays the one the match is played under.
+        fastMatchProbability(kid, opp, { surface: event.surface, tour: JUNIOR_TOUR, seed: '', weather: eventWeather(world.seed, event) })
       : null,
     // Same (player, surface, tour) the chance above is computed from - one source, two readings, so
     // the card can never quote a rating that disagrees with the ring beside it.
@@ -784,6 +869,7 @@ export function previewEvent(
     fieldStrength: strengthOf(expected, mineAtRest),
     fieldChance: fieldChance(expected, mineAtRest),
     temperatureC: eventTemperature(world.seed, event),
+    weather: eventWeather(world.seed, event),
     crowd: eventCrowd(world.seed, event),
   }
 }

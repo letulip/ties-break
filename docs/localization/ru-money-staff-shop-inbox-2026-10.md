@@ -1994,6 +1994,16 @@ These are the 81 catalogue keys of `src/engine/economy/shop.ts`, `equipment.ts` 
 | RU21-MON-119 | `{0} less than it cost` | `на {0} дешевле цены покупки` |
 | RU21-MON-120 | `{0} more than it cost` | `на {0} дороже цены покупки` |
 | RU21-MON-121 | `{0}% built – ready {1}` | `Построено на {0}%, готово: {1}` |
+| RU21-MON-122 | `Her return moves from {0} to {1}.` | `Возвращение переносится с {0} на {1}.` |
+| RU21-MON-123 | `These entries will be withdrawn – the doctor will not clear her in time: {0}.` | `Эти заявки будут сняты – врач не допустит её к играм вовремя: {0}.` |
+| RU21-MON-124 | `Doctor said no: {0} – {1}` | `Доктор не пустил: {0} – {1}` |
+| RU21-MON-125 | `{n} more {tier} this season` | `ещё {n} {tier} в этом сезоне` |
+
+⚙ 21.10 agent-authored, r53 шаг 3 – строка на карточке турнира серии W (`DRAFT`): сколько ещё турниров ЭТОГО уровня осталось в сезоне, кроме этой карточки; число – то же `seasonSupply`, что в шапке.
+
+⚙ 21.10 agent-authored, r53 шаг 2 – рядом с `RU21-MON-67` (увольнение массажиста): строки `DRAFT`, слова владельца «Доктор не пустил» – из его 21.10. Первые две печатаются в подтверждении после старого предложения, когда у массажиста есть что терять; третья – строка ленты при автоматическом снятии заявки.
+
+⚖ 22.10 владелец (лист вычитки r53): ряды `RU21-MON-122`–`RU21-MON-125` `APPROVED`, его правки перенесены.
 
 ## ⚙ 13.10 agent-authored (бланкет) – r51 B3, item №2: the Specialists tab's engine sentences, as whole keys
 

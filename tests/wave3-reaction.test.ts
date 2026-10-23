@@ -198,8 +198,11 @@ import { pokedAt as careerAt } from './helpers/career'
  *  typed out from `docs/plans/life-wave-3-builder-2026-09.md` §4 – «warm +2 · wary 0 · intrusive −3
  *  · silent −1 | flip: private → silent +2, warm −1» – and ARM 1 and ARM 2 are what say so. */
 const TABLE: Record<LoveEpisode['wants'], Record<string, number>> = {
-  open: { warm: 2, wary: 0, meet: -3, silent: -1 },
-  private: { warm: -1, wary: 0, meet: -3, silent: 2 },
+  // ⚠ RE-AIMED 21.10 BY r53 M9 (the partner's name; re-aim by M9b), NOT WEAKENED: two rows join the four – `ask` 0 and `insist` −2, in BOTH readings
+  // (the wants flip re-prices warm and silent only). Typed as literals from docs/specs/partner-name-disclosure-2026-10.md §3 (road 2: half the
+  // worst big-beat answer), not read from `PARTNER_NAME`, for the reason this comment's first paragraph gives.
+  open: { warm: 2, wary: 0, meet: -3, silent: -1, ask: 0, insist: -2 },
+  private: { warm: -1, wary: 0, meet: -3, silent: 2, ask: 0, insist: -2 },
 }
 
 /** The four answer ids, in the engine's own order. ⚠ READ FROM THE TABLE and not transcribed a
@@ -228,7 +231,7 @@ const MID_BOND = 60
  *  the temperament are the engine's own (wave3-arrival.test.ts's fixture doctrine). */
 /** An attachment, hand-built – T5's draws decide `wants` in a career and are not under test here. */
 function episode(sinceWeek: number, knownWeek: number, wants: LoveEpisode['wants']): LoveEpisode {
-  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants, partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null }
+  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants, partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, latchedWeek: null, partnerName: null, nameKnownWeek: null }
 }
 
 /** A career on the week it was told, with the beat already raised and waiting. */
@@ -311,13 +314,30 @@ describe('wave 3 T7 A – answer A against answer B, and the difference is exact
         // ⚠ THE PEEL IS NOT THE WHOLE WORLD, which is what stops this being vacuous: four keys come
         // off a career that has dozens, and what is compared has to still be most of it.
         expect(Object.keys(world).length, 'the career has keys to compare').toBeGreaterThan(40)
-        const before = everythingElse(world)
+        // ⚠ RE-AIMED 21.10 BY r53 M9 (re-aim by M9b), NOT WEAKENED: the two NAME answers (`ask`, `insist`) are the one case where an answer
+        // teaches the parent something – they write `nameKnownWeek` (and `partnerName` on this hand-built, nameless row) onto the episode
+        // (spec partner-name-disclosure §3 roads 1–2). For those two the episode list is peeled too and checked on its own below: the
+        // episode may gain EXACTLY those two keys and no other, and the REST of the world is still compared whole.
+        const teaches = id === 'ask' || id === 'insist'
+        const rowsBefore = JSON.stringify(world.loveEpisodes)
+        const elseOf = (w: WorldState): string => {
+          if (!teaches) return everythingElse(w)
+          const { loveEpisodes: _rows, ...rest } = JSON.parse(everythingElse(w)) as Record<string, unknown>
+          return JSON.stringify(rest)
+        }
+        const before = elseOf(world)
         expect(before.length, 'and the peel left nearly all of them in').toBeGreaterThan(5_000)
         const spirit = world.spirit
         const funds = world.fundsCents
         const rng = JSON.stringify(world.rngMain)
         answerLifeBeat(world, id)
-        expect(everythingElse(world), `⚠⚠ ${wants}/${id}: his words move \`bond\` and nothing else`).toBe(before)
+        expect(elseOf(world), `⚠⚠ ${wants}/${id}: his words move \`bond\` and nothing else`).toBe(before)
+        if (teaches) {
+          const changed = Object.keys(world.loveEpisodes[0]).filter(
+            (k) => JSON.stringify((world.loveEpisodes[0] as unknown as Record<string, unknown>)[k]) !== JSON.stringify((JSON.parse(rowsBefore)[0] as Record<string, unknown>)[k]),
+          )
+          expect(changed.sort(), `${wants}/${id}: the episode gains the name and the week he heard it, and nothing else`).toEqual(['nameKnownWeek', 'partnerName'])
+        }
         // The named fields as well, so a key that somehow joined the peel cannot hide behind it.
         expect(world.spirit, `${wants}/${id}: no spirit delta – weather is hers`).toBe(spirit)
         expect(world.fundsCents, `${wants}/${id}: and a life beat is never a purchase`).toBe(funds)
@@ -341,11 +361,13 @@ describe('wave 3 T7 A – answer A against answer B, and the difference is exact
 // =================================================================================================
 describe('wave 3 T7 B – a private girl reads silence as the kindness', () => {
   it('⭐⭐⭐ the two tables, as literals – open is the ruled row, private flips warm and silent', () => {
-    expect(lifeBeatOptionsFor('met', 'open').map((o) => o.bond), 'open: warm / wary / intrusive / silent').toEqual([
-      2, 0, -3, -1,
+    expect(lifeBeatOptionsFor('met', 'open').map((o) => o.bond), 'open: warm / wary / intrusive / silent, then ask / insist').toEqual([
+      // ⚠ RE-AIMED 21.10 BY r53 M9 (re-aim by M9b), NOT WEAKENED: the set is six – the ruled four, then `ask` 0 and `insist` −2 (spec
+      // partner-name-disclosure §3), which the wants flip does not touch.
+      2, 0, -3, -1, 0, -2,
     ])
     expect(lifeBeatOptionsFor('met', 'private').map((o) => o.bond), 'private: the flip, brief §4').toEqual([
-      -1, 0, -3, 2,
+      -1, 0, -3, 2, 0, -2,
     ])
     expect(
       [ECONOMY.bond.delta.metWarmPrivate, ECONOMY.bond.delta.metSilentPrivate],
@@ -392,9 +414,9 @@ describe('wave 3 T7 B – a private girl reads silence as the kindness', () => {
 
   it('⚠ `pendingLifeBeatOptions` reads the row\'s OWN attachment, not the base table', () => {
     const priv = told('t7-pending', 'private')
-    expect(pendingLifeBeatOptions(priv)!.map((o) => o.bond), 'the priced set for the row in hand').toEqual([-1, 0, -3, 2])
+    expect(pendingLifeBeatOptions(priv)!.map((o) => o.bond), 'the priced set for the row in hand').toEqual([-1, 0, -3, 2, 0, -2])
     const open = told('t7-pending', 'open')
-    expect(pendingLifeBeatOptions(open)!.map((o) => o.bond), 'and the other girl gets the other one').toEqual([2, 0, -3, -1])
+    expect(pendingLifeBeatOptions(open)!.map((o) => o.bond), 'and the other girl gets the other one').toEqual([2, 0, -3, -1, 0, -2])
     // ⚠ NULL AND NOT A THROW when nothing is waiting – it is asked on worlds with no beat at all.
     answerLifeBeat(open, 'wary')
     expect(pendingLifeBeatOptions(open), 'nothing pending, nothing priced').toBeNull()

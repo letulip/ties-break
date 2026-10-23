@@ -77,6 +77,8 @@ import { entryBandTrack, eventActionable, feedContext, feedShows, pointsLockNote
 // `upcoming` to – so the feed cannot draw a row the snapshot has no event for, and the note cannot
 // promise a window the feed does not cover.
 import { UPCOMING_WEEKS } from '../../engine/world/constants'
+// R53 L3 (E-P02): the family-week headline asks the engine's own tired verdict, not its own `<`.
+import { practiceTired } from '../../engine/world/planner'
 // THE UPCOMING-EVENT CARD'S OWN PARTS, shared with the Calendar's marker card: the photograph, the
 // court's verdict for her build, the scholarship's share, and how an odds ring is NAMED. Its colour
 // is no longer one of them – that ramp is drawn on five surfaces, not two, so it lives a line below.
@@ -93,7 +95,7 @@ import { readingColor } from '../../composables/readingColor'
 // Calendar so the two surfaces cannot call the same tournament two different things.
 import { enterActionName } from '../../composables/eventName'
 import { TIER_SHORT } from '../../composables/weekAhead'
-import { layoffHoldsWeek, layoffNoteFor } from '../../composables/weekDays'
+import { layoffClinicReturnWeek, layoffHoldsWeek, layoffNoteFor, layoffReturnWeek } from '../../composables/weekDays'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
 import { WEEKS_IN_SEASON, seasonYear, weekNumberLabel } from '../../shared/dates'
 import { seasonWeekRange, weekLabel } from '../../i18n/dates'
@@ -861,6 +863,22 @@ const supplyLine = computed<{ total: number; weeks: number; parts: string[] } | 
   return { total, weeks: supply.weeksLeft, parts }
 })
 
+// R53 L3 (round 15 #3): THE PER-CARD HALF OF THE PLANNING COUNTER. The owner's old complaint was
+// that the professional events stop appearing on the feed with no sentence why; the header says how
+// much is left across the rungs and this says it on the card, for THAT card's rung. The number is
+// the header's own field (`seasonSupply.rows[tier].open`), never a second count. `open` includes
+// this very card when the engine counts it (an entry made, or the list still open and the gate not
+// blocked), so the card's own place comes off – «more» means «besides this one». Null (line hidden)
+// for a junior card, an absent row, or nothing besides this card.
+function moreInTier(ev: UpcomingEvent): number | null {
+  if (TIERS[ev.tier].track !== 'wta') return null
+  const row = game.snapshot?.seasonSupply?.rows.find((r) => r.tier === ev.tier)
+  if (!row) return null
+  const countedHere = ev.entered || (!entriesClosed(ev) && ev.eligible)
+  const more = row.open - (countedHere ? 1 : 0)
+  return more > 0 ? more : null
+}
+
 /** ⭐⭐ ROUND-21 #2b – HOW MANY OF THAT COUNT THE FEED BELOW ACTUALLY DRAWS.
  *
  *  THE OWNER'S REPORT, and it is two sentences about one screen: there are lots of them on the
@@ -1128,13 +1146,28 @@ function askEnter(e: UpcomingEvent): void {
     onConfirm: () => game.enterEvent(e.id),
   }
 }
+/** ⭐⭐ ROUND 53 №4 (owner, 21.10: «я снимаю заявки, а за неделю до турнира она здорова, и подать заявку
+ *  уже поздно») – WHAT THE WITHDRAW CONFIRM SAYS WHEN SHE IS HURT BUT BACK IN TIME. The return week is
+ *  `layoffReturnWeek` (the engine's `expectedWeeks` when the masseur shortens it); the deadline is the
+ *  event's own `deadlineWeek`. No arithmetic here, no second predicate. Empty when she is fit, or when
+ *  she is out past the event (then withdrawing is simply right). DRAFT wording. */
+function withdrawInjuryNote(e: UpcomingEvent): string {
+  const s = game.snapshot
+  const back = s ? layoffReturnWeek(s) : null
+  if (!s || back === null || back > e.week) return ''
+  const params = { back: weekLabel(back, startYear.value), deadline: weekLabel(e.deadlineWeek, startYear.value) }
+  return layoffClinicReturnWeek(s) !== null
+    ? t('With the masseur she is expected back by {back}, in time for this event. Entries close at the end of {deadline}.', params)
+    : t('She is expected back by {back}, in time for this event. Entries close at the end of {deadline}.', params)
+}
 function askWithdraw(e: UpcomingEvent): void {
+  const injuryNote = withdrawInjuryNote(e)
   pendingConfirm.value = {
     message: t('Withdraw from {event} ({week})? Entry fee {fee} will be refunded.', {
       event: e.label,
       week: weekLabel(e.week, startYear.value),
       fee: formatCents(e.entryFeeCents),
-    }),
+    }) + (injuryNote ? ` ${injuryNote}` : ''),
     confirmLabel: t('Withdraw'),
     onConfirm: () => game.withdrawEvent(e.id),
   }
@@ -1302,7 +1335,7 @@ const showRescue = computed(
 /** The offer now reaches MILDLY tired weeks too (band widened to 80), and "she is worn out" is a
  *  lie at condition 78 – the headline follows the depth of the hole. */
 const rescueTitle = computed(() =>
-  condition.value < ECONOMY.practice.cautionCondition
+  practiceTired(condition.value)
     ? t('She is worn out – maybe a family week?')
     : t('She could use a week off – maybe a family week?'),
 )
@@ -1683,6 +1716,9 @@ function closeExhibition(): void {
                   <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"></path>
                 </svg>
                 {{ ev.preview.temperatureC }}&deg;
+                <!-- ⭐ r53 step 10: wind and rain beside the degrees, only when the day has them. -->
+                <template v-if="ev.preview.weather && ev.preview.weather.wind !== 'none'"> · {{ ev.preview.weather.wind === 'strong' ? t('Strong wind') : t('Fresh wind') }}</template>
+                <template v-if="ev.preview.weather && ev.preview.weather.rain !== 'none'"> · {{ ev.preview.weather.rain === 'falling' ? t('Rain') : t('Rain possible') }}</template>
               </span>
             </div>
 
@@ -1709,6 +1745,9 @@ function closeExhibition(): void {
                    player just sees a smaller number and no reason for it. -->
               <p v-if="academyCoverPct > 0" class="event-money-sub">{{ t('academy covers {0}%', [academyCoverPct]) }}</p>
             </div>
+            <!-- R53 L3 (round 15 #3): how many more of THIS rung the season still holds, off the same
+                 `seasonSupply` row the header reads. Professional cards only; absent when none are left. -->
+            <p v-if="moreInTier(ev) !== null" class="event-more">{{ t('{n} more {tier} this season', { n: moreInTier(ev), tier: TIER_SHORT[ev.tier] }) }}</p>
 
             <div class="controls">
               <!-- The entry fee reads as a FIGURE, in white, on the same row as the deadline chips
@@ -2907,6 +2946,14 @@ section.bare .event-cards {
 /* The line under the travel figure. v21 gave it its job back: the figure is already net of the
    academy's share, and this says so. It sits ON the venue painting like the figure above it, so it
    carries the same shadow – `--ink-soft` alone disappears over a bright court. */
+.event-more {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  text-shadow: var(--shadow-text-on-art);
+}
+
 .event-money-sub {
   margin: 4px 0 0;
   font-size: 12.5px;

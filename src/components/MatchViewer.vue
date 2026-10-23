@@ -16,6 +16,7 @@ import { buildCommentary } from '../viz/commentary'
 // receives the engine's two facts and adds the one fact it owns (which chair is hers) on the way
 // into the narrator. See the `buildCommentary` call below.
 import type { BoothPrivateLife } from '../shared/protocol'
+import type { HeadToHead } from '../shared/protocol/competition'
 import { buildPreview, type PreviewEvent } from '../viz/preview'
 import { buildClockTrack, clockSecondsAt, formatMatchClock, type ClockTrack } from '../viz/matchClock'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
@@ -39,6 +40,7 @@ import MatchControls from './MatchControls.vue'
 import Card from './ui/Card.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import WeatherPlate from './ui/WeatherPlate.vue'
+import type { EventWeather } from '../engine/season/preview'
 
 const props = withDefaults(
   defineProps<{
@@ -101,6 +103,8 @@ const props = withDefaults(
      *  PracticeFlow and the Season sandbox have no tournament day behind the match, so no plate is
      *  the truth there rather than a gap. */
     temperatureC?: number | null
+    /** ⭐ r53 step 10 – `PendingView.weather`: wind, rain and the fourth draw. Optional; absent = the plate and the note it always had. */
+    weather?: EventWeather | null
     /** THE PRE-MATCH PREVIEW'S TOURNAMENT CONTEXT (round 16, owner's own ask) - the tier and the
      *  round, which together decide BOTH how much the intro says (the ladder of voices, four
      *  storeys - see viz/preview.ts) and what winning this match is worth in points.
@@ -176,6 +180,10 @@ const props = withDefaults(
     /** ⭐ v89 (the college scene, T4.3): `collegeTitles` rides the same packet – the copy forks on it
      *  in `src/viz/commentary.ts` and this component still holds no opinion about what may be said. */
     boothLineage?: { proTitles: number; collegeTitles: number; slams: number } | null
+    /** ⭐ ROUND 53 · STEP 6 – what the two have already played (`PendingView.headToHead`), counted by the
+     *  engine; this component passes it through. Absent/null is every replay of an old match and every
+     *  first meeting: the log and the preview are byte-identical to what they were. */
+    headToHead?: HeadToHead | null
     /** ⭐ ROUND 39 #15a – ONE QUIET LINE UNDER THE RETIREMENT POPUP'S REASON, for the caller that
      *  knows more about the moment than the model does. The prologue's Local Open passes the
      *  parent's reassurance here (`LOCAL_OPEN_COPY.hurtNote` – a prologue weekend stores no injury,
@@ -188,7 +196,7 @@ const props = withDefaults(
      *  existing caller's popup is byte-identical. */
     hurtNote?: string | null
   }>(),
-  { rankA: null, rankB: null, finalMatch: false, temperatureC: null, previewEvent: null, proceedLabel: null, coachTravelled: false, boothPrivateLife: null, boothLineage: null, hurtNote: null },
+  { rankA: null, rankB: null, finalMatch: false, temperatureC: null, previewEvent: null, proceedLabel: null, coachTravelled: false, boothPrivateLife: null, boothLineage: null, headToHead: null, hurtNote: null },
 )
 // `finish` = "the player is done with this match". ⚠ R17 #10 MOVED WHEN IT FIRES, NOT WHAT IT MEANS:
 // with a `proceedLabel` it waits for the Proceed press, and without one it still fires the instant
@@ -868,7 +876,12 @@ const commentary = computed(() =>
   buildCommentary(props.match, props.playerA.name, props.playerB.name, props.previewEvent, props.coachTravelled && kidSide.value !== null ? { side: kidSide.value } : null, props.boothPrivateLife && kidSide.value !== null ? { ...props.boothPrivateLife, side: kidSide.value } : null,
     // ⭐⭐ v86 – the LINE, on the same one-line pattern and with the same `kidSide` guard: a rival's
     // replay is silent by construction, because nobody's mother is the family's there.
-    props.boothLineage && kidSide.value !== null ? { ...props.boothLineage, side: kidSide.value } : null),
+    props.boothLineage && kidSide.value !== null ? { ...props.boothLineage, side: kidSide.value } : null,
+    // ⭐ ROUND 53 · STEP 6 – the head-to-head, same guard: a rival's replay is silent by construction.
+    props.headToHead && kidSide.value !== null ? { record: props.headToHead, side: kidSide.value } : null,
+    // ⭐ r53 step 11 – the rain's pause, played by the booth (weather stage 2); W3 hands it the whole day
+    // (temperature, wind, rain and the fourth draw `linePick`, which `EventWeather` already carries).
+    props.weather ? { temperatureC: props.weather.temperatureC, wind: props.weather.wind, rain: props.weather.rain, linePick: props.weather.linePick } : null),
 )
 const modeCommentary = computed(() =>
   viewMode.value === 'key' ? commentary.value.filter((b) => b.keyMoment) : commentary.value,
@@ -985,6 +998,8 @@ const previewRows = computed<LogRow[]>(() =>
     oppRank: heroSide.value === 0 ? props.rankB : props.rankA,
     event: props.previewEvent,
     temperatureC: props.temperatureC,
+    weather: props.weather ?? null,
+    headToHead: props.headToHead,
   }).map((line) => ({ key: `p-${line.key}`, kind: 'intro', rail: '', lead: null, text: line.text, textC: line.c, score: '' })),
 )
 
@@ -1217,7 +1232,7 @@ watch(finished, (isFinished) => {
           <!-- The export puts this bottom-right ON the court as a two-line chip; the owner asked for
                one line and off the surface, so it is a single row up here. Same plate the Season
                card draws, so the same fact looks like the same fact. -->
-          <WeatherPlate v-if="temperatureC != null" class="mv-weather" :temperature-c="temperatureC" :size="13" />
+          <WeatherPlate v-if="temperatureC != null" class="mv-weather" :temperature-c="temperatureC" :wind="weather?.wind" :rain="weather?.rain" :size="13" />
         </div>
 
         <!-- ===== THE BOTTOM RUN-OFF BAND: SPEED · SCORE · SPEED =============================

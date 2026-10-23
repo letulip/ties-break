@@ -296,7 +296,9 @@ describe('D-07 – the snapshot carries this week, and the world keeps the histo
   // band's feed) and `devLifeBoost` (the ×8 dev switch's state echoed back to the More screen). All
   // three are derived per snapshot and persisted nowhere; nothing reordered or removed.
   // -----------------------------------------------------------------------------------------------
-  it('⭐ D-P8 – 119 top-level keys, the same set in the same order on every committed career', async () => {
+  // ⚠ RE-AIMED 22.10 (round 53, M7 47487a7c): 119 -> 120 – the one new always-present key `sparringTopRungOffered`
+  // (the hitting-partner dial's top rung is gated on the coach's week now, and the dial reads the engine's verdict).
+  it('⭐ D-P8 – 120 top-level keys, the same set in the same order on every committed career', async () => {
     const manifest = JSON.parse(readFileSync(resolve(CAREERS, 'manifest.json'), 'utf8')) as {
       fixtures: { name: string }[]
     }
@@ -306,7 +308,7 @@ describe('D-07 – the snapshot carries this week, and the world keeps the histo
     expect(names.length, 'the fixture manifest was not read – this case would prove nothing').toBe(13)
 
     // OPTIONAL VIEW KEYS – present on SOME careers by design, so neither counted nor compared as part of the set (the dated note at the count below says why).
-    const OPTIONAL_VIEW_KEYS: readonly string[] = ['coachFeel']
+    const OPTIONAL_VIEW_KEYS: readonly string[] = ['coachFeel', 'masseurRelease']
     const keysByCareer: Record<string, string[]> = {}
     const wireByCareer: Record<string, string[]> = {}
     for (const name of names) {
@@ -331,7 +333,8 @@ describe('D-07 – the snapshot carries this week, and the world keeps the histo
     // an always-present `null` would move every L3-7 digest for the reason given above. So the keys here are COUNTED AND COMPARED WITHOUT the optional view keys (`OPTIONAL_VIEW_KEYS`, one list), and the one
     // thing still asked of an optional key is below the sameness loop: where a career carries it, it sits in the SAME place of the wire – order is what every hash of a snapshot sees. 119 stays the count of
     // the keys EVERY career carries. The next optional view key joins that list WITH a dated line here, so the list cannot grow unread.
-    expect(reference.length, 'D-P8: the wire`s top-level key count').toBe(119)
+    // r53 step 2 (21.10): `masseurRelease` IS NOT COUNTED EITHER – the confirm's consequences, present only while a hired masseur is shortening a running layoff and ABSENT otherwise (`InjuryView.expectedWeeks`'s rule); it joins `OPTIONAL_VIEW_KEYS` with this dated line. 119 stays the count of the keys EVERY career carries.
+    expect(reference.length, 'D-P8: the wire`s top-level key count').toBe(120)
     for (const key of ['offers', 'offerOpen', 'newestLetterId'] as const) {
       expect(reference, `the wire must carry \`${key}\` – the count is about these three`).toContain(key)
     }

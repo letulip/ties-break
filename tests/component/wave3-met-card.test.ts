@@ -166,7 +166,10 @@ describe('wave 3 T6 – the `met` card on a phone', () => {
     expect(fit.scrollable, 'and what is past the fold can be reached').toBe(true)
     // FOUR answers on this card, not the fork's three – the thing that made it taller in the first
     // place, asserted so the measurement is known to be about the card this wave ships.
-    expect(card.querySelectorAll('.life-beat-choice').length, 'four reactions').toBe(4)
+    // ⚠ RE-AIMED 22.10 (r53 M9, 9ff885d0): the met card carries SIX answers now – the four reactions plus «Ask what his
+    // name is» and «Insist: we want to know» (docs/specs/partner-name-disclosure-2026-10.md §3.2). The fit claims above are
+    // what this round owes the phone: six rows still inside 375x667, bounded and scrolling.
+    expect(card.querySelectorAll('.life-beat-choice').length, 'six reactions').toBe(6)
     w.unmount()
   })
 
@@ -290,7 +293,8 @@ describe('wave 3 T6 – the `met` card on a phone', () => {
     expect(card.querySelector('.life-beat-listen-done'), 'nothing on a met card promises more of her').toBeNull()
     // Pressing an answer on a met card must not open a second panel either: the radios are all there
     // is, and the fourth one («say nothing») is a plain answer with a plain price.
-    expect(card.querySelectorAll('[role="radio"]').length, 'four radios and no advance control').toBe(4)
+    // ⚠ RE-AIMED 22.10 (r53 M9): six radios – the two name answers joined the four reactions; still no advance control.
+    expect(card.querySelectorAll('[role="radio"]').length, 'six radios and no advance control').toBe(6)
     w.unmount()
     document.body.innerHTML = ''
 

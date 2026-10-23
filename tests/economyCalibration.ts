@@ -53,8 +53,11 @@ import {
   tickWeek,
   financeWindow,
   STARTING_FUNDS_CENTS,
+  settleCoachDeal,
   type WorldState,
 } from '../src/engine/world'
+import { coachPedigree } from '../src/engine/coachPedigree'
+import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground } from '../src/shared/protocol'
 
@@ -100,11 +103,29 @@ export function seasonBurnDollars(
   opts: { excludeSponsor?: boolean } = {},
 ): number {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, background, coachTier: CALIBRATION_TIER[background] })
+  plainEliteInChair(world)
   const rng = rngFromSeed(world.seed)
   const start = STARTING_FUNDS_CENTS[background]
   for (let i = 0; i < 52; i++) tickWeek(world, rng)
   const sponsor = opts.excludeSponsor ? sponsorIncomeCents(world) : 0
   return (start - world.fundsCents - physioSpendCents(world) + interestEarnedCents(world) + sponsor) / 100
+}
+
+/** ⚠ RE-AIMED 22.10 (r53, N3 – the close; M8 0e1c36a7): A PLAIN ELITE IN THE CHAIR. Round 53 №2 gave one elite slot
+ *  in four a famous past (`coachPedigree`, its own sub-stream) at +50% of his labour, and the opening elite coach of
+ *  5 of the 16 calibration seeds (cal-1, -8, -11, -13, -14) and of 'coach-market' drew one – so the wealthy cell
+ *  measured +$67,650 against M7's own +$55,213, the premium and not the rung. A famous name is a choice ABOVE the
+ *  rung with its own bench (`tools/coach-pedigree-bench.ts`); these calibrations price the RUNG, so a pedigreed
+ *  opening coach is swapped for the first plain elite slot of the same roster before the year runs. A no-op for
+ *  every non-elite rung and every plain seed. Zero draws (the pedigree is a re-derived sub-stream). */
+export function plainEliteInChair(world: WorldState): void {
+  const id = world.coachId
+  if (!id || !coachPedigree(world.seed, id, 'elite')) return
+  if (ECONOMY.coach.roster.find((r) => r.portrait === id)?.tier !== 'elite') return
+  const plain = ECONOMY.coach.roster.find((r) => r.tier === 'elite' && !coachPedigree(world.seed, r.portrait, 'elite'))
+  if (!plain) throw new Error(`no plain elite on the ${world.seed} roster`)
+  world.coachId = plain.portrait
+  settleCoachDeal(world)
 }
 
 export function batchBurns(background: FamilyBackground, opts: { excludeSponsor?: boolean } = {}): number[] {
@@ -230,9 +251,19 @@ export const BANDS: Record<FamilyBackground, [number, number]> = {
   // ⚠ MEASURED (+2,970.05), NOT CHOSEN – see the resolution block above. Same ±1,750 half-width the
   // working band carries, so it is a characterisation with the same tightness, not a widened net,
   // and the sign is back where round 7 put it.
-  wealthy: [1_200, 4_700],
+  // ⭐ RE-AIMED 21.10 (round 53 №1, M7 – docs/specs/coach-pay-ladder-2026-10.md §3.1): the elite shelf is $300–400 an
+  // hour at 12–16 on his word («2–3к вполне может быть ок», «ок» to $1500–2000 for the junior band), so the wealthy
+  // family's elite year burns **+$55,212.86** measured (was +$2,970.05). Same ±1,750 half-width around the new mean.
+  // «Premium everything must hurt» is now a fact about the price, not a fine balance.
+  // ⚠ 22.10 (r53, N3 – the close; M8 0e1c36a7): the band is NOT widened. M8's famous names put +50% labour on 5 of the
+  // 16 opening elite coaches and the mean read +$67,650; with a plain elite in the chair (`plainEliteInChair`) it
+  // measures **+$54,602.12** (seeds +$42,887 .. +$66,492), inside the band M7 pinned.
+  wealthy: [53_450, 56_950],
 }
 
 /** Per-seed tolerance around each band. The corridor roll moves the coaching line every week, so a
  *  single season lands further from the batch mean than it did with a corridor-free bill. */
-export const SEED_SLACK: Record<FamilyBackground, number> = { working: 2_500, middle: 3_500, wealthy: 8_000 }
+// ⭐ 21.10 (round 53 M7): wealthy 8,000 → 13,000 – the elite shelf is $300–400 an hour now, so one seed's coach can sit
+// $100/h × 5 sessions × 52 = $26k a year from another's; half that is the per-seed reach (measured low seed +$44,200
+// against the +$55,213 mean). Derived from the rate band's own width, not widened until green.
+export const SEED_SLACK: Record<FamilyBackground, number> = { working: 2_500, middle: 3_500, wealthy: 13_000 }

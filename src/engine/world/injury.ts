@@ -103,9 +103,25 @@ function recurrenceDecay(rowWeek: number, week: number): number {
  *  is what it documents. Reading through `Record<string, number | undefined>` is the honest join of
  *  the two: an unrecognised severity contributes NOTHING rather than `undefined` propagating into
  *  the sum as `NaN` and poisoning every factor downstream. */
-function recurrenceWeightOf(severity: string): number {
-  const table = ECONOMY.availability.recurrence.severityWeight as Record<string, number | undefined>
-  return table[severity] ?? 0
+function recurrenceWeightOf(row: { severity: string; weeksOut: number }): number {
+  const r = ECONOMY.availability.recurrence
+  const table = r.severityWeight as Record<string, number | undefined>
+  return (table[row.severity] ?? 0) * recurrenceDurationFactor(row.weeksOut)
+}
+
+/** ⭐ HOW LONG SHE WAS OUT scales the memory, within a severity (owner, 21.10: «может быть не жестко
+ *  30% а как-то в зависимости от самой травмы и ее сложности/продолжительности сделать более
+ *  динамично?»). Linear from `durationFactorLo` at `durationFloorWeeks` or less to `durationFactorHi`
+ *  at `durationCeilWeeks` or more, so a twelve-week layoff leaves twice the fragility a fortnight does.
+ *  ⚠ READS `weeksOut`, THE WEEKS SHE WAS ACTUALLY OUT (v59), never the clinic's dealt number: a
+ *  masseur who bought weeks back also bought back some of the fragility. A row without a finite
+ *  `weeksOut` (a hand-built probe world) reads 1, the old behaviour. Pure state, zero draws. */
+export function recurrenceDurationFactor(weeksOut: number): number {
+  const r = ECONOMY.availability.recurrence
+  if (!Number.isFinite(weeksOut)) return 1
+  const t = (weeksOut - r.durationFloorWeeks) / (r.durationCeilWeeks - r.durationFloorWeeks)
+  const clamped = Math.min(1, Math.max(0, t))
+  return r.durationFactorLo + (r.durationFactorHi - r.durationFactorLo) * clamped
 }
 
 /**
@@ -129,7 +145,7 @@ export function recurrenceLoad(world: WorldState): number {
   const r = ECONOMY.availability.recurrence
   let load = 0
   for (const row of world.injuryHistory) {
-    load += recurrenceWeightOf(row.severity) * recurrenceDecay(row.week, world.week)
+    load += recurrenceWeightOf(row) * recurrenceDecay(row.week, world.week)
   }
   return Math.min(load, r.loadCap)
 }
@@ -152,7 +168,7 @@ export function recurrencePartLoad(world: WorldState): Map<string, number> {
   for (const row of world.injuryHistory) {
     const part = bodyPartOf(row.kind)
     if (part === null) continue
-    const w = recurrenceWeightOf(row.severity) * recurrenceDecay(row.week, world.week)
+    const w = recurrenceWeightOf(row) * recurrenceDecay(row.week, world.week)
     out.set(part, Math.min(r.loadCap, (out.get(part) ?? 0) + w))
   }
   return out

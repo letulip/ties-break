@@ -224,7 +224,7 @@ const courtRead = computed(() => courtReadFor(props.event.surface))
         </div>
         <div class="nt-money-row">
           <span class="hint">{{ t('Conditions') }}</span>
-          <WeatherPlate :temperature-c="event.preview.temperatureC" :size="13" on-art />
+          <WeatherPlate :temperature-c="event.preview.temperatureC" :wind="event.preview.weather?.wind" :rain="event.preview.weather?.rain" :size="13" on-art />
         </div>
       </div>
 

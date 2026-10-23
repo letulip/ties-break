@@ -5640,6 +5640,14 @@ tr.kid-row td {
   letter-spacing: var(--label-track);
   text-transform: uppercase;
 }
+/* ⚠ R53 L1 (21.10) – the tier's medical-team sentence, one block under the title (it was `.cm-load` on
+   every card). `.cm-load`'s treatment, to the value: quieter than the card text, wraps freely. */
+.tier-note {
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
 .tier-dot {
   width: 7px;
   height: 7px;
@@ -6349,6 +6357,10 @@ tr.kid-row td {
      goes with the rows' – the grid's gap is that number now, and keeping both would open 16px under
      the heading and 8 between the cards. */
   .tier-block .tier-head {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+  .tier-block .tier-note {
     grid-column: 1 / -1;
     margin-bottom: 0;
   }

@@ -23,6 +23,8 @@ import { netTravelCents, travelCoverShare } from '../academy'
 // The rung ladder, for the cameo's coach cut. coach.ts is a leaf (it imports ECONOMY and rng and
 // nothing else), so this runs one way exactly as every other import in this file does.
 import { COACH_TIERS } from '../coach'
+import { pedigreeTradeInChair } from './coachDeal'
+import { COACH_PEDIGREE } from '../coachPedigree'
 import { AD_CATEGORIES, isOfferLive, offerRefusal, activeAdDealIn, activeAdDeals, activeKitDeal, adBandFor, adCapstoneTerms, adFeeFor, adJuniorAt, adJuniorFeeCents, adJuniorOpen, adJuniorTerms, adLetterRng, adLifetimeTerms, adSpokenFor, adTermsForCategory, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, lastSignedAdBrand, letDownThisWindow, pickAdHouse, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, type AdCategory, type AdOfferTerms, type AdPortfolioRow, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer, type SaleOfferTerms, type WorldEventCategory } from '../../shared/protocol'
@@ -921,7 +923,13 @@ export function reviewAdOffer(world: WorldState): void {
     // ⚠ «РЕЖЕ» IS THE ARRIVAL BAR AND NOTHING ELSE – the SAME sub-stream at a lower threshold, so the
     // draw count, the stream and its position are untouched at every age. A career that crosses
     // eighteen mid-week does not re-roll anything; it simply starts clearing the adult bar.
-    const chance = junior ? (s.offerChance * s.junior.chanceBps) / 10_000 : s.offerChance
+    const baseChance = junior ? (s.offerChance * s.junior.chanceBps) / 10_000 : s.offerChance
+    // ⭐ ROUND 53 №2 (spec §3.4) – THE SPONSORS TRADE OF A FAMOUS NAME: the letters come at three weeks in four of the
+    // cadence (the arrival bar × 1/0.75) while he is in the chair. The SAME sub-stream at a higher threshold – the
+    // draw count, key and position are untouched (the junior bar's own argument above). The two crowns are not a
+    // cadence («once per career») and keep their bar.
+    const famous = category !== 'capstone' && category !== 'lifetime' && pedigreeTradeInChair(world, 'sponsors')
+    const chance = famous ? Math.min(1, baseChance / COACH_PEDIGREE.sponsorCadenceFactor) : baseChance
     let terms: AdOfferTerms | null = null
     if (category === 'capstone') {
       // ⭐⭐ THE CAPSTONE'S TENURE GATE IS `adCategoryOpen`'S (B-03) – four seasons ENDED inside the
@@ -1002,6 +1010,9 @@ export function reviewAdOffer(world: WorldState): void {
       if (junior && terms) terms = adJuniorTerms(terms)
     }
     if (!terms) continue
+    // ⭐ ROUND 53 №2 – ...AND THE CHEQUE ×1.2, on the same categories, after the junior re-size (the shelf quotes it
+    // through `famousAdFeeCents` below, so the letter and the row cannot disagree).
+    if (famous) terms = { ...terms, cashCents: famousAdFeeCents(terms.cashCents) }
     // Terms are frozen at arrival from the catalogue – the snapshot rule – and the deadline gives
     // him `ECONOMY.advertising.decideWeeks` counted INCLUSIVELY from today, so the arrival week is
     // one of them and the letter is still answerable on the last (round 28 #2's five, on its own
@@ -1143,7 +1154,12 @@ export function adPortfolioView(world: WorldState): AdPortfolioRow[] {
     rows.push(
       fee === null
         ? { category, label: def.label, state: 'closed' }
-        : { category, label: def.label, state: 'open', openCashCents: junior ? adJuniorFeeCents(fee) : fee },
+        : {
+            category,
+            label: def.label,
+            state: 'open',
+            openCashCents: pedigreeTradeInChair(world, 'sponsors') ? famousAdFeeCents(junior ? adJuniorFeeCents(fee) : fee) : junior ? adJuniorFeeCents(fee) : fee,
+          },
     )
   }
   return rows
@@ -1960,4 +1976,9 @@ export function resultBonusFor(world: WorldState, tier: TierId, finish: number):
   if (share <= 0 || !from) return 0
   if (TIER_LADDER.indexOf(tier) < TIER_LADDER.indexOf(from)) return 0
   return Math.round(share * (TIERS[tier].prizeCents?.[finish] ?? 0))
+}
+
+/** ⭐ ROUND 53 №2 – a band category's cheque with a famous name's sponsors trade in the chair: ×1.2, rounded. */
+export function famousAdFeeCents(cents: number): number {
+  return Math.round(cents * COACH_PEDIGREE.sponsorFeeFactor)
 }

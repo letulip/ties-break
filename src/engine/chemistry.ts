@@ -54,6 +54,7 @@
 // is benchable on its own – which is what B9 and B10 actually do.
 
 import { ECONOMY } from './economy'
+import { COACH_PEDIGREE } from './coachPedigree'
 import { rngFromSeed } from './rng'
 import type { SpiritBand } from './spirit'
 import type { Temperament } from './spirit'
@@ -337,6 +338,24 @@ export function accrueChemistry(
     phase,
     standing: pair.standing,
   }
+}
+
+/** ⭐⭐ ROUND 53 №2 (spec §3.4) – ONE WEEK OF A PAIR WITH A FAMOUS NAME IN THE CHAIR who has the chemistry trade: the
+ *  pair, if it has no row yet, STARTS one band warmer (`chemistryStartPhase`), and every week that GAINS counts
+ *  `chemistryGainFactor`× – only the gaining weeks, because «grows faster» must not deepen a dip. `pair` undefined is
+ *  the first week of the relationship. Pure, zero draws beyond `accrueChemistry`'s own sub-streams. */
+export function accrueWarmChemistry(
+  pair: CoachPair | undefined,
+  affinity: number,
+  seed: string,
+  coachId: string,
+  week: number,
+  events: ChemistryWeek,
+): CoachPair {
+  const before = pair ?? { ...freshCoachPair(), phase: COACH_PEDIGREE.chemistryStartPhase }
+  const after = accrueChemistry(before, affinity, seed, coachId, week, events)
+  if (after.chem <= before.chem) return after
+  return { ...after, chem: Math.min(100, before.chem + (after.chem - before.chem) * COACH_PEDIGREE.chemistryGainFactor) }
 }
 
 // =================================================================================================

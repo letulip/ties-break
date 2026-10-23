@@ -50,6 +50,16 @@ import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-ben
 
 const EN = { locale: SOURCE_LOCALE }
 const TABLE = new Set(allTemplateKeys())
+// ⚠ 22.10 r53 N2 (M11, weather stage 2): the champion row's six weather tails – new whole sentences for a new fact (the day touched the match), no old save holds one. The same six
+// i18n-l3-1-ledger-writers.test.ts lists in NEW_KEYS (the static key law); this played-career walk admits them by name, it does not loosen the table check for anything else.
+const WEATHER_TAILS = new Set([
+  '🏆 {0} won the {1} ({2}) in exhausting heat.',
+  '🏆 {0} won the {1} ({2}) – the last one standing in the heat.',
+  '🏆 {0} won the {1} ({2}) despite the rain.',
+  '🏆 {0} won the {1} ({2}) – thanks to the rain, on the fresher legs.',
+  '🏆 {0} won the {1} ({2}) in a strong wind.',
+  '🏆 {0} won the {1} ({2}) – the wind had its say, and she had the last word.',
+])
 
 interface Row extends WorldEvent {
   c?: CopyRef
@@ -79,7 +89,7 @@ describe('§1 played careers – every row that carries c renders to its text', 
       for (const e of rows) {
         if (!e.c) continue
         if (renderCopyRef(e.c, EN) !== e.text) bad.push(`${JSON.stringify(renderCopyRef(e.c, EN))} !== ${JSON.stringify(e.text)}`)
-        if (!TABLE.has(e.c.k)) bad.push(`key outside the table: ${e.c.k}`)
+        if (!TABLE.has(e.c.k) && !WEATHER_TAILS.has(e.c.k)) bad.push(`key outside the table: ${e.c.k}`)
         expect(JSON.parse(JSON.stringify(e.c)), e.text).toEqual(e.c)
       }
       expect(bad).toEqual([])
@@ -220,6 +230,11 @@ describe('§3 the season wrap-up – twelve whole sentences', () => {
   it('the real writer on a played world: the ref renders to the text for an unmoved, a risen and a fallen start rank, and for none', () => {
     const outcomes = new Set<string>()
     // 8k self-coached · player: its SECOND season is played on the international (ITF) table – the one track the movement arrow is written for
+    // ⚠ RE-AIMED 22.10 (r53 close, N4): with M11's weather the career at index 0 sits #1 on the National table by week 101, so a start rank of 1 / 99999 / 60
+    // never moved the arrow and only ONE sentence came out. A sweep of indices 0–9 (4 start ranks each, same preset and policy): 2, 3, 4, 6 and 7 print all
+    // three, the rest print one. Index 2 – the first – is walked; the claim is unchanged.
+    // ⚠ RE-AIMED 22.10 (r53 W1, heat variant V1 – she tires EARLIER in heat, fatigue onset 120 / heat): index 2 now prints ONE (her results moved with the hot days). The same
+    // sweep 0–9: 0, 3, 5, 6, 7 and 9 print all three. Index 0 – the first – is walked; the claim is unchanged.
     for (const startRank of [null, 1, 99999, 60] as const) {
       const { world, rng } = openCareer(PRESETS[0]!, 0, POLICIES[1]!)
       while (world.week < 52 || world.week % 52 !== 48) stepCareerWeek(world, rng, POLICIES[1]!)

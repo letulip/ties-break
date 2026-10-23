@@ -443,7 +443,7 @@ describe('§5 the seats – the keys the readers ask for are catalog keys, wired
   it('engine.text carries the coach market\'s pools: 16 bios, 4 load notes, 8 halves of the profile, 11 plaque sentences, the travel line – and every one has Russian', () => {
     const catalog = JSON.parse(readFileSync(join(ROOT, 'src/i18n/catalog.en.json'), 'utf8')) as { keys: Record<string, { home: string[]; seat?: string[] }> }
     const homed = Object.entries(catalog.keys).filter(([, e]) => e.seat?.includes('engine.text') && e.home.includes('src/engine/world/coachMarket.ts'))
-    expect(homed.length, '16 + 4 + 8 + 11 + 1').toBe(40)
+    expect(homed.length, '16 + 4 + 8 + 11 + 1 + 6').toBe(46) // ⚠ 22.10 r53 M8 (N2): 40 → 46 – the six pedigree lines of the coach card (coachPedigree, read by coachMarket.ts), each with Russian below
     for (const [k] of homed) expect(RU[k], k).toBeTruthy()
   })
 })

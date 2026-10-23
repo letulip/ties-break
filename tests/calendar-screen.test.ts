@@ -895,7 +895,8 @@ describe('the calendar reads the snapshot and nothing else', () => {
     expect(days, 'the masseur rule is the engine\'s, not a fourth spelling of it').toContain(
       'masseurWorksInWeek(snap.masseurHired ?? false, frozen, bookedOff)',
     )
-    expect(days).toContain('layoffCoversWeek(snap.week, snap.injury?.weeksRemaining, week)')
+    // ⭐ R53 №4: the week is asked of `layoffHoldsWeek` (the honest figure), whose body holds the engine's `layoffCoversWeek`.
+    expect(days).toContain('return layoffCoversWeek(snap.week, layoffWeeksOut(snap), week)')
     expect(days, 'the marker rule is the engine\'s function, re-exported under its historical name').toContain(
       'export const isSuitable: (e: UpcomingEvent, currentWeek: number) => boolean = eventIsHers',
     )

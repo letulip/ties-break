@@ -320,8 +320,9 @@ const REF = { //
 // byte and are asserted BEFORE this constant is read. #34 adds NO draw to any stream - it changes
 // what a drawn point is worth, never how many are drawn - which is why the hash could not move
 // and did not, and why planner.test.ts's input-independence halves still pass unchanged.
-  // ⚠ RE-PINNED 02.10 (ROUND 45 #1, the owner's 1-2-3 tariff): kidRank 90 -> 89 – a VALUE moving and NO DRAW. Same companion value as tests/condition.test.ts (full reasoning at its REF declaration): the draws are unmoved, the year-end rank is not.
-  kidRank: 89 }
+  // ⚠ RE-PINNED 02.10 (ROUND 45 #1, the owner's 1-2-3 tariff): kidRank 90 -> 89 – a VALUE moving and NO DRAW. Same companion value as tests/condition.test.ts (full reasoning at its REF declaration): the draws are unmoved, the year-end rank is not. – and ⚠ RE-PINNED AGAIN 22.10 (r53 step 11, weather stage 2): kidRank 89 -> 88 – a VALUE moving and NO DRAW: the match reads the day now (heat on both players' fatigue, wind on the serve), so a frozen career's results shift; the capture's count and hash did not move.
+  // ⚠ RE-PINNED 22.10 (r53 W1, heat variant V1 – she tires EARLIER in heat, fatigue onset 120 / heat): kidRank 88 -> 87 – a VALUE moving and NO DRAW, same companion as tests/condition.test.ts.
+  kidRank: 87 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
@@ -1703,7 +1704,8 @@ describe('C13 – severity by age, and recurrence (round 30 #27)', () => {
   // --- the recurrence load: ceiling and decay -----------------------------------------------------
 
   it('recurrenceLoad DECAYS – an injury three seasons back is worth <= 12.5% of a fresh one', () => {
-    const row = (week: number) => [{ kind: 'ankle strain', severity: 'moderate' as InjurySeverity, week, weeksOut: 4 }]
+    // weeksOut 2 = the fortnight anchor, duration factor exactly 1.0 – these fixtures read the bare severity weight
+    const row = (week: number) => [{ kind: 'ankle strain', severity: 'moderate' as InjurySeverity, week, weeksOut: 2 }]
     const fresh = recurrenceLoad(withHistory(row(500), 500))
     const oneSeason = recurrenceLoad(withHistory(row(500), 500 + REC.halfLifeWeeks))
     const threeSeasons = recurrenceLoad(withHistory(row(500), 500 + 3 * REC.halfLifeWeeks))
@@ -1725,6 +1727,33 @@ describe('C13 – severity by age, and recurrence (round 30 #27)', () => {
     expect(recurrenceTauFactor(withHistory(many, 500))).toBeCloseTo(1 + REC.tauBump * REC.loadCap, 10)
   })
 
+  // --- ROUND 53 L5: the weight runs on HOW LONG she was out, not only on how bad it was ---------------
+
+  it('recurrence weight scales with the weeks ACTUALLY out: 1.0 at <= 2w, 1.5 at 7w, 2.0 at >= 12w, clamped', () => {
+    const at = (weeksOut: number, extra: object = {}) =>
+      recurrenceLoad(
+        withHistory([{ kind: 'ankle strain', severity: 'minor' as InjurySeverity, week: 300, weeksOut, ...extra }], 300),
+      )
+    const w = REC.severityWeight.minor
+    expect(at(2)).toBeCloseTo(w * 1.0, 10)
+    expect(at(12)).toBeCloseTo(w * 2.0, 10)
+    expect(at(7)).toBeCloseTo(w * 1.5, 10)
+    // the clamps: below the floor and above the ceiling read the end values exactly
+    expect(at(0)).toBe(at(2))
+    expect(at(1)).toBe(at(2))
+    expect(at(30)).toBe(at(12))
+    // the ratio the owner asked for: a twelve-week layoff leaves 2.0 : 1.0 of a fortnight's memory
+    expect(at(12) / at(2)).toBeCloseTo(2, 10)
+    // linear between the ends (4w is a fifth of the way up the slope)
+    expect(at(4)).toBeCloseTo(w * (1.0 + 1.0 * 0.2), 10)
+    // ...and it is the REAL absence: a row dealt 12 weeks that the masseur cut to 2 weighs as 2
+    expect(at(2, { weeksSaved: 10 })).toBe(at(2))
+    expect(at(2, { weeksSaved: 10 })).not.toBe(at(12))
+    // the part tilt reads the same weight
+    const w2 = withHistory([{ kind: 'ankle strain', severity: 'minor' as InjurySeverity, week: 300, weeksOut: 12 }], 300)
+    expect(recurrencePartLoad(w2).get('ankle')).toBeCloseTo(w * 2.0, 10)
+  })
+
   it('a clean record is EXACTLY the identity at every reader – no career without an injury moves', () => {
     const clean = withHistory([], 300)
     expect(recurrenceLoad(clean)).toBe(0)
@@ -1737,7 +1766,7 @@ describe('C13 – severity by age, and recurrence (round 30 #27)', () => {
   it('recurrencePartLoad names the RIGHT part, including the two-word one', () => {
     const w = withHistory(
       [
-        { kind: 'lower back strain', severity: 'moderate', week: 300, weeksOut: 4 },
+        { kind: 'lower back strain', severity: 'moderate', week: 300, weeksOut: 2 },
         { kind: 'ankle soreness', severity: 'minor', week: 300, weeksOut: 2 },
       ],
       300,

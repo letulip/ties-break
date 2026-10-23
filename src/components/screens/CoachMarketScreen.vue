@@ -602,6 +602,9 @@ interface TierGroup {
   rows: Row[]
   loCents: number
   hiCents: number
+  /** The rung's medical-team sentence, the ENGINE's (`coachLoadNote(tier)`), read off the group's first
+   *  row – every row of a tier carries the same one, so this is no second spelling. */
+  loadNote: string
 }
 const groups = computed<TierGroup[]>(() =>
   HIREABLE_TIERS.map((tier) => {
@@ -618,6 +621,7 @@ const groups = computed<TierGroup[]>(() =>
       rows: sorted,
       loCents: prices.length ? Math.min(...prices) : 0,
       hiCents: prices.length ? Math.max(...prices) : 0,
+      loadNote: sorted.length ? sorted[0].loadNote : '',
     }
   }).filter((g) => g.rows.length > 0),
 )
@@ -665,7 +669,12 @@ function rowLabel(r: Row): string {
   // ⚠ ONLY WHEN THERE IS A READING. A stranger's card says nothing rather than «chemistry unknown»,
   // because a name should not grow a clause that is true of most of the list.
   const chem = r.chemistry === null ? '' : t(', chemistry {0}%', [chemSpoken(r.chemistry)])
-  return t('{0}, {1} tier, {2}, {3} a week{4} – {5}', [r.name, COACH_TIER_WORD[r.tier], FIT_LABEL[r.fitNow], formatCents(r.weeklyCents), chem, state])
+  const base = t('{0}, {1} tier, {2}, {3} a week{4} – {5}', [r.name, COACH_TIER_WORD[r.tier], FIT_LABEL[r.fitNow], formatCents(r.weeklyCents), chem, state])
+  // ⭐ ROUND 53 W2 – the famous name's past is heard too (the star itself is aria-hidden); no new string, the engine's own line
+  // ⚠ 22.10 (W2's tail): the past line goes FIRST, not last – the label's ending «… a week – hire» is a
+  // contract (`e2e/elite-gate.spec.ts` reads the price and the call to action off the END of the name),
+  // and the W2 suffix broke it on every famous row. The listener hears the past, then the usual row.
+  return r.pedigree ? `${engineText(r.pedigree.past)}. ${base}` : base
 }
 
 // =================================================================================================
@@ -1297,6 +1306,14 @@ function scrollToTier(tier: CoachTier): void {
         <span class="tier-count">{{ t('{0} coaches', [g.rows.length]) }}</span>
         <span class="tier-range">{{ t('{0}-{1} /wk', [formatCents(g.loCents), formatCents(g.hiCents)]) }}</span>
       </p>
+      <!-- ⚠ R53 L1 (21.10) – THE MEDICAL-TEAM SENTENCE LIVES HERE, ONCE PER TIER, NOT ON EVERY CARD. The
+           owner: the same last phrase on each card of a group is noise (his word, in the ledger) – four repeats on cards that are
+           already over-full – so it is lifted out and set as a block of text under the tier's title.
+           The reasoning it was first put on the card for (round `load slice`: the money buys a better
+           medical team and takes decisions off you, and nothing on screen said so) still holds – the
+           tier is what that sentence is about, and it is the engine's own `coachLoadNote(tier)`,
+           word for word. -->
+      <p v-if="g.loadNote" class="tier-note">{{ engineText(g.loadNote) }}</p>
 
       <!-- The portrait is FULL-BLEED down the left edge, sized by height, masked into the card -
            the same treatment `.coach-card` uses on Home and for the same reason (A2c/d): a strip
@@ -1336,7 +1353,9 @@ function scrollToTier(tier: CoachTier): void {
       >
         <!-- `alt=""` now that the row carries its own label: the portrait's only text was the name,
              which the label already says, and Home's coach card decorates the same way. -->
-        <span class="cm-art portrait-strip"><img :src="coachPortraitUrl(r.id)" alt="" loading="lazy" /></span>
+        <span class="cm-art portrait-strip"
+          ><img :src="coachPortraitUrl(r.id)" alt="" loading="lazy" /><!-- ⭐ ROUND 53 W2 (22.10) – the famous name's star, bottom-left over the photo (his ask, spec coach-pay-ladder §3.4.1) --><span v-if="r.pedigree" class="cm-pedigree-star" aria-hidden="true"
+            ><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" focusable="false"><path d="M12 2.5l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.52l-5.88 3.09 1.12-6.55L2.48 9.42l6.58-.96L12 2.5z" /></svg></span></span>
         <span class="cm-body">
           <span class="cm-name">{{ r.name }}</span>
           <span class="cm-meta">
@@ -1354,6 +1373,10 @@ function scrollToTier(tier: CoachTier): void {
                read before argument. It takes the load note's own treatment rather than a louder one -
                the uplift is still the card's headline and a description must not compete with it. -->
           <span v-if="coachBlurb(r.id)" class="cm-blurb">{{ engineText(coachBlurb(r.id)) }}</span>
+          <!-- ⭐ ROUND 53 №2 – A FAMOUS NAME'S PAST AND TRADE, two quiet lines under the bio (spec §3.4); absent for a plain coach. -->
+          <span v-if="r.pedigree" class="cm-pedigree-past">{{ engineText(r.pedigree.past) }}</span>
+          <span v-if="r.pedigree" class="cm-pedigree-trade">{{ engineText(r.pedigree.trade) }}</span>
+          <span v-if="r.pedigree" class="cm-pedigree-rate">{{ t('Rate +{0} % for the name', [r.pedigree.labourPct]) }}</span>
           <!-- WHAT THE RUNG IS WORTH TO HER, computed from her own headroom. Its own line, because
                it is the number the owner asked for and it must never be the thing that truncates.
 
@@ -1412,13 +1435,8 @@ function scrollToTier(tier: CoachTier): void {
                read on her, not a fact about anybody for hire. Empty until her own decline starts,
                which is the same data-level guarantee Home's short plate inherits. -->
           <span v-if="r.current && declineNote" class="cm-decline">{{ declineNote }}</span>
-          <!-- WHAT HE DOES ABOUT HER BODY (load slice). The card used to make exactly one claim - the
-               development uplift - so the two differences that wave introduced (how good his medical
-               team is, and how much of the deciding he takes off you) were spent money with nothing on
-               screen to explain it. Prose, not a second number: the measured spread is a few injury
-               weeks over four years and printing a figure would promise precision the run cannot back.
-               Below the uplift, quieter than it, because the uplift is still the card's headline. -->
-          <span class="cm-load">{{ engineText(r.loadNote) }}</span>
+          <!-- WHAT HE DOES ABOUT HER BODY (load slice) used to close the card here; R53 L1 moved the sentence
+               to the tier block above (`.tier-note`) – see the note there. -->
         </span>
         <!-- ⭐⭐⭐ ROUND 42 #42 - THE WEEK'S COST, THEN THE WAY IN. The price line has carried what
              the rung costs since the market shipped; what changed is the line under it. It used to
@@ -1555,10 +1573,30 @@ function scrollToTier(tier: CoachTier): void {
      gap above itself to separate the body note from the FIGURES, and this line sits directly under
      the meta row where `.cm-body`'s own 4px gap is already the separation. -->
 <style scoped>
-.cm-blurb {
+.cm-blurb,
+.cm-pedigree-past,
+.cm-pedigree-trade,
+.cm-pedigree-rate {
   font-size: 10.5px;
   line-height: 1.35;
   color: var(--muted);
+}
+.cm-pedigree-past {
+  font-weight: 600;
+}
+/* the famous name's star: a dark scrim disc so it reads over any photo, bottom-left of the portrait */
+.cm-pedigree-star {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  color: #f5c542;
 }
 /* ⭐⭐ WAVE 5 T12 – THE PROFILE TAKES `.cm-load`'s TREATMENT, to the value, for `.cm-blurb`'s own
    reason one rule up: it is quiet prose under the figures and it must not argue with the uplift,

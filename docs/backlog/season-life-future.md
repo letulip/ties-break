@@ -100,3 +100,10 @@ WTA ankle/knee skew, one-time onset treatment costs. Deferred, each with its mis
 Order agreed with owner 25.07: finish availability first – **slice C (injuries + physio)** – keeping
 the coach info recorded here. Then the coach/economy slice (section 1). The deferred items in
 section 2 attach to Phase-6 systems (morale, weather, hidden stats, richer match engine).
+
+
+## Крытые корты (round 53 №3, 21.10)
+
+Свойство турнира «крытый корт», где погоды нет. Его слово: «не знаю, я думал об этом, но надо
+опять рисовать всё, давай без него пока что, можно в беклог бросить». Поле у события и арт – когда
+погода (`docs/specs/weather-2026-10.md`) отработает сезон.

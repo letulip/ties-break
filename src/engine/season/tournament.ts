@@ -4,7 +4,8 @@
 // resolve from the closed-form win probability with a single RNG draw.
 
 import { rngFromSeed, type Rng } from '../rng'
-import type { MatchPlayer } from '../match/types'
+import type { MatchPlayer, MatchWeather } from '../match/types'
+import { playedWeather } from '../match/weather'
 import { simulateMatch, fastMatchProbability, recordedMatchOptions, JUNIOR_TOUR } from '../match/engine'
 import { TIERS, TIER_LADDER, isTierAgeOpen } from './calendar'
 import { NATION_POOL } from './cohort'
@@ -1094,11 +1095,16 @@ function playMatch(
   kid: MatchPlayer | null,
   worldSeed: string,
   rng: Rng,
+  weather?: MatchWeather,
 ): MatchRecord {
   const kidPlays = kid !== null && (a.id === kid.id || b.id === kid.id)
+  // ⭐ r53 step 11 – the day this event is played on, as a match records it (`undefined` on a calm,
+  // mild day, which keeps that record byte-identical to the one before stage 2). Zero draws.
+  const played = playedWeather(weather)
+  const day = played ? { weather: played } : {}
   if (kidPlays) {
     const seed = `${worldSeed}:${event.id}:r${round}`
-    const res = simulateMatch(a, b, recordedMatchOptions({ surface: event.surface, seed }))
+    const res = simulateMatch(a, b, recordedMatchOptions({ surface: event.surface, seed, ...day }))
     const winnerId = res.winner === 0 ? a.id : b.id
     const score = res.sets.map((s) => `${s.a}-${s.b}`).join(' ')
     // SHE (or her opponent) STOPPED. `simulateMatch` has already done the work: the loser is the
@@ -1113,11 +1119,11 @@ function playMatch(
     // ступени») – it needed no code, only the guarantee that the run still reaches finalize.
     if (res.retired) {
       const retiredId = res.retired.side === 0 ? a.id : b.id
-      return { round, aId: a.id, bId: b.id, winnerId, seed, score, retiredId }
+      return { round, aId: a.id, bId: b.id, winnerId, seed, score, retiredId, ...day }
     }
-    return { round, aId: a.id, bId: b.id, winnerId, seed, score }
+    return { round, aId: a.id, bId: b.id, winnerId, seed, score, ...day }
   }
-  const p = fastMatchProbability(a, b, { surface: event.surface, tour: JUNIOR_TOUR, seed: '' })
+  const p = fastMatchProbability(a, b, { surface: event.surface, tour: JUNIOR_TOUR, seed: '', ...day })
   const aWins = rng() < p
   return { round, aId: a.id, bId: b.id, winnerId: aWins ? a.id : b.id }
 }
@@ -1301,6 +1307,10 @@ export function runTournament(
    *  what every caller with no published draw wants and what this function did before the parameter
    *  existed. See `withPinnedFirstRound`. */
   pinnedFirstOpponent?: MatchPlayer,
+  /** ⭐ r53 step 11 – the event's day (`eventWeather`, drawn by the caller off its own sub-stream –
+   *  this module cannot import the season preview, which imports it). Omitted ⇒ every match is
+   *  played as before stage 2. Read by the kid's matches AND the closed form that resolves the rest. */
+  weather?: MatchWeather,
 ): TournamentResult {
   let alive: MatchPlayer[] = buildDraw(event, entrants, kid, kidSeedIndex ?? null, rng)
   // ⚠ AFTER the draw and BEFORE a ball is struck: zero draws on any stream, so the event's
@@ -1317,7 +1327,7 @@ export function runTournament(
     for (let i = 0; i < alive.length; i += 2) {
       const a = alive[i]
       const b = alive[i + 1]
-      const rec = playMatch(a, b, round, event, kid, worldSeed, rng)
+      const rec = playMatch(a, b, round, event, kid, worldSeed, rng, weather)
       matches.push(rec)
       const winner = rec.winnerId === a.id ? a : b
       const loser = rec.winnerId === a.id ? b : a

@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 174 dated entries, newest 2026-10-15. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 176 dated entries, newest 2026-10-22. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -40,7 +40,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 31 | [ROUND 52, HIS TIMING ANSWERS (his two review-sheet questions)](#15102026--round-52-his-timing-answers-his-two-review-sheet-questions) | 2026-10-15 |
+| process-and-git | 33 | [ROUND 53, HIS REVIEW SHEET (his marks live in the sheet's db; counts and ids in the round ledger)](#22102026--round-53-his-review-sheet-his-marks-live-in-the-sheets-db-counts-and-ids-in-the-round-ledger) | 2026-10-22 |
 | product-and-scope | 8 | [LOCALIZATION: THE NINE QUESTIONS RULED, PLUS THREE ORDERS – THE STACK LANDS WITH THE INTAKE](#07102026--localization-the-nine-questions-ruled-plus-three-orders--the-stack-lands-with-the-intake) | 2026-10-07 |
 | ranking-and-ladder | 10 | [ROUND 46 OPENS: THE LADDER TARGETS, HOUSE INFLATION, NO IN-BROWSER LLM, THE EVENT PICTURES, AND THE SUCCESSION SEED](#05102026--round-46-opens-the-ladder-targets-house-inflation-no-in-browser-llm-the-event-pictures-and-the-succession-seed) | 2026-10-05 |
 | saves-and-schema | 4 | [NO PLAYERS, SO THE SAVE DOORS ANSWER TO ONE RULE: THE PLAYER NEVER GETS STUCK](#26092026--no-players-so-the-save-doors-answer-to-one-rule-the-player-never-gets-stuck) | 2026-09-26 |
@@ -6177,3 +6177,71 @@ byte-identity proven, and the coach market was the last product screen to leave 
    weeks 24–31; R71's six «полгода» rows are approved with it.
 2. **«Год» means the first year** – «Окно 48–63 нед.»: the year rows (R73–R75) get an upper bound,
    so ordinary small talk cannot raise them after ~15 months; the week-56 checkpoint stays.
+
+## 21.10.2026 – ROUND 53, HIS ANSWERS ON THE SPECS (verbatim in the round ledger)
+
+1. **A round is discussed before it is built** – «Мы сначала делаем спеку и обсуждаем каждый
+   пункт. Я не говорил ничего строить». Spec, his word per item, then dispatch; builders no lower
+   than sonnet («Исполнители не ниже sonnet»).
+2. **The coach's pay ladder** – three bands: «до 51 места без изменений», elite from the first day
+   «2к+ за неделю (2–3к вполне может быть ок)», «50–11 тренер с письмом повышает цену и в таблице
+   все тренеры тоже должны подорожать», «1–10 еще дороже, но механизм остается», «10% с призовых…
+   остаются» (10% title / 5% final); refusal of the band letter → the coach leaves at season end,
+   and the whole market reprices. Famous names: «обмен может быть как раз разный, у кого-то
+   химия, у кого-то бонус или спонсоры» – and sparring access («спарринги может и да»).
+3. **Relationships on her page from the first known partner** – «можно сразу показывать уже
+   что-то про отношения»; college with nobody keeps «Курс N из 4»; the name comes through the
+   micro-dialogs by trust and openness («если отношения хорошие – то она расскажет, или
+   "продавить"»), by the papers at the top tournaments, by phone from college; pressing costs
+   −2 bond (the architect's number on his «как сам считаешь»).
+4. **Weather in two stages, the third not now** – «спеку на 1 и 2 этапы»; rain never pauses the
+   game («мы же не будем игру останавливать») – a commentator's line and «+1 кондиции»; indoor
+   courts to the backlog («давай без него пока что»).
+5. **The honest injury week** – the withdraw caution «будет очень наглядно»; letting the masseur
+   go withdraws the entries in the gap – «я бы снял автоматически "доктор не пустил"».
+6. **Cheap backlog items ride along** – «добавим что недорого»; fragility after an injury «в
+   зависимости от самой травмы и ее сложности/продолжительности».
+7. **The medical-team sentence off the coach cards** – «вынесем и поставим… как некий
+   разделитель тиров просто блоком текста прямо под названием тира».
+
+## 22.10.2026 – ROUND 53, HIS REVIEW SHEET (his marks live in the sheet's db; counts and ids in the round ledger)
+
+1. **The round's strings are his** – 117 rows reviewed: 59 approved as drafted, 27 rewritten by him
+   and transferred verbatim (11 weather lines, 10 name-road answers, the three honest-week notes,
+   three pedigree-card lines); the commentary's seven and the letters' four approved as drafted.
+   Three English sources moved at his ask – the ask / insist answers are reused at home and on the
+   phone, so «smiled at her plate», «did not look up» and «went to her room» became channel-neutral
+   («Нужна синхронная правка EN-источника и RU»). The 31 display-word rows he «restored» were the
+   sheet's own defect (the extractor split on the escaped pipe) – the table was right, nothing
+   transferred, the extractor rule recorded. Every r53 section is `APPROVED`.
+2. **Elite plus a famous name breaking a wealthy family** – «это ок, игрок решает кого и когда
+   нанимать»; with the rider: «показывайте полную стоимость сезона и отдельно объясняйте премию
+   выше потолка ступени» – open, a UI item.
+3. **Weather-driven bankruptcies at the edge are a release stop signal** – «раннее банкротство
+   working/self-coached и middle/middle считаю стоп-сигналом для релиза, а не желательной
+   сложностью. Нужен A/B на одинаковых сидах и разбор разницы по заявкам/поездкам/физио/призовым;
+   смена пресета в тесте не чинит баланс» – the A/B is in the round ledger under the same date.
+4. **Heat is not strengthened for the spec's sake** – «Жару не стоит усиливать до 4–6 п.п. только
+   ради прогноза спеки: сначала решить, должна ли она так менять исход, либо поправить обещание» –
+   open, with the architect's options.
+5. **The press road at a cold bond** – «Имя из прессы при cold выглядит слишком частым обходом
+   семейной тайны – рассмотрел бы более высокий порог известности» – open, one constant.
+6. **Fragility and a fourth weather line** – «проверять по повторным травмам и реальным повторам
+   текста» before either moves.
+7. **The weather A/B is re-measured on a sensible policy** (his second message, 22.10) –
+   «обязательно надо померить, сделай пожалуйста»; the player policy's result is in the round
+   ledger: 0–1 bankruptcies of 90, the grinder arm's stop signal was its own.
+8. **The press road reads the `known` standing** – «поднять порог до "known" (#100) – мне кажется
+   да, про 200 нигде особо не говорят кажется»; built as one line in `booth.ts`, measured null in
+   every band (the partner-name spec §6.2), kept as his word.
+9. **A famous coach's card gets a marker** – «можно там какой-то маркер здвездочкой сделать…
+   в левом нижнем углу карточки поверх фото… и написать какой бонус дает надо на карточке тоже»;
+   the strings are proposed DRAFT in the coach-pay-ladder spec §3.4.1 and wait for his word.
+10. **The build-out rides in the same wave** (his third message, 22.10) – «жара и ветер реплик не
+    имеют – для этого тоже надо добавить несколько вариантов комментариев, чтобы не однообразно
+    было, и для дождя тоже разные, дождь может ожидаться, быть сильным, слабым, долгим, коротким,
+    может просто быть облачно… жару делаем под калибровку 2.73 % на снятие, реши какой вариант
+    лучше, строки карточки ок, строй… все в эту же волну делаем». Built as W1 (heat: the onset
+    divides by the day's factor, the hazard untouched), W2 (the card's star and rate line, the two
+    strings APPROVED by «строки карточки ок»), W3 (13 booth lines, DRAFT). Weather icons: none to
+    upload – the plate draws them inline (`WeatherPlate.vue`); his own SVGs are welcome.

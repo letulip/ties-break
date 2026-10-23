@@ -80,6 +80,9 @@ installMemoryStorage()
 const FIXTURE_DIR = resolve(process.cwd(), 'tests/fixtures/inbox-identity')
 const RECORD_FILE = resolve(FIXTURE_DIR, 'render.json')
 const CAREERS = resolve(process.cwd(), 'e2e/fixtures')
+// ⚠ RE-RECORDED 22.10 (round 53 close, architect): the `pro` career's sheet grew 86 → 89 rows – M7's coach letters
+// (47487a7c: the rank-band ask at #11–50 / #1–10 and its decline/lapse rows) land in the inbox of a career that reaches
+// the top fifty. The finding this file asks for: three more letters, nothing else moved on the other careers.
 const WRITING = process.env.TB_WRITE_INBOX_IDENTITY === '1'
 // ⚠ RE-RECORDED, L2-6 (08.10): the inbox's copy calls `t()` now. The record is a text-node-by-text-node capture, and a paragraph that is only an interpolation
 // (`{{ t('…') }}`) loses the single space at each edge that Vue's condenser kept around the same words as bare text – 4 leaves moved, every one of them a space at the

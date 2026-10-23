@@ -62,7 +62,8 @@ import { landWedding, rollWedding } from './lifeBeat/wedding'
 import { rollEnds } from './lifeBeat/ended'
 import { rollSmallTalk } from './lifeBeat/smallTalk'
 import { rollLeak } from './lifeBeat/leak'
-import { airBoothMention } from './lifeBeat/booth'
+import { airBoothMention, pressNamesPartnerAt } from './lifeBeat/booth'
+import { nameAtMet, rollPartnerName } from './lifeBeat/partnerName'
 import { deliverOwnKey } from './lifeBeat/ownKey'
 import { landBirth, landPregnancyAnnouncement, landPregnancyPause, rollPregnancy } from './lifeBeat/pregnancy'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
@@ -87,7 +88,7 @@ import { resolveSparring, resolveSparringRaise } from './sparring'
 // measured the same way the two above were: `world/coachMarket.ts` imports no phase at all
 // (`coachWorksThisWeek` deliberately lives in `phaseFinance.ts`, with the bill that is its first
 // reader), so this import closes no runtime loop.
-import { bankCoachResidual, resolveCoachRaise } from './coachMarket'
+import { bankCoachResidual, resolveCoachBandAsk, resolveCoachRaise } from './coachMarket'
 // ⚠ ONE-WAY ARROW, AND MEASURED: `world/spotlight.ts` imports `../economy`, `../season/calendar`,
 // `./constants`, `./fame` and `./loveEpisodes` – never a phase and never `../spirit` – so this
 // import closes no runtime loop, the same shape `./lifeBeat` above already has. It is the VALUE side
@@ -99,6 +100,7 @@ import { bankCoachResidual, resolveCoachRaise } from './coachMarket'
 // facts, no new edge in the graph.
 import { exposureEventsOf, newsStandingOf } from './spotlight'
 import { chargeCoachTravel, chargeMasseurTravel, chargeSparringTravel, chargeTravel, coachTravelFareFor } from './sponsors'
+import { eventWeather } from '../season/preview'
 
 // Compute the kid's full shadow tournament: same event-scoped RNG, same entrant selection, same
 // bracket. Emits NO events and awards NO points – that is deferred to reveal/finalize. Snapshots
@@ -234,6 +236,8 @@ function computeShadowTournament(
     kidRng,
     kidSeedIndexIn(field, seedRanking, KID_ID),
     promised,
+    // ⭐ r53 step 11 – the day the Season card and the plate already print (one tournament, one day).
+    eventWeather(world.seed, event),
   )
   // ⚠ THE ROSTER, NOT THE FIELD, and the difference is one player: a promised girl put back into the
   // draw is not in `field`, and `field.find` would hand her to `fallbackPlayer` – a placeholder name
@@ -571,6 +575,11 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        called and not duplicated. `STOP_PRECEDENCE` already puts the birthday's card in front of
   //        it on a week that is both.
   deliverKnownPartner(world)
+  // ⭐ R53 №2 (21.10) – HIS NAME (docs/specs/partner-name-disclosure-2026-10.md §3.2): road 1 at close names him on the
+  //        card this delivery just raised; road 3, once a feel period after `knownWeek`, may have her say it on her own
+  //        (a phone call from college). Sub-streams only – `seed:partnername:<id>:<period>` – zero MAIN draws.
+  nameAtMet(world)
+  rollPartnerName(world, inCollege(world))
   // ⭐ 1c-key (v83, wave 7 – T10, backlog §8): AND THE WEEK SHE LIVES BEHIND HER OWN DOOR. One-time,
   //        NON-blocking, narrative-only – a kept `'life'` row and a soft card, no mechanic, no cost,
   //        no bond move. ⚠ ZERO DRAWS ON EVERY PATH (the section's own argument: nothing to decide,
@@ -1077,6 +1086,8 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
     //        about to watch, and a stamp written before it would be a booth speaking at a match that
     //        `computeShadowTournament` had not yet composed. Nothing here reads `pendingTournament`.
     airBoothMention(world, enteredThisWeek.tier)
+    // ⭐ R53 №2 – road 4, the papers name him: the booth's licence, its own news row (`booth.ts`).
+    pressNamesPartnerAt(world, enteredThisWeek.tier)
   }
 
   // 1c-masseur, settled HERE since the per-match tour pricing (v59; the step-1 position was beside
@@ -1117,6 +1128,9 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
   // fee) or `declineOffer` / a lapse (which leave it). The automatic rise and its feed row are retired – see
   // the supersession note on `resolveCoachRaise`. The week's bill below is therefore still at the old rate.
   resolveCoachRaise(world)
+  // ⭐ ROUND 53 №1 – AND THE BAND LETTER, in the same slot: the week she stands in a band his contract was
+  // not struck in, he writes once (`resolveCoachBandAsk`). Zero draws.
+  resolveCoachBandAsk(world)
   // ⭐ ...AND THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1
   // сеанс массажа по возвращении»): when he was NOT flown to her last tournament, the first
   // non-played week after it gets one extra session's worth of recovery, receipt included.

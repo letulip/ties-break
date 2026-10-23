@@ -205,10 +205,11 @@ describe('rates – the owner\'s per-hour ladder, by age', () => {
     expect(midHourly('budget')).toBe(30)
     expect(midHourly('middle')).toBe(50)
     expect(midHourly('high')).toBe(80)
-    expect(midHourly('elite')).toBe(150)
-    // ...and that 150 is not a chosen number: it is his 120 in the corridor P1 retired, to the cent.
-    const [wLo, wHi] = ECONOMY.wealthCorridor.wealthy
-    expect(midHourly('elite')).toBe(120 * ((wLo + wHi) / 2))
+    // ⭐⭐ RE-AIMED BY HIS WORD OF 21.10 (round 53 №1, docs/specs/coach-pay-ladder-2026-10.md §3.1) – the elite shelf is
+    // $300–400 an hour at 12–16, so the balanced plan's five sessions are $1500–2000 a week («ок»). The 12.09 anchor
+    // (his 120 in the retired wealthy corridor, 150) is superseded rather than deleted: the three rungs below the cut
+    // still reproduce his 29.07 table to the dollar, and only the elite row moved, again only up.
+    expect(midHourly('elite')).toBe(350)
     // ...and self sits below Budget, which is where the spec puts the parent's rung.
     expect(midHourly('self')).toBeLessThan(midHourly('budget'))
     // The middle corridor really is the neutral one: a quote there is his hourly rate x the hours.

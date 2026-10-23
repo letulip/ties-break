@@ -152,8 +152,8 @@ describe('§2 the seats – every static string is a valid key, and the number t
   })
 
   it('the pool holds 105 cells: 95 static, 6 with a hole, 4 deliberate silences', () => {
-    expect(DIARY_POOL.length).toBe(105)
-    expect(poolStatics().length).toBe(95)
+    expect(DIARY_POOL.length).toBe(107) // r53 step 10: +2 photo captions (heat, rain)
+    expect(poolStatics().length).toBe(97)
     expect(DIARY_POOL.filter((p) => typeof p.text === 'function').length).toBe(6)
     expect(DIARY_POOL.filter((p) => p.text === null).length).toBe(4)
   })
@@ -476,7 +476,11 @@ describe('§6 played careers', () => {
   // (74cabe86) – only the coached career 5/0 can reach them (F3's test 4b pins 0/1 as self-coached);
   // F3 measured the same value (0xf7a88407) before the close, so attribution is direct. Not a MAIN
   // draw (the weeknote sub-stream is purpose-scoped). Was 0xd961a15a.
-  const PRE_WAVE_DIGEST = 0xf7a88407
+  // ⚠ RE-STAMPED 22.10 (round 53 close, architect): moved with M10's weather captions and scraps (heat and rain
+  // in the pools), M11's changed match results (different weeks, different lines) and M9's named partner. Was 0xf7a88407.
+  // ⚠ RE-STAMPED 22.10 (r53 W1, heat variant V1 – she tires EARLIER in heat, fatigue onset 120 / heat): a hot match past point 75 plays differently, so the careers' results – and the
+  // weeks and lines the diary picks from them – move. No pick key, pool or draw count changed. Was 0x99144eb6.
+  const PRE_WAVE_DIGEST = 0xaf182516
   // played once, on first use, INSIDE a test – a ref that drifts from its text must fail a test by name, not take the whole file down at collection
   let played: Array<ReturnType<typeof play>> | null = null
   // careers 5/0 and 0/1 are the DIGEST's pair (captured on the pre-wave tree); 5/1 is a third, played for the families the first two never reach – the coach travels with her only there
@@ -566,6 +570,6 @@ describe('§8 the 341 cells', () => {
   })
 
   it('the pool shapes the pick walks are unchanged: 105 photo / condition cells, 73 travel scraps, 5 coach lines, 341 week notes', () => {
-    expect([DIARY_POOL.length, TRAVEL_NOTES.length, COACH_TRIP_NOTES.length, WEEK_NOTES.length]).toEqual([105, 73, 5, 341])
+    expect([DIARY_POOL.length, TRAVEL_NOTES.length, COACH_TRIP_NOTES.length, WEEK_NOTES.length]).toEqual([107, 75, 5, 341]) // r53 step 10: +2 photo captions, +2 travel scraps (heat, rain)
   })
 })

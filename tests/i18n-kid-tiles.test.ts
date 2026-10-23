@@ -284,6 +284,21 @@ describe('§4 the English – a line is returned as written', () => {
       ['Together for', 'Вместе'], ['together 4m', 'вместе 4 м'], ['1y 6m', '1 г 6 м'], ['3y', '3 г'], ['<1m', '<1 м'],
     ] as const) expect(tile(en), en).toBe(want)
   })
+
+  // ⭐ R53 №2 (21.10) – ⚠ ⚠ DRAFT: his name on the relationships lead, nominative after a colon (docs/localization/ru-display-words-2026-10.md, R53-REL-01..03 and R53-REL-N01..N28).
+  it('⭐ R53 №2 – the named leads read Russian, all 28 names of the pool, and an unknown name comes back as written', async () => {
+    const { tile } = rig()
+    for (const [en, want] of [
+      ['Married: Anton', 'В браке: Антон'], ['Engaged: Gabriel', 'Помолвлена: Габриэль'], ['Dating: Xavier', 'Встречается: Ксавье'], ['Dating: Yann', 'Встречается: Ян'],
+    ] as const) expect(tile(en), en).toBe(want)
+    const { PARTNER_NAME_POOL } = await import('../src/engine/world/lifeBeat/wedding')
+    for (const name of PARTNER_NAME_POOL) {
+      const ruName = tile(`Married: ${name}`)
+      expect(ruName, `${name} has a Russian row`).not.toBe(`Married: ${name}`)
+      expect(ruName, `${name}: Cyrillic, no long dash`).toMatch(/^В браке: [А-Яа-яЁё]+$/)
+    }
+    expect(tile('Married: Zzzz'), 'a name the lexicon does not hold').toBe('Married: Zzzz')
+  })
 })
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------

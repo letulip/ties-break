@@ -465,7 +465,13 @@ describe('#12 what the gate reads', () => {
     })
     const rng = rngFromSeed(world.seed)
     for (let i = 0; i < 120; i++) tickWeek(world, rng)
-    const snapshot = toSnapshot(world)
+    // ⭐ ROUND 53 №1 (21.10) – THE FIXTURE MOVED AGAIN, THE CLAIM DID NOT. The elite shelf is $300–400 an hour now
+    // (docs/specs/coach-pay-ladder-2026-10.md §3.1), so no family's market fits under its cap any more and the
+    // nothing-is-over screen cannot be found by walking. It is MADE instead: every row's over-budget figure zeroed,
+    // which is exactly the screen this arm guards – a meter that recovered its cap from an over-budget row would
+    // read nothing here and draw $0.
+    const raw = toSnapshot(world)
+    const snapshot = { ...raw, coachMarket: raw.coachMarket.map((r) => ({ ...r, overBudgetCents: 0 })) }
     expect(snapshot.coachMarket.every((r) => r.overBudgetCents === 0), 'nothing is over budget here').toBe(true)
     expect(snapshot.coachMarket.find((r) => r.current), 'and a coach is engaged, so the free bar has a subtrahend').toBeTruthy()
 

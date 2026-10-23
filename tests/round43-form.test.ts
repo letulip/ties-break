@@ -51,6 +51,7 @@ import {
   SAVE_SCHEMA_VERSION,
   setSparringRung,
   setSparringTravels,
+  settleCoachDeal,
   coachFormNote,
   resolveSparring,
   sparringRungOf,
@@ -65,8 +66,24 @@ import {
   toSnapshot,
 } from '../src/engine/world'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
+import { sparringTopRungCents } from '../src/engine/world/sparring'
+import type { WorldState } from '../src/engine/world/state'
 
 const F = ECONOMY.form
+
+/** ⚠ RE-AIMED 22.10 (r53, N3 – the close; M7 47487a7c): the top hitting-partner rung is offered only beside a coach
+ *  whose week carries it (60% of his week at or above the middle rung – `sparringTopRungCents`), and
+ *  DEFAULT_PROFILE's coach does not, so `setSparringRung(w, 2)` refused these fixtures. The claims are about the
+ *  seat's words and its ledger, never about the coach, so every fixture that turns the dial to the top rung now
+ *  sits beside an elite coach (the house idiom of tests/round53-coach-pay-ladder.test.ts) – the market offers the
+ *  rung and the sentence under test is the one the engine really writes. */
+function besideEliteCoach(seed: string): WorldState {
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'elite' })
+  if (!world.coachId) throw new Error('the fixture has no coach')
+  settleCoachDeal(world)
+  world.bestFinishByTier.w15 = 0
+  return world
+}
 
 /** A week with the given gap and nothing else. */
 function gapWeek(matchlessWeeks: number, rustCut = 1): FormWeek {
@@ -277,15 +294,18 @@ describe('§4 the sparring partner – one channel, and the fence around it', ()
     const junior = createWorld('sparring-gate', DEFAULT_PROFILE)
     expect(sparringUnlocked(junior)).toBe(false)
     expect(() => hireSparring(junior, true)).toThrow(SPARRING_LOCKED_DETAIL)
-    const pro = createWorld('sparring-gate-2', DEFAULT_PROFILE)
-    pro.bestFinishByTier.w15 = 0
+    const pro = besideEliteCoach('sparring-gate-2')
     expect(sparringUnlocked(pro)).toBe(true)
     hireSparring(pro, true)
     expect(pro.sparringHired).toBe(true)
     expect(() => setSparringRung(pro, 7)).toThrow()
     setSparringRung(pro, 2)
     expect(pro.sparringRung).toBe(2)
-    expect(sparringWeeklyCents(pro)).toBe(ECONOMY.sparring.rungs[2].weeklyCents)
+    // ⚠ 22.10 (r53, N3; M7): the top rung bills the ENGINE's offered price – the catalogue's, capped at 60% of the
+    // coach's week – so the claim «the price is the engine's» reads the one function the dial and the till share.
+    expect(sparringTopRungCents(pro)).not.toBeNull()
+    expect(sparringWeeklyCents(pro)).toBe(sparringTopRungCents(pro))
+    expect(sparringWeeklyCents(pro)).toBeLessThanOrEqual(ECONOMY.sparring.rungs[2].weeklyCents)
   })
 
   it('the card`s facts cross the wire, and the price is the engine`s', () => {
@@ -365,7 +385,8 @@ describe('§6 the schema move – v80', () => {
     // form half below did not.
     // ⚠ AND AGAIN AT v93 (09.10, the localization rig L3-0): the head moved, the form half below did not.
     // ⚠ AND AGAIN AT v94 (12.10, round 49 №8 – the wedding-milestone net): the head moved, the form half below did not.
-    expect(SAVE_SCHEMA_VERSION).toBe(94)
+    // ⚠ AND AGAIN AT v95 (22.10, r53 M9 – `nameKnownWeek` on the love-episode rows): the head moved, the form half below did not.
+    expect(SAVE_SCHEMA_VERSION).toBe(95)
     expect(createWorld('form-schema', DEFAULT_PROFILE).form).toBe(0)
   })
 
@@ -432,8 +453,7 @@ describe('§7 his 17.09 copy review – one vocabulary for the seat, and it is t
    *  A string that never reaches a feed cannot be checked, and a string quoted into a test from the
    *  source it is checking is not checked either. */
   function everySeatSentence(): string[] {
-    const world = createWorld('sparring-voice', DEFAULT_PROFILE)
-    world.bestFinishByTier.w15 = 0
+    const world = besideEliteCoach('sparring-voice')
     hireSparring(world, true)
     setSparringRung(world, 2)
     setSparringTravels(world, true)
@@ -448,8 +468,7 @@ describe('§7 his 17.09 copy review – one vocabulary for the seat, and it is t
   }
 
   it('⭐ the five feed sentences are his, word for word', () => {
-    const world = createWorld('sparring-words', DEFAULT_PROFILE)
-    world.bestFinishByTier.w15 = 0
+    const world = besideEliteCoach('sparring-words')
     const last = (): string => world.events[world.events.length - 1].text
 
     hireSparring(world, true)
@@ -477,8 +496,7 @@ describe('§7 his 17.09 copy review – one vocabulary for the seat, and it is t
     // The check that decided which of his two lines to take, asserted rather than asserted about. If
     // a future wave makes a rung change write its own tagged row, the sentence above becomes the
     // wrong one of the two and this case is what says so.
-    const world = createWorld('sparring-tenure', DEFAULT_PROFILE)
-    world.bestFinishByTier.w15 = 0
+    const world = besideEliteCoach('sparring-tenure')
     hireSparring(world, true)
     const tagged = (): number => world.events.filter((e) => e.milestoneKey?.startsWith(SPARRING_CHANGE_KEY)).length
     expect(tagged(), 'the hire opens the arrangement').toBe(1)

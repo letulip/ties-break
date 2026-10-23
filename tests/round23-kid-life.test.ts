@@ -74,6 +74,7 @@ import { drainLifeBeats } from './helpers/career'
 import { answerCollegeReveal } from './helpers/scenarios/college'
 import { relationshipsTile, relationshipsTileOpen } from '../src/engine/kidLife'
 import { togetherSpan, togetherSpanShort } from '../src/engine/world/lifeBeat/weddingCopy'
+import { PARTNER_NAME_POOL } from '../src/engine/world/lifeBeat/wedding'
 
 /** A view for one week of one career. Her age is HER OWN (`kidAgeExact`), never the band's – the
  *  one-clock ruling – because the after-school ladder's last rung is an age comparison. */
@@ -477,31 +478,60 @@ describe('⭐⭐ ROUND 46 MORNING #3 – the school cell hands over to her relat
   const grown = (together: Together | null) => view(WEEKS_PER_YEAR * 9, { ageYears: 24, together })
   const cell = (lead: string, note: string) => ({ label: 'Relationships', lead, note })
 
-  it('the cell opens exactly where the ladder\'s last rung does, and nowhere before it', () => {
+  // ⚠ RE-AIMED 21.10 (R53 №2): this arm held «the cell opens exactly where the ladder's last rung does» (stage `after` AND 22). The owner asked that the cell SAY there is nobody
+  // («А когда отношений нет – так и написать, что их нет»), so the age gate is gone and the cell opens with the stage; and a known partner opens it in ANY stage. The 22 stays
+  // the LADDER's boundary (`Grown up`, the diary's voice split) – the sweep below still reads it, as the second claim.
+  it('R53 №2 – with nobody known the cell opens exactly when school is over and she is not studying, at ANY age; the ladder\'s own 22 is unmoved', () => {
     let opened = 0
     let closed = 0
     for (const bm of [1, 6, 9, 12]) {
       for (let week = 0; week < WEEKS_PER_YEAR * 25; week += 5) {
         const v = view(week, { birthMonth: bm })
-        const lastRung = lifeStageTile(v).lead === 'Grown up'
-        expect(relationshipsTileOpen(v), `week ${week}, born in month ${bm}`).toBe(lastRung)
-        expect(relationshipsTile(v) !== null, `week ${week}, born in month ${bm}: the field follows the predicate`).toBe(lastRung)
-        if (lastRung) opened++
+        const out = stageLabelOf(v) === STAGE_LABEL.after
+        expect(relationshipsTileOpen(v), `week ${week}, born in month ${bm}`).toBe(out)
+        expect(relationshipsTile(v) !== null, `week ${week}, born in month ${bm}: the field follows the predicate`).toBe(out)
+        // the ladder's last rung is still the 22 and still its own
+        expect(lifeStageTile(v).lead === 'Grown up', `week ${week}: the ladder`).toBe(out && v.ageYears >= GROWN_UP_AGE_YEARS)
+        if (out) opened++
         else closed++
       }
     }
-    expect(opened, 'THE SWEEP IS NOT VACUOUS: it reaches the last rung').toBeGreaterThan(0)
-    expect(closed, '...and it has rungs below it').toBeGreaterThan(0)
+    expect(opened, 'THE SWEEP IS NOT VACUOUS: it reaches the after-school rungs').toBeGreaterThan(0)
+    expect(closed, '...and it has school rungs below them').toBeGreaterThan(0)
+    // nineteen, a year out of school: «The last bell» on the ladder, and the cell says there is nobody
+    const nineteen = view(schoolEndWeek(6) + WEEKS_PER_YEAR + 5, { ageYears: 19 })
+    expect(lifeStageTile(nineteen).lead).toBe('Tennis full-time')
+    expect(relationshipsTile(nineteen)).toEqual({ label: 'Relationships', lead: 'On her own', note: 'it seems' })
   })
 
-  it('a college place does not keep the cell: the course holds it, a finished or abandoned one hands it over at 22', () => {
+  it('R53 №2 – A PARTNER THE PARENT KNOWS OF OPENS THE CELL IN ANY STAGE: at school she reads her relationship, not her grade; nobody known, the grade is back', () => {
+    const together = { weeks: 20, married: false, engaged: false }
+    for (const week of [40, 120, 200]) {
+      const at = view(week, { together })
+      expect(/ grade$/.test(lifeStageTile(at).lead), `week ${week}: THE FIXTURE is a girl at school`).toBe(true)
+      expect(relationshipsTileOpen(at), `week ${week}`).toBe(true)
+      expect(relationshipsTile(at), `week ${week}`).toEqual({ label: 'Relationships', lead: 'Together for', note: togetherSpanShort(20) })
+      const nobody = view(week)
+      expect(relationshipsTile(nobody), `week ${week}: nobody known – the school ladder is unchanged`).toBeNull()
+      expect(relationshipsTile(view(week, { together: null })), `week ${week}: and an explicit null is nobody`).toBeNull()
+    }
+    // …and a pair that began before the last bell does not read «The last bell» either: the cell is the relationship on both sides of it
+    const out = view(schoolEndWeek(6) + 3, { together: { weeks: 40, married: false, engaged: false } })
+    expect(lifeStageTile(out).lead).toBe('The last bell')
+    expect(relationshipsTile(out)?.lead).toBe('Together for')
+  })
+
+  it('a college place does not keep the cell from a girl with nobody: the course holds it; a finished or abandoned one hands over at once (R53 №2: no 22 gate)', () => {
     const studying = view(400, { ageYears: 23, college: collegeView({ studying: true, yearsDone: 3 }) })
     expect(relationshipsTileOpen(studying), 'still on the course at 23: the College rung is alive').toBe(false)
     expect(relationshipsTile(studying)).toBeNull()
+    // …unless she has told him: a known partner opens the cell on the course too
+    expect(relationshipsTile({ ...studying, together: { weeks: 78, married: false, engaged: false } })?.lead).toBe('Together for')
     for (const [what, yearsDone, lead] of [['finished', 4, 'Graduate'], ['left early', 1, 'Left college']] as const) {
       const young = view(400, { ageYears: GROWN_UP_AGE_YEARS - 1, college: collegeView({ studying: false, yearsDone }) })
       expect(lifeStageTile(young).lead, `${what}: the school ladder is untouched`).toBe(lead)
-      expect(relationshipsTileOpen(young), `${what}, but not yet 22`).toBe(false)
+      expect(relationshipsTileOpen(young), `${what}, under 22: the old gate is re-aimed – the cell says there is nobody`).toBe(true)
+      expect(relationshipsTile(young)).toEqual(cell('On her own', 'it seems'))
       const adult = view(400, { ageYears: GROWN_UP_AGE_YEARS, college: collegeView({ studying: false, yearsDone }) })
       expect(lifeStageTile(adult).lead, `${what}: the ladder still says so at 22 – it is the screen that hands over`).toBe(lead)
       expect(relationshipsTileOpen(adult), `${what}, at 22`).toBe(true)
@@ -517,8 +547,39 @@ describe('⭐⭐ ROUND 46 MORNING #3 – the school cell hands over to her relat
     // Married outranks engaged. A real snapshot cannot say both (`upcomingWeddingWeek` skips a latched episode),
     // but the cell must not lean on that.
     expect(relationshipsTile(grown(fact(78, { married: true, engaged: true })))?.lead).toBe('Married')
-    // Whatever she is told, the cell stays the school's until the last rung.
-    expect(relationshipsTile(view(WEEKS_PER_YEAR * 8, { ageYears: GROWN_UP_AGE_YEARS - 1, together: fact(78) }))).toBeNull()
+    // ⚠ RE-AIMED 21.10 (R53 №2): «whatever she is told, the cell stays the school's until the last rung» is retired – what she has told him IS the cell, at any age (the arm above).
+    expect(relationshipsTile(view(WEEKS_PER_YEAR * 8, { ageYears: GROWN_UP_AGE_YEARS - 1, together: fact(78) }))).toEqual(cell('Together for', '1y 6m'))
+  })
+
+  it('R53 №2 – «School – …» (the September sentence) goes with the School cell: a girl at school whose partner the parent knows of has no School cell for it to explain', () => {
+    const decemberSeptember = view(246, { birthMonth: 12 })
+    expect(buildKidLife(decemberSeptember).schoolWhy, 'THE FIXTURE: the sentence fires with nobody known').not.toBe('')
+    const told = buildKidLife({ ...decemberSeptember, together: { weeks: 20, married: false, engaged: false } })
+    expect(told.relationships).not.toBeNull()
+    expect(told.schoolWhy, 'and is gone once the cell is hers').toBe('')
+  })
+
+  it('R53 №2 – HIS NAME: printed in the lead once the engine holds one, never before, and every line stays inside the budget with the longest name in the pool', () => {
+    // no name (null, or absent from a hand-built view): the three leads are exactly what they were
+    expect(relationshipsTile(grown(fact(78, { name: null })))).toEqual(cell('Together for', '1y 6m'))
+    expect(relationshipsTile(grown(fact(78, { engaged: true, name: null })))).toEqual(cell('Engaged', 'together 1y 6m'))
+    expect(relationshipsTile(grown(fact(78, { married: true, name: null })))).toEqual(cell('Married', 'together 1y 6m'))
+    // named: status and name on the lead, the span on the note – the fog law's three facts, plus the name
+    expect(relationshipsTile(grown(fact(78, { name: 'Anton' })))).toEqual(cell('Dating: Anton', 'together 1y 6m'))
+    expect(relationshipsTile(grown(fact(78, { engaged: true, name: 'Anton' })))).toEqual(cell('Engaged: Anton', 'together 1y 6m'))
+    expect(relationshipsTile(grown(fact(78, { married: true, name: 'Anton' })))).toEqual(cell('Married: Anton', 'together 1y 6m'))
+    // the whole pool, the widest span: no line over the English generation budget, no long dash
+    for (const name of PARTNER_NAME_POOL) {
+      for (const flags of [{}, { engaged: true }, { married: true }] as Array<Partial<Together>>) {
+        const tile = relationshipsTile(grown(fact(99 * WEEKS_PER_YEAR + 48, { ...flags, name })))!
+        for (const l of [tile.lead, tile.note]) {
+          expect(l.length, `"${l}" is ${l.length} characters`).toBeLessThanOrEqual(TILE_LINE_MAX)
+          expect(l).not.toContain('—')
+        }
+        expect(tile.lead, 'the name is on the lead').toContain(name)
+      }
+    }
+    expect(Math.max(...PARTNER_NAME_POOL.map((n) => `Engaged: ${n}`.length)), 'THE FIXTURE: the pool\'s widest name fills the line exactly').toBe(TILE_LINE_MAX)
   })
 
   it('the compact span: its forms, and the same count as the words it stands in for', () => {

@@ -33,8 +33,11 @@ import {
   growWeek,
   physicalMean,
   COOLHEAD_RECEIPT,
+  SKILL_KEYS,
   type DeclineCare,
+  type KidSkills,
 } from '../development'
+import { COACH_PEDIGREE, coachPedigree } from '../coachPedigree'
 import { addEvent } from './ledger'
 // ⭐⭐ v76 T5 – THE SEAT, ASKED DIRECTLY, WHICH IS THE HALF OF RULING J THAT APPLIES HERE. The
 // architect's ruling J as corrected by T4b: a focus pass sitting UNDER `world/college.ts` in the
@@ -68,7 +71,7 @@ import { coachById, type Coach } from '../coach'
 // ⭐⭐ THE CHEMISTRY WAVE C1. `engine/chemistry.ts` is a LEAF – `ECONOMY`, two rng helpers and two
 // types – so both arrows below close nothing, and `spiritBandOf` is the world's ONE reading of her
 // spirit number, asked here rather than re-spelled (its own docblock refuses a second reader).
-import { accrueChemistry, freshCoachPair, type ChemistryWeek } from '../chemistry'
+import { accrueChemistry, accrueWarmChemistry, freshCoachPair, type ChemistryWeek } from '../chemistry'
 // ⭐ ROUND 52 F1: the affinity's four arguments are spelled ONCE, in the leaf her feel for the coach also reads (`world/coachFeel.ts`)
 import { coachPairAffinity } from './coachFeel'
 import { spiritBandOf } from '../spirit'
@@ -232,7 +235,10 @@ export function growAndLive(world: WorldState, rng: Rng, away = false): void {
   }
   world.skills = growWeek({
     skills: world.skills,
-    potential: world.potential,
+    // ⭐ ROUND 53 №2 (spec §3.4) – THE CEILING TRADE: while a famous name with it is in the chair her ceiling reads
+    // `ceilingPoints` higher here (the potential `growWeek` clamps against, read live every week). `world.potential`
+    // itself is untouched, so a release hands the old ceiling back the same week. Zero draws.
+    potential: coach && coachPedigree(world.seed, coach.id, coach.tier)?.trade === 'ceiling' ? raisedCeiling(world.potential) : world.potential,
     // ⚠ HER REAL AGE, not the band's - and this REPLACED a hybrid that said the same thing worse. It used
     // to be `ageAtWeek(week) + relativeAgeYears(birthMonth)`: the band's age plus an offset standing in
     // for a birthday. `kidAgeExact` is the birthday itself, off the game's own calendar, so the number is
@@ -485,9 +491,16 @@ export function growAndLive(world: WorldState, rng: Rng, away = false): void {
  *  generator from a string and throw it away; neither can reach the weekly stream, so the frozen
  *  capture (41550 / e6b0c709) cannot see this pass. */
 function accrueCoachPair(world: WorldState, coach: Coach): number {
-  const before = world.coachPairs[coach.id] ?? freshCoachPair()
+  // ⭐ ROUND 53 №2 (spec §3.4) – A FAMOUS NAME WITH THE CHEMISTRY TRADE (`accrueWarmChemistry`: a warmer start and the
+  // gaining weeks at 1.25×). `coach` is the man who works this week, so the trade is his while he is in the chair and a
+  // release ends it; nothing persisted.
   const affinity = coachPairAffinity(world, coach)
-  const after = accrueChemistry(before, affinity, world.seed, coach.id, world.week, herWeekForChemistry(world))
+  const events = herWeekForChemistry(world)
+  const known = world.coachPairs[coach.id]
+  const after =
+    coachPedigree(world.seed, coach.id, coach.tier)?.trade === 'chemistry'
+      ? accrueWarmChemistry(known, affinity, world.seed, coach.id, world.week, events)
+      : accrueChemistry(known ?? freshCoachPair(), affinity, world.seed, coach.id, world.week, events)
   world.coachPairs[coach.id] = after
   return after.chem
 }
@@ -517,4 +530,12 @@ function herWeekForChemistry(world: WorldState): ChemistryWeek {
     titles: last.filter((e) => e.type === 'tournament' && e.finishIdx === 0).length,
     band: spiritBandOf(world.spirit),
   }
+}
+
+/** ⭐ ROUND 53 №2 – HER CEILING WITH A FAMOUS NAME IN THE CHAIR: every attribute's potential `ceilingPoints` higher,
+ *  capped at 100. A new object – `world.potential` is never written. Zero draws. */
+export function raisedCeiling(potential: KidSkills): KidSkills {
+  const out = { ...potential }
+  for (const k of SKILL_KEYS) out[k] = Math.min(100, potential[k] + COACH_PEDIGREE.ceilingPoints)
+  return out
 }

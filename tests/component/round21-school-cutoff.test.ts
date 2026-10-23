@@ -51,6 +51,9 @@ function careerAt(week: number, birthMonth: number, seed = `school-${birthMonth}
       closeTournament(world)
     }
   }
+  // ⚠ R53 №2 (21.10): these arms are about the CALENDAR's school cell. A real career can have told the parent of a partner by this age, and then the cell is her relationship (and the
+  // «School – …» sentence goes with it – tests/component/round23-kid-page.test.ts holds that half), so the love life is cleared before the snapshot: the fixture isolates the school.
+  world.loveEpisodes = []
   return toSnapshot(world)
 }
 
@@ -133,14 +136,15 @@ describe('⭐ ROUND-21 #6 – the School tile explains its own September', () =>
 
   it('...and it stops once school is behind her, when there is nothing left to explain', () => {
     // `schoolEndWeek(12)` is 294; one week past it the cell has left the classroom entirely - since
-    // round 23 #6 its HEADING moves too, so the tile is found by the new label rather than the old.
+    // round 23 #6 its HEADING moves too, and since R53 №2 (21.10) it is her relationships cell from this week (nobody known: the «no relationship» line), so the tile is found by that label.
     const snap = careerAt(schoolEndWeek(12) + 1, 12, 'school-12-done')
     expect(snap.ending ?? null, 'the career is still running').toBeNull()
+    expect(snap.life.school.lead, 'THE ENGINE\'S LADDER IS UNTOUCHED').toBe('The last bell')
     const w = mountKid(snap)
     const tiles = w.findAll('.kid-tile')
-    const school = tiles.find((t) => t.find('.kid-tile-label').text() === 'After school')
-    expect(school, 'the cell is headed for the stage she is at').toBeTruthy()
-    expect(school!.findAll('.kid-tile-line')[0].text()).toBe('The last bell')
+    const school = tiles.find((t) => t.find('.kid-tile-label').text() === 'Relationships')
+    expect(school, 'the cell is headed for what it says now').toBeTruthy()
+    expect(school!.findAll('.kid-tile-line')[0].text()).toBe('On her own')
     expect(w.find('.kid-note-school').exists()).toBe(false)
     w.unmount()
   })
