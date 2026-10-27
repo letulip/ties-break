@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ties Break – prologue film, one phone</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <!-- ⚠ THE VIEWER'S OWN PRE-ROLL, SET THE WAY A PLAYER WOULD SET IT. `usePlaybackClock` holds
+         3600 / min(speed, 2) ms before the first frame - 1800ms at the shipped opening speed of x2 -
+         which is most of this film's two-second cut, and the first take of it filmed a live court
+         reading 0-0 with the momentum row still saying "Not started". At x4 the hold is skipped by
+         the clock's own branch (`if (speed.value !== 4)`), so the film sets the SETTING rather than
+         reaching into the component: `matchDefaults.ts` reads `tb-match-speed` once at import, so
+         this has to run before the module graph does. -->
+    <script>
+      try {
+        localStorage.setItem('tb-match-speed', '4')
+        localStorage.setItem('tb-match-view', 'key')
+      } catch (e) {}
+    </script>
+    <script type="module" src="/tools/film/prologue-phone.ts"></script>
+  </body>
+</html>
